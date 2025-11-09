@@ -1,0 +1,11 @@
+.DS_Store
+build/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+.build/
+Pods/
+Carthage/Build/
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
