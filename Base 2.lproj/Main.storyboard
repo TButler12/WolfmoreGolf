@@ -11,13 +11,13 @@
         <!--View Controller-->
         <scene sceneID="tne-QT-ifu">
             <objects>
-                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="WolfmoreGolf" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="BYZ-38-t0r" customClass="ViewController" customModule="Wolfmore_5Man" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="8bC-Xf-vdC">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QgZ-2Z-HCF">
-                                <rect key="frame" x="107" y="368" width="180" height="35"/>
+                                <rect key="frame" x="106" y="189" width="180" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" systemColor="systemGreenColor"/>
                                 <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -27,20 +27,8 @@
                                     <action selector="startNewGameTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="tvv-ZC-07f"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ook-gM-mUh">
-                                <rect key="frame" x="107" y="450" width="179" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.94328010080000002" green="0.63925028159999997" blue="0.062925106189999996" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Edit Course Data"/>
-                                <connections>
-                                    <action selector="editCourseTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="z3k-bG-Xhe"/>
-                                    <segue destination="uPE-cq-hQ1" kind="show" identifier="showCourseHC" id="KbU-rX-4EP"/>
-                                </connections>
-                            </button>
                             <label userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="WOLFMORE" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="r2g-wF-Kff">
-                                <rect key="frame" x="37" y="222" width="321" height="83"/>
+                                <rect key="frame" x="36" y="51" width="321" height="83"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <accessibility key="accessibilityConfiguration">
@@ -51,6 +39,18 @@
                                 <color key="highlightedColor" systemColor="systemGreenColor"/>
                                 <color key="shadowColor" systemColor="systemGreenColor"/>
                             </label>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ook-gM-mUh">
+                                <rect key="frame" x="106" y="302" width="179" height="35"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="0.94328010080000002" green="0.63925028159999997" blue="0.062925106189999996" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Edit Course Data"/>
+                                <connections>
+                                    <action selector="editCourseTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="z3k-bG-Xhe"/>
+                                    <segue destination="uPE-cq-hQ1" kind="show" identifier="showCourseHC" id="KbU-rX-4EP"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -68,7 +68,7 @@
         <!--Player Setup View Controller-->
         <scene sceneID="52N-hg-dLW">
             <objects>
-                <viewController id="Kxu-mt-3Z3" customClass="PlayerSetupViewController" customModule="WolfmoreGolf" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="Kxu-mt-3Z3" customClass="PlayerSetupViewController" customModule="Wolfmore_5Man" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="RVs-vg-qUk">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="793"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -485,7 +485,7 @@
         <!--Course Setup View Controller-->
         <scene sceneID="v6m-EO-lxQ">
             <objects>
-                <viewController id="uPE-cq-hQ1" customClass="CourseSetupViewController" customModule="WolfmoreGolf" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="uPE-cq-hQ1" customClass="CourseSetupViewController" customModule="Wolfmore_5Man" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="CGn-5L-6TN">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="793"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
@@ -1020,7 +1020,7 @@
         <!--Game View Controller-->
         <scene sceneID="qvJ-lt-r3Y">
             <objects>
-                <viewController id="xlr-P2-18F" customClass="GameViewController" customModule="WolfmoreGolf" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="xlr-P2-18F" customClass="GameViewController" customModule="Wolfmore_5Man" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" contentMode="scaleToFill" id="W5p-tb-maM">
                         <rect key="frame" x="0.0" y="0.0" width="393" height="783"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

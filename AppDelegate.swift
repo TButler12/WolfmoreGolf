@@ -1,8 +1,8 @@
 //
 //  AppDelegate.swift
-//  WolfmoreGolf
+//  Wolfmore-5Man
 //
-//  Created by Tom BUTLER on 10/27/25.
+//  Created by Tom BUTLER on 9/24/25.
 //
 
 import UIKit
