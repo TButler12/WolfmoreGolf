@@ -1,0 +1,301 @@
+//
+//  ViewController.swift
+//  Wolfmore
+//
+//  Created by Tom BUTLER on 9/24/25.
+
+import UIKit
+
+final class ViewController: UIViewController {
+
+    // MARK: - Lifecycle
+  
+    private var shouldPromptForName = false
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        if ProfileStore.name == nil {            // first launch, no name yet
+            ProfileStore.name = "Player 1"       // seed so label isn’t empty
+            shouldPromptForName = true           // ask right after first show
+        }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if shouldPromptForName || (ProfileStore.name == "Player 1") {
+            shouldPromptForName = false
+            promptForName()
+        }
+    }
+
+    private func promptForName() {
+        let ac = UIAlertController(title: "Welcome!", message: "What should we call you?", preferredStyle: .alert)
+        ac.addTextField { tf in
+            tf.placeholder = "Your name"
+            tf.autocapitalizationType = .words
+            tf.clearButtonMode = .whileEditing
+        }
+        ac.addAction(UIAlertAction(title: "Skip", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            ProfileStore.name = ac.textFields?.first?.text
+            self?.updateWelcome()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        })
+        present(ac, animated: true)
+    }
+
+    
+   
+    
+  
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        updateWelcome()
+    }
+
+    private func updateWelcome() {
+        let name = (ProfileStore.name ?? "Player 1")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        welcomeLabel.text = "Welcome, \(name)"
+    }
+
+
+    // MARK: - Actions
+    @IBAction private func rulesTapped(_ sender: UIButton) {
+        let rules = RulesViewController()
+        if let nav = navigationController {
+            // You’re inside a UINavigationController → push
+            nav.pushViewController(rules, animated: true)
+        } else {
+            // No nav controller → present modally wrapped in one
+            let wrap = UINavigationController(rootViewController: rules)
+            wrap.modalPresentationStyle = .pageSheet   // or .formSheet on iPad
+            present(wrap, animated: true)
+        }
+    }
+
+    @IBAction private func deleteHistoryTapped(_ sender: UIButton) {
+        // Nothing to delete?
+        guard !RoundStore.shared.rounds.isEmpty else {
+            let a = UIAlertController(title: "No History",
+                                      message: "You don’t have any saved rounds yet.",
+                                      preferredStyle: .alert)
+            a.addAction(UIAlertAction(title: "OK", style: .default))
+            present(a, animated: true)
+            return
+        }
+
+        // Show choices: Delete Last or Delete All
+        let ac = UIAlertController(
+            title: "Delete History",
+            message: "Choose what to delete.",
+            preferredStyle: .alert
+        )
+
+        // Delete last round (with confirmation-ish context)
+        ac.addAction(UIAlertAction(title: "Delete Last Round", style: .destructive) { _ in
+            RoundStore.shared.deleteLast()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+            let done = UIAlertController(title: "Last Round Deleted",
+                                         message: "The most recent round was removed from history.",
+                                         preferredStyle: .alert)
+            done.addAction(UIAlertAction(title: "OK", style: .default))
+            self.present(done, animated: true)
+
+            // If you broadcast updates elsewhere, uncomment:
+            // NotificationCenter.default.post(name: .roundsChanged, object: nil)
+        })
+
+        // Delete ALL rounds (your original behavior)
+        ac.addAction(UIAlertAction(title: "Delete ALL Rounds", style: .destructive) { _ in
+            RoundStore.shared.clearAll()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+            let done = UIAlertController(title: "History Deleted",
+                                         message: "All saved rounds were removed.",
+                                         preferredStyle: .alert)
+            done.addAction(UIAlertAction(title: "OK", style: .default))
+            self.present(done, animated: true)
+
+            // Notification if you use it elsewhere:
+            // NotificationCenter.default.post(name: .roundsChanged, object: nil)
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(ac, animated: true)
+    }
+    @IBAction private func trackFriendsButtonTapped(_ sender: UIButton) {
+        print("Track Friends tapped")
+
+        guard let vc = storyboard?.instantiateViewController(
+            withIdentifier: "TrackFriendsVC"
+        ) as? TrackFriendsViewController else {
+            print("⚠️ Could not find TrackFriendsVC")
+            return
+        }
+
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+
+    @IBAction private func myStatsTapped(_ sender: UIButton) {
+        let allRounds = RoundStore.shared.rounds
+        let cal = Calendar.current
+        let now = Date()
+        let cutoff = cal.date(byAdding: .year, value: -1, to: now) ?? now
+
+        // --- ME ---
+
+        let myName = (ProfileStore.name ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let myRounds = allRounds.filter {
+            $0.date >= cutoff &&
+            $0.playerName.caseInsensitiveCompare(myName) == .orderedSame
+        }
+
+        let myCount = myRounds.count
+        let myTotalMoney = myRounds.reduce(0) { $0 + $1.totalMoney }
+        let myTotalProx  = myRounds.reduce(0) { $0 + $1.totalProx }
+
+        let myTotalHoles = myRounds.reduce(0) { $0 + max($1.holesPlayed, 1) }
+
+        let myAvgMoneyPer18: Double = myTotalHoles > 0
+            ? Double(myTotalMoney) / Double(myTotalHoles) * 18.0
+            : 0
+
+        let myAvgProxPer18: Double = myTotalHoles > 0
+            ? Double(myTotalProx) / Double(myTotalHoles) * 18.0
+            : 0
+
+        // Optional: average score if you’re tracking it
+        let myScores = myRounds.compactMap { $0.totalScore }
+        let myAvgScore = myScores.isEmpty
+            ? nil
+            : Double(myScores.reduce(0, +)) / Double(myScores.count)
+
+        // Recent 5 for you
+        let recentMine = myRounds
+            .sorted { $0.date > $1.date }
+            .prefix(5)
+
+        let df = DateFormatter()
+        df.dateStyle = .medium
+
+        var message = ""
+        message += "Rounds: \(myCount)\n"
+        message += String(
+            format: "Net money: %+d  (avg %+0.1f per 18 holes)\n",
+            myTotalMoney, myAvgMoneyPer18
+        )
+        message += String(
+            format: "Prox wins: %d  (avg %0.1f per 18 holes)\n",
+            myTotalProx, myAvgProxPer18
+        )
+
+        if let avgScore = myAvgScore {
+            message += String(format: "Avg score: %0.1f\n", avgScore)
+        }
+
+        message += "\nRecent:\n"
+        for r in recentMine {
+            let d = df.string(from: r.date)
+            let line = String(
+                format: "• %@  %+d, prox %d%@\n",
+                d,
+                r.totalMoney,
+                r.totalProx,
+                r.totalScore != nil ? ", score \(r.totalScore!)" : ""
+            )
+            message += line
+        }
+
+        // --- FRIENDS SECTION (tracked only) ---
+
+        let courseID = "HOME-COURSE"  // same string used in TrackFriendsViewController
+
+        let trackedFriends = FriendStore.shared.friends.filter {
+            FriendTrackStore.shared.isTracked($0.id, on: courseID)
+        }
+
+        var friendLines: [String] = []
+
+        for friend in trackedFriends {
+            guard let stats = RoundStore.shared.stats(forPlayerNamed: friend.name) else {
+                continue   // no rounds yet for this friend
+            }
+
+            let line = String(
+                format: "• %@: %d rds, avg $%0.1f, prox %0.1f/rnd",
+                friend.name,
+                stats.rounds,
+                stats.avgMoneyPerRound,
+                stats.avgProxPerRound
+            )
+            friendLines.append(line)
+        }
+
+        if !friendLines.isEmpty {
+            message += "\nFriends (tracked):\n"
+            message += friendLines.joined(separator: "\n")
+        }
+
+        // --- Show alert ---
+
+        let ac = UIAlertController(
+            title: "My Stats (last 12 months)",
+            message: message,
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+
+
+    @IBAction private func startNewGameTapped(_ sender: UIButton) {
+        // Go to Player Setup; that screen will call GameManager.startNewGame(from:)
+        performSegue(withIdentifier: "showPlayerSetup", sender: self)
+    }
+    @IBOutlet private weak var welcomeLabel: UILabel!
+
+    @IBAction private func loadSavedGameTapped(_ sender: UIButton) {
+        if GameManager.shared.loadLastOpened() {
+            performSegue(withIdentifier: "showGame", sender: self)
+        } else {
+            let ac = UIAlertController(
+                title: "No Saved Game",
+                message: "You don’t have a saved game yet. Start a new one?",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            ac.addAction(UIAlertAction(title: "Start New", style: .default) { [weak self] _ in
+                self?.performSegue(withIdentifier: "showPlayerSetup", sender: self)
+            })
+            present(ac, animated: true)
+        }
+    }
+
+    @IBAction private func editPlayerTapped(_ sender: UIButton) {
+        // Simple inline editor for the persistent profile name
+        let current = ProfileStore.name ?? ""
+        let ac = UIAlertController(title: "Your Name", message: "This name is used to track your stats.", preferredStyle: .alert)
+        ac.addTextField { tf in
+            tf.placeholder = "Enter your name"
+            tf.text = current
+            tf.autocapitalizationType = .words
+            tf.clearButtonMode = .whileEditing
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { _ in
+            let newName = ac.textFields?.first?.text
+            ProfileStore.name = newName
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        })
+        present(ac, animated: true)
+    }
+
+    @IBAction private func editCourseTapped(_ sender: UIButton) {
+        performSegue(withIdentifier: "showCourseHC", sender: self)
+    }
+}
