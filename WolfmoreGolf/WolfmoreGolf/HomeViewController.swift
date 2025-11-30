@@ -126,18 +126,29 @@ final class ViewController: UIViewController {
         present(ac, animated: true)
     }
     @IBAction private func trackFriendsButtonTapped(_ sender: UIButton) {
-        print("Track Friends tapped")
+        print("Roster / Tracking tapped")
 
         guard let vc = storyboard?.instantiateViewController(
-            withIdentifier: "TrackFriendsVC"
-        ) as? TrackFriendsViewController else {
-            print("⚠️ Could not find TrackFriendsVC")
+            withIdentifier: "RosterAndTrackingVC"
+        ) as? RosterAndTrackingViewController else {
+            print("⚠️ Could not find RosterAndTrackingVC")
             return
         }
 
         navigationController?.pushViewController(vc, animated: true)
     }
+    @IBAction private func managePlayersTapped(_ sender: UIButton) {
+        print("Manage Players tapped")
 
+        guard let vc = storyboard?.instantiateViewController(
+            withIdentifier: "RosterAndTrackingVC"
+        ) as? RosterAndTrackingViewController else {
+            print("⚠️ Could not find RosterAndTrackingVC")
+            return
+        }
+
+        navigationController?.pushViewController(vc, animated: true)
+    }
 
     @IBAction private func myStatsTapped(_ sender: UIButton) {
         let allRounds = RoundStore.shared.rounds
@@ -145,7 +156,7 @@ final class ViewController: UIViewController {
         let now = Date()
         let cutoff = cal.date(byAdding: .year, value: -1, to: now) ?? now
 
-        // --- ME ---
+        // --- ME (last 12 months) ---
 
         let myName = (ProfileStore.name ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
@@ -184,7 +195,7 @@ final class ViewController: UIViewController {
         df.dateStyle = .medium
 
         var message = ""
-        message += "Rounds: \(myCount)\n"
+        message += "Rounds (last 12 months): \(myCount)\n"
         message += String(
             format: "Net money: %+d  (avg %+0.1f per 18 holes)\n",
             myTotalMoney, myAvgMoneyPer18
@@ -198,7 +209,7 @@ final class ViewController: UIViewController {
             message += String(format: "Avg score: %0.1f\n", avgScore)
         }
 
-        message += "\nRecent:\n"
+        message += "\nRecent rounds:\n"
         for r in recentMine {
             let d = df.string(from: r.date)
             let line = String(
@@ -211,38 +222,6 @@ final class ViewController: UIViewController {
             message += line
         }
 
-        // --- FRIENDS SECTION (tracked only) ---
-
-        let courseID = "HOME-COURSE"  // same string used in TrackFriendsViewController
-
-        let trackedFriends = FriendStore.shared.friends.filter {
-            FriendTrackStore.shared.isTracked($0.id, on: courseID)
-        }
-
-        var friendLines: [String] = []
-
-        for friend in trackedFriends {
-            guard let stats = RoundStore.shared.stats(forPlayerNamed: friend.name) else {
-                continue   // no rounds yet for this friend
-            }
-
-            let line = String(
-                format: "• %@: %d rds, avg $%0.1f, prox %0.1f/rnd",
-                friend.name,
-                stats.rounds,
-                stats.avgMoneyPerRound,
-                stats.avgProxPerRound
-            )
-            friendLines.append(line)
-        }
-
-        if !friendLines.isEmpty {
-            message += "\nFriends (tracked):\n"
-            message += friendLines.joined(separator: "\n")
-        }
-
-        // --- Show alert ---
-
         let ac = UIAlertController(
             title: "My Stats (last 12 months)",
             message: message,
@@ -251,12 +230,102 @@ final class ViewController: UIViewController {
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
     }
+    @IBAction private func friendStatsTapped(_ sender: UIButton) {
+        let allRounds = RoundStore.shared.rounds
+
+        if allRounds.isEmpty {
+            let ac = UIAlertController(
+                title: "Friend Stats",
+                message: "No rounds have been recorded yet.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+            return
+        }
+
+        // Use the same “tracking course” key as TrackFriends
+        let courseID: String = {
+            let stored = ProfileStore.homeCourseID
+            if !stored.isEmpty { return stored }
+            if let b = CourseLibrary.shared.biltmore() {
+                return b.id.uuidString
+            }
+            return "HOME-COURSE"
+        }()
+
+        // Friends that are marked as "tracked" for this course
+        let trackedFriends = FriendStore.shared.friends.filter {
+            FriendTrackStore.shared.isTracked($0.id, on: courseID)
+        }
+
+        guard !trackedFriends.isEmpty else {
+            let ac = UIAlertController(
+                title: "Friend Stats",
+                message: "You haven't selected any friends to track yet.\nUse Track Friends to choose who to track.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+            return
+        }
+
+        var lines: [String] = []
+
+        for friend in trackedFriends {
+            guard let stats = RoundStore.shared.stats(forPlayerNamed: friend.name) else {
+                continue // no rounds for this friend yet
+            }
+
+            let line = String(
+                format: "• %@: %d rds, avg $%0.1f per 18, prox %0.1f per 18",
+                friend.name,
+                stats.rounds,
+                stats.avgMoneyPerRound,
+                stats.avgProxPerRound
+            )
+            lines.append(line)
+        }
+
+        if lines.isEmpty {
+            let ac = UIAlertController(
+                title: "Friend Stats",
+                message: "Your tracked friends don't have any recorded rounds yet.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+            return
+        }
+
+        let ac = UIAlertController(
+            title: "Friend Stats (all-time)",
+            message: lines.joined(separator: "\n"),
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+
+    @IBAction private func managePlayersButtonTapped(_ sender: UIButton) {
+        print("Manage Players tapped")
+
+        guard let vc = storyboard?.instantiateViewController(
+            withIdentifier: "ManagePlayersVC"
+        ) as? ManagePlayersViewController else {
+            print("⚠️ Could not find ManagePlayersVC")
+            return
+        }
+
+        navigationController?.pushViewController(vc, animated: true)
+    }
 
 
     @IBAction private func startNewGameTapped(_ sender: UIButton) {
-        // Go to Player Setup; that screen will call GameManager.startNewGame(from:)
+        // Old, working behavior: go straight to PlayerSetupViewController
         performSegue(withIdentifier: "showPlayerSetup", sender: self)
     }
+
     @IBOutlet private weak var welcomeLabel: UILabel!
 
     @IBAction private func loadSavedGameTapped(_ sender: UIButton) {

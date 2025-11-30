@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */; };
+		F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */; };
+		F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D07132ED922D400F165CA /* ManagePlayerCell.swift */; };
+		F64CDA962ECD0AA900019EE0 /* HoleStatsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64CDA952ECD0AA900019EE0 /* HoleStatsViewController.swift */; };
 		F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64DE8142EB2850000F8D625 /* AppDelegate.swift */; };
 		F64DE8202EB2864B00F8D625 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */; };
 		F64DE9522EB6AAE300F8D625 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F64DE9512EB6AAE300F8D625 /* Assets.xcassets */; };
@@ -19,6 +23,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterAndTrackingViewController.swift; sourceTree = "<group>"; };
+		F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagePlayersViewController.swift; sourceTree = "<group>"; };
+		F63D07132ED922D400F165CA /* ManagePlayerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagePlayerCell.swift; sourceTree = "<group>"; };
+		F64CDA952ECD0AA900019EE0 /* HoleStatsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsViewController.swift; sourceTree = "<group>"; };
 		F64DE8142EB2850000F8D625 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		F64DE8462EB2940000F8D625 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -54,6 +62,10 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F63D07132ED922D400F165CA /* ManagePlayerCell.swift */,
+				F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */,
+				F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */,
+				F64CDA952ECD0AA900019EE0 /* HoleStatsViewController.swift */,
 				F6D6A4A22EC78A100000F576 /* TrackFriendsViewController.swift */,
 				F6D6A49D2EC786FF0000F576 /* FriendTrackStore.swift */,
 				F6D6A49B2EC786D10000F576 /* FriendStore.swift */,
@@ -126,7 +138,6 @@
 				Base,
 				"Base 2",
 				"Base 2C",
-				"base 2C",
 			);
 			mainGroup = F64DE77F2EB0396000F8D625;
 			minimizedProjectReferenceProxies = 1;
@@ -157,10 +168,14 @@
 			buildActionMask = 2147483647;
 			files = (
 				F64DE8202EB2864B00F8D625 /* SceneDelegate.swift in Sources */,
+				F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */,
+				F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */,
 				F6D6A49E2EC786FF0000F576 /* FriendTrackStore.swift in Sources */,
 				F6D6A49C2EC786D10000F576 /* FriendStore.swift in Sources */,
+				F64CDA962ECD0AA900019EE0 /* HoleStatsViewController.swift in Sources */,
 				F6D6A4A32EC78A100000F576 /* TrackFriendsViewController.swift in Sources */,
 				F6D6A49A2EC786BC0000F576 /* Friend.swift in Sources */,
+				F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */,
 				F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */,
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,

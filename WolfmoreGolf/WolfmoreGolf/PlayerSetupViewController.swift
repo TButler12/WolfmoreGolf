@@ -2,6 +2,8 @@ import UIKit
 final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
     // MARK: - Outlets (row orders must align)
+    @IBOutlet private weak var courseLabel: UILabel!
+
     @IBOutlet private var nameFields: [UITextField]!
     @IBOutlet private var handicapFields: [UITextField]!
     @IBOutlet private var activateButtons: [UIButton]!
@@ -18,24 +20,35 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private var playersForNextGame: [Player] = []
 
     // MARK: - Lifecycle
-    
-    override func viewDidLoad() {
+override func viewDidLoad() {
         super.viewDidLoad()
 
-        // Ensure we have a game
+        // Ensure we have a game first
         if GameManager.shared.currentGame == nil {
-            if !GameManager.shared.loadLastOpened() { GameManager.shared.startNewGame() }
+            if !GameManager.shared.loadLastOpened() {
+                GameManager.shared.startNewGame()
+            }
         }
+
+        // Seed course library (so Biltmore etc. exist)
+        CourseLibrary.shared.seedIfNeeded()
+
+        // Now that game + course library exist, update label
+        updateCourseLabel()
 
         // Wiring
         wireNameFields()
         wireHCFields()
         wireActivateButtons()
-       // addDismissTap()
+        // addDismissTap()
 
-        // Observe model/UI reloads
-        NotificationCenter.default.addObserver(self, selector: #selector(reloadFromModel), name: .reloadUI, object: nil)
-        
+        // Observe model/UI reloads (from CourseSetup etc.)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reloadFromModel),
+            name: .reloadUI,
+            object: nil
+        )
 
         // Initial paint
         populateFromModel()
@@ -43,19 +56,22 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         enforceActivationCap()
         updateGoButtonEnabled()
         refreshGatedButtons()
-        
+
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-                    title: "Track",
-                    style: .plain,
-                    target: self,
-                    action: #selector(trackFriendsTapped)
-                )
+            title: "Track",
+            style: .plain,
+            target: self,
+            action: #selector(trackFriendsTapped)
+        )
         print("goToGame isEnabled = \(goToGameButton.isEnabled)")
-       
     }
+
+    
+    
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         print("viewDidAppear – goToGame isEnabled = \(goToGameButton.isEnabled)")
+        updateCourseLabel()
     }
 
     @objc private func trackFriendsTapped() {
@@ -67,6 +83,42 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
+
+    private func updateCourseLabel() {
+        // Make sure library has been seeded
+        CourseLibrary.shared.seedIfNeeded()
+
+        guard let g = GameManager.shared.currentGame else {
+            courseLabel.text = "Course: (none)"
+            print("updateCourseLabel: no current game")
+            return
+        }
+
+        let currentPars = Array(g.course.pars.prefix(18))
+        let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
+
+        print("updateCourseLabel: pars[0]=\(currentPars.first ?? -1), hc[0]=\(currentHCs.first ?? -1)")
+
+        // Find a saved course whose pars + HCs match the current game
+        let match = CourseLibrary.shared.courses.first { c in
+            Array(c.pars.prefix(18)) == currentPars &&
+            Array(c.hcs.prefix(18))  == currentHCs
+        }
+
+        if let course = match {
+            let isHome = (course.id.uuidString == ProfileStore.homeCourseID)
+            if isHome {
+                courseLabel.text = "Course: ⭐ \(course.name)"
+            } else {
+                courseLabel.text = "Course: \(course.name)"
+            }
+            print("updateCourseLabel: matched \(course.name), isHome=\(isHome)")
+        } else {
+            courseLabel.text = "Course: Custom"
+            print("updateCourseLabel: no matching CourseProfile – showing Custom")
+        }
+    }
+
 
     // MARK: - Wiring
     private func wireNameFields() {
@@ -113,7 +165,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         enforceActivationCap()
         updateGoButtonEnabled()
         refreshGatedButtons()
+        updateCourseLabel()    // 👈 make sure label reflects any course changes
     }
+
 
     private func populateFromModel() {
         guard let g = GameManager.shared.currentGame else { return }

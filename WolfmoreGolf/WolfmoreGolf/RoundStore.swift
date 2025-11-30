@@ -11,61 +11,93 @@ import Foundation
 struct RoundSummary: Codable, Identifiable {
     var id: UUID = UUID()
     var date: Date
-    var playerName: String         // from ProfileStore.name at save time
-    var totalMoney: Int            // whole dollars (rounded if money is Double)
+
+    /// Course this round was played on.
+    /// For new rounds, this should be ProfileStore.homeCourseID (or the course UUID string).
+    var courseID: String
+
+    var playerName: String
+    var totalMoney: Int
     var totalProx: Int
-    var totalScore: Int?           // optional
-    var holesPlayed: Int           // NEW: how many holes actually counted for this player
+    var totalScore: Int?
+    var holesPlayed: Int
+
+    // Per-hole history for “Hole Stats”
+    var moneyPerHole: [Int]   // 18 ints (can be negative)
+    var proxPerHole:  [Bool]  // 18 flags
 
     enum CodingKeys: String, CodingKey {
-        case id, date, playerName, totalMoney, totalProx, totalScore, holesPlayed
+        case id, date, courseID, playerName, totalMoney, totalProx, totalScore,
+             holesPlayed, moneyPerHole, proxPerHole
     }
 
-    // Decode old saved data (that didn't have holesPlayed) as 18 holes
+    // Backwards compatible with old saves (no courseID / per-hole arrays)
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id          = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
-        date        = try c.decode(Date.self, forKey: .date)
-        playerName  = try c.decode(String.self, forKey: .playerName)
-        totalMoney  = try c.decode(Int.self, forKey: .totalMoney)
-        totalProx   = try c.decode(Int.self, forKey: .totalProx)
-        totalScore  = try c.decodeIfPresent(Int.self, forKey: .totalScore)
-        holesPlayed = try c.decodeIfPresent(Int.self, forKey: .holesPlayed) ?? 18
+        id          = try c.decodeIfPresent(UUID.self,   forKey: .id) ?? UUID()
+        date        = try c.decode(Date.self,            forKey: .date)
+
+        // Old saves didn’t have courseID – treat as “unknown” so they’re ignored by
+        // course-specific HoleStats (but still count for overall MyStats).
+        courseID    = try c.decodeIfPresent(String.self, forKey: .courseID) ?? ""
+
+        playerName  = try c.decode(String.self,          forKey: .playerName)
+        totalMoney  = try c.decode(Int.self,             forKey: .totalMoney)
+        totalProx   = try c.decode(Int.self,             forKey: .totalProx)
+        totalScore  = try c.decodeIfPresent(Int.self,    forKey: .totalScore)
+        holesPlayed = try c.decodeIfPresent(Int.self,    forKey: .holesPlayed) ?? 18
+
+        moneyPerHole = try c.decodeIfPresent([Int].self,  forKey: .moneyPerHole)
+            ?? Array(repeating: 0, count: 18)
+        proxPerHole  = try c.decodeIfPresent([Bool].self, forKey: .proxPerHole)
+            ?? Array(repeating: false, count: 18)
     }
 
-    // Default init you already get from Swift, but we restate for clarity
     init(
         id: UUID = UUID(),
         date: Date,
+        courseID: String,
         playerName: String,
         totalMoney: Int,
         totalProx: Int,
         totalScore: Int?,
-        holesPlayed: Int
+        holesPlayed: Int,
+        moneyPerHole: [Int],
+        proxPerHole: [Bool]
     ) {
         self.id = id
         self.date = date
+        self.courseID = courseID
         self.playerName = playerName
         self.totalMoney = totalMoney
         self.totalProx = totalProx
         self.totalScore = totalScore
         self.holesPlayed = holesPlayed
+        self.moneyPerHole = Array(moneyPerHole.prefix(18))
+        self.proxPerHole  = Array(proxPerHole.prefix(18))
     }
 }
 
-// Optional summary type you can use in UI
+
+// MARK: - Aggregate stats model
+
 struct MyStats {
     let rounds: Int
     let totalMoney: Int
-    let avgMoneyPerRound: Double
+    let avgMoneyPerRound: Double   // “per 18 holes”
     let totalProx: Int
-    let avgProxPerRound: Double
+    let avgProxPerRound: Double    // “per 18 holes”
 }
 
-private let courseID = "HOME-COURSE"   // same string you used in TrackFriendsVC
+// Use the current home/tracking course when building global tracked stats
+private var trackingCourseID: String {
+    let stored = ProfileStore.homeCourseID
+    return stored.isEmpty ? "HOME-COURSE" : stored
+}
+
 private var trackedFriendStats: [(friend: Friend, stats: MyStats)] {
     let trackedFriends = FriendStore.shared.friends.filter {
-        FriendTrackStore.shared.isTracked($0.id, on: courseID)
+        FriendTrackStore.shared.isTracked($0.id, on: trackingCourseID)
     }
 
     return trackedFriends.compactMap { friend in
@@ -84,7 +116,6 @@ final class RoundStore {
 
     private init() { load() }
 
-    // Save a new round at the top
     func add(_ r: RoundSummary) {
         rounds.insert(r, at: 0)
         save()
@@ -101,14 +132,13 @@ final class RoundStore {
         save()
     }
 
-    /// Delete the most recently saved round (top of list)
     func deleteLast() {
         guard !rounds.isEmpty else { return }
         rounds.removeFirst()
         save()
     }
 
-    // MARK: Persistance
+    // MARK: Persistence
 
     private func load() {
         guard let data = UserDefaults.standard.data(forKey: key) else { return }
@@ -119,12 +149,11 @@ final class RoundStore {
         let data = (try? JSONEncoder().encode(rounds)) ?? Data()
         UserDefaults.standard.set(data, forKey: key)
     }
-    
-    
 }
 
-// MARK: - Capture from current game
-// MARK: - Capture from current game
+
+// MARK: - Capture from current game (ONE definition)
+
 
 extension RoundStore {
 
@@ -151,18 +180,22 @@ extension RoundStore {
             return nil
         }
 
-        // --- MONEY TOTALS ---
+        // --- MONEY PER HOLE + TOTAL ---
         let moneyRowD: [Double] = (seat < g.playerMoney.count) ? g.playerMoney[seat] : []
-        let totalMoney: Int = Int(moneyRowD.prefix(18).reduce(0.0, +).rounded())
+        let moneyPerHoleInt: [Int] = moneyRowD.prefix(18).map { Int($0.rounded()) }
+        let totalMoney: Int = moneyPerHoleInt.reduce(0, +)
 
-        // --- PROX WINS ---
+        // --- PROX PER HOLE + TOTAL ---
         let winners: [Int] = g.proxWinnerPerHole.map { $0 ?? -1 }
-        let totalProx = winners.prefix(18).filter { $0 == seat }.count
+        let proxFlags: [Bool] = winners.prefix(18).map { $0 == seat }
+        let totalProx: Int = proxFlags.filter { $0 }.count
 
         // --- SCORES + HOLES PLAYED ---
         var scoresForSeat = [Int?](repeating: nil, count: 18)
 
-        if seat < g.scores.count, let first = g.scores.first, first.count == 18 {
+        if seat < g.scores.count,
+           let first = g.scores.first,
+           first.count == 18 {
             // [player][hole]
             for h in 0..<min(18, g.scores[seat].count) {
                 scoresForSeat[h] = g.scores[seat][h]
@@ -185,7 +218,7 @@ extension RoundStore {
             if let v = scoresForSeat[h] {
                 sum += v
                 haveAnyScore = true
-                holesPlayed = h + 1      // last hole with a score
+                holesPlayed = h + 1  // last hole with a score
             }
         }
 
@@ -197,8 +230,7 @@ extension RoundStore {
         }
 
         if holesPlayed == 0 {
-            // total fallback so we never divide by 0 in stats
-            holesPlayed = 18
+            holesPlayed = 18 // fallback so we never divide by 0
         }
 
         let totalScore: Int? = haveAnyScore ? sum : nil
@@ -213,13 +245,43 @@ extension RoundStore {
             return "Me"
         }()
 
+        // ✅ NEW: decide if this round should be tagged as "home/tracking course"
+        let courseIDForRound: String = {
+            // If no home course set, don’t tag it
+            guard
+                let homeUUID = UUID(uuidString: ProfileStore.homeCourseID),
+                let homeCourse = CourseLibrary.shared.get(id: homeUUID)
+            else {
+                return ""   // unknown / non-tracked course
+            }
+
+            // Compare current game’s course (pars + HCs) to the home course
+            let currentPars = Array(g.course.pars.prefix(18))
+            let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
+
+            let homePars = Array(homeCourse.pars.prefix(18))
+            let homeHCs  = Array(homeCourse.hcs.prefix(18))
+
+            // Only if they match do we say “this was played on the home course”
+            if currentPars == homePars && currentHCs == homeHCs {
+                print("RoundStore: tagging round as home course \(homeCourse.name)")
+                return homeCourse.id.uuidString    // will be used by HoleStats
+            } else {
+                print("RoundStore: round NOT on home course (home = \(homeCourse.name))")
+                return ""                          // HoleStats will ignore this round
+            }
+        }()
+
         let summary = RoundSummary(
             date: Date(),
+            courseID: courseIDForRound,
             playerName: finalName,
             totalMoney: totalMoney,
             totalProx: totalProx,
             totalScore: totalScore,
-            holesPlayed: holesPlayed
+            holesPlayed: holesPlayed,
+            moneyPerHole: moneyPerHoleInt,
+            proxPerHole: proxFlags
         )
 
         add(summary)
@@ -227,15 +289,14 @@ extension RoundStore {
     }
 }
 
-// MARK: - Per-friend stats
+// MARK: - Per-friend stats (per 18 holes, across all courses)
 
 extension RoundStore {
-    /// Aggregate stats for a given player name (case-insensitive).
     func stats(forPlayerNamed name: String) -> MyStats? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        // All rounds saved for this name
+        // NOTE: this intentionally aggregates across ALL courses.
         let roundsForPlayer = rounds.filter {
             $0.playerName.caseInsensitiveCompare(trimmed) == .orderedSame
         }
@@ -245,7 +306,6 @@ extension RoundStore {
         let totalMoney = roundsForPlayer.reduce(0) { $0 + $1.totalMoney }
         let totalProx  = roundsForPlayer.reduce(0) { $0 + $1.totalProx }
 
-        // Normalize by total holes, then scale to 18
         let totalHoles = roundsForPlayer.reduce(0) { $0 + max($1.holesPlayed, 1) }
 
         let moneyPer18: Double = totalHoles > 0
@@ -259,19 +319,17 @@ extension RoundStore {
         return MyStats(
             rounds: count,
             totalMoney: totalMoney,
-            avgMoneyPerRound: moneyPer18,   // now "per 18 holes"
+            avgMoneyPerRound: moneyPer18,
             totalProx: totalProx,
-            avgProxPerRound: proxPer18      // now "per 18 holes"
+            avgProxPerRound: proxPer18
         )
     }
 }
 
+
 // MARK: - Capture ALL players from current game
 
 extension RoundStore {
-
-    /// Helper if you ever want to save EVERY active player on the card.
-    /// (Uses the same logic as `recordFromCurrentGame`.)
     func recordAllPlayersFromCurrentGame() {
         guard let g = GameManager.shared.currentGame else { return }
 

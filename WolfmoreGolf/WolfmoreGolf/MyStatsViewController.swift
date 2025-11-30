@@ -2,13 +2,10 @@ import UIKit
 
 final class MyStatsViewController: UIViewController {
 
-    private let courseID = "HOME-COURSE"   // later you can use ProfileStore.homeCourseID
-
-    // Friends the user chose to track on this course
-    private var trackedFriends: [Friend] {
-        FriendStore.shared.friends.filter {
-            FriendTrackStore.shared.isTracked($0.id, on: courseID)
-        }
+    // For now: just use ALL friends in FriendStore.
+    // No course ID, no tracking filter.
+    private var allFriends: [Friend] {
+        return FriendStore.shared.friends
     }
 
     override func viewDidLoad() {
@@ -20,10 +17,11 @@ final class MyStatsViewController: UIViewController {
 
     // MARK: - Stats helpers
 
-    /// Returns an array of (friend, stats) for all tracked friends.
+    /// Returns an array of (friend, stats) for all friends that have stats.
     private func computeMoneyAverages() -> [(friend: Friend, stats: MyStats)] {
-        return trackedFriends.compactMap { friend in
+        return allFriends.compactMap { friend in
             guard let stats = RoundStore.shared.stats(forPlayerNamed: friend.name) else {
+                print("MyStats: no stats for \(friend.name)")
                 return nil
             }
             return (friend, stats)
@@ -33,6 +31,9 @@ final class MyStatsViewController: UIViewController {
     /// Temporary: print to console so you can verify it works.
     private func debugPrintMoneyAverages() {
         let rows = computeMoneyAverages()
+        if rows.isEmpty {
+            print("MyStats: no stats found for any friends")
+        }
         for row in rows {
             let f = row.friend
             let s = row.stats

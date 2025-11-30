@@ -19,6 +19,8 @@ final class GameViewController: UIViewController {
     var isUmbrella: Bool = false   // true = mute double for ENTIRE game
 
     // MARK: - Outlets
+    @IBOutlet weak var holeStatsTapped: UIView!
+    
     @IBOutlet private weak var plusPointDollars: UIButton!
     @IBOutlet private weak var minusPointDollars: UIButton!
     @IBOutlet private weak var updateDollars: UIButton!
@@ -92,20 +94,20 @@ final class GameViewController: UIViewController {
         super.viewDidLoad()
         
         scoreFields.forEach {
-                $0.keyboardType = .numberPad
-                $0.inputAccessoryView = makeDoneToolbar()   // adds a Done button above the pad
-            }
+            $0.keyboardType = .numberPad
+            $0.inputAccessoryView = makeDoneToolbar()   // adds a Done button above the pad
+        }
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
-            tap.cancelsTouchesInView = false
-            view.addGestureRecognizer(tap)
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
         totalMoneyLabels = totalMoneyLabels.sorted { $0.tag < $1.tag } // if using tags
-           refreshTotalMoneyLabels()
+        refreshTotalMoneyLabels()
         
         setupToggleButton(rollPushed,    onColor: .black, offColor: .systemOrange, onTitle: "Roll On",    offTitle: "Roll")
-           setupToggleButton(rerollPushed,  onColor: .black, offColor: .systemOrange, onTitle: "Re-Roll On", offTitle: "Re-Roll")
-           setupToggleButton(alonePushed,   onColor: .black, offColor: .systemOrange, onTitle: "Alone On",   offTitle: "Alone")
-           setupToggleButton(pressedPushed2,onColor: .black, offColor: .systemOrange, onTitle: "Press On",   offTitle: "Press")
-
+        setupToggleButton(rerollPushed,  onColor: .black, offColor: .systemOrange, onTitle: "Re-Roll On", offTitle: "Re-Roll")
+        setupToggleButton(alonePushed,   onColor: .black, offColor: .systemOrange, onTitle: "Alone On",   offTitle: "Alone")
+        setupToggleButton(pressedPushed2,onColor: .black, offColor: .systemOrange, onTitle: "Press On",   offTitle: "Press")
+        
         // Fallback only (SceneDelegate should have loaded/normalized already)
         if GameManager.shared.currentGame == nil {
             GameManager.shared.startNewGame()
@@ -126,7 +128,7 @@ final class GameViewController: UIViewController {
             tf.keyboardType = .decimalPad
             tf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
         }
-
+        
         // Button tags for seats
         for (i, b) in wolfButtons.enumerated() { b.tag = i }
         for (i, b) in proxButtons.enumerated() { b.tag = i }
@@ -141,19 +143,24 @@ final class GameViewController: UIViewController {
         // debugStrokes("GameVC viewDidLoad")
         refreshForCurrentHole()
         // Map seat index 0…4 to the Wolf/Prox UI; scores match seats 0…4 as well.
-         for (i, b) in wolfButtons.enumerated() { b.tag = i }
-         for (i, b) in proxButtons.enumerated() { b.tag = i }
-         for (i, tf) in scoreFields.enumerated() {
-             tf.tag = i
-             tf.keyboardType = .numberPad
-             tf.addTarget(self, action: #selector(scoreChanged(_:)), for: .editingChanged)
-         }
-
-         if GameManager.shared.currentGame == nil {
-             GameManager.shared.startNewGame()
-         }
+        for (i, b) in wolfButtons.enumerated() { b.tag = i }
+        for (i, b) in proxButtons.enumerated() { b.tag = i }
+        for (i, tf) in scoreFields.enumerated() {
+            tf.tag = i
+            tf.keyboardType = .numberPad
+            tf.addTarget(self, action: #selector(scoreChanged(_:)), for: .editingChanged)
+        }
+        
+        if GameManager.shared.currentGame == nil {
+            GameManager.shared.startNewGame()
+        }
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
+        navigationItem.hidesBackButton = true
+
+               // (optional) disable swipe-back gesture too
+               navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        
     }
 
     deinit {
@@ -471,8 +478,58 @@ final class GameViewController: UIViewController {
         }
     }
     
-   
-   
+    @IBAction private func holeStatsTapped(_ sender: UIButton) {
+        guard let g = GameManager.shared.currentGame else { return }
+
+        // 1) Make sure we have a home / tracking course set
+        guard
+            let homeUUID = UUID(uuidString: ProfileStore.homeCourseID),
+            let homeCourse = CourseLibrary.shared.get(id: homeUUID)
+        else {
+            let alert = UIAlertController(
+                title: "Non-Tracked Course",
+                message: "Hole stats are only tracked for your home course.\nSet a home course in Course Setup first.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        // 2) Compare current game layout to the home course layout
+        let currentPars = Array(g.course.pars.prefix(18))
+        let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
+
+        let homePars = Array(homeCourse.pars.prefix(18))
+        let homeHCs  = Array(homeCourse.hcs.prefix(18))
+
+        let isHomeCourse = (currentPars == homePars && currentHCs == homeHCs)
+
+        // 3) If NOT the home course → show message instead of stats
+        guard isHomeCourse else {
+            let alert = UIAlertController(
+                title: "Non-Tracked Course",
+                message: "Hole stats are only tracked for your home course.\nThis round is on a different layout.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
+        }
+
+        // 4) If we get here, we ARE on the home course → show Hole Stats
+        let holeIndex = g.hole
+
+        let sb = storyboard ?? UIStoryboard(name: "Main", bundle: nil)
+        guard let vc = sb.instantiateViewController(withIdentifier: "HoleStatsVC")
+                as? HoleStatsViewController else { return }
+
+        vc.holeIndex = holeIndex
+        vc.modalPresentationStyle = .pageSheet
+        present(vc, animated: true)
+    }
+
+
     @IBAction func pressedPush2(_ sender: UIButton) {
         GameManager.shared.update { g in
             // Ensure arrays exist (old save safety)
@@ -829,8 +886,8 @@ final class GameViewController: UIViewController {
             return
         }
 
-        let who = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !who.isEmpty else {
+        let ownerName = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !ownerName.isEmpty else {
             let a = UIAlertController(
                 title: "Set Your Name First",
                 message: "Edit Player → enter your name so we can track your history.",
@@ -853,11 +910,10 @@ final class GameViewController: UIViewController {
             guard let self = self else { return }
 
             // --- 4) Save YOUR round first ---
-            // recordFromCurrentGame() now also records holesPlayed internally
             guard let meSummary = RoundStore.shared.recordFromCurrentGame() else {
                 let warn = UIAlertController(
                     title: "Not On This Card",
-                    message: "\"\(who)\" must be on the card and active before saving.",
+                    message: "\"\(ownerName)\" must be on the card and active before saving.",
                     preferredStyle: .alert
                 )
                 warn.addAction(UIAlertAction(title: "OK", style: .default))
@@ -865,11 +921,25 @@ final class GameViewController: UIViewController {
                 return
             }
 
-            // --- 5) Save TRACKED FRIENDS rounds ---
-            let courseID = "HOME-COURSE"   // same string used in TrackFriendsVC
+       
+            // --- 5) Save TRACKED FRIENDS rounds (excluding the owner) ---
+            // Use the same course ID key as TrackFriendsVC / HoleStats
+            let courseID: String = {
+                let stored = ProfileStore.homeCourseID
+                // fallback keeps old "HOME-COURSE" data alive if you had it
+                return stored.isEmpty ? "HOME-COURSE" : stored
+            }()
 
-            let trackedFriends = FriendStore.shared.friends.filter {
-                FriendTrackStore.shared.isTracked($0.id, on: courseID)
+            let trackedFriends = FriendStore.shared.friends.filter { friend in
+                // must be tracked on this course
+                guard FriendTrackStore.shared.isTracked(friend.id, on: courseID) else {
+                    return false
+                }
+
+                // EXCLUDE the owner name so they are not saved twice
+                let friendName = friend.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                return !friendName.isEmpty &&
+                       friendName.caseInsensitiveCompare(ownerName) != .orderedSame
             }
 
             var savedFriendNames: [String] = []
@@ -880,6 +950,7 @@ final class GameViewController: UIViewController {
                     savedFriendNames.append(friend.name)
                 }
             }
+
 
             UINotificationFeedbackGenerator().notificationOccurred(.success)
 
@@ -905,6 +976,7 @@ final class GameViewController: UIViewController {
         }
         present(ac, animated: true)
     }
+
 
     @IBAction func alonePushedTapped(_ sender: UIButton) {
         sender.isSelected.toggle()
