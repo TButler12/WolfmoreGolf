@@ -93,6 +93,8 @@ final class GameViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        GameManager.shared.seedScoresWithParsForActivePlayers()
+          
         scoreFields.forEach {
             $0.keyboardType = .numberPad
             $0.inputAccessoryView = makeDoneToolbar()   // adds a Done button above the pad

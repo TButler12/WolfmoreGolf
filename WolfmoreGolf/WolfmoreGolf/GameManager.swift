@@ -37,7 +37,8 @@ extension Notification.Name {
     
     /// Save current game to UserDefaults (no notify here).
     func saveCurrent() {
-        guard let g = currentGame else { return }
+        guard var g = currentGame
+ else { return }
         do {
             let data = try JSONEncoder().encode(g)
             UserDefaults.standard.set(data, forKey: currentKey)
@@ -269,4 +270,52 @@ extension Notification.Name {
     
 }
 
+// Put this in GameManager.swift (or its own file) **outside** the GameManager class,
+// but in the same target.
+extension GameManager {
 
+    /// For the current game, pre-fill every hole for each ACTIVE player with the
+    /// course par as their score, but only if that score is currently nil.
+    /// (We never overwrite scores that are already set.)
+    func seedScoresWithParsForActivePlayers() {
+        // Work on a mutable copy of the game
+        guard var game = self.currentGame else { return }
+
+        // How many holes? usually 18, but respect the course data
+        let holeCount = min(18, game.courseParToPass.count)
+        guard holeCount > 0 else { return }
+
+        // Seats visible on the Game screen
+        let seatsRange = 0 ..< min(9,
+                                   min(game.playerNames.count,
+                                       game.playerActivated.count))
+
+        // Ensure scores is shaped as [player][hole] and has a row per seat
+        if game.scores.count < seatsRange.endIndex {
+            for _ in game.scores.count ..< seatsRange.endIndex {
+                game.scores.append(Array(repeating: nil, count: holeCount))
+            }
+        }
+
+        // Fill nil scores with par for every active player, every hole
+        for seat in seatsRange where game.playerActivated[seat] {
+
+            // Make sure this player’s row has a slot for each hole
+            if game.scores[seat].count < holeCount {
+                game.scores[seat] += Array(
+                    repeating: nil,
+                    count: holeCount - game.scores[seat].count
+                )
+            }
+
+            for hole in 0..<holeCount {
+                if game.scores[seat][hole] == nil {
+                    game.scores[seat][hole] = game.courseParToPass[hole]
+                }
+            }
+        }
+
+        // Write back to the singleton
+        self.currentGame = game
+    }
+}

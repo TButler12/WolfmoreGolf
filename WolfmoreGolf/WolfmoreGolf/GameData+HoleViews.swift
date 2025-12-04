@@ -4,8 +4,8 @@
 //
 //  Created by Tom BUTLER on 10/8/25.
 //
-
 import Foundation
+
 // MARK: - GameData hole-first views (keep storage unchanged)
 extension GameData {
     // Generic transpose for rectangular matrices (your arrays are rectangular)
@@ -61,7 +61,6 @@ extension GameData {
 
             wolfMaskByHole = mask
         }
-
     }
 
     // MARK: Setters for the *current* hole (no press touched)
@@ -84,6 +83,55 @@ extension GameData {
         var arr = wolfIndexPerHole
         arr[hole] = seat
         wolfIndexPerHole = arr
+    }
+
+    // MARK: - Rebuild Wolf stats from money
+
+    /// Recomputes wolfCalledPerHole / wolfTeamWonPerHole from:
+    /// - wolfMaskByHole  ([hole][player]: who is Wolf)
+    /// - moneyByHole     ([hole][player]: final $ per player)
+    ///
+    /// Wolf team is considered to "win" a hole if:
+    ///   - at least one Wolf is present, and
+    ///   - sum of Wolf team money on that hole > 0
+    mutating func recomputeWolfFlagsFromMoney() {
+        // Ensure arrays exist and have room for 18 holes
+        if wolfCalledPerHole.count < Self.holes {
+            wolfCalledPerHole = Array(repeating: false, count: Self.holes)
+        }
+        if wolfTeamWonPerHole.count < Self.holes {
+            wolfTeamWonPerHole = Array(repeating: false, count: Self.holes)
+        }
+
+        let money = moneyByHole      // [hole][player]
+        let mask  = wolfMaskByHole   // [hole][player]
+
+        let holeCount = min(Self.holes, money.count, mask.count)
+
+        for h in 0..<holeCount {
+            let moneyRow = money[h]
+            let maskRow  = mask[h]
+            let playerCount = min(moneyRow.count, maskRow.count)
+
+            var wolfMoney: Double = 0
+            var anyWolf = false
+
+            for p in 0..<playerCount {
+                if maskRow[p] {
+                    anyWolf = true
+                    wolfMoney += moneyRow[p]
+                }
+            }
+
+            // Wolf called?
+            wolfCalledPerHole[h] = anyWolf
+
+            // Wolf "win" if they were called AND net $ > 0
+            wolfTeamWonPerHole[h] = (anyWolf && wolfMoney > 0)
+
+            // If you want to debug:
+            // print("Hole \(h+1): anyWolf=\(anyWolf), wolfMoney=\(wolfMoney), win=\(wolfTeamWonPerHole[h])")
+        }
     }
 }
 

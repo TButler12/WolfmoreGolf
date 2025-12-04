@@ -26,9 +26,22 @@ struct RoundSummary: Codable, Identifiable {
     var moneyPerHole: [Int]   // 18 ints (can be negative)
     var proxPerHole:  [Bool]  // 18 flags
 
+    // Per-hole gross scores for this player (nil = no score on that hole)
+    var scorePerHole: [Int?]
+
+    // Wolf stats per hole (for Wolf% by hole)
+    var wolfCalledPerHole:   [Bool]   // true if Wolf was called on that hole
+    var wolfTeamWonPerHole:  [Bool]   // true if Wolf side won that hole
+
+    // Umbrella (Umbie) per hole – true if any team got all 6 points
+    var umbieWonPerHole: [Bool]
+
     enum CodingKeys: String, CodingKey {
         case id, date, courseID, playerName, totalMoney, totalProx, totalScore,
-             holesPlayed, moneyPerHole, proxPerHole
+             holesPlayed, moneyPerHole, proxPerHole,
+             scorePerHole,
+             wolfCalledPerHole, wolfTeamWonPerHole,
+             umbieWonPerHole
     }
 
     // Backwards compatible with old saves (no courseID / per-hole arrays)
@@ -37,8 +50,7 @@ struct RoundSummary: Codable, Identifiable {
         id          = try c.decodeIfPresent(UUID.self,   forKey: .id) ?? UUID()
         date        = try c.decode(Date.self,            forKey: .date)
 
-        // Old saves didn’t have courseID – treat as “unknown” so they’re ignored by
-        // course-specific HoleStats (but still count for overall MyStats).
+        // Old saves didn’t have courseID – treat as “unknown”
         courseID    = try c.decodeIfPresent(String.self, forKey: .courseID) ?? ""
 
         playerName  = try c.decode(String.self,          forKey: .playerName)
@@ -50,6 +62,20 @@ struct RoundSummary: Codable, Identifiable {
         moneyPerHole = try c.decodeIfPresent([Int].self,  forKey: .moneyPerHole)
             ?? Array(repeating: 0, count: 18)
         proxPerHole  = try c.decodeIfPresent([Bool].self, forKey: .proxPerHole)
+            ?? Array(repeating: false, count: 18)
+
+        // Per-hole scores – default to 18 nils for old rounds
+        scorePerHole = try c.decodeIfPresent([Int?].self, forKey: .scorePerHole)
+            ?? Array(repeating: nil, count: 18)
+
+        // Wolf flags – default to all false for old rounds
+        wolfCalledPerHole = try c.decodeIfPresent([Bool].self, forKey: .wolfCalledPerHole)
+            ?? Array(repeating: false, count: 18)
+        wolfTeamWonPerHole = try c.decodeIfPresent([Bool].self, forKey: .wolfTeamWonPerHole)
+            ?? Array(repeating: false, count: 18)
+
+        // Umbie flags – default to all false for old rounds
+        umbieWonPerHole = try c.decodeIfPresent([Bool].self, forKey: .umbieWonPerHole)
             ?? Array(repeating: false, count: 18)
     }
 
@@ -63,7 +89,11 @@ struct RoundSummary: Codable, Identifiable {
         totalScore: Int?,
         holesPlayed: Int,
         moneyPerHole: [Int],
-        proxPerHole: [Bool]
+        proxPerHole: [Bool],
+        scorePerHole: [Int?],
+        wolfCalledPerHole: [Bool],
+        wolfTeamWonPerHole: [Bool],
+        umbieWonPerHole: [Bool]
     ) {
         self.id = id
         self.date = date
@@ -73,8 +103,12 @@ struct RoundSummary: Codable, Identifiable {
         self.totalProx = totalProx
         self.totalScore = totalScore
         self.holesPlayed = holesPlayed
-        self.moneyPerHole = Array(moneyPerHole.prefix(18))
-        self.proxPerHole  = Array(proxPerHole.prefix(18))
+        self.moneyPerHole        = Array(moneyPerHole.prefix(18))
+        self.proxPerHole         = Array(proxPerHole.prefix(18))
+        self.scorePerHole        = Array(scorePerHole.prefix(18))
+        self.wolfCalledPerHole   = Array(wolfCalledPerHole.prefix(18))
+        self.wolfTeamWonPerHole  = Array(wolfTeamWonPerHole.prefix(18))
+        self.umbieWonPerHole     = Array(umbieWonPerHole.prefix(18))
     }
 }
 
@@ -152,8 +186,7 @@ final class RoundStore {
 }
 
 
-// MARK: - Capture from current game (ONE definition)
-
+// MARK: - Capture from current game
 
 extension RoundStore {
 
@@ -161,6 +194,7 @@ extension RoundStore {
     /// Only records if the profile name matches an **active** seat.
     @discardableResult
     func recordFromCurrentGame(playerNameOverride: String? = nil) -> RoundSummary? {
+        // Just read the game; do NOT mutate it here.
         guard let g = GameManager.shared.currentGame else { return nil }
 
         // Resolve the owner name
@@ -183,12 +217,19 @@ extension RoundStore {
         // --- MONEY PER HOLE + TOTAL ---
         let moneyRowD: [Double] = (seat < g.playerMoney.count) ? g.playerMoney[seat] : []
         let moneyPerHoleInt: [Int] = moneyRowD.prefix(18).map { Int($0.rounded()) }
-        let totalMoney: Int = moneyPerHoleInt.reduce(0, +)
+        let totalMoney: Int = moneyPerHoleInt.reduce(0) { acc, value in
+            acc + value
+        }
 
         // --- PROX PER HOLE + TOTAL ---
         let winners: [Int] = g.proxWinnerPerHole.map { $0 ?? -1 }
         let proxFlags: [Bool] = winners.prefix(18).map { $0 == seat }
         let totalProx: Int = proxFlags.filter { $0 }.count
+
+        // --- WOLF / UMBIE PER HOLE (for stats) ---
+        let wolfCalled: [Bool]  = Array(g.wolfCalledPerHole.prefix(18))
+        let wolfTeamWon: [Bool] = Array(g.wolfTeamWonPerHole.prefix(18))
+        let umbieWon: [Bool]    = Array(g.umbieWonPerHole.prefix(18))
 
         // --- SCORES + HOLES PLAYED ---
         var scoresForSeat = [Int?](repeating: nil, count: 18)
@@ -245,9 +286,8 @@ extension RoundStore {
             return "Me"
         }()
 
-        // ✅ NEW: decide if this round should be tagged as "home/tracking course"
+        // Decide if this round should be tagged as "home/tracking course"
         let courseIDForRound: String = {
-            // If no home course set, don’t tag it
             guard
                 let homeUUID = UUID(uuidString: ProfileStore.homeCourseID),
                 let homeCourse = CourseLibrary.shared.get(id: homeUUID)
@@ -255,20 +295,18 @@ extension RoundStore {
                 return ""   // unknown / non-tracked course
             }
 
-            // Compare current game’s course (pars + HCs) to the home course
             let currentPars = Array(g.course.pars.prefix(18))
             let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
 
             let homePars = Array(homeCourse.pars.prefix(18))
             let homeHCs  = Array(homeCourse.hcs.prefix(18))
 
-            // Only if they match do we say “this was played on the home course”
             if currentPars == homePars && currentHCs == homeHCs {
                 print("RoundStore: tagging round as home course \(homeCourse.name)")
-                return homeCourse.id.uuidString    // will be used by HoleStats
+                return homeCourse.id.uuidString
             } else {
                 print("RoundStore: round NOT on home course (home = \(homeCourse.name))")
-                return ""                          // HoleStats will ignore this round
+                return ""
             }
         }()
 
@@ -281,13 +319,18 @@ extension RoundStore {
             totalScore: totalScore,
             holesPlayed: holesPlayed,
             moneyPerHole: moneyPerHoleInt,
-            proxPerHole: proxFlags
+            proxPerHole: proxFlags,
+            scorePerHole: scoresForSeat,
+            wolfCalledPerHole: wolfCalled,
+            wolfTeamWonPerHole: wolfTeamWon,
+            umbieWonPerHole: umbieWon
         )
 
         add(summary)
         return summary
     }
 }
+
 
 // MARK: - Per-friend stats (per 18 holes, across all courses)
 
@@ -302,11 +345,19 @@ extension RoundStore {
         }
         guard !roundsForPlayer.isEmpty else { return nil }
 
-        let count      = roundsForPlayer.count
-        let totalMoney = roundsForPlayer.reduce(0) { $0 + $1.totalMoney }
-        let totalProx  = roundsForPlayer.reduce(0) { $0 + $1.totalProx }
+        let count = roundsForPlayer.count
 
-        let totalHoles = roundsForPlayer.reduce(0) { $0 + max($1.holesPlayed, 1) }
+        let totalMoney = roundsForPlayer.reduce(0) { acc, round in
+            acc + round.totalMoney
+        }
+
+        let totalProx = roundsForPlayer.reduce(0) { acc, round in
+            acc + round.totalProx
+        }
+
+        let totalHoles = roundsForPlayer.reduce(0) { acc, round in
+            acc + max(round.holesPlayed, 1)
+        }
 
         let moneyPer18: Double = totalHoles > 0
             ? Double(totalMoney) / Double(totalHoles) * 18.0

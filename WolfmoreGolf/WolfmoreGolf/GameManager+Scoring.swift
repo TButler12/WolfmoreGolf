@@ -13,6 +13,9 @@ private let popsLog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "app",
                              category: "POPS")
 var proxEnabled: [Bool] = Array(repeating: false, count: 18)
 
+var wolfCalledPerHole: [Bool] = Array(repeating: false, count: 18)
+var wolfTeamWonPerHole: [Bool] = Array(repeating: false, count: 18)
+
 extension GameManager {
 
     /// Returns a 9-element payout array for `hole`. Seats 0…4 are used; 5…8 = 0.
@@ -126,28 +129,46 @@ extension GameManager {
         var nonTeamScore  = nonWolfProx + nonLowTotal + nonLowBall + nonBirdie + nonEagle
 
         // Umbrella/double rule
+        // Umbrella / double rule
         var diff = abs(wolfTeamScore - nonTeamScore)
         if !umbePressed, diff >= 6 { diff *= 2 }
 
-        // Payouts
-        var payouts = Array(repeating: 0.0, count: 9)
-        guard diff != 0, !(wolfTeam.isEmpty && nonWolfTeam.isEmpty) else { return payouts }
+        // ---------------------------------------------------------
+        //  RECORD STATS: Wolf called, Wolf win, Umbie hit
+        // ---------------------------------------------------------
 
-        if wolfTeamScore > nonTeamScore {
-            let wolfEach = Double(diff) * stake * (Double(numNonWolf) / Double(numWolf))
-            let nonEach  = -Double(diff) * stake
-            wolfTeam.forEach    { payouts[$0] = wolfEach }
-            nonWolfTeam.forEach { payouts[$0] = nonEach  }
-        } else {
-            let nonEach  = Double(diff) * stake
-            let wolfEach = -Double(diff) * stake * (Double(numNonWolf) / Double(numWolf))
-            nonWolfTeam.forEach { payouts[$0] = nonEach  }
-            wolfTeam.forEach    { payouts[$0] = wolfEach }
+        // Raw points (before doubling)
+        let wolfPoints = wolfProx + wolfLowTotal + wolfLowBall + wolfBirdie + wolfEagle
+        let nonPoints  = nonWolfProx + nonLowTotal + nonLowBall + nonBirdie + nonEagle
+
+        let umbrellaHit    = (wolfPoints >= 6 || nonPoints >= 6)
+        let wolfCalledNow  = !wolfTeam.isEmpty          // any Wolves on this hole?
+        let wolfWonThisHole = (diff != 0 &&            // not a push
+                               wolfTeamScore > nonTeamScore)
+
+        // Safely mutate the current game and write it back
+        if var gameCopy = currentGame {
+            if hole < gameCopy.umbieWonPerHole.count {
+                gameCopy.umbieWonPerHole[hole] = umbrellaHit
+            }
+            if hole < gameCopy.wolfCalledPerHole.count {
+                gameCopy.wolfCalledPerHole[hole] = wolfCalledNow
+            }
+            if hole < gameCopy.wolfTeamWonPerHole.count {
+                gameCopy.wolfTeamWonPerHole[hole] = wolfWonThisHole
+            }
+            currentGame = gameCopy
         }
 
-        // --- WHOLE-DOLLAR PAYOUTS (extra $ to first Wolf) -------------------------
-       
-        guard diff != 0, !(wolfTeam.isEmpty && nonWolfTeam.isEmpty) else { return payouts }
+        // ---------------------------------------------------------
+        //  WHOLE-DOLLAR PAYOUTS (extra $ to first Wolf)
+        // ---------------------------------------------------------
+        var payouts = Array(repeating: 0.0, count: 9)
+
+        // If no net points or no teams, nobody pays/gets paid
+        guard diff != 0, !(wolfTeam.isEmpty && nonWolfTeam.isEmpty) else {
+            return payouts
+        }
 
         // Per non-Wolf seat transfer in dollars (rounded to nearest whole $)
         let perNonDollar = Int((Double(diff) * stake).rounded())

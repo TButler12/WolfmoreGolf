@@ -241,6 +241,18 @@
         }
       }
     },
+    "A7o-Cw-biI.text" : {
+      "comment" : "Class = \"UILabel\"; text = \"Title\"; ObjectID = \"A7o-Cw-biI\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Title"
+          }
+        }
+      }
+    },
     "ABy-NN-jmd.text" : {
       "comment" : "Class = \"UILabel\"; text = \"Prox\"; ObjectID = \"ABy-NN-jmd\";",
       "extractionState" : "extracted_with_value",
@@ -279,6 +291,30 @@
     },
     "asW-OX-YwQ.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"asW-OX-YwQ\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Button"
+          }
+        }
+      }
+    },
+    "awx-Tl-XV1.configuration.title" : {
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Home Course Summary\"; ObjectID = \"awx-Tl-XV1\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Home Course Summary"
+          }
+        }
+      }
+    },
+    "awx-Tl-XV1.normalTitle" : {
+      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"awx-Tl-XV1\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -998,13 +1034,13 @@
       }
     },
     "kYA-vS-Psc.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"End Game\"; ObjectID = \"kYA-vS-Psc\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Load History\"; ObjectID = \"kYA-vS-Psc\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "End Game"
+            "value" : "Load History"
           }
         }
       }
@@ -1370,13 +1406,13 @@
       }
     },
     "QgZ-2Z-HCF.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Play Game\"; ObjectID = \"QgZ-2Z-HCF\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Cont' Game\"; ObjectID = \"QgZ-2Z-HCF\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Play Game"
+            "value" : "Cont' Game"
           }
         }
       }
@@ -1665,6 +1701,18 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Player"
+          }
+        }
+      }
+    },
+    "tma-PP-H9a.text" : {
+      "comment" : "Class = \"UILabel\"; text = \"Subtitle\"; ObjectID = \"tma-PP-H9a\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Subtitle"
           }
         }
       }

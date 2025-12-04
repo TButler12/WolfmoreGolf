@@ -10,6 +10,7 @@
 		F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */; };
 		F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */; };
 		F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D07132ED922D400F165CA /* ManagePlayerCell.swift */; };
+		F63D08052EDFA66800F165CA /* CourseSummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D08042EDFA66800F165CA /* CourseSummaryViewController.swift */; };
 		F64CDA962ECD0AA900019EE0 /* HoleStatsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64CDA952ECD0AA900019EE0 /* HoleStatsViewController.swift */; };
 		F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64DE8142EB2850000F8D625 /* AppDelegate.swift */; };
 		F64DE8202EB2864B00F8D625 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */; };
@@ -26,6 +27,7 @@
 		F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterAndTrackingViewController.swift; sourceTree = "<group>"; };
 		F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagePlayersViewController.swift; sourceTree = "<group>"; };
 		F63D07132ED922D400F165CA /* ManagePlayerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagePlayerCell.swift; sourceTree = "<group>"; };
+		F63D08042EDFA66800F165CA /* CourseSummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseSummaryViewController.swift; sourceTree = "<group>"; };
 		F64CDA952ECD0AA900019EE0 /* HoleStatsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsViewController.swift; sourceTree = "<group>"; };
 		F64DE8142EB2850000F8D625 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -63,6 +65,7 @@
 			isa = PBXGroup;
 			children = (
 				F63D07132ED922D400F165CA /* ManagePlayerCell.swift */,
+				F63D08042EDFA66800F165CA /* CourseSummaryViewController.swift */,
 				F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */,
 				F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */,
 				F64CDA952ECD0AA900019EE0 /* HoleStatsViewController.swift */,
@@ -138,6 +141,7 @@
 				Base,
 				"Base 2",
 				"Base 2C",
+				"base 2C",
 			);
 			mainGroup = F64DE77F2EB0396000F8D625;
 			minimizedProjectReferenceProxies = 1;
@@ -168,6 +172,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F64DE8202EB2864B00F8D625 /* SceneDelegate.swift in Sources */,
+				F63D08052EDFA66800F165CA /* CourseSummaryViewController.swift in Sources */,
 				F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */,
 				F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */,
 				F6D6A49E2EC786FF0000F576 /* FriendTrackStore.swift in Sources */,

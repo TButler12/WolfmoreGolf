@@ -56,64 +56,103 @@ final class RulesViewController: UIViewController {
 
 private extension RulesViewController {
     static let rulesText = """
-WOLFMORE • SIX-POINT SCOTCH GAME
+
+
+WOLF MORE · SIX-POINT SCOTCH GAME
+
+GETTING STARTED
+
+Set the Course
+Go to the Course Edit page.
+Enter hole pars and hole handicaps.
+Save the course. These settings persist until you change them.
+
+Set Up Players
+Go to the Player Setup page.
+Enter player names and handicaps.
+Toggle which players are Active for today’s game (up to 7 players).
+Track Players & Friends
+Use the Players / Friends screens to:
+Keep a roster of regular playing partners.
+Mark friends you want to track over time.
+Each finished round is stored so you can review results by player and friend later.
+
+Start a New Game
+Confirm course, active players, and handicaps are correct.
+Press “Reset Game” (clears scores and wagers but keeps course and roster).
+Set stakes and options (Umbie, Press, etc.).
+Hit “Randomize” if you want to shuffle the tee order.
+Press “Go to Game” to begin scoring.
+The game persists until you press “Reset Game.”
 
 SCORING OVERVIEW
-• 2 points — Team Total (aggregate best two NET; Lone Wolf uses partner = (player + bogey) ÷ 2).
-• 2 points — Team Low Ball (best NET).
-• 1 point — Prox (closest to the pin in regulation).
-• 1 point — Birdie.
-• Sweep rule (Umbrella): if a team wins all 6 points on a hole, points automatically double. This can be deactivated in the game.
-• Alone rule: if a player declares “Lone Wolf,” their team total is calculated using a partner score of (player’s score + bogey score) ÷ 2.
+2 points — Team Total
+Aggregate best two NET scores.
+Lone Wolf uses a partner score = (player+bogey)÷2
+2 points — Team Low Ball
+Best NET score on the hole.
+1 point — Prox
+Closest to the pin in regulation.
+1 point — Birdie
+Sweep rule (Umbrella)
+If a team wins all 6 points on a hole, points automatically double.
+This can be deactivated in the game settings.
+Alone rule
+If a player declares “Lone Wolf,” their team total is calculated using a partner score of:
+(player’s score + bogey score) ÷ 2.
 
 GAME
-• Track scores and bets using a six-point scotch format, including player handicaps.
+Track scores and bets using a six-point scotch format, including player handicaps.
+Per-hole scoring, stakes, and presses are handled automatically once you enter scores.
 
 COURSE
-• Load course stats on the Course Edit page (hole pars and hole handicaps). This data persists until you change it.
+Load course stats on the Course Edit page (pars and hole handicaps).
+Course data is saved and reused until you change it.
 
-PLAYERS & HANDICAPS
-• Player names and active players are set on the Player Setup page.
-• Enter player handicaps on the Player Setup page.
+PLAYERS, FRIENDS & HANDICAPS
+Player names and active players are managed on the Player Setup page.
+Enter player handicaps on the Player Setup page.
+Maintain a Friends / Roster list so you can:
+See who played in each round.
+Track long-term performance versus specific friends.
 
 STROKES / HANDICAPS
-• Pops are automatically calculated from player handicaps and course hole handicaps.
-• Pops are displayed on each hole.
+Pops are automatically calculated from player handicaps and course hole handicaps.
+Pops are displayed on each hole.
 
 SCORE ENTRY
-• For each hole, enter scores and mark Prox and Wolf selections.
-• Totals and standings are available anytime via the Stats button.
-
+For each hole, enter scores and mark Prox and Wolf selections.
+Totals and standings are available anytime via the Stats button.
 STAKES (GAME $)
-• Stakes are tracked per hole.
-• Roll / Re-Roll doubles the current hole’s stake per your group’s rules.
-
+Stakes are tracked per hole.
+Roll / Re-Roll doubles the current hole’s stake according to your group’s rules.
 ALONE DOUBLE (BUTTON)
-• Use when a player goes Lone Wolf to double the current hole’s stake.
-
+Use when a player goes Lone Wolf to double the current hole’s stake.
 PRESS
-• Starts at the current hole.
-• Applies a persistent double for up to nine holes (per your settings).
-
+Starts at the current hole.
+Applies a persistent double for up to nine holes (per your settings).
 UMBRELLA (“UMBIE”)
-• If a team gets all 6 points, the point value doubles.
-• You can deactivate the Umbie double for the game by pushing the Umbie button.
+If a team gets all 6 points, the point value doubles.
+You can deactivate the Umbie double for the game by pushing the Umbie button.
 
 RESET GAME
-• Reset clears scores and wagers but preserves course and roster.
+Reset Game clears scores and wagers but preserves course and roster.
 
-START NEW GAME
-• Load and activate player names and associated handicaps. These persist until changed by the user.
-• Push “Reset Game”.
-• Activate up to 7 players.
-• Hit “Randomize” to set the first-tee order.
-• Push “Go to Game”.
-• The game persists until “Reset Game” is pushed.
 
-NOTES
-• Use the Game Stats screen for sortable Player / Score / Money / Prox.
-• Use the "End Game" to load game data into history storage
-• Use the "My Stats" to review last 12-month persoanl history.
+TRACKING & STATS
+
+Hole Tracking
+Every hole stores score, Prox, and stake results.
+Use Stats to see which holes you play best or worst on each course.
+
+Player & Friend Tracking
+Completed rounds are stored in history.
+The Game Stats screen shows sortable Player / Score / Money / Prox results.
+You can review performance by player and by friend over time.
+
+Personal History
+Use “End Game” to save the round into history.
+Use “My Stats” to review your last 12-month personal history and trends.
 
 """
 }
