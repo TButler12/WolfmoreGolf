@@ -50,7 +50,7 @@ final class RosterAndTrackingViewController: UIViewController,
     }
 
     private var rows: [RowModel] = []
-    private let trackLimit = 10
+    private let trackLimit = 30
 
     // Use the same key everywhere for tracking
     private var courseID: String {

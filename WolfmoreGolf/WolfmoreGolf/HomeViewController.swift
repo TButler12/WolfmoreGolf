@@ -281,6 +281,7 @@ final class ViewController: UIViewController {
             return
         }
 
+        // Same course / tracking logic as before
         let courseID: String = {
             let stored = ProfileStore.homeCourseID
             if !stored.isEmpty { return stored }
@@ -305,24 +306,31 @@ final class ViewController: UIViewController {
             return
         }
 
-        var lines: [String] = []
+        // Build blocks (multi-line per friend, with spacing)
+        var blocks: [String] = []
 
         for friend in trackedFriends {
             guard let stats = RoundStore.shared.stats(forPlayerNamed: friend.name) else {
                 continue
             }
 
-            let line = String(
-                format: "• %@: %d rds, avg $%0.1f per 18, prox %0.1f per 18",
+            let block = String(
+                format:
+                """
+                • %@:
+                  %d rds, avg $%.1f per 18
+                  prox %.1f per 18
+                """,
                 friend.name,
                 stats.rounds,
                 stats.avgMoneyPerRound,
                 stats.avgProxPerRound
             )
-            lines.append(line)
+
+            blocks.append(block)
         }
 
-        if lines.isEmpty {
+        if blocks.isEmpty {
             let ac = UIAlertController(
                 title: "Friend Stats",
                 message: "Your tracked friends don't have any recorded rounds yet.",
@@ -335,7 +343,7 @@ final class ViewController: UIViewController {
 
         let ac = UIAlertController(
             title: "Friend Stats (all-time)",
-            message: lines.joined(separator: "\n"),
+            message: blocks.joined(separator: "\n\n"),   // 👈 blank line between friends
             preferredStyle: .alert
         )
         ac.addAction(UIAlertAction(title: "OK", style: .default))

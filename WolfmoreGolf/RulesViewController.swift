@@ -70,7 +70,7 @@ Save the course. These settings persist until you change them.
 Set Up Players
 Go to the Player Setup page.
 Enter player names and handicaps.
-Toggle which players are Active for today’s game (up to 7 players).
+Toggle which players are Active for today’s game.
 Track Players & Friends
 Use the Players / Friends screens to:
 Keep a roster of regular playing partners.

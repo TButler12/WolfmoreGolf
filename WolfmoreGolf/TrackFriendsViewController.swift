@@ -13,7 +13,7 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
     private var allFriends: [Friend] = []
     private var filtered: [Friend] = []
 
-    private let limit = 10
+    private let limit = 30
 
     /// Course ID used for tracking (home course only).
     /// - If ProfileStore.homeCourseID is set, use that.

@@ -97,12 +97,12 @@ final class GameViewController: UIViewController {
           
         scoreFields.forEach {
             $0.keyboardType = .numberPad
-            $0.inputAccessoryView = makeDoneToolbar()   // adds a Done button above the pad
+            $0.inputAccessoryView = makeDoneToolbar()
         }
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
-        totalMoneyLabels = totalMoneyLabels.sorted { $0.tag < $1.tag } // if using tags
+        totalMoneyLabels = totalMoneyLabels.sorted { $0.tag < $1.tag }
         refreshTotalMoneyLabels()
         
         setupToggleButton(rollPushed,    onColor: .black, offColor: .systemOrange, onTitle: "Roll On",    offTitle: "Roll")
@@ -116,7 +116,6 @@ final class GameViewController: UIViewController {
             GameManager.shared.normalizeCurrentIfNeeded()
         }
         
-        // Wire score fields to persist on edit end
         for (i, f) in scoreFields.enumerated() {
             f.tag = i
             f.keyboardType = .numberPad
@@ -124,29 +123,17 @@ final class GameViewController: UIViewController {
         }
         
         for (i, tf) in playerMoneyFields.enumerated() {
-            tf.tag = i                     // seat index 0…4
+            tf.tag = i
             tf.isUserInteractionEnabled = true
             tf.textAlignment = .right
             tf.keyboardType = .decimalPad
             tf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
         }
         
-        // Button tags for seats
         for (i, b) in wolfButtons.enumerated() { b.tag = i }
         for (i, b) in proxButtons.enumerated() { b.tag = i }
         styleWolfButtons()
         
-        // One observer (once)
-        
-        // First paint: single canonical painter
-        paintEverythingForCurrentHole()
-        
-        // Optional debugging
-        // debugStrokes("GameVC viewDidLoad")
-        refreshForCurrentHole()
-        // Map seat index 0…4 to the Wolf/Prox UI; scores match seats 0…4 as well.
-        for (i, b) in wolfButtons.enumerated() { b.tag = i }
-        for (i, b) in proxButtons.enumerated() { b.tag = i }
         for (i, tf) in scoreFields.enumerated() {
             tf.tag = i
             tf.keyboardType = .numberPad
@@ -158,18 +145,43 @@ final class GameViewController: UIViewController {
         }
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
-        navigationItem.hidesBackButton = true
 
-               // (optional) disable swipe-back gesture too
-               navigationController?.interactivePopGestureRecognizer?.isEnabled = false
-        
+        // 👇 Take over back behavior
+        navigationItem.hidesBackButton = true
+       // navigationItem.leftBarButtonItem = UIBarButtonItem(
+         //   title: "Back",
+         //   style: .plain,
+         //   target: self,
+         //   action: //#selector(gameBackTapped)
+        //)
+
+        // Optional: keep swipe-back disabled so user *must* use our Back
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
     }
+
 
     deinit {
         NotificationCenter.default.removeObserver(self, name: .reloadUI, object: nil)
     }
 
-    
+    @objc private func gameBackTapped() {
+        // If Game is inside a navigation controller that was presented modally
+        // (your RoundNav), close that whole flow.
+        if let nav = navigationController, nav.presentingViewController != nil {
+            nav.dismiss(animated: true)
+            return
+        }
+
+        // If Game itself was presented modally, just dismiss it
+        if presentingViewController != nil {
+            dismiss(animated: true)
+            return
+        }
+
+        // Fallback: if it's on a push stack somewhere, just pop
+        navigationController?.popViewController(animated: true)
+    }
+
 
     
     @inline(__always)

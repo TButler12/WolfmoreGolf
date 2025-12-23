@@ -167,8 +167,9 @@ final class ManagePlayersViewController: UIViewController,
     @IBAction private func closeTapped(_ sender: Any) {
         navigationController?.popViewController(animated: true)
     }
+   
 
-    @IBAction private func startRoundTapped(_ sender: UIButton) {
+    @IBAction func startRoundTapped(_ sender: Any) {
         print("▶️ Start Round tapped (from Manage Players)")
 
         // 1. Collect selected players (preselectForRound == true)
@@ -184,21 +185,76 @@ final class ManagePlayersViewController: UIViewController,
             return
         }
 
-        // Cap at 9 seats
         let active = Array(selected.prefix(9))
 
-        // 2. Push these into GameManager as the current card
+        if hasInProgressRound() {
+            let ac = UIAlertController(
+                title: "Start New Round?",
+                message: "This will reorder players and clear the current round data.",
+                preferredStyle: .alert
+            )
+
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+            ac.addAction(UIAlertAction(
+                title: "Start New Round",
+                style: .destructive
+            ) { [weak self] _ in
+                // 🔁 Do the same kind of reset you do on Player Setup
+                if GameManager.shared.currentGame != nil {
+                    GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
+                    GameManager.shared.canRandomizeTeams = true
+                } else {
+                    // If somehow no game yet, create a fresh one
+                    GameManager.shared.startNewGame(name: "New Game")
+                }
+
+                // Now apply this screen’s roster and go to RoundNav
+                self?.configureGameRosterAndPresentRoundNav(with: active)
+            })
+
+            present(ac, animated: true)
+        } else {
+            // No scores yet → just go straight through
+            configureGameRosterAndPresentRoundNav(with: active)
+        }
+    }
+
+
+    // MARK: - Helpers
+
+    /// True if there is a current game with any score entered.
+    private func hasInProgressRound() -> Bool {
+        guard let g = GameManager.shared.currentGame else { return false }
+
+        for row in g.scores {
+            if row.contains(where: { $0 != nil }) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /// Push the chosen players into GameManager and present RoundNav.
+    private func configureGameRosterAndPresentRoundNav(with active: [Friend]) {
+        // Make sure there *is* a game object to update.
+        if GameManager.shared.currentGame == nil {
+            GameManager.shared.startNewGame(name: "New Game")
+        }
+
         GameManager.shared.update { g in
             if g.playerNames.count != 9     { g.playerNames     = Array(repeating: "",    count: 9) }
             if g.hcPlayers.count != 9       { g.hcPlayers       = Array(repeating: 0,     count: 9) }
             if g.playerActivated.count != 9 { g.playerActivated = Array(repeating: false, count: 9) }
 
+            // Fill seats with active friends
             for (seat, friend) in active.enumerated() {
                 g.playerNames[seat]     = friend.name
                 g.hcPlayers[seat]       = friend.defaultHC
                 g.playerActivated[seat] = true
             }
 
+            // Clear any remaining seats
             if active.count < 9 {
                 for seat in active.count..<9 {
                     g.playerNames[seat]     = ""
@@ -207,10 +263,10 @@ final class ManagePlayersViewController: UIViewController,
                 }
             }
 
-            g.hole = 0
+            g.hole = 0 // always start on hole 1 (index 0)
         }
 
-        // 3. Present the SAME round navigation flow that Home uses
+        // Present the SAME round navigation flow that Home uses
         guard let roundNav = storyboard?.instantiateViewController(
             withIdentifier: "RoundNav"
         ) as? UINavigationController else {
@@ -218,8 +274,8 @@ final class ManagePlayersViewController: UIViewController,
             return
         }
 
-        // Present modally, just like the Home "Play Game" button does
         present(roundNav, animated: true)
     }
+
 
 }

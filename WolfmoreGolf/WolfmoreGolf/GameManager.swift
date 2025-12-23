@@ -23,6 +23,9 @@ extension Notification.Name {
 
     // In-memory model
     var currentGame: GameData?
+    var hasActiveGame: Bool {
+            return currentGame != nil
+        }
 
     // MARK: - Create / Load / Save
 

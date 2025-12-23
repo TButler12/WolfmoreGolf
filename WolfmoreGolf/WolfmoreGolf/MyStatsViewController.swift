@@ -3,16 +3,13 @@ import UIKit
 final class MyStatsViewController: UIViewController {
 
     // For now: just use ALL friends in FriendStore.
-    // No course ID, no tracking filter.
     private var allFriends: [Friend] {
-        return FriendStore.shared.friends
+        FriendStore.shared.friends
     }
 
-    override func viewDidLoad() {
-        super.viewDidLoad()
-
-        // For now just log results; later you’ll reload a table
-        debugPrintMoneyAverages()
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        showFriendStatsAlert()
     }
 
     // MARK: - Stats helpers
@@ -21,23 +18,82 @@ final class MyStatsViewController: UIViewController {
     private func computeMoneyAverages() -> [(friend: Friend, stats: MyStats)] {
         return allFriends.compactMap { friend in
             guard let stats = RoundStore.shared.stats(forPlayerNamed: friend.name) else {
-                print("MyStats: no stats for \(friend.name)")
                 return nil
             }
             return (friend, stats)
         }
     }
 
-    /// Temporary: print to console so you can verify it works.
-    private func debugPrintMoneyAverages() {
+    // MARK: - UI
+
+    private func showFriendStatsAlert() {
         let rows = computeMoneyAverages()
-        if rows.isEmpty {
-            print("MyStats: no stats found for any friends")
+
+        // No stats at all
+        guard !rows.isEmpty else {
+            let ac = UIAlertController(
+                title: "Friend Stats",
+                message: "No rounds saved yet.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                self.dismiss(animated: true)
+            })
+            present(ac, animated: true)
+            return
         }
-        for row in rows {
+
+        // Sort by name (optional)
+        let sorted = rows.sorted {
+            $0.friend.name.localizedCaseInsensitiveCompare($1.friend.name) == .orderedAscending
+        }
+
+        var blocks: [String] = []
+
+        for row in sorted {
             let f = row.friend
             let s = row.stats
-            print("\(f.name): \(s.rounds) rounds, total $\(s.totalMoney), avg $\(s.avgMoneyPerRound), prox avg \(s.avgProxPerRound)")
+
+            // Adjust these to whatever “per 18” values you already use
+            let moneyPer18 = s.avgMoneyPerRound      // or s.avgMoneyPer18 if you have it
+            let proxPer18  = s.avgProxPerRound       // or s.avgProxPer18
+
+            let block = String(
+                format:
+                """
+                • %@:
+                  %d rds, avg $%.1f per 18
+                  prox %.1f per 18
+                """,
+                f.name,
+                s.rounds,
+                moneyPer18,
+                proxPer18
+            )
+
+            blocks.append(block)
         }
+
+        // 👇 blank line between friends → much more breathing room
+        let message = blocks.joined(separator: "\n\n")
+
+        let ac = UIAlertController(
+            title: "Friend Stats (all-time)",
+            message: message,
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+            self.dismiss(animated: true)
+        })
+
+        // iPad safety
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = view
+            pop.sourceRect = CGRect(x: view.bounds.midX,
+                                    y: view.bounds.midY,
+                                    width: 1, height: 1)
+        }
+
+        present(ac, animated: true)
     }
 }

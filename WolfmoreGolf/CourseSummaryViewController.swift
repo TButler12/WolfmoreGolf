@@ -7,58 +7,38 @@
 import UIKit
 
 final class CourseSummaryViewController: UITableViewController {
-    // MARK: - Sorting
 
-    private enum SortMode {
-        case hole       // 1–18
-        case difficulty // score vs par (hardest first)
-        case money      // biggest average winner $
-    }
+    // MARK: - Row model
 
-    private var sortMode: SortMode = .hole
-
-    // Segmented control in the nav bar to pick sort
-    private lazy var sortControl: UISegmentedControl = {
-        let sc = UISegmentedControl(items: ["Hole", "Score", "$"])
-        sc.selectedSegmentIndex = 0
-        sc.addTarget(self,
-                     action: #selector(sortModeChanged(_:)),
-                     for: .valueChanged)
-        return sc
-    }()
-
-    // One row per hole
-    private struct Row {
-        let holeIndex: Int      // 0-based
+    private struct HoleRow {
+        let holeNumber: Int      // 0-based (0 = Hole 1)
         let par: Int
 
-        let avgScore: Double    // raw avg strokes
-        let avgVsPar: Double    // avgScore - par
-        let scoreRank: Int      // 1 = easiest vs par
+        let avgMoney: Double
+        let proxPct: Double
+        let avgScore: Double
+        let avgVsPar: Double
 
-        let avgWinnerMoney: Double
-        let moneyRank: Int      // 1 = best $ hole
-
-        let rounds: Int         // approx # of rounds contributing
-
-        // Wolf / Non-Wolf / Tie percentages for this hole
         let wolfWinPct: Double
         let nonWolfWinPct: Double
         let tieWinPct: Double
 
-        // Umbie counts (approx games)
-        let wolfUmbies: Int     // approx # games Umbie by Wolf
-        let nonWolfUmbies: Int  // approx # games Umbie by non-Wolf
+        let maxWin: Double       // biggest single win on that hole
+
+        let moneyRank: Int
+        let proxRank: Int
+        let scoreRank: Int
+        let wolfRank: Int
+        let nonWolfRank: Int
+        let tieRank: Int
+        let maxWinRank: Int
     }
 
-    private var rows: [Row] = []
+    // MARK: - Properties
 
-    // Overall Wolf / Non-Wolf / Tie win % across this course
-    private var overallWolfWinPct: Double = 0
-    private var overallNonWolfWinPct: Double = 0
-    private var overallTieWinPct: Double = 0
+    private var rows: [HoleRow] = []
 
-    // Same tracking logic you use elsewhere
+    /// Same “home / tracking course” logic as elsewhere
     private var trackingCourseID: String {
         let stored = ProfileStore.homeCourseID
         if !stored.isEmpty { return stored }
@@ -66,6 +46,7 @@ final class CourseSummaryViewController: UITableViewController {
         if let b = CourseLibrary.shared.biltmore() {
             return b.id.uuidString
         }
+
         return "HOME-COURSE"
     }
 
@@ -75,53 +56,22 @@ final class CourseSummaryViewController: UITableViewController {
         super.viewDidLoad()
 
         title = "Course Summary"
-        navigationItem.titleView = sortControl
 
-        view.backgroundColor = .systemBackground
-        tableView.backgroundColor = .systemBackground
-
+        tableView.backgroundColor = .systemGroupedBackground
+        tableView.separatorStyle = .none
         tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 80
+        tableView.estimatedRowHeight = 72
 
         buildRows()
         updateEmptyBackgroundIfNeeded()
     }
 
-    // MARK: - Apply sorting
-
-    private func applySort() {
-        switch sortMode {
-        case .hole:
-            rows.sort { $0.holeIndex < $1.holeIndex }
-
-        case .difficulty:
-            // Hardest first = most over par (highest avgVsPar)
-            rows.sort {
-                if $0.avgVsPar == $1.avgVsPar {
-                    return $0.holeIndex < $1.holeIndex
-                }
-                return $0.avgVsPar > $1.avgVsPar
-            }
-
-        case .money:
-            // Biggest average winner $ first
-            rows.sort {
-                if $0.avgWinnerMoney == $1.avgWinnerMoney {
-                    return $0.holeIndex < $1.holeIndex
-                }
-                return $0.avgWinnerMoney > $1.avgWinnerMoney
-            }
-        }
-
-        tableView.reloadData()
-    }
-
-    // MARK: - Build data
+    // MARK: - Data builder
 
     private func buildRows() {
         let courseID = trackingCourseID
 
-        // All rounds that were tagged as this course
+        // All rounds on this course (you + friends)
         let allRounds = RoundStore.shared.rounds.filter { $0.courseID == courseID }
         guard !allRounds.isEmpty else {
             rows = []
@@ -129,7 +79,6 @@ final class CourseSummaryViewController: UITableViewController {
             return
         }
 
-        // How many holes? (usually 18)
         let holeCount = allRounds.map { $0.moneyPerHole.count }.max() ?? 0
         guard holeCount > 0 else {
             rows = []
@@ -137,7 +86,7 @@ final class CourseSummaryViewController: UITableViewController {
             return
         }
 
-        // --- Pars for this course (fallback = all 4s) ---
+        // Load pars (default all 4)
         var pars = Array(repeating: 4, count: holeCount)
         if let uuid = UUID(uuidString: courseID),
            let course = CourseLibrary.shared.get(id: uuid) {
@@ -145,32 +94,22 @@ final class CourseSummaryViewController: UITableViewController {
             if !coursePars.isEmpty { pars = coursePars }
         }
 
-        // Approximate group size = distinct players on this course
-        let allPlayerNames = Set(allRounds.map { $0.playerName.lowercased() })
-        let playersPerRound = max(1, allPlayerNames.count)
-        let playersPerRoundDouble = Double(playersPerRound)
+        // ---- Aggregates ----
 
-        // Aggregates (per hole)
-        var totalWinMoney        = Array(repeating: 0.0, count: holeCount)
-        var winRoundsPerHole     = Array(repeating: 0,   count: holeCount)
+        var totalWinMoney       = Array(repeating: 0.0, count: holeCount)
+        var winRoundsPerHole    = Array(repeating: 0,   count: holeCount)
+        var proxWins            = Array(repeating: 0,   count: holeCount)
+        var playerRoundsPerHole = Array(repeating: 0,   count: holeCount)
+        var scoreSum            = Array(repeating: 0,   count: holeCount)
+        var scoreCount          = Array(repeating: 0,   count: holeCount)
 
-        var proxWins             = Array(repeating: 0,   count: holeCount)
-        var playerRoundsPerHole  = Array(repeating: 0,   count: holeCount)
+        var wolfCallSamples     = Array(repeating: 0,   count: holeCount)
+        var wolfWinSamples      = Array(repeating: 0,   count: holeCount)
+        var tieSamples          = Array(repeating: 0,   count: holeCount)
 
-        var scoreSum             = Array(repeating: 0,   count: holeCount)
-        var scoreCount           = Array(repeating: 0,   count: holeCount)
-
-        // Wolf call aggregates (per player-sample)
-        var wolfHolesSamples     = Array(repeating: 0,   count: holeCount)
-        var wolfWinSamples       = Array(repeating: 0,   count: holeCount)
-        var tieSamples           = Array(repeating: 0,   count: holeCount)
-
-        // Umbie samples
-        var wolfUmbieSamples     = Array(repeating: 0,   count: holeCount)
-        var nonWolfUmbieSamples  = Array(repeating: 0,   count: holeCount)
+        var maxWinPerHole       = Array(repeating: 0.0, count: holeCount)
 
         for round in allRounds {
-            // Base usable length on money/prox arrays (most stable)
             let count = min(
                 holeCount,
                 round.moneyPerHole.count,
@@ -179,218 +118,150 @@ final class CourseSummaryViewController: UITableViewController {
             guard count > 0 else { continue }
 
             for h in 0..<count {
-                let delta = round.moneyPerHole[h]
+                let delta = round.moneyPerHole[h]   // + = winner, − = loser
 
-                // Only count *winner* dollars (high-water mark)
+                // $ winners (average winner $)
                 if delta > 0 {
                     totalWinMoney[h] += Double(delta)
                     winRoundsPerHole[h] += 1
+
+                    // biggest single win
+                    if Double(delta) > maxWinPerHole[h] {
+                        maxWinPerHole[h] = Double(delta)
+                    }
                 }
 
-                // Prox for this player on this hole
+                // Prox (per player-sample)
                 if round.proxPerHole[h] {
                     proxWins[h] += 1
                 }
 
                 // Scores
-                if h < round.scorePerHole.count, let s = round.scorePerHole[h] {
+                if h < round.scorePerHole.count,
+                   let s = round.scorePerHole[h] {
                     scoreSum[h]   += s
                     scoreCount[h] += 1
                 }
 
-                // Wolf call + result (per player-sample)
+                // Wolf tracking
                 if h < round.wolfCalledPerHole.count,
                    round.wolfCalledPerHole[h] {
-                    wolfHolesSamples[h] += 1
+
+                    wolfCallSamples[h] += 1
 
                     if h < round.wolfTeamWonPerHole.count,
                        round.wolfTeamWonPerHole[h] {
-                        // Wolf side won this game-hole (for this player-sample)
                         wolfWinSamples[h] += 1
-                    } else {
-                        // Wolf was called but Wolf side did NOT win.
-                        // Approximate ties as "no money moved" for this player.
-                        if delta == 0 {
-                            tieSamples[h] += 1
-                        }
-                        // Non-Wolf wins are inferred later as residual holes.
+                    } else if delta == 0 {
+                        tieSamples[h] += 1
                     }
                 }
 
-                // Umbie by Wolf vs Non-Wolf (per player-sample)
-                if h < round.umbieWonPerHole.count,
-                   round.umbieWonPerHole[h] {
-
-                    if h < round.wolfTeamWonPerHole.count,
-                       round.wolfTeamWonPerHole[h] {
-                        // Umbie and Wolf side won
-                        wolfUmbieSamples[h] += 1
-                    } else {
-                        // Umbie and non-Wolf side (or tie) won
-                        nonWolfUmbieSamples[h] += 1
-                    }
-                }
-
-                // This player has data on this hole
+                // Count this player-hole sample
                 playerRoundsPerHole[h] += 1
             }
         }
 
-        // Convert player-samples → approximate group rounds per hole
-        let groupRoundsPerHole: [Int] = playerRoundsPerHole.map { samples in
-            max(1, samples / playersPerRound)
+        // ---- Helpers ----
+
+        func safeDiv(_ a: Double, _ b: Double) -> Double {
+            b == 0 ? 0 : a / b
         }
 
-        // --- Derived arrays ---
+        func ranks(for values: [Double], descending: Bool = true) -> [Int] {
+            let indices = Array(0..<values.count).sorted { a, b in
+                descending ? values[a] > values[b] : values[a] < values[b]
+            }
+            var out = Array(repeating: 0, count: values.count)
+            for (pos, idx) in indices.enumerated() {
+                out[idx] = pos + 1
+            }
+            return out
+        }
+
+        // ---- Per-hole averages / % ----
 
         let avgMoneyPerHole: [Double] = (0..<holeCount).map { i in
-            guard winRoundsPerHole[i] > 0 else { return 0 }
-            return totalWinMoney[i] / Double(winRoundsPerHole[i])
+            safeDiv(totalWinMoney[i], Double(max(1, winRoundsPerHole[i])))
         }
 
         let avgScorePerHole: [Double] = (0..<holeCount).map { i in
-            guard scoreCount[i] > 0 else { return Double(pars[i]) }
-            return Double(scoreSum[i]) / Double(scoreCount[i])
+            safeDiv(Double(scoreSum[i]), Double(scoreCount[i]))
         }
 
         let avgVsParPerHole: [Double] = (0..<holeCount).map { i in
             avgScorePerHole[i] - Double(pars[i])
         }
 
-        // Wolf / Non-Wolf / Tie % per hole
-        let wolfWinPctPerHole: [Double] = (0..<holeCount).map { i in
-            let wolfCallsAsHoles = Double(wolfHolesSamples[i]) / playersPerRoundDouble
-            guard wolfCallsAsHoles > 0 else { return 0 }
-
-            let wolfWinsAsHoles = Double(wolfWinSamples[i]) / playersPerRoundDouble
-            let tiesAsHoles     = Double(tieSamples[i]) / playersPerRoundDouble
-            let nonWolfAsHoles  = max(0.0, wolfCallsAsHoles - wolfWinsAsHoles - tiesAsHoles)
-
-            let totalHolesWithWolf = wolfCallsAsHoles
-            guard totalHolesWithWolf > 0 else { return 0 }
-
-            return (wolfWinsAsHoles / totalHolesWithWolf) * 100.0
+        // Prox % (per player-sample, never > 100)
+        let proxPctPerHole: [Double] = (0..<holeCount).map { i in
+            safeDiv(Double(proxWins[i]) * 100.0,
+                    Double(max(1, playerRoundsPerHole[i])))
         }
 
-        let nonWolfWinPctPerHole: [Double] = (0..<holeCount).map { i in
-            let wolfCallsAsHoles = Double(wolfHolesSamples[i]) / playersPerRoundDouble
-            guard wolfCallsAsHoles > 0 else { return 0 }
-
-            let wolfWinsAsHoles = Double(wolfWinSamples[i]) / playersPerRoundDouble
-            let tiesAsHoles     = Double(tieSamples[i]) / playersPerRoundDouble
-            let nonWolfAsHoles  = max(0.0, wolfCallsAsHoles - wolfWinsAsHoles - tiesAsHoles)
-
-            let totalHolesWithWolf = wolfCallsAsHoles
-            guard totalHolesWithWolf > 0 else { return 0 }
-
-            return (nonWolfAsHoles / totalHolesWithWolf) * 100.0
+        // Wolf / Non-Wolf / Tie %
+        let wolfWinPctPerHole: [Double] = (0..<holeCount).map { i in
+            safeDiv(Double(wolfWinSamples[i]) * 100.0,
+                    Double(max(1, wolfCallSamples[i])))
         }
 
         let tieWinPctPerHole: [Double] = (0..<holeCount).map { i in
-            let wolfCallsAsHoles = Double(wolfHolesSamples[i]) / playersPerRoundDouble
-            guard wolfCallsAsHoles > 0 else { return 0 }
-
-            let tiesAsHoles = Double(tieSamples[i]) / playersPerRoundDouble
-            let totalHolesWithWolf = wolfCallsAsHoles
-            guard totalHolesWithWolf > 0 else { return 0 }
-
-            return (tiesAsHoles / totalHolesWithWolf) * 100.0
+            safeDiv(Double(tieSamples[i]) * 100.0,
+                    Double(max(1, wolfCallSamples[i])))
         }
 
-        // Approximate Umbie counts per hole (convert from player samples → games)
-        let wolfUmbiesPerHole: [Int] = (0..<holeCount).map { i in
-            let samples = wolfUmbieSamples[i]
-            guard samples > 0 else { return 0 }
-            let approxGames = Double(samples) / playersPerRoundDouble
-            return max(1, Int(approxGames.rounded()))
+        let nonWolfWinPctPerHole: [Double] = (0..<holeCount).map { i in
+            let total = Double(wolfCallSamples[i])
+            let wolf  = Double(wolfWinSamples[i])
+            let tie   = Double(tieSamples[i])
+            guard total > 0 else { return 0 }
+            let nonWolf = max(0.0, total - wolf - tie)
+            return safeDiv(nonWolf * 100.0, total)
         }
 
-        let nonWolfUmbiesPerHole: [Int] = (0..<holeCount).map { i in
-            let samples = nonWolfUmbieSamples[i]
-            guard samples > 0 else { return 0 }
-            let approxGames = Double(samples) / playersPerRoundDouble
-            return max(1, Int(approxGames.rounded()))
-        }
+        // ---- Ranks across holes ----
 
-        // Overall Wolf / Non-Wolf / Tie % across the course
-        let totalWolfCallsSamples = wolfHolesSamples.reduce(0, +)
-        let totalWolfWinsSamples  = wolfWinSamples.reduce(0, +)
-        let totalTieSamples       = tieSamples.reduce(0, +)
+        let moneyRanks    = ranks(for: avgMoneyPerHole,    descending: true)
+        let proxRanks     = ranks(for: proxPctPerHole,     descending: true)
+        let scoreRanks    = ranks(for: avgVsParPerHole,    descending: false)
+        let wolfRanks     = ranks(for: wolfWinPctPerHole,  descending: true)
+        let nonWolfRanks  = ranks(for: nonWolfWinPctPerHole, descending: true)
+        let tieRanks      = ranks(for: tieWinPctPerHole,   descending: true)
+        let maxWinRanks   = ranks(for: maxWinPerHole,      descending: true)
 
-        let totalWolfCallsAsHoles = Double(totalWolfCallsSamples) / playersPerRoundDouble
-        let totalWolfWinsAsHoles  = Double(totalWolfWinsSamples) / playersPerRoundDouble
-        let totalTiesAsHoles      = Double(totalTieSamples) / playersPerRoundDouble
-        let totalNonWolfAsHoles   = max(0.0, totalWolfCallsAsHoles - totalWolfWinsAsHoles - totalTiesAsHoles)
+        // ---- Build rows ----
 
-        if totalWolfCallsAsHoles > 0 {
-            overallWolfWinPct    = (totalWolfWinsAsHoles  / totalWolfCallsAsHoles) * 100.0
-            overallNonWolfWinPct = (totalNonWolfAsHoles   / totalWolfCallsAsHoles) * 100.0
-            overallTieWinPct     = (totalTiesAsHoles      / totalWolfCallsAsHoles) * 100.0
-        } else {
-            overallWolfWinPct = 0
-            overallNonWolfWinPct = 0
-            overallTieWinPct = 0
-        }
+        var built: [HoleRow] = []
 
-        // Show it under the nav bar title
-        navigationItem.prompt = String(
-            format: "Wolf %.0f%% • Non-Wolf %.0f%% • Tie %.0f%%",
-            overallWolfWinPct, overallNonWolfWinPct, overallTieWinPct
-        )
-
-        // Helper: convert an array of values into per-hole ranks
-        func ranks(for values: [Double], descending: Bool) -> [Int] {
-            let indices = Array(0..<values.count)
-            let sorted = indices.sorted { a, b in
-                descending ? (values[a] > values[b]) : (values[a] < values[b])
-            }
-            var result = Array(repeating: 0, count: values.count)
-            for (pos, idx) in sorted.enumerated() {
-                result[idx] = pos + 1
-            }
-            return result
-        }
-
-        let moneyRanks = ranks(for: avgMoneyPerHole, descending: true)   // 1 = best $ hole
-        let scoreRanks = ranks(for: avgVsParPerHole, descending: false)  // 1 = easiest vs par
-
-        // Build table rows
-        var newRows: [Row] = []
         for h in 0..<holeCount {
-            newRows.append(Row(
-                holeIndex: h,
-                par: pars[h],
-                avgScore: avgScorePerHole[h],
-                avgVsPar: avgVsParPerHole[h],
-                scoreRank: scoreRanks[h],
-                avgWinnerMoney: avgMoneyPerHole[h],
-                moneyRank: moneyRanks[h],
-                rounds: groupRoundsPerHole[h],
-                wolfWinPct: wolfWinPctPerHole[h],
-                nonWolfWinPct: nonWolfWinPctPerHole[h],
-                tieWinPct: tieWinPctPerHole[h],
-                wolfUmbies: wolfUmbiesPerHole[h],
-                nonWolfUmbies: nonWolfUmbiesPerHole[h]
-            ))
+            built.append(
+                HoleRow(
+                    holeNumber: h,
+                    par: pars[h],
+                    avgMoney: avgMoneyPerHole[h],
+                    proxPct: proxPctPerHole[h],
+                    avgScore: avgScorePerHole[h],
+                    avgVsPar: avgVsParPerHole[h],
+                    wolfWinPct: wolfWinPctPerHole[h],
+                    nonWolfWinPct: nonWolfWinPctPerHole[h],
+                    tieWinPct: tieWinPctPerHole[h],
+                    maxWin: maxWinPerHole[h],
+                    moneyRank: moneyRanks[h],
+                    proxRank: proxRanks[h],
+                    scoreRank: scoreRanks[h],
+                    wolfRank: wolfRanks[h],
+                    nonWolfRank: nonWolfRanks[h],
+                    tieRank: tieRanks[h],
+                    maxWinRank: maxWinRanks[h]
+                )
+            )
         }
 
-        rows = newRows
-        applySort()
+        rows = built
+        tableView.reloadData()
     }
 
-    @objc private func sortModeChanged(_ sender: UISegmentedControl) {
-        switch sender.selectedSegmentIndex {
-        case 0:
-            sortMode = .hole
-        case 1:
-            sortMode = .difficulty
-        case 2:
-            sortMode = .money
-        default:
-            sortMode = .hole
-        }
-        applySort()
-    }
+    // MARK: - Empty background
 
     private func updateEmptyBackgroundIfNeeded() {
         if rows.isEmpty {
@@ -398,12 +269,13 @@ final class CourseSummaryViewController: UITableViewController {
             label.textAlignment = .center
             label.numberOfLines = 0
             label.textColor = .secondaryLabel
-            label.text = """
+            label.text =
+            """
             No course stats yet.
 
             • Make sure a Home / Tracking Course is set in Course Setup.
-            • Use Track Friends on your home course.
-            • Play and save rounds to build course stats.
+            • Use Track Friends to choose who to track.
+            • Play and save rounds on that course to build stats.
             """
             tableView.backgroundView = label
         } else {
@@ -411,7 +283,11 @@ final class CourseSummaryViewController: UITableViewController {
         }
     }
 
-    // MARK: - UITableViewDataSource
+    // MARK: - Table View
+
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        return 1
+    }
 
     override func tableView(_ tableView: UITableView,
                             numberOfRowsInSection section: Int) -> Int {
@@ -419,33 +295,45 @@ final class CourseSummaryViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView,
+                            titleForHeaderInSection section: Int) -> String? {
+        return rows.isEmpty ? nil : "By Hole"
+    }
+
+    override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        // In Interface Builder: UITableViewCell, style = Subtitle, ID = "CourseSummaryCell"
-        let cell = tableView.dequeueReusableCell(withIdentifier: "CourseSummaryCell",
-                                                 for: indexPath)
-        let r = rows[indexPath.row]
+        let cell = tableView.dequeueReusableCell(
+            withIdentifier: "CourseSummaryCell",
+            for: indexPath
+        )
 
-        let delta = r.avgVsPar
-        let sign  = delta >= 0 ? "+" : "−"
-
-        cell.textLabel?.text = "Hole \(r.holeIndex + 1) • Par \(r.par)"
+        cell.backgroundColor = .clear
         cell.detailTextLabel?.numberOfLines = 0
+
+        let r = rows[indexPath.row]
+        let holeNo = r.holeNumber + 1
+        let delta  = r.avgVsPar
+        let sign   = delta >= 0 ? "+" : "−"
+
+        cell.textLabel?.text = "Hole \(holeNo) (Par \(r.par))"
         cell.detailTextLabel?.text = String(
             format:
             """
-            Avg score %.1f (%@%.1f vs par, rank %d)
             Avg winner $%.1f (rank %d)
-            Wolf %.0f%% • NW %.0f%% • Tie %.0f%%
-            Umbies W:%d / NW:%d
-            Based on %d rounds
+            Biggest win $%.0f (rank %d)
+            Prox %.0f%% (rank %d)
+            Avg score %.1f (%@%.1f vs par, rank %d)
+            Wolf win %.0f%% (rank %d)
+            Non-Wolf win %.0f%% (rank %d)
+            Tie %.0f%% (rank %d)
             """,
-            r.avgScore,
-            sign, abs(delta), r.scoreRank,
-            r.avgWinnerMoney, r.moneyRank,
-            r.wolfWinPct, r.nonWolfWinPct, r.tieWinPct,
-            r.wolfUmbies, r.nonWolfUmbies,
-            r.rounds
+            r.avgMoney,       r.moneyRank,
+            r.maxWin,         r.maxWinRank,
+            r.proxPct,        r.proxRank,
+            r.avgScore,       sign, abs(delta), r.scoreRank,
+            r.wolfWinPct,     r.wolfRank,
+            r.nonWolfWinPct,  r.nonWolfRank,
+            r.tieWinPct,      r.tieRank
         )
 
         return cell
