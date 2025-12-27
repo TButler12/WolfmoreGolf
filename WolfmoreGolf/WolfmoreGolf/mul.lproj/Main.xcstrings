@@ -109,42 +109,6 @@
         }
       }
     },
-    "2Kc-WK-3jQ.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"W\"; ObjectID = \"2Kc-WK-3jQ\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "W"
-          }
-        }
-      }
-    },
-    "2Kc-WK-3jQ.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"2Kc-WK-3jQ\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "2QL-zz-CWQ.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"Player 9\"; ObjectID = \"2QL-zz-CWQ\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Player 9"
-          }
-        }
-      }
-    },
     "3cq-bA-TIZ.text" : {
       "comment" : "Class = \"UILabel\"; text = \"3\"; ObjectID = \"3cq-bA-TIZ\";",
       "extractionState" : "extracted_with_value",
@@ -409,20 +373,20 @@
         }
       }
     },
-    "Bt7-4I-Vbe.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"W\"; ObjectID = \"Bt7-4I-Vbe\";",
+    "bMF-ZV-5kD.configuration.title" : {
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Hammer\"; ObjectID = \"bMF-ZV-5kD\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "W"
+            "value" : "Hammer"
           }
         }
       }
     },
-    "Bt7-4I-Vbe.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"Bt7-4I-Vbe\";",
+    "bMF-ZV-5kD.normalTitle" : {
+      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"bMF-ZV-5kD\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -781,26 +745,38 @@
         }
       }
     },
-    "Hju-x3-WqM.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"Hju-x3-WqM\";",
+    "hMb-NB-8an.segmentTitles[0]" : {
+      "comment" : "Class = \"UISegmentedControl\"; hMb-NB-8an.segmentTitles[0] = \"6-Point\"; ObjectID = \"hMb-NB-8an\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Active"
+            "value" : "6-Point"
           }
         }
       }
     },
-    "Hju-x3-WqM.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"Hju-x3-WqM\";",
+    "hMb-NB-8an.segmentTitles[1]" : {
+      "comment" : "Class = \"UISegmentedControl\"; hMb-NB-8an.segmentTitles[1] = \"Wolf - 2 point\"; ObjectID = \"hMb-NB-8an\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Button"
+            "value" : "Wolf - 2 point"
+          }
+        }
+      }
+    },
+    "hMb-NB-8an.segmentTitles[2]" : {
+      "comment" : "Class = \"UISegmentedControl\"; hMb-NB-8an.segmentTitles[2] = \"Wolf - Low ball\"; ObjectID = \"hMb-NB-8an\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Wolf - Low ball"
           }
         }
       }
@@ -949,30 +925,6 @@
         }
       }
     },
-    "jOb-dh-CBc.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"P\"; ObjectID = \"jOb-dh-CBc\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "P"
-          }
-        }
-      }
-    },
-    "jOb-dh-CBc.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"jOb-dh-CBc\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
     "jPd-nN-OG9.text" : {
       "comment" : "Class = \"UILabel\"; text = \"Course\"; ObjectID = \"jPd-nN-OG9\";",
       "extractionState" : "extracted_with_value",
@@ -1034,13 +986,13 @@
       }
     },
     "kYA-vS-Psc.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Load History\"; ObjectID = \"kYA-vS-Psc\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Load To History\"; ObjectID = \"kYA-vS-Psc\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Load History"
+            "value" : "Load To History"
           }
         }
       }
@@ -1101,18 +1053,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Button"
-          }
-        }
-      }
-    },
-    "lkF-sF-SeO.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"Player 6\"; ObjectID = \"lkF-sF-SeO\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Player 6"
           }
         }
       }
@@ -1197,18 +1137,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Title"
-          }
-        }
-      }
-    },
-    "MRy-Pk-oEj.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"Player 8\"; ObjectID = \"MRy-Pk-oEj\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Player 8"
           }
         }
       }
@@ -1369,6 +1297,30 @@
         }
       }
     },
+    "pka-Ma-Enf.configuration.title" : {
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Reject Hammer\"; ObjectID = \"pka-Ma-Enf\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Reject Hammer"
+          }
+        }
+      }
+    },
+    "pka-Ma-Enf.normalTitle" : {
+      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"pka-Ma-Enf\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Button"
+          }
+        }
+      }
+    },
     "PQh-u8-zDB.text" : {
       "comment" : "Class = \"UILabel\"; text = \"Player 3\"; ObjectID = \"PQh-u8-zDB\";",
       "extractionState" : "extracted_with_value",
@@ -1406,13 +1358,13 @@
       }
     },
     "QgZ-2Z-HCF.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Cont' Game\"; ObjectID = \"QgZ-2Z-HCF\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Continue Game\"; ObjectID = \"QgZ-2Z-HCF\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Cont' Game"
+            "value" : "Continue Game"
           }
         }
       }
@@ -1467,54 +1419,6 @@
     },
     "qpi-dy-IGo.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"qpi-dy-IGo\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "qqt-ed-gNu.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"P\"; ObjectID = \"qqt-ed-gNu\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "P"
-          }
-        }
-      }
-    },
-    "qqt-ed-gNu.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"qqt-ed-gNu\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "QxR-gz-fPk.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"W\"; ObjectID = \"QxR-gz-fPk\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "W"
-          }
-        }
-      }
-    },
-    "QxR-gz-fPk.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"QxR-gz-fPk\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -1621,68 +1525,20 @@
         }
       }
     },
-    "RSA-p7-3ja.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"RSA-p7-3ja\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Active"
-          }
-        }
-      }
-    },
-    "RSA-p7-3ja.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"RSA-p7-3ja\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
     "s5V-Dc-AWC.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Manage Players \"; ObjectID = \"s5V-Dc-AWC\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"New Game \"; ObjectID = \"s5V-Dc-AWC\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Manage Players "
+            "value" : "New Game "
           }
         }
       }
     },
     "s5V-Dc-AWC.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"s5V-Dc-AWC\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "SQ3-DJ-lwv.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"SQ3-DJ-lwv\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Active"
-          }
-        }
-      }
-    },
-    "SQ3-DJ-lwv.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"SQ3-DJ-lwv\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -1753,30 +1609,6 @@
         }
       }
     },
-    "UiS-wH-wAA.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"P\"; ObjectID = \"UiS-wH-wAA\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "P"
-          }
-        }
-      }
-    },
-    "UiS-wH-wAA.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"UiS-wH-wAA\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
     "uln-u6-bGR.configuration.title" : {
       "comment" : "Class = \"UIButton\"; configuration.title = \"Rules\"; ObjectID = \"uln-u6-bGR\";",
       "extractionState" : "extracted_with_value",
@@ -1791,30 +1623,6 @@
     },
     "uln-u6-bGR.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"uln-u6-bGR\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "uVC-cP-CMF.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"W\"; ObjectID = \"uVC-cP-CMF\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "W"
-          }
-        }
-      }
-    },
-    "uVC-cP-CMF.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"uVC-cP-CMF\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -1885,30 +1693,6 @@
         }
       }
     },
-    "VOz-ML-rqZ.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"P\"; ObjectID = \"VOz-ML-rqZ\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "P"
-          }
-        }
-      }
-    },
-    "VOz-ML-rqZ.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"VOz-ML-rqZ\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
     "vTR-an-2RO.configuration.title" : {
       "comment" : "Class = \"UIButton\"; configuration.title = \"Go To Game\"; ObjectID = \"vTR-an-2RO\";",
       "extractionState" : "extracted_with_value",
@@ -1941,30 +1725,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Enter Course Pars and Handicaps"
-          }
-        }
-      }
-    },
-    "w5B-jv-J1T.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"w5B-jv-J1T\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Active"
-          }
-        }
-      }
-    },
-    "w5B-jv-J1T.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"w5B-jv-J1T\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
           }
         }
       }
@@ -2085,18 +1845,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Button"
-          }
-        }
-      }
-    },
-    "ZxB-zv-8X9.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"Player 7\"; ObjectID = \"ZxB-zv-8X9\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Player 7"
           }
         }
       }

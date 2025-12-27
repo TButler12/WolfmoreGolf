@@ -203,7 +203,7 @@ extension RoundStore {
         guard !who.isEmpty else { return nil }
 
         // Find ACTIVE seat that matches the owner name (case-insensitive)
-        let seatsRange = 0..<min(9, min(g.playerNames.count, g.playerActivated.count))
+        let seatsRange = 0..<min(5, min(g.playerNames.count, g.playerActivated.count))
         guard let seat = seatsRange.first(where: { i in
             g.playerActivated[i] &&
             g.playerNames[i]
@@ -384,7 +384,7 @@ extension RoundStore {
     func recordAllPlayersFromCurrentGame() {
         guard let g = GameManager.shared.currentGame else { return }
 
-        let seats = 0..<min(9, min(g.playerNames.count, g.playerActivated.count))
+        let seats = 0..<min(5, min(g.playerNames.count, g.playerActivated.count))
 
         for seat in seats where g.playerActivated[seat] {
             let name = g.playerNames[seat]

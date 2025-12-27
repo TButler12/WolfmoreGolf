@@ -9,6 +9,15 @@ import Foundation
 
 struct GameData: Codable {
 
+    // NEW (optional so old saves decode safely)
+    var gameType: GameType?
+    var hammerCountPerHole: [Int]?
+    var wolfPlayerPerHole: [Int?]?
+    var wolfWentAlonePerHole: [Bool]?
+    
+    // Convenience so your existing code can stay mostly unchanged
+    var resolvedGameType: GameType { gameType ?? .sixPointScotch }
+
     // MARK: - Wolf stats per hole (for Hole Stats / Wolf% views)
     // In GameData.swift
     var umbieWonPerHole: [Bool] = Array(repeating: false, count: 18)
@@ -35,13 +44,13 @@ struct GameData: Codable {
     // 9 players × 18 holes; nil = no score entered yet
     var scores: [[Int?]] = Array(
         repeating: Array(repeating: nil, count: 18),
-        count: 9
+        count: 5
     )
 
     // Per-player payout per hole (what you show on the game screen)
     var playerMoney: [[Double]] = Array(
         repeating: Array(repeating: 0, count: 18),
-        count: 9
+        count: 5
     )
 
     var rosterNames: [String] = []
@@ -66,9 +75,9 @@ struct GameData: Codable {
         count: 9  // exactly 9 buttons/players
     )
 
-    var playerNames:   [String] = Array(repeating: "",    count: 9)
-    var hcPlayers:     [Int]    = Array(repeating: 0,     count: 9)
-    var playerActivated: [Bool] = Array(repeating: false, count: 9)
+    var playerNames:   [String] = Array(repeating: "",    count: 5)
+    var hcPlayers:     [Int]    = Array(repeating: 0,     count: 5)
+    var playerActivated: [Bool] = Array(repeating: false, count: 5)
 
     var hole: Int = 0
 
@@ -97,9 +106,32 @@ struct GameData: Codable {
             course.holeHandicaps = Array(fixed)
         }
     }
+    mutating func normalize(holes: Int = 18) {
+        if gameType == nil { gameType = .sixPointScotch }
+
+        if hammerCountPerHole == nil { hammerCountPerHole = Array(repeating: 0, count: holes) }
+        if wolfPlayerPerHole == nil { wolfPlayerPerHole = Array(repeating: nil, count: holes) }
+        if wolfWentAlonePerHole == nil { wolfWentAlonePerHole = Array(repeating: false, count: holes) }
+
+        func pad<T>(_ arr: inout [T], with value: T) {
+            if arr.count < holes { arr += Array(repeating: value, count: holes - arr.count) }
+            if arr.count > holes { arr = Array(arr.prefix(holes)) }
+        }
+
+        pad(&hammerCountPerHole!, with: 0)
+        pad(&wolfPlayerPerHole!, with: nil as Int?)
+        pad(&wolfWentAlonePerHole!, with: false)
+    }
+    
+
+}
+extension GameData {
+    func hammerMultiplier(for hole: Int) -> Double {
+        let c = hammerCountPerHole?[safe: hole] ?? 0
+        return Double(1 << max(0, c))   // 1,2,4,8...
+    }
 }
 
-// Nice little safe-subscript helper you already had
 extension Collection {
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil

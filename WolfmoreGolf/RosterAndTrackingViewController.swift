@@ -133,7 +133,7 @@ final class RosterAndTrackingViewController: UIViewController,
 
             if let g = g {
                 let seats = 0..<min(
-                    9,
+                    5,
                     min(g.playerNames.count,
                         min(g.playerActivated.count, g.hcPlayers.count))
                 )

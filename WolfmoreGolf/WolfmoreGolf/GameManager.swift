@@ -149,50 +149,65 @@ extension Notification.Name {
     }
     
     
-    func resetCurrentGame(keepCourse: Bool = true, defaultBet: Double = 2.0) {
-        guard var g = currentGame else { return }
+        func resetCurrentGame(keepCourse: Bool = true, defaultBet: Double = 2.0) {
+            guard var g = currentGame else { return }
 
-        // Preserve course-related values
-        let savedCourse = g.course
-        let savedPars   = g.courseParToPass
-        let savedHCs    = g.courseHCToPass
+            // Preserve course-related values
+            let savedCourse = g.course
+            let savedPars   = g.courseParToPass
+            let savedHCs    = g.courseHCToPass
 
-        // Round-only reset
-        g.hole = 0
-        g.scores              = Array(repeating: Array(repeating: nil,  count: 18), count: 9)
-        g.playerMoney         = Array(repeating: Array(repeating: 0.0,  count: 18), count: 9)
-        g.rollApplied         = Array(repeating: false, count: 18)
-        g.rerollApplied       = Array(repeating: false, count: 18)
-        g.rerollBaseAmount    = Array(repeating: 0.0,  count: 18)
-        g.aloneApplied        = Array(repeating: false, count: 18)
-        g.pressMask           = Array(repeating: false, count: 18)
-        g.proxWinnerPerHole   = Array(repeating: nil,   count: 18)
-        g.wolfButtonStatus    = Array(repeating: Array(repeating: false, count: 18), count: 9)
-        g.gameHoleDollarsArray = Array(repeating: defaultBet, count: 18)
+            // Round-only reset
+            g.hole = 0
+            g.scores               = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+            g.playerMoney          = Array(repeating: Array(repeating: 0.0, count: 18), count: 5)
+            g.rollApplied          = Array(repeating: false, count: 18)
+            g.rerollApplied        = Array(repeating: false, count: 18)
+            g.rerollBaseAmount     = Array(repeating: 0.0, count: 18)
+            g.aloneApplied         = Array(repeating: false, count: 18)
+            g.pressMask            = Array(repeating: false, count: 18)
+            g.proxWinnerPerHole    = Array(repeating: nil, count: 18)
+            g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: 18), count: 5)
+            g.gameHoleDollarsArray = Array(repeating: defaultBet, count: 18)
 
-        if keepCourse {
-            g.course          = savedCourse
-            g.courseParToPass = savedPars
-            g.courseHCToPass  = savedHCs
+            // ✅ NEW: Wolf/Hammer state reset (safe defaults)
+            g.hammerCountPerHole   = Array(repeating: 0, count: 18)
+            g.wolfPlayerPerHole    = Array(repeating: nil, count: 18)
+            g.wolfWentAlonePerHole = Array(repeating: false, count: 18)
+
+            if keepCourse {
+                g.course          = savedCourse
+                g.courseParToPass = savedPars
+                g.courseHCToPass  = savedHCs
+            }
+
+            currentGame = g
+            saveCurrent()
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
         }
 
-        currentGame = g
-        saveCurrent()
-        NotificationCenter.default.post(name: .reloadUI, object: nil)
-    }
 
     // MARK: - Private builders / normalizers
 
     /// Build a fresh game with all arrays sized and defaults filled.
     private func baselineNewGame(named name: String) -> GameData {
         var g = GameData()
+        
+        // Game type default (keeps  current behavior)
+        g.gameType = .sixPointScotch
+
+        // Hammer/Wolf storage
+        g.hammerCountPerHole   = Array(repeating: 0,   count: 18)
+        g.wolfPlayerPerHole    = Array(repeating: nil, count: 18)
+        g.wolfWentAlonePerHole = Array(repeating: false, count: 18)
+
         g.gameName = name
         g.hole = 0
 
         // Seats (9)
-        g.playerNames     = Array(repeating: "",    count: 9)
-        g.hcPlayers       = Array(repeating: 0,     count: 9)   // S-column deltas
-        g.playerActivated = Array(repeating: false, count: 9)
+        g.playerNames     = Array(repeating: "",    count: 5)
+        g.hcPlayers       = Array(repeating: 0,     count: 5)   // S-column deltas
+        g.playerActivated = Array(repeating: false, count: 5)
 
         // Course (18)
      // g.courseParToPass = Array(repeating: 4, count: 18)
@@ -201,13 +216,13 @@ extension Notification.Name {
         // Stakes per hole
         g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18)
 
-        // Wolves (9×18) & Prox (seat 0…4 or nil)
-        g.wolfButtonStatus  = Array(repeating: Array(repeating: false, count: 18), count: 9)
+        // Wolves (5×18) & Prox (seat 0…4 or nil)
+        g.wolfButtonStatus  = Array(repeating: Array(repeating: false, count: 18), count: 5)
         g.proxWinnerPerHole = Array(repeating: nil, count: 18)
 
         // Scores & per-player payouts (9×18)
-        g.scores      = Array(repeating: Array(repeating: nil, count: 18), count: 9)
-        g.playerMoney = Array(repeating: Array(repeating: 0,   count: 18), count: 9)
+        g.scores      = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+        g.playerMoney = Array(repeating: Array(repeating: 0,   count: 18), count: 5)
 
         // Press / previous press flags
         g.pressedPushedToggleArray         = Array(repeating: false, count: 18)
@@ -220,51 +235,54 @@ extension Notification.Name {
     }
 
     /// Ensure an old save has all fields with correct sizes/defaults.
-    private func normalizeShapes(_ g: inout GameData) {
-        // Seats
-        if g.playerNames.count != 9     { g.playerNames     = pad(g.playerNames,     to: 9,  fill: "") }
-        if g.hcPlayers.count != 9       { g.hcPlayers       = pad(g.hcPlayers,       to: 9,  fill: 0) }
-        if g.playerActivated.count != 9 { g.playerActivated = pad(g.playerActivated, to: 9,  fill: false) }
+        private func normalizeShapes(_ g: inout GameData) {
+            g.normalize()   // ✅ handles gameType + hammer/wolf arrays
 
-        // Course
-        if g.courseParToPass.count != 18 { g.courseParToPass = pad(g.courseParToPass, to: 18, fill: 4) }
-        if g.courseHCToPass.count  != 18 { g.courseHCToPass  = pad(g.courseHCToPass,  to: 18, fill: 1) }
+            // Seats
+            if g.playerNames.count != 5     { g.playerNames     = pad(g.playerNames,     to: 5,  fill: "") }
+            if g.hcPlayers.count != 5       { g.hcPlayers       = pad(g.hcPlayers,       to: 5,  fill: 0) }
+            if g.playerActivated.count != 5 { g.playerActivated = pad(g.playerActivated, to: 5,  fill: false) }
 
-        // Stakes
-        if g.gameHoleDollarsArray.count != 18 {
-            g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: 18, fill: 2.0)
+            // Course
+            if g.courseParToPass.count != 18 { g.courseParToPass = pad(g.courseParToPass, to: 18, fill: 4) }
+            if g.courseHCToPass.count  != 18 { g.courseHCToPass  = pad(g.courseHCToPass,  to: 18, fill: 1) }
+
+            // Stakes
+            if g.gameHoleDollarsArray.count != 18 {
+                g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: 18, fill: 2.0)
+            }
+
+            // Wolves & Prox
+            if g.wolfButtonStatus.count != 5 || g.wolfButtonStatus.first?.count != 18 {
+                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: 18), count: 5)
+            }
+            if g.proxWinnerPerHole.count != 18 {
+                g.proxWinnerPerHole = Array(repeating: nil, count: 18)
+            }
+
+            // Scores & Money
+            if g.scores.count != 5 || g.scores.first?.count != 18 {
+                g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+            }
+            if g.playerMoney.count != 5 || g.playerMoney.first?.count != 18 {
+                g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 5)
+            }
+
+            // Press
+            if g.pressedPushedToggleArray.count != 18 {
+                g.pressedPushedToggleArray = Array(repeating: false, count: 18)
+            }
+            if g.previousPressedPushedToggleArray.count != 18 {
+                g.previousPressedPushedToggleArray = Array(repeating: false, count: 18)
+            }
+
+            // Roster list ok even if empty
+            if g.rosterNames.isEmpty { g.rosterNames = [] }
+
+            // Clamp current hole
+            g.hole = max(0, min(17, g.hole))
         }
 
-        // Wolves & Prox
-        if g.wolfButtonStatus.count != 9 || g.wolfButtonStatus.first?.count != 18 {
-            g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: 18), count: 9)
-        }
-        if g.proxWinnerPerHole.count != 18 {
-            g.proxWinnerPerHole = Array(repeating: nil, count: 18)
-        }
-
-        // Scores & Money
-        if g.scores.count != 9 || g.scores.first?.count != 18 {
-            g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 9)
-        }
-        if g.playerMoney.count != 9 || g.playerMoney.first?.count != 18 {
-            g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 9)
-        }
-
-        // Press
-        if g.pressedPushedToggleArray.count != 18 {
-            g.pressedPushedToggleArray = Array(repeating: false, count: 18)
-        }
-        if g.previousPressedPushedToggleArray.count != 18 {
-            g.previousPressedPushedToggleArray = Array(repeating: false, count: 18)
-        }
-
-        // Roster list ok even if empty
-        if g.rosterNames.isEmpty { g.rosterNames = [] }
-
-        // Clamp current hole
-        g.hole = max(0, min(17, g.hole))
-    }
 
     private func pad<T>(_ a: [T], to n: Int, fill: T) -> [T] {
         a.count >= n ? Array(a.prefix(n)) : a + Array(repeating: fill, count: n - a.count)
@@ -289,7 +307,7 @@ extension GameManager {
         guard holeCount > 0 else { return }
 
         // Seats visible on the Game screen
-        let seatsRange = 0 ..< min(9,
+        let seatsRange = 0 ..< min(5,
                                    min(game.playerNames.count,
                                        game.playerActivated.count))
 

@@ -21,7 +21,7 @@ extension GameData {
 }
 extension GameData {
     static let holes = 18
-    static let capacity = 9
+    static let capacity = 5
 }
 
 

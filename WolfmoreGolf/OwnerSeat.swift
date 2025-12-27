@@ -22,7 +22,7 @@ extension GameManager {
               let whoRaw = ProfileStore.name, !whoRaw.isEmpty else { return nil }
 
         let who = whoRaw.normalizedPlayerName
-        let seats = min(9, min(g.playerNames.count, g.playerActivated.count))
+        let seats = min(5, min(g.playerNames.count, g.playerActivated.count))
 
         for i in 0..<seats {
             let name = g.playerNames[i].normalizedPlayerName

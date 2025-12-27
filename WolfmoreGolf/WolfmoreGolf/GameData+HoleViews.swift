@@ -28,7 +28,7 @@ extension GameData {
 
     // Wolf: your storage is wolfButtonStatus [player][hole] with 9 players.
     var wolfMaskByHole: [[Bool]] {
-        get { transpose(wolfButtonStatus) }            // -> [18][9]
+        get { transpose(wolfButtonStatus) }            // -> [18][5]
         set { wolfButtonStatus = transpose(newValue.map { Array($0.prefix(wolfButtonStatus.count)) }) }
     }
 

@@ -57,7 +57,7 @@ final class GameViewController: UIViewController {
     @IBOutlet weak var w7: UIButton!
     @IBOutlet weak var w8: UIButton!
     
-    private var wolfButtons: [UIButton] { [w0, w1, w2, w3, w4, w5, w6, w7, w8] }
+    private var wolfButtons: [UIButton] { [w0, w1, w2, w3, w4] }
    
     @IBOutlet private weak var p0: UIButton!
     @IBOutlet private weak var p1: UIButton!
@@ -72,8 +72,59 @@ final class GameViewController: UIViewController {
     
     @IBOutlet weak var UpdateScores: UIButton!
     
+    @IBOutlet weak var hammerButton: UIButton!
+   // @IBOutlet weak var hammerLabel: UILabel!
+
+    @IBOutlet weak var rejectHammerButton: UIButton!
     
-    private var proxButtons: [UIButton] { [p0, p1, p2, p3, p4, p5, p6, p7, p8] }
+    @IBAction private func hammerTapped(_ sender: UIButton) {
+        var newCount = 0
+
+        GameManager.shared.update { g in
+            g.normalize(holes: 18)
+
+            let h = max(0, min(17, g.hole))
+
+            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != 18 {
+                g.hammerCountPerHole = Array(repeating: 0, count: 18)
+            }
+
+            g.hammerCountPerHole![h] += 1
+            newCount = g.hammerCountPerHole![h]
+        }
+
+        updateHammerButton(hammerButton, hammerCount: newCount)
+        refreshDollarsLabel()
+        setRejectHammerEnabled(newCount > 0)
+    }
+
+    @IBOutlet private weak var wolfControlsStack: UIStackView!
+    @IBOutlet private weak var scotchControlsStack: UIStackView!
+
+    
+    @IBAction private func rejectHammerTapped(_ sender: UIButton) {
+        var newCount = 0
+
+        GameManager.shared.update { g in
+            g.normalize(holes: 18)
+
+            let h = max(0, min(17, g.hole))
+
+            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != 18 {
+                g.hammerCountPerHole = Array(repeating: 0, count: 18)
+            }
+
+            g.hammerCountPerHole![h] = max(0, g.hammerCountPerHole![h] - 1)
+            newCount = g.hammerCountPerHole![h]
+        }
+
+        updateHammerButton(hammerButton, hammerCount: newCount)
+        refreshDollarsLabel()
+        setRejectHammerEnabled(newCount > 0)
+    }
+
+
+    private var proxButtons: [UIButton] { [p0, p1, p2, p3, p4] }
 
     private var currentHole: Int = 0
    
@@ -88,13 +139,25 @@ final class GameViewController: UIViewController {
     
     private var isUmbrellaOn = false
    
-    
+    @IBOutlet private weak var gameModeSegment: UISegmentedControl!
+
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        // ✅ Ensure we have a game loaded, then normalize (one time)
+        if GameManager.shared.currentGame == nil {
+            GameManager.shared.startNewGame()
+        }
+        GameManager.shared.normalizeCurrentIfNeeded()
+
+        // Seed any missing scores with pars (only affects nils)
         GameManager.shared.seedScoresWithParsForActivePlayers()
-          
+
+        // ✅ Apply mode-based visibility (Wolf vs 6-point)
+        applyGameTypeUI()
+
+        // --- Keyboard / tap-to-dismiss ---
         scoreFields.forEach {
             $0.keyboardType = .numberPad
             $0.inputAccessoryView = makeDoneToolbar()
@@ -102,26 +165,26 @@ final class GameViewController: UIViewController {
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
+
+        // --- Totals labels ---
         totalMoneyLabels = totalMoneyLabels.sorted { $0.tag < $1.tag }
         refreshTotalMoneyLabels()
-        
-        setupToggleButton(rollPushed,    onColor: .black, offColor: .systemOrange, onTitle: "Roll On",    offTitle: "Roll")
-        setupToggleButton(rerollPushed,  onColor: .black, offColor: .systemOrange, onTitle: "Re-Roll On", offTitle: "Re-Roll")
-        setupToggleButton(alonePushed,   onColor: .black, offColor: .systemOrange, onTitle: "Alone On",   offTitle: "Alone")
-        setupToggleButton(pressedPushed2,onColor: .black, offColor: .systemOrange, onTitle: "Press On",   offTitle: "Press")
-        
-        // Fallback only (SceneDelegate should have loaded/normalized already)
-        if GameManager.shared.currentGame == nil {
-            GameManager.shared.startNewGame()
-            GameManager.shared.normalizeCurrentIfNeeded()
-        }
-        
+
+        // --- Toggle button styling (these may be hidden depending on mode) ---
+        setupToggleButton(rollPushed,     onColor: .black, offColor: .systemOrange, onTitle: "Roll On",    offTitle: "Roll")
+        setupToggleButton(rerollPushed,   onColor: .black, offColor: .systemOrange, onTitle: "Re-Roll On", offTitle: "Re-Roll")
+        setupToggleButton(alonePushed,    onColor: .black, offColor: .systemOrange, onTitle: "Alone On",   offTitle: "Alone")
+        setupToggleButton(pressedPushed2, onColor: .black, offColor: .systemOrange, onTitle: "Press On",   offTitle: "Press")
+
+        // --- Score fields ---
         for (i, f) in scoreFields.enumerated() {
             f.tag = i
             f.keyboardType = .numberPad
             f.addTarget(self, action: #selector(scoreEdited(_:)), for: .editingDidEnd)
+            f.addTarget(self, action: #selector(scoreChanged(_:)), for: .editingChanged)
         }
-        
+
+        // --- Player money fields ---
         for (i, tf) in playerMoneyFields.enumerated() {
             tf.tag = i
             tf.isUserInteractionEnabled = true
@@ -129,33 +192,19 @@ final class GameViewController: UIViewController {
             tf.keyboardType = .decimalPad
             tf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
         }
-        
+
+        // --- Button tags + styles ---
         for (i, b) in wolfButtons.enumerated() { b.tag = i }
         for (i, b) in proxButtons.enumerated() { b.tag = i }
         styleWolfButtons()
-        
-        for (i, tf) in scoreFields.enumerated() {
-            tf.tag = i
-            tf.keyboardType = .numberPad
-            tf.addTarget(self, action: #selector(scoreChanged(_:)), for: .editingChanged)
-        }
-        
-        if GameManager.shared.currentGame == nil {
-            GameManager.shared.startNewGame()
-        }
+
+        // --- Initial paint ---
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
+        refreshTotalMoneyLabels()
 
         // 👇 Take over back behavior
         navigationItem.hidesBackButton = true
-       // navigationItem.leftBarButtonItem = UIBarButtonItem(
-         //   title: "Back",
-         //   style: .plain,
-         //   target: self,
-         //   action: //#selector(gameBackTapped)
-        //)
-
-        // Optional: keep swipe-back disabled so user *must* use our Back
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
     }
 
@@ -182,6 +231,10 @@ final class GameViewController: UIViewController {
         navigationController?.popViewController(animated: true)
     }
 
+    private func setRejectHammerEnabled(_ on: Bool) {
+        rejectHammerButton.isEnabled = on
+        rejectHammerButton.alpha = on ? 1.0 : 0.35
+    }
 
     
     @inline(__always)
@@ -208,7 +261,7 @@ final class GameViewController: UIViewController {
 
         // Seat × hole matrix padded to 18
         let money: [[Double]] = g.playerMoney.isEmpty
-            ? Array(repeating: Array(repeating: 0.0, count: 18), count: 9)
+            ? Array(repeating: Array(repeating: 0.0, count: 18), count: 5)
             : g.playerMoney.map { row in
                 row.count >= 18 ? Array(row.prefix(18))
                                 : row + Array(repeating: 0.0, count: 18 - row.count)
@@ -297,6 +350,8 @@ final class GameViewController: UIViewController {
     }
     @objc private func dismissKeyboard() { view.endEditing(true) }
 
+   
+    
     private func makeDoneToolbar() -> UIToolbar {
         let bar = UIToolbar(); bar.sizeToFit()
         let flex = UIBarButtonItem(systemItem: .flexibleSpace)
@@ -306,22 +361,34 @@ final class GameViewController: UIViewController {
     }
     private func stepDollars(by delta: Double) {
         GameManager.shared.update { g in
-            let hole = max(0, min(g.hole, g.gameHoleDollarsArray.count - 1))
-            guard hole < g.gameHoleDollarsArray.count else { return }
+            // ✅ Always safe / consistent
+            g.normalize(holes: 18)
+            if g.gameHoleDollarsArray.count != 18 {
+                g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18)
+            }
 
-            // start from current (if somehow 0 from an old save, treat as default 2.0)
-            var amount = g.gameHoleDollarsArray[hole]
-            if amount == 0 { amount = 2.0 }
+            // ✅ Use the model hole (0...17)
+            let h = max(0, min(17, g.hole))
+            self.currentHole = h   // keep your VC’s currentHole in sync (prevents “sometimes”)
 
-            amount += delta
-            amount = max(1.0, amount)                 // ← minimum is $1
-            amount = (amount * 2.0).rounded() / 2.0   // ← snap to .5 increments
+            // ✅ Start from current value (fallback to 2.0)
+            var amount = g.gameHoleDollarsArray[h]
+            if amount <= 0 { amount = 2.0 }
 
-            g.gameHoleDollarsArray[hole] = amount
+            // ✅ Apply delta, clamp, snap to 0.5
+            amount = max(1.0, amount + delta)
+            amount = (amount * 2.0).rounded() / 2.0
+
+            g.gameHoleDollarsArray[h] = amount
         }
 
-        refreshForCurrentHole()
+        // ✅ Repaint everything that shows dollars
+        DispatchQueue.main.async {
+            self.refreshForCurrentHole()
+            self.paintEverythingForCurrentHole()
+        }
     }
+
     private func refreshPlayerNameLabels() {
         guard let g = GameManager.shared.currentGame else { return }
         for (i, label) in playerNameLabels.sorted(by: { $0.tag < $1.tag }).enumerated() {
@@ -335,8 +402,7 @@ final class GameViewController: UIViewController {
         }
     }
 
-    private func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
-    
+  
     private func syncAloneButtonForHole(_ hole: Int) {
         guard let g = GameManager.shared.currentGame else { return }
         let on = (hole < g.aloneApplied.count) ? g.aloneApplied[hole] : false
@@ -351,8 +417,8 @@ final class GameViewController: UIViewController {
 
         for b in wolfButtons {
             let i = b.tag
-            guard (0..<9).contains(i),
-                  g.wolfButtonStatus.count == 9,
+            guard (0..<5).contains(i),
+                  g.wolfButtonStatus.count == 5,
                   g.wolfButtonStatus[i].count == 18 else { continue }
 
             let isOn = g.wolfButtonStatus[i][hole]
@@ -370,26 +436,55 @@ final class GameViewController: UIViewController {
         button.layoutIfNeeded()
     }
    
+   
+    private func baseStake(for hole: Int, in g: GameData) -> Double {
+        let raw = g.gameHoleDollarsArray[safe: hole] ?? 2.0
+        return raw == 0 ? 2.0 : raw
+    }
 
-    private func refreshForCurrentHole() {
+    private func hammerCount(for hole: Int, in g: GameData) -> Int {
+        max(0, g.hammerCountPerHole?[safe: hole] ?? 0)
+    }
+
+    private func effectiveStake(for hole: Int, in g: GameData) -> Double {
+        let base = baseStake(for: hole, in: g)
+        let c = hammerCount(for: hole, in: g)
+        let mult = Double(1 << c)              // 1,2,4,8...
+        return roundToHalf(base * mult)
+    }
+
+    private func paintHammerUIForCurrentHole() {
         guard let g = GameManager.shared.currentGame else { return }
-        let h = g.hole
-        
+        let h = max(0, min(17, g.hole))
+
+        let count = hammerCount(for: h, in: g)
+        updateHammerButton(hammerButton, hammerCount: count)
+        setRejectHammerEnabled(count > 0)
+
+        let shown = effectiveStake(for: h, in: g)
+        gameDollarsField.text = String(format: "%.2f", shown)
+    }
+    private func refreshForCurrentHole() {
+        applyGameTypeUI()
+        guard let g = GameManager.shared.currentGame else { return }
+        let h = max(0, min(17, g.hole))
+
+        // Money fields
         for (seat, tf) in playerMoneyFields.enumerated() {
-               let amt = g.moneyFor(hole: h, player: seat)
-               tf.text = amt == 0 ? "" : String(format: "%.2f", amt)
-               tf.isEnabled = (g.playerActivated[safe: seat] ?? true)
-               tf.alpha = tf.isEnabled ? 1.0 : 0.4
-           }
-        
+            let amt = g.moneyFor(hole: h, player: seat)
+            tf.text = amt == 0 ? "" : String(format: "%.2f", amt)
+            tf.isEnabled = (g.playerActivated[safe: seat] ?? true)
+            tf.alpha = tf.isEnabled ? 1.0 : 0.4
+        }
+
         paintReRoll(g, hole: h)
         paintBetButtons(g, hole: h)
+
         // Header
         holePlaying.text = "\(h + 1)"
         parOfHole.text   = "\(g.courseParToPass[safe: h] ?? 4)"
-        gameDollarsField.text = String(format: "%.2f", g.gameHoleDollarsArray[safe: h] ?? 2.0)
 
-        // --- Your existing roll / re-roll / alone / PRESS paint here (unchanged) ---
+        // ❌ DO NOT set gameDollarsField from base dollars here
 
         // Wolf
         let wolfSeat = g.wolfIndexPerHole[safe: h] ?? nil
@@ -399,7 +494,7 @@ final class GameViewController: UIViewController {
             b.backgroundColor = isWolf ? .black : .systemGreen
         }
 
-        // Prox (single winner)
+        // Prox
         let proxSeat = g.proxWinnerPerHole[safe: h] ?? nil
         for (i, b) in proxButtons.enumerated() {
             let on = (proxSeat == i)
@@ -407,17 +502,18 @@ final class GameViewController: UIViewController {
             b.backgroundColor = on ? .systemGreen : .systemGray
         }
 
-        // Scores (hole-first view)
-        let holeScores = g.scoresByHole[safe: h] ?? []    // ✅
-
+        // Scores
+        let holeScores = g.scoresByHole[safe: h] ?? []
         for (i, tf) in scoreFields.enumerated() {
             tf.text = (holeScores[safe: i] ?? nil).map(String.init) ?? ""
             tf.isEnabled = (g.playerActivated[safe: i] ?? true)
             tf.alpha = tf.isEnabled ? 1.0 : 0.4
         }
 
-        // Pops painter (unchanged)
         paintHolePops(blankZeros: false)
+
+        // ✅ ONE call paints hammer button + reject + dollars label (effective)
+        paintHammerUIForCurrentHole()
     }
 
     // Paint per-hole POPS into playerStrokesFields
@@ -491,7 +587,75 @@ final class GameViewController: UIViewController {
             $0.backgroundColor = .clear
         }
     }
+    @IBAction private func gameModeChanged(_ sender: UISegmentedControl) {
+        let newType: GameType
+        switch sender.selectedSegmentIndex {
+        case 0: newType = .sixPointScotch
+        case 1: newType = .wolf
+        default: newType = .wolfLowBall
+        }
+
+        GameManager.shared.update { g in
+            g.gameType = newType
+            g.normalize()
+            if newType != .sixPointScotch { g.isUmbrella = false }  // 6-Point only
+        }
+
+        applyGameTypeUI()
+        paintEverythingForCurrentHole()
+    }
+
+
+    private func applyGameTypeUI() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let t = g.resolvedGameType
+
+        wolfControlsStack.isHidden   = !t.isWolf
+        scotchControlsStack.isHidden = !t.isScotch
+
+        // Umbrella is 6-point only
+        if !t.isScotch, g.isUmbrella {
+            GameManager.shared.update { $0.isUmbrella = false }
+        }
+
+        // keep segment in sync
+        switch t {
+        case .sixPointScotch: gameModeSegment.selectedSegmentIndex = 0
+        case .wolf:           gameModeSegment.selectedSegmentIndex = 1
+        case .wolfLowBall:    gameModeSegment.selectedSegmentIndex = 2
+        case .hammer:         gameModeSegment.selectedSegmentIndex = 0   // since we treat as scotch
+        }
+    }
     
+    private func roundToHalf(_ x: Double) -> Double {
+        (x * 2.0).rounded() / 2.0
+    }
+
+    private func baseStakeForHole(_ h: Int, g: GameData) -> Double {
+        // IMPORTANT: treat 0 as "unset" -> 2.0 (do NOT clamp 0 to 1 for display)
+        let raw = g.gameHoleDollarsArray[safe: h] ?? 2.0
+        return (raw == 0) ? 2.0 : raw
+    }
+
+    private func hammerCountForHole(_ h: Int, g: GameData) -> Int {
+        max(0, g.hammerCountPerHole?[safe: h] ?? 0)
+    }
+
+    private func effectiveStakeForHole(_ h: Int, g: GameData) -> Double {
+        let base = baseStakeForHole(h, g: g)
+        let c = hammerCountForHole(h, g: g)
+        let mult = Double(1 << c) // 1,2,4,8...
+        return roundToHalf(base * mult)
+    }
+
+    private func refreshDollarsLabel() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let h = max(0, min(17, g.hole))
+        let shown = effectiveStakeForHole(h, g: g)
+        gameDollarsField.text = String(format: "%.2f", shown)
+    }
+
+
     @IBAction private func holeStatsTapped(_ sender: UIButton) {
         guard let g = GameManager.shared.currentGame else { return }
 
@@ -700,10 +864,10 @@ final class GameViewController: UIViewController {
         let val  = Int(tf.text ?? "")  // Int? (nil if blank)
 
         GameManager.shared.update { m in
-            if m.scores.count != 9 || m.scores.first?.count != 18 {
-                m.scores = Array(repeating: Array(repeating: nil, count: 18), count: 9)
+            if m.scores.count != 5 || m.scores.first?.count != 18 {
+                m.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
             }
-            if (0..<9).contains(seat), (0..<18).contains(hole) {
+            if (0..<5).contains(seat), (0..<18).contains(hole) {
                 m.scores[seat][hole] = val
             }
         }
@@ -724,14 +888,19 @@ final class GameViewController: UIViewController {
         // 👇 GLOBAL — not per-hole
         let muted = g.isUmbrella
 
-        let payouts = GameManager.shared.computeHolePayout(
+        var payouts = GameManager.shared.computeHolePayout(
             hole: hole,
-            umbePressed: muted   // pass the global flag
+            umbePressed: muted
         )
 
+        // ✅ HAMMER overlay (doubles the RESULT for this hole)
+        
+
+
+
         GameManager.shared.update { g in
-            if g.playerMoney.count < 9 {
-                g.playerMoney = Array(repeating: Array(repeating: 0.0, count: 18), count: 9)
+            if g.playerMoney.count < 5 {
+                g.playerMoney = Array(repeating: Array(repeating: 0.0, count: 18), count: 5)
             }
             for s in 0..<payouts.count {
                 if g.playerMoney[s].count < 18 {
@@ -793,15 +962,14 @@ final class GameViewController: UIViewController {
     }
     
     @IBAction private func umbrellaTapped(_ sender: UIButton) {
-        GameManager.shared.update { g in
-            g.isUmbrella.toggle()   // flip for the WHOLE game
-        }
+        guard let g = GameManager.shared.currentGame else { return }
+        guard g.resolvedGameType == .sixPointScotch else { return } // ✅ block in Wolf
 
+        GameManager.shared.update { $0.isUmbrella.toggle() }
         refreshUmbrellaButtonUI(sender)
-
-        // optional: repaint current hole so you see new money right away
         paintEverythingForCurrentHole()
     }
+
 
     
     @IBAction func previousHoleTapped(_ sender: UIButton) {
@@ -1053,12 +1221,12 @@ final class GameViewController: UIViewController {
     
     @IBAction private func wolfButtonTapped(_ sender: UIButton) {
         let player = sender.tag
-        guard (0..<9).contains(player) else { return }
+        guard (0..<5).contains(player) else { return }
 
         GameManager.shared.update { g in
             let hole = max(0, min(17, g.hole))
-            if g.wolfButtonStatus.count != 9 || g.wolfButtonStatus.first?.count != 18 {
-                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: 18), count: 9)
+            if g.wolfButtonStatus.count != 5 || g.wolfButtonStatus.first?.count != 18 {
+                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: 18), count: 5)
             }
             g.wolfButtonStatus[player][hole].toggle()
         }
@@ -1094,20 +1262,70 @@ final class GameViewController: UIViewController {
 
     // Exclusive prox winner per hole
     @IBAction private func proxButtonTapped(_ sender: UIButton) {
+        guard let g = GameManager.shared.currentGame else { return }
+        guard g.resolvedGameType == .sixPointScotch else { return } // ✅ block in Wolf
+
         let player = sender.tag
-        guard (0..<9).contains(player) else { return }
+        guard (0..<5).contains(player) else { return }
 
         GameManager.shared.update { g in
-            if g.proxWinnerPerHole.count != 18 {
-                g.proxWinnerPerHole = Array(repeating: nil, count: 18)
-            }
+            if g.proxWinnerPerHole.count != 18 { g.proxWinnerPerHole = Array(repeating: nil, count: 18) }
             let hole = max(0, min(17, g.hole))
             g.proxWinnerPerHole[hole] = (g.proxWinnerPerHole[hole] == player) ? nil : player
         }
 
         refreshProxButtons()
     }
-   
+
+    private struct HammerStyle {
+        let color: UIColor
+        let title: String
+    }
+
+    private func hammerMultiplier(for count: Int) -> Int {
+        // doubles each hammer: 0→1x, 1→2x, 2→4x, 3→8x...
+        return 1 << max(0, count)
+    }
+
+    private func hammerStyle(for count: Int) -> HammerStyle {
+        // tweak colors/titles however you want
+        switch count {
+        case 0:  return .init(color: .systemGray5, title: "HAMMER (1x)")
+        case 1:  return .init(color: .systemYellow, title: "HAMMER (2x)")
+        case 2:  return .init(color: .systemOrange, title: "HAMMER (4x)")
+        case 3:  return .init(color: .systemRed, title: "HAMMER (8x)")
+        case 4:  return .init(color: .systemPurple, title: "HAMMER (16x)")
+        default: return .init(color: .black, title: "HAMMER (\(hammerMultiplier(for: count))x)")
+        }
+    }
+    
+    private func updateHammerButton(_ button: UIButton, hammerCount: Int) {
+        // Build 2-line title
+        let mult = hammerMultiplier(for: hammerCount)          // 1,2,4,8...
+        let title = "HAMMER\n(\(mult)x)"
+
+        // If you're NOT using UIButton.Configuration for this button:
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.setBackgroundImage(.pixel(of: hammerStyle(for: hammerCount).color), for: .normal)
+
+        // ✅ center the second line
+        button.titleLabel?.numberOfLines = 2
+        button.titleLabel?.lineBreakMode = .byWordWrapping
+        button.titleLabel?.textAlignment = .center
+        button.contentHorizontalAlignment = .center
+        button.contentVerticalAlignment = .center
+
+        // (optional) ensure no weird insets are pushing text
+        button.titleEdgeInsets = .zero
+        button.contentEdgeInsets = .zero
+
+        button.layer.cornerRadius = 10
+        button.clipsToBounds = true
+    }
+
+
+
     @IBAction func updateScorePushed(_ sender: UIButton) {
         sender.isEnabled = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { sender.isEnabled = true }
@@ -1122,7 +1340,7 @@ final class GameViewController: UIViewController {
         guard (0..<18).contains(hole) else { return }
 
         // ✅ USE GLOBAL FLAG (true = mute double everywhere)
-        let umbrellaMuted = snap.isUmbrella
+        let umbrellaMuted = (snap.resolvedGameType == .sixPointScotch) ? snap.isUmbrella : false
 
         // keep your press logic
         let pressOnThisHole = (hole < snap.pressedPushedToggleArray.count)
@@ -1131,10 +1349,10 @@ final class GameViewController: UIViewController {
 
         // 1) save scores from UI
         GameManager.shared.update { g in
-            if g.scores.count != 9 || g.scores.first?.count != 18 {
-                g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 9)
+            if g.scores.count != 5 || g.scores.first?.count != 18 {
+                g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
             }
-            let seats = min(9, scoreFields.count, g.scores.count)
+            let seats = min(5, scoreFields.count, g.scores.count)
             for s in 0..<seats {
                 g.scores[s][hole] = Int(scoreFields[s].text ?? "")
             }
@@ -1165,17 +1383,17 @@ final class GameViewController: UIViewController {
 
         // 4) save payouts
         GameManager.shared.update { g in
-            if g.playerMoney.count != 9 || g.playerMoney.first?.count != 18 {
-                g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 9)
+            if g.playerMoney.count != 5 || g.playerMoney.first?.count != 18 {
+                g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 5)
             }
-            let seats = min(9, playerMoneyFields.count, g.playerMoney.count, payouts.count)
+            let seats = min(5, playerMoneyFields.count, g.playerMoney.count, payouts.count)
             for s in 0..<seats {
                 g.playerMoney[s][hole] = payouts[s]
             }
         }
 
         // 5) paint
-        let seatsToPaint = min(9, min(playerMoneyFields.count, payouts.count))
+        let seatsToPaint = min(5, min(playerMoneyFields.count, payouts.count))
         for s in 0..<seatsToPaint {
             setMoneyField(playerMoneyFields[s], to: payouts[s])
         }
@@ -1185,7 +1403,7 @@ final class GameViewController: UIViewController {
         // 6) debug
         if let g = GameManager.shared.currentGame {
             let h = g.hole
-            let seats = min(9, g.scores.count, g.playerNames.count)
+            let seats = min(5, g.scores.count, g.playerNames.count)
             let scorePart = (0..<seats).map { s -> String in
                 let name = g.playerNames[s].isEmpty ? "P\(s+1)" : g.playerNames[s]
                 let sc   = g.scores[s][h].map(String.init) ?? "-"
@@ -1212,13 +1430,13 @@ final class GameViewController: UIViewController {
         let fields = scoreFields.sorted { $0.tag < $1.tag }
 
         // Fill up to the number of visible fields (should be 5)
-        for player in 0..<min(9, fields.count) {
+        for player in 0..<min(5, fields.count) {
             let val = row[safe: player] ?? nil
             fields[player].text = val.map(String.init) ?? ""
         }
         // Clear extras if any
-        if fields.count > 9 {
-            for i in 9..<fields.count { fields[i].text = "" }
+        if fields.count > 5 {
+            for i in 5..<fields.count { fields[i].text = "" }
         }
 
         // Update headers if you have them
@@ -1267,7 +1485,7 @@ final class GameViewController: UIViewController {
    
     
     func indexFor(hole: Int, player: Int) -> Int {
-        return hole * 9 + player   // 9 players per hole
+        return hole * 5 + player   // 9 players per hole
     }
 
     

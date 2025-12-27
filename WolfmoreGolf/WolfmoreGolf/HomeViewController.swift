@@ -44,6 +44,29 @@ final class ViewController: UIViewController {
     }
 
     // MARK: - Name + Welcome
+    @IBAction private func startWolfTapped(_ sender: UIButton) {
+        GameManager.shared.startNewGame()
+        GameManager.shared.update { g in
+            g.gameType = .wolf
+            g.normalize()
+        }
+        pushGameVC()
+    }
+
+    @IBAction private func startScotchTapped(_ sender: UIButton) {
+        GameManager.shared.startNewGame()
+        GameManager.shared.update { g in
+            g.gameType = .sixPointScotch
+            g.normalize()
+        }
+        pushGameVC()
+    }
+
+    private func pushGameVC() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "GameViewController")
+        navigationController?.pushViewController(vc, animated: true)
+    }
 
     private func promptForName() {
         let ac = UIAlertController(

@@ -28,35 +28,59 @@ extension GameManager {
     ///   - umbePressed: true if Umbrella is pressed (disables doubling at ≥6)
     func computeHolePayout(hole: Int, umbePressed: Bool) -> [Double] {
         guard let g = currentGame, (0..<18).contains(hole) else {
-            return Array(repeating: 0, count: 9)
+            return Array(repeating: 0.0, count: 5)
         }
 
+        let mode = g.resolvedGameType
+
         // Seats shown on the Game screen
-        let seatsRange = 0..<min(9, min(g.playerActivated.count, g.hcPlayers.count, g.playerNames.count))
+        let seatsRange = 0..<min(5, min(g.playerActivated.count, g.hcPlayers.count, g.playerNames.count))
 
         // Active seats with a non-empty name
         let activeSeats = seatsRange.filter {
             g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
-        if activeSeats.isEmpty { return Array(repeating: 0, count: 9) }
+        if activeSeats.isEmpty { return Array(repeating: 0.0, count: 5) }
 
         // Wolves for this hole (by seat)
         var wolfSeats = Set<Int>()
-        if g.wolfButtonStatus.count >= 9, g.wolfButtonStatus.first?.count ?? 0 >= 18 {
+        if g.wolfButtonStatus.count >= 5, (g.wolfButtonStatus.first?.count ?? 0) >= 18 {
             for s in activeSeats where g.wolfButtonStatus[s][hole] { wolfSeats.insert(s) }
         }
 
         // Teams
         let wolfTeam    = activeSeats.filter { wolfSeats.contains($0) }
         let nonWolfTeam = activeSeats.filter { !wolfSeats.contains($0) }
-        let numWolf     = max(1, wolfTeam.count)
-        let numNonWolf  = max(1, nonWolfTeam.count)
+
+        // ✅ Need both sides or money math becomes nonsense
+        guard !wolfTeam.isEmpty, !nonWolfTeam.isEmpty else {
+            return Array(repeating: 0.0, count: 5)
+        }
+
+        let numWolf    = wolfTeam.count
+        let numNonWolf = nonWolfTeam.count
 
         // Hole constants
-        let par         = hole < g.courseParToPass.count ? g.courseParToPass[hole] : 4
-        let rawSI       = hole < g.courseHCToPass.count ? g.courseHCToPass[hole] : 18
-        let si          = max(1, min(18, rawSI == 0 ? 18 : rawSI))        // 1…18 (0 → 18)
-        let stake       = hole < g.gameHoleDollarsArray.count ? g.gameHoleDollarsArray[hole] : 2.0
+        let par   = g.courseParToPass[safe: hole] ?? 4
+        let rawSI = g.courseHCToPass[safe: hole] ?? 18
+        let si    = max(1, min(18, rawSI == 0 ? 18 : rawSI)) // 1…18 (0 → 18)
+
+        // Stake (includes hammer multiplier)
+        let baseStake = (g.gameHoleDollarsArray[safe: hole] ?? 2.0)
+        let hammerC   = g.hammerCountPerHole?[safe: hole] ?? 0
+        let hammerMult = Double(1 << max(0, hammerC)) // 1,2,4,8...
+        let stake = baseStake * hammerMult
+
+        // ✅ Point values by mode
+        let lowBallPts: Int = mode.isScotch ? 2 : 1
+        let lowTotalPts: Int = {
+            switch mode {
+            case .sixPointScotch: return 2
+            case .wolf:           return 1
+            case .wolfLowBall:    return 0   // low ball only
+            case .hammer:         return 2   // treat like scotch scoring
+            }
+        }()
 
         // House rule pops: ONE on hardest S holes only (+1 more on hardest S-18 if S>18)
         @inline(__always)
@@ -75,130 +99,146 @@ extension GameManager {
         for s in activeSeats {
             let gScore = (s < g.scores.count && hole < g.scores[s].count) ? (g.scores[s][hole] ?? 99) : 99
             gross[s] = gScore
-            let S = max(0, g.hcPlayers[s] - baseHC)          // delta from low active HC
+
+            let S = max(0, g.hcPlayers[s] - baseHC)
             let pops = strokesGiven(delta: S, strokeIndex: si)
             net[s] = (gScore < 99) ? (gScore - pops) : 99
         }
 
-        // Prox (seat index 0…4)
+        // ---------------------------------------------------------
+        //  6-POINT ONLY: Prox
+        // ---------------------------------------------------------
         var wolfProx = 0, nonWolfProx = 0
-        if hole < g.proxWinnerPerHole.count, let pxSeat = g.proxWinnerPerHole[hole], activeSeats.contains(pxSeat) {
+        if mode.isScotch,
+           hole < g.proxWinnerPerHole.count,
+           let pxSeat = g.proxWinnerPerHole[hole],
+           activeSeats.contains(pxSeat) {
             if wolfSeats.contains(pxSeat) { wolfProx = 1 } else { nonWolfProx = 1 }
         }
 
-        // Helpers
+        // ---------------------------------------------------------
+        //  6-POINT ONLY: Birdie / Eagle
+        // ---------------------------------------------------------
         func teamHasBirdie(_ team: [Int]) -> Int { team.contains { (gross[$0] ?? 99) <= par - 1 } ? 1 : 0 }
         func teamHasEagle(_ team: [Int]) -> Int  { team.contains { (gross[$0] ?? 99) <= par - 2 } ? 1 : 0 }
 
-        // Points
-        let wolfBirdie = teamHasBirdie(wolfTeam)
-        let wolfEagle  = teamHasEagle(wolfTeam)
-        let nonBirdie  = teamHasBirdie(nonWolfTeam)
-        let nonEagle   = teamHasEagle(nonWolfTeam)
+        let wolfBirdie = mode.isScotch ? teamHasBirdie(wolfTeam) : 0
+        let wolfEagle  = mode.isScotch ? teamHasEagle(wolfTeam)  : 0
+        let nonBirdie  = mode.isScotch ? teamHasBirdie(nonWolfTeam) : 0
+        let nonEagle   = mode.isScotch ? teamHasEagle(nonWolfTeam)  : 0
 
-        // Low Ball (2 to winner)
+        // ---------------------------------------------------------
+        //  Low Ball — used in ALL modes (points vary)
+        // ---------------------------------------------------------
         let wolfMinNet = wolfTeam.map { net[$0] ?? 99 }.min() ?? 99
         let nonMinNet  = nonWolfTeam.map { net[$0] ?? 99 }.min() ?? 99
-        var wolfLowBall = 0, nonLowBall = 0
-        if wolfMinNet < nonMinNet { wolfLowBall = 2 }
-        else if wolfMinNet > nonMinNet { nonLowBall = 2 }
 
-        // includes alon calcualtion of lone + (lone + Float(par + 1)) / 2.0
-        func twoBestSum(_ team: [Int]) -> Float {
-            let arr = team.map { Float(net[$0] ?? 99) }.sorted()
-            switch arr.count {
-            case 0:
-                return 999
-            case 1:
-                let lone = arr[0]                  // lone player's NET
-                // Lone Total = lone + (lone + (par+1)) / 2
-                return lone + (lone + Float(par + 1)) / 2.0
-            default:
-                return arr[0] + arr[1]
+        var wolfLowBall = 0, nonLowBall = 0
+        if wolfMinNet < nonMinNet { wolfLowBall = lowBallPts }
+        else if wolfMinNet > nonMinNet { nonLowBall = lowBallPts }
+
+        // ---------------------------------------------------------
+        //  Low Total — scotch + wolf (points vary), NOT used in wolfLowBall
+        // ---------------------------------------------------------
+        var wolfLowTotal = 0, nonLowTotal = 0
+        if lowTotalPts > 0 {
+            // includes alone calc: lone + (lone + (par + 1)) / 2
+            func twoBestSum(_ team: [Int]) -> Float {
+                let arr = team.map { Float(net[$0] ?? 99) }.sorted()
+                switch arr.count {
+                case 0:
+                    return 999
+                case 1:
+                    let lone = arr[0]
+                    return lone + (lone + Float(par + 1)) / 2.0
+                default:
+                    return arr[0] + arr[1]
+                }
             }
+
+            let wolfTotal = twoBestSum(wolfTeam)
+            let nonTotal  = twoBestSum(nonWolfTeam)
+
+            if wolfTotal < nonTotal { wolfLowTotal = lowTotalPts }
+            else if wolfTotal > nonTotal { nonLowTotal = lowTotalPts }
         }
 
-        let wolfTotal = twoBestSum(wolfTeam)
-        let nonTotal  = twoBestSum(nonWolfTeam)
-        var wolfLowTotal = 0, nonLowTotal = 0
-        if wolfTotal < nonTotal { wolfLowTotal = 2 }
-        else if wolfTotal > nonTotal { nonLowTotal = 2 }
+        // ---------------------------------------------------------
+        //  TEAM TALLIES BY MODE
+        // ---------------------------------------------------------
+        let wolfTeamScore: Int
+        let nonTeamScore: Int
 
-        // Team tallies
-        var wolfTeamScore = wolfProx + wolfLowTotal + wolfLowBall + wolfBirdie + wolfEagle
-        var nonTeamScore  = nonWolfProx + nonLowTotal + nonLowBall + nonBirdie + nonEagle
+        switch mode {
+        case .sixPointScotch, .hammer:
+            wolfTeamScore = wolfProx + wolfLowTotal + wolfLowBall + wolfBirdie + wolfEagle
+            nonTeamScore  = nonWolfProx + nonLowTotal + nonLowBall + nonBirdie + nonEagle
 
-        // Umbrella/double rule
-        // Umbrella / double rule
+        case .wolf:
+            // ✅ Wolf “2-point” now means 1 + 1
+            wolfTeamScore = wolfLowBall + wolfLowTotal
+            nonTeamScore  = nonLowBall  + nonLowTotal
+
+        case .wolfLowBall:
+            // ✅ Wolf Low Ball only: 1 point max
+            wolfTeamScore = wolfLowBall
+            nonTeamScore  = nonLowBall
+        }
+
+        // ---------------------------------------------------------
+        //  Umbrella/double rule — 6-POINT ONLY
+        // ---------------------------------------------------------
         var diff = abs(wolfTeamScore - nonTeamScore)
-        if !umbePressed, diff >= 6 { diff *= 2 }
+        if mode.isScotch, !umbePressed, diff >= 6 { diff *= 2 }
 
         // ---------------------------------------------------------
-        //  RECORD STATS: Wolf called, Wolf win, Umbie hit
+        //  RECORD STATS
         // ---------------------------------------------------------
+        let umbrellaHit     = mode.isScotch && (wolfTeamScore >= 6 || nonTeamScore >= 6)
+        let wolfCalledNow   = !wolfTeam.isEmpty
+        let wolfWonThisHole = (wolfTeamScore != nonTeamScore) && (wolfTeamScore > nonTeamScore)
 
-        // Raw points (before doubling)
-        let wolfPoints = wolfProx + wolfLowTotal + wolfLowBall + wolfBirdie + wolfEagle
-        let nonPoints  = nonWolfProx + nonLowTotal + nonLowBall + nonBirdie + nonEagle
-
-        let umbrellaHit    = (wolfPoints >= 6 || nonPoints >= 6)
-        let wolfCalledNow  = !wolfTeam.isEmpty          // any Wolves on this hole?
-        let wolfWonThisHole = (diff != 0 &&            // not a push
-                               wolfTeamScore > nonTeamScore)
-
-        // Safely mutate the current game and write it back
         if var gameCopy = currentGame {
-            if hole < gameCopy.umbieWonPerHole.count {
-                gameCopy.umbieWonPerHole[hole] = umbrellaHit
-            }
-            if hole < gameCopy.wolfCalledPerHole.count {
-                gameCopy.wolfCalledPerHole[hole] = wolfCalledNow
-            }
-            if hole < gameCopy.wolfTeamWonPerHole.count {
-                gameCopy.wolfTeamWonPerHole[hole] = wolfWonThisHole
-            }
+            if hole < gameCopy.umbieWonPerHole.count     { gameCopy.umbieWonPerHole[hole] = umbrellaHit }
+            if hole < gameCopy.wolfCalledPerHole.count   { gameCopy.wolfCalledPerHole[hole] = wolfCalledNow }
+            if hole < gameCopy.wolfTeamWonPerHole.count  { gameCopy.wolfTeamWonPerHole[hole] = wolfWonThisHole }
             currentGame = gameCopy
         }
 
         // ---------------------------------------------------------
-        //  WHOLE-DOLLAR PAYOUTS (extra $ to first Wolf)
+        //  PAYOUTS (whole-dollar)
         // ---------------------------------------------------------
-        var payouts = Array(repeating: 0.0, count: 9)
+        var payouts = Array(repeating: 0.0, count: 5)
 
-        // If no net points or no teams, nobody pays/gets paid
-        guard diff != 0, !(wolfTeam.isEmpty && nonWolfTeam.isEmpty) else {
-            return payouts
-        }
+        guard diff != 0 else { return payouts }
 
-        // Per non-Wolf seat transfer in dollars (rounded to nearest whole $)
+        // Per-seat transfer (rounded to nearest whole $)
         let perNonDollar = Int((Double(diff) * stake).rounded())
         guard perNonDollar != 0 else { return payouts }
 
-        // Total dollars flowing from the losing side to the winning side
+        // Total dollars flowing between teams
         let totalDollars = perNonDollar * numNonWolf
 
-        // Split total across Wolves, whole dollars only
-        let basePerWolf = totalDollars / numWolf        // even share
-        let remainder   = totalDollars % numWolf        // 0…(numWolf-1)
-        let primaryWolf = wolfTeam.min()                // first Wolf seat
+        // Split total across Wolves (whole dollars)
+        let basePerWolf = totalDollars / numWolf
+        let remainder   = totalDollars % numWolf
+        let primaryWolf = wolfTeam.min()
 
         if wolfTeamScore > nonTeamScore {
-            // Wolves win: Non-wolves each pay, Wolves split pot
+            // Wolves win
             for s in nonWolfTeam { payouts[s] = Double(-perNonDollar) }
-            for s in wolfTeam    { payouts[s] = Double(basePerWolf)   }
-            if let p = primaryWolf { payouts[p] += Double(remainder) }   // extra $ to first Wolf
+            for s in wolfTeam    { payouts[s] = Double(basePerWolf) }
+            if let p = primaryWolf { payouts[p] += Double(remainder) }
         } else {
-            // Wolves lose: Non-wolves each receive, Wolves split what they owe
+            // Wolves lose
             for s in nonWolfTeam { payouts[s] = Double(+perNonDollar) }
-            for s in wolfTeam    { payouts[s] = Double(-basePerWolf)  }
-            if let p = primaryWolf { payouts[p] -= Double(remainder) }   // first Wolf pays the extra $
+            for s in wolfTeam    { payouts[s] = Double(-basePerWolf) }
+            if let p = primaryWolf { payouts[p] -= Double(remainder) }
         }
 
         return payouts
-
     }
 
-    
 }
 
 

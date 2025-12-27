@@ -12,7 +12,7 @@ final class ManagePlayersViewController: UIViewController,
                                          UITextFieldDelegate {
 
     
-    private let maxActivePlayers = 9   // 👈 new
+    private let maxActivePlayers = 5   // 👈 new
 
     @IBOutlet private weak var tableView: UITableView!
     
@@ -185,7 +185,7 @@ final class ManagePlayersViewController: UIViewController,
             return
         }
 
-        let active = Array(selected.prefix(9))
+        let active = Array(selected.prefix(5))
 
         if hasInProgressRound() {
             let ac = UIAlertController(
@@ -243,9 +243,9 @@ final class ManagePlayersViewController: UIViewController,
         }
 
         GameManager.shared.update { g in
-            if g.playerNames.count != 9     { g.playerNames     = Array(repeating: "",    count: 9) }
-            if g.hcPlayers.count != 9       { g.hcPlayers       = Array(repeating: 0,     count: 9) }
-            if g.playerActivated.count != 9 { g.playerActivated = Array(repeating: false, count: 9) }
+            if g.playerNames.count != 5     { g.playerNames     = Array(repeating: "",    count: 5) }
+            if g.hcPlayers.count != 5       { g.hcPlayers       = Array(repeating: 0,     count: 5) }
+            if g.playerActivated.count != 5 { g.playerActivated = Array(repeating: false, count: 5) }
 
             // Fill seats with active friends
             for (seat, friend) in active.enumerated() {
@@ -255,8 +255,8 @@ final class ManagePlayersViewController: UIViewController,
             }
 
             // Clear any remaining seats
-            if active.count < 9 {
-                for seat in active.count..<9 {
+            if active.count < 5 {
+                for seat in active.count..<5 {
                     g.playerNames[seat]     = ""
                     g.hcPlayers[seat]       = 0
                     g.playerActivated[seat] = false
