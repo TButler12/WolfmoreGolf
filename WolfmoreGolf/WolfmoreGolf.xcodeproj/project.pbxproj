@@ -15,6 +15,7 @@
 		F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64DE8142EB2850000F8D625 /* AppDelegate.swift */; };
 		F64DE8202EB2864B00F8D625 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */; };
 		F64DE9522EB6AAE300F8D625 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F64DE9512EB6AAE300F8D625 /* Assets.xcassets */; };
+		F657CEB42F01BBCA001CBFCD /* CourseLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */; };
 		F6590F052EFA225B0085D088 /* GameType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6590F042EFA225B0085D088 /* GameType.swift */; };
 		F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D351512EC0313E00CE24F9 /* RulesViewController.swift */; };
 		F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */; };
@@ -34,6 +35,7 @@
 		F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		F64DE8462EB2940000F8D625 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F64DE9512EB6AAE300F8D625 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseLibrary.swift; sourceTree = "<group>"; };
 		F6590F042EFA225B0085D088 /* GameType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameType.swift; sourceTree = "<group>"; };
 		F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WolfmoreGolf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6D351512EC0313E00CE24F9 /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
@@ -66,6 +68,7 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */,
 				F6590F042EFA225B0085D088 /* GameType.swift */,
 				F63D07132ED922D400F165CA /* ManagePlayerCell.swift */,
 				F63D08042EDFA66800F165CA /* CourseSummaryViewController.swift */,
@@ -184,6 +187,7 @@
 				F6D6A4A32EC78A100000F576 /* TrackFriendsViewController.swift in Sources */,
 				F6D6A49A2EC786BC0000F576 /* Friend.swift in Sources */,
 				F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */,
+				F657CEB42F01BBCA001CBFCD /* CourseLibrary.swift in Sources */,
 				F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */,
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,

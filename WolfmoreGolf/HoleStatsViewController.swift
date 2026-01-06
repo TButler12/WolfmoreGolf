@@ -136,16 +136,42 @@ final class HoleStatsViewController: UITableViewController {
     }
 
     // MARK: - Overview Builder (Wolf / Non-Wolf / Tie / Max Win)
+    /// Returns "games" (each game = array of RoundSummary rows) for a course.
+    /// Prefers real gameID grouping, but falls back if your stored gameIDs are wrong (all singletons).
+    private func gamesForCourse(_ courseID: String) -> [[RoundSummary]] {
+        let rows = RoundStore.shared.rounds.filter { $0.courseID == courseID }
+        guard !rows.isEmpty else { return [] }
+
+        let byGameID = Dictionary(grouping: rows, by: \.gameID)
+
+        // Use gameID if it actually groups multiple player-rows together
+        if byGameID.values.contains(where: { $0.count > 1 }) {
+            return byGameID.values.map { Array($0) }
+        }
+
+        // Back-compat fallback for bad historical data (unique gameID per player-row).
+        // 30-second bucket is enough to group the 5 player rows from a single save,
+        // but won't usually merge two different rounds.
+        let byBucket = Dictionary(grouping: rows) { r -> String in
+            let bucket = Int(r.date.timeIntervalSince1970 / 30.0) // 30-second bucket
+            return "\(r.courseID)|\(bucket)"
+        }
+
+        return byBucket.values.map { Array($0) }
+    }
 
     private func buildOverview(for trackedFriends: [Friend], courseID: String) {
-        // Use ALL rounds on this course (friends + you)
-        let allRounds = RoundStore.shared.rounds.filter { $0.courseID == courseID }
-        guard !allRounds.isEmpty else { overview = nil; return }
 
-        let holeCount = allRounds.map { $0.moneyPerHole.count }.max() ?? 0
+        let allRows = RoundStore.shared.rounds.filter { $0.courseID == courseID }
+        guard !allRows.isEmpty else { overview = nil; return }
+
+        // determine holeCount robustly (not just moneyPerHole)
+        let holeCount = allRows.map {
+            max($0.moneyPerHole.count, $0.proxPerHole.count, $0.scorePerHole.count, $0.wolfTeamWonPerHole.count)
+        }.max() ?? 0
         guard holeCount > 0 else { overview = nil; return }
 
-        // Pars for this course (fallback 4s)
+        // pars
         var pars = Array(repeating: 4, count: holeCount)
         if let uuid = UUID(uuidString: courseID),
            let course = CourseLibrary.shared.get(id: uuid) {
@@ -153,100 +179,90 @@ final class HoleStatsViewController: UITableViewController {
             if !coursePars.isEmpty { pars = coursePars }
         }
 
-        // Approximate group size: assume typical 4-ball once we have 4+ names
-        let allPlayerNames = Set(allRounds.map { $0.playerName.lowercased() })
-        let approxPlayersPerRound = max(1, min(4, allPlayerNames.count))
+        // ✅ games (with fallback)
+        let games = gamesForCourse(courseID)
+        guard !games.isEmpty else { overview = nil; return }
 
-        // Aggregates
-        var totalWinMoney        = Array(repeating: 0.0, count: holeCount)
-        var winSamplesPerHole    = Array(repeating: 0,   count: holeCount)
-        var maxWinPerHole        = Array(repeating: 0.0, count: holeCount)
-
-        var proxWins             = Array(repeating: 0,   count: holeCount)
-        var playerSamplesPerHole = Array(repeating: 0,   count: holeCount)
-
-        var scoreSum             = Array(repeating: 0,   count: holeCount)
-        var scoreCount           = Array(repeating: 0,   count: holeCount)
-
-        // Wolf call aggregates (per sample; ratios still correct)
-        var wolfCallSamples      = Array(repeating: 0,   count: holeCount)
-        var wolfWinSamples       = Array(repeating: 0,   count: holeCount)
-        var tieSamples           = Array(repeating: 0,   count: holeCount)
-
-        // ---- Aggregate across all player-rounds ----
-        for round in allRounds {
-            let count = min(
-                holeCount,
-                round.moneyPerHole.count,
-                round.proxPerHole.count
-            )
-            guard count > 0 else { continue }
-
-            for h in 0..<count {
-                let delta = round.moneyPerHole[h]
-
-                // Money: only winner dollars (delta > 0)
-                if delta > 0 {
-                    let win = Double(delta)
-                    totalWinMoney[h] += win
-                    winSamplesPerHole[h] += 1
-                    if win > maxWinPerHole[h] {
-                        maxWinPerHole[h] = win     // biggest single win on this hole
-                    }
-                }
-
-                // Prox winner (one per game)
-                if round.proxPerHole[h] {
-                    proxWins[h] += 1
-                }
-
-                // Scores
-                if h < round.scorePerHole.count,
-                   let s = round.scorePerHole[h] {
-                    scoreSum[h]   += s
-                    scoreCount[h] += 1
-                }
-
-                // Wolf flags: did a Wolf get called, and who won?
-                if h < round.wolfCalledPerHole.count,
-                   round.wolfCalledPerHole[h] {
-
-                    wolfCallSamples[h] += 1
-
-                    if h < round.wolfTeamWonPerHole.count,
-                       round.wolfTeamWonPerHole[h] {
-                        // Wolf side won this game-hole
-                        wolfWinSamples[h] += 1
-                    } else if delta == 0 {
-                        // Wolf called and nobody won money → treat as tie
-                        tieSamples[h] += 1
-                    }
-                    // Non-Wolf wins are inferred as the residual later.
-                }
-
-                // Count this player-hole sample
-                playerSamplesPerHole[h] += 1
+        // helpers
+        func moneyAt(_ r: RoundSummary, _ h: Int) -> Int {
+            (h < r.moneyPerHole.count) ? r.moneyPerHole[h] : 0
+        }
+        func scoreAt(_ r: RoundSummary, _ h: Int) -> Int? {
+            guard h < r.scorePerHole.count else { return nil }
+            return r.scorePerHole[h]
+        }
+        func holeIsPlayed(in group: [RoundSummary], hole h: Int) -> Bool {
+            group.contains { r in
+                if scoreAt(r, h) != nil { return true }
+                if h < r.moneyPerHole.count { return true }
+                if h < r.proxPerHole.count { return true }
+                return h < max(r.holesPlayed, 0)
             }
         }
 
-        // ---- Derived numbers ----
+        // aggregates per hole (GAME-based)
+        var gamesPlayed      = Array(repeating: 0,   count: holeCount)
+        var proxGames        = Array(repeating: 0,   count: holeCount)
 
-        func safeDiv(_ a: Double, _ b: Double) -> Double {
-            b == 0 ? 0 : (a / b)
+        var winnerMoneySum   = Array(repeating: 0.0, count: holeCount)
+        var winnerMoneyCount = Array(repeating: 0,   count: holeCount) // games where winner > 0
+        var maxWinPerHole    = Array(repeating: 0.0, count: holeCount)
+
+        var scoreSum         = Array(repeating: 0,   count: holeCount)
+        var scoreCount       = Array(repeating: 0,   count: holeCount)
+
+        var wolfWins         = Array(repeating: 0,   count: holeCount)
+        var nonWolfWins      = Array(repeating: 0,   count: holeCount)
+        var ties             = Array(repeating: 0,   count: holeCount)
+
+        // compute per hole using playedGames like CourseSummary
+        for h in 0..<holeCount {
+            let playedGames = games.filter { holeIsPlayed(in: $0, hole: h) }
+            gamesPlayed[h] = playedGames.count
+            guard gamesPlayed[h] > 0 else { continue }
+
+            // prox: ANY player in game has prox true
+            proxGames[h] = playedGames.filter { group in
+                group.contains { r in h < r.proxPerHole.count && r.proxPerHole[h] }
+            }.count
+
+            // money: winner per game = max money in game on that hole
+            for group in playedGames {
+                let winAmt = group.map { Double(moneyAt($0, h)) }.max() ?? 0.0
+                if winAmt > 0 {
+                    winnerMoneySum[h] += winAmt
+                    winnerMoneyCount[h] += 1
+                    if winAmt > maxWinPerHole[h] { maxWinPerHole[h] = winAmt }
+                }
+
+                // scores: all recorded scores
+                for r in group {
+                    if let s = scoreAt(r, h) {
+                        scoreSum[h] += s
+                        scoreCount[h] += 1
+                    }
+                }
+
+                // wolf/non-wolf/tie from game winner row
+                if let winnerRow = group.max(by: { moneyAt($0, h) < moneyAt($1, h) }) {
+                    let m = moneyAt(winnerRow, h)
+                    if m <= 0 {
+                        ties[h] += 1
+                    } else if h < winnerRow.wolfTeamWonPerHole.count, winnerRow.wolfTeamWonPerHole[h] {
+                        wolfWins[h] += 1
+                    } else {
+                        nonWolfWins[h] += 1
+                    }
+                }
+            }
         }
 
-        // Approximate game count per hole from samples
-        let groupRoundsPerHole: [Int] = (0..<holeCount).map { i in
-            let approxGames = Double(playerSamplesPerHole[i]) / Double(approxPlayersPerRound)
-            return max(1, Int(approxGames.rounded()))   // never 0
-        }
+        func safeDiv(_ a: Double, _ b: Double) -> Double { b == 0 ? 0 : (a / b) }
 
-        // Average money (per winning game, roughly)
         let avgMoneyPerHole: [Double] = (0..<holeCount).map { i in
-            safeDiv(totalWinMoney[i], Double(max(1, winSamplesPerHole[i])))
+            safeDiv(winnerMoneySum[i], Double(winnerMoneyCount[i]))
         }
 
-        // Average score & vs par
         let avgScorePerHole: [Double] = (0..<holeCount).map { i in
             safeDiv(Double(scoreSum[i]), Double(scoreCount[i]))
         }
@@ -255,71 +271,57 @@ final class HoleStatsViewController: UITableViewController {
             avgScorePerHole[i] - Double(pars[i])
         }
 
-        // Prox %: games with a prox winner / approx games (clamp to 100)
         let proxPctPerHole: [Double] = (0..<holeCount).map { i in
-            let rounds = Double(max(1, groupRoundsPerHole[i]))
-            let pct = safeDiv(Double(proxWins[i]) * 100.0, rounds)
-            return min(100.0, max(0.0, pct))
+            safeDiv(Double(proxGames[i]) * 100.0, Double(gamesPlayed[i]))
         }
 
-        // Wolf / Non-Wolf / Tie % (based on Wolf-called holes)
         let wolfWinPctPerHole: [Double] = (0..<holeCount).map { i in
-            safeDiv(Double(wolfWinSamples[i]) * 100.0, Double(wolfCallSamples[i]))
-        }
-
-        let tieWinPctPerHole: [Double] = (0..<holeCount).map { i in
-            safeDiv(Double(tieSamples[i]) * 100.0, Double(wolfCallSamples[i]))
+            safeDiv(Double(wolfWins[i]) * 100.0, Double(gamesPlayed[i]))
         }
 
         let nonWolfWinPctPerHole: [Double] = (0..<holeCount).map { i in
-            let total = Double(wolfCallSamples[i])
-            let wolf  = Double(wolfWinSamples[i])
-            let tie   = Double(tieSamples[i])
-            guard total > 0 else { return 0 }
-            let nonWolf = max(0.0, total - wolf - tie)
-            return safeDiv(nonWolf * 100.0, total)
+            safeDiv(Double(nonWolfWins[i]) * 100.0, Double(gamesPlayed[i]))
         }
 
-        // ---- Ranking helper ----
+        let tieWinPctPerHole: [Double] = (0..<holeCount).map { i in
+            safeDiv(Double(ties[i]) * 100.0, Double(gamesPlayed[i]))
+        }
+
         func rank(of index: Int, using values: [Double], descending: Bool = true) -> Int {
-            // Ignore pure zeros so “no data” doesn’t get rank 1
             let valid = values.enumerated().filter { $0.element > 0 }
             guard !valid.isEmpty else { return 0 }
-
-            let sorted = valid.sorted { a, b in
-                descending ? a.element > b.element : a.element < b.element
-            }
-
+            let sorted = valid.sorted { a, b in descending ? a.element > b.element : a.element < b.element }
             return (sorted.firstIndex { $0.offset == index } ?? 0) + 1
         }
 
-        // ---- Compose Overview for THIS hole ----
         let h = holeIndex
-        guard h < holeCount else {
-            overview = nil
-            return
-        }
+        guard h < holeCount else { overview = nil; return }
 
         overview = HoleOverview(
             avgMoney:      avgMoneyPerHole[h],
             proxPct:       proxPctPerHole[h],
             avgScore:      avgScorePerHole[h],
             avgVsPar:      avgVsParPerHole[h],
+
             wolfWinPct:    wolfWinPctPerHole[h],
             nonWolfWinPct: nonWolfWinPctPerHole[h],
             tieWinPct:     tieWinPctPerHole[h],
+
             moneyRank:     rank(of: h, using: avgMoneyPerHole,      descending: true),
             proxRank:      rank(of: h, using: proxPctPerHole,       descending: true),
             scoreRank:     rank(of: h, using: avgVsParPerHole,      descending: false),
             wolfRank:      rank(of: h, using: wolfWinPctPerHole,    descending: true),
             nonWolfRank:   rank(of: h, using: nonWolfWinPctPerHole, descending: true),
             tieRank:       rank(of: h, using: tieWinPctPerHole,     descending: true),
+
             maxWin:        maxWinPerHole[h],
             maxWinRank:    rank(of: h, using: maxWinPerHole,        descending: true),
-            rounds:        groupRoundsPerHole[h],
+
+            rounds:        gamesPlayed[h],     // ✅ matches CourseSummary now
             holeCount:     holeCount
         )
     }
+
 
     // MARK: - Empty Background
 

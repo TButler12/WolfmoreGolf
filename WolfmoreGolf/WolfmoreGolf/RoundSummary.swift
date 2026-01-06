@@ -6,3 +6,5 @@
 //
 
 import Foundation
+
+var gameTypePerHole: [GameType]?   // nil for old rounds

@@ -1,17 +1,15 @@
 {
   "images" : [
     {
-      "filename" : "wolfmore-icon-1024 copy.png",
+      "filename" : "wolfmore_icon_howl_bright_appstore_1024.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "wolfmore-icon-1024 copy 1.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "wolfmore-icon-1024 copy 2.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

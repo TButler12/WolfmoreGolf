@@ -2,42 +2,52 @@
 import Foundation
 
 enum ProfileStore {
-    // MARK: - Name
 
-    private static let key = "profile.myName"
+    // MARK: - Name
+    private static let nameKey = "profile.myName"
 
     static var name: String? {
-        get { getName() }
-        set { set(name: newValue) }
-    }
-
-    static func set(name: String?) {
-        let trimmed = name?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if trimmed.isEmpty {
-            UserDefaults.standard.removeObject(forKey: key)
-        } else {
-            UserDefaults.standard.set(trimmed, forKey: key)
-        }
-    }
-
-    static func getName() -> String? {
-        let v = UserDefaults.standard.string(forKey: key)?
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        return (v?.isEmpty == false) ? v : nil
-    }
-
-    // MARK: - Home Course Tracking
-
-    private static let homeCourseKey = "profile.homeCourseID"
-
-    /// The course ID (UUID string) of the user's chosen "home / tracking" course.
-    /// If nothing is set yet, we fall back to a default string.
-    static var homeCourseID: String {
         get {
-            UserDefaults.standard.string(forKey: homeCourseKey) ?? "HOME-COURSE"
+            let v = (UserDefaults.standard.string(forKey: nameKey) ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            return v.isEmpty ? nil : v
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: homeCourseKey)
+            let trimmed = (newValue ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                UserDefaults.standard.removeObject(forKey: nameKey)
+            } else {
+                UserDefaults.standard.set(trimmed, forKey: nameKey)
+            }
         }
+    }
+
+    // MARK: - Home Course
+    private static let homeCourseKey = "profile.homeCourseID"
+
+    /// Empty string = not set yet.
+    static var homeCourseID: String {
+        get { UserDefaults.standard.string(forKey: homeCourseKey) ?? "" }
+        set {
+            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty {
+                UserDefaults.standard.removeObject(forKey: homeCourseKey)
+            } else {
+                UserDefaults.standard.set(trimmed, forKey: homeCourseKey)
+            }
+        }
+    }
+
+    static var hasHomeCourse: Bool {
+        UUID(uuidString: homeCourseID) != nil
+    }
+
+    // MARK: - One-time prompt flag
+    private static let didPromptHomeCourseKey = "profile.didPromptHomeCourse_v1"
+
+    static var didPromptHomeCourse: Bool {
+        get { UserDefaults.standard.bool(forKey: didPromptHomeCourseKey) }
+        set { UserDefaults.standard.set(newValue, forKey: didPromptHomeCourseKey) }
     }
 }

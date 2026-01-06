@@ -10,6 +10,8 @@ import Foundation
 struct GameData: Codable {
 
     // NEW (optional so old saves decode safely)
+    var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: 18)
+
     var gameType: GameType?
     var hammerCountPerHole: [Int]?
     var wolfPlayerPerHole: [Int?]?

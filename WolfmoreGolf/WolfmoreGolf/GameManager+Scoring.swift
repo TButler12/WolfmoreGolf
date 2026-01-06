@@ -238,6 +238,19 @@ extension GameManager {
 
         return payouts
     }
+    func proxPercent(seat: Int,
+                     gameTypePerHole: [GameType],
+                     proxWinnerSeatPerHole: [Int?]) -> Double {
+
+        let eligibleHoles = (0..<min(gameTypePerHole.count, proxWinnerSeatPerHole.count))
+            .filter { gameTypePerHole[$0].isScotch }   // ✅ excludes wolf + wolfLowBall
+
+        let opp = eligibleHoles.count
+        guard opp > 0 else { return 0 }
+
+        let wins = eligibleHoles.filter { proxWinnerSeatPerHole[$0] == seat }.count
+        return (Double(wins) / Double(opp)) * 100.0
+    }
 
 }
 

@@ -51,15 +51,7 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
 
         // Navigation buttons: Add + Import Roster
-        navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(barButtonSystemItem: .add,
-                            target: self,
-                            action: #selector(addTapped)),
-            UIBarButtonItem(title: "Import Roster",
-                            style: .plain,
-                            target: self,
-                            action: #selector(importRoster))
-        ]
+        
 
         // Search setup
         searchController.obscuresBackgroundDuringPresentation = false

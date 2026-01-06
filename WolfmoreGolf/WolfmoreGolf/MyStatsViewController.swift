@@ -2,98 +2,214 @@ import UIKit
 
 final class MyStatsViewController: UIViewController {
 
-    // For now: just use ALL friends in FriendStore.
-    private var allFriends: [Friend] {
-        FriendStore.shared.friends
-    }
+    // MARK: - Modes / Sorting
 
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        showFriendStatsAlert()
-    }
+    enum Mode { case me, friends }
+    enum SortKey { case name, money, prox }
 
-    // MARK: - Stats helpers
-
-    /// Returns an array of (friend, stats) for all friends that have stats.
-    private func computeMoneyAverages() -> [(friend: Friend, stats: MyStats)] {
-        return allFriends.compactMap { friend in
-            guard let stats = RoundStore.shared.stats(forPlayerNamed: friend.name) else {
-                return nil
-            }
-            return (friend, stats)
-        }
-    }
+    var mode: Mode = .me
+    private var sortKey: SortKey = .money   // default for friends mode
 
     // MARK: - UI
 
-    private func showFriendStatsAlert() {
-        let rows = computeMoneyAverages()
+    private let textView = UITextView()
+    private let sortControl = UISegmentedControl(items: ["Name", "Money", "Prox"])
 
-        // No stats at all
-        guard !rows.isEmpty else {
-            let ac = UIAlertController(
-                title: "Friend Stats",
-                message: "No rounds saved yet.",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-                self.dismiss(animated: true)
-            })
-            present(ac, animated: true)
-            return
+    // MARK: - Data
+
+    private var allFriends: [Friend] { FriendStore.shared.friends }
+
+    // MARK: - Formatting
+
+    private let currency0: NumberFormatter = {
+        let nf = NumberFormatter()
+        nf.numberStyle = .currency
+        nf.minimumFractionDigits = 0
+        nf.maximumFractionDigits = 0
+        return nf
+    }()
+
+    private func wonLostText(totalMoney: Int) -> String {
+        let verb = (totalMoney >= 0) ? "Won" : "Lost"
+        let amt = abs(totalMoney)
+        let amtStr = currency0.string(from: NSNumber(value: amt)) ?? "\(amt)"
+        return "\(verb) \(amtStr)"
+    }
+
+    // MARK: - Lifecycle
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+
+        view.backgroundColor = .systemBackground
+        title = (mode == .me) ? "My Stats" : "Friend Stats"
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Done",
+            style: .done,
+            target: self,
+            action: #selector(doneTapped)
+        )
+
+        configureTextView()
+
+        if mode == .friends {
+            configureSortControl()
         }
 
-        // Sort by name (optional)
-        let sorted = rows.sorted {
-            $0.friend.name.localizedCaseInsensitiveCompare($1.friend.name) == .orderedAscending
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(reload),
+            name: .reloadUI,
+            object: nil
+        )
+
+        reload()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
+    // MARK: - UI Setup
+
+    private func configureTextView() {
+        textView.translatesAutoresizingMaskIntoConstraints = false
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.backgroundColor = .clear
+        textView.font = .systemFont(ofSize: 16)
+        textView.textContainerInset = UIEdgeInsets(top: 16, left: 14, bottom: 16, right: 14)
+
+        view.addSubview(textView)
+
+        NSLayoutConstraint.activate([
+            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            textView.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor),
+            textView.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor),
+            textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+    }
+
+    private func configureSortControl() {
+        sortControl.selectedSegmentIndex = 1 // Money
+        sortControl.addTarget(self, action: #selector(sortChanged(_:)), for: .valueChanged)
+        navigationItem.titleView = sortControl
+    }
+
+    // MARK: - Actions
+
+    @objc private func doneTapped() {
+        // If pushed, pop. If presented, dismiss.
+        if let nav = navigationController, nav.viewControllers.first != self {
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
         }
+    }
+
+    @objc private func sortChanged(_ sender: UISegmentedControl) {
+        switch sender.selectedSegmentIndex {
+        case 0: sortKey = .name
+        case 1: sortKey = .money
+        default: sortKey = .prox
+        }
+        reload()
+    }
+
+    // MARK: - Reload
+
+    @objc private func reload() {
+        switch mode {
+        case .me:
+            navigationItem.titleView = nil
+            title = "My Stats"
+            textView.text = buildMyStatsMessage()
+        case .friends:
+            title = "Friend Stats"
+            textView.text = buildFriendStatsMessagePinnedMe()
+        }
+    }
+
+    // MARK: - Build: My Stats
+
+    private func buildMyStatsMessage() -> String {
+        let myName = (ProfileStore.name ?? "Player 1")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard let s = RoundStore.shared.stats(forPlayerNamed: myName) else {
+            return "No rounds saved yet for \(myName)."
+        }
+
+        return formatBlock(name: myName, stats: s)
+    }
+
+    // MARK: - Build: Friends Stats (with Me pinned + sortable friends)
+
+    private func buildFriendStatsMessagePinnedMe() -> String {
+        let myName = (ProfileStore.name ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
         var blocks: [String] = []
 
-        for row in sorted {
-            let f = row.friend
-            let s = row.stats
-
-            // Adjust these to whatever “per 18” values you already use
-            let moneyPer18 = s.avgMoneyPerRound      // or s.avgMoneyPer18 if you have it
-            let proxPer18  = s.avgProxPerRound       // or s.avgProxPer18
-
-            let block = String(
-                format:
-                """
-                • %@:
-                  %d rds, avg $%.1f per 18
-                  prox %.1f per 18
-                """,
-                f.name,
-                s.rounds,
-                moneyPer18,
-                proxPer18
-            )
-
-            blocks.append(block)
+        // --- ME pinned at top ---
+        if !myName.isEmpty, let myStats = RoundStore.shared.stats(forPlayerNamed: myName) {
+            blocks.append("— ME —\n" + formatBlock(name: myName, stats: myStats))
         }
 
-        // 👇 blank line between friends → much more breathing room
-        let message = blocks.joined(separator: "\n\n")
+        // --- FRIENDS ---
+        var friendRows: [(name: String, stats: MyStats)] = allFriends.compactMap { f in
+            let n = f.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !n.isEmpty else { return nil }
 
-        let ac = UIAlertController(
-            title: "Friend Stats (all-time)",
-            message: message,
-            preferredStyle: .alert
-        )
-        ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-            self.dismiss(animated: true)
-        })
+            // Avoid duplicates if "me" is also in FriendStore
+            if !myName.isEmpty, n.caseInsensitiveCompare(myName) == .orderedSame {
+                return nil
+            }
 
-        // iPad safety
-        if let pop = ac.popoverPresentationController {
-            pop.sourceView = view
-            pop.sourceRect = CGRect(x: view.bounds.midX,
-                                    y: view.bounds.midY,
-                                    width: 1, height: 1)
+            guard let s = RoundStore.shared.stats(forPlayerNamed: n) else { return nil }
+            return (n, s)
         }
 
-        present(ac, animated: true)
+        // Nothing at all?
+        guard !(blocks.isEmpty && friendRows.isEmpty) else {
+            return "No rounds saved yet."
+        }
+
+        // Sort friends
+        switch sortKey {
+        case .name:
+            friendRows.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        case .money:
+            friendRows.sort { $0.stats.totalMoney > $1.stats.totalMoney } // high → low
+        case .prox:
+            friendRows.sort { $0.stats.totalProx > $1.stats.totalProx }   // high → low
+        }
+
+        if !friendRows.isEmpty {
+            let friendsText = friendRows
+                .map { formatBlock(name: $0.name, stats: $0.stats) }
+                .joined(separator: "\n\n")
+
+            blocks.append("— FRIENDS —\n" + friendsText)
+        }
+
+        return blocks.joined(separator: "\n\n\n")
+    }
+
+    // MARK: - Formatting
+
+    private func formatBlock(name: String, stats s: MyStats) -> String {
+        let totalLine = wonLostText(totalMoney: s.totalMoney)
+        let avgMoneyStr = String(format: "%.1f", s.avgMoneyPerRound)
+        let avgProxStr  = String(format: "%.1f", s.avgProxPerRound)
+
+        return """
+        • \(name)
+          \(s.rounds) rds
+          \(totalLine)
+          avg $\(avgMoneyStr) per 18
+          prox \(s.totalProx) total (avg \(avgProxStr) per 18)
+        """
     }
 }

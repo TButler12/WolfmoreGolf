@@ -19,6 +19,8 @@ final class GameViewController: UIViewController {
     var isUmbrella: Bool = false   // true = mute double for ENTIRE game
 
     // MARK: - Outlets
+    @IBOutlet private weak var umbrellaButton: UIButton!
+
     @IBOutlet weak var holeStatsTapped: UIView!
     
     @IBOutlet private weak var plusPointDollars: UIButton!
@@ -144,19 +146,23 @@ final class GameViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
+        installUmbieHelp()
+        
+        installLongPressHelp()
+        
         // ✅ Ensure we have a game loaded, then normalize (one time)
         if GameManager.shared.currentGame == nil {
             GameManager.shared.startNewGame()
         }
         GameManager.shared.normalizeCurrentIfNeeded()
-
+        
         // Seed any missing scores with pars (only affects nils)
         GameManager.shared.seedScoresWithParsForActivePlayers()
-
+        
         // ✅ Apply mode-based visibility (Wolf vs 6-point)
         applyGameTypeUI()
-
+        
         // --- Keyboard / tap-to-dismiss ---
         scoreFields.forEach {
             $0.keyboardType = .numberPad
@@ -165,17 +171,17 @@ final class GameViewController: UIViewController {
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
-
+        
         // --- Totals labels ---
         totalMoneyLabels = totalMoneyLabels.sorted { $0.tag < $1.tag }
         refreshTotalMoneyLabels()
-
+        
         // --- Toggle button styling (these may be hidden depending on mode) ---
-        setupToggleButton(rollPushed,     onColor: .black, offColor: .systemOrange, onTitle: "Roll On",    offTitle: "Roll")
-        setupToggleButton(rerollPushed,   onColor: .black, offColor: .systemOrange, onTitle: "Re-Roll On", offTitle: "Re-Roll")
-        setupToggleButton(alonePushed,    onColor: .black, offColor: .systemOrange, onTitle: "Alone On",   offTitle: "Alone")
+        setupToggleButton(rollPushed,     onColor: .black, offColor: .systemOrange, onTitle: "Roll",    offTitle: "Roll")
+        setupToggleButton(rerollPushed,   onColor: .black, offColor: .systemOrange, onTitle: "Re-Roll", offTitle: "Re-Roll")
+        setupToggleButton(alonePushed,    onColor: .black, offColor: .systemOrange, onTitle: "Double",   offTitle: "Alone")
         setupToggleButton(pressedPushed2, onColor: .black, offColor: .systemOrange, onTitle: "Press On",   offTitle: "Press")
-
+        
         // --- Score fields ---
         for (i, f) in scoreFields.enumerated() {
             f.tag = i
@@ -183,7 +189,7 @@ final class GameViewController: UIViewController {
             f.addTarget(self, action: #selector(scoreEdited(_:)), for: .editingDidEnd)
             f.addTarget(self, action: #selector(scoreChanged(_:)), for: .editingChanged)
         }
-
+        
         // --- Player money fields ---
         for (i, tf) in playerMoneyFields.enumerated() {
             tf.tag = i
@@ -192,25 +198,115 @@ final class GameViewController: UIViewController {
             tf.keyboardType = .decimalPad
             tf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
         }
-
+        
         // --- Button tags + styles ---
         for (i, b) in wolfButtons.enumerated() { b.tag = i }
         for (i, b) in proxButtons.enumerated() { b.tag = i }
         styleWolfButtons()
-
+        
         // --- Initial paint ---
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
-
+        
         // 👇 Take over back behavior
         navigationItem.hidesBackButton = true
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        
+        addHoldRulesToGameModeSegment()
+
+        
     }
 
 
     deinit {
         NotificationCenter.default.removeObserver(self, name: .reloadUI, object: nil)
+    }
+    private func addHoldRulesToGameModeSegment() {
+        let lp = UILongPressGestureRecognizer(target: self,
+                                              action: #selector(gameModeSegmentHeld(_:)))
+        lp.minimumPressDuration = 0.5
+        lp.cancelsTouchesInView = false   // keeps normal taps working
+        gameModeSegment.addGestureRecognizer(lp)
+    }
+    
+    @objc private func gameModeSegmentHeld(_ gr: UILongPressGestureRecognizer) {
+        guard gr.state == .began else { return }
+
+        let ac = UIAlertController(
+            title: "Scoring Rules",
+            message: allThreeGameRulesText(),
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+    private func allThreeGameRulesText() -> String {
+        """
+        • Teams of two vs two or three
+        
+        6-Point Scotch 
+        • 2 points low ball
+        • 2 points low team total
+        • 1 point prox
+        • 1 point birdie
+        • Sweep all 6 points and points double. Umbie button can mute this double. 
+        
+        2-Point 
+        • 1 point team low ball
+        • 1 point team low total
+        
+        1-Point 
+        • 1-Point team low ball
+        
+        """
+    }
+    private func sixPointRules() -> String {
+        """
+        • Teams of two vs two or three
+        • 2 points low ball
+        • 2 points low team total
+        • 1 point prox
+        • 1 point birdie
+        • Sweep all 6 points and points double unless muted by umbie button
+        """
+    }
+
+    private func twoPointRules() -> String {
+        """
+        • Teams of two vs two or three
+        • 1 point low ball
+        • 1 point low team total
+        """
+    }
+
+    private func onePointRules() -> String {
+        """
+        • Teams of two vs two or three
+        • 1 point low ball
+        """
+    }
+
+    private func allRules() -> String {
+        """
+        6-Point Scotch:
+        \(sixPointRules())
+
+        2-Point:
+        \(twoPointRules())
+
+        1-Point:
+        \(onePointRules())
+        """
+    }
+
+ 
+    
+
+    private func presentRules(title: String, message: String) {
+        let ac = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
     }
 
     @objc private func gameBackTapped() {
@@ -440,6 +536,13 @@ final class GameViewController: UIViewController {
     private func baseStake(for hole: Int, in g: GameData) -> Double {
         let raw = g.gameHoleDollarsArray[safe: hole] ?? 2.0
         return raw == 0 ? 2.0 : raw
+    }
+    private func installUmbieHelp() {
+        addHelp(to: umbrellaButton, title: "Umbie (Sweep)", message: """
+    Six-Point only.
+    If a team wins all 6 points, the hole automatically doubles.
+    Tap Umbie to mute/enable the sweep doubling.
+    """)
     }
 
     private func hammerCount(for hole: Int, in g: GameData) -> Int {
@@ -703,8 +806,9 @@ final class GameViewController: UIViewController {
                 as? HoleStatsViewController else { return }
 
         vc.holeIndex = holeIndex
-        vc.modalPresentationStyle = .pageSheet
+        vc.modalPresentationStyle = (UIDevice.current.userInterfaceIdiom == .pad) ? .fullScreen : .pageSheet
         present(vc, animated: true)
+
     }
 
 
@@ -872,6 +976,85 @@ final class GameViewController: UIViewController {
             }
         }
     }
+    // MARK: - Quick Help (Long-press)
+
+    private struct HelpItem {
+        let title: String
+        let message: String
+    }
+
+    private func installLongPressHelp() {
+        // Hammer / Reject
+        addHelp(to: hammerButton, title: "Hammer", message: """
+    Doubles the current hole stake each tap (1× → 2× → 4× → 8×…).
+    Applies only to this hole.
+    Use Reject to undo the most recent hammer.
+    Money updates when you press Update Scores.
+    """)
+
+        addHelp(to: rejectHammerButton, title: "Reject Hammer", message: """
+    Undo the most recent Hammer tap for this hole.
+    (Stake drops one step: 8× → 4× → 2× → 1×.)
+    """)
+
+        // Roll / Re-Roll / Press / Alone
+        addHelp(to: rollPushed, title: "Roll", message: """
+    Doubles the hole stake for this hole.
+    Often used when teams want to raise the action on a single hole.
+    """)
+
+        addHelp(to: rerollPushed, title: "Re-Roll", message: """
+    Doubles the stake again on this hole.
+    Only available if Roll is already ON.
+    """)
+
+        addHelp(to: pressedPushed2, title: "Press", message: """
+    Persistent double.
+    Starts at the current hole and stays ON for up to 9 holes.
+    Press affects stake going forward until the pressed window ends or is turned off.
+    """)
+
+        addHelp(to: alonePushed, title: "Alone (Lone Wolf)", message: """
+    Player goes solo (no partner).
+    Doubles the stake for this hole.
+    Only tap if you want Lone Wolf wager to double. Otherwise. Alone calculation will be the same but without the double.
+    Note: Alone Team Total calculation uses a ghost partner score: (player score + bogey) ÷ 2.
+    """)
+
+        // Umbie (if you have an umbrella button outlet, attach help there too)
+        // If your Umbie button is called something else, just wire it below.
+    }
+    private func addHelp(to view: UIView?, title: String, message: String) {
+        guard let view else { return }
+        view.isUserInteractionEnabled = true
+
+        // Store text on the view itself (simple and reliable)
+        view.accessibilityLabel = title
+        view.accessibilityValue = message
+
+        let lp = UILongPressGestureRecognizer(target: self, action: #selector(handleHelpLongPress(_:)))
+        lp.minimumPressDuration = 0.45
+        view.addGestureRecognizer(lp)
+    }
+
+    @objc private func handleHelpLongPress(_ gr: UILongPressGestureRecognizer) {
+        guard gr.state == .began, let source = gr.view else { return }
+
+        let title = source.accessibilityLabel ?? "Help"
+        let message = source.accessibilityValue ?? ""
+
+        let ac = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "Got it", style: .cancel))
+
+        // iPad anchor safety
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = source
+            pop.sourceRect = source.bounds
+        }
+
+        present(ac, animated: true)
+    }
+
     private func effectiveHCs(_ hc: [Int], activeSeats: [Int]) -> [Int] {
         guard !activeSeats.isEmpty else { return hc }
         let maxActive = activeSeats.map { hc[$0] }.max() ?? 0
@@ -912,6 +1095,7 @@ final class GameViewController: UIViewController {
 
         refreshMoneyFieldsForCurrentHole()
     }
+    private var hasSavedThisOpen = false
 
     private func debugStrokes(_ tag: String) {
         guard let g = GameManager.shared.currentGame else { return }
@@ -962,12 +1146,16 @@ final class GameViewController: UIViewController {
     }
     
     @IBAction private func umbrellaTapped(_ sender: UIButton) {
-        guard let g = GameManager.shared.currentGame else { return }
-        guard g.resolvedGameType == .sixPointScotch else { return } // ✅ block in Wolf
+        // ✅ block in Wolf
+        guard GameManager.shared.currentGame?.resolvedGameType == .sixPointScotch else { return }
 
         GameManager.shared.update { $0.isUmbrella.toggle() }
-        refreshUmbrellaButtonUI(sender)
+
+        // repaint everything that might overwrite styles…
         paintEverythingForCurrentHole()
+
+        // ✅ …then force Umbie UI LAST so it wins
+        refreshUmbrellaButtonUI(sender)
     }
 
 
@@ -1010,12 +1198,43 @@ final class GameViewController: UIViewController {
    
     private func refreshUmbrellaButtonUI(_ button: UIButton) {
         guard let g = GameManager.shared.currentGame else { return }
-        let muted = g.isUmbrella    // 👈 global
+        let muted = g.isUmbrella   // true = OFF (muted)
 
-        button.setTitle(muted ? "Umbrella: OFF" : "Umbrella: ON", for: .normal)
-        button.backgroundColor = muted ? .systemBrown : .systemOrange
-        button.alpha = 1.0
+        let title = muted ? "Umbrella: OFF" : "Umbrella: ON"
+        let bg    = muted ? UIColor.systemBrown : UIColor.systemOrange
+
+        if #available(iOS 15.0, *) {
+            var cfg = button.configuration ?? UIButton.Configuration.filled()
+            cfg.title = title
+            cfg.baseBackgroundColor = bg
+
+            // ✅ force black text (prevents auto white)
+            cfg.baseForegroundColor = .black
+
+            // ✅ slightly smaller font
+            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = UIFont.systemFont(ofSize: 13, weight: .semibold) // tweak
+                outgoing.foregroundColor = UIColor.black
+                return outgoing
+            }
+
+            button.configuration = cfg
+
+            // extra safety for state changes
+            button.setTitleColor(.black, for: .normal)
+            button.setTitleColor(.black, for: .highlighted)
+            button.setTitleColor(.black, for: .selected)
+            button.setTitleColor(.black, for: .disabled)
+        } else {
+            button.setTitle(title, for: .normal)
+            button.backgroundColor = bg
+            button.setTitleColor(.black, for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+            button.alpha = 1.0
+        }
     }
+
 
 
     private func refreshHeaderForCurrentHole() {
@@ -1092,6 +1311,9 @@ final class GameViewController: UIViewController {
             guard let self = self else { return }
 
             // --- 4) Save YOUR round first ---
+            print("✅ proxWinnerPerHole:", GameManager.shared.currentGame?.proxWinnerPerHole as Any)
+            print("💾 saving prox array:", GameManager.shared.currentGame?.proxWinnerPerHole as Any)
+
             guard let meSummary = RoundStore.shared.recordFromCurrentGame() else {
                 let warn = UIAlertController(
                     title: "Not On This Card",
@@ -1300,28 +1522,40 @@ final class GameViewController: UIViewController {
     }
     
     private func updateHammerButton(_ button: UIButton, hammerCount: Int) {
-        // Build 2-line title
-        let mult = hammerMultiplier(for: hammerCount)          // 1,2,4,8...
-        let title = "HAMMER\n(\(mult)x)"
+        let style = hammerStyle(for: hammerCount)
 
-        // If you're NOT using UIButton.Configuration for this button:
-        button.setTitle(title, for: .normal)
-        button.setTitleColor(.white, for: .normal)
-        button.setBackgroundImage(.pixel(of: hammerStyle(for: hammerCount).color), for: .normal)
+        if #available(iOS 15.0, *) {
+            var cfg = button.configuration ?? UIButton.Configuration.filled()
 
-        // ✅ center the second line
-        button.titleLabel?.numberOfLines = 2
-        button.titleLabel?.lineBreakMode = .byWordWrapping
-        button.titleLabel?.textAlignment = .center
-        button.contentHorizontalAlignment = .center
-        button.contentVerticalAlignment = .center
+            cfg.title = style.title
+            cfg.baseBackgroundColor = style.color
 
-        // (optional) ensure no weird insets are pushing text
-        button.titleEdgeInsets = .zero
-        button.contentEdgeInsets = .zero
+            // ✅ Force BLACK text (prevents iOS from flipping to white)
+            cfg.baseForegroundColor = .black
 
-        button.layer.cornerRadius = 10
-        button.clipsToBounds = true
+            // ✅ Slightly smaller font
+            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = UIFont.systemFont(ofSize: 13, weight: .semibold) // tweak 12–14
+                outgoing.foregroundColor = UIColor.black
+                return outgoing
+            }
+
+            button.configuration = cfg
+
+            // Extra safety for highlighted/selected states
+            button.setTitleColor(.black, for: .normal)
+            button.setTitleColor(.black, for: .highlighted)
+            button.setTitleColor(.black, for: .selected)
+            button.setTitleColor(.black, for: .disabled)
+        } else {
+            button.backgroundColor = style.color
+            button.setTitle(style.title, for: .normal)
+            button.setTitleColor(.black, for: .normal)
+            button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+            button.layer.cornerRadius = 8
+            button.clipsToBounds = true
+        }
     }
 
 

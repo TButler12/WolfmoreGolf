@@ -1,10 +1,5 @@
-//
-//  GameStatsViewController: UIViewController.swift
-//  Wolfmore-7Man
-//
-//  Created by Tom BUTLER on 10/18/25.
-//
-//
+
+
 //  GameStatsViewController: UIViewController.swift
 //  Wolfmore-7Man
 //
@@ -54,10 +49,9 @@ final class GameStatsViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // 1) make the whole background slightly dim
         view.backgroundColor = UIColor.black.withAlphaComponent(0.25)
 
-        // 2) make an inner container for the stats
+        // Panel container
         let panel = UIView()
         panel.backgroundColor = .systemBackground
         panel.layer.cornerRadius = 16
@@ -71,14 +65,25 @@ final class GameStatsViewController: UIViewController {
             panel.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.6),
         ])
 
-        // 3) add a close (X) button
+        // Close button
         let closeBtn = UIButton(type: .system)
         closeBtn.setTitle("Close", for: .normal)
         closeBtn.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         closeBtn.translatesAutoresizingMaskIntoConstraints = false
         panel.addSubview(closeBtn)
 
-        // 4) add your table INSIDE the panel
+        // Load Game To History button (inside popup)
+        let historyBtn = UIButton(type: .system)
+        historyBtn.setTitle("Load Game To History", for: .normal)
+        historyBtn.setTitleColor(.white, for: .normal)
+        historyBtn.backgroundColor = .systemIndigo
+        historyBtn.layer.cornerRadius = 14
+        historyBtn.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+        historyBtn.addTarget(self, action: #selector(loadGameToHistoryTapped(_:)), for: .touchUpInside)
+        historyBtn.translatesAutoresizingMaskIntoConstraints = false
+        panel.addSubview(historyBtn)
+
+        // Table
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
@@ -87,17 +92,23 @@ final class GameStatsViewController: UIViewController {
         tableView.register(StatsCell.self, forCellReuseIdentifier: StatsCell.reuseID)
         panel.addSubview(tableView)
 
+        // ✅ IMPORTANT: This must be the ONLY constraint block involving tableView in viewDidLoad.
         NSLayoutConstraint.activate([
             closeBtn.topAnchor.constraint(equalTo: panel.topAnchor, constant: 8),
             closeBtn.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -8),
 
+            historyBtn.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 16),
+            historyBtn.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -16),
+            historyBtn.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -14),
+            historyBtn.heightAnchor.constraint(equalToConstant: 52),
+
             tableView.topAnchor.constraint(equalTo: closeBtn.bottomAnchor, constant: 4),
             tableView.leadingAnchor.constraint(equalTo: panel.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: panel.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: panel.bottomAnchor),
+            tableView.bottomAnchor.constraint(equalTo: historyBtn.topAnchor, constant: -10),
         ])
 
-        // header
+        // Header
         header.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 44)
         tableView.tableHeaderView = header
         header.onTapName  = { [weak self] in self?.setSort(.name)  }
@@ -105,21 +116,100 @@ final class GameStatsViewController: UIViewController {
         header.onTapMoney = { [weak self] in self?.setSort(.money) }
         header.onTapProx  = { [weak self] in self?.setSort(.prox)  }
 
-        // 9) tap outside to dismiss
+        // Tap outside to dismiss
         let tap = UITapGestureRecognizer(target: self, action: #selector(bgTapped))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
 
+        // Reload when model changes
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(reloadFromModel),
                                                name: .reloadUI,
                                                object: nil)
+
         reloadFromModel()
     }
+
+    @objc private func loadGameToHistoryTapped(_ sender: UIButton) {
+        // Optional: prevent double-saves while this popup is open
+        if hasSavedThisOpen {
+            let done = UIAlertController(title: "Already Saved", message: "This round is already in History.", preferredStyle: .alert)
+            done.addAction(UIAlertAction(title: "OK", style: .default))
+            present(done, animated: true)
+            return
+        }
+
+        let ac = UIAlertController(
+            title: "Save Round to History?",
+            message: "This will save stats for you and any tracked friends on this card.",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "No", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Yes, Save", style: .default) { [weak self] _ in
+            guard let self else { return }
+
+            // If you truly want “all active players”, use this:
+            // RoundStore.shared.recordAllPlayersFromCurrentGame()
+
+            // If you want “me + tracked friends”, use this helper:
+            self.recordMeAndTrackedFriendsFromCurrentGame()
+
+            self.hasSavedThisOpen = true
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+            sender.isEnabled = false
+            sender.alpha = 0.7
+            sender.setTitle("Saved ✓", for: .disabled)
+        })
+
+        present(ac, animated: true)
+    }
+
+    private func recordMeAndTrackedFriendsFromCurrentGame() {
+        guard let _ = GameManager.shared.currentGame else { return }
+
+        var namesToSave = Set<String>()
+
+        let me = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !me.isEmpty { namesToSave.insert(me) }
+
+        let trackingCourseID = ProfileStore.homeCourseID.isEmpty ? "HOME-COURSE" : ProfileStore.homeCourseID
+        let trackedFriendNames = FriendStore.shared.friends
+            .filter { FriendTrackStore.shared.isTracked($0.id, on: trackingCourseID) }
+            .map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        let g = GameManager.shared.currentGame!
+        let seats = 0..<min(5, min(g.playerNames.count, g.playerActivated.count))
+        for i in seats where g.playerActivated[i] {
+            let seatName = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
+            if trackedFriendNames.contains(where: { $0.caseInsensitiveCompare(seatName) == .orderedSame }) {
+                namesToSave.insert(seatName)
+            }
+        }
+
+       
+        // ✅ ONE shared gameID for this save action
+        let sharedGameID = UUID()
+        let sharedDate = Date()
+
+        for name in namesToSave {
+            _ = RoundStore.shared.recordFromCurrentGame(
+                playerNameOverride: name,
+                gameID: sharedGameID,
+                date: sharedDate
+            )
+        }
+
+    }
+
 
     @objc private func closeTapped() {
         dismiss(animated: true)
     }
+    private var hasSavedThisOpen = false
 
     @objc private func bgTapped(_ gr: UITapGestureRecognizer) {
         // if tap is on the dim background (not the panel), dismiss

@@ -1,49 +1,235 @@
 //
+//
 //  ViewController.swift
 //  Wolfmore
 //
 //  Created by Tom BUTLER on 9/24/25.
+//
+
 import UIKit
 
 final class ViewController: UIViewController {
 
     // MARK: - Outlets
-
     @IBOutlet private weak var welcomeLabel: UILabel!
-    @IBOutlet private weak var editCourseButton: UIButton!   // map / “Set Course” button
-    @IBOutlet private weak var playGameButton: UIButton!     // green “Play Game” button
-
+    @IBOutlet private weak var editCourseButton: UIButton!
+    @IBOutlet private weak var playGameButton: UIButton!
+    @IBOutlet private weak var playNewGameButton: UIButton!
+    @IBOutlet private weak var continueButton: UIButton!
     // MARK: - State
-
     private var shouldPromptForName = false
 
-    // MARK: - Lifecycle
+    // MARK: - Home Course Prompt Key
+    private let didPromptHomeCourseKey = "profile.didPromptHomeCourse_v1"
 
+    private var didPromptHomeCourse: Bool {
+        get { UserDefaults.standard.bool(forKey: didPromptHomeCourseKey) }
+        set { UserDefaults.standard.set(newValue, forKey: didPromptHomeCourseKey) }
+    }
+
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        configureImageButtons()          // ⬅️ make the buttons look right
+        configureImageButtons()
+        configurePlayButtonTitle()
 
-        if ProfileStore.name == nil {    // first launch, no name yet
-            ProfileStore.name = "Player 1"
-            shouldPromptForName = true   // ask right after first show
-        }
+        seedProfileNameIfNeeded()
+        updateWelcome()
+        fixIconButton(editCourseButton)
+        
+
     }
-
-    override func viewDidAppear(_ animated: Bool) {
-        super.viewDidAppear(animated)
-        if shouldPromptForName || (ProfileStore.name == "Player 1") {
-            shouldPromptForName = false
-            promptForName()
-        }
+    private func fixIconButton(_ b: UIButton) {
+        b.imageView?.contentMode = .scaleAspectFit
+        b.contentHorizontalAlignment = .fill
+        b.contentVerticalAlignment = .fill
+        b.imageEdgeInsets = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
     }
-
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateWelcome()
     }
 
-    // MARK: - Name + Welcome
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        runFirstLaunchPromptsIfNeeded()
+    }
+
+    // MARK: - Actions (Stats)
+    @IBAction func myStatsTapped(_ sender: UIButton) {
+        showMyStatsAlert(anchor: sender)
+    }
+
+    @IBAction func friendsStatsTapped(_ sender: UIButton) {
+        showFriendStatsAlert(anchor: sender)
+    }
+
+    // MARK: - Setup helpers
+    private func seedProfileNameIfNeeded() {
+        if ProfileStore.name == nil {
+            ProfileStore.name = "Player 1"
+            shouldPromptForName = true
+        }
+    }
+
+    private func configurePlayButtonTitle() {
+        playGameButton.titleLabel?.textAlignment = .center
+        playGameButton.titleLabel?.numberOfLines = 2
+        playGameButton.titleLabel?.lineBreakMode = .byWordWrapping
+        playGameButton.contentHorizontalAlignment = .center
+        playGameButton.contentVerticalAlignment = .center
+        playGameButton.titleLabel?.adjustsFontForContentSizeCategory = true
+    }
+
+    private func runFirstLaunchPromptsIfNeeded() {
+        // Don’t stack alerts.
+        guard presentedViewController == nil else { return }
+
+        // 1) Prompt for name (first)
+        if shouldPromptForName || (ProfileStore.name == "Player 1") {
+            shouldPromptForName = false
+            promptForName { [weak self] in
+                self?.runHomeCoursePromptIfNeeded()
+            }
+            return
+        }
+
+        // 2) Then prompt for Home Course (if needed)
+        runHomeCoursePromptIfNeeded()
+    }
+
+    // MARK: - Welcome
+    private func updateWelcome() {
+        let name = (ProfileStore.name ?? "Player 1")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        welcomeLabel.text = "      Welcome, \(name)"
+        welcomeLabel.textAlignment = .center
+    }
+
+    private func promptForName(completion: @escaping () -> Void) {
+        let ac = UIAlertController(
+            title: "Welcome!",
+            message: "What should we call you?",
+            preferredStyle: .alert
+        )
+        ac.addTextField { tf in
+            tf.placeholder = "Your name"
+            tf.text = (ProfileStore.name == "Player 1") ? "" : ProfileStore.name
+            tf.autocapitalizationType = .words
+            tf.clearButtonMode = .whileEditing
+        }
+
+        ac.addAction(UIAlertAction(title: "Skip", style: .cancel) { _ in
+            completion()
+        })
+
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            let name = (ac.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            if !name.isEmpty {
+                ProfileStore.name = name
+                self?.updateWelcome()
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            }
+            completion()
+        })
+
+        present(ac, animated: true)
+    }
+
+    // MARK: - Home course prompt
+    private func hasHomeCourseSet() -> Bool {
+        let id = (ProfileStore.homeCourseID ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        return UUID(uuidString: id) != nil
+    }
+
+    private func runHomeCoursePromptIfNeeded() {
+        guard presentedViewController == nil else { return }
+        guard !didPromptHomeCourse else { return }
+
+        // If already set, mark prompted and stop
+        guard !hasHomeCourseSet() else {
+            didPromptHomeCourse = true
+            return
+        }
+
+        didPromptHomeCourse = true
+        setEditCourseGlow(true)
+
+        let ac = UIAlertController(
+            title: "Set your Home Course?",
+            message: "Home Course is used for tracking Hole Stats and Friend Stats. Want to set it now?",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Not now", style: .cancel) { [weak self] _ in
+            self?.setEditCourseGlow(false)
+        })
+
+        ac.addAction(UIAlertAction(title: "Yes", style: .default) { [weak self] _ in
+            self?.setEditCourseGlow(false)
+            self?.openCourseSetup(nil)
+        })
+
+        present(ac, animated: true)
+    }
+
+    // MARK: - Glow
+    private func setEditCourseGlow(_ on: Bool) {
+        if on {
+            editCourseButton.layer.shadowColor = UIColor.systemYellow.cgColor
+            editCourseButton.layer.shadowRadius = 12
+            editCourseButton.layer.shadowOpacity = 0.9
+            editCourseButton.layer.shadowOffset = .zero
+
+            let pulse = CABasicAnimation(keyPath: "shadowOpacity")
+            pulse.fromValue = 0.2
+            pulse.toValue = 0.95
+            pulse.duration = 0.7
+            pulse.autoreverses = true
+            pulse.repeatCount = .infinity
+            editCourseButton.layer.add(pulse, forKey: "homeCourseGlowPulse")
+        } else {
+            editCourseButton.layer.removeAnimation(forKey: "homeCourseGlowPulse")
+            editCourseButton.layer.shadowOpacity = 0
+            editCourseButton.layer.shadowRadius = 0
+        }
+    }
+
+    // MARK: - Button appearance
+    private func configureImageButtons() {
+        configureImageButton(editCourseButton, imageName: "EditCourse")
+        configureImageButton(playGameButton, imageName: "PlayGame")
+    }
+
+    private func configureImageButton(_ button: UIButton, imageName: String) {
+        button.setImage(UIImage(named: imageName), for: .normal)
+        button.imageView?.contentMode = .scaleAspectFit
+        button.contentHorizontalAlignment = .fill
+        button.contentVerticalAlignment = .fill
+    }
+
+    // MARK: - Navigation
+    @IBAction private func openCourseSetup(_ sender: Any? = nil) {
+        // Keep using your existing storyboard ID for Edit Course flow
+        performSegue(withIdentifier: "showCourseHC", sender: sender)
+    }
+
+    private func pushGameVC() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "GameViewController")
+
+        if let nav = navigationController {
+            nav.pushViewController(vc, animated: true)
+        } else {
+            vc.modalPresentationStyle = .fullScreen
+            present(vc, animated: true)
+        }
+    }
+
+    // MARK: - Start Modes
     @IBAction private func startWolfTapped(_ sender: UIButton) {
         GameManager.shared.startNewGame()
         GameManager.shared.update { g in
@@ -62,58 +248,7 @@ final class ViewController: UIViewController {
         pushGameVC()
     }
 
-    private func pushGameVC() {
-        let sb = UIStoryboard(name: "Main", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "GameViewController")
-        navigationController?.pushViewController(vc, animated: true)
-    }
-
-    private func promptForName() {
-        let ac = UIAlertController(
-            title: "Welcome!",
-            message: "What should we call you?",
-            preferredStyle: .alert
-        )
-        ac.addTextField { tf in
-            tf.placeholder = "Your name"
-            tf.autocapitalizationType = .words
-            tf.clearButtonMode = .whileEditing
-        }
-        ac.addAction(UIAlertAction(title: "Skip", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
-            ProfileStore.name = ac.textFields?.first?.text
-            self?.updateWelcome()
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-        })
-        present(ac, animated: true)
-    }
-
-    private func updateWelcome() {
-        let name = (ProfileStore.name ?? "Player 1")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-        welcomeLabel.text = "Welcome, \(name)"
-    }
-
-    // MARK: - Button appearance
-
-    private func configureImageButtons() {
-        // Use your asset names here:
-        configureImageButton(editCourseButton, imageName: "EditCourse")  // map icon
-        configureImageButton(playGameButton, imageName: "PlayGame")      // flag icon
-    }
-
-    private func configureImageButton(_ button: UIButton, imageName: String) {
-        button.setImage(UIImage(named: imageName), for: .normal)
-        button.imageView?.contentMode = .scaleAspectFit
-        button.contentHorizontalAlignment = .fill
-        button.contentVerticalAlignment = .fill
-
-        // If you have separate labels under the images, clear the button title:
-        // button.setTitle("", for: .normal)
-    }
-
-    // MARK: - Actions
-
+    // MARK: - Actions (your original ones)
     @IBAction private func rulesTapped(_ sender: UIButton) {
         let rules = RulesViewController()
         if let nav = navigationController {
@@ -125,265 +260,15 @@ final class ViewController: UIViewController {
         }
     }
 
-    @IBAction private func deleteHistoryTapped(_ sender: UIButton) {
-        guard !RoundStore.shared.rounds.isEmpty else {
-            let a = UIAlertController(
-                title: "No History",
-                message: "You don’t have any saved rounds yet.",
-                preferredStyle: .alert
-            )
-            a.addAction(UIAlertAction(title: "OK", style: .default))
-            present(a, animated: true)
-            return
-        }
-
-        let ac = UIAlertController(
-            title: "Delete History",
-            message: "Choose what to delete.",
-            preferredStyle: .alert
-        )
-
-        ac.addAction(UIAlertAction(title: "Delete Last Round", style: .destructive) { _ in
-            RoundStore.shared.deleteLast()
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-
-            let done = UIAlertController(
-                title: "Last Round Deleted",
-                message: "The most recent round was removed from history.",
-                preferredStyle: .alert
-            )
-            done.addAction(UIAlertAction(title: "OK", style: .default))
-            self.present(done, animated: true)
-        })
-
-        ac.addAction(UIAlertAction(title: "Delete ALL Rounds", style: .destructive) { _ in
-            RoundStore.shared.clearAll()
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-
-            let done = UIAlertController(
-                title: "History Deleted",
-                message: "All saved rounds were removed.",
-                preferredStyle: .alert
-            )
-            done.addAction(UIAlertAction(title: "OK", style: .default))
-            self.present(done, animated: true)
-        })
-
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(ac, animated: true)
-    }
-
-    @IBAction private func trackFriendsButtonTapped(_ sender: UIButton) {
-        print("Roster / Tracking tapped")
-
-        guard let vc = storyboard?.instantiateViewController(
-            withIdentifier: "RosterAndTrackingVC"
-        ) as? RosterAndTrackingViewController else {
-            print("⚠️ Could not find RosterAndTrackingVC")
-            return
-        }
-
-        navigationController?.pushViewController(vc, animated: true)
-    }
-
-    @IBAction private func managePlayersTapped(_ sender: UIButton) {
-        print("Manage Players tapped")
-
-        guard let vc = storyboard?.instantiateViewController(
-            withIdentifier: "RosterAndTrackingVC"
-        ) as? RosterAndTrackingViewController else {
-            print("⚠️ Could not find RosterAndTrackingVC")
-            return
-        }
-
-        navigationController?.pushViewController(vc, animated: true)
-    }
-
-    @IBAction private func myStatsTapped(_ sender: UIButton) {
-        let allRounds = RoundStore.shared.rounds
-        let cal = Calendar.current
-        let now = Date()
-        let cutoff = cal.date(byAdding: .year, value: -1, to: now) ?? now
-
-        let myName = (ProfileStore.name ?? "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        let myRounds = allRounds.filter {
-            $0.date >= cutoff &&
-            $0.playerName.caseInsensitiveCompare(myName) == .orderedSame
-        }
-
-        let myCount = myRounds.count
-        let myTotalMoney = myRounds.reduce(0) { $0 + $1.totalMoney }
-        let myTotalProx  = myRounds.reduce(0) { $0 + $1.totalProx }
-        let myTotalHoles = myRounds.reduce(0) { $0 + max($1.holesPlayed, 1) }
-
-        let myAvgMoneyPer18: Double = myTotalHoles > 0
-            ? Double(myTotalMoney) / Double(myTotalHoles) * 18.0
-            : 0
-
-        let myAvgProxPer18: Double = myTotalHoles > 0
-            ? Double(myTotalProx) / Double(myTotalHoles) * 18.0
-            : 0
-
-        let myScores = myRounds.compactMap { $0.totalScore }
-        let myAvgScore = myScores.isEmpty
-            ? nil
-            : Double(myScores.reduce(0, +)) / Double(myScores.count)
-
-        let recentMine = myRounds
-            .sorted { $0.date > $1.date }
-            .prefix(5)
-
-        let df = DateFormatter()
-        df.dateStyle = .medium
-
-        var message = ""
-        message += "Rounds (last 12 months): \(myCount)\n"
-        message += String(
-            format: "Net money: %+d  (avg %+0.1f per 18 holes)\n",
-            myTotalMoney, myAvgMoneyPer18
-        )
-        message += String(
-            format: "Prox wins: %d  (avg %0.1f per 18 holes)\n",
-            myTotalProx, myAvgProxPer18
-        )
-
-        if let avgScore = myAvgScore {
-            message += String(format: "Avg score: %0.1f\n", avgScore)
-        }
-
-        message += "\nRecent rounds:\n"
-        for r in recentMine {
-            let d = df.string(from: r.date)
-            let line = String(
-                format: "• %@  %+d, prox %d%@\n",
-                d,
-                r.totalMoney,
-                r.totalProx,
-                r.totalScore != nil ? ", score \(r.totalScore!)" : ""
-            )
-            message += line
-        }
-
-        let ac = UIAlertController(
-            title: "My Stats (last 12 months)",
-            message: message,
-            preferredStyle: .alert
-        )
-        ac.addAction(UIAlertAction(title: "OK", style: .default))
-        present(ac, animated: true)
-    }
     @IBAction private func courseSummaryTapped(_ sender: UIButton) {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
-        let vc = storyboard.instantiateViewController(
-            withIdentifier: "CourseSummaryViewController"
-        )
-
-        // If home is inside a navigation controller, push:
+        let vc = storyboard.instantiateViewController(withIdentifier: "CourseSummaryViewController")
         if let nav = navigationController {
             nav.pushViewController(vc, animated: true)
         } else {
-            // Otherwise present modally
             vc.modalPresentationStyle = .formSheet
             present(vc, animated: true)
         }
-    }
-
-    @IBAction private func friendStatsTapped(_ sender: UIButton) {
-        let allRounds = RoundStore.shared.rounds
-
-        if allRounds.isEmpty {
-            let ac = UIAlertController(
-                title: "Friend Stats",
-                message: "No rounds have been recorded yet.",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            present(ac, animated: true)
-            return
-        }
-
-        // Same course / tracking logic as before
-        let courseID: String = {
-            let stored = ProfileStore.homeCourseID
-            if !stored.isEmpty { return stored }
-            if let b = CourseLibrary.shared.biltmore() {
-                return b.id.uuidString
-            }
-            return "HOME-COURSE"
-        }()
-
-        let trackedFriends = FriendStore.shared.friends.filter {
-            FriendTrackStore.shared.isTracked($0.id, on: courseID)
-        }
-
-        guard !trackedFriends.isEmpty else {
-            let ac = UIAlertController(
-                title: "Friend Stats",
-                message: "You haven't selected any friends to track yet.\nUse Track Friends to choose who to track.",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            present(ac, animated: true)
-            return
-        }
-
-        // Build blocks (multi-line per friend, with spacing)
-        var blocks: [String] = []
-
-        for friend in trackedFriends {
-            guard let stats = RoundStore.shared.stats(forPlayerNamed: friend.name) else {
-                continue
-            }
-
-            let block = String(
-                format:
-                """
-                • %@:
-                  %d rds, avg $%.1f per 18
-                  prox %.1f per 18
-                """,
-                friend.name,
-                stats.rounds,
-                stats.avgMoneyPerRound,
-                stats.avgProxPerRound
-            )
-
-            blocks.append(block)
-        }
-
-        if blocks.isEmpty {
-            let ac = UIAlertController(
-                title: "Friend Stats",
-                message: "Your tracked friends don't have any recorded rounds yet.",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            present(ac, animated: true)
-            return
-        }
-
-        let ac = UIAlertController(
-            title: "Friend Stats (all-time)",
-            message: blocks.joined(separator: "\n\n"),   // 👈 blank line between friends
-            preferredStyle: .alert
-        )
-        ac.addAction(UIAlertAction(title: "OK", style: .default))
-        present(ac, animated: true)
-    }
-
-    @IBAction private func managePlayersButtonTapped(_ sender: UIButton) {
-        print("Manage Players tapped")
-
-        guard let vc = storyboard?.instantiateViewController(
-            withIdentifier: "ManagePlayersVC"
-        ) as? ManagePlayersViewController else {
-            print("⚠️ Could not find ManagePlayersVC")
-            return
-        }
-
-        navigationController?.pushViewController(vc, animated: true)
     }
 
     @IBAction private func startNewGameTapped(_ sender: UIButton) {
@@ -407,29 +292,110 @@ final class ViewController: UIViewController {
         }
     }
 
-    @IBAction private func editPlayerTapped(_ sender: UIButton) {
-        let current = ProfileStore.name ?? ""
-        let ac = UIAlertController(
-            title: "Your Name",
-            message: "This name is used to track your stats.",
-            preferredStyle: .alert
-        )
-        ac.addTextField { tf in
-            tf.placeholder = "Enter your name"
-            tf.text = current
-            tf.autocapitalizationType = .words
-            tf.clearButtonMode = .whileEditing
-        }
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Save", style: .default) { _ in
-            let newName = ac.textFields?.first?.text
-            ProfileStore.name = newName
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-        })
-        present(ac, animated: true)
-    }
-
     @IBAction private func editCourseTapped(_ sender: UIButton) {
         performSegue(withIdentifier: "showCourseHC", sender: self)
     }
+}
+
+// MARK: - Stats helpers (adds back showMyStatsAlert / showFriendStatsAlert)
+extension ViewController {
+
+    func showMyStatsAlert(anchor: UIView) {
+        let ac = UIAlertController(title: "My Stats", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Open My Stats", style: .default) { [weak self] _ in
+            self?.openMyStatsScreen()
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(ac, anchor: anchor)
+    }
+
+    func showFriendStatsAlert(anchor: UIView) {
+        let ac = UIAlertController(title: "Friend Stats", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Open Friend Stats", style: .default) { [weak self] _ in
+            self?.openFriendStatsScreen()
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(ac, anchor: anchor)
+    }
+
+    private func presentActionSheet(_ ac: UIAlertController, anchor: UIView) {
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = anchor
+            pop.sourceRect = anchor.bounds
+            pop.permittedArrowDirections = [.up, .down]
+        }
+        present(ac, animated: true)
+    }
+
+    private func pushOrPresent(_ vc: UIViewController) {
+        if let nav = navigationController {
+            nav.pushViewController(vc, animated: true)
+        } else {
+            let wrap = UINavigationController(rootViewController: vc)
+            wrap.modalPresentationStyle = .pageSheet
+            present(wrap, animated: true)
+        }
+    }
+
+    private func openMyStatsScreen() {
+        let vc = MyStatsViewController()
+        vc.mode = .me
+        pushOrPresent(vc)
+    }
+
+    private func openFriendStatsScreen() {
+        let vc = MyStatsViewController()
+        vc.mode = .friends
+        pushOrPresent(vc)
+    }
+    @IBAction private func deleteHistoryTapped(_ sender: UIButton) {
+        print("✅ deleteHistoryTapped fired") // remove after testing
+
+        // Nothing to delete? (optional)
+        guard !RoundStore.shared.rounds.isEmpty else {
+            let ac = UIAlertController(title: "No History", message: "No saved rounds yet.", preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+            return
+        }
+
+        let ac = UIAlertController(
+            title: "Delete History?",
+            message: "This will permanently delete all saved rounds and stats on this device.",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
+            RoundStore.shared.clearAll()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+            let done = UIAlertController(title: "Deleted", message: "History cleared.", preferredStyle: .alert)
+            done.addAction(UIAlertAction(title: "OK", style: .default))
+            self.present(done, animated: true)
+        })
+
+        present(ac, animated: true)
+    }
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        // Force full screen on iPad for these flows
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            switch segue.identifier {
+            case "showGame", "showPlayerSetup", "showCourseHC":
+                if let nav = segue.destination as? UINavigationController {
+                    nav.modalPresentationStyle = .fullScreen
+                } else {
+                    segue.destination.modalPresentationStyle = .fullScreen
+                }
+            default:
+                break
+            }
+        }
+    }
+
 }

@@ -86,13 +86,13 @@
       }
     },
     "1ht-GT-3Kx.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Stats\"; ObjectID = \"1ht-GT-3Kx\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Go To Game Stats\"; ObjectID = \"1ht-GT-3Kx\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Stats"
+            "value" : "Go To Game Stats"
           }
         }
       }
@@ -601,6 +601,18 @@
         }
       }
     },
+    "Fbe-n9-tJH.text" : {
+      "comment" : "Class = \"UILabel\"; text = \"-----  STATS  -----\"; ObjectID = \"Fbe-n9-tJH\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "-----  STATS  -----"
+          }
+        }
+      }
+    },
     "FeT-FW-X78.text" : {
       "comment" : "Class = \"UILabel\"; text = \"9\"; ObjectID = \"FeT-FW-X78\";",
       "extractionState" : "extracted_with_value",
@@ -777,30 +789,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Wolf - Low ball"
-          }
-        }
-      }
-    },
-    "ict-N1-Gha.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"My Stats\"; ObjectID = \"ict-N1-Gha\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "My Stats"
-          }
-        }
-      }
-    },
-    "ict-N1-Gha.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"ict-N1-Gha\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
           }
         }
       }
@@ -985,30 +973,6 @@
         }
       }
     },
-    "kYA-vS-Psc.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Load To History\"; ObjectID = \"kYA-vS-Psc\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Load To History"
-          }
-        }
-      }
-    },
-    "kYA-vS-Psc.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"kYA-vS-Psc\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
     "le9-RB-Ofj.configuration.title" : {
       "comment" : "Class = \"UIButton\"; configuration.title = \"Go To Game\"; ObjectID = \"le9-RB-Ofj\";",
       "extractionState" : "extracted_with_value",
@@ -1058,13 +1022,13 @@
       }
     },
     "lTx-yh-g1Z.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Freinds Stats\"; ObjectID = \"lTx-yh-g1Z\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Player Stats\"; ObjectID = \"lTx-yh-g1Z\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Freinds Stats"
+            "value" : "Player Stats"
           }
         }
       }
@@ -1610,13 +1574,13 @@
       }
     },
     "uln-u6-bGR.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Rules\"; ObjectID = \"uln-u6-bGR\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Explore the Rules\"; ObjectID = \"uln-u6-bGR\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Rules"
+            "value" : "Explore the Rules"
           }
         }
       }
@@ -1718,13 +1682,13 @@
       }
     },
     "VUW-nQ-iYy.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"Enter Course Pars and Handicaps\"; ObjectID = \"VUW-nQ-iYy\";",
+      "comment" : "Class = \"UILabel\"; text = \"Tap Any Par or  Handicap to Edit Then Go To Course Review\"; ObjectID = \"VUW-nQ-iYy\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Enter Course Pars and Handicaps"
+            "value" : "Tap Any Par or  Handicap to Edit Then Go To Course Review"
           }
         }
       }

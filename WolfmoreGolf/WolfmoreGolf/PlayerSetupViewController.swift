@@ -59,7 +59,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
         // Nav button
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Track",
+            title: "Add Players To Stat Tracking",
             style: .plain,
             target: self,
             action: #selector(trackFriendsTapped)
@@ -546,10 +546,19 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard segue.identifier == "showGame" else { return }
 
-        // If you ever pass anything forward, do it here.
-        // (Your GameVC uses GameManager.shared.currentGame, so nothing is required.)
-        _ = segue.destination
+        // If your Game screen is embedded in a nav controller in the storyboard
+        if let nav = segue.destination as? UINavigationController {
+            nav.modalPresentationStyle = .fullScreen
+            nav.modalTransitionStyle = .coverVertical
+            // (optional) if you need the actual VC:
+            // let gameVC = nav.topViewController as? GameViewController
+        } else {
+            // If it’s the Game VC directly
+            segue.destination.modalPresentationStyle = .fullScreen
+            segue.destination.modalTransitionStyle = .coverVertical
+        }
     }
+
 }
 
 // MARK: - Small Utilities
