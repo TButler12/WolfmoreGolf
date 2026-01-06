@@ -147,7 +147,6 @@
 				Base,
 				"Base 2",
 				"Base 2C",
-				"base 2C",
 			);
 			mainGroup = F64DE77F2EB0396000F8D625;
 			minimizedProjectReferenceProxies = 1;
