@@ -41,6 +41,28 @@ final class CourseSetupViewController: UIViewController {
         startInstructionGlow()
         
     }
+    
+    private func presentNewGameFlow_showManagePlayersFirst() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+
+        let setup = sb.instantiateViewController(withIdentifier: "PlayerSetupVC") as! PlayerSetupViewController
+        let manage = sb.instantiateViewController(withIdentifier: "ManagePlayersVC") as! ManagePlayersViewController
+
+        let nav = UINavigationController()
+        nav.modalPresentationStyle = .fullScreen
+
+        // ✅ No flash: ManagePlayers is top, PlayerSetup is root
+        nav.setViewControllers([setup, manage], animated: false)
+
+        present(nav, animated: true)
+    }
+
+    @IBAction private func playNewGameTapped(_ sender: UIButton) {
+        GameManager.shared.startNewGame()
+        presentNewGameFlow_showManagePlayersFirst()
+    }
+
+    
     private func wirePopupOnInstructionLabel() {
         instructionLabel.isUserInteractionEnabled = true
 

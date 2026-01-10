@@ -17,6 +17,15 @@ extension UIImage {
 final class GameViewController: UIViewController {
     
     var isUmbrella: Bool = false   // true = mute double for ENTIRE game
+    @IBAction private func closeTapped(_ sender: Any) {
+        // capture the presenter BEFORE dismiss
+        let presenter = navigationController?.presentingViewController ?? presentingViewController
+
+        dismiss(animated: true) {
+            // if presenter (ManagePlayers) is on a nav stack, pop to Home
+            presenter?.navigationController?.popToRootViewController(animated: true)
+        }
+    }
 
     // MARK: - Outlets
     @IBOutlet private weak var umbrellaButton: UIButton!

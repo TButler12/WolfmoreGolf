@@ -77,10 +77,12 @@ final class CourseSummaryViewController: UITableViewController {
 
         configureSortHeader()
 
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(rebuild),
-                                               name: .reloadUI,
-                                               object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(rebuild),
+            name: .reloadUI,
+            object: nil
+        )
 
         rebuild()
     }
@@ -92,7 +94,6 @@ final class CourseSummaryViewController: UITableViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
 
-        // keep the header height correct
         if let header = tableView.tableHeaderView {
             let target = CGSize(width: tableView.bounds.width,
                                 height: UIView.layoutFittingCompressedSize.height)
@@ -166,9 +167,10 @@ final class CourseSummaryViewController: UITableViewController {
     // MARK: - Build
 
     private func buildRows() -> [HoleRow] {
-        let homeID = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
+        let homeID = (ProfileStore.homeCourseID ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Use ALL rounds on this course
+        // Use ALL rounds on this course (or all rounds if no home set)
         let roundsOnCourse = RoundStore.shared.rounds.filter {
             homeID.isEmpty ? true : $0.courseID == homeID
         }
@@ -180,19 +182,14 @@ final class CourseSummaryViewController: UITableViewController {
             .values
             .map { Array($0) }
 
-        // ✅ Back-compat fallback:
-        // If every group is size 1, you're almost certainly saving a unique gameID per player row.
-        // We coalesce by courseID + minute-bucket timestamp so 1 real game doesn't look like 5.
+        // ✅ Back-compat fallback (coalesce if every group is singleton)
         let allSingletons = games.allSatisfy { $0.count == 1 }
         if allSingletons && roundsOnCourse.count >= 2 {
             let fallback = Dictionary(grouping: roundsOnCourse) { r in
-                // minute-bucket; adjust to /30 if you want 30-second buckets
                 let minuteBucket = Int(r.date.timeIntervalSince1970 / 60.0)
                 return "\(r.courseID)|\(minuteBucket)"
             }
             let candidateGames = fallback.values.map { Array($0) }
-
-            // Only accept fallback if it actually merges rows (otherwise it was pointless)
             if candidateGames.contains(where: { $0.count > 1 }) {
                 games = candidateGames
             }
@@ -200,32 +197,78 @@ final class CourseSummaryViewController: UITableViewController {
 
         guard !games.isEmpty else { return [] }
 
-        let pars = resolveParsFallback()
+        // ✅ Resolve pars & hcs together, using Home Course first.
+        let pars = resolvePars()
+        // If you don’t need HC in the UI here, you can delete resolveHC(); I’m including it so you can
+        // keep pars/hcs consistent if you later want to show strokes or deltas.
+        _ = resolveHC()
 
         return (0..<18).map { h in
             buildHoleRow(holeIndex: h, par: pars.safe(h) ?? 4, games: games)
         }
     }
 
-    private func resolveParsFallback() -> [Int] {
-        // 1) Prefer Home Course pars
-        if let uuid = UUID(uuidString: ProfileStore.homeCourseID),
-           let course = CourseLibrary.shared.get(id: uuid) {
+    // MARK: - Course resolution (robust)
+
+    private func homeCourseUUID() -> UUID? {
+        let raw = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !raw.isEmpty, let uuid = UUID(uuidString: raw) else { return nil }
+        return uuid
+    }
+
+
+    private func isDefaultPars(_ pars: [Int]) -> Bool {
+        guard pars.count >= 18 else { return true }
+        return pars.prefix(18).allSatisfy { $0 == 4 }
+    }
+
+    private func isDefaultHC(_ hcs: [Int]) -> Bool {
+        guard hcs.count >= 18 else { return true }
+        return Array(hcs.prefix(18)) == Array(1...18)
+    }
+
+    private func resolvePars() -> [Int] {
+        // 1) Home Course (strong preference)
+        if let uuid = homeCourseUUID(),
+           let course = CourseLibrary.shared.get(id: uuid),
+           course.pars.count >= 18,
+           !isDefaultPars(course.pars) {                // prevents accidentally treating defaults as a real course
             return Array(course.pars.prefix(18))
         }
 
-        // 2) Fallback to current game pars
+        // 2) Current game course pars — only if non-default
         if let g = GameManager.shared.currentGame {
-            return Array(g.course.pars.prefix(18))
+            let pars = Array(g.course.pars.prefix(18))
+            if pars.count == 18, !isDefaultPars(pars) {
+                return pars
+            }
         }
 
-        // 3) Final fallback
+        // 3) Last resort
         return Array(repeating: 4, count: 18)
     }
 
+    private func resolveHC() -> [Int] {
+        // 1) Home Course
+        if let uuid = homeCourseUUID(),
+           let course = CourseLibrary.shared.get(id: uuid),
+           course.hcs.count >= 18,
+           !isDefaultHC(course.hcs) {
+            return Array(course.hcs.prefix(18))
+        }
+
+        // 2) Current game course hcs — only if non-default
+        
+        
+
+        // 3) Last resort
+        return Array(1...18)
+    }
+
+    // MARK: - Build per-hole
+
     private func buildHoleRow(holeIndex h: Int, par: Int, games: [[RoundSummary]]) -> HoleRow {
 
-        // Only games where hole was played by at least one player
         let playedGames = games.filter { group in
             group.contains { r in
                 if scoreValue(r, h) != nil { return true }
@@ -244,7 +287,7 @@ final class CourseSummaryViewController: UITableViewController {
             )
         }
 
-        // -------- Money: winner per game = max money in that game --------
+        // Money: winner per game = max money in that game
         let winnersPerGame: [Int] = playedGames.map { group in
             group.map { moneyValue($0, h) }.max() ?? 0
         }
@@ -256,13 +299,13 @@ final class CourseSummaryViewController: UITableViewController {
 
         let biggestWin: Int = winningGames.max() ?? 0
 
-        // -------- Prox: awarded if ANY player in game has prox true --------
+        // Prox: awarded if ANY player in game has prox true
         let proxGames = playedGames.filter { group in
             group.contains { $0.proxPerHole.safe(h) == true }
         }.count
         let proxPct = (Double(proxGames) / Double(gameCount)) * 100.0
 
-        // -------- Avg score: average of all recorded scores (all players) --------
+        // Avg score: average of all recorded scores (all players)
         let allScores: [Int] = playedGames.flatMap { group in
             group.compactMap { scoreValue($0, h) }
         }
@@ -270,7 +313,7 @@ final class CourseSummaryViewController: UITableViewController {
             ? nil
             : Double(allScores.reduce(0, +)) / Double(allScores.count)
 
-        // -------- Wolf / Non-wolf / Tie: decide from the GAME winner --------
+        // Wolf / Non-wolf / Tie: decide from the GAME winner
         var wolfWins = 0
         var nonWolfWins = 0
         var ties = 0
@@ -292,7 +335,7 @@ final class CourseSummaryViewController: UITableViewController {
         let nonWolfPct = (Double(nonWolfWins) / Double(gameCount)) * 100.0
         let tiePct = (Double(ties) / Double(gameCount)) * 100.0
 
-        // -------- Umbie: hit if ANY player in game has umbie true --------
+        // Umbie: hit if ANY player in game has umbie true
         let umbieGames = playedGames.filter { group in
             group.contains { $0.umbieWonPerHole.safe(h) == true }
         }.count
@@ -320,7 +363,7 @@ final class CourseSummaryViewController: UITableViewController {
     }
 
     private func scoreValue(_ r: RoundSummary, _ h: Int) -> Int? {
-        guard let vOpt = r.scorePerHole.safe(h) else { return nil } // Int?
+        guard let vOpt = r.scorePerHole.safe(h) else { return nil }
         return vOpt
     }
 
@@ -426,7 +469,8 @@ final class CourseSummaryViewController: UITableViewController {
             guard let avg = r.avgScore else { return "Avg score —" }
             let delta = avg - Double(r.par)
             let sign = (delta >= 0) ? "+" : "–"
-            return String(format: "Avg score %.1f (%@%.1f vs par, rank %d)", avg, sign, abs(delta), r.rankAvgScore)
+            return String(format: "Avg score %.1f (%@%.1f vs par, rank %d)",
+                          avg, sign, abs(delta), r.rankAvgScore)
         }()
 
         cell.textLabel?.text =

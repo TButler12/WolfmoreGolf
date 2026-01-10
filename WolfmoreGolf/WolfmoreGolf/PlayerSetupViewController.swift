@@ -7,13 +7,16 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
     @IBOutlet private var nameFields: [UITextField]!
     @IBOutlet private var handicapFields: [UITextField]!
-    @IBOutlet private var activateButtons: [UIButton]!
+    @IBOutlet private var activeSwitches: [UISwitch]!
     @IBOutlet private var strokeLabels: [UILabel]!
 
     @IBOutlet private weak var randomizeButton: UIButton!
     @IBOutlet private weak var goToGameButton: UIButton!
+   
+        
+       
 
-    // (Optional) if you still have these on the screen
+    // Optional
     @IBOutlet private weak var plusPointDollars: UIButton?
     @IBOutlet private weak var minusPointDollars: UIButton?
 
@@ -32,24 +35,22 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             }
         }
 
-        // Make sure model arrays are 5-wide for this build
+        // Ensure model arrays are 5-wide
         GameManager.shared.update { g in
             self.ensureModelHasCapacity(&g)
         }
 
-        // Seed course library (so Biltmore etc. exist)
         CourseLibrary.shared.seedIfNeeded()
 
-        // Sort + retag UI rows to 0..4 and hide extras (if storyboard still has 9 rows)
+        // Sort/retag UI rows 0..4
         normalizeAndTagRows()
         hideExtraRowsBeyondCapacity()
 
         // Wiring
         wireNameFields()
         wireHCFields()
-        wireActivateButtons()
+        wireActiveSwitches()
 
-        // Observe model/UI reloads (from CourseSetup etc.)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(reloadFromModel),
@@ -57,9 +58,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             object: nil
         )
 
-        // Nav button
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Add Players To Stat Tracking",
+            title: "Edit Player Tracking",
             style: .plain,
             target: self,
             action: #selector(trackFriendsTapped)
@@ -77,17 +77,47 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         updateCourseLabel()
+        
     }
 
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
+    private func closeToHome(animated: Bool = true) {
 
-    // MARK: - Row normalization (IMPORTANT)
-    /// Best practice: set tags 0..4 in storyboard for each row.
-    /// This function also tries to recover by sorting rows and assigning tags.
+        // 1) If we're inside a modally-presented navigation stack, dismiss the whole stack
+        if let nav = navigationController, nav.presentingViewController != nil {
+            nav.dismiss(animated: animated)
+            return
+        }
+
+        // 2) If we're presented over something (your sheet case), dismiss self,
+        // then pop the underlying nav back to root (Home)
+        if let presenter = presentingViewController {
+            let presenterNav = presenter.navigationController
+            dismiss(animated: animated) {
+                presenterNav?.popToRootViewController(animated: animated)
+            }
+            return
+        }
+
+        // 3) Fallback: just pop to root if we're pushed
+        navigationController?.popToRootViewController(animated: animated)
+    }
+
+    private func pushManagePlayers() {
+           let sb = UIStoryboard(name: "Main", bundle: nil)
+           let mp = sb.instantiateViewController(withIdentifier: "ManagePlayersVC")
+           navigationController?.pushViewController(mp, animated: false)
+       }
+
+       private func pushGame() {
+           let sb = UIStoryboard(name: "Main", bundle: nil)
+           let game = sb.instantiateViewController(withIdentifier: "GameViewController")
+           navigationController?.pushViewController(game, animated: true)
+       }
+    // MARK: - Row normalization
     private func normalizeAndTagRows() {
-        // Prefer tag order if tags look sane; otherwise fallback to vertical position.
         func sortViews<T: UIView>(_ views: [T]) -> [T] {
             let tags = views.map { $0.tag }
             let hasUsefulTags = Set(tags).count > 1 || tags.contains(where: { $0 != 0 })
@@ -98,33 +128,32 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             }
         }
 
-        nameFields      = sortViews(nameFields)
-        handicapFields  = sortViews(handicapFields)
-        activateButtons = sortViews(activateButtons)
-        strokeLabels    = sortViews(strokeLabels)
+        nameFields     = sortViews(nameFields)
+        handicapFields = sortViews(handicapFields)
+        activeSwitches = sortViews(activeSwitches)
+        strokeLabels   = sortViews(strokeLabels)
 
-        // Force consistent tags 0..N so all collections align.
-        let n = min(nameFields.count, handicapFields.count, activateButtons.count, strokeLabels.count)
+        let n = min(nameFields.count, handicapFields.count, activeSwitches.count, strokeLabels.count)
         for i in 0..<n {
             nameFields[i].tag = i
             handicapFields[i].tag = i
-            activateButtons[i].tag = i
+            activeSwitches[i].tag = i
             strokeLabels[i].tag = i
         }
     }
 
     private var uiCount: Int {
-        min(capacity, nameFields.count, handicapFields.count, activateButtons.count, strokeLabels.count)
+        min(capacity, nameFields.count, handicapFields.count, activeSwitches.count, strokeLabels.count)
     }
 
     private func hideExtraRowsBeyondCapacity() {
         for i in uiCount..<nameFields.count { nameFields[i].isHidden = true }
         for i in uiCount..<handicapFields.count { handicapFields[i].isHidden = true }
-        for i in uiCount..<activateButtons.count { activateButtons[i].isHidden = true }
+        for i in uiCount..<activeSwitches.count { activeSwitches[i].isHidden = true }
         for i in uiCount..<strokeLabels.count { strokeLabels[i].isHidden = true }
     }
 
-    // MARK: - Model sizing (5-man)
+    // MARK: - Model sizing
     private func ensureModelHasCapacity(_ g: inout GameData) {
         func resize<T>(_ arr: inout [T], fill: T) {
             if arr.count < capacity { arr += Array(repeating: fill, count: capacity - arr.count) }
@@ -179,7 +208,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             f.addTarget(self, action: #selector(hcChanged(_:)), for: .editingChanged)
             f.addTarget(self, action: #selector(hcEdited(_:)), for: .editingDidEnd)
 
-            // number pad "Done"
             let bar = UIToolbar(); bar.sizeToFit()
             bar.items = [
                 .flexibleSpace(),
@@ -189,9 +217,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
     }
 
-    private func wireActivateButtons() {
+    private func wireActiveSwitches() {
         for i in 0..<uiCount {
-            styleActivate(activateButtons[i])
+            activeSwitches[i].addTarget(self, action: #selector(activeSwitchChanged(_:)), for: .valueChanged)
         }
     }
 
@@ -216,12 +244,30 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             handicapFields[i].text = String(g.hcPlayers[safe: i] ?? 0)
 
             let on = g.playerActivated[safe: i] ?? false
-            activateButtons[i].isSelected = on
-            activateButtons[i].isEnabled = true
-            styleActivate(activateButtons[i])
+            activeSwitches[i].isOn = on
+            activeSwitches[i].isEnabled = true
+
+            setRowEnabled(i, enabled: on)
         }
     }
 
+    // MARK: - Row enable/disable styling
+    private func setRowEnabled(_ i: Int, enabled: Bool) {
+        let alpha: CGFloat = enabled ? 1.0 : 0.35
+
+        nameFields[i].alpha = alpha
+        handicapFields[i].alpha = alpha
+        strokeLabels[i].alpha = alpha
+
+        // Keep the switch readable
+        activeSwitches[i].alpha = 1.0
+
+        // Inactive rows can’t be edited (but can be re-enabled)
+        nameFields[i].isEnabled = enabled
+        handicapFields[i].isEnabled = enabled
+    }
+
+    // MARK: - Strokes
     private func recalcStrokesFromModel() {
         guard let g = GameManager.shared.currentGame else { return }
 
@@ -232,6 +278,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
 
         let minHC = active.map { g.hcPlayers[safe: $0] ?? 0 }.min() ?? 0
+
         for i in 0..<uiCount {
             let on = g.playerActivated[safe: i] ?? false
             strokeLabels[i].text = on ? String(max(0, (g.hcPlayers[safe: i] ?? 0) - minHC)) : ""
@@ -239,7 +286,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func recalcStrokesFromUI() {
-        let active = (0..<uiCount).filter { activateButtons[$0].isSelected }
+        let active = (0..<uiCount).filter { activeSwitches[$0].isOn }
         guard !active.isEmpty else {
             for i in 0..<uiCount { strokeLabels[i].text = "" }
             return
@@ -249,7 +296,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let minHC = hcs.min() ?? 0
 
         for i in 0..<uiCount {
-            if activateButtons[i].isSelected {
+            if activeSwitches[i].isOn {
                 let hc = Int(handicapFields[i].text ?? "") ?? 0
                 strokeLabels[i].text = String(max(0, hc - minHC))
             } else {
@@ -258,25 +305,26 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
     }
 
+    // MARK: - Cap + buttons
     private func enforceActivationCap() {
-        let activeCount = activateButtons.prefix(uiCount).filter { $0.isSelected }.count
+        let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
         let lockOthers = activeCount >= maxActive
 
         for i in 0..<uiCount {
-            let b = activateButtons[i]
-            b.isEnabled = b.isSelected || !lockOthers
-            styleActivate(b)
+            let sw = activeSwitches[i]
+            // If at cap, you can still turn OFF an ON switch, but can't turn ON more
+            sw.isEnabled = sw.isOn || !lockOthers
         }
     }
 
     private func updateGoButtonEnabled() {
-        let active = activateButtons.prefix(uiCount).filter { $0.isSelected }.count
+        let active = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
         goToGameButton.isEnabled = active > 0
         goToGameButton.alpha = goToGameButton.isEnabled ? 1 : 0.5
     }
 
     private func refreshRandomizeEnabled() {
-        let activeCount = activateButtons.prefix(uiCount).filter { $0.isSelected }.count
+        let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
         let canRand = GameManager.shared.canRandomizeTeams && activeCount >= 2
         randomizeButton.isEnabled = canRand
         randomizeButton.alpha = canRand ? 1.0 : 0.5
@@ -295,26 +343,29 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    @IBAction private func activateTapped(_ sender: UIButton) {
+    @objc private func activeSwitchChanged(_ sender: UISwitch) {
         view.endEditing(true)
 
         let i = sender.tag
         guard (0..<uiCount).contains(i) else { return }
 
-        let activeCount = activateButtons.prefix(uiCount).filter { $0.isSelected }.count
-        if !sender.isSelected && activeCount >= maxActive {
-            UIImpactFeedbackGenerator(style: .light).impactOccurred()
-            shake(sender)
-            return
+        // If trying to turn ON beyond cap, bounce it back OFF.
+        if sender.isOn {
+            let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
+            if activeCount > maxActive {
+                sender.setOn(false, animated: true)
+                UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                shake(sender)
+                return
+            }
         }
-
-        sender.isSelected.toggle()
-        styleActivate(sender)
 
         GameManager.shared.update { g in
             self.ensureModelHasCapacity(&g)
-            g.playerActivated[i] = sender.isSelected
+            g.playerActivated[i] = sender.isOn
         }
+
+        setRowEnabled(i, enabled: sender.isOn)
 
         enforceActivationCap()
         updateGoButtonEnabled()
@@ -324,7 +375,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     @IBAction private func randomizePlayersTapped(_ sender: UIButton) {
-        let activeCount = activateButtons.prefix(uiCount).filter { $0.isSelected }.count
+        let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
         guard GameManager.shared.canRandomizeTeams, activeCount >= 2 else {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             shake(sender)
@@ -338,7 +389,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             Row(
                 name: (nameFields[i].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
                 hc:   Int(handicapFields[i].text ?? "") ?? 0,
-                active: activateButtons[i].isSelected
+                active: activeSwitches[i].isOn
             )
         }
 
@@ -355,10 +406,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
 
         for i in 0..<uiCount {
-            let b = activateButtons[i]
-            b.isEnabled = true
-            b.isSelected = (i < newActiveCount)
-            styleActivate(b)
+            let on = (i < newActiveCount)
+            activeSwitches[i].isEnabled = true
+            activeSwitches[i].setOn(on, animated: true)
+            setRowEnabled(i, enabled: on)
         }
 
         enforceActivationCap()
@@ -378,7 +429,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             preferredStyle: style
         )
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
         ac.addAction(UIAlertAction(title: "Reset", style: .destructive) { [weak self] _ in
             self?.performConfirmedReset()
         })
@@ -394,7 +444,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
         GameManager.shared.canRandomizeTeams = true
 
-        // Re-ensure 5-man sizing after reset
         GameManager.shared.update { g in
             self.ensureModelHasCapacity(&g)
         }
@@ -409,36 +458,17 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
-    @IBAction private func goToGameTapped(_ sender: UIButton) {
-        view.endEditing(true)
+    @IBAction private func goToGameTapped(_ sender: Any) {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let game = sb.instantiateViewController(withIdentifier: "GameViewController")
 
-        // Ensure game exists
-        if GameManager.shared.currentGame == nil {
-            if !GameManager.shared.loadLastOpened() {
-                GameManager.shared.startNewGame()
-            }
-        }
+        guard let nav = navigationController else { return }
+        nav.pushViewController(game, animated: true)
 
-        persistEntireSetupFromUI()
-
-        // Validate at least one active, named player
-        let hasActiveNamed = (0..<uiCount).contains { i in
-            let on = activateButtons[i].isSelected
-            let name = (nameFields[i].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            return on && !name.isEmpty
-        }
-        guard hasActiveNamed else {
-            showAlert(title: "No Players", message: "Activate at least one player with a name.")
-            return
-        }
-
-        // Start at Hole 1
-        GameManager.shared.update { g in
-            g.hole = 0
-        }
-
-        // Navigate to game screen
-        performSegue(withIdentifier: "showGame", sender: self)
+        // Remove ManagePlayers so back goes to Home (not ManagePlayers)
+        var vcs = nav.viewControllers
+        vcs.removeAll { $0 is ManagePlayersViewController }
+        nav.setViewControllers(vcs, animated: false)
     }
 
     // MARK: - Editing hooks
@@ -489,7 +519,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             for i in 0..<uiCount {
                 g.playerNames[i] = (nameFields[i].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 g.hcPlayers[i] = Int(handicapFields[i].text ?? "") ?? 0
-                g.playerActivated[i] = activateButtons[i].isSelected
+                g.playerActivated[i] = activeSwitches[i].isOn
             }
         }
     }
@@ -503,38 +533,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         present(a, animated: true)
     }
 
-    private func styleActivate(_ button: UIButton) {
-        let on = button.isSelected
-
-        if #available(iOS 15.0, *) {
-            var cfg = UIButton.Configuration.filled()
-
-            if !button.isEnabled {
-                cfg.baseBackgroundColor = .systemGray3
-                cfg.baseForegroundColor = .white
-                cfg.title = "Max \(maxActive)"
-            } else {
-                cfg.baseBackgroundColor = on ? .systemBrown : .systemOrange
-                cfg.baseForegroundColor = .white
-                cfg.title = on ? "Active" : "Activate"
-            }
-
-            cfg.cornerStyle = .medium
-            button.configuration = cfg
-        } else {
-            if !button.isEnabled {
-                button.backgroundColor = .systemGray3
-                button.setTitle("Max \(maxActive)", for: .normal)
-            } else {
-                button.backgroundColor = on ? .brown : .systemOrange
-                button.setTitle(on ? "Active" : "Activate", for: .normal)
-            }
-            button.setTitleColor(.white, for: .normal)
-            button.layer.cornerRadius = 8
-            button.clipsToBounds = true
-        }
-    }
-
     private func shake(_ view: UIView) {
         let anim = CAKeyframeAnimation(keyPath: "transform.translation.x")
         anim.values = [-6, 6, -5, 5, -3, 3, 0]
@@ -546,19 +544,14 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         guard segue.identifier == "showGame" else { return }
 
-        // If your Game screen is embedded in a nav controller in the storyboard
         if let nav = segue.destination as? UINavigationController {
             nav.modalPresentationStyle = .fullScreen
             nav.modalTransitionStyle = .coverVertical
-            // (optional) if you need the actual VC:
-            // let gameVC = nav.topViewController as? GameViewController
         } else {
-            // If it’s the Game VC directly
             segue.destination.modalPresentationStyle = .fullScreen
             segue.destination.modalTransitionStyle = .coverVertical
         }
     }
-
 }
 
 // MARK: - Small Utilities

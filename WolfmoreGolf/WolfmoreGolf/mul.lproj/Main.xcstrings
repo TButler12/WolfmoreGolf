@@ -74,13 +74,13 @@
       }
     },
     "0Tc-Yg-OBE.text" : {
-      "comment" : "Class = \"UITextField\"; text = \"Player\"; ObjectID = \"0Tc-Yg-OBE\";",
+      "comment" : "Class = \"UITextField\"; text = \"Activate          Player\"; ObjectID = \"0Tc-Yg-OBE\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Player"
+            "value" : "Activate          Player"
           }
         }
       }
@@ -141,30 +141,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "S"
-          }
-        }
-      }
-    },
-    "8b6-Vu-AEj.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"8b6-Vu-AEj\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Active"
-          }
-        }
-      }
-    },
-    "8b6-Vu-AEj.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"8b6-Vu-AEj\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
           }
         }
       }
@@ -237,6 +213,30 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "HC"
+          }
+        }
+      }
+    },
+    "aQ8-2g-vd2.configuration.title" : {
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Home\"; ObjectID = \"aQ8-2g-vd2\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Home"
+          }
+        }
+      }
+    },
+    "aQ8-2g-vd2.normalTitle" : {
+      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"aQ8-2g-vd2\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Button"
           }
         }
       }
@@ -315,30 +315,6 @@
     },
     "BCo-g2-rLJ.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"BCo-g2-rLJ\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "bjn-6C-VwF.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"bjn-6C-VwF\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Active"
-          }
-        }
-      }
-    },
-    "bjn-6C-VwF.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"bjn-6C-VwF\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -493,30 +469,6 @@
         }
       }
     },
-    "DKe-6m-A0y.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"DKe-6m-A0y\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Active"
-          }
-        }
-      }
-    },
-    "DKe-6m-A0y.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"DKe-6m-A0y\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
     "DLq-Tq-TtB.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"DLq-Tq-TtB\";",
       "extractionState" : "extracted_with_value",
@@ -567,30 +519,6 @@
     },
     "E5X-u3-2fv.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"E5X-u3-2fv\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "EfM-Ar-pZT.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"EfM-Ar-pZT\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Active"
-          }
-        }
-      }
-    },
-    "EfM-Ar-pZT.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"EfM-Ar-pZT\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -945,30 +873,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "HC"
-          }
-        }
-      }
-    },
-    "kXR-e8-70h.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Active\"; ObjectID = \"kXR-e8-70h\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Active"
-          }
-        }
-      }
-    },
-    "kXR-e8-70h.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"kXR-e8-70h\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
           }
         }
       }
@@ -1442,13 +1346,13 @@
       }
     },
     "R2k-ui-OKw.text" : {
-      "comment" : "Class = \"UITextField\"; text = \"S\"; ObjectID = \"R2k-ui-OKw\";",
+      "comment" : "Class = \"UITextField\"; text = \"Strokes\"; ObjectID = \"R2k-ui-OKw\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "S"
+            "value" : "Strokes"
           }
         }
       }

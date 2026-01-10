@@ -4,6 +4,7 @@
 //
 //  Created by Tom BUTLER on 11/27/25.
 //
+
 import UIKit
 
 final class ManagePlayersViewController: UIViewController,
@@ -11,52 +12,113 @@ final class ManagePlayersViewController: UIViewController,
                                          UITableViewDelegate,
                                          UITextFieldDelegate {
 
-    
-    private let maxActivePlayers = 5   // 👈 new
+    // MARK: - Limits
+    private let maxActivePlayers = 5
+    private let trackingLimitPerCourse = 30
 
+    // MARK: - Outlets
     @IBOutlet private weak var tableView: UITableView!
-    
-    // Read-only view into FriendStore
-    private var friends: [Friend] {
-        FriendStore.shared.friends
-    }
 
+    // MARK: - Data
+    private var friends: [Friend] { FriendStore.shared.friends }
+
+    // MARK: - UI refs
+    private weak var addUIButton: UIButton?
+
+    // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "Manage Players"
-        tableView.dataSource = self
-        tableView.delegate   = self
-
-        // Tap anywhere to dismiss keyboard
-        let tap = UITapGestureRecognizer(target: self, action: #selector(endEditingTap))
-        tap.cancelsTouchesInView = false   // so table cells still receive taps
-        view.addGestureRecognizer(tap)
-
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .add,
-            target: self,
-            action: #selector(addFriendTapped)
-        )
-        navigationItem.hidesBackButton = true
-
-              // (Optional) also disable the swipe-to-go-back gesture
-              navigationController?.interactivePopGestureRecognizer?.isEnabled = false
-          
+        configureNavBar()
+        configureTable()
+        configureKeyboardDismissTap()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        tableView.reloadData()   // refresh if list changed elsewhere
+        tableView.reloadData()
     }
 
+    // MARK: - Setup
+    private func configureNavBar() {
+        navigationItem.title = "Add Players  ===>"
+        navigationItem.prompt = nil
+
+        let addButton = makeGlowingAddButton()
+        addUIButton = addButton
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
+
+        navigationItem.hidesBackButton = true
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    }
+
+    private func configureTable() {
+        tableView.dataSource = self
+        tableView.delegate = self
+    }
+
+    private func configureKeyboardDismissTap() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(endEditingTap))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+
+    // MARK: - Add button (glow)
+    private func makeGlowingAddButton() -> UIButton {
+        let b = UIButton(type: .system)
+        b.frame = CGRect(x: 0, y: 0, width: 36, height: 36)
+        b.layer.cornerRadius = 18
+        b.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.92)
+
+        b.setImage(UIImage(systemName: "plus"), for: .normal)
+        b.tintColor = .systemGreen
+        b.addTarget(self, action: #selector(addFriendTapped), for: .touchUpInside)
+
+        setAddGlow(true, on: b)
+        return b
+    }
+
+    private func setAddGlow(_ on: Bool, on button: UIButton) {
+        if on {
+            button.layer.shadowColor = UIColor.systemGreen.cgColor
+            button.layer.shadowRadius = 12
+            button.layer.shadowOpacity = 0.85
+            button.layer.shadowOffset = .zero
+
+            let pulse = CABasicAnimation(keyPath: "shadowOpacity")
+            pulse.fromValue = 0.15
+            pulse.toValue = 0.9
+            pulse.duration = 0.8
+            pulse.autoreverses = true
+            pulse.repeatCount = .infinity
+            button.layer.add(pulse, forKey: "addGlowPulse")
+        } else {
+            button.layer.removeAnimation(forKey: "addGlowPulse")
+            button.layer.shadowOpacity = 0
+            button.layer.shadowRadius = 0
+        }
+    }
+
+    private func flashNavPrompt(_ text: String, seconds: TimeInterval = 1.6) {
+        let old = navigationItem.prompt
+        navigationItem.prompt = text
+        DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [weak self] in
+            guard let self else { return }
+            self.navigationItem.prompt = old
+        }
+    }
+
+    // MARK: - Keyboard
     @objc private func endEditingTap() {
         view.endEditing(true)
     }
+
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
     }
+
+    // MARK: - Alerts
     private func showActiveLimitAlert() {
         let ac = UIAlertController(
             title: "Player Limit",
@@ -67,39 +129,158 @@ final class ManagePlayersViewController: UIViewController,
         present(ac, animated: true)
     }
 
-    // MARK: - Add player
-
+    // MARK: - Add Player flow (Name -> Next -> HC -> Add)
     @objc private func addFriendTapped() {
-        let ac = UIAlertController(
-            title: "Add Player",
-            message: nil,
-            preferredStyle: .alert
-        )
+        showNamePrompt(prefillName: nil)
+    }
+
+    private func showNamePrompt(prefillName: String?) {
+        let ac = UIAlertController(title: "Add Player", message: nil, preferredStyle: .alert)
 
         ac.addTextField { tf in
             tf.placeholder = "Player name"
             tf.autocapitalizationType = .words
+            tf.text = prefillName
+            tf.returnKeyType = .done
         }
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
-        ac.addAction(UIAlertAction(title: "Add", style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            let name = ac.textFields?.first?.text?
-                .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            guard !name.isEmpty else { return }
+        ac.addAction(UIAlertAction(title: "Next", style: .default) { [weak self] _ in
+            guard let self else { return }
 
-            FriendStore.shared.add(name: name)
-            self.tableView.reloadData()
+            let name = (ac.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            guard !name.isEmpty else { return }
+            self.showHCPrompt(name: name, prefillHC: nil)
         })
 
         present(ac, animated: true)
     }
 
-    // MARK: - TableView Data Source
+    private func showHCPrompt(name: String, prefillHC: Int?) {
+        let ac = UIAlertController(
+            title: "Handicap",
+            message: "Enter HC for \(name)",
+            preferredStyle: .alert
+        )
 
-    func tableView(_ tableView: UITableView,
-                   numberOfRowsInSection section: Int) -> Int {
+        ac.addTextField { tf in
+            tf.placeholder = "HC"
+            tf.keyboardType = .numberPad
+            if let prefillHC = prefillHC {
+                tf.text = "\(prefillHC)"
+            }
+        }
+
+        ac.addAction(UIAlertAction(title: "Back", style: .default) { [weak self] _ in
+            self?.showNamePrompt(prefillName: name)
+        })
+
+        ac.addAction(UIAlertAction(title: "Add", style: .default) { [weak self] _ in
+            guard let self else { return }
+
+            let hcText = (ac.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let hc = Int(hcText) ?? 0
+
+            // 1) Create friend
+            FriendStore.shared.add(name: name)
+
+            // 2) Find newly-added friend and set HC
+            // Assumes FriendStore de-dupes names or newest is last; adjust if needed.
+            guard let newFriend = FriendStore.shared.friends.last(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .caseInsensitiveCompare(name) == .orderedSame
+            }) else {
+                self.tableView.reloadData()
+                return
+            }
+
+            FriendStore.shared.update(friendID: newFriend.id, defaultHC: hc)
+            self.tableView.reloadData()
+
+            // 3) ✅ Ask to add to STAT TRACKING (NOT Activate)
+            self.promptAddToStatTracking(friend: newFriend)
+        })
+
+        present(ac, animated: true)
+    }
+
+    // MARK: - Stat Tracking prompt (FriendTrackStore)
+    private func promptAddToStatTracking(friend: Friend) {
+        let courseID = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        // Home course must be a valid UUID string
+        guard UUID(uuidString: courseID) != nil else {
+            let ac = UIAlertController(
+                title: "Set Home Course First",
+                message: "Stat Tracking is tied to your Home Course. Set it now?",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Not now", style: .cancel))
+            ac.addAction(UIAlertAction(title: "Set Home Course", style: .default) { [weak self] _ in
+                self?.goToHomeCourseSetup()
+            })
+            present(ac, animated: true)
+            return
+        }
+
+        // If already tracked, don’t ask again
+        if FriendTrackStore.shared.isTracked(friend.id, on: courseID) {
+            flashNavPrompt("\(friend.name) already tracked ✅")
+            return
+        }
+
+        let ac = UIAlertController(
+            title: "Add to Stat Tracking?",
+            message: "Track \(friend.name) for Friend Stats / Hole Stats on your Home Course?",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Not now", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Add to Tracking", style: .default) { [weak self] _ in
+            guard let self else { return }
+
+            // ✅ Uses YOUR FriendTrackStore API (toggle)
+            let ok = FriendTrackStore.shared.toggle(friend.id,
+                                                   courseID: courseID,
+                                                   limit: self.trackingLimitPerCourse)
+            if ok {
+                self.flashNavPrompt("Added to Stat Tracking ✅")
+            } else {
+                let full = UIAlertController(
+                    title: "Tracking Limit Reached",
+                    message: "You can track up to \(self.trackingLimitPerCourse) friends for this Home Course.",
+                    preferredStyle: .alert
+                )
+                full.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(full, animated: true)
+            }
+        })
+
+        present(ac, animated: true)
+    }
+
+    private func goToHomeCourseSetup() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+
+        // Use your actual storyboard ID (if yours is "CourseSetupVC" or "CourseSetupVC", keep it consistent).
+        let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC")
+
+        if let nav = navigationController {
+            nav.pushViewController(vc, animated: true)
+        } else {
+            let wrap = UINavigationController(rootViewController: vc)
+            wrap.modalPresentationStyle = .fullScreen
+            present(wrap, animated: true)
+        }
+    }
+
+    // MARK: - TableView Data Source
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         friends.count
     }
 
@@ -116,43 +297,35 @@ final class ManagePlayersViewController: UIViewController,
         let friend = friends[indexPath.row]
         let friendID = friend.id
 
-        // Configure UI
         cell.nameLabel.text = friend.name
-        cell.hcField.text   = friend.defaultHC == 0 ? "" : String(friend.defaultHC)
+        cell.hcField.text = friend.defaultHC == 0 ? "" : String(friend.defaultHC)
         cell.activeSwitch.isOn = friend.preselectForRound
 
         // HC changed
         cell.hcChanged = { newHC in
-            FriendStore.shared.update(friendID: friendID,
-                                      defaultHC: newHC)
+            FriendStore.shared.update(friendID: friendID, defaultHC: newHC)
         }
 
-        // 🔒 limit to 9 active players
+        // Activate changed (this is for the ROUND roster, not tracking)
         cell.activeChanged = { [weak self, weak cell] isOn in
-            guard let self = self else { return }
+            guard let self else { return }
 
             if isOn {
-                // How many are currently active?
                 let currentActive = FriendStore.shared.preselectedCount
                 if currentActive >= self.maxActivePlayers {
-                    // Over the limit – revert switch & show alert
                     cell?.activeSwitch.setOn(false, animated: true)
                     self.showActiveLimitAlert()
                     return
                 }
             }
 
-            // Within limit or turning OFF – save the new state
-            FriendStore.shared.update(friendID: friendID,
-                                      preselectForRound: isOn)
+            FriendStore.shared.update(friendID: friendID, preselectForRound: isOn)
         }
 
         return cell
     }
 
-
     // MARK: - Delete (swipe to delete)
-
     func tableView(_ tableView: UITableView,
                    commit editingStyle: UITableViewCell.EditingStyle,
                    forRowAt indexPath: IndexPath) {
@@ -163,16 +336,24 @@ final class ManagePlayersViewController: UIViewController,
         FriendStore.shared.remove(friendID: friend.id)
         tableView.deleteRows(at: [indexPath], with: .automatic)
     }
-    // MARK: - Start round from Manage Players
-    @IBAction private func closeTapped(_ sender: Any) {
-        navigationController?.popViewController(animated: true)
-    }
-   
 
+    // MARK: - Close
+    @IBAction private func closeTapped(_ sender: Any) {
+        if let nav = navigationController, nav.presentingViewController != nil {
+            nav.dismiss(animated: true)
+            return
+        }
+        if navigationController != nil {
+            navigationController?.popViewController(animated: true)
+            return
+        }
+        dismiss(animated: true)
+    }
+
+    // MARK: - Start Round (unchanged)
     @IBAction func startRoundTapped(_ sender: Any) {
         print("▶️ Start Round tapped (from Manage Players)")
 
-        // 1. Collect selected players (preselectForRound == true)
         let selected = FriendStore.shared.friends.filter { $0.preselectForRound }
         guard !selected.isEmpty else {
             let ac = UIAlertController(
@@ -193,51 +374,31 @@ final class ManagePlayersViewController: UIViewController,
                 message: "This will reorder players and clear the current round data.",
                 preferredStyle: .alert
             )
-
             ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-            ac.addAction(UIAlertAction(
-                title: "Start New Round",
-                style: .destructive
-            ) { [weak self] _ in
-                // 🔁 Do the same kind of reset you do on Player Setup
+            ac.addAction(UIAlertAction(title: "Start New Round", style: .destructive) { [weak self] _ in
                 if GameManager.shared.currentGame != nil {
                     GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
                     GameManager.shared.canRandomizeTeams = true
                 } else {
-                    // If somehow no game yet, create a fresh one
                     GameManager.shared.startNewGame(name: "New Game")
                 }
-
-                // Now apply this screen’s roster and go to RoundNav
                 self?.configureGameRosterAndPresentRoundNav(with: active)
             })
-
             present(ac, animated: true)
         } else {
-            // No scores yet → just go straight through
             configureGameRosterAndPresentRoundNav(with: active)
         }
     }
 
-
-    // MARK: - Helpers
-
-    /// True if there is a current game with any score entered.
     private func hasInProgressRound() -> Bool {
         guard let g = GameManager.shared.currentGame else { return false }
-
         for row in g.scores {
-            if row.contains(where: { $0 != nil }) {
-                return true
-            }
+            if row.contains(where: { $0 != nil }) { return true }
         }
         return false
     }
 
-    /// Push the chosen players into GameManager and present RoundNav.
     private func configureGameRosterAndPresentRoundNav(with active: [Friend]) {
-        // Make sure there *is* a game object to update.
         if GameManager.shared.currentGame == nil {
             GameManager.shared.startNewGame(name: "New Game")
         }
@@ -247,14 +408,12 @@ final class ManagePlayersViewController: UIViewController,
             if g.hcPlayers.count != 5       { g.hcPlayers       = Array(repeating: 0,     count: 5) }
             if g.playerActivated.count != 5 { g.playerActivated = Array(repeating: false, count: 5) }
 
-            // Fill seats with active friends
             for (seat, friend) in active.enumerated() {
                 g.playerNames[seat]     = friend.name
                 g.hcPlayers[seat]       = friend.defaultHC
                 g.playerActivated[seat] = true
             }
 
-            // Clear any remaining seats
             if active.count < 5 {
                 for seat in active.count..<5 {
                     g.playerNames[seat]     = ""
@@ -263,19 +422,14 @@ final class ManagePlayersViewController: UIViewController,
                 }
             }
 
-            g.hole = 0 // always start on hole 1 (index 0)
+            g.hole = 0
         }
 
-        // Present the SAME round navigation flow that Home uses
-        guard let roundNav = storyboard?.instantiateViewController(
-            withIdentifier: "RoundNav"
-        ) as? UINavigationController else {
+        guard let roundNav = storyboard?.instantiateViewController(withIdentifier: "RoundNav") as? UINavigationController else {
             print("⚠️ Could not find RoundNav in storyboard")
             return
         }
 
         present(roundNav, animated: true)
     }
-
-
 }
