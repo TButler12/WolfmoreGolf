@@ -208,6 +208,15 @@ final class RoundStore {
         guard let data = UserDefaults.standard.data(forKey: key) else { return }
         rounds = (try? JSONDecoder().decode([RoundSummary].self, from: data)) ?? []
     }
+    private let freeRoundLimit = 10
+
+    private var savedRoundCount: Int {
+        Set(rounds.map(\.gameID)).count
+    }
+
+    private var canSaveAnotherRound: Bool {
+        Entitlements.shared.isPro || savedRoundCount < freeRoundLimit
+    }
 
     private func save() {
         let data = (try? JSONEncoder().encode(rounds)) ?? Data()
@@ -433,6 +442,12 @@ extension RoundStore {
 extension RoundStore {
     func recordAllPlayersFromCurrentGame() {
         guard let g = GameManager.shared.currentGame else { return }
+
+        // ✅ Pro gate: block saving a NEW round once Free hits 10 rounds
+        guard canSaveAnotherRound else {
+            NotificationCenter.default.post(name: .roundSaveBlockedNeedsPro, object: nil)
+            return
+        }
 
         let sharedGameID = UUID()
         let now = Date()

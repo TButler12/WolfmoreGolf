@@ -173,14 +173,14 @@ final class CourseSetupViewController: UIViewController {
             self?.setActiveAsHomeCourse()
         })
 
-        ac.addAction(UIAlertAction(title: "Set to Biltmore Defaults", style: .default) { [weak self] _ in
-            self?.setToBiltmoreDefaults()
+        ac.addAction(UIAlertAction(title: "Set to WolMore Defaults", style: .default) { [weak self] _ in
+            self?.setToWolfMoreDefaults()
         })
 
         // Delete (protect Biltmore)
         if let id = activeCourseID,
            let c = CourseLibrary.shared.get(id: id),
-           c.name.caseInsensitiveCompare("Biltmore CC") != .orderedSame {
+           c.name.caseInsensitiveCompare("WolfMore CC") != .orderedSame {
             ac.addAction(UIAlertAction(title: "Delete Course", style: .destructive) { [weak self] _ in
                 self?.confirmDeleteActiveCourse()
             })
@@ -210,7 +210,7 @@ final class CourseSetupViewController: UIViewController {
 
         // Put Biltmore first
         var courses = CourseLibrary.shared.allSorted()
-        if let idx = courses.firstIndex(where: { $0.name.caseInsensitiveCompare("Biltmore CC") == .orderedSame }) {
+        if let idx = courses.firstIndex(where: { $0.name.caseInsensitiveCompare("WolfMore CC") == .orderedSame }) {
             let b = courses.remove(at: idx)
             courses.insert(b, at: 0)
         }
@@ -261,7 +261,7 @@ final class CourseSetupViewController: UIViewController {
                 hcs:  Array(g.course.holeHandicaps.prefix(18))
             )
         } else {
-            applyToUIAndModel(pars: BILTMORE_PARS, hcs: BILTMORE_HCS)
+            applyToUIAndModel(pars: WOLFMORE_PARS, hcs: WOLFMORE_HCS)
         }
     }
 
@@ -348,13 +348,13 @@ final class CourseSetupViewController: UIViewController {
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
 
-    private func setToBiltmoreDefaults() {
+    private func setToWolfMoreDefaults() {
         CourseLibrary.shared.seedIfNeeded()
-        if let b = CourseLibrary.shared.biltmore() {
+        if let b = CourseLibrary.shared.WolfMore() {
             applyToUIAndModel(pars: b.pars, hcs: b.hcs)
             activeCourseID = b.id
         } else {
-            applyToUIAndModel(pars: BILTMORE_PARS, hcs: BILTMORE_HCS)
+            applyToUIAndModel(pars: WOLFMORE_PARS, hcs: WOLFMORE_HCS)
             activeCourseID = nil
         }
         updateCourseLabel()
@@ -374,7 +374,7 @@ final class CourseSetupViewController: UIViewController {
         warn.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
             guard let self = self else { return }
             CourseLibrary.shared.delete(id: id)
-            self.setToBiltmoreDefaults()
+            self.setToWolfMoreDefaults()
         })
         present(warn, animated: true)
     }

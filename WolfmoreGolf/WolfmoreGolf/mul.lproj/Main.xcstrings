@@ -217,30 +217,6 @@
         }
       }
     },
-    "aQ8-2g-vd2.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Home\"; ObjectID = \"aQ8-2g-vd2\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Home"
-          }
-        }
-      }
-    },
-    "aQ8-2g-vd2.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"aQ8-2g-vd2\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
     "asW-OX-YwQ.configuration.title" : {
       "comment" : "Class = \"UIButton\"; configuration.title = \"Next Hole\"; ObjectID = \"asW-OX-YwQ\";",
       "extractionState" : "extracted_with_value",
@@ -549,6 +525,30 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "9"
+          }
+        }
+      }
+    },
+    "FKr-xj-0VS.configuration.title" : {
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Join Pro-Stat Access\"; ObjectID = \"FKr-xj-0VS\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Join Pro-Stat Access"
+          }
+        }
+      }
+    },
+    "FKr-xj-0VS.normalTitle" : {
+      "comment" : "Class = \"UIButton\"; normalTitle = \"Join Pro-Stat Access\"; ObjectID = \"FKr-xj-0VS\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Join Pro-Stat Access"
           }
         }
       }

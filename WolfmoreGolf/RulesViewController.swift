@@ -161,69 +161,87 @@ private extension RulesViewController {
 
         header("WOLFMORE — HOW TO PLAY")
         body("""
-Scoring and bet tracking made easy!
+        Scoring and bet tracking made easy!
+        
+        Hover or long press over most buttos for decription of that button.
 
-Play up to 5 players (yes 5 players, 3 against 2 wolf is the most fun!) 
-Set your course, add players, and start scoring.
-Supports Wolf, Six-Point Scotch, and Hammer play.
-""")
+        WolfMore Pro: unlock premium stat tracking (full history, friend comparisons, home course summaries).
+
+        Play up to 5 players (yes 5 players, 3 against 2 wolf is the most fun!)
+        Set your course, add players through new game button, and start scoring.
+        Supports Wolf, Six-Point Scotch, and Hammer play.
+        """)
 
         header("GETTING STARTED")
         body("""
-• Set your course and handicaps
-• Choose and activate players
-• Select a Home Course if you want personal stat tracking of you and your friends. This is your personal data on your phone only.
-""")
+        • Set your course and handicaps
+        • Select a Home Course if you want personal stat tracking of you and your friends. This is your personal data on your phone only.
+        • Press "New Game" and select up to 5 players. If you're new to WolfMore, first add players and activate players through "New Game" button.
+        """)
 
         header("WAGERS")
         body("""
-• Default wager is $2.00
-• Use + / – to adjust for the present hole or the game
-• Tap $ to apply wager to entire game
-""")
+        • Default wager is $2.00
+        • Use + / – to adjust for the present hole or the game
+        • Tap $ to apply wager to entire game
+        """)
 
         header("HAMMER")
         body("""
-• Doubles the hole wager
-• Each tap doubles again (2× → 4× → 8×)
-• Reject removes last hammer
-""")
+        • Doubles the hole wager
+        • Each tap doubles again (2× → 4× → 8×)
+        • Reject removes last hammer
+        """)
 
         header("GAME MODES - All modes accessed in game scorng page")
         body("""
-• Six-Point Scotch (default)
-• Wolf (2 Point)
-• Wolf (1 Point)
-• Modes can change mid-round.
-""")
+        • Six-Point Scotch (default)
+        • Wolf (2 Point)
+        • Wolf (1 Point)
+        • Modes can change mid-round.
+        """)
 
         header("LONE WOLF")
         body("""
-• Player goes solo
-• Lone Wolf Total Score = (Lone Wolf Score + ((Lone Wolf Score + Bogey) ÷ 2)
-• Doubles hole wager
-""")
+        • Player goes solo
+        • Lone Wolf Total Score = (Lone Wolf Score + ((Lone Wolf Score + Bogey) ÷ 2)
+        • Doubles hole wager
+        """)
 
         header("UMBIE")
         body("""
-• Sweep rule for Six-Point
-• Winning all 6 points doubles the hole
-• Can be toggled on/off 
-""")
+        • Sweep rule for Six-Point
+        • Winning all 6 points doubles the hole
+        • Can be toggled on/off
+        """)
 
         header("SCORING")
         body("""
-Enter scores → Select options → Update Scores
-W = Wolf partners
-P = Prox
-""")
+        Enter scores → Select options → Update Scores
+        W = Wolf partners
+        P = Prox
+        """)
 
         header("TRACKING")
         body("""
-Your personal stat tracking.
-View stats by player, course, and hole.
-Access and select tracking from the player activation screen. 
-""")
+        Your personal stat tracking.
+        View stats by player, course, and hole.
+        Access and select tracking from the player activation screen.
+        """)
+
+        // ✅ Added Pro section (matches your screenshot content)
+        header("WOLFMORE PRO — PREMIUM STATS")
+        body("""
+        Join WolfMore Pro to unlock premium stat tracking:
+
+        • Full history (no limits)
+        • Friend tracking and comparisons
+        • Home Course summaries
+        • By-hole summaries and trends over time
+
+        Pro is an optional subscription. You can cancel anytime in your Apple ID subscriptions.
+        If you already joined Pro on this device, tap "Restore Purchases" on the Pro screen to re-enable access.
+        """)
 
         return text
     }

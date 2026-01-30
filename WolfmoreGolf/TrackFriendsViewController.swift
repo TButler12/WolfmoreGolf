@@ -23,7 +23,7 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
         let stored = ProfileStore.homeCourseID
         if !stored.isEmpty { return stored }
 
-        if let b = CourseLibrary.shared.biltmore() {
+        if let b = CourseLibrary.shared.WolfMore() {
             return b.id.uuidString
         }
 

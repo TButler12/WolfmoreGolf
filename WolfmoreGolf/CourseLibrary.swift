@@ -11,12 +11,12 @@ import Foundation
 // MARK: - Built-in default: Biltmore CC (18 pars + 18 HCs)
 // =======================================================
 
-let BILTMORE_PARS: [Int] = [
+let WOLFMORE_PARS: [Int] = [
     4,4,4,4,3,5,3,4,4,
     4,4,3,4,4,5,3,4,5
 ]
 
-let BILTMORE_HCS: [Int] = [
+let WOLFMORE_HCS: [Int] = [
     4,8,14,10,16,2,18,6,12,
     11,3,15,1,13,7,17,9,5
 ]
@@ -55,9 +55,9 @@ final class CourseLibrary {
         guard !u.bool(forKey: keySeed) else { return }
 
         if !courses.contains(where: {
-            $0.name.caseInsensitiveCompare("Biltmore CC") == ComparisonResult.orderedSame
+            $0.name.caseInsensitiveCompare("WolfMore CC") == ComparisonResult.orderedSame
         }) {
-            courses.append(CourseProfile(name: "Biltmore CC", pars: BILTMORE_PARS, hcs: BILTMORE_HCS))
+            courses.append(CourseProfile(name: "WolfMore CC", pars: WOLFMORE_PARS, hcs: WOLFMORE_HCS))
             save()
         }
 
@@ -89,8 +89,8 @@ final class CourseLibrary {
         save()
     }
 
-    func biltmore() -> CourseProfile? {
-        courses.first { $0.name.caseInsensitiveCompare("Biltmore CC") == ComparisonResult.orderedSame }
+    func WolfMore() -> CourseProfile? {
+        courses.first { $0.name.caseInsensitiveCompare("WolMore CC") == ComparisonResult.orderedSame }
     }
 
     // MARK: - Persistence
