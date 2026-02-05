@@ -15,10 +15,10 @@ final class CourseSummaryViewController: UITableViewController {
     // MARK: - Models
 
     private struct HoleRow {
-        let holeIndex: Int   // 0-based
+        let holeIndex: Int          // 0-based
         let par: Int
 
-        // Stored as 0–100
+        // metrics
         let avgWinner: Double
         let biggestWin: Int
         let proxPct: Double
@@ -28,9 +28,11 @@ final class CourseSummaryViewController: UITableViewController {
         let nonWolfWinPct: Double
         let tiePct: Double
 
-        // Umbie
         let umbieCount: Int
         let umbiePct: Double
+
+        // ✅ number of games that contributed to this hole
+        let rounds: Int
 
         // ranks (1 = best)
         var rankAvgWinner: Int = 0
@@ -95,8 +97,10 @@ final class CourseSummaryViewController: UITableViewController {
         super.viewDidLayoutSubviews()
 
         if let header = tableView.tableHeaderView {
-            let target = CGSize(width: tableView.bounds.width,
-                                height: UIView.layoutFittingCompressedSize.height)
+            let target = CGSize(
+                width: tableView.bounds.width,
+                height: UIView.layoutFittingCompressedSize.height
+            )
             let height = header.systemLayoutSizeFitting(target).height
             if header.frame.height != height {
                 header.frame.size.height = height
@@ -170,22 +174,27 @@ final class CourseSummaryViewController: UITableViewController {
         let homeID = (ProfileStore.homeCourseID ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Use ALL rounds on this course (or all rounds if no home set)
-        let roundsOnCourse = RoundStore.shared.rounds.filter {
-            homeID.isEmpty ? true : $0.courseID == homeID
+        let isPro = ProStore.shared.isPro
+
+        // ✅ entitlement filtered rows (Free = newest 10 games, Pro = all)
+        let visible = RoundStore.shared.visibleRows(isPro: isPro)
+
+        // ✅ only rows for home course (or all visible if no home set)
+        let rowsOnCourse = visible.filter { r in
+            homeID.isEmpty ? true : r.courseID == homeID
         }
 
-        guard !roundsOnCourse.isEmpty else { return [] }
+        guard !rowsOnCourse.isEmpty else { return [] }
 
-        // ✅ Primary grouping: gameID
-        var games = Dictionary(grouping: roundsOnCourse, by: \.gameID)
+        // ✅ group into games (by gameID)
+        var games = Dictionary(grouping: rowsOnCourse, by: \.gameID)
             .values
             .map { Array($0) }
 
-        // ✅ Back-compat fallback (coalesce if every group is singleton)
+        // ✅ fallback: if everything is singleton, coalesce by time bucket
         let allSingletons = games.allSatisfy { $0.count == 1 }
-        if allSingletons && roundsOnCourse.count >= 2 {
-            let fallback = Dictionary(grouping: roundsOnCourse) { r in
+        if allSingletons && rowsOnCourse.count >= 2 {
+            let fallback = Dictionary(grouping: rowsOnCourse) { r in
                 let minuteBucket = Int(r.date.timeIntervalSince1970 / 60.0)
                 return "\(r.courseID)|\(minuteBucket)"
             }
@@ -197,10 +206,7 @@ final class CourseSummaryViewController: UITableViewController {
 
         guard !games.isEmpty else { return [] }
 
-        // ✅ Resolve pars & hcs together, using Home Course first.
         let pars = resolvePars()
-        // If you don’t need HC in the UI here, you can delete resolveHC(); I’m including it so you can
-        // keep pars/hcs consistent if you later want to show strokes or deltas.
         _ = resolveHC()
 
         return (0..<18).map { h in
@@ -216,7 +222,6 @@ final class CourseSummaryViewController: UITableViewController {
         return uuid
     }
 
-
     private func isDefaultPars(_ pars: [Int]) -> Bool {
         guard pars.count >= 18 else { return true }
         return pars.prefix(18).allSatisfy { $0 == 4 }
@@ -228,15 +233,15 @@ final class CourseSummaryViewController: UITableViewController {
     }
 
     private func resolvePars() -> [Int] {
-        // 1) Home Course (strong preference)
+        // 1) Home Course
         if let uuid = homeCourseUUID(),
            let course = CourseLibrary.shared.get(id: uuid),
            course.pars.count >= 18,
-           !isDefaultPars(course.pars) {                // prevents accidentally treating defaults as a real course
+           !isDefaultPars(course.pars) {
             return Array(course.pars.prefix(18))
         }
 
-        // 2) Current game course pars — only if non-default
+        // 2) Current game course pars (if non-default)
         if let g = GameManager.shared.currentGame {
             let pars = Array(g.course.pars.prefix(18))
             if pars.count == 18, !isDefaultPars(pars) {
@@ -244,7 +249,7 @@ final class CourseSummaryViewController: UITableViewController {
             }
         }
 
-        // 3) Last resort
+        // 3) last resort
         return Array(repeating: 4, count: 18)
     }
 
@@ -257,11 +262,7 @@ final class CourseSummaryViewController: UITableViewController {
             return Array(course.hcs.prefix(18))
         }
 
-        // 2) Current game course hcs — only if non-default
-        
-        
-
-        // 3) Last resort
+        // 3) last resort
         return Array(1...18)
     }
 
@@ -283,7 +284,8 @@ final class CourseSummaryViewController: UITableViewController {
                 avgWinner: 0, biggestWin: 0,
                 proxPct: 0, avgScore: nil,
                 wolfWinPct: 0, nonWolfWinPct: 0, tiePct: 0,
-                umbieCount: 0, umbiePct: 0
+                umbieCount: 0, umbiePct: 0,
+                rounds: 0
             )
         }
 
@@ -352,7 +354,8 @@ final class CourseSummaryViewController: UITableViewController {
             nonWolfWinPct: nonWolfPct,
             tiePct: tiePct,
             umbieCount: umbieGames,
-            umbiePct: umbiePct
+            umbiePct: umbiePct,
+            rounds: gameCount
         )
     }
 
@@ -456,6 +459,7 @@ final class CourseSummaryViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
         let r = rows[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "holeCell", for: indexPath)
 
@@ -476,6 +480,7 @@ final class CourseSummaryViewController: UITableViewController {
         cell.textLabel?.text =
         """
         Hole \(holeNum) (Par \(r.par))
+        Based on \(r.rounds) rounds
         Avg winner \(money1(r.avgWinner)) (rank \(r.rankAvgWinner))
         Biggest win $\(r.biggestWin) (rank \(r.rankBiggestWin))
         Prox \(pct0(r.proxPct)) (rank \(r.rankProx))

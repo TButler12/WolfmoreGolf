@@ -79,6 +79,17 @@ final class HoleStatsViewController: UITableViewController {
         buildRows()
         updateEmptyBackgroundIfNeeded()
     }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        Task { @MainActor in
+            await ProStore.shared.refreshEntitlement()
+            buildRows()
+            updateEmptyBackgroundIfNeeded()
+            tableView.reloadData()
+        }
+    }
+
 
     var trackToggled: ((Bool) -> Void)?
 
@@ -92,14 +103,17 @@ final class HoleStatsViewController: UITableViewController {
             FriendTrackStore.shared.isTracked($0.id, on: courseID)
         }
 
-        // Build course-wide “Hole vs All Holes” overview
+        // Build course-wide “Hole vs All Holes” overview (make sure buildOverview also uses visible rows)
         buildOverview(for: trackedFriends, courseID: courseID)
+
+        // ✅ Use entitlement-filtered rows (Free = newest 10 games, Pro = all)
+        let visible = RoundStore.shared.visibleRows(isPro: ProStore.shared.isPro)
 
         var built: [Row] = []
 
         // Per-friend stats for THIS hole
         for friend in trackedFriends {
-            let rds = RoundStore.shared.rounds.filter { r in
+            let rds = visible.filter { r in
                 r.courseID == courseID &&
                 r.playerName.caseInsensitiveCompare(friend.name) == .orderedSame &&
                 r.moneyPerHole.indices.contains(holeIndex) &&
@@ -108,7 +122,7 @@ final class HoleStatsViewController: UITableViewController {
 
             guard !rds.isEmpty else { continue }
 
-            let totalRounds = rds.count
+            let totalRounds = Set(rds.map(\.gameID)).count
 
             let totalMoney = rds.reduce(0) { acc, round in
                 acc + round.moneyPerHole[holeIndex]
@@ -116,9 +130,7 @@ final class HoleStatsViewController: UITableViewController {
             let avgMoney = Double(totalMoney) / Double(totalRounds)
 
             let proxWins = rds.filter { $0.proxPerHole[holeIndex] }.count
-            let proxPct = totalRounds > 0
-                ? Double(proxWins) / Double(totalRounds) * 100.0
-                : 0.0
+            let proxPct = Double(proxWins) / Double(totalRounds) * 100.0
 
             built.append(Row(
                 name: friend.name,
@@ -139,7 +151,10 @@ final class HoleStatsViewController: UITableViewController {
     /// Returns "games" (each game = array of RoundSummary rows) for a course.
     /// Prefers real gameID grouping, but falls back if your stored gameIDs are wrong (all singletons).
     private func gamesForCourse(_ courseID: String) -> [[RoundSummary]] {
-        let rows = RoundStore.shared.rounds.filter { $0.courseID == courseID }
+        let isPro = ProStore.shared.isPro
+        let rows = RoundStore.shared
+            .visibleRows(isPro: isPro)
+            .filter { $0.courseID == courseID }
         guard !rows.isEmpty else { return [] }
 
         let byGameID = Dictionary(grouping: rows, by: \.gameID)
@@ -162,8 +177,22 @@ final class HoleStatsViewController: UITableViewController {
 
     private func buildOverview(for trackedFriends: [Friend], courseID: String) {
 
-        let allRows = RoundStore.shared.rounds.filter { $0.courseID == courseID }
-        guard !allRows.isEmpty else { overview = nil; return }
+        let isPro = ProStore.shared.isPro
+
+        // Only allow newest 10 games for Free users
+        let allowedGames = RoundStore.shared.visibleGameIDs(isPro: isPro)
+
+        // Filter rows by course + entitlement
+        let allRows = RoundStore.shared.rounds.filter {
+            $0.courseID == courseID &&
+            (isPro || allowedGames.contains($0.gameID))
+        }
+
+        guard !allRows.isEmpty else {
+            overview = nil
+            return
+        }
+
 
         // determine holeCount robustly (not just moneyPerHole)
         let holeCount = allRows.map {

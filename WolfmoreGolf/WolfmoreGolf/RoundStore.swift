@@ -208,20 +208,57 @@ final class RoundStore {
         guard let data = UserDefaults.standard.data(forKey: key) else { return }
         rounds = (try? JSONDecoder().decode([RoundSummary].self, from: data)) ?? []
     }
-    private let freeRoundLimit = 10
-
+   
     private var savedRoundCount: Int {
         Set(rounds.map(\.gameID)).count
     }
 
     private var canSaveAnotherRound: Bool {
-        Entitlements.shared.isPro || savedRoundCount < freeRoundLimit
+        ProStore.shared.isPro || savedRoundCount < freeRoundLimit
     }
 
     private func save() {
         let data = (try? JSONEncoder().encode(rounds)) ?? Data()
         UserDefaults.standard.set(data, forKey: key)
     }
+    private let freeRoundLimit = 10
+
+    /// Returns gameIDs sorted newest -> oldest (based on the newest row in each game)
+    private var gameIDsNewestFirst: [UUID] {
+        // Group all saved player-rows by gameID
+        let grouped = Dictionary(grouping: rounds, by: \.gameID)
+
+        // Pick a representative date per game (newest row date)
+        let gamesWithDate: [(UUID, Date)] = grouped.map { (gameID, rows) in
+            let newestDate = rows.map(\.date).max() ?? .distantPast
+            return (gameID, newestDate)
+        }
+
+        return gamesWithDate
+            .sorted { $0.1 > $1.1 }
+            .map { $0.0 }
+    }
+
+    /// For non-pro, these are the ONLY gameIDs they can access (most recent 10 games).
+    func visibleGameIDs(isPro: Bool) -> Set<UUID> {
+        if isPro { return Set(rounds.map(\.gameID)) }
+        return Set(gameIDsNewestFirst.prefix(freeRoundLimit))
+    }
+
+    /// These are the rows you should show in History for the current user.
+    func visibleRows(isPro: Bool) -> [RoundSummary] {
+        if isPro { return rounds }
+        let allowed = visibleGameIDs(isPro: false)
+        return rounds.filter { allowed.contains($0.gameID) }
+    }
+
+    /// How many whole rounds (games) are locked behind Pro.
+    func lockedRoundCount(isPro: Bool) -> Int {
+        if isPro { return 0 }
+        let totalGames = Set(rounds.map(\.gameID)).count
+        return max(0, totalGames - freeRoundLimit)
+    }
+
 }
 
 
@@ -403,18 +440,23 @@ extension RoundStore {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        // Aggregates across ALL courses (as you had it)
-        let roundsForPlayer = rounds.filter {
+        let isPro = ProStore.shared.isPro
+
+        // ✅ Only use rows the user is allowed to see
+        let visible = visibleRows(isPro: isPro)
+
+        let rowsForPlayer = visible.filter {
             $0.playerName.caseInsensitiveCompare(trimmed) == .orderedSame
         }
-        guard !roundsForPlayer.isEmpty else { return nil }
+        guard !rowsForPlayer.isEmpty else { return nil }
 
-        let count = roundsForPlayer.count
+        // ✅ rounds = unique games, not player-rows
+        let roundCount = Set(rowsForPlayer.map(\.gameID)).count
 
-        let totalMoney = roundsForPlayer.reduce(0) { $0 + $1.totalMoney }
-        let totalProx  = roundsForPlayer.reduce(0) { $0 + $1.totalProx }
+        let totalMoney = rowsForPlayer.reduce(0) { $0 + $1.totalMoney }
+        let totalProx  = rowsForPlayer.reduce(0) { $0 + $1.totalProx }
 
-        let totalHoles = roundsForPlayer.reduce(0) { acc, round in
+        let totalHoles = rowsForPlayer.reduce(0) { acc, round in
             acc + max(round.holesPlayed, 1)
         }
 
@@ -427,7 +469,7 @@ extension RoundStore {
             : 0
 
         return MyStats(
-            rounds: count,
+            rounds: roundCount,
             totalMoney: totalMoney,
             avgMoneyPerRound: moneyPer18,
             totalProx: totalProx,
@@ -443,11 +485,7 @@ extension RoundStore {
     func recordAllPlayersFromCurrentGame() {
         guard let g = GameManager.shared.currentGame else { return }
 
-        // ✅ Pro gate: block saving a NEW round once Free hits 10 rounds
-        guard canSaveAnotherRound else {
-            NotificationCenter.default.post(name: .roundSaveBlockedNeedsPro, object: nil)
-            return
-        }
+       
 
         let sharedGameID = UUID()
         let now = Date()
@@ -465,5 +503,33 @@ extension RoundStore {
                 date: now
             )
         }
+    }
+}
+extension RoundStore {
+
+    func visibleRowsForCourse(_ courseID: String) -> [RoundSummary] {
+        visibleRows(isPro: ProStore.shared.isPro).filter { $0.courseID == courseID }
+    }
+
+    func visibleGameIDsForCourse(_ courseID: String) -> Set<UUID> {
+        let rows = visibleRowsForCourse(courseID)
+        return Set(rows.map(\.gameID))
+    }
+
+    func visibleGamesForCourse(_ courseID: String) -> [[RoundSummary]] {
+        let rows = visibleRowsForCourse(courseID)
+        guard !rows.isEmpty else { return [] }
+
+        let byGameID = Dictionary(grouping: rows, by: \.gameID)
+        if byGameID.values.contains(where: { $0.count > 1 }) {
+            return byGameID.values.map { Array($0) }
+        }
+
+        // fallback bucket for legacy “bad grouping”
+        let byBucket = Dictionary(grouping: rows) { r -> String in
+            let bucket = Int(r.date.timeIntervalSince1970 / 30.0)
+            return "\(r.courseID)|\(bucket)"
+        }
+        return byBucket.values.map { Array($0) }
     }
 }

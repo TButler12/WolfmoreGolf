@@ -142,7 +142,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FKr-xj-0VS">
-                                <rect key="frame" x="132" y="464" width="143" height="29"/>
+                                <rect key="frame" x="84" y="464" width="237" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="12"/>
                                 <color key="tintColor" red="0.2399226837" green="0.3877051768" blue="0.02471920226" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
