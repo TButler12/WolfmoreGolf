@@ -251,10 +251,21 @@ final class ViewController: UIViewController {
         }
         openFriendStatsScreen()
     }
+    @IBAction func textHubTapped(_ sender: UIButton) {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "TextVC")
+        navigationController?.pushViewController(vc, animated: true)
+    }
 
     @IBAction func myStatsTapped(_ sender: UIButton) {
         showMyStatsAlert(anchor: sender)
     }
+    @IBAction func contactsTapped(_ sender: UIButton) {
+        let vc = storyboard!.instantiateViewController(withIdentifier: "ContactsViewController")
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+
 
     // MARK: - Delete History ✅ INCLUDED
     @IBAction private func deleteHistoryTapped(_ sender: UIButton) {

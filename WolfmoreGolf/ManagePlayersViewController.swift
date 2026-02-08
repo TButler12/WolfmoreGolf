@@ -4,7 +4,6 @@
 //
 //  Created by Tom BUTLER on 11/27/25.
 //
-
 import UIKit
 
 final class ManagePlayersViewController: UIViewController,
@@ -28,7 +27,6 @@ final class ManagePlayersViewController: UIViewController,
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-
         configureNavBar()
         configureTable()
         configureKeyboardDismissTap()
@@ -129,7 +127,7 @@ final class ManagePlayersViewController: UIViewController,
         present(ac, animated: true)
     }
 
-    // MARK: - Add Player flow (Name -> Next -> HC -> Add)
+    // MARK: - Add Player flow (Name + Phone -> Next -> HC -> Add)
     @objc private func addFriendTapped() {
         showNamePrompt(prefillName: nil)
     }
@@ -141,7 +139,13 @@ final class ManagePlayersViewController: UIViewController,
             tf.placeholder = "Player name"
             tf.autocapitalizationType = .words
             tf.text = prefillName
-            tf.returnKeyType = .done
+            tf.returnKeyType = .next
+        }
+
+        ac.addTextField { tf in
+            tf.placeholder = "Mobile (optional)"
+            tf.keyboardType = .phonePad
+            tf.clearButtonMode = .whileEditing
         }
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -149,17 +153,20 @@ final class ManagePlayersViewController: UIViewController,
         ac.addAction(UIAlertAction(title: "Next", style: .default) { [weak self] _ in
             guard let self else { return }
 
-            let name = (ac.textFields?.first?.text ?? "")
+            let name = (ac.textFields?[0].text ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
+            let rawPhone = ac.textFields?[1].text ?? ""
+            let phone = rawPhone.filter { $0.isNumber }
+
             guard !name.isEmpty else { return }
-            self.showHCPrompt(name: name, prefillHC: nil)
+            self.showHCPrompt(name: name, phone: phone, prefillHC: nil)
         })
 
         present(ac, animated: true)
     }
 
-    private func showHCPrompt(name: String, prefillHC: Int?) {
+    private func showHCPrompt(name: String, phone: String, prefillHC: Int?) {
         let ac = UIAlertController(
             title: "Handicap",
             message: "Enter HC for \(name)",
@@ -169,9 +176,7 @@ final class ManagePlayersViewController: UIViewController,
         ac.addTextField { tf in
             tf.placeholder = "HC"
             tf.keyboardType = .numberPad
-            if let prefillHC = prefillHC {
-                tf.text = "\(prefillHC)"
-            }
+            if let prefillHC { tf.text = "\(prefillHC)" }
         }
 
         ac.addAction(UIAlertAction(title: "Back", style: .default) { [weak self] _ in
@@ -185,24 +190,28 @@ final class ManagePlayersViewController: UIViewController,
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             let hc = Int(hcText) ?? 0
 
-            // 1) Create friend
-            FriendStore.shared.add(name: name)
-
-            // 2) Find newly-added friend and set HC
-            // Assumes FriendStore de-dupes names or newest is last; adjust if needed.
-            guard let newFriend = FriendStore.shared.friends.last(where: {
+            // ✅ Upsert friend with HC + phone (only overwrite phone if provided)
+            if var existing = FriendStore.shared.friends.first(where: {
                 $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
                     .caseInsensitiveCompare(name) == .orderedSame
-            }) else {
-                self.tableView.reloadData()
-                return
+            }) {
+                existing.defaultHC = hc
+                if !phone.isEmpty { existing.phone = phone }
+                FriendStore.shared.upsert(existing)
+            } else {
+                let friend = Friend(name: name, defaultHC: hc, phone: phone)
+                FriendStore.shared.upsert(friend)
             }
 
-            FriendStore.shared.update(friendID: newFriend.id, defaultHC: hc)
             self.tableView.reloadData()
 
-            // 3) ✅ Ask to add to STAT TRACKING (NOT Activate)
-            self.promptAddToStatTracking(friend: newFriend)
+            // Fetch saved friend (post-save)
+            guard let savedFriend = FriendStore.shared.friends.last(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .caseInsensitiveCompare(name) == .orderedSame
+            }) else { return }
+
+            self.promptAddToStatTracking(friend: savedFriend)
         })
 
         present(ac, animated: true)
@@ -212,7 +221,6 @@ final class ManagePlayersViewController: UIViewController,
     private func promptAddToStatTracking(friend: Friend) {
         let courseID = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
 
-        // Home course must be a valid UUID string
         guard UUID(uuidString: courseID) != nil else {
             let ac = UIAlertController(
                 title: "Set Home Course First",
@@ -227,7 +235,6 @@ final class ManagePlayersViewController: UIViewController,
             return
         }
 
-        // If already tracked, don’t ask again
         if FriendTrackStore.shared.isTracked(friend.id, on: courseID) {
             flashNavPrompt("\(friend.name) already tracked ✅")
             return
@@ -244,7 +251,6 @@ final class ManagePlayersViewController: UIViewController,
         ac.addAction(UIAlertAction(title: "Add to Tracking", style: .default) { [weak self] _ in
             guard let self else { return }
 
-            // ✅ Uses YOUR FriendTrackStore API (toggle)
             let ok = FriendTrackStore.shared.toggle(friend.id,
                                                    courseID: courseID,
                                                    limit: self.trackingLimitPerCourse)
@@ -266,8 +272,6 @@ final class ManagePlayersViewController: UIViewController,
 
     private func goToHomeCourseSetup() {
         let sb = UIStoryboard(name: "Main", bundle: nil)
-
-        // Use your actual storyboard ID (if yours is "CourseSetupVC" or "CourseSetupVC", keep it consistent).
         let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC")
 
         if let nav = navigationController {
@@ -301,12 +305,10 @@ final class ManagePlayersViewController: UIViewController,
         cell.hcField.text = friend.defaultHC == 0 ? "" : String(friend.defaultHC)
         cell.activeSwitch.isOn = friend.preselectForRound
 
-        // HC changed
         cell.hcChanged = { newHC in
             FriendStore.shared.update(friendID: friendID, defaultHC: newHC)
         }
 
-        // Activate changed (this is for the ROUND roster, not tracking)
         cell.activeChanged = { [weak self, weak cell] isOn in
             guard let self else { return }
 
@@ -352,8 +354,6 @@ final class ManagePlayersViewController: UIViewController,
 
     // MARK: - Start Round (unchanged)
     @IBAction func startRoundTapped(_ sender: Any) {
-        print("▶️ Start Round tapped (from Manage Players)")
-
         let selected = FriendStore.shared.friends.filter { $0.preselectForRound }
         guard !selected.isEmpty else {
             let ac = UIAlertController(
@@ -392,8 +392,8 @@ final class ManagePlayersViewController: UIViewController,
 
     private func hasInProgressRound() -> Bool {
         guard let g = GameManager.shared.currentGame else { return false }
-        for row in g.scores {
-            if row.contains(where: { $0 != nil }) { return true }
+        for row in g.scores where row.contains(where: { $0 != nil }) {
+            return true
         }
         return false
     }

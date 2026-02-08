@@ -41,7 +41,12 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
         super.viewDidLoad()
 
         title = "Track Friends"
+    
 
+           navigationItem.rightBarButtonItems = [
+               UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped)),
+               UIBarButtonItem(title: "Import", style: .plain, target: self, action: #selector(importRoster))
+           ]
         view.backgroundColor = .systemBackground
         tableView.backgroundColor = .systemBackground
 
@@ -186,21 +191,35 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
     @objc private func addTapped() {
         guard canEditTracking else { return }
 
-        let ac = UIAlertController(title: "Add Friend",
-                                   message: nil,
-                                   preferredStyle: .alert)
+        let ac = UIAlertController(title: "Add Friend", message: nil, preferredStyle: .alert)
+
         ac.addTextField { tf in
             tf.placeholder = "Name"
             tf.autocapitalizationType = .words
             tf.clearButtonMode = .whileEditing
-            tf.returnKeyType = .done
         }
+
+        ac.addTextField { tf in
+            tf.placeholder = "Mobile (optional)"
+            tf.keyboardType = .phonePad
+            tf.clearButtonMode = .whileEditing
+        }
+
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         ac.addAction(UIAlertAction(title: "Add", style: .default) { _ in
-            let name = ac.textFields?.first?.text ?? ""
-            FriendStore.shared.add(name)
+            let name = (ac.textFields?[0].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let rawPhone = ac.textFields?[1].text ?? ""
+            let normalized = rawPhone.filter { $0.isNumber }
+
+            guard !name.isEmpty else { return }
+
+            // Create & save the friend with phone
+            let friend = Friend(name: name, phone: normalized)
+            FriendStore.shared.upsert(friend)   // we’ll add upsert if you don’t have it
+
             self.reloadData()
         })
+
         present(ac, animated: true)
     }
 
@@ -233,7 +252,7 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
 
         var config = cell.defaultContentConfiguration()
         config.text = friend.name
-        cell.contentConfiguration = config
+        config.secondaryText = friend.phone.isEmpty ? "" : friend.phone
 
         let tracked = FriendTrackStore.shared.isTracked(friend.id, on: trackingCourseID)
         cell.accessoryType = tracked ? .checkmark : .none

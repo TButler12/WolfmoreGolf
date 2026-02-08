@@ -163,20 +163,25 @@ private extension RulesViewController {
         body("""
         Scoring and bet tracking made easy!
         
-        Hover or long press over most buttos for decription of that button.
+        Hover or long press over most buttons for decription of that button.
 
-        WolfMore Pro: unlock premium stat tracking (full history, friend comparisons, home course summaries).
+        WolfMore Pro: unlocks premium stat tracking (full history, friend comparisons, home course, by hole summaries).
 
         Play up to 5 players (yes 5 players, 3 against 2 wolf is the most fun!)
+        
         Set your course, add players through new game button, and start scoring.
+        
         Supports Wolf, Six-Point Scotch, and Hammer play.
+        
+        WolfMore is perfect for competing on your home course with supporting course stat tracking, away-course games and great for indoor simualtor golf games. 
         """)
 
         header("GETTING STARTED")
         body("""
-        • Set your course and handicaps
+        • Set your course pars and handicaps
         • Select a Home Course if you want personal stat tracking of you and your friends. This is your personal data on your phone only.
-        • Press "New Game" and select up to 5 players. If you're new to WolfMore, first add players and activate players through "New Game" button.
+        • Press "New Game" and select up to 5 players. If you're new to WolfMore, first add players and activate players through "New Game" button
+        • Add new players by using new game button 
         """)
 
         header("WAGERS")
@@ -198,12 +203,12 @@ private extension RulesViewController {
         • Six-Point Scotch (default)
         • Wolf (2 Point)
         • Wolf (1 Point)
-        • Modes can change mid-round.
+        • User can change Game Modes mid-round if you want to mix it up!
         """)
 
         header("LONE WOLF")
         body("""
-        • Player goes solo
+        • Player goes solo (Lone Wolf)
         • Lone Wolf Total Score = (Lone Wolf Score + ((Lone Wolf Score + Bogey) ÷ 2)
         • Doubles hole wager
         """)
@@ -226,7 +231,7 @@ private extension RulesViewController {
         body("""
         Your personal stat tracking.
         View stats by player, course, and hole.
-        Access and select tracking from the player activation screen.
+        Access and select tracking from the player activation screen
         """)
 
         // ✅ Added Pro section (matches your screenshot content)

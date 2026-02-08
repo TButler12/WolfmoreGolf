@@ -289,6 +289,8 @@ final class RosterAndTrackingViewController: UIViewController,
     // MARK: - Add Player (optional)
 
     @IBAction private func addPlayerTapped(_ sender: Any) {
+        print("✅ addPlayerTapped fired")
+        
         let ac = UIAlertController(title: "Add Player", message: nil, preferredStyle: .alert)
 
         ac.addTextField { tf in
@@ -296,20 +298,40 @@ final class RosterAndTrackingViewController: UIViewController,
             tf.autocapitalizationType = .words
         }
 
+        ac.addTextField { tf in
+            tf.placeholder = "Mobile (optional)"
+            tf.keyboardType = .phonePad
+            tf.clearButtonMode = .whileEditing
+        }
+
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
         ac.addAction(UIAlertAction(title: "Add", style: .default) { [weak self] _ in
             guard let self = self else { return }
 
-            let name = (ac.textFields?.first?.text ?? "")
+            let name = (ac.textFields?[0].text ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
+            let rawPhone = ac.textFields?[1].text ?? ""
+            let phone = rawPhone.filter { $0.isNumber }
+
             guard !name.isEmpty else { return }
 
-            // Save friend + refresh table
-            FriendStore.shared.merge(names: [name])
+            // ✅ If friend already exists, update phone only if provided
+            if var existing = FriendStore.shared.friends.first(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .caseInsensitiveCompare(name) == .orderedSame
+            }) {
+                if !phone.isEmpty { existing.phone = phone }
+                FriendStore.shared.upsert(existing)
+            } else {
+                // ✅ New friend
+                let friend = Friend(name: name, phone: phone)
+                FriendStore.shared.upsert(friend)
+            }
+
             self.rebuildRowsFromStores()
 
-            // Find the friend record we just added/merged
+            // Find the friend record (post-save)
             guard let friend = FriendStore.shared.friends.first(where: {
                 $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
                     .caseInsensitiveCompare(name) == .orderedSame
@@ -318,15 +340,14 @@ final class RosterAndTrackingViewController: UIViewController,
             // If already tracked, don't ask again
             if FriendTrackStore.shared.isTracked(friend.id, on: self.courseID) { return }
 
-            // ✅ Present AFTER the "Add Player" alert finishes dismissing
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 self?.promptTrackNewFriend(friend)
             }
         })
 
         safePresent(ac)
-
     }
+
     private func safePresent(_ vc: UIViewController) {
         if let presented = presentedViewController {
             presented.dismiss(animated: false) { [weak self] in

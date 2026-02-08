@@ -4,27 +4,32 @@
 //
 //  Created by Tom BUTLER on 11/14/25.
 //
-
 import Foundation
 
 struct Friend: Codable, Identifiable, Equatable {
     let id: UUID
     var name: String
-    var defaultHC: Int          // default handicap for this player
-    var preselectForRound: Bool // should be pre-activated for next round?
+    var defaultHC: Int
+    var preselectForRound: Bool
+    var phone: String
+    var isFavorite: Bool
 
     init(id: UUID = UUID(),
          name: String,
          defaultHC: Int = 0,
-         preselectForRound: Bool = false) {
+         preselectForRound: Bool = false,
+         phone: String = "",
+         isFavorite: Bool = false) {
         self.id = id
         self.name = name
         self.defaultHC = defaultHC
         self.preselectForRound = preselectForRound
+        self.phone = phone
+        self.isFavorite = isFavorite
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, defaultHC, preselectForRound
+        case id, name, defaultHC, preselectForRound, phone, isFavorite
     }
 
     init(from decoder: Decoder) throws {
@@ -32,8 +37,9 @@ struct Friend: Codable, Identifiable, Equatable {
         id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
         name = try c.decodeIfPresent(String.self, forKey: .name) ?? "Player"
         defaultHC = try c.decodeIfPresent(Int.self, forKey: .defaultHC) ?? 0
-        preselectForRound = try c.decodeIfPresent(Bool.self,
-                                                  forKey: .preselectForRound) ?? false
+        preselectForRound = try c.decodeIfPresent(Bool.self, forKey: .preselectForRound) ?? false
+        phone = try c.decodeIfPresent(String.self, forKey: .phone) ?? ""
+        isFavorite = try c.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
     }
 
     func encode(to encoder: Encoder) throws {
@@ -42,5 +48,8 @@ struct Friend: Codable, Identifiable, Equatable {
         try c.encode(name, forKey: .name)
         try c.encode(defaultHC, forKey: .defaultHC)
         try c.encode(preselectForRound, forKey: .preselectForRound)
+        try c.encode(phone, forKey: .phone)
+        try c.encode(isFavorite, forKey: .isFavorite)
     }
 }
+

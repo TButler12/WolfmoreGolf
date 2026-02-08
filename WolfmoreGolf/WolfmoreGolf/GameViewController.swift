@@ -149,7 +149,23 @@ final class GameViewController: UIViewController {
     // MARK: - State
     
     private var isUmbrellaOn = false
-   
+    
+    @IBAction private func textHubTapped(_ sender: Any) {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "TextVC") // your Storyboard ID
+
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]      // collapsible sizes
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 18
+        }
+
+        present(nav, animated: true)
+    }
+
     @IBOutlet private weak var gameModeSegment: UISegmentedControl!
 
     
