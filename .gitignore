@@ -1,11 +1,17 @@
 .DS_Store
-build/
+**/.DS_Store
+
 DerivedData/
-xcuserdata/
+build/
+
 *.xcuserstate
+*.xccheckout
+*.xcscmblueprint
+
+# User-specific Xcode data
+**/xcuserdata/
+**/*.xcodeproj/xcuserdata/
+**/*.xcworkspace/xcuserdata/
+
+# SwiftPM (optional)
 .build/
-Pods/
-Carthage/Build/
-fastlane/report.xml
-fastlane/Preview.html
-fastlane/screenshots
