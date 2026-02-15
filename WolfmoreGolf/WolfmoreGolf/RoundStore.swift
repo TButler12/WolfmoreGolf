@@ -9,10 +9,11 @@ import Foundation
 // MARK: - Model
 
 struct RoundSummary: Codable, Identifiable {
-    // Unique per player-row
+
+    /// Unique per player-row.
     var id: UUID = UUID()
 
-    // Shared across all player-rows saved from the same game
+    /// Shared across all player-rows saved from the same game.
     var gameID: UUID = UUID()
 
     var date: Date
@@ -27,12 +28,10 @@ struct RoundSummary: Codable, Identifiable {
     var totalScore: Int?
     var holesPlayed: Int
 
-    // Per-hole history
-    var moneyPerHole: [Int]   // up to 18 ints (can be negative)
-    var proxPerHole:  [Bool]  // up to 18 flags
-
-    // Per-hole gross scores for this player (nil = no score on that hole)
-    var scorePerHole: [Int?]
+    // Per-hole history (up to 18)
+    var moneyPerHole: [Int]     // can be negative
+    var proxPerHole:  [Bool]
+    var scorePerHole: [Int?]    // nil = no score on that hole
 
     // Wolf stats per hole
     var wolfCalledPerHole:   [Bool]
@@ -47,14 +46,14 @@ struct RoundSummary: Codable, Identifiable {
              wolfCalledPerHole, wolfTeamWonPerHole, umbieWonPerHole
     }
 
-    // Backwards compatible decode (old saves won’t have gameID / arrays)
+    /// Backwards compatible decode (legacy saves won’t have gameID / arrays).
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
 
-        id   = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
 
-        // ✅ Old saves won’t have gameID — fallback so decode never fails.
-        // Using id means “each saved row is its own game” for legacy data.
+        // Legacy saves won’t have gameID.
+        // Using id makes “each saved row is its own game” for old data.
         gameID = try c.decodeIfPresent(UUID.self, forKey: .gameID) ?? id
 
         date        = try c.decode(Date.self, forKey: .date)
@@ -123,20 +122,24 @@ struct RoundSummary: Codable, Identifiable {
 struct MyStats {
     let rounds: Int
     let totalMoney: Int
-    let avgMoneyPerRound: Double   // “per 18 holes”
+    let avgMoneyPerRound: Double   // normalized to “per 18 holes”
     let totalProx: Int
-    let avgProxPerRound: Double    // “per 18 holes”
+    let avgProxPerRound: Double    // normalized to “per 18 holes”
 }
 
-// Use the current home/tracking course when building global tracked stats
+
+// MARK: - Tracking helpers
+
+/// Uses the user’s current home course for “tracked friends” filtering.
+/// If no home course exists yet, return a stable placeholder.
 private var trackingCourseID: String {
     let stored = ProfileStore.homeCourseID
     return stored.isEmpty ? "HOME-COURSE" : stored
 }
 
 private var trackedFriendStats: [(friend: Friend, stats: MyStats)] {
-    let trackedFriends = FriendStore.shared.friends.filter {
-        FriendTrackStore.shared.isTracked($0.id, on: trackingCourseID)
+    let trackedFriends = FriendStore.shared.friends.filter { friend in
+        FriendTrackStore.shared.isTracked(friendID: friend.id, courseID: trackingCourseID)
     }
 
     return trackedFriends.compactMap { friend in
@@ -149,8 +152,12 @@ private var trackedFriendStats: [(friend: Friend, stats: MyStats)] {
 // MARK: - Store
 
 final class RoundStore {
+
     static let shared = RoundStore()
+
     private let key = "round.store.v1"
+    private let freeRoundLimit = 10
+
     private(set) var rounds: [RoundSummary] = []
 
     private init() { load() }
@@ -176,8 +183,13 @@ final class RoundStore {
         rounds.removeFirst()
         save()
     }
-    private func proxRateForHoleGroupedByGame(_ holeIndex: Int, rows: [RoundSummary])
-    -> (pct: Double, hits: Int, rounds: Int) {
+
+    // MARK: - Prox rate (grouped by game)
+
+    private func proxRateForHoleGroupedByGame(
+        _ holeIndex: Int,
+        rows: [RoundSummary]
+    ) -> (pct: Double, hits: Int, rounds: Int) {
 
         let byGame = Dictionary(grouping: rows, by: \.gameID)
 
@@ -185,11 +197,11 @@ final class RoundStore {
         var gamesWithProx = 0
 
         for (_, gameRows) in byGame {
-            // only count this game if at least one saved row shows the hole was played
+            // Only count this game if at least one saved row shows the hole was played.
             guard gameRows.contains(where: { $0.holesPlayed > holeIndex }) else { continue }
             roundsThatPlayedHole += 1
 
-            // prox is "true for the game" if ANY player row had prox=true on that hole
+            // Prox is "true for the game" if ANY player-row had prox=true on that hole.
             let proxAwardedThisGame = gameRows.contains { r in
                 holeIndex < r.proxPerHole.count && r.proxPerHole[holeIndex]
             }
@@ -202,13 +214,20 @@ final class RoundStore {
         return (pct, gamesWithProx, roundsThatPlayedHole)
     }
 
-    // MARK: Persistence
+    // MARK: - Persistence
 
     private func load() {
         guard let data = UserDefaults.standard.data(forKey: key) else { return }
         rounds = (try? JSONDecoder().decode([RoundSummary].self, from: data)) ?? []
     }
-   
+
+    private func save() {
+        let data = (try? JSONEncoder().encode(rounds)) ?? Data()
+        UserDefaults.standard.set(data, forKey: key)
+    }
+
+    // MARK: - Limits / Visibility
+
     private var savedRoundCount: Int {
         Set(rounds.map(\.gameID)).count
     }
@@ -217,18 +236,10 @@ final class RoundStore {
         ProStore.shared.isPro || savedRoundCount < freeRoundLimit
     }
 
-    private func save() {
-        let data = (try? JSONEncoder().encode(rounds)) ?? Data()
-        UserDefaults.standard.set(data, forKey: key)
-    }
-    private let freeRoundLimit = 10
-
-    /// Returns gameIDs sorted newest -> oldest (based on the newest row in each game)
+    /// GameIDs sorted newest -> oldest (based on the newest row date in each game).
     private var gameIDsNewestFirst: [UUID] {
-        // Group all saved player-rows by gameID
         let grouped = Dictionary(grouping: rounds, by: \.gameID)
 
-        // Pick a representative date per game (newest row date)
         let gamesWithDate: [(UUID, Date)] = grouped.map { (gameID, rows) in
             let newestDate = rows.map(\.date).max() ?? .distantPast
             return (gameID, newestDate)
@@ -245,7 +256,7 @@ final class RoundStore {
         return Set(gameIDsNewestFirst.prefix(freeRoundLimit))
     }
 
-    /// These are the rows you should show in History for the current user.
+    /// Rows to show in History for the current user.
     func visibleRows(isPro: Bool) -> [RoundSummary] {
         if isPro { return rounds }
         let allowed = visibleGameIDs(isPro: false)
@@ -258,7 +269,6 @@ final class RoundStore {
         let totalGames = Set(rounds.map(\.gameID)).count
         return max(0, totalGames - freeRoundLimit)
     }
-
 }
 
 
@@ -266,7 +276,7 @@ final class RoundStore {
 
 extension RoundStore {
 
-    /// Create & save a RoundSummary from the current GameManager state.
+    /// Creates & saves a RoundSummary from the current GameManager state.
     /// - If gameID is nil, this call creates a new one (single-player save).
     /// - recordAllPlayersFromCurrentGame() passes the SAME gameID for everyone.
     @discardableResult
@@ -294,7 +304,7 @@ extension RoundStore {
             return nil
         }
 
-        // ✅ One shared game id for all player-rows saved in the same "Save Round" action
+        // One shared game id for all player-rows saved in the same "Save Round" action.
         let sharedGameID = gameID ?? UUID()
 
         // Helpers to force 18-length arrays
@@ -340,12 +350,8 @@ extension RoundStore {
             }
         }
 
-        // ---------- HOLES PLAYED (critical) ----------
-        // We want the LAST hole index that has ANY evidence it was played:
-        // - a score exists, OR
-        // - money is nonzero, OR
-        // - prox is true, OR
-        // - wolf/umbie flags true (optional but harmless)
+        // ---------- HOLES PLAYED ----------
+        // Last hole index that has any evidence it was played.
         var holesPlayed = 0
         for h in 0..<18 {
             let hasScore = (scoresForSeat[h] != nil)
@@ -356,13 +362,6 @@ extension RoundStore {
             if hasScore || hasMoney || hasProx || hasFlag {
                 holesPlayed = h + 1
             }
-        }
-
-        // If literally nothing recorded, treat as 0 holes (NOT 18)
-        if holesPlayed == 0 {
-            // If you prefer to drop the save instead:
-            // return nil
-            holesPlayed = 0
         }
 
         // ---------- TOTAL SCORE ----------
@@ -386,13 +385,8 @@ extension RoundStore {
             return "Me"
         }()
 
-        // ---------- CourseID logic (keep yours, but make it predictable) ----------
-        // If you want stats to be tied to the selected Home Course, you should usually store homeCourseID directly.
-        // Your current “match pars/hc” method is okay, but it can return "" and then you won’t see stats.
+        // ---------- CourseID ----------
         let courseIDForRound: String = {
-            // If you WANT everything saved to home course always:
-            // return ProfileStore.homeCourseID
-
             guard
                 let homeUUID = UUID(uuidString: ProfileStore.homeCourseID),
                 let homeCourse = CourseLibrary.shared.get(id: homeUUID)
@@ -429,20 +423,18 @@ extension RoundStore {
         add(summary)
         return summary
     }
-
 }
 
 
 // MARK: - Per-friend stats (per 18 holes, across all courses)
 
 extension RoundStore {
+
     func stats(forPlayerNamed name: String) -> MyStats? {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
         let isPro = ProStore.shared.isPro
-
-        // ✅ Only use rows the user is allowed to see
         let visible = visibleRows(isPro: isPro)
 
         let rowsForPlayer = visible.filter {
@@ -450,7 +442,7 @@ extension RoundStore {
         }
         guard !rowsForPlayer.isEmpty else { return nil }
 
-        // ✅ rounds = unique games, not player-rows
+        // Unique games, not player-rows.
         let roundCount = Set(rowsForPlayer.map(\.gameID)).count
 
         let totalMoney = rowsForPlayer.reduce(0) { $0 + $1.totalMoney }
@@ -482,10 +474,9 @@ extension RoundStore {
 // MARK: - Capture ALL players from current game (shared gameID)
 
 extension RoundStore {
+
     func recordAllPlayersFromCurrentGame() {
         guard let g = GameManager.shared.currentGame else { return }
-
-       
 
         let sharedGameID = UUID()
         let now = Date()
@@ -505,6 +496,10 @@ extension RoundStore {
         }
     }
 }
+
+
+// MARK: - Course filtered visibility helpers
+
 extension RoundStore {
 
     func visibleRowsForCourse(_ courseID: String) -> [RoundSummary] {
@@ -512,8 +507,7 @@ extension RoundStore {
     }
 
     func visibleGameIDsForCourse(_ courseID: String) -> Set<UUID> {
-        let rows = visibleRowsForCourse(courseID)
-        return Set(rows.map(\.gameID))
+        Set(visibleRowsForCourse(courseID).map(\.gameID))
     }
 
     func visibleGamesForCourse(_ courseID: String) -> [[RoundSummary]] {
@@ -525,7 +519,7 @@ extension RoundStore {
             return byGameID.values.map { Array($0) }
         }
 
-        // fallback bucket for legacy “bad grouping”
+        // Fallback bucket for legacy “bad grouping”
         let byBucket = Dictionary(grouping: rows) { r -> String in
             let bucket = Int(r.date.timeIntervalSince1970 / 30.0)
             return "\(r.courseID)|\(bucket)"

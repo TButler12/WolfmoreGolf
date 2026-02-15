@@ -100,18 +100,16 @@ final class HoleStatsViewController: UITableViewController {
 
         // Only friends tracked for the tracking course
         let trackedFriends = FriendStore.shared.friends.filter {
-            FriendTrackStore.shared.isTracked($0.id, on: courseID)
+            FriendTrackStore.shared.isTracked(friendID: $0.id, courseID: courseID)
         }
 
-        // Build course-wide “Hole vs All Holes” overview (make sure buildOverview also uses visible rows)
         buildOverview(for: trackedFriends, courseID: courseID)
 
-        // ✅ Use entitlement-filtered rows (Free = newest 10 games, Pro = all)
+        // Entitlement-filtered rows (Free = newest 10 games, Pro = all)
         let visible = RoundStore.shared.visibleRows(isPro: ProStore.shared.isPro)
 
         var built: [Row] = []
 
-        // Per-friend stats for THIS hole
         for friend in trackedFriends {
             let rds = visible.filter { r in
                 r.courseID == courseID &&
@@ -122,11 +120,11 @@ final class HoleStatsViewController: UITableViewController {
 
             guard !rds.isEmpty else { continue }
 
-            let totalRounds = Set(rds.map(\.gameID)).count
+            // ✅ Fix: avoid key-path inference issue
+            let totalRounds = Set(rds.map { $0.gameID }).count
+            guard totalRounds > 0 else { continue }
 
-            let totalMoney = rds.reduce(0) { acc, round in
-                acc + round.moneyPerHole[holeIndex]
-            }
+            let totalMoney = rds.reduce(0) { $0 + $1.moneyPerHole[holeIndex] }
             let avgMoney = Double(totalMoney) / Double(totalRounds)
 
             let proxWins = rds.filter { $0.proxPerHole[holeIndex] }.count

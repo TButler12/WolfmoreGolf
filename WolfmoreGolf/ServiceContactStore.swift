@@ -4,7 +4,6 @@
 //
 //  Created by Tom BUTLER on 2/6/26.
 //
-
 import Foundation
 
 final class ServiceContactStore {
@@ -16,6 +15,8 @@ final class ServiceContactStore {
 
     private init() { load() }
 
+    // MARK: - Numbers
+
     func setProShop(_ number: String) {
         contacts.proShop = number
         save()
@@ -25,6 +26,13 @@ final class ServiceContactStore {
         contacts.drinkCart = number
         save()
     }
+
+    func setCoordinator(_ number: String) {
+        contacts.coordinator = number
+        save()
+    }
+
+    // MARK: - Names
 
     func setProShopName(_ name: String) {
         contacts.proShopName = name
@@ -36,21 +44,34 @@ final class ServiceContactStore {
         save()
     }
 
+    func setCoordinatorName(_ name: String) {
+        contacts.coordinatorName = name
+        save()
+    }
+
+    // MARK: - Persistence
+
     private func load() {
-        guard
-            let data = UserDefaults.standard.data(forKey: key),
-            let decoded = try? JSONDecoder().decode(ServiceContacts.self, from: data)
-        else {
+        guard let data = UserDefaults.standard.data(forKey: key) else {
             contacts = .default
             return
         }
-        contacts = decoded
+
+        do {
+            contacts = try JSONDecoder().decode(ServiceContacts.self, from: data)
+        } catch {
+            // If an old/invalid save exists, don't crash
+            contacts = .default
+        }
     }
 
     private func save() {
-        if let data = try? JSONEncoder().encode(contacts) {
+        do {
+            let data = try JSONEncoder().encode(contacts)
             UserDefaults.standard.set(data, forKey: key)
+        } catch {
+            // Optional debug:
+            // print("❌ ServiceContactStore save error:", error)
         }
     }
 }
-

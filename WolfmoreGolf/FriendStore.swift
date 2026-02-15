@@ -2,6 +2,19 @@ import Foundation
 
 final class FriendStore {
 
+    var isTracked: Bool
+  
+    private init() {
+        self.isTracked = false
+        load()
+    }
+
+    func setTracked(friendID: UUID, isTracked: Bool) {
+        guard let idx = friends.firstIndex(where: { $0.id == friendID }) else { return }
+        friends[idx].isTracked = isTracked
+        resort()
+    }
+
     static let shared = FriendStore()
     private let defaultsKey = "friends.v1"
 
@@ -9,14 +22,13 @@ final class FriendStore {
     private(set) var friends: [Friend] = [] {
         didSet { save() }
     }
+    
 
     var preselectedCount: Int {
         friends.filter { $0.preselectForRound }.count
     }
-
-    private init() {
-        load()
-    }
+   
+    
 
     // MARK: - CRUD (Core)
 

@@ -3,7 +3,6 @@
 //  WolfmoreGolf
 //
 //  Created by Tom BUTLER on 11/14/25.
-//
 import Foundation
 
 struct Friend: Codable, Identifiable, Equatable {
@@ -13,23 +12,26 @@ struct Friend: Codable, Identifiable, Equatable {
     var preselectForRound: Bool
     var phone: String
     var isFavorite: Bool
+    var isTracked: Bool   // ✅ NEW
 
     init(id: UUID = UUID(),
          name: String,
          defaultHC: Int = 0,
          preselectForRound: Bool = false,
          phone: String = "",
-         isFavorite: Bool = false) {
+         isFavorite: Bool = false,
+         isTracked: Bool = false) {   // ✅ NEW
         self.id = id
         self.name = name
         self.defaultHC = defaultHC
         self.preselectForRound = preselectForRound
         self.phone = phone
         self.isFavorite = isFavorite
+        self.isTracked = isTracked
     }
 
     private enum CodingKeys: String, CodingKey {
-        case id, name, defaultHC, preselectForRound, phone, isFavorite
+        case id, name, defaultHC, preselectForRound, phone, isFavorite, isTracked
     }
 
     init(from decoder: Decoder) throws {
@@ -40,6 +42,7 @@ struct Friend: Codable, Identifiable, Equatable {
         preselectForRound = try c.decodeIfPresent(Bool.self, forKey: .preselectForRound) ?? false
         phone = try c.decodeIfPresent(String.self, forKey: .phone) ?? ""
         isFavorite = try c.decodeIfPresent(Bool.self, forKey: .isFavorite) ?? false
+        isTracked = try c.decodeIfPresent(Bool.self, forKey: .isTracked) ?? false   // ✅ NEW
     }
 
     func encode(to encoder: Encoder) throws {
@@ -50,6 +53,8 @@ struct Friend: Codable, Identifiable, Equatable {
         try c.encode(preselectForRound, forKey: .preselectForRound)
         try c.encode(phone, forKey: .phone)
         try c.encode(isFavorite, forKey: .isFavorite)
+        try c.encode(isTracked, forKey: .isTracked)   // ✅ NEW
     }
 }
+
 

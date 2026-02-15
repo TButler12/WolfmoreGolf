@@ -2,6 +2,7 @@
 import UIKit
 
 // MARK: - Cell
+import UIKit
 
 final class RosterPlayerCell: UITableViewCell {
 
@@ -12,6 +13,7 @@ final class RosterPlayerCell: UITableViewCell {
 
     /// Called when the star is tapped; Bool is the NEW on/off value.
     var trackToggled: ((Bool) -> Void)?
+
     /// Called when the active switch changes; Bool is the NEW on/off value.
     var activeToggled: ((Bool) -> Void)?
 
@@ -25,7 +27,7 @@ final class RosterPlayerCell: UITableViewCell {
     }
 }
 
-// MARK: - View controller
+// MARK: - View Controller
 
 final class RosterAndTrackingViewController: UIViewController,
                                             UITableViewDataSource,
@@ -57,13 +59,6 @@ final class RosterAndTrackingViewController: UIViewController,
 
         title = "Players & Tracking"
 
-           navigationItem.rightBarButtonItem = UIBarButtonItem(
-               title: "Player History",
-               style: .plain,
-               target: self,
-               action: #selector(trackFriendsTapped)
-           )
-        
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             title: "Player History",
             style: .plain,
@@ -71,21 +66,12 @@ final class RosterAndTrackingViewController: UIViewController,
             action: #selector(trackFriendsTapped)
         )
 
-        
-        
-        title = "Players & Tracking"
-
         tableView.dataSource = self
-        tableView.delegate   = self
+        tableView.delegate = self
         tableView.keyboardDismissMode = .onDrag
         tableView.tableFooterView = UIView()
 
-        // Make sure we have a game
-        if GameManager.shared.currentGame == nil {
-            if !GameManager.shared.loadLastOpened() {
-                GameManager.shared.startNewGame()
-            }
-        }
+        ensureGameExists()
 
         seedFriendsFromCurrentGameIfNeeded()
         rebuildRowsFromStores()
@@ -95,10 +81,19 @@ final class RosterAndTrackingViewController: UIViewController,
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // In case home course / tracking changed elsewhere
         rebuildRowsFromStores()
         updateCourseLabel()
         updateGoButtonState()
+    }
+
+    // MARK: - Game
+
+    private func ensureGameExists() {
+        if GameManager.shared.currentGame == nil {
+            if !GameManager.shared.loadLastOpened() {
+                GameManager.shared.startNewGame()
+            }
+        }
     }
 
     // MARK: - Seed + Build rows
@@ -124,8 +119,8 @@ final class RosterAndTrackingViewController: UIViewController,
         let g = GameManager.shared.currentGame
 
         rows = friends.map { friend in
-            var hc = 0
-            var isActive = false
+            var hc = friend.defaultHC
+            var isActive = friend.preselectForRound
 
             if let g = g {
                 let seats = 0..<min(5, min(g.playerNames.count,
@@ -141,7 +136,7 @@ final class RosterAndTrackingViewController: UIViewController,
                 }
             }
 
-            let tracked = FriendTrackStore.shared.isTracked(friend.id, on: courseID)
+            let tracked = FriendTrackStore.shared.isTracked(friendID: friend.id, courseID: courseID)
             return RowModel(friend: friend, hc: hc, isActive: isActive, isTracked: tracked)
         }
 
@@ -199,10 +194,10 @@ final class RosterAndTrackingViewController: UIViewController,
         cell.hcField.delegate = self
         cell.hcField.tag = indexPath.row
 
-        // Active switch (NO addTarget; use the cell's IBAction + closure)
+        // Active switch
         cell.activeSwitch.isOn = row.isActive
         cell.activeToggled = { [weak self, weak cell] isOn in
-            guard let self = self, let cell = cell,
+            guard let self, let cell,
                   let idx = self.tableView.indexPath(for: cell)?.row,
                   self.rows.indices.contains(idx) else { return }
 
@@ -210,29 +205,34 @@ final class RosterAndTrackingViewController: UIViewController,
             self.updateGoButtonState()
         }
 
-        // ⭐ tracking star
+        // ⭐ tracking
         cell.trackButton.isSelected = row.isTracked
         cell.trackToggled = { [weak self, weak cell] desiredOn in
-            guard let self = self, let cell = cell,
+            guard let self, let cell,
                   let idx = self.tableView.indexPath(for: cell)?.row,
                   self.rows.indices.contains(idx) else { return }
 
-            let friend = self.rows[idx].friend
+            let friendID = self.rows[idx].friend.id
             let prev = self.rows[idx].isTracked
 
-            let ok = FriendTrackStore.shared.setTracked(
-                desiredOn,
-                friend.id,
-                courseID: self.courseID,
-                limit: self.trackLimit
-            )
-
-            if ok {
-                self.rows[idx].isTracked = desiredOn
+            // We only want to block when turning ON and limit is reached.
+            if desiredOn {
+                let ok = FriendTrackStore.shared.toggle(
+                    friendID: friendID,
+                    courseID: self.courseID,
+                    limit: self.trackLimit
+                )
+                if ok {
+                    self.rows[idx].isTracked = true
+                } else {
+                    self.rows[idx].isTracked = prev
+                    cell.trackButton.isSelected = prev
+                    self.showTrackLimitAlert()
+                }
             } else {
-                self.rows[idx].isTracked = prev
-                cell.trackButton.isSelected = prev
-                self.showTrackLimitAlert()
+                // Turning OFF always succeeds
+                FriendTrackStore.shared.setTracked(friendID: friendID, courseID: self.courseID, isTracked: false)
+                self.rows[idx].isTracked = false
             }
         }
 
@@ -249,7 +249,6 @@ final class RosterAndTrackingViewController: UIViewController,
         let val = Int(raw) ?? 0
         rows[idx].hc = max(0, val)
 
-        // (Optional) If this person is active, you can re-evaluate Go button state
         updateGoButtonState()
     }
 
@@ -257,8 +256,6 @@ final class RosterAndTrackingViewController: UIViewController,
 
     private func updateGoButtonState() {
         let activeCount = rows.filter { $0.isActive }.count
-
-        // Allow 1...5
         let ok = (activeCount >= 1 && activeCount <= maxActivePlayers)
         goToGameButton.isEnabled = ok
         goToGameButton.alpha = ok ? 1.0 : 0.4
@@ -286,11 +283,9 @@ final class RosterAndTrackingViewController: UIViewController,
         present(ac, animated: true)
     }
 
-    // MARK: - Add Player (optional)
+    // MARK: - Add Player
 
     @IBAction private func addPlayerTapped(_ sender: Any) {
-        print("✅ addPlayerTapped fired")
-        
         let ac = UIAlertController(title: "Add Player", message: nil, preferredStyle: .alert)
 
         ac.addTextField { tf in
@@ -307,16 +302,17 @@ final class RosterAndTrackingViewController: UIViewController,
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
         ac.addAction(UIAlertAction(title: "Add", style: .default) { [weak self] _ in
-            guard let self = self else { return }
+            guard let self else { return }
 
             let name = (ac.textFields?[0].text ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
+
             let rawPhone = ac.textFields?[1].text ?? ""
-            let phone = rawPhone.filter { $0.isNumber }
+            let phone = rawPhone.filter(\.isNumber)
 
             guard !name.isEmpty else { return }
 
-            // ✅ If friend already exists, update phone only if provided
+            // Upsert friend (only overwrite phone if provided)
             if var existing = FriendStore.shared.friends.first(where: {
                 $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
                     .caseInsensitiveCompare(name) == .orderedSame
@@ -324,21 +320,18 @@ final class RosterAndTrackingViewController: UIViewController,
                 if !phone.isEmpty { existing.phone = phone }
                 FriendStore.shared.upsert(existing)
             } else {
-                // ✅ New friend
-                let friend = Friend(name: name, phone: phone)
-                FriendStore.shared.upsert(friend)
+                FriendStore.shared.upsert(Friend(name: name, phone: phone))
             }
 
             self.rebuildRowsFromStores()
 
-            // Find the friend record (post-save)
             guard let friend = FriendStore.shared.friends.first(where: {
                 $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
                     .caseInsensitiveCompare(name) == .orderedSame
             }) else { return }
 
-            // If already tracked, don't ask again
-            if FriendTrackStore.shared.isTracked(friend.id, on: self.courseID) { return }
+            // If already tracked, don’t ask again
+            if FriendTrackStore.shared.isTracked(friendID: friend.id, courseID: self.courseID) { return }
 
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 self?.promptTrackNewFriend(friend)
@@ -359,10 +352,6 @@ final class RosterAndTrackingViewController: UIViewController,
     }
 
     private func promptTrackNewFriend(_ friend: Friend) {
-        
-
-        print("✅ promptTrackNewFriend for:", friend.name)
-
         let ac = UIAlertController(
             title: "Track this player?",
             message: "Track \(friend.name) for ⭐ Home Course stats?",
@@ -370,8 +359,16 @@ final class RosterAndTrackingViewController: UIViewController,
         )
         ac.addAction(UIAlertAction(title: "Not now", style: .cancel))
         ac.addAction(UIAlertAction(title: "Track", style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            _ = FriendTrackStore.shared.setTracked(true, friend.id, courseID: self.courseID, limit: self.trackLimit)
+            guard let self else { return }
+
+            // Try to turn it ON (respect limit)
+            let ok = FriendTrackStore.shared.toggle(
+                friendID: friend.id,
+                courseID: self.courseID,
+                limit: self.trackLimit
+            )
+
+            if !ok { self.showTrackLimitAlert() }
             self.rebuildRowsFromStores()
         })
         present(ac, animated: true)
@@ -388,14 +385,12 @@ final class RosterAndTrackingViewController: UIViewController,
             return
         }
 
-        // Pack actives into seats 0...4 (simple + predictable)
         GameManager.shared.update { g in
             g.normalize(holes: 18)
 
-            // Ensure sizes (adjust if your capacity differs)
-            if g.playerNames.count != 5 { g.playerNames = Array(g.playerNames.prefix(5)) + Array(repeating: "", count: max(0, 5 - g.playerNames.count)) }
-            if g.hcPlayers.count != 5 { g.hcPlayers = Array(g.hcPlayers.prefix(5)) + Array(repeating: 0, count: max(0, 5 - g.hcPlayers.count)) }
-            if g.playerActivated.count != 5 { g.playerActivated = Array(g.playerActivated.prefix(5)) + Array(repeating: false, count: max(0, 5 - g.playerActivated.count)) }
+            if g.playerNames.count != 5 { g.playerNames = Array(repeating: "", count: 5) }
+            if g.hcPlayers.count != 5 { g.hcPlayers = Array(repeating: 0, count: 5) }
+            if g.playerActivated.count != 5 { g.playerActivated = Array(repeating: false, count: 5) }
 
             for seat in 0..<5 {
                 if seat < activeRows.count {
@@ -425,20 +420,8 @@ final class RosterAndTrackingViewController: UIViewController,
     }
 }
 
-// MARK: - FriendTrackStore helper
+// MARK: - Player History
 
-extension FriendTrackStore {
-    /// Ensures tracking matches `desired`. Returns false only if trying to turn ON but limit blocks it.
-    func setTracked(_ desired: Bool,
-                    _ friendID: UUID,
-                    courseID: String,
-                    limit: Int) -> Bool {
-        let current = isTracked(friendID, on: courseID)
-        if desired == current { return true }
-        return toggle(friendID, courseID: courseID, limit: limit)
-    }
-}
- 
 extension RosterAndTrackingViewController {
 
     @objc func trackFriendsTapped() {
@@ -455,7 +438,7 @@ extension RosterAndTrackingViewController {
         }
 
         let trackedFriends = FriendStore.shared.friends.filter {
-            FriendTrackStore.shared.isTracked($0.id, on: courseID)
+            FriendTrackStore.shared.isTracked(friendID: $0.id, courseID: courseID)
         }
 
         guard !trackedFriends.isEmpty else {
@@ -490,5 +473,3 @@ extension RosterAndTrackingViewController {
         present(ac, animated: true)
     }
 }
-
-

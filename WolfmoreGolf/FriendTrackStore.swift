@@ -8,87 +8,87 @@
 import Foundation
 
 /// Stores which friends are "tracked" per course.
-/// Key = courseID (String), Value = set of Friend IDs (UUIDs).
+/// - Key: courseID (String)
+/// - Value: Set of Friend IDs (UUID strings)
 final class FriendTrackStore {
+
     static let shared = FriendTrackStore()
+    private init() { load() }
 
-    private let key = "friend.track.v1"
+    private let defaultsKey = "friend.track.v1"
 
-    // courseID → set of friend IDs
-    private var tracked: [String: Set<UUID>] = [:]
+    // courseID -> Set(friendUUIDString)
+    private var trackedByCourse: [String: Set<String>] = [:] {
+        didSet { save() }
+    }
 
-    private init() {
-        load()
+    // MARK: - Read
+
+    func isTracked(friendID: UUID, courseID: String) -> Bool {
+        trackedByCourse[courseID]?.contains(friendID.uuidString) ?? false
+    }
+
+    func trackedIDs(courseID: String) -> Set<String> {
+        trackedByCourse[courseID] ?? []
+    }
+
+    func count(courseID: String) -> Int {
+        trackedByCourse[courseID]?.count ?? 0
+    }
+
+    /// Convenience for older call sites (e.g. `count(for:)`).
+    func count(for courseID: String) -> Int {
+        count(courseID: courseID)
+    }
+
+    // MARK: - Write
+
+    func setTracked(friendID: UUID, courseID: String, isTracked: Bool) {
+        var set = trackedByCourse[courseID] ?? Set<String>()
+        let id = friendID.uuidString
+
+        if isTracked {
+            set.insert(id)
+        } else {
+            set.remove(id)
+        }
+
+        trackedByCourse[courseID] = set
+    }
+
+    /// Toggle tracking for a friend on a course.
+    /// - Returns: `true` if the toggle succeeded. `false` only when trying to add but the limit is reached.
+    @discardableResult
+    func toggle(friendID: UUID, courseID: String, limit: Int) -> Bool {
+        var set = trackedByCourse[courseID] ?? Set<String>()
+        let id = friendID.uuidString
+
+        if set.contains(id) {
+            set.remove(id)
+            trackedByCourse[courseID] = set
+            return true
+        }
+
+        guard set.count < limit else { return false }
+
+        set.insert(id)
+        trackedByCourse[courseID] = set
+        return true
     }
 
     // MARK: - Persistence
 
     private func load() {
-        guard let data = UserDefaults.standard.data(forKey: key) else { return }
+        guard
+            let data = UserDefaults.standard.data(forKey: defaultsKey),
+            let decoded = try? JSONDecoder().decode([String: Set<String>].self, from: data)
+        else { return }
 
-        if let decoded = try? JSONDecoder().decode([String: [UUID]].self, from: data) {
-            // convert [UUID] → Set<UUID>
-            tracked = decoded.reduce(into: [:]) { partial, pair in
-                partial[pair.key] = Set(pair.value)
-            }
-        }
+        trackedByCourse = decoded
     }
 
     private func save() {
-        // convert Set<UUID> → [UUID] for encoding
-        let encodable = tracked.mapValues { Array($0) }
-        if let data = try? JSONEncoder().encode(encodable) {
-            UserDefaults.standard.set(data, forKey: key)
-        }
-    }
-
-    // MARK: - Query
-
-    /// Is this friend tracked on this course?
-    func isTracked(_ friendID: UUID, on courseID: String) -> Bool {
-        tracked[courseID]?.contains(friendID) ?? false
-    }
-
-    /// How many friends are tracked on this specific course?
-    func count(for courseID: String) -> Int {
-        tracked[courseID]?.count ?? 0
-    }
-
-    /// Total tracked entries across all courses (optional, if you want it).
-    var totalTrackedCount: Int {
-        tracked.values.reduce(0) { $0 + $1.count }
-    }
-
-    // MARK: - Mutation
-
-    /// Toggle tracked/untracked for a friend on a course.
-    /// Respects `limit`: if already at limit and trying to add, returns false.
-    @discardableResult
-    func toggle(_ friendID: UUID, courseID: String, limit: Int) -> Bool {
-        var set = tracked[courseID] ?? []
-
-        if set.contains(friendID) {
-            // Turning OFF
-            set.remove(friendID)
-            tracked[courseID] = set
-            save()
-            return true
-        } else {
-            // Turning ON – enforce per-course limit
-            if set.count >= limit {
-                return false
-            }
-            set.insert(friendID)
-            tracked[courseID] = set
-            save()
-            return true
-        }
-    }
-
-    /// Clear all tracking (if you ever need a reset).
-    func clearAll() {
-        tracked.removeAll()
-        save()
+        guard let data = try? JSONEncoder().encode(trackedByCourse) else { return }
+        UserDefaults.standard.set(data, forKey: defaultsKey)
     }
 }
-

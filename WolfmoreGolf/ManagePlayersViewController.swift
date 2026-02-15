@@ -12,19 +12,24 @@ final class ManagePlayersViewController: UIViewController,
                                          UITextFieldDelegate {
 
     // MARK: - Limits
+
     private let maxActivePlayers = 5
     private let trackingLimitPerCourse = 30
 
     // MARK: - Outlets
+
     @IBOutlet private weak var tableView: UITableView!
 
     // MARK: - Data
+
     private var friends: [Friend] { FriendStore.shared.friends }
 
     // MARK: - UI refs
+
     private weak var addUIButton: UIButton?
 
     // MARK: - Lifecycle
+
     override func viewDidLoad() {
         super.viewDidLoad()
         configureNavBar()
@@ -38,6 +43,7 @@ final class ManagePlayersViewController: UIViewController,
     }
 
     // MARK: - Setup
+
     private func configureNavBar() {
         navigationItem.title = "Add Players  ===>"
         navigationItem.prompt = nil
@@ -62,6 +68,7 @@ final class ManagePlayersViewController: UIViewController,
     }
 
     // MARK: - Add button (glow)
+
     private func makeGlowingAddButton() -> UIButton {
         let b = UIButton(type: .system)
         b.frame = CGRect(x: 0, y: 0, width: 36, height: 36)
@@ -101,12 +108,12 @@ final class ManagePlayersViewController: UIViewController,
         let old = navigationItem.prompt
         navigationItem.prompt = text
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [weak self] in
-            guard let self else { return }
-            self.navigationItem.prompt = old
+            self?.navigationItem.prompt = old
         }
     }
 
     // MARK: - Keyboard
+
     @objc private func endEditingTap() {
         view.endEditing(true)
     }
@@ -117,6 +124,7 @@ final class ManagePlayersViewController: UIViewController,
     }
 
     // MARK: - Alerts
+
     private func showActiveLimitAlert() {
         let ac = UIAlertController(
             title: "Player Limit",
@@ -127,7 +135,8 @@ final class ManagePlayersViewController: UIViewController,
         present(ac, animated: true)
     }
 
-    // MARK: - Add Player flow (Name + Phone -> Next -> HC -> Add)
+    // MARK: - Add Player flow (Name + Phone -> HC -> Save)
+
     @objc private func addFriendTapped() {
         showNamePrompt(prefillName: nil)
     }
@@ -157,7 +166,7 @@ final class ManagePlayersViewController: UIViewController,
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
             let rawPhone = ac.textFields?[1].text ?? ""
-            let phone = rawPhone.filter { $0.isNumber }
+            let phone = rawPhone.filter(\.isNumber)
 
             guard !name.isEmpty else { return }
             self.showHCPrompt(name: name, phone: phone, prefillHC: nil)
@@ -190,34 +199,32 @@ final class ManagePlayersViewController: UIViewController,
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             let hc = Int(hcText) ?? 0
 
-            // ✅ Upsert friend with HC + phone (only overwrite phone if provided)
-            if var existing = FriendStore.shared.friends.first(where: {
-                $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
-                    .caseInsensitiveCompare(name) == .orderedSame
-            }) {
-                existing.defaultHC = hc
-                if !phone.isEmpty { existing.phone = phone }
-                FriendStore.shared.upsert(existing)
-            } else {
-                let friend = Friend(name: name, defaultHC: hc, phone: phone)
-                FriendStore.shared.upsert(friend)
-            }
-
+            let savedFriend = self.upsertFriend(name: name, phone: phone, defaultHC: hc)
             self.tableView.reloadData()
-
-            // Fetch saved friend (post-save)
-            guard let savedFriend = FriendStore.shared.friends.last(where: {
-                $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
-                    .caseInsensitiveCompare(name) == .orderedSame
-            }) else { return }
-
             self.promptAddToStatTracking(friend: savedFriend)
         })
 
         present(ac, animated: true)
     }
 
+    private func upsertFriend(name: String, phone: String, defaultHC: Int) -> Friend {
+        if var existing = FriendStore.shared.friends.first(where: {
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                .caseInsensitiveCompare(name) == .orderedSame
+        }) {
+            existing.defaultHC = defaultHC
+            if !phone.isEmpty { existing.phone = phone }
+            FriendStore.shared.upsert(existing)
+            return existing
+        } else {
+            let newFriend = Friend(name: name, defaultHC: defaultHC, phone: phone)
+            FriendStore.shared.upsert(newFriend)
+            return newFriend
+        }
+    }
+
     // MARK: - Stat Tracking prompt (FriendTrackStore)
+
     private func promptAddToStatTracking(friend: Friend) {
         let courseID = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
 
@@ -235,7 +242,7 @@ final class ManagePlayersViewController: UIViewController,
             return
         }
 
-        if FriendTrackStore.shared.isTracked(friend.id, on: courseID) {
+        if FriendTrackStore.shared.isTracked(friendID: friend.id, courseID: courseID) {
             flashNavPrompt("\(friend.name) already tracked ✅")
             return
         }
@@ -251,9 +258,12 @@ final class ManagePlayersViewController: UIViewController,
         ac.addAction(UIAlertAction(title: "Add to Tracking", style: .default) { [weak self] _ in
             guard let self else { return }
 
-            let ok = FriendTrackStore.shared.toggle(friend.id,
-                                                   courseID: courseID,
-                                                   limit: self.trackingLimitPerCourse)
+            let ok = FriendTrackStore.shared.toggle(
+                friendID: friend.id,
+                courseID: courseID,
+                limit: self.trackingLimitPerCourse
+            )
+
             if ok {
                 self.flashNavPrompt("Added to Stat Tracking ✅")
             } else {
@@ -284,6 +294,7 @@ final class ManagePlayersViewController: UIViewController,
     }
 
     // MARK: - TableView Data Source
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         friends.count
     }
@@ -328,6 +339,7 @@ final class ManagePlayersViewController: UIViewController,
     }
 
     // MARK: - Delete (swipe to delete)
+
     func tableView(_ tableView: UITableView,
                    commit editingStyle: UITableViewCell.EditingStyle,
                    forRowAt indexPath: IndexPath) {
@@ -340,6 +352,7 @@ final class ManagePlayersViewController: UIViewController,
     }
 
     // MARK: - Close
+
     @IBAction private func closeTapped(_ sender: Any) {
         if let nav = navigationController, nav.presentingViewController != nil {
             nav.dismiss(animated: true)
@@ -353,6 +366,7 @@ final class ManagePlayersViewController: UIViewController,
     }
 
     // MARK: - Start Round (unchanged)
+
     @IBAction func startRoundTapped(_ sender: Any) {
         let selected = FriendStore.shared.friends.filter { $0.preselectForRound }
         guard !selected.isEmpty else {

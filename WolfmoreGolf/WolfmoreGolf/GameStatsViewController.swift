@@ -177,7 +177,10 @@ final class GameStatsViewController: UIViewController {
 
         let trackingCourseID = ProfileStore.homeCourseID.isEmpty ? "HOME-COURSE" : ProfileStore.homeCourseID
         let trackedFriendNames = FriendStore.shared.friends
-            .filter { FriendTrackStore.shared.isTracked($0.id, on: trackingCourseID) }
+            .filter {
+                FriendTrackStore.shared.isTracked(friendID: $0.id, courseID: trackingCourseID)
+            }
+
             .map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 

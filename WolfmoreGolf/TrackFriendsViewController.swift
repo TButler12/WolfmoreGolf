@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  TrackFriendsViewController.swift
 //  WolfmoreGolf
 //
 //  Created by Tom BUTLER on 11/14/25.
@@ -8,73 +8,85 @@ import UIKit
 
 final class TrackFriendsViewController: UITableViewController, UISearchResultsUpdating {
 
+    // MARK: - Constants
+
+    private let limit = 30
+    private let cellID = "TrackFriendCell"
+
     // MARK: - Data
 
     private var allFriends: [Friend] = []
-    private var filtered: [Friend] = []
+    private var filteredFriends: [Friend] = []
 
-    private let limit = 30
+    // MARK: - UI
+
+    private let searchController = UISearchController(searchResultsController: nil)
+
+    // MARK: - State
+
+    private var canEditTracking = false
+    private var hasShownNoRoundAlert = false
+    private var hasShownNotHomeAlert = false
+
+    // MARK: - Tracking Course
 
     /// Course ID used for tracking (home course only).
     /// - If ProfileStore.homeCourseID is set, use that.
-    /// - Else, if Biltmore exists, use its UUID.
+    /// - Else, if the default WolfMore course exists, use its UUID.
     /// - Else, fall back to legacy "HOME-COURSE" key.
     private var trackingCourseID: String {
         let stored = ProfileStore.homeCourseID
         if !stored.isEmpty { return stored }
-
-        if let b = CourseLibrary.shared.WolfMore() {
-            return b.id.uuidString
-        }
-
+        if let c = CourseLibrary.shared.WolfMore() { return c.id.uuidString }
         return "HOME-COURSE"
     }
-
-    private let searchController = UISearchController(searchResultsController: nil)
-
-    /// Whether the user is currently playing the home / tracking course.
-    private var canEditTracking = false
 
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "Track Friends"
-    
+        configureUI()
+        configureSearch()
 
-           navigationItem.rightBarButtonItems = [
-               UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped)),
-               UIBarButtonItem(title: "Import", style: .plain, target: self, action: #selector(importRoster))
-           ]
+        canEditTracking = isPlayingHomeCourse()
+        setEditingEnabled(canEditTracking)
+
+        seedFriendsFromCurrentGameIfNeeded()
+        reloadFriends()
+        updateHeader()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        reloadFriends()
+        updateHeader()
+    }
+
+    // MARK: - UI Setup
+
+    private func configureUI() {
+        title = "Track Friends"
         view.backgroundColor = .systemBackground
         tableView.backgroundColor = .systemBackground
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: cellID)
+        tableView.tableFooterView = UIView()
 
-        print("TrackFriendsViewController viewDidLoad, trackingCourseID = \(trackingCourseID)")
+        navigationItem.rightBarButtonItems = [
+            UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped)),
+            UIBarButtonItem(title: "Import", style: .plain, target: self, action: #selector(importRoster))
+        ]
+    }
 
-        // Table cell registration (plain UITableViewCell)
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
-
-        // Navigation buttons: Add + Import Roster
-        
-
-        // Search setup
+    private func configureSearch() {
         searchController.obscuresBackgroundDuringPresentation = false
         searchController.searchResultsUpdater = self
         navigationItem.searchController = searchController
         definesPresentationContext = true
+    }
 
-        // Only allow tracking edits if we’re on the home course
-        canEditTracking = isPlayingHomeCourse()
-        if !canEditTracking {
-            navigationItem.rightBarButtonItems?.forEach { $0.isEnabled = false }
-        }
-
-        // If FriendStore is empty, seed it from the current game once
-        seedFriendsFromCurrentGameIfNeeded()
-
-        reloadData()
-        updateHeader()
+    private func setEditingEnabled(_ enabled: Bool) {
+        navigationItem.rightBarButtonItems?.forEach { $0.isEnabled = enabled }
     }
 
     // MARK: - Home-course logic
@@ -82,36 +94,25 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
     /// Returns true if the current game’s course matches the selected home/tracking course.
     private func isPlayingHomeCourse() -> Bool {
         guard let g = GameManager.shared.currentGame else {
-            print("TrackFriends: no current game – tracking edits disabled")
             showOnceNoCurrentRoundAlert()
             return false
         }
 
         guard let uuid = UUID(uuidString: trackingCourseID),
               let homeCourse = CourseLibrary.shared.get(id: uuid) else {
-            print("TrackFriends: no matching CourseProfile for trackingCourseID \(trackingCourseID)")
             return false
         }
 
-        let currentPars = g.course.pars
-        let currentHCs  = g.course.holeHandicaps
+        let samePars = Array(g.course.pars.prefix(18)) == Array(homeCourse.pars.prefix(18))
+        let sameHCs  = Array(g.course.holeHandicaps.prefix(18)) == Array(homeCourse.hcs.prefix(18))
+        let isSame = samePars && sameHCs
 
-        let isSame =
-            Array(currentPars.prefix(18)) == Array(homeCourse.pars.prefix(18)) &&
-            Array(currentHCs.prefix(18))  == Array(homeCourse.hcs.prefix(18))
-
-        if isSame {
-            print("TrackFriends: playing home/tracking course \(homeCourse.name)")
-        } else {
-            print("TrackFriends: NOT playing home course. Current pars/HCs differ from \(homeCourse.name)")
+        if !isSame {
             showOnceNotHomeCourseAlert(courseName: homeCourse.name)
         }
 
         return isSame
     }
-
-    private var hasShownNoRoundAlert = false
-    private var hasShownNotHomeAlert = false
 
     private func showOnceNoCurrentRoundAlert() {
         guard !hasShownNoRoundAlert else { return }
@@ -132,7 +133,7 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
 
         let ac = UIAlertController(
             title: "Home Course Only",
-            message: "Tracking by hole is tied to your home course: \(courseName).\nYou can still view the list, but changes are disabled for this round.",
+            message: "Tracking by hole is tied to your home course: \(courseName).\nYou can view the list, but changes are disabled for this round.",
             preferredStyle: .alert
         )
         ac.addAction(UIAlertAction(title: "OK", style: .default))
@@ -142,47 +143,38 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
     // MARK: - Data helpers
 
     private func seedFriendsFromCurrentGameIfNeeded() {
-        if FriendStore.shared.friends.isEmpty,
-           let g = GameManager.shared.currentGame {
+        guard FriendStore.shared.friends.isEmpty,
+              let g = GameManager.shared.currentGame else { return }
 
-            let names = g.playerNames
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
+        let names = g.playerNames
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
 
-            if !names.isEmpty {
-                print("TrackFriends: seeding \(names.count) names from current game")
-                FriendStore.shared.merge(names: names)
-            } else {
-                print("TrackFriends: current game has no usable names")
-            }
-        } else {
-            print("TrackFriends: FriendStore already has \(FriendStore.shared.friends.count) friends")
-        }
+        guard !names.isEmpty else { return }
+        FriendStore.shared.merge(names: names)
     }
 
-    private func reloadData() {
+    private func reloadFriends() {
         allFriends = FriendStore.shared.friends.sorted {
             $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
-        filtered = allFriends
-        print("TrackFriends: reloadData → \(filtered.count) rows")
+        filteredFriends = allFriends
         tableView.reloadData()
     }
 
     private func updateHeader() {
-        let n = FriendTrackStore.shared.count(for: trackingCourseID)
+        let trackedCount = FriendTrackStore.shared.count(courseID: trackingCourseID)
+
         let label = UILabel()
         label.textAlignment = .center
-
-        if canEditTracking {
-            label.text = "Tracking \(n)/\(limit) for Home Course"
-        } else {
-            label.text = "Read-only (not on home course)"
-        }
-
         label.font = .systemFont(ofSize: 14, weight: .medium)
         label.textColor = .secondaryLabel
         label.frame.size.height = 36
+
+        label.text = canEditTracking
+            ? "Tracking \(trackedCount)/\(limit) for Home Course"
+            : "Read-only (not on home course)"
+
         tableView.tableHeaderView = label
     }
 
@@ -206,69 +198,79 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
         }
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Add", style: .default) { _ in
-            let name = (ac.textFields?[0].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        ac.addAction(UIAlertAction(title: "Add", style: .default) { [weak self] _ in
+            guard let self else { return }
+
+            let name = (ac.textFields?[0].text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
             let rawPhone = ac.textFields?[1].text ?? ""
-            let normalized = rawPhone.filter { $0.isNumber }
+            let normalizedPhone = rawPhone.filter(\.isNumber)
 
             guard !name.isEmpty else { return }
 
-            // Create & save the friend with phone
-            let friend = Friend(name: name, phone: normalized)
-            FriendStore.shared.upsert(friend)   // we’ll add upsert if you don’t have it
-
-            self.reloadData()
+            FriendStore.shared.addOrMergeContact(name: name, phone: normalizedPhone)
+            self.reloadFriends()
+            self.updateHeader()
         })
 
         present(ac, animated: true)
     }
 
-    /// Pull names from the current roster / card and merge into FriendStore
     @objc private func importRoster() {
-        guard canEditTracking else { return }
-
-        if let g = GameManager.shared.currentGame {
-            let names = g.playerNames
-            print("TrackFriends: importing roster names \(names)")
-            FriendStore.shared.merge(names: names)
-            reloadData()
-        } else {
-            print("TrackFriends: no current game to import from")
-        }
+        guard canEditTracking, let g = GameManager.shared.currentGame else { return }
+        FriendStore.shared.merge(names: g.playerNames)
+        reloadFriends()
+        updateHeader()
     }
 
     // MARK: - TableView
 
-    override func tableView(_ tableView: UITableView,
-                            numberOfRowsInSection section: Int) -> Int {
-        filtered.count
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        filteredFriends.count
     }
 
     override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let friend = filtered[indexPath.row]
-        let cell = tableView.dequeueReusableCell(withIdentifier: "Cell",
-                                                 for: indexPath)
 
+        let friend = filteredFriends[indexPath.row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: cellID, for: indexPath)
+
+        let tracked = FriendTrackStore.shared.isTracked(friendID: friend.id, courseID: trackingCourseID)
+
+        // Content
         var config = cell.defaultContentConfiguration()
         config.text = friend.name
-        config.secondaryText = friend.phone.isEmpty ? "" : friend.phone
+        config.secondaryText = friend.phone.isEmpty ? nil : friend.phone
 
-        let tracked = FriendTrackStore.shared.isTracked(friend.id, on: trackingCourseID)
+        // ✅ GREEN when tracked
+        config.textProperties.color = tracked ? .systemGreen : .label
+        config.secondaryTextProperties.color = tracked ? .systemGreen : .secondaryLabel
+
+        cell.contentConfiguration = config
         cell.accessoryType = tracked ? .checkmark : .none
+        cell.selectionStyle = canEditTracking ? .default : .none
+
+        // ✅ subtle green row tint (and reset when not tracked)
+        if #available(iOS 14.0, *) {
+            var bg = UIBackgroundConfiguration.listPlainCell()
+            bg.backgroundColor = tracked ? UIColor.systemGreen.withAlphaComponent(0.12) : .clear
+            cell.backgroundConfiguration = bg
+        } else {
+            cell.backgroundColor = tracked ? UIColor.systemGreen.withAlphaComponent(0.12) : .clear
+        }
 
         return cell
     }
 
-    override func tableView(_ tableView: UITableView,
-                            didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-
         guard canEditTracking else { return }
 
-        let friend = filtered[indexPath.row]
+        let friend = filteredFriends[indexPath.row]
+
         let changed = FriendTrackStore.shared.toggle(
-            friend.id,
+            friendID: friend.id,
             courseID: trackingCourseID,
             limit: limit
         )
@@ -290,15 +292,17 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
     // MARK: - Search
 
     func updateSearchResults(for searchController: UISearchController) {
-        guard let text = searchController.searchBar.text,
-              !text.isEmpty else {
-            filtered = allFriends
+        let text = (searchController.searchBar.text ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard !text.isEmpty else {
+            filteredFriends = allFriends
             tableView.reloadData()
             return
         }
-        filtered = allFriends.filter {
-            $0.name.localizedCaseInsensitiveContains(text)
-        }
+
+        filteredFriends = allFriends.filter { $0.name.localizedCaseInsensitiveContains(text) }
         tableView.reloadData()
     }
 }
+
