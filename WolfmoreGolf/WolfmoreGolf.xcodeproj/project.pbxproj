@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F60F95992F4789DC003A0F84 /* CoursePickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60F95982F4789DC003A0F84 /* CoursePickerViewController.swift */; };
 		F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1702F3691E6009EEB12 /* ServiceContact.swift */; };
 		F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1722F369228009EEB12 /* ServiceContactStore.swift */; };
 		F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */; };
@@ -35,6 +36,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F60F95982F4789DC003A0F84 /* CoursePickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoursePickerViewController.swift; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
 		F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterAndTrackingViewController.swift; sourceTree = "<group>"; };
@@ -87,6 +89,7 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F60F95982F4789DC003A0F84 /* CoursePickerViewController.swift */,
 				F688C7402F37F9E800A4B094 /* ContactsViewController.swift */,
 				F618A1722F369228009EEB12 /* ServiceContactStore.swift */,
 				F618A1702F3691E6009EEB12 /* ServiceContact.swift */,
@@ -183,7 +186,6 @@
 				Base,
 				"Base 2",
 				"Base 2C",
-				"base 2C",
 			);
 			mainGroup = F64DE77F2EB0396000F8D625;
 			minimizedProjectReferenceProxies = 1;
@@ -227,6 +229,7 @@
 				F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */,
 				F6D6A49C2EC786D10000F576 /* FriendStore.swift in Sources */,
 				F64CDA962ECD0AA900019EE0 /* HoleStatsViewController.swift in Sources */,
+				F60F95992F4789DC003A0F84 /* CoursePickerViewController.swift in Sources */,
 				F6D6A4A32EC78A100000F576 /* TrackFriendsViewController.swift in Sources */,
 				F6D6A49A2EC786BC0000F576 /* Friend.swift in Sources */,
 				F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */,

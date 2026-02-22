@@ -11,10 +11,15 @@ final class ViewController: UIViewController {
 
     // MARK: - Outlets
     @IBOutlet private weak var welcomeLabel: UILabel!
+    @IBOutlet private weak var courseButton: UIButton!
+    // ✅ Legacy storyboard connection safety (prevents crash if something is still wired to playTapped:)
+   
+   
+
     @IBOutlet private weak var editCourseButton: UIButton!
     @IBOutlet private weak var playGameButton: UIButton!
-    @IBOutlet private weak var playNewGameButton: UIButton!
-    @IBOutlet private weak var continueButton: UIButton!
+    @IBOutlet private weak var playNewGameButton: UIButton?
+    @IBOutlet private weak var continueButton: UIButton?
     @IBOutlet private weak var joinProButton: UIButton!
 
     // MARK: - State
@@ -33,11 +38,17 @@ final class ViewController: UIViewController {
     }
 
     // MARK: - Lifecycle
+  
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        migrateHomeCourseIfNeeded()
+        CourseLibrary.shared.seedIfNeeded()
 
+        refreshPlayArea()
+        refreshCourseButtonTitle()
+
+        migrateHomeCourseIfNeeded()
+        styleCourseButton()
         configureImageButtons()
         configurePlayButtonTitle()
 
@@ -53,16 +64,39 @@ final class ViewController: UIViewController {
             object: nil
         )
     }
-
+    private func styleCourseButton() {
+        // Match your other pill buttons
+        courseButton.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        courseButton.titleLabel?.adjustsFontForContentSizeCategory = true
+        courseButton.titleLabel?.adjustsFontSizeToFitWidth = true
+        courseButton.titleLabel?.minimumScaleFactor = 0.85
+        courseButton.titleLabel?.lineBreakMode = .byTruncatingTail
+    }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateWelcome()
+        refreshCourseButtonTitle()
+
+    }
+    private func updatePlayButtonTitle() {
+        if GameManager.shared.hasSavedGame {
+            playGameButton.setTitle("Continue Game", for: .normal)
+        } else {
+            playGameButton.setTitle("Start New Game", for: .normal)
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         runFirstLaunchPromptsIfNeeded()
+        refreshPlayArea()
     }
+    
+    private func refreshCourseButtonTitle() {
+        let name = CourseLibrary.shared.selectedCourseName ?? "Choose Course"
+        courseButton.configuration = yellowPillConfig(title: name, trailingChevron: true)
+    }
+
 
     // MARK: - Migration
     private func migrateHomeCourseIfNeeded() {
@@ -71,6 +105,152 @@ final class ViewController: UIViewController {
             ProfileStore.homeCourseID = ""
             UserDefaults.standard.removeObject(forKey: didPromptHomeCourseKey)
         }
+    }
+    private func openAddCourse() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC")
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    
+    // ✅ Legacy storyboard connection safety (prevents crash if something is still wired to playTapped:)
+    @IBAction func playTapped(_ sender: UIButton) {
+        playGameTapped(sender)
+    }
+
+    @IBAction func playGameTapped(_ sender: UIButton) {
+
+        guard GameManager.shared.hasSavedGame else {
+            presentManagePlayers()
+            return
+        }
+
+        let ac = UIAlertController(title: "Play Game", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Continue Last Game", style: .default) { [weak self] _ in
+            self?.performSegue(withIdentifier: "showPlayerSetup", sender: self)
+        })
+
+        ac.addAction(UIAlertAction(title: "Start New Game", style: .default) { [weak self] _ in
+            self?.presentManagePlayers()
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = sender
+            pop.sourceRect = sender.bounds
+        }
+
+        present(ac, animated: true)
+    }
+    private func yellowPillConfig(title: String, trailingChevron: Bool = false) -> UIButton.Configuration {
+        var config = UIButton.Configuration.filled()
+        config.title = title
+
+        // ✅ Same yellow for both
+        config.baseBackgroundColor = .systemYellow
+        config.baseForegroundColor = .black
+
+        // ✅ Same pill shape + padding
+        config.cornerStyle = .capsule
+        config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
+
+        // ✅ Smaller font
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var out = incoming
+            out.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+            return out
+        }
+
+        if trailingChevron {
+            config.image = UIImage(systemName: "chevron.down")
+            config.imagePlacement = .trailing
+            config.imagePadding = 8
+        }
+
+        return config
+    }
+
+    private func makePillConfig(
+        title: String,
+        fill: UIColor,
+        text: UIColor,
+        bordered: Bool,
+        trailingChevron: Bool = false
+    ) -> UIButton.Configuration {
+
+        var config = UIButton.Configuration.filled()
+        config.title = title
+
+        config.baseBackgroundColor = fill
+        config.baseForegroundColor = text
+
+        config.cornerStyle = .capsule
+        config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 18, bottom: 12, trailing: 18)
+
+        // font
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var out = incoming
+            out.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+            return out
+        }
+
+        if bordered {
+            config.background.strokeColor = UIColor.systemGray4
+            config.background.strokeWidth = 1
+        }
+
+        if trailingChevron {
+            config.image = UIImage(systemName: "chevron.down")
+            config.imagePlacement = .trailing
+            config.imagePadding = 8
+        }
+
+        return config
+    }
+
+    private func refreshPlayArea() {
+        playGameButton.configuration = yellowPillConfig(title: "Play Game")
+
+        playNewGameButton?.isHidden = true
+        continueButton?.isHidden = true
+    }
+
+
+    @IBAction private func courseButtonTapped(_ sender: Any) {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+
+        guard let picker = sb.instantiateViewController(withIdentifier: "CoursePickerVC") as? CoursePickerViewController else {
+            assertionFailure("CoursePickerVC storyboard id / class mismatch")
+            return
+        }
+
+        picker.onPickCourse = { [weak self] id in
+            CourseLibrary.shared.selectedCourseID = id
+
+            if let c = CourseLibrary.shared.get(id: id) {
+                GameManager.shared.update { g in
+                    g.course.pars = Array(c.pars.prefix(18))
+                    g.course.holeHandicaps = Array(c.hcs.prefix(18))
+                }
+            }
+
+            self?.refreshCourseButtonTitle()
+            self?.dismiss(animated: true)
+        }
+        picker.onTapAddCourse = { [weak self] in
+            self?.dismiss(animated: true) {
+                self?.openAddCourse()
+            }
+        }
+
+        let nav = UINavigationController(rootViewController: picker)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
     }
 
     // MARK: - Paywall
@@ -324,7 +504,14 @@ final class ViewController: UIViewController {
     // MARK: - Navigation
     @IBAction private func openCourseSetup(_ sender: Any? = nil) {
         let sb = UIStoryboard(name: "Main", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC")
+
+        guard let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC") as? CourseSetupViewController else {
+            assertionFailure("CourseSetupVC storyboard id / class mismatch")
+            return
+        }
+
+        // ✅ If user already chose a course on Home, load it
+        vc.loadCourseID = CourseLibrary.shared.selectedCourseID
 
         if let nav = navigationController {
             nav.pushViewController(vc, animated: true)

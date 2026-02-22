@@ -527,3 +527,28 @@ extension RoundStore {
         return byBucket.values.map { Array($0) }
     }
 }
+extension RoundStore {
+
+    /// Phones for the players in these saved rows (skips blanks, removes duplicates)
+    func recipientPhones(for gameRows: [RoundSummary]) -> [String] {
+        let friends = FriendStore.shared.friends
+
+        let phones: [String] = gameRows.compactMap { row -> String? in
+            let rowName = row.playerName
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .lowercased()
+
+            guard let friend = friends.first(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == rowName
+            }) else {
+                return nil
+            }
+
+            let phone = friend.phone.trimmingCharacters(in: .whitespacesAndNewlines)
+            return phone.isEmpty ? nil : phone
+        }
+
+        // unique, stable-ish order (or remove sorted() if you want original order)
+        return Array(Set(phones)).sorted()
+    }
+}

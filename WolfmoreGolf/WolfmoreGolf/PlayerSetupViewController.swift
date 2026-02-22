@@ -13,7 +13,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet private weak var randomizeButton: UIButton!
     @IBOutlet private weak var goToGameButton: UIButton!
    
-        
+    var isInRoundEdit: Bool = false   // ✅ NEW
+
+    
        
 
     // Optional
@@ -73,6 +75,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         updateGoButtonEnabled()
         refreshRandomizeEnabled()
     }
+    enum Mode { case preRound, inRound }
+       var mode: Mode = .preRound
+       var onDone: (() -> Void)?
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -459,6 +464,12 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     @IBAction private func goToGameTapped(_ sender: Any) {
+        if isInRoundEdit {
+              dismiss(animated: true) { [weak self] in
+                  self?.onDone?()
+              }
+              return
+          }
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let game = sb.instantiateViewController(withIdentifier: "GameViewController")
 
@@ -554,7 +565,3 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 }
 
-// MARK: - Small Utilities
-private extension Array {
-    subscript(safe i: Int) -> Element? { indices.contains(i) ? self[i] : nil }
-}

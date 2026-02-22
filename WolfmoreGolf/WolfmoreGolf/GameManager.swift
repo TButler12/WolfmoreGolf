@@ -340,3 +340,14 @@ extension GameManager {
         self.currentGame = game
     }
 }
+extension GameManager {
+
+    /// True if there is a saved/continue-able game on this device
+    var hasSavedGame: Bool {
+        // If it's already loaded in memory, yes
+        if currentGame != nil { return true }
+
+        // Otherwise check the actual save slot
+        return UserDefaults.standard.data(forKey: "currentGame_v1") != nil
+    }
+}

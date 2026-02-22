@@ -267,7 +267,7 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         let stored = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
         if !stored.isEmpty { return stored }
 
-        if let c = CourseLibrary.shared.WolfMore() {
+        if let c = CourseLibrary.shared.wolfMore() {
             return c.id.uuidString
         }
         return "HOME-COURSE"
@@ -301,18 +301,20 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         case eta
         case onTee
         case beerOrder
-        case scoreUpdate
         case rulesQuestion
         case custom
 
         static func templates(for target: TextTarget) -> [MessageTemplate] {
             switch target {
             case .manual, .todaysGroup, .favorites, .trackedFriendsGroup:
-                return [.eta, .onTee, .scoreUpdate, .custom]
+                return [.eta, .onTee, .custom]
+
             case .allFriends:
-                return [.eta, .scoreUpdate, .custom]
+                return [.eta, .custom]
+
             case .proShop:
                 return [.rulesQuestion, .custom]
+
             case .drinkCart:
                 return [.beerOrder, .eta, .custom]
             }
@@ -323,7 +325,6 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
             case .eta:           return "Arrival / ETA"
             case .onTee:         return "On Tee"
             case .beerOrder:     return "Beer Order 🍺"
-            case .scoreUpdate:   return "Score Update"
             case .rulesQuestion: return "Quick Question"
             case .custom:        return "Custom…"
             }
@@ -338,14 +339,8 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
             case (.todaysGroup, .onTee), (.manual, .onTee), (.favorites, .onTee), (.trackedFriendsGroup, .onTee):
                 return "WolfMore: on the tee in 10."
 
-            case (.todaysGroup, .scoreUpdate), (.manual, .scoreUpdate),
-                 (.favorites, .scoreUpdate), (.trackedFriendsGroup, .scoreUpdate):
-                return "WolfMore update: "
-
             case (.allFriends, .eta):
                 return "WolfMore: anyone getting out today?"
-            case (.allFriends, .scoreUpdate):
-                return "WolfMore: tee time / group update — "
 
             case (.proShop, .rulesQuestion):
                 return "Hey — quick question:"

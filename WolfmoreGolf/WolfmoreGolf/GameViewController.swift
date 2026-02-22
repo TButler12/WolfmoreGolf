@@ -165,7 +165,7 @@ final class GameViewController: UIViewController {
 
         present(nav, animated: true)
     }
-
+   
     @IBOutlet private weak var gameModeSegment: UISegmentedControl!
 
     
@@ -234,6 +234,9 @@ final class GameViewController: UIViewController {
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
         
+       
+              
+           
         // 👇 Take over back behavior
         navigationItem.hidesBackButton = true
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false

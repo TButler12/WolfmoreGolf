@@ -1358,13 +1358,13 @@
       }
     },
     "QgZ-2Z-HCF.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Continue Game\"; ObjectID = \"QgZ-2Z-HCF\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Play Game\"; ObjectID = \"QgZ-2Z-HCF\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Continue Game"
+            "value" : "Play Game"
           }
         }
       }
@@ -1521,30 +1521,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "Par"
-          }
-        }
-      }
-    },
-    "s5V-Dc-AWC.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"New Game \"; ObjectID = \"s5V-Dc-AWC\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "New Game "
-          }
-        }
-      }
-    },
-    "s5V-Dc-AWC.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"s5V-Dc-AWC\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
           }
         }
       }
@@ -1742,13 +1718,13 @@
       }
     },
     "VUW-nQ-iYy.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"Tap Any Par or  Handicap to Edit Then Go To Course Review\"; ObjectID = \"VUW-nQ-iYy\";",
+      "comment" : "Class = \"UILabel\"; text = \"To Add New Course, Tap Any Par or  Handicap to Edit Then Go To Course Review\"; ObjectID = \"VUW-nQ-iYy\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Tap Any Par or  Handicap to Edit Then Go To Course Review"
+            "value" : "To Add New Course, Tap Any Par or  Handicap to Edit Then Go To Course Review"
           }
         }
       }

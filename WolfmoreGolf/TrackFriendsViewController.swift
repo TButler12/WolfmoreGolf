@@ -37,7 +37,7 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
     private var trackingCourseID: String {
         let stored = ProfileStore.homeCourseID
         if !stored.isEmpty { return stored }
-        if let c = CourseLibrary.shared.WolfMore() { return c.id.uuidString }
+        if let c = CourseLibrary.shared.wolfMore() { return c.id.uuidString }
         return "HOME-COURSE"
     }
 

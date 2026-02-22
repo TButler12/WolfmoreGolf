@@ -17,6 +17,10 @@ final class ManagePlayersViewController: UIViewController,
     private let trackingLimitPerCourse = 30
 
     // MARK: - Outlets
+    enum Mode { case preRound, inRound }
+        var mode: Mode = .preRound
+
+        var onDone: (() -> Void)?
 
     @IBOutlet private weak var tableView: UITableView!
 
@@ -35,8 +39,12 @@ final class ManagePlayersViewController: UIViewController,
         configureNavBar()
         configureTable()
         configureKeyboardDismissTap()
+        title = "Edit Player Tracking"
     }
-
+    @objc private func doneTapped() {
+            dismiss(animated: true)
+            onDone?()
+        }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         tableView.reloadData()
@@ -45,17 +53,34 @@ final class ManagePlayersViewController: UIViewController,
     // MARK: - Setup
 
     private func configureNavBar() {
-        navigationItem.title = "Add Players  ===>"
         navigationItem.prompt = nil
 
-        let addButton = makeGlowingAddButton()
-        addUIButton = addButton
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
+        switch mode {
+        case .preRound:
+            navigationItem.title = "Add Players  ===>"
+            let addButton = makeGlowingAddButton()
+            addUIButton = addButton
+            navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
 
-        navigationItem.hidesBackButton = true
-        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+            navigationItem.hidesBackButton = true
+            navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+
+        case .inRound:
+            navigationItem.title = "Edit Player Tracking"
+            navigationItem.rightBarButtonItem = nil
+
+            navigationItem.leftBarButtonItem = UIBarButtonItem(
+                barButtonSystemItem: .done,
+                target: self,
+                action: #selector(doneTapped)
+            )
+
+            // allow swipe-back etc if you want; since this is presented, not pushed
+            navigationItem.hidesBackButton = true
+        }
     }
 
+  
     private func configureTable() {
         tableView.dataSource = self
         tableView.delegate = self
@@ -311,28 +336,49 @@ final class ManagePlayersViewController: UIViewController,
 
         let friend = friends[indexPath.row]
         let friendID = friend.id
+        let seat = indexPath.row
 
         cell.nameLabel.text = friend.name
         cell.hcField.text = friend.defaultHC == 0 ? "" : String(friend.defaultHC)
-        cell.activeSwitch.isOn = friend.preselectForRound
 
-        cell.hcChanged = { newHC in
-            FriendStore.shared.update(friendID: friendID, defaultHC: newHC)
+        // ✅ Switch reflects different state depending on mode
+        if mode == .preRound {
+            cell.activeSwitch.isOn = friend.preselectForRound
+        } else {
+            cell.activeSwitch.isOn = GameManager.shared.currentGame?.playerActivated[safe: seat] ?? false
         }
 
+        // ✅ HC edit (only makes sense pre-round; optional to disable in-round)
+        cell.hcChanged = { newHC in
+            if self.mode == .preRound {
+                FriendStore.shared.update(friendID: friendID, defaultHC: newHC)
+            }
+        }
+
+        // ✅ ONE activeChanged handler
         cell.activeChanged = { [weak self, weak cell] isOn in
             guard let self else { return }
 
-            if isOn {
-                let currentActive = FriendStore.shared.preselectedCount
-                if currentActive >= self.maxActivePlayers {
-                    cell?.activeSwitch.setOn(false, animated: true)
-                    self.showActiveLimitAlert()
-                    return
+            if self.mode == .preRound {
+                if isOn {
+                    let currentActive = FriendStore.shared.preselectedCount
+                    if currentActive >= self.maxActivePlayers {
+                        cell?.activeSwitch.setOn(false, animated: true)
+                        self.showActiveLimitAlert()
+                        return
+                    }
                 }
+                FriendStore.shared.update(friendID: friendID, preselectForRound: isOn)
+                return
             }
 
-            FriendStore.shared.update(friendID: friendID, preselectForRound: isOn)
+            // ✅ inRound: update the live game's activation state
+            GameManager.shared.update { g in
+                guard seat < g.playerActivated.count else { return }
+                g.playerActivated[seat] = isOn
+            }
+
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
         }
 
         return cell
@@ -445,5 +491,12 @@ final class ManagePlayersViewController: UIViewController,
         }
 
         present(roundNav, animated: true)
+    }
+    
+}
+extension Array {
+    subscript(safe index: Int) -> Element? {
+        guard indices.contains(index) else { return nil }
+        return self[index]
     }
 }
