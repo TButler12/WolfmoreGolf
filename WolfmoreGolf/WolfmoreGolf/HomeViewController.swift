@@ -259,10 +259,15 @@ final class ViewController: UIViewController {
     }
 
     @objc private func showProPaywall() {
-        // You said it exists now ✅
-        let vc = ProViewController()
+        let vc = ProGateViewController()
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .pageSheet
+
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+
         present(nav, animated: true)
     }
 
@@ -477,7 +482,7 @@ final class ViewController: UIViewController {
     // MARK: - Upsell Bubble
     private func showStatsUpgradeBubble(anchor: UIView) {
         let ac = UIAlertController(
-            title: "WolfMore Pro",
+            title: "WolfMore Pro Annual",
             message: "Unlock full stats and unlimited history.",
             preferredStyle: .actionSheet
         )

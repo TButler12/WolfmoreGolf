@@ -7,255 +7,221 @@
 import UIKit
 import StoreKit
 
-final class ProViewController: UITableViewController {
+@available(iOS 15.0, *)
 
-    private enum Section: Int, CaseIterable { case unlock, plan, restore, legal }
+final class ProViewController: UIViewController {
 
-    private let store = ProStore.shared
+    // MARK: - UI
 
-    private var priceText: String = "Loading…"
-    private var isBusy = false
-    private var didInitialLoad = false
+    private let titleLabel: UILabel = {
+        let l = UILabel()
+        l.text = "WolfMore Pro"
+        l.font = .systemFont(ofSize: 28, weight: .bold)
+        l.numberOfLines = 0
+        return l
+    }()
+
+    private let subtitleLabel: UILabel = {
+        let l = UILabel()
+        l.text = "Unlock custom text groups, advanced stats, and more."
+        l.font = .systemFont(ofSize: 16, weight: .regular)
+        l.textColor = .secondaryLabel
+        l.numberOfLines = 0
+        return l
+    }()
+
+    private let featuresLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 16, weight: .semibold)
+        l.numberOfLines = 0
+        l.text = """
+        ✅ Custom text groups
+        ✅ Favorites & tracked friend blasts
+        ✅ Year-long stats + summaries
+        """
+        return l
+    }()
+
+    private let priceLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 16, weight: .semibold)
+        l.textColor = .secondaryLabel
+        l.text = "Loading price…"
+        return l
+    }()
+
+    private let unlockButton: UIButton = {
+        var cfg = UIButton.Configuration.filled()
+        cfg.title = "Unlock Pro"
+        cfg.cornerStyle = .large
+        cfg.baseBackgroundColor = .systemGreen
+        let b = UIButton(configuration: cfg)
+        return b
+    }()
+
+    private let restoreButton: UIButton = {
+        var cfg = UIButton.Configuration.plain()
+        cfg.title = "Restore Purchases"
+        let b = UIButton(configuration: cfg)
+        return b
+    }()
+
+    private let closeButton: UIBarButtonItem = {
+        UIBarButtonItem(barButtonSystemItem: .close, target: nil, action: nil)
+    }()
+
+    private let spinner = UIActivityIndicatorView(style: .medium)
+
+    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        title = "Pro"
 
-        title = "WolfMore Pro"
-        tableView = UITableView(frame: .zero, style: .insetGrouped)
+        closeButton.target = self
+        closeButton.action = #selector(closeTapped)
+        navigationItem.leftBarButtonItem = closeButton
 
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close,
-            target: self,
-            action: #selector(closeTapped)
-        )
+        layout()
+        wireActions()
 
-        // Kick off load once
-        Task { await initialLoadIfNeeded() }
-    }
-
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-
-        // On re-appear: refresh entitlement only (fast)
-        Task {
-            await store.refreshEntitlement()
-            updatePrice()
-            tableView.reloadData()
-
-            #if DEBUG
-            // Optional debug logging (not an alert)
-            print("Pro Debug:",
-                  "yearlyProduct:", store.yearlyProduct?.id ?? "nil",
-                  "priceText:", priceText,
-                  "isLoaded:", store.isLoaded,
-                  "bundle:", Bundle.main.bundleIdentifier ?? "nil")
-            #endif
+        // ✅ Start StoreKit listener + load product + refresh entitlement
+        Task { @MainActor in
+            ProStore.shared.start()
+            await ProStore.shared.refreshEntitlement()
+            await loadPrice()
+            updateForEntitlement()
         }
     }
 
-    @objc private func closeTapped() { dismiss(animated: true) }
+    // MARK: - Layout
 
-    // MARK: - Loading
+    private func layout() {
+        let stack = UIStackView(arrangedSubviews: [
+            titleLabel,
+            subtitleLabel,
+            featuresLabel,
+            priceLabel,
+            unlockButton,
+            restoreButton
+        ])
+        stack.axis = .vertical
+        stack.spacing = 14
+        stack.translatesAutoresizingMaskIntoConstraints = false
 
-    private func initialLoadIfNeeded() async {
-        guard !didInitialLoad else { return }
-        didInitialLoad = true
+        view.addSubview(stack)
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(spinner)
 
-        isBusy = true
-        tableView.reloadData()
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
 
-        await store.loadProducts()
-        await store.refreshEntitlement()
-        updatePrice()
-
-        isBusy = false
-        tableView.reloadData()
+            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            spinner.topAnchor.constraint(equalTo: stack.bottomAnchor, constant: 18)
+        ])
     }
 
-    private func updatePrice() {
-        if let p = store.yearlyProduct {
-            priceText = "\(p.displayPrice) / year"
+    private func wireActions() {
+        unlockButton.addTarget(self, action: #selector(unlockTapped), for: .touchUpInside)
+        restoreButton.addTarget(self, action: #selector(restoreTapped), for: .touchUpInside)
+    }
+
+    // MARK: - StoreKit
+
+    private func loadPrice() async {
+        await ProStore.shared.loadProducts()
+
+        if let p = ProStore.shared.yearlyProduct {
+            // StoreKit provides localized price formatting
+            priceLabel.text = "\(p.displayName) — \(p.displayPrice)"
         } else {
-            priceText = "Unavailable"
+            priceLabel.text = "Price unavailable (try again)."
         }
     }
 
-    // MARK: - Table
-
-    override func numberOfSections(in tableView: UITableView) -> Int {
-        Section.allCases.count
-    }
-
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch Section(rawValue: section)! {
-        case .unlock:  return 3
-        case .plan:    return 1
-        case .restore: return 1
-        case .legal:   return 1
+    private func updateForEntitlement() {
+        if ProStore.shared.isPro {
+            priceLabel.text = "✅ Pro Active"
+            unlockButton.configuration?.title = "Pro Active"
+            unlockButton.isEnabled = false
+        } else {
+            unlockButton.configuration?.title = "Unlock Pro"
+            unlockButton.isEnabled = true
         }
     }
 
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        switch Section(rawValue: section)! {
-        case .unlock:  return "Unlock with Pro"
-        case .plan:    return nil
-        case .restore: return nil
-        case .legal:   return nil
+    // MARK: - Actions
+
+    @objc private func closeTapped() {
+        dismiss(animated: true)
+    }
+
+    @objc private func unlockTapped() {
+        Task { @MainActor in
+            setLoading(true)
+            defer { setLoading(false) }
+
+            do {
+                // ✅ Ensure products are loaded
+                await ProStore.shared.loadProducts()
+
+                // ✅ Purchase (no try!, catch errors)
+                try await ProStore.shared.purchaseYearly()
+
+                // ✅ Refresh + update UI
+                await ProStore.shared.refreshEntitlement()
+                updateForEntitlement()
+
+                if ProStore.shared.isPro {
+                    dismiss(animated: true)
+                }
+
+            } catch is CancellationError {
+                // user cancelled; no alert needed
+            } catch {
+                showAlert("Purchase Failed", error.localizedDescription)
+            }
         }
     }
 
-    override func tableView(_ tableView: UITableView,
-                            titleForFooterInSection section: Int) -> String? {
-        switch Section(rawValue: section)! {
-        case .legal:
-            return "Payment will be charged to your Apple ID. Subscription automatically renews unless canceled at least 24 hours before the end of the current period. Manage or cancel in Settings."
-        default:
-            return nil
-        }
-    }
+    @objc private func restoreTapped() {
+        Task { @MainActor in
+            setLoading(true)
+            defer { setLoading(false) }
 
-    override func tableView(_ tableView: UITableView,
-                            cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            do {
+                try await ProStore.shared.restore()
+                updateForEntitlement()
 
-        let cell = UITableViewCell(style: .value1, reuseIdentifier: nil)
-        cell.textLabel?.numberOfLines = 2
-
-        switch Section(rawValue: indexPath.section)! {
-
-        case .unlock:
-            cell.selectionStyle = .none
-            cell.textLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-            cell.textLabel?.text = [
-                "Unlimited round history",
-                "Year-long summaries",
-                "Advanced player & course stats"
-            ][indexPath.row]
-
-        case .plan:
-            cell.textLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-
-            if store.isPro {
-                cell.textLabel?.text = "You’re Pro ✅"
-                cell.detailTextLabel?.text = ""
-                cell.selectionStyle = .none
-                cell.accessoryType = .none
-            } else {
-                // CTA-like row
-                cell.textLabel?.text = "Start Pro"
-                cell.detailTextLabel?.text = priceText
-                cell.accessoryType = .none
-
-                // Make it look tappable + premium
-                cell.textLabel?.textColor = view.tintColor
-                cell.detailTextLabel?.textColor = .secondaryLabel
-
-                // Disable if loading or missing product
-                let enabled = (!isBusy && store.yearlyProduct != nil)
-                cell.selectionStyle = enabled ? .default : .none
-
-                // Optional subtle spinner while loading
-                if isBusy && store.yearlyProduct == nil {
-                    let spinner = UIActivityIndicatorView(style: .medium)
-                    spinner.startAnimating()
-                    cell.accessoryView = spinner
+                if ProStore.shared.isPro {
+                    dismiss(animated: true)
                 } else {
-                    cell.accessoryView = nil
+                    showAlert("Nothing to Restore", "No active Pro subscription was found for this Apple ID.")
                 }
-            }
-
-        case .restore:
-            cell.textLabel?.text = "Restore Purchases"
-            cell.textLabel?.font = .systemFont(ofSize: 17, weight: .regular)
-            cell.textLabel?.textColor = isBusy ? .secondaryLabel : .label
-            cell.selectionStyle = isBusy ? .none : .default
-
-        case .legal:
-            cell.textLabel?.text = "Terms & subscription info"
-            cell.textLabel?.font = .systemFont(ofSize: 15, weight: .regular)
-            cell.textLabel?.textColor = .secondaryLabel
-            cell.selectionStyle = .none
-        }
-
-        return cell
-    }
-
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        switch Section(rawValue: indexPath.section)! {
-
-        case .unlock, .legal:
-            return
-
-        case .plan:
-            guard !store.isPro, !isBusy else { return }
-
-            // If product missing, try one reload then stop
-            guard store.yearlyProduct != nil else {
-                isBusy = true
-                tableView.reloadData()
-
-                Task {
-                    await store.loadProducts()
-                    updatePrice()
-                    isBusy = false
-                    tableView.reloadData()
-
-                    if store.yearlyProduct == nil {
-                        showAlert(title: "Unavailable", message: "Couldn’t load the Pro plan. Please try again.")
-                    }
-                }
-                return
-            }
-
-            isBusy = true
-            tableView.reloadData()
-
-            Task {
-                do {
-                    try await store.purchaseYearly()
-                    await store.refreshEntitlement()
-                    updatePrice()
-                } catch is CancellationError {
-                    // user canceled
-                } catch {
-                    showAlert(title: "Purchase Failed", message: "Please try again.")
-                }
-
-                isBusy = false
-                tableView.reloadData()
-            }
-
-        case .restore:
-            guard !isBusy else { return }
-
-            isBusy = true
-            tableView.reloadData()
-
-            Task {
-                do {
-                    try await store.restore()
-                    await store.refreshEntitlement()
-                    updatePrice()
-
-                    // Keep message but less “noisy”
-                    if !store.isPro {
-                        showAlert(title: "Not Found", message: "No active subscription found for this Apple ID.")
-                    }
-                } catch {
-                    showAlert(title: "Restore Failed", message: "Please try again.")
-                }
-
-                isBusy = false
-                tableView.reloadData()
+            } catch {
+                showAlert("Restore Failed", error.localizedDescription)
             }
         }
     }
 
-    private func showAlert(title: String, message: String) {
+    // MARK: - Helpers
+
+    private func setLoading(_ loading: Bool) {
+        if loading {
+            spinner.startAnimating()
+        } else {
+            spinner.stopAnimating()
+        }
+        unlockButton.isEnabled = !loading && !ProStore.shared.isPro
+        restoreButton.isEnabled = !loading
+    }
+
+    private func showAlert(_ title: String, _ message: String) {
         let ac = UIAlertController(title: title, message: message, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
     }
 }
-

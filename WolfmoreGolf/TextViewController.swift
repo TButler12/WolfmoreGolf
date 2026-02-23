@@ -10,33 +10,32 @@ import MessageUI
 
 final class TextViewController: UIViewController, MFMessageComposeViewControllerDelegate {
 
-    // MARK: - Outlets (must be connected in storyboard)
+    // MARK: - Types
 
-   
+    // ✅ Prefer moving this to its own file RecipientPreview.swift (shared by WMComposeVC + TextVC),
+    // but keeping it here is fine as long as WMComposeViewController DOES NOT reference it.
+    
+
+    // MARK: - Outlets
+
     @IBOutlet private weak var proShopButton: UIButton!
     @IBOutlet private weak var drinkCartButton: UIButton!
     @IBOutlet private weak var coordinatorButton: UIButton!
-    
-
-    
-    
 
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // ✅ Helps catch storyboard wiring issues instantly
-      
         assert(proShopButton != nil, "❌ proShopButton outlet not connected")
         assert(drinkCartButton != nil, "❌ drinkCartButton outlet not connected")
+        assert(coordinatorButton != nil, "❌ coordinatorButton outlet not connected")
 
         title = "Text Hub"
         view.backgroundColor = .systemBackground
 
         applyServiceButtonStyle()
-
-          refreshServiceButtonTitles()
+        refreshServiceButtonTitles()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -44,12 +43,10 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         refreshServiceButtonTitles()
     }
 
-    // MARK: - Service button titles
+    // MARK: - Button styling / titles
+
     private func applyServiceButtonStyle() {
         let buttons = [coordinatorButton, proShopButton, drinkCartButton]
-
-        // Pick ONE source of truth:
-        // Option 1: use Pro Shop’s current font as the standard
         let font = proShopButton.titleLabel?.font ?? .systemFont(ofSize: 22, weight: .semibold)
 
         buttons.forEach { b in
@@ -59,15 +56,115 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
             b?.titleLabel?.adjustsFontSizeToFitWidth = true
         }
     }
+    private func requireProForCustomGroups(_ onAllowed: () -> Void) {
+        if ProStore.shared.isPro {
+            onAllowed()
+            return
+        }
+
+        let ac = UIAlertController(
+            title: "Custom Groups are Pro",
+            message: "Unlock Pro to create and use custom text groups for your regular games.",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Unlock Pro", style: .default) { [weak self] _ in
+            self?.presentPro()
+        })
+
+        present(ac, animated: true)
+    }
+
+    private func presentPro() {
+        // ✅ Option A: If you already have a ProViewController in storyboard
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        if let vc = sb.instantiateViewController(withIdentifier: "ProViewController") as? ProViewController {
+            let nav = UINavigationController(rootViewController: vc)
+            nav.modalPresentationStyle = .pageSheet
+            present(nav, animated: true)
+            return
+        }
+
+        // ✅ Option B: fallback message if storyboard id isn’t set yet
+        let ac = UIAlertController(title: "Pro", message: "Open your Pro screen here.", preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
     private func refreshServiceButtonTitles() {
         let c = ServiceContactStore.shared.contacts
         coordinatorButton.setTitle(c.coordinatorName, for: .normal)
         proShopButton.setTitle(c.proShopName, for: .normal)
         drinkCartButton.setTitle(c.drinkCartName, for: .normal)
     }
-    
 
+    // MARK: - Groups (Custom)
 
+    @IBAction private func customGroupsTapped(_ sender: UIButton) {
+        requireProForCustomGroups { [weak self] in
+            guard let self else { return }
+
+            let vc = CustomGroupsViewController()
+            vc.onPick = { [weak self] group in
+                self?.sendCustomGroup(group)
+            }
+
+            let nav = UINavigationController(rootViewController: vc)
+            nav.modalPresentationStyle = .pageSheet
+            if let sheet = nav.sheetPresentationController {
+                sheet.detents = [.medium(), .large()]
+                sheet.prefersGrabberVisible = true
+            }
+            self.present(nav, animated: true)
+        }
+    }
+    private func requireProForCustomGroups(onAllowed: @escaping () -> Void) {
+        // ✅ If Pro, proceed
+        if ProStore.shared.isPro {
+            onAllowed()
+            return
+        }
+
+        // ✅ Not Pro: show paywall and STOP (do NOT run closure)
+        presentProPaywall()
+    }
+
+    private func presentProPaywall() {
+        // Prevent double-present crashes
+        if presentedViewController != nil { return }
+
+        let vc = ProGateViewController()   // <-- use the safe wrapper (or ProViewController if iOS15+ only)
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        present(nav, animated: true)
+    }
+    private func sendCustomGroup(_ group: TextGroup) {
+        let phones: [String] = group.memberIDs.compactMap { id in
+            FriendStore.shared.friends.first(where: { $0.id == id })?.phone
+        }
+
+        let clean = phones
+            .map { normalizePhone($0) }
+            .filter { !$0.isEmpty }
+            .uniquePreserveOrder()
+
+        guard !clean.isEmpty else {
+            showAlert("No Numbers Found", "That group has no valid mobile numbers.")
+            return
+        }
+
+        // ✅ Use templates + compose preview (names) before Apple Messages
+        pickTemplateAndSend(to: clean, target: .customGroup(name: group.name))
+    }
+
+    // MARK: - Group buttons
 
     @IBAction private func favoritesTapped(_ sender: UIButton) {
         let phones = FriendStore.shared.friends
@@ -113,7 +210,6 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         pickTemplateAndSend(to: phones, target: .allFriends)
     }
 
-    // ✅ Tracked Friends: EXACTLY like Favorites, but uses FriendTrackStore for current home course
     @IBAction private func trackedFriendsTapped(_ sender: UIButton) {
         let courseID = trackingCourseID()
 
@@ -131,6 +227,8 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         pickTemplateAndSend(to: phones, target: .trackedFriendsGroup)
     }
 
+    // MARK: - Service contacts (Pro Shop / Cart / Coordinator)
+
     @IBAction private func proShopTapped(_ sender: UIButton) {
         let c = ServiceContactStore.shared.contacts
         let digits = normalizePhone(c.proShop)
@@ -145,6 +243,37 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
             textBody: "Hey — quick question:"
         )
     }
+
+    @IBAction private func drinkCartTapped(_ sender: UIButton) {
+        let c = ServiceContactStore.shared.contacts
+        let digits = normalizePhone(c.drinkCart)
+        guard !digits.isEmpty else {
+            showAlert("No Drink Cart Number", "Tap “Edit Course Numbers” to add it.")
+            return
+        }
+
+        presentCallOrTextSheet(
+            name: c.drinkCartName,
+            rawNumber: digits,
+            textBody: "Beer cart — can we get: "
+        )
+    }
+
+    @IBAction private func coordinatorTapped(_ sender: UIButton) {
+        let c = ServiceContactStore.shared.contacts
+        let digits = normalizePhone(c.coordinator)
+        guard !digits.isEmpty else {
+            showAlert("No Coordinator Number", "Tap “Edit Service Numbers” to add it.")
+            return
+        }
+
+        presentCallOrTextSheet(
+            name: c.coordinatorName,
+            rawNumber: digits,
+            textBody: "Hey — quick question:"
+        )
+    }
+
     @IBAction private func editServiceNumbersTapped(_ sender: UIButton) {
         let current = ServiceContactStore.shared.contacts
 
@@ -154,52 +283,52 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
             preferredStyle: .alert
         )
 
-        // Pro Shop Name
-        ac.addTextField { tf in
-            tf.placeholder = "Pro Shop Button Name"
-            tf.text = current.proShopName
-            tf.clearButtonMode = .whileEditing
-            tf.autocapitalizationType = .words
+        // 0 Pro Shop Name
+        ac.addTextField {
+            $0.placeholder = "Pro Shop Button Name"
+            $0.text = current.proShopName
+            $0.clearButtonMode = .whileEditing
+            $0.autocapitalizationType = .words
         }
 
-        // Pro Shop Number
-        ac.addTextField { tf in
-            tf.placeholder = "Pro Shop Number"
-            tf.keyboardType = .phonePad
-            tf.text = current.proShop
-            tf.clearButtonMode = .whileEditing
+        // 1 Pro Shop Number
+        ac.addTextField {
+            $0.placeholder = "Pro Shop Number"
+            $0.keyboardType = .phonePad
+            $0.text = current.proShop
+            $0.clearButtonMode = .whileEditing
         }
 
-        // Drink Cart Name
-        ac.addTextField { tf in
-            tf.placeholder = "Drink Cart Button Name"
-            tf.text = current.drinkCartName
-            tf.clearButtonMode = .whileEditing
-            tf.autocapitalizationType = .words
+        // 2 Drink Cart Name
+        ac.addTextField {
+            $0.placeholder = "Drink Cart Button Name"
+            $0.text = current.drinkCartName
+            $0.clearButtonMode = .whileEditing
+            $0.autocapitalizationType = .words
         }
 
-        // Drink Cart Number
-        ac.addTextField { tf in
-            tf.placeholder = "Drink Cart Number"
-            tf.keyboardType = .phonePad
-            tf.text = current.drinkCart
-            tf.clearButtonMode = .whileEditing
+        // 3 Drink Cart Number
+        ac.addTextField {
+            $0.placeholder = "Drink Cart Number"
+            $0.keyboardType = .phonePad
+            $0.text = current.drinkCart
+            $0.clearButtonMode = .whileEditing
         }
 
-        // Coordinator Name
-        ac.addTextField { tf in
-            tf.placeholder = "Coordinator Button Name"
-            tf.text = current.coordinatorName
-            tf.clearButtonMode = .whileEditing
-            tf.autocapitalizationType = .words
+        // 4 Coordinator Name
+        ac.addTextField {
+            $0.placeholder = "Coordinator Button Name"
+            $0.text = current.coordinatorName
+            $0.clearButtonMode = .whileEditing
+            $0.autocapitalizationType = .words
         }
 
-        // Coordinator Number
-        ac.addTextField { tf in
-            tf.placeholder = "Coordinator Number"
-            tf.keyboardType = .phonePad
-            tf.text = current.coordinator
-            tf.clearButtonMode = .whileEditing
+        // 5 Coordinator Number
+        ac.addTextField {
+            $0.placeholder = "Coordinator Number"
+            $0.keyboardType = .phonePad
+            $0.text = current.coordinator
+            $0.clearButtonMode = .whileEditing
         }
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -207,10 +336,10 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
             guard let self else { return }
 
-            let namePro  = (ac.textFields?[0].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let rawPro   = (ac.textFields?[1].text ?? "")
-            let nameCart = (ac.textFields?[2].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let rawCart  = (ac.textFields?[3].text ?? "")
+            let namePro   = (ac.textFields?[0].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let rawPro    = (ac.textFields?[1].text ?? "")
+            let nameCart  = (ac.textFields?[2].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let rawCart   = (ac.textFields?[3].text ?? "")
             let nameCoord = (ac.textFields?[4].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
             let rawCoord  = (ac.textFields?[5].text ?? "")
 
@@ -227,38 +356,6 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         })
 
         present(ac, animated: true)
-    }
-
-    @IBAction private func drinkCartTapped(_ sender: UIButton) {
-        let c = ServiceContactStore.shared.contacts
-        let digits = normalizePhone(c.drinkCart)
-        guard !digits.isEmpty else {
-            showAlert("No Drink Cart Number", "Tap “Edit Course Numbers” to add it.")
-            return
-        }
-        presentCallOrTextSheet(
-            name: c.drinkCartName,
-            rawNumber: digits,
-            textBody: "Beer cart — can we get: "        )
-        
-    }
-    
-    
-    
-    @IBAction private func coordinatorTapped(_ sender: UIButton) {
-        let c = ServiceContactStore.shared.contacts
-        let digits = normalizePhone(c.coordinator)
-
-        guard !digits.isEmpty else {
-            showAlert("No Coordinator Number", "Tap “Edit Service Numbers” to add it.")
-            return
-        }
-
-        presentCallOrTextSheet(
-            name: c.coordinatorName,
-            rawNumber: digits,
-            textBody: "Hey — quick question:"
-        )
     }
 
     // MARK: - Course ID used for tracking
@@ -283,16 +380,18 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         case trackedFriendsGroup
         case proShop
         case drinkCart
+        case customGroup(name: String)
 
         var title: String {
             switch self {
-            case .manual:             return "Manual Number"
-            case .todaysGroup:        return "Today’s Group"
-            case .favorites:          return "Favorites"
-            case .allFriends:         return "All Friends"
-            case .trackedFriendsGroup:return "Tracked Friends"
-            case .proShop:            return "Pro Shop"
-            case .drinkCart:          return "Drink Cart"
+            case .manual:                 return "Manual Number"
+            case .todaysGroup:            return "Today’s Group"
+            case .favorites:              return "Favorites"
+            case .allFriends:             return "All Friends"
+            case .trackedFriendsGroup:    return "Tracked Friends"
+            case .proShop:                return "Pro Shop"
+            case .drinkCart:              return "Drink Cart"
+            case .customGroup(let name):  return name
             }
         }
     }
@@ -306,15 +405,12 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
 
         static func templates(for target: TextTarget) -> [MessageTemplate] {
             switch target {
-            case .manual, .todaysGroup, .favorites, .trackedFriendsGroup:
+            case .manual, .todaysGroup, .favorites, .trackedFriendsGroup, .customGroup:
                 return [.eta, .onTee, .custom]
-
             case .allFriends:
                 return [.eta, .custom]
-
             case .proShop:
                 return [.rulesQuestion, .custom]
-
             case .drinkCart:
                 return [.beerOrder, .eta, .custom]
             }
@@ -332,31 +428,25 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
 
         func defaultBody(for target: TextTarget) -> String {
             switch (target, self) {
-
-            case (.todaysGroup, .eta), (.manual, .eta), (.favorites, .eta), (.trackedFriendsGroup, .eta):
+            case (.todaysGroup, .eta), (.manual, .eta), (.favorites, .eta), (.trackedFriendsGroup, .eta), (.customGroup, .eta):
                 return "WolfMore: pulling in now ⛳️"
-
-            case (.todaysGroup, .onTee), (.manual, .onTee), (.favorites, .onTee), (.trackedFriendsGroup, .onTee):
+            case (.todaysGroup, .onTee), (.manual, .onTee), (.favorites, .onTee), (.trackedFriendsGroup, .onTee), (.customGroup, .onTee):
                 return "WolfMore: on the tee in 10."
-
             case (.allFriends, .eta):
                 return "WolfMore: anyone getting out today?"
-
             case (.proShop, .rulesQuestion):
                 return "Hey — quick question:"
-
             case (.drinkCart, .beerOrder):
                 return "Beer cart — can we get: "
             case (.drinkCart, .eta):
                 return "Beer cart — where are you at right now?"
-
             default:
                 return ""
             }
         }
     }
 
-    // MARK: - Template Picker + Composer
+    // MARK: - Template Picker
 
     private func pickTemplateAndSend(to recipients: [String], target: TextTarget) {
         let clean = recipients
@@ -375,18 +465,13 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         }
 
         let templates = MessageTemplate.templates(for: target)
-
         let ac = UIAlertController(title: target.title, message: "Choose a message", preferredStyle: .actionSheet)
 
         templates.forEach { template in
             ac.addAction(UIAlertAction(title: template.title(for: target), style: .default) { [weak self] _ in
                 guard let self else { return }
-
-                if template == .custom {
-                    self.promptCustomMessage(to: clean)
-                } else {
-                    self.presentComposer(to: clean, body: template.defaultBody(for: target))
-                }
+                let body = (template == .custom) ? "" : template.defaultBody(for: target)
+                self.presentComposeSheet(to: clean, defaultBody: body, title: target.title)
             })
         }
 
@@ -400,24 +485,47 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         present(ac, animated: true)
     }
 
-    private func promptCustomMessage(to recipients: [String]) {
-        let ac = UIAlertController(title: "Custom Message", message: nil, preferredStyle: .alert)
+    // MARK: - Compose preview (names) -> Apple Messages
 
-        ac.addTextField { tf in
-            tf.placeholder = "Type your message…"
-            tf.autocapitalizationType = .sentences
+    private func resolveRecipientPreviews(from phones: [String]) -> [RecipientPreview] {
+        let clean = phones
+            .map { normalizePhone($0) }
+            .filter { !$0.isEmpty }
+            .uniquePreserveOrder()
+
+        let friends = FriendStore.shared.friends
+
+        return clean.map { p in
+            let match = friends.first { normalizePhone($0.phone) == p }
+            return RecipientPreview(name: match?.name ?? "Unknown", phone: p)
+        }
+    }
+
+    private func presentComposeSheet(to recipients: [String], defaultBody: String, title: String) {
+        let previews = resolveRecipientPreviews(from: recipients)
+        guard !previews.isEmpty else {
+            showAlert("No Numbers", "No phone numbers found for this group.")
+            return
         }
 
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Send", style: .default) { [weak self] _ in
-            guard let self else { return }
-            let text = (ac.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !text.isEmpty else { return }
-            self.presentComposer(to: recipients, body: text)
-        })
+        // ✅ IMPORTANT: use WMComposeViewController’s init(titleText:recipients:initialText:)
+        let vc = WMComposeViewController(titleText: title, recipients: previews, initialText: defaultBody)
+        vc.onSend = { [weak self] text in
+            self?.presentComposer(to: previews.map { $0.phone }, body: text)
+        }
 
-        present(ac, animated: true)
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+
+        present(nav, animated: true)
     }
+
+    // MARK: - Apple composer
 
     private func presentComposer(to phones: [String], body: String) {
         let clean = phones

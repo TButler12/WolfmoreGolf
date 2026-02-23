@@ -6,6 +6,7 @@
 //
 import Foundation
 import StoreKit
+@available(iOS 15.0, *)
 
 @MainActor
 final class ProStore {

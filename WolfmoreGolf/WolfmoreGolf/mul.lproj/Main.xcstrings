@@ -1741,6 +1741,30 @@
         }
       }
     },
+    "We7-au-XGN.configuration.title" : {
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Custom Groups\"; ObjectID = \"We7-au-XGN\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Custom Groups"
+          }
+        }
+      }
+    },
+    "We7-au-XGN.normalTitle" : {
+      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"We7-au-XGN\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Button"
+          }
+        }
+      }
+    },
     "xEg-V4-M64.configuration.title" : {
       "comment" : "Class = \"UIButton\"; configuration.title = \"Drinks\"; ObjectID = \"xEg-V4-M64\";",
       "extractionState" : "extracted_with_value",

@@ -9,8 +9,10 @@ import ContactsUI
 
 final class ContactsViewController: UITableViewController {
 
+    private var friends: [Friend] { FriendStore.shared.friends }
     private enum CellID { static let contact = "ContactCell" }
-
+    private var selectingForGroup = false
+    private var selectedFriendIDs = Set<UUID>()
     // MARK: - Data
 
     private var allFriends: [Friend] { FriendStore.shared.friends }
@@ -32,7 +34,11 @@ final class ContactsViewController: UITableViewController {
         sc.searchBar.placeholder = "Search contacts"
         return sc
     }()
-
+    private func showAlert(_ title: String, _ message: String) {
+        let ac = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
     private lazy var filterControl: UISegmentedControl = {
         let c = UISegmentedControl(items: ["All", "Tracked", "⭐️"])
         c.selectedSegmentIndex = 0
@@ -46,29 +52,74 @@ final class ContactsViewController: UITableViewController {
         super.viewDidLoad()
 
         title = "Contacts"
+
+        // Table
         tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: CellID.contact)
+        tableView.allowsSelection = true
+        tableView.allowsMultipleSelection = true
 
         // Search
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
 
-        // Top filter
+        // Top filter header
         tableView.tableHeaderView = makeHeader()
 
-        // LEFT = Import
-        navigationItem.leftBarButtonItem =
-            UIBarButtonItem(title: "Import", style: .plain, target: self, action: #selector(importTapped))
-
-        // RIGHT = Add + Close
-        let add = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped))
-        let close = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(closeTapped))
-        navigationItem.rightBarButtonItems = [add, close]
+        // Nav buttons (keeps Close working even after Select mode)
+        updateNavButtons()
 
         applySnapshot()
     }
+    @objc private func createGroupTapped() {
+        let ids = Array(selectedFriendIDs)
+        guard ids.count >= 2 else {
+            showAlert("Pick at least 2", "Select at least two contacts for a group.")
+            return
+        }
 
+        let ac = UIAlertController(title: "New Text Group", message: "Name your group", preferredStyle: .alert)
+        ac.addTextField { $0.placeholder = "e.g. Saturday Wolf" }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { _ in
+            let name = (ac.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let finalName = name.isEmpty ? "My Group" : name
+            TextGroupStore.shared.upsert(TextGroup(name: finalName, memberIDs: ids))
+            self.cancelSelect()
+        })
+        present(ac, animated: true)
+    }
+    @objc private func selectTapped() {
+        selectingForGroup = true
+        selectedFriendIDs.removeAll()
+
+        navigationItem.leftBarButtonItem =
+            UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelSelect))
+
+        navigationItem.rightBarButtonItems = [
+            UIBarButtonItem(title: "Create Group", style: .done, target: self, action: #selector(createGroupTapped))
+        ]
+
+        tableView.reloadData()
+    }
+
+    @objc private func cancelSelect() {
+        selectingForGroup = false
+        selectedFriendIDs.removeAll()
+
+        navigationItem.leftBarButtonItem =
+            UIBarButtonItem(title: "Import", style: .plain, target: self, action: #selector(importTapped))
+
+        let close  = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(closeTapped))
+        let add    = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped))
+        let select = UIBarButtonItem(title: "Custom Select", style: .plain, target: self, action: #selector(selectTapped))
+
+        navigationItem.rightBarButtonItems = [close, add, select]
+
+        title = "Contacts"
+        tableView.reloadData()
+    }
     @objc private func closeTapped() {
         if presentingViewController != nil {
             dismiss(animated: true)                 // presented modally
@@ -147,17 +198,46 @@ final class ContactsViewController: UITableViewController {
         config.text = f.name
         config.secondaryText = formattedPhone(f.phone)
         cell.contentConfiguration = config
+        cell.selectionStyle = .default
 
-        // Accessory: star (favorite) as a simple visual
-        // If you’d rather not show it here, remove this.
-        cell.accessoryView = favoriteStarView(isFavorite: f.isFavorite)
+        let isPicked = selectedFriendIDs.contains(f.id)
 
-        // Show tracked state subtly using accessoryType
-        cell.accessoryType = f.isTracked ? .checkmark : .none
+        if selectingForGroup {
+            cell.accessoryView = nil
+            cell.accessoryType = isPicked ? .checkmark : .none
+            cell.backgroundColor = isPicked ? UIColor.systemGray6 : UIColor.clear
+        } else {
+            cell.accessoryView = favoriteStarView(isFavorite: f.isFavorite)
+            cell.accessoryType = f.isTracked ? .checkmark : .none
+            cell.backgroundColor = .clear
+        }
 
         return cell
     }
+    
+    private func updateNavButtons() {
+        if selectingForGroup {
+            navigationItem.leftBarButtonItem =
+                UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelSelect))
 
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(title: "Create (\(selectedFriendIDs.count))",
+                                style: .done,
+                                target: self,
+                                action: #selector(createGroupTapped))
+            ]
+        } else {
+            navigationItem.leftBarButtonItem =
+                UIBarButtonItem(title: "Import", style: .plain, target: self, action: #selector(importTapped))
+
+            let close  = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(closeTapped))
+            let add    = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped))
+            let select = UIBarButtonItem(title: "Custom Select", style: .plain, target: self, action: #selector(selectTapped))
+
+            navigationItem.rightBarButtonItems = [close, add, select]
+        }
+    }
+    
     private func favoriteStarView(isFavorite: Bool) -> UIImageView {
         let iv = UIImageView(image: UIImage(systemName: isFavorite ? "star.fill" : "star"))
         iv.tintColor = .systemYellow
@@ -167,8 +247,21 @@ final class ContactsViewController: UITableViewController {
     }
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let f = visibleFriends[indexPath.row]
         tableView.deselectRow(at: indexPath, animated: true)
-        presentEdit(for: visibleFriends[indexPath.row])
+
+        if selectingForGroup {
+            if selectedFriendIDs.contains(f.id) {
+                selectedFriendIDs.remove(f.id)
+            } else {
+                selectedFriendIDs.insert(f.id)
+            }
+            tableView.reloadRows(at: [indexPath], with: .none)
+            return
+        }
+
+        // normal behavior (tap to edit)
+        presentEdit(for: f)
     }
 
     // MARK: - Swipe actions (Track / Favorite / Delete)

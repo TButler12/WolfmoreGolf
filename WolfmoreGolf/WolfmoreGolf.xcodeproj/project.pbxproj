@@ -21,6 +21,11 @@
 		F657CEB42F01BBCA001CBFCD /* CourseLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */; };
 		F6590F052EFA225B0085D088 /* GameType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6590F042EFA225B0085D088 /* GameType.swift */; };
 		F688C7412F37F9E800A4B094 /* ContactsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F688C7402F37F9E800A4B094 /* ContactsViewController.swift */; };
+		F6B1DCCD2F4C96350067838E /* WMComposeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B1DCCC2F4C96350067838E /* WMComposeViewController.swift */; };
+		F6B1DCCF2F4C9BA20067838E /* TextGroupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B1DCCE2F4C9BA20067838E /* TextGroupStore.swift */; };
+		F6B1DCD12F4CA6D50067838E /* CustomGroupsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B1DCD02F4CA6D50067838E /* CustomGroupsViewController.swift */; };
+		F6B1DCD62F4CB6230067838E /* RecipientPreview.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B1DCD52F4CB6230067838E /* RecipientPreview.swift */; };
+		F6B1DCD82F4CC65B0067838E /* ProGateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6B1DCD72F4CC65B0067838E /* ProGateViewController.swift */; };
 		F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D351512EC0313E00CE24F9 /* RulesViewController.swift */; };
 		F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */; };
 		F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66A7E2F26971300367C08 /* Entitlements.swift */; };
@@ -51,6 +56,11 @@
 		F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseLibrary.swift; sourceTree = "<group>"; };
 		F6590F042EFA225B0085D088 /* GameType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameType.swift; sourceTree = "<group>"; };
 		F688C7402F37F9E800A4B094 /* ContactsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsViewController.swift; sourceTree = "<group>"; };
+		F6B1DCCC2F4C96350067838E /* WMComposeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WMComposeViewController.swift; sourceTree = "<group>"; };
+		F6B1DCCE2F4C9BA20067838E /* TextGroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextGroupStore.swift; sourceTree = "<group>"; };
+		F6B1DCD02F4CA6D50067838E /* CustomGroupsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomGroupsViewController.swift; sourceTree = "<group>"; };
+		F6B1DCD52F4CB6230067838E /* RecipientPreview.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipientPreview.swift; sourceTree = "<group>"; };
+		F6B1DCD72F4CC65B0067838E /* ProGateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProGateViewController.swift; sourceTree = "<group>"; };
 		F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WolfmoreGolf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6D351512EC0313E00CE24F9 /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerSeat.swift; sourceTree = "<group>"; };
@@ -89,6 +99,11 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F6B1DCD72F4CC65B0067838E /* ProGateViewController.swift */,
+				F6B1DCD52F4CB6230067838E /* RecipientPreview.swift */,
+				F6B1DCD02F4CA6D50067838E /* CustomGroupsViewController.swift */,
+				F6B1DCCE2F4C9BA20067838E /* TextGroupStore.swift */,
+				F6B1DCCC2F4C96350067838E /* WMComposeViewController.swift */,
 				F60F95982F4789DC003A0F84 /* CoursePickerViewController.swift */,
 				F688C7402F37F9E800A4B094 /* ContactsViewController.swift */,
 				F618A1722F369228009EEB12 /* ServiceContactStore.swift */,
@@ -221,14 +236,19 @@
 				F6D66AC32F327A2B00367C08 /* ProStore.swift in Sources */,
 				F6D66A812F26994400367C08 /* Notifications.swift in Sources */,
 				F6D66AD12F356B7E00367C08 /* TextViewController.swift in Sources */,
+				F6B1DCD62F4CB6230067838E /* RecipientPreview.swift in Sources */,
+				F6B1DCCF2F4C9BA20067838E /* TextGroupStore.swift in Sources */,
 				F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */,
+				F6B1DCD12F4CA6D50067838E /* CustomGroupsViewController.swift in Sources */,
 				F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */,
 				F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */,
 				F6D6A49E2EC786FF0000F576 /* FriendTrackStore.swift in Sources */,
 				F6D66A832F2BCD4900367C08 /* ProViewController.swift in Sources */,
 				F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */,
 				F6D6A49C2EC786D10000F576 /* FriendStore.swift in Sources */,
+				F6B1DCCD2F4C96350067838E /* WMComposeViewController.swift in Sources */,
 				F64CDA962ECD0AA900019EE0 /* HoleStatsViewController.swift in Sources */,
+				F6B1DCD82F4CC65B0067838E /* ProGateViewController.swift in Sources */,
 				F60F95992F4789DC003A0F84 /* CoursePickerViewController.swift in Sources */,
 				F6D6A4A32EC78A100000F576 /* TrackFriendsViewController.swift in Sources */,
 				F6D6A49A2EC786BC0000F576 /* Friend.swift in Sources */,
@@ -253,7 +273,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -268,7 +288,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.8;
+				MARKETING_VERSION = 1.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -294,7 +314,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -309,7 +329,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.4.8;
+				MARKETING_VERSION = 1.5.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
