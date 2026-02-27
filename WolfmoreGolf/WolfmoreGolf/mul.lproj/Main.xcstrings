@@ -817,6 +817,18 @@
         }
       }
     },
+    "Heh-sT-fiA.text" : {
+      "comment" : "Class = \"UILabel\"; text = \"-----  Contacts  -----\"; ObjectID = \"Heh-sT-fiA\";",
+      "extractionState" : "extracted_with_value",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "-----  Contacts  -----"
+          }
+        }
+      }
+    },
     "hMb-NB-8an.segmentTitles[0]" : {
       "comment" : "Class = \"UISegmentedControl\"; hMb-NB-8an.segmentTitles[0] = \"6-Point\"; ObjectID = \"hMb-NB-8an\";",
       "extractionState" : "extracted_with_value",
