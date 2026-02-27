@@ -163,7 +163,7 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
     }
 
     private func updateHeader() {
-        let trackedCount = FriendTrackStore.shared.count(courseID: trackingCourseID)
+        let trackedCount = FriendStore.shared.friends.filter { $0.isTracked }.count
 
         let label = UILabel()
         label.textAlignment = .center
@@ -236,8 +236,8 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
         let friend = filteredFriends[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: cellID, for: indexPath)
 
-        let tracked = FriendTrackStore.shared.isTracked(friendID: friend.id, courseID: trackingCourseID)
-
+       // let tracked = FriendTrackStore.shared.isTracked(friendID: friend.id, courseID: trackingCourseID)
+        let tracked = friend.isTracked
         // Content
         var config = cell.defaultContentConfiguration()
         config.text = friend.name
@@ -269,23 +269,9 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
 
         let friend = filteredFriends[indexPath.row]
 
-        let changed = FriendTrackStore.shared.toggle(
-            friendID: friend.id,
-            courseID: trackingCourseID,
-            limit: limit
-        )
+        FriendStore.shared.setTracked(friendID: friend.id, isTracked: !friend.isTracked)
 
-        if !changed {
-            let ac = UIAlertController(
-                title: "Limit Reached",
-                message: "You can track up to \(limit) friends for this course.",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            present(ac, animated: true)
-        }
-
-        tableView.reloadRows(at: [indexPath], with: .automatic)
+        reloadFriends()
         updateHeader()
     }
 

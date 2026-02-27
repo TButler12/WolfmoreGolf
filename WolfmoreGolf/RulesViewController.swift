@@ -4,7 +4,6 @@
 //
 //  Created by Tom BUTLER on 11/8/25.
 //
-
 import UIKit
 
 final class RulesViewController: UIViewController {
@@ -42,12 +41,11 @@ private extension RulesViewController {
         textView.isScrollEnabled = true
         textView.alwaysBounceVertical = true
         textView.backgroundColor = .clear
-
-        textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 24, right: 16)
         textView.adjustsFontForContentSizeCategory = true
-
-        // Default alignment for everything
         textView.textAlignment = .left
+
+        // Nice reading insets
+        textView.textContainerInset = UIEdgeInsets(top: 16, left: 16, bottom: 24, right: 16)
 
         view.addSubview(textView)
 
@@ -86,7 +84,6 @@ extension RulesViewController: UISearchResultsUpdating {
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         guard !query.isEmpty else {
-            // Reset to full styled rules
             textView.attributedText = baseAttributedText
             return
         }
@@ -94,35 +91,32 @@ extension RulesViewController: UISearchResultsUpdating {
         // Highlight matches on a mutable copy
         let highlighted = NSMutableAttributedString(attributedString: baseAttributedText)
 
-        let fullString = highlighted.string
-        let fullNSString = fullString as NSString
-        let lowerFull = fullString.lowercased()
+        let full = highlighted.string as NSString
+        let lowerFull = full.lowercased
         let lowerQuery = query.lowercased()
 
         var firstMatch: NSRange?
+        var searchRange = NSRange(location: 0, length: full.length)
 
-        var searchRange = NSRange(location: 0, length: fullNSString.length)
         while true {
-            let foundRange = (lowerFull as NSString).range(of: lowerQuery, options: [], range: searchRange)
-            if foundRange.location == NSNotFound { break }
+            let found = (lowerFull as NSString).range(of: lowerQuery, options: [], range: searchRange)
+            if found.location == NSNotFound { break }
+            if firstMatch == nil { firstMatch = found }
 
-            // record first match
-            if firstMatch == nil { firstMatch = foundRange }
+            highlighted.addAttribute(.backgroundColor,
+                                    value: UIColor.systemYellow.withAlphaComponent(0.35),
+                                    range: found)
 
-            // highlight
-            highlighted.addAttribute(.backgroundColor, value: UIColor.systemYellow.withAlphaComponent(0.35), range: foundRange)
-            highlighted.addAttribute(.foregroundColor, value: UIColor.label, range: foundRange)
-
-            // move forward
-            let nextLoc = foundRange.location + max(foundRange.length, 1)
-            if nextLoc >= fullNSString.length { break }
-            searchRange = NSRange(location: nextLoc, length: fullNSString.length - nextLoc)
+            let nextLoc = found.location + max(found.length, 1)
+            if nextLoc >= full.length { break }
+            searchRange = NSRange(location: nextLoc, length: full.length - nextLoc)
         }
 
         textView.attributedText = highlighted
 
-        // Scroll to first match
         if let r = firstMatch {
+            // Ensure layout exists before scrolling (reduces occasional “miss”)
+            textView.layoutManager.ensureLayout(for: textView.textContainer)
             textView.scrollRangeToVisible(r)
         }
     }
@@ -134,119 +128,165 @@ private extension RulesViewController {
     func makeRulesText() -> NSAttributedString {
         let text = NSMutableAttributedString()
 
+        // Dynamic Type friendly header font
+        let headerBase = UIFont.preferredFont(forTextStyle: .title2)
+        let headerFont = UIFontMetrics(forTextStyle: .title2)
+            .scaledFont(for: UIFont.boldSystemFont(ofSize: headerBase.pointSize))
+
+        let bodyFont = UIFont.preferredFont(forTextStyle: .body)
+
         func header(_ str: String) {
             text.append(NSAttributedString(
                 string: "\(str)\n",
                 attributes: [
-                    .font: UIFont.boldSystemFont(ofSize: 22),
+                    .font: headerFont,
                     .foregroundColor: UIColor.label
                 ]
             ))
-            text.append(NSAttributedString(string: "────────────────────\n",
-                                           attributes: [
-                                            .font: UIFont.systemFont(ofSize: 14, weight: .semibold),
-                                            .foregroundColor: UIColor.tertiaryLabel
-                                           ]))
+            text.append(NSAttributedString(
+                string: "────────────────────\n",
+                attributes: [
+                    .font: UIFont.preferredFont(forTextStyle: .footnote),
+                    .foregroundColor: UIColor.tertiaryLabel
+                ]
+            ))
         }
 
         func body(_ str: String) {
             text.append(NSAttributedString(
                 string: "\(str)\n\n",
                 attributes: [
-                    .font: UIFont.preferredFont(forTextStyle: .body),
+                    .font: bodyFont,
                     .foregroundColor: UIColor.secondaryLabel
                 ]
             ))
         }
 
+        // =============== CONTENT ===============
+
         header("WOLFMORE — HOW TO PLAY")
         body("""
-        Scoring and bet tracking made easy!
-        
-        Hover or long press over most buttons for decription of that button.
+Scoring and bet tracking made easy!
 
-        WolfMore Pro: unlocks premium stat tracking (full history, friend comparisons, home course, by hole summaries).
+Hover or long press over most buttons for a description of that button.
 
-        Play up to 5 players (yes 5 players, 3 against 2 wolf is the most fun!)
-        
-        Set your course, add players through new game button, and start scoring.
-        
-        Supports Wolf, Six-Point Scotch, and Hammer play.
-        
-        WolfMore is perfect for competing on your home course with supporting course stat tracking, away-course games and great for indoor simualtor golf games. 
-        """)
+Play up to 5 players (yes 5 players — 3 vs 2 Wolf is the most fun!).
+
+Set your course, add players through “New Game”, and start scoring.
+
+Supports Wolf, Six-Point Scotch, and Hammer play.
+
+WolfMore is perfect for home-course competition with course stat tracking, away-course games, and indoor simulator rounds.
+""")
+
+        header("HIGHLIGHTS")
+        body("""
+• Contacts: import friends from your iPhone contacts (or add players manually).
+• Texting Hub: send a round summary or quick messages to today’s group, Pro Shop, Drink Cart, or Coordinator.
+• Preloaded Courses: pick built-in courses (pars + handicaps included) and start playing fast.
+• WolfMore Pro (optional): unlock premium stats + custom text groups.
+""")
 
         header("GETTING STARTED")
         body("""
-        • Set your course pars and handicaps
-        • Select a Home Course if you want personal stat tracking of you and your friends. This is your personal data on your phone only.
-        • Press "New Game" and select up to 5 players. If you're new to WolfMore, first add players and activate players through "New Game" button
-        • Add new players by using new game button 
-        """)
+• Choose a course:
+   – Select a Preloaded Course (fastest)
+   – Or create a new course by entering pars + handicaps
+• Select a Home Course if you want personal stat tracking (saved on your phone)
+• Press “New Game” and select up to 5 players
+• Add players by importing from Contacts or entering names manually
+""")
+
+        header("CONTACTS")
+        body("""
+• Import players from your iPhone contacts
+• You can also add players manually if you don’t want to import
+• Tracking (optional): mark friends as “tracked” to include them in your stats and comparisons
+""")
+
+        header("TEXTING HUB")
+        body("""
+Texting is built into WolfMore so your group stays synced.
+
+Available to all users:
+• Send a round summary to today’s group
+• Quick text buttons for Pro Shop, Drink Cart, and Coordinator
+• Jump right back to scoring after sending
+
+WolfMore Pro unlocks:
+• Custom text groups (save groups and message them anytime)
+""")
 
         header("WAGERS")
         body("""
-        • Default wager is $2.00
-        • Use + / – to adjust for the present hole or the game
-        • Tap $ to apply wager to entire game
-        """)
+• Default wager is $2.00
+• Use + / – to adjust for the current hole or the entire game
+• Tap $ to apply the wager to the entire game
+""")
 
         header("HAMMER")
         body("""
-        • Doubles the hole wager
-        • Each tap doubles again (2× → 4× → 8×)
-        • Reject removes last hammer
-        """)
+• Doubles the hole wager
+• Each tap doubles again (2× → 4× → 8×)
+• Reject removes the last hammer
+""")
 
-        header("GAME MODES - All modes accessed in game scorng page")
+        header("GAME MODES — all modes accessed on the scoring page")
         body("""
-        • Six-Point Scotch (default)
-        • Wolf (2 Point)
-        • Wolf (1 Point)
-        • User can change Game Modes mid-round if you want to mix it up!
-        """)
+• Six-Point Scotch (default)
+• Wolf (2 Point)
+• Wolf (1 Point)
+• You can change game modes mid-round if you want to mix it up
+""")
 
         header("LONE WOLF")
         body("""
-        • Player goes solo (Lone Wolf)
-        • Lone Wolf Total Score = (Lone Wolf Score + ((Lone Wolf Score + Bogey) ÷ 2)
-        • Doubles hole wager
-        """)
+• Player goes solo (Lone Wolf)
+• Lone Wolf doubles the hole wager
+•  Player goes solo (no partner).
+    Doubles the stake for this hole.
+    Only tap if you want Lone Wolf wager to double. Otherwise. Alone calculation will be the same but without the double.
+* Note: Alone Team Total calculation uses a ghost partner score: (player score + bogey) ÷ 2.
+""")
 
         header("UMBIE")
         body("""
-        • Sweep rule for Six-Point
-        • Winning all 6 points doubles the hole
-        • Can be toggled on/off
-        """)
+• Sweep rule for Six-Point
+• Winning all 6 points doubles the hole
+• Can be toggled on/off
+""")
 
         header("SCORING")
         body("""
-        Enter scores → Select options → Update Scores
-        W = Wolf partners
-        P = Prox
-        """)
+Enter scores → Select options → Update Scores
+
+W = Wolf partners
+P = Prox
+""")
 
         header("TRACKING")
         body("""
-        Your personal stat tracking.
-        View stats by player, course, and hole.
-        Access and select tracking from the player activation screen
-        """)
+Your personal stat tracking.
 
-        // ✅ Added Pro section (matches your screenshot content)
-        header("WOLFMORE PRO — PREMIUM STATS")
+View stats by player, course, and hole.
+Access and select tracking from the player activation screen.
+""")
+
+        header("WOLFMORE PRO — PREMIUM FEATURES")
         body("""
-        Join WolfMore Pro to unlock premium stat tracking:
+Join WolfMore Pro to unlock premium features:
 
-        • Full history (no limits)
-        • Friend tracking and comparisons
-        • Home Course summaries
-        • By-hole summaries and trends over time
+• Full history (no limits)
+• Friend tracking and comparisons
+• Home Course summaries
+• By-hole summaries and trends over time
+• Custom text groups (save groups and message them anytime)
 
-        Pro is an optional subscription. You can cancel anytime in your Apple ID subscriptions.
-        If you already joined Pro on this device, tap "Restore Purchases" on the Pro screen to re-enable access.
-        """)
+Pro is an optional subscription. You can cancel anytime in your Apple ID subscriptions.
+If you already joined Pro on this device, tap “Restore Purchases” on the Pro screen to re-enable access.
+""")
+
+ 
 
         return text
     }

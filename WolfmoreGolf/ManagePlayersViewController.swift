@@ -1,9 +1,4 @@
 //
-//  ManagePlayersViewController.swift
-//  WolfmoreGolf
-//
-//  Created by Tom BUTLER on 11/27/25.
-//
 import UIKit
 
 final class ManagePlayersViewController: UIViewController,
@@ -11,16 +6,21 @@ final class ManagePlayersViewController: UIViewController,
                                          UITableViewDelegate,
                                          UITextFieldDelegate {
 
-    // MARK: - Limits
+    // MARK: - Types
+
+    enum Mode { case preRound, inRound }
+
+    // MARK: - Config
 
     private let maxActivePlayers = 5
     private let trackingLimitPerCourse = 30
 
-    // MARK: - Outlets
-    enum Mode { case preRound, inRound }
-        var mode: Mode = .preRound
+    // MARK: - Public
 
-        var onDone: (() -> Void)?
+    var mode: Mode = .preRound
+    var onDone: (() -> Void)?
+
+    // MARK: - Outlets
 
     @IBOutlet private weak var tableView: UITableView!
 
@@ -36,15 +36,13 @@ final class ManagePlayersViewController: UIViewController,
 
     override func viewDidLoad() {
         super.viewDidLoad()
+
+        title = (mode == .preRound) ? "Add Players" : "Edit Player Tracking"
         configureNavBar()
         configureTable()
         configureKeyboardDismissTap()
-        title = "Edit Player Tracking"
     }
-    @objc private func doneTapped() {
-            dismiss(animated: true)
-            onDone?()
-        }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         tableView.reloadData()
@@ -57,39 +55,45 @@ final class ManagePlayersViewController: UIViewController,
 
         switch mode {
         case .preRound:
-            navigationItem.title = "Add Players  ===>"
-            let addButton = makeGlowingAddButton()
-            addUIButton = addButton
-            navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
+            navigationItem.rightBarButtonItem = UIBarButtonItem(customView: makeGlowingAddButton())
+            navigationItem.leftBarButtonItem = nil
 
+            // if you truly want to lock navigation during setup
             navigationItem.hidesBackButton = true
             navigationController?.interactivePopGestureRecognizer?.isEnabled = false
 
         case .inRound:
-            navigationItem.title = "Edit Player Tracking"
             navigationItem.rightBarButtonItem = nil
-
             navigationItem.leftBarButtonItem = UIBarButtonItem(
                 barButtonSystemItem: .done,
                 target: self,
                 action: #selector(doneTapped)
             )
-
-            // allow swipe-back etc if you want; since this is presented, not pushed
             navigationItem.hidesBackButton = true
         }
     }
 
-  
     private func configureTable() {
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.keyboardDismissMode = .onDrag
     }
 
     private func configureKeyboardDismissTap() {
         let tap = UITapGestureRecognizer(target: self, action: #selector(endEditingTap))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
+    }
+
+    // MARK: - Nav actions
+
+    @objc private func doneTapped() {
+        dismiss(animated: true)
+        onDone?()
+    }
+
+    @objc private func endEditingTap() {
+        view.endEditing(true)
     }
 
     // MARK: - Add button (glow)
@@ -105,6 +109,7 @@ final class ManagePlayersViewController: UIViewController,
         b.addTarget(self, action: #selector(addFriendTapped), for: .touchUpInside)
 
         setAddGlow(true, on: b)
+        addUIButton = b
         return b
     }
 
@@ -135,17 +140,6 @@ final class ManagePlayersViewController: UIViewController,
         DispatchQueue.main.asyncAfter(deadline: .now() + seconds) { [weak self] in
             self?.navigationItem.prompt = old
         }
-    }
-
-    // MARK: - Keyboard
-
-    @objc private func endEditingTap() {
-        view.endEditing(true)
-    }
-
-    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        textField.resignFirstResponder()
-        return true
     }
 
     // MARK: - Alerts
@@ -338,24 +332,38 @@ final class ManagePlayersViewController: UIViewController,
         let friendID = friend.id
         let seat = indexPath.row
 
+        // Name
         cell.nameLabel.text = friend.name
-        cell.hcField.text = friend.defaultHC == 0 ? "" : String(friend.defaultHC)
 
-        // ✅ Switch reflects different state depending on mode
+        // HC
+        cell.hcField.text = (friend.defaultHC == 0) ? "" : String(friend.defaultHC)
+
+        // ✅ Highlight rule:
+        // - preRound: highlight when activated AND HC empty (best UX)
+        // - inRound: no highlight
+        let needsHC = (mode == .preRound) && (friend.defaultHC == 0)
+        cell.applyHCStyle(isRequired: needsHC)
+
+        // Activate switch state
         if mode == .preRound {
             cell.activeSwitch.isOn = friend.preselectForRound
         } else {
             cell.activeSwitch.isOn = GameManager.shared.currentGame?.playerActivated[safe: seat] ?? false
         }
 
-        // ✅ HC edit (only makes sense pre-round; optional to disable in-round)
-        cell.hcChanged = { newHC in
+        // HC change callback
+        cell.hcChanged = { [weak self, weak cell] newHC in
+            guard let self else { return }
             if self.mode == .preRound {
                 FriendStore.shared.update(friendID: friendID, defaultHC: newHC)
+
+                // keep highlight accurate while editing
+                let stillNeeds = FriendStore.shared.friends.first(where: { $0.id == friendID })?.preselectForRound ?? false
+                cell?.applyHCStyle(isRequired: stillNeeds)
             }
         }
 
-        // ✅ ONE activeChanged handler
+        // Activate callback
         cell.activeChanged = { [weak self, weak cell] isOn in
             guard let self else { return }
 
@@ -368,23 +376,26 @@ final class ManagePlayersViewController: UIViewController,
                         return
                     }
                 }
+
                 FriendStore.shared.update(friendID: friendID, preselectForRound: isOn)
+
+                // ✅ If activated, HC becomes "required" → highlight if empty
+                cell?.applyHCStyle(isRequired: isOn)
                 return
             }
 
-            // ✅ inRound: update the live game's activation state
+            // inRound: update the live game activation state
             GameManager.shared.update { g in
                 guard seat < g.playerActivated.count else { return }
                 g.playerActivated[seat] = isOn
             }
-
             NotificationCenter.default.post(name: .reloadUI, object: nil)
         }
 
         return cell
     }
 
-    // MARK: - Delete (swipe to delete)
+    // MARK: - Delete
 
     func tableView(_ tableView: UITableView,
                    commit editingStyle: UITableViewCell.EditingStyle,
@@ -397,7 +408,7 @@ final class ManagePlayersViewController: UIViewController,
         tableView.deleteRows(at: [indexPath], with: .automatic)
     }
 
-    // MARK: - Close
+    // MARK: - Close (if you still use it)
 
     @IBAction private func closeTapped(_ sender: Any) {
         if let nav = navigationController, nav.presentingViewController != nil {
@@ -411,9 +422,9 @@ final class ManagePlayersViewController: UIViewController,
         dismiss(animated: true)
     }
 
-    // MARK: - Start Round (unchanged)
+    // MARK: - Start Round (unchanged logic, cleaned slightly)
 
-    @IBAction func startRoundTapped(_ sender: Any) {
+    @IBAction private func startRoundTapped(_ sender: Any) {
         let selected = FriendStore.shared.friends.filter { $0.preselectForRound }
         guard !selected.isEmpty else {
             let ac = UIAlertController(
@@ -426,7 +437,7 @@ final class ManagePlayersViewController: UIViewController,
             return
         }
 
-        let active = Array(selected.prefix(5))
+        let active = Array(selected.prefix(maxActivePlayers))
 
         if hasInProgressRound() {
             let ac = UIAlertController(
@@ -436,13 +447,16 @@ final class ManagePlayersViewController: UIViewController,
             )
             ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             ac.addAction(UIAlertAction(title: "Start New Round", style: .destructive) { [weak self] _ in
+                guard let self else { return }
+
                 if GameManager.shared.currentGame != nil {
                     GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
                     GameManager.shared.canRandomizeTeams = true
                 } else {
                     GameManager.shared.startNewGame(name: "New Game")
                 }
-                self?.configureGameRosterAndPresentRoundNav(with: active)
+
+                self.configureGameRosterAndPresentRoundNav(with: active)
             })
             present(ac, animated: true)
         } else {
@@ -452,10 +466,7 @@ final class ManagePlayersViewController: UIViewController,
 
     private func hasInProgressRound() -> Bool {
         guard let g = GameManager.shared.currentGame else { return false }
-        for row in g.scores where row.contains(where: { $0 != nil }) {
-            return true
-        }
-        return false
+        return g.scores.contains { row in row.contains(where: { $0 != nil }) }
     }
 
     private func configureGameRosterAndPresentRoundNav(with active: [Friend]) {
@@ -464,9 +475,9 @@ final class ManagePlayersViewController: UIViewController,
         }
 
         GameManager.shared.update { g in
-            if g.playerNames.count != 5     { g.playerNames     = Array(repeating: "",    count: 5) }
-            if g.hcPlayers.count != 5       { g.hcPlayers       = Array(repeating: 0,     count: 5) }
-            if g.playerActivated.count != 5 { g.playerActivated = Array(repeating: false, count: 5) }
+            if g.playerNames.count != maxActivePlayers     { g.playerNames     = Array(repeating: "",    count: maxActivePlayers) }
+            if g.hcPlayers.count != maxActivePlayers       { g.hcPlayers       = Array(repeating: 0,     count: maxActivePlayers) }
+            if g.playerActivated.count != maxActivePlayers { g.playerActivated = Array(repeating: false, count: maxActivePlayers) }
 
             for (seat, friend) in active.enumerated() {
                 g.playerNames[seat]     = friend.name
@@ -474,8 +485,8 @@ final class ManagePlayersViewController: UIViewController,
                 g.playerActivated[seat] = true
             }
 
-            if active.count < 5 {
-                for seat in active.count..<5 {
+            if active.count < maxActivePlayers {
+                for seat in active.count..<maxActivePlayers {
                     g.playerNames[seat]     = ""
                     g.hcPlayers[seat]       = 0
                     g.playerActivated[seat] = false
@@ -492,9 +503,11 @@ final class ManagePlayersViewController: UIViewController,
 
         present(roundNav, animated: true)
     }
-    
 }
-extension Array {
+
+// MARK: - Safe subscript
+
+private extension Array {
     subscript(safe index: Int) -> Element? {
         guard indices.contains(index) else { return nil }
         return self[index]

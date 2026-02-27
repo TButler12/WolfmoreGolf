@@ -211,10 +211,9 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
     }
 
     @IBAction private func trackedFriendsTapped(_ sender: UIButton) {
-        let courseID = trackingCourseID()
 
         let phones = FriendStore.shared.friends
-            .filter { FriendTrackStore.shared.isTracked(friendID: $0.id, courseID: courseID) }
+            .filter { $0.isTracked }                      // ✅ use global tracked flag
             .map { normalizePhone($0.phone) }
             .filter { !$0.isEmpty }
             .uniquePreserveOrder()
@@ -226,7 +225,6 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
 
         pickTemplateAndSend(to: phones, target: .trackedFriendsGroup)
     }
-
     // MARK: - Service contacts (Pro Shop / Cart / Coordinator)
 
     @IBAction private func proShopTapped(_ sender: UIButton) {

@@ -24,5 +24,19 @@ final class ManagePlayerCell: UITableViewCell {
     @IBAction private func activeSwitchChanged(_ sender: UISwitch) {
         activeChanged?(sender.isOn)
     }
+    func applyHCStyle(isRequired: Bool) {
+        let isEmpty = (hcField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+
+        if isRequired && isEmpty {
+            hcField.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.25)
+            hcField.layer.cornerRadius = 8
+            hcField.layer.borderWidth = 1
+            hcField.layer.borderColor = UIColor.systemYellow.withAlphaComponent(0.8).cgColor
+        } else {
+            hcField.backgroundColor = .clear
+            hcField.layer.borderWidth = 0
+            hcField.layer.borderColor = UIColor.clear.cgColor
+        }
+    }
 }
 
