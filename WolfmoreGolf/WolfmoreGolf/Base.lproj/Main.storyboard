@@ -52,122 +52,58 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="-----  STATS  -----" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Fbe-n9-tJH">
-                                <rect key="frame" x="56" y="641" width="285" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="-----  Contacts  -----" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Heh-sT-fiA">
-                                <rect key="frame" x="56" y="511" width="285" height="21"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <nil key="textColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="iFk-Qp-2Fn">
-                                <rect key="frame" x="60" y="765" width="293" height="35"/>
+                                <rect key="frame" x="267" y="680" width="100" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="tintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Delete History">
-                                    <fontDescription key="titleFontDescription" type="system" pointSize="12"/>
+                                <buttonConfiguration key="configuration" style="plain" title="More">
+                                    <fontDescription key="titleFontDescription" type="system" pointSize="7"/>
+                                    <color key="baseForegroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </buttonConfiguration>
                                 <connections>
-                                    <action selector="deleteHistoryTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="NJL-l8-u83"/>
+                                    <action selector="moreTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="6Hy-iu-KmW"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="lTx-yh-g1Z">
-                                <rect key="frame" x="66" y="671" width="293" height="35"/>
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="Home" translatesAutoresizingMaskIntoConstraints="NO" id="tCP-Lo-bDG">
+                                <rect key="frame" x="128" y="208" width="162" height="96"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.46426720216784417" green="0.52621093749999992" blue="0.090745509083515419" alpha="0.74188490316901412" colorSpace="custom" customColorSpace="displayP3"/>
-                                <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="tintColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                            </imageView>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="awx-Tl-XV1">
+                                <rect key="frame" x="159" y="681" width="100" height="35"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="tintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Player Stats">
-                                    <fontDescription key="titleFontDescription" type="system" pointSize="12"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Stats">
+                                    <fontDescription key="titleFontDescription" type="system" pointSize="7"/>
+                                    <color key="baseForegroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </buttonConfiguration>
                                 <connections>
-                                    <action selector="friendsStatsTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Zx7-af-uCa"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Zkt-6i-lHp">
-                                <rect key="frame" x="66" y="540" width="287" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.20603965564561497" green="0.31906250000000003" blue="0.046247311387031073" alpha="0.75121038732394363" colorSpace="custom" customColorSpace="displayP3"/>
-                                <color key="tintColor" systemColor="systemBackgroundColor"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Text Contacts">
-                                    <fontDescription key="titleFontDescription" type="system" pointSize="14"/>
-                                </buttonConfiguration>
-                                <connections>
-                                    <action selector="textHubTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="xkI-NJ-3pj"/>
+                                    <action selector="statsTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Ta1-iy-fBp"/>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="9d4-sr-o26">
-                                <rect key="frame" x="66" y="583" width="287" height="35"/>
+                                <rect key="frame" x="51" y="681" width="100" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.45358101789999999" green="0.46037109370000001" blue="0.19106557760000001" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                <color key="tintColor" systemColor="tableBackgroundColor"/>
+                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <color key="tintColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Edit Contacts">
-                                    <fontDescription key="titleFontDescription" type="system" pointSize="14"/>
-                                    <color key="baseForegroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Contacts">
+                                    <fontDescription key="titleFontDescription" type="system" pointSize="7"/>
+                                    <color key="baseForegroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 </buttonConfiguration>
                                 <connections>
                                     <action selector="contactsTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="Jcs-PN-L6P"/>
                                 </connections>
                             </button>
-                            <label userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="WOLFMORE" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="r2g-wF-Kff">
-                                <rect key="frame" x="79" y="276" width="257" height="46"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <accessibility key="accessibilityConfiguration">
-                                    <accessibilityTraits key="traits" staticText="YES" header="YES"/>
-                                </accessibility>
-                                <fontDescription key="fontDescription" type="system" pointSize="34"/>
-                                <nil key="textColor"/>
-                                <color key="highlightedColor" systemColor="systemGreenColor"/>
-                                <color key="shadowColor" systemColor="systemGreenColor"/>
-                            </label>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" image="Home" translatesAutoresizingMaskIntoConstraints="NO" id="tCP-Lo-bDG">
-                                <rect key="frame" x="124" y="172" width="162" height="96"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <color key="tintColor" white="0.33333333333333331" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                            </imageView>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="uln-u6-bGR">
-                                <rect key="frame" x="78" y="437" width="237" height="36"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" white="0.0" alpha="0.0" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <color key="tintColor" red="0.2399226837" green="0.3877051768" blue="0.02471920226" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Explore the Rules">
-                                    <fontDescription key="titleFontDescription" type="system" pointSize="14"/>
-                                </buttonConfiguration>
-                                <connections>
-                                    <action selector="rulesTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="zds-eG-9wP"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="FKr-xj-0VS">
-                                <rect key="frame" x="80" y="463" width="237" height="29"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" name=".AppleSystemUIFont" family=".AppleSystemUIFont" pointSize="12"/>
-                                <color key="tintColor" red="0.2399226837" green="0.3877051768" blue="0.02471920226" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                <inset key="imageEdgeInsets" minX="0.0" minY="0.0" maxX="2.2250738585072014e-308" maxY="0.0"/>
-                                <state key="normal" title="Join Pro-Stat Access"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Join Pro-Stat Access">
-                                    <fontDescription key="titleFontDescription" type="system" pointSize="14"/>
-                                </buttonConfiguration>
-                                <connections>
-                                    <action selector="joinProTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="1mg-h1-sqD"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="fill" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="QgZ-2Z-HCF">
-                                <rect key="frame" x="212" y="361" width="165" height="60"/>
+                                <rect key="frame" x="51" y="401" width="316" height="50"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" systemColor="systemYellowColor"/>
+                                <color key="backgroundColor" systemColor="systemGreenColor"/>
                                 <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <state key="normal" title="Button"/>
                                 <buttonConfiguration key="configuration" style="plain" title="Play Game" titleAlignment="center">
@@ -179,7 +115,7 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Ook-gM-mUh">
-                                <rect key="frame" x="39" y="362" width="165" height="60"/>
+                                <rect key="frame" x="51" y="482" width="316" height="50"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" systemColor="systemOrangeColor"/>
                                 <color key="tintColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -191,19 +127,6 @@
                                     <action selector="courseButtonTapped:" destination="BYZ-38-t0r" eventType="touchUpInside" id="pfJ-VR-RQ0"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="awx-Tl-XV1">
-                                <rect key="frame" x="63" y="718" width="293" height="35"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.90093387196762387" green="0.82705155693491572" blue="0.11630201343525554" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                <color key="tintColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Home Course Summary">
-                                    <fontDescription key="titleFontDescription" type="system" pointSize="12"/>
-                                </buttonConfiguration>
-                                <connections>
-                                    <segue destination="ofG-t3-dD0" kind="presentation" id="IRD-pB-a8V"/>
-                                </connections>
-                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -211,10 +134,12 @@
                     </view>
                     <navigationItem key="navigationItem" id="RgD-i4-vCd"/>
                     <connections>
+                        <outlet property="contactsButton" destination="9d4-sr-o26" id="51p-O9-NLE"/>
                         <outlet property="courseButton" destination="Ook-gM-mUh" id="0x1-6u-L7e"/>
                         <outlet property="editCourseButton" destination="Ook-gM-mUh" id="K5M-qd-Pv9"/>
-                        <outlet property="joinProButton" destination="FKr-xj-0VS" id="oUj-Mj-x3j"/>
+                        <outlet property="moreButton" destination="iFk-Qp-2Fn" id="gAt-lQ-Mgl"/>
                         <outlet property="playGameButton" destination="QgZ-2Z-HCF" id="3Vp-Aw-9rb"/>
+                        <outlet property="statsButton" destination="awx-Tl-XV1" id="qSf-PW-ZPp"/>
                         <outlet property="welcomeLabel" destination="XJS-nV-SCu" id="8AL-T0-nQw"/>
                         <segue destination="A5u-Tv-Z3p" kind="show" identifier="showPlayerSetup" id="ddw-j1-808"/>
                     </connections>
@@ -1060,7 +985,7 @@
             <objects>
                 <tableViewController storyboardIdentifier="CourseSummaryViewController" id="ofG-t3-dD0" customClass="CourseSummaryViewController" customModule="WolfmoreGolf" customModuleProvider="target" sceneMemberID="viewController">
                     <tableView key="view" clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="-1" estimatedSectionHeaderHeight="-1" sectionFooterHeight="-1" estimatedSectionFooterHeight="-1" id="WGJ-KP-Jfq">
-                        <rect key="frame" x="0.0" y="0.0" width="393" height="793"/>
+                        <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <prototypes>
@@ -2377,9 +2302,6 @@
         </systemColor>
         <systemColor name="systemYellowColor">
             <color red="1" green="0.80000000000000004" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-        </systemColor>
-        <systemColor name="tableBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
         </systemColor>
         <systemColor name="tertiarySystemGroupedBackgroundColor">
             <color red="0.94901960780000005" green="0.94901960780000005" blue="0.96862745100000003" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>

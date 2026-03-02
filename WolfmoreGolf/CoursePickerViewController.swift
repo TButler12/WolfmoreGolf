@@ -1,10 +1,14 @@
 //
 //
+//  //
+//  //
 //  CoursePickerViewController.swift
 //  WolfmoreGolf
 //
 //  Created by Tom BUTLER on 2/19/26.
 //
+
+
 import UIKit
 
 final class CoursePickerViewController: UITableViewController, UISearchResultsUpdating {
@@ -17,13 +21,15 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     private var all: [CourseProfile] = []
     private var filtered: [CourseProfile] = []
 
+    // Sections (e.g., "IL", "WI", "FL", "Ireland", "Northern Ireland")
+    private var sections: [(title: String, items: [CourseProfile])] = []
+
     // Search
     private let searchController = UISearchController(searchResultsController: nil)
     private var searchText: String {
         (searchController.searchBar.text ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    private var isSearching: Bool { !searchText.isEmpty }
 
     // Home course star
     private var homeCourseUUID: UUID? {
@@ -69,12 +75,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     private func reloadCourses() {
         all = CourseLibrary.shared.allSorted()
 
-        // Optional: keep WolfMore pinned to top
-        if let idx = all.firstIndex(where: { $0.name.caseInsensitiveCompare("WolfMore") == .orderedSame }) {
-            let b = all.remove(at: idx)
-            all.insert(b, at: 0)
-        }
-
+        // Keep WolfMore at top of its section later
         applyFilter()
     }
 
@@ -85,7 +86,77 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             let q = searchText.lowercased()
             filtered = all.filter { $0.name.lowercased().contains(q) }
         }
+
+        buildSections()
         tableView.reloadData()
+    }
+
+    // MARK: - Grouping
+
+    private func isUSA(_ country: String?) -> Bool {
+        let t = (country ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if t.isEmpty { return true } // treat nil as USA default in your app
+        return t.caseInsensitiveCompare("USA") == .orderedSame
+            || t.caseInsensitiveCompare("United States") == .orderedSame
+            || t.caseInsensitiveCompare("United States of America") == .orderedSame
+    }
+
+    private func sectionTitle(for c: CourseProfile) -> String {
+        if isUSA(c.country) {
+            let st = (c.state ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return st.isEmpty ? "USA (No State)" : st
+        } else {
+            let ct = (c.country ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return ct.isEmpty ? "International" : ct
+        }
+    }
+
+    private func sectionRank(_ title: String) -> Int {
+        // Put US states first, then countries
+        switch title {
+        case "IL": return 0
+        case "WI": return 1
+        case "FL": return 2
+        case "AZ": return 3
+        case "CA": return 4
+        case "OR": return 5
+        case "NJ": return 6
+        case "IA": return 7
+        case "USA (No State)": return 99
+        case "Ireland": return 200
+        case "Northern Ireland": return 201
+        default: return 500
+        }
+    }
+
+    private func buildSections() {
+        let grouped = Dictionary(grouping: filtered, by: sectionTitle(for:))
+
+        var built: [(title: String, items: [CourseProfile])] = grouped.map { title, items in
+            let sorted = items.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            return (title: title, items: sorted)
+        }
+
+        // Pin WolfMore to top of its section (usually IL)
+        for i in built.indices {
+            if let idx = built[i].items.firstIndex(where: { $0.name.caseInsensitiveCompare("WolfMore") == .orderedSame }) {
+                let w = built[i].items.remove(at: idx)
+                built[i].items.insert(w, at: 0)
+            }
+        }
+
+        built.sort {
+            let r0 = sectionRank($0.title)
+            let r1 = sectionRank($1.title)
+            if r0 != r1 { return r0 < r1 }
+            return $0.title.localizedCaseInsensitiveCompare($1.title) == .orderedAscending
+        }
+
+        sections = built
+    }
+
+    private func course(at indexPath: IndexPath) -> CourseProfile {
+        sections[indexPath.section].items[indexPath.row]
     }
 
     private func setHomeCourse(_ id: UUID) {
@@ -99,16 +170,26 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
     // MARK: - UITableView
 
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        sections.count
+    }
+
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        sections[section].title
+    }
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        filtered.count
+        sections[section].items.count
     }
 
     override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
-        let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
-        let c = filtered[indexPath.row]
+        let reuseID = "CourseCell"
+        let cell = tableView.dequeueReusableCell(withIdentifier: reuseID)
+            ?? UITableViewCell(style: .default, reuseIdentifier: reuseID)
 
+        let c = course(at: indexPath)
         cell.textLabel?.text = c.name
 
         // ✓ Selected course
@@ -127,9 +208,8 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
     override func tableView(_ tableView: UITableView,
                             didSelectRowAt indexPath: IndexPath) {
-
         tableView.deselectRow(at: indexPath, animated: true)
-        let c = filtered[indexPath.row]
+        let c = course(at: indexPath)
         onPickCourse?(c.id)
     }
 
@@ -138,7 +218,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
                             trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
 
-        let c = filtered[indexPath.row]
+        let c = course(at: indexPath)
 
         // ⭐ Home
         let home = UIContextualAction(style: .normal, title: "Home") { [weak self] _, _, done in
@@ -188,7 +268,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     private func editCourse(_ c: CourseProfile) {
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC") as! CourseSetupViewController
-        vc.loadCourseID = c.id   // `var loadCourseID: UUID?` in CourseSetupVC
+        vc.loadCourseID = c.id
         navigationController?.pushViewController(vc, animated: true)
     }
 

@@ -182,13 +182,13 @@
       }
     },
     "9d4-sr-o26.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Edit Contacts\"; ObjectID = \"9d4-sr-o26\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Contacts\"; ObjectID = \"9d4-sr-o26\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Edit Contacts"
+            "value" : "Contacts"
           }
         }
       }
@@ -314,13 +314,13 @@
       }
     },
     "awx-Tl-XV1.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Home Course Summary\"; ObjectID = \"awx-Tl-XV1\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"Stats\"; ObjectID = \"awx-Tl-XV1\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Home Course Summary"
+            "value" : "Stats"
           }
         }
       }
@@ -625,18 +625,6 @@
         }
       }
     },
-    "Fbe-n9-tJH.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"-----  STATS  -----\"; ObjectID = \"Fbe-n9-tJH\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "-----  STATS  -----"
-          }
-        }
-      }
-    },
     "FeT-FW-X78.text" : {
       "comment" : "Class = \"UILabel\"; text = \"9\"; ObjectID = \"FeT-FW-X78\";",
       "extractionState" : "extracted_with_value",
@@ -645,30 +633,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "9"
-          }
-        }
-      }
-    },
-    "FKr-xj-0VS.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Join Pro-Stat Access\"; ObjectID = \"FKr-xj-0VS\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Join Pro-Stat Access"
-          }
-        }
-      }
-    },
-    "FKr-xj-0VS.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Join Pro-Stat Access\"; ObjectID = \"FKr-xj-0VS\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Join Pro-Stat Access"
           }
         }
       }
@@ -817,18 +781,6 @@
         }
       }
     },
-    "Heh-sT-fiA.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"-----  Contacts  -----\"; ObjectID = \"Heh-sT-fiA\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "-----  Contacts  -----"
-          }
-        }
-      }
-    },
     "hMb-NB-8an.segmentTitles[0]" : {
       "comment" : "Class = \"UISegmentedControl\"; hMb-NB-8an.segmentTitles[0] = \"6-Point\"; ObjectID = \"hMb-NB-8an\";",
       "extractionState" : "extracted_with_value",
@@ -866,13 +818,13 @@
       }
     },
     "iFk-Qp-2Fn.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Delete History\"; ObjectID = \"iFk-Qp-2Fn\";",
+      "comment" : "Class = \"UIButton\"; configuration.title = \"More\"; ObjectID = \"iFk-Qp-2Fn\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "new",
-            "value" : "Delete History"
+            "value" : "More"
           }
         }
       }
@@ -1059,30 +1011,6 @@
     },
     "LjX-Ve-Yza.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"LjX-Ve-Yza\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "lTx-yh-g1Z.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Player Stats\"; ObjectID = \"lTx-yh-g1Z\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Player Stats"
-          }
-        }
-      }
-    },
-    "lTx-yh-g1Z.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"lTx-yh-g1Z\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {
@@ -1453,18 +1381,6 @@
         }
       }
     },
-    "r2g-wF-Kff.text" : {
-      "comment" : "Class = \"UILabel\"; text = \"WOLFMORE\"; ObjectID = \"r2g-wF-Kff\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "WOLFMORE"
-          }
-        }
-      }
-    },
     "R2k-bo-rBg.configuration.title" : {
       "comment" : "Class = \"UIButton\"; configuration.title = \"Re-Roll\"; ObjectID = \"R2k-bo-rBg\";",
       "extractionState" : "extracted_with_value",
@@ -1617,30 +1533,6 @@
           "stringUnit" : {
             "state" : "new",
             "value" : "HC"
-          }
-        }
-      }
-    },
-    "uln-u6-bGR.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Explore the Rules\"; ObjectID = \"uln-u6-bGR\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Explore the Rules"
-          }
-        }
-      }
-    },
-    "uln-u6-bGR.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"uln-u6-bGR\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
           }
         }
       }
@@ -1923,30 +1815,6 @@
     },
     "ZKo-9A-I4e.normalTitle" : {
       "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"ZKo-9A-I4e\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
-    "Zkt-6i-lHp.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Text Contacts\"; ObjectID = \"Zkt-6i-lHp\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Text Contacts"
-          }
-        }
-      }
-    },
-    "Zkt-6i-lHp.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"Zkt-6i-lHp\";",
       "extractionState" : "extracted_with_value",
       "localizations" : {
         "en" : {

@@ -14,7 +14,9 @@ final class ViewController: UIViewController {
     @IBOutlet private weak var courseButton: UIButton!
     // ✅ Legacy storyboard connection safety (prevents crash if something is still wired to playTapped:)
    
-   
+    @IBOutlet private weak var contactsButton: UIButton!
+    @IBOutlet private weak var statsButton: UIButton!
+    @IBOutlet private weak var moreButton: UIButton!
 
     @IBOutlet private weak var editCourseButton: UIButton!
     @IBOutlet private weak var playGameButton: UIButton!
@@ -41,19 +43,38 @@ final class ViewController: UIViewController {
   
     override func viewDidLoad() {
         super.viewDidLoad()
+        // Apple-ish nav
+           title = "WolfMore"
+           navigationItem.largeTitleDisplayMode = .never
+           navigationController?.navigationBar.prefersLargeTitles = false
 
+           CourseLibrary.shared.seedIfNeeded()
+           migrateHomeCourseIfNeeded()
+
+           seedProfileNameIfNeeded()
+           updateWelcome()
+
+           refreshCourseButtonTitle()
+           refreshPlayArea()
+           refreshBottomButtons()
+
+           fixIconButton(editCourseButton)
+
+           NotificationCenter.default.addObserver(
+               self,
+               selector: #selector(showProPaywall),
+               name: .roundSaveBlockedNeedsPro,
+               object: nil
+           )
         CourseLibrary.shared.seedIfNeeded()
-
-        refreshPlayArea()
-        refreshCourseButtonTitle()
-
         migrateHomeCourseIfNeeded()
-        styleCourseButton()
-        configureImageButtons()
-        configurePlayButtonTitle()
 
         seedProfileNameIfNeeded()
         updateWelcome()
+
+        refreshCourseButtonTitle()
+        refreshPlayArea()
+        refreshBottomButtons()
 
         fixIconButton(editCourseButton)
 
@@ -63,6 +84,10 @@ final class ViewController: UIViewController {
             name: .roundSaveBlockedNeedsPro,
             object: nil
         )
+    }
+    private func refreshCourseButtonTitle() {
+        let name = CourseLibrary.shared.selectedCourseName ?? "Choose Course"
+        courseButton.configuration = styledButton(title: name, style: .secondaryChevron)
     }
     private func styleCourseButton() {
         // Match your other pill buttons
@@ -76,7 +101,8 @@ final class ViewController: UIViewController {
         super.viewWillAppear(animated)
         updateWelcome()
         refreshCourseButtonTitle()
-
+        refreshPlayArea()
+        refreshBottomButtons()
     }
     private func updatePlayButtonTitle() {
         if GameManager.shared.hasSavedGame {
@@ -92,11 +118,7 @@ final class ViewController: UIViewController {
         refreshPlayArea()
     }
     
-    private func refreshCourseButtonTitle() {
-        let name = CourseLibrary.shared.selectedCourseName ?? "Choose Course"
-        courseButton.configuration = yellowPillConfig(title: name, trailingChevron: true)
-    }
-
+  
 
     // MARK: - Migration
     private func migrateHomeCourseIfNeeded() {
@@ -143,24 +165,30 @@ final class ViewController: UIViewController {
 
         present(ac, animated: true)
     }
+    
     private func yellowPillConfig(title: String, trailingChevron: Bool = false) -> UIButton.Configuration {
         var config = UIButton.Configuration.filled()
-        config.title = title
 
-        // ✅ Same yellow for both
         config.baseBackgroundColor = .systemYellow
         config.baseForegroundColor = .black
-
-        // ✅ Same pill shape + padding
         config.cornerStyle = .capsule
         config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
 
-        // ✅ Smaller font
-        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-            var out = incoming
-            out.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-            return out
-        }
+        // ✅ Center + single-line truncation
+        let p = NSMutableParagraphStyle()
+        p.alignment = .center
+        p.lineBreakMode = .byTruncatingTail
+
+        let attrs = AttributeContainer([
+            .font: UIFont.systemFont(ofSize: 16, weight: .semibold),
+            .paragraphStyle: p
+        ])
+
+        config.attributedTitle = AttributedString(title, attributes: attrs)
+
+        // ✅ iOS 15+ supported
+        config.titleAlignment = .center
+        config.titleLineBreakMode = .byTruncatingTail
 
         if trailingChevron {
             config.image = UIImage(systemName: "chevron.down")
@@ -210,12 +238,20 @@ final class ViewController: UIViewController {
     }
 
     private func refreshPlayArea() {
-        playGameButton.configuration = yellowPillConfig(title: "Play Game")
+        playGameButton.configuration = styledButton(title: "Play Game", style: .primary)
 
         playNewGameButton?.isHidden = true
         continueButton?.isHidden = true
     }
-
+    private func refreshBottomButtons() {
+        contactsButton.configuration = styledButton(title: "Contacts", style: .utilityChip)
+        statsButton.configuration    = styledButton(title: "Stats", style: .utilityChip)
+        moreButton.configuration     = styledButton(title: "More", style: .utilityChip)
+    }
+    private var wolfGreen: UIColor {
+        UIColor(red: 0.12, green: 0.28, blue: 0.14, alpha: 1.0) // deep green
+    }
+    
 
     @IBAction private func courseButtonTapped(_ sender: Any) {
         let sb = UIStoryboard(name: "Main", bundle: nil)
@@ -313,7 +349,7 @@ final class ViewController: UIViewController {
         let name = (ProfileStore.name ?? "Player 1")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        welcomeLabel.text = "Welcome, \(name)"
+        welcomeLabel.text = "       Welcome, \(name)"
         welcomeLabel.textAlignment = .center
         welcomeLabel.adjustsFontForContentSizeCategory = true
         welcomeLabel.adjustsFontSizeToFitWidth = true
@@ -337,7 +373,7 @@ final class ViewController: UIViewController {
 
     private func promptForName(completion: @escaping () -> Void) {
         let ac = UIAlertController(
-            title: "Welcome!",
+            title: "    Welcome!",
             message: "What should we call you?",
             preferredStyle: .alert
         )
@@ -437,21 +473,84 @@ final class ViewController: UIViewController {
         openFriendStatsScreen()
     }
     @IBAction func textHubTapped(_ sender: UIButton) {
+        contactsTapped(sender) // reuse the new menu
+    }
+    @IBAction func myStatsTapped(_ sender: UIButton) {
+        showMyStatsAlert(anchor: sender)
+    }
+    @IBAction func statsTapped(_ sender: UIButton) {
+        let ac = UIAlertController(title: "Stats", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Player Stats", style: .default) { [weak self] _ in
+            self?.openPlayerStats(anchor: sender)
+        })
+
+        ac.addAction(UIAlertAction(title: "Home Course Summary", style: .default) { [weak self] _ in
+            self?.openCourseSummaryScreen()
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = sender
+            pop.sourceRect = sender.bounds
+            pop.permittedArrowDirections = [.up, .down]
+        }
+
+        present(ac, animated: true)
+    }
+    
+    private func openPlayerStats(anchor: UIView) {
+        // Keep your current Pro gating behavior
+        if !Entitlements.shared.isPro {
+            showStatsUpgradeBubble(anchor: anchor)
+            return
+        }
+        openFriendStatsScreen()
+    }
+
+    private func openCourseSummaryScreen() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "CourseSummaryViewController")
+        if let nav = navigationController {
+            nav.pushViewController(vc, animated: true)
+        } else {
+            vc.modalPresentationStyle = .formSheet
+            present(vc, animated: true)
+        }
+    }
+    @IBAction func contactsTapped(_ sender: UIButton) {
+        let ac = UIAlertController(title: "Contacts", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Text Contacts", style: .default) { [weak self] _ in
+            self?.openTextHub()
+        })
+
+        ac.addAction(UIAlertAction(title: "Manage Contacts", style: .default) { [weak self] _ in
+            self?.openContactsManager()
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = sender
+            pop.sourceRect = sender.bounds
+            pop.permittedArrowDirections = [.up, .down]
+        }
+
+        present(ac, animated: true)
+    }
+    private func openTextHub() {
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "TextVC")
         navigationController?.pushViewController(vc, animated: true)
     }
 
-    @IBAction func myStatsTapped(_ sender: UIButton) {
-        showMyStatsAlert(anchor: sender)
-    }
-    @IBAction func contactsTapped(_ sender: UIButton) {
-        let vc = storyboard!.instantiateViewController(withIdentifier: "ContactsViewController")
+    private func openContactsManager() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "ContactsViewController")
         navigationController?.pushViewController(vc, animated: true)
     }
-
-
-
     // MARK: - Delete History ✅ INCLUDED
     @IBAction private func deleteHistoryTapped(_ sender: UIButton) {
         guard !RoundStore.shared.rounds.isEmpty else {
@@ -478,7 +577,81 @@ final class ViewController: UIViewController {
 
         present(ac, animated: true)
     }
+    // MARK: - Button Styles (Clean Apple Utility)
 
+    private enum ButtonStyle {
+        case primary
+        case secondaryChevron
+        case utilityChip
+    }
+
+    private func styledButton(
+        title: String,
+        style: ButtonStyle,
+        systemImage: String? = nil
+    ) -> UIButton.Configuration {
+
+        var config = UIButton.Configuration.filled()
+
+        // Shared pill shape + typography
+        config.cornerStyle = .capsule
+        config.titleAlignment = .center
+        config.titleLineBreakMode = .byTruncatingTail
+
+        // Centered, single-line attributed title
+        let p = NSMutableParagraphStyle()
+        p.alignment = .center
+        p.lineBreakMode = .byTruncatingTail
+
+        func setTitle(_ text: String, size: CGFloat, weight: UIFont.Weight) {
+            let attrs = AttributeContainer([
+                .font: UIFont.systemFont(ofSize: size, weight: weight),
+                .paragraphStyle: p
+            ])
+            config.attributedTitle = AttributedString(text, attributes: attrs)
+        }
+
+        switch style {
+
+        case .primary:
+            config.baseBackgroundColor = wolfPrimaryGreen   // ✅ was .systemGreen
+            config.baseForegroundColor = .white
+            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 18, bottom: 12, trailing: 18)
+            setTitle(title, size: 16, weight: .medium)
+
+        case .secondaryChevron:
+            config.baseBackgroundColor = wolfGold
+            config.baseForegroundColor = .black
+
+            // ✅ Course pill sizing (bigger than chips) + extra trailing for chevron centering
+            config.contentInsets = NSDirectionalEdgeInsets(top: 14, leading: 18, bottom: 14, trailing: 28)
+
+            setTitle(title, size: 16, weight: .semibold)
+
+            config.image = UIImage(systemName: "chevron.down")
+            config.imagePlacement = .trailing
+            config.imagePadding = 10
+        case .utilityChip:
+            config.baseBackgroundColor = .systemGray5
+            config.baseForegroundColor = .label
+            config.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)
+            setTitle(title, size: 13.5, weight: .medium)
+        }
+
+        // Optional leading/trailing image support if you want later
+        if let systemImage {
+            config.image = UIImage(systemName: systemImage)
+        }
+
+        return config
+    }
+    private var wolfPrimaryGreen: UIColor {
+        UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+    }
+
+    private var wolfGold: UIColor {
+        UIColor(red: 0.93, green: 0.74, blue: 0.10, alpha: 1.0)
+    }
     // MARK: - Upsell Bubble
     private func showStatsUpgradeBubble(anchor: UIView) {
         let ac = UIAlertController(
@@ -539,7 +712,44 @@ final class ViewController: UIViewController {
     @IBAction private func continueGameTapped(_ sender: UIButton) {
         performSegue(withIdentifier: "showPlayerSetup", sender: self)
     }
+    @IBAction func moreTapped(_ sender: UIButton) {
+        let ac = UIAlertController(title: "More", message: nil, preferredStyle: .actionSheet)
 
+        ac.addAction(UIAlertAction(title: "Explore the Rules", style: .default) { [weak self] _ in
+            self?.openRules()
+        })
+
+        ac.addAction(UIAlertAction(title: "Join Pro-Stat Access", style: .default) { [weak self] _ in
+            self?.showProPaywall()
+        })
+
+        ac.addAction(UIAlertAction(title: "Delete History", style: .destructive) { [weak self] _ in
+            guard let self = self else { return }
+            // reuse your existing delete flow
+            self.deleteHistoryTapped(sender)
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = sender
+            pop.sourceRect = sender.bounds
+            pop.permittedArrowDirections = [.up, .down]
+        }
+
+        present(ac, animated: true)
+    }
+    private func openRules() {
+        let rules = RulesViewController()
+        if let nav = navigationController {
+            nav.pushViewController(rules, animated: true)
+        } else {
+            let wrap = UINavigationController(rootViewController: rules)
+            wrap.modalPresentationStyle = .pageSheet
+            present(wrap, animated: true)
+        }
+    }
+    
     @IBAction private func rulesTapped(_ sender: UIButton) {
         let rules = RulesViewController()
         if let nav = navigationController {
