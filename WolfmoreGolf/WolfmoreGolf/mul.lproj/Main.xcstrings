@@ -205,30 +205,6 @@
         }
       }
     },
-    "9nf-4Q-W7s.configuration.title" : {
-      "comment" : "Class = \"UIButton\"; configuration.title = \"Tracked Friends\"; ObjectID = \"9nf-4Q-W7s\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Tracked Friends"
-          }
-        }
-      }
-    },
-    "9nf-4Q-W7s.normalTitle" : {
-      "comment" : "Class = \"UIButton\"; normalTitle = \"Button\"; ObjectID = \"9nf-4Q-W7s\";",
-      "extractionState" : "extracted_with_value",
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "new",
-            "value" : "Button"
-          }
-        }
-      }
-    },
     "19A-eM-piO.text" : {
       "comment" : "Class = \"UILabel\"; text = \"Score\"; ObjectID = \"19A-eM-piO\";",
       "extractionState" : "extracted_with_value",

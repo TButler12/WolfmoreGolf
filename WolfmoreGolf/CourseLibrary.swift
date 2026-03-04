@@ -32,9 +32,11 @@ struct CourseProfile: Codable, Equatable {
     var hcs:  [Int]   // 18
     var tees: [TeeInfo]? = nil
 
-    // ✅ NEW (optional so old saved data still decodes)
-    var country: String? = nil         // "USA", "Ireland", etc.
-    var state: String? = nil           // "WI", "FL" (only for USA typically)
+    // ✅ Optional metadata (safe for old saves)
+    var country: String? = nil
+    var state: String? = nil
+    var architect: String? = nil
+    var type: String? = nil          // ✅ NEW (e.g. "Resort", "Private", "Public")
 
     init(
         id: UUID = UUID(),
@@ -43,7 +45,9 @@ struct CourseProfile: Codable, Equatable {
         hcs: [Int],
         tees: [TeeInfo]? = nil,
         country: String? = nil,
-        state: String? = nil
+        state: String? = nil,
+        architect: String? = nil,
+        type: String? = nil           // ✅ NEW
     ) {
         self.id = id
         self.name = name
@@ -52,11 +56,10 @@ struct CourseProfile: Codable, Equatable {
         self.tees = tees
         self.country = country
         self.state = state
+        self.architect = architect
+        self.type = type              // ✅ NEW
     }
 }
-
-
-
 // =======================================================
 // MARK: - Built-in raw data (pars / hcs / optional tees)
 // =======================================================
@@ -620,22 +623,44 @@ let PGA_NATIONAL_CHAMPION_BEAR_TEES: [TeeInfo] = [
 ]
 //
 
-// MARK: Sea Island Retreat — Red (St Simons Island, GA)
+// MARK: Sea Island — Seaside Course — Red — St Simons Island, GA
+// Par 70 | 6,883 yds | Rating 73.8 | Slope 138
+// Type: Resort | Architect: Davis Love III, Mark Love
+
+private let SEA_ISLAND_SEASIDE_RED_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000006")!
+
+let SEA_ISLAND_SEASIDE_RED_PARS: [Int] = [
+    4,4,3,4,4,3,5,4,4,
+    4,4,3,4,4,5,4,3,4
+]
+
+let SEA_ISLAND_SEASIDE_RED_HCS: [Int] = [
+    7,3,9,1,11,17,15,13,5,
+    6,10,12,2,16,14,8,18,4
+]
+
+let SEA_ISLAND_SEASIDE_RED_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "RED", yardage: 6883, rating: 73.8, slope: 138)
+]
+// MARK: Sea Island — Retreat Course — Red — St Simons Island, GA
 // Par 72 | 7,110 yds | Rating 73.9 | Slope 133
-private let SEA_ISLAND_RETREAT_RED_ID = UUID(uuidString: "A1111111-1111-1111-1111-111111111111")!
+// Type: Resort | Architect: Davis Love III, Mark Love
+
+private let SEA_ISLAND_RETREAT_RED_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000012")!
 
 let SEA_ISLAND_RETREAT_RED_PARS: [Int] = [
     5,4,3,4,4,4,3,5,4,
     5,4,3,4,4,4,3,5,4
 ]
+
 let SEA_ISLAND_RETREAT_RED_HCS: [Int] = [
     13,5,11,1,7,17,15,9,3,
     16,6,14,8,2,10,18,12,4
 ]
-let SEA_ISLAND_RETREAT_RED_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Red", yardage: 7110, rating: 73.9, slope: 133)
-]
 
+let SEA_ISLAND_RETREAT_RED_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "RED", yardage: 7110, rating: 73.9, slope: 133)
+]
 // MARK: Dye Preserve — Championship (Jupiter, FL)
 // Par 72 | 7,312 yds | Rating 75.9 | Slope 146
 private let DYE_PRESERVE_CHAMPIONSHIP_ID = UUID(uuidString: "A2222222-2222-2222-2222-222222222222")!
@@ -699,6 +724,500 @@ let SEMINOLE_GOLD_HCS: [Int] = [
 let SEMINOLE_GOLD_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold", yardage: 7259, rating: 75.4, slope: 144)
 ]
+
+
+// =======================================================
+// MARK: - Built-in: Erin Hills (Black)
+// Erin, WI  •  Par 72  •  7715 yds  •  77.9 / 145
+// =======================================================
+
+private let ERIN_HILLS_ID = UUID(uuidString: "91FA20CB-83C8-4D06-8189-95D9DE5A86FC")!
+
+let ERIN_HILLS_BLACK_PARS: [Int] = [
+    5,4,4,4,4,3,5,4,3,
+    4,4,4,3,5,4,3,4,5
+]
+
+let ERIN_HILLS_BLACK_HCS: [Int] = [
+    3,13,7,11,9,15,1,5,17,
+    4,14,10,18,2,12,16,8,6
+]
+
+let ERIN_HILLS_BLACK_YARDS: [Int] = [
+    552,361,476,445,462,237,607,492,163,
+    504,423,464,212,613,370,190,481,663
+]
+
+let ERIN_HILLS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7715, rating: 77.9, slope: 145)
+]
+
+// =======================================================
+// MARK: - Built-in: Calusa Pines (Gold)
+// Naples, FL  •  Par 72  •  7119 yds  •  75.2 / 143
+// =======================================================
+
+private let CALUSA_PINES_ID = UUID(uuidString: "0F70F061-4A22-462F-BFF1-5A541D160774")!
+
+let CALUSA_PINES_GOLD_PARS: [Int] = [
+    4,5,3,4,4,5,3,4,4,
+    4,3,4,5,4,4,3,4,5
+]
+
+let CALUSA_PINES_GOLD_HCS: [Int] = [
+    9,7,15,5,1,11,13,17,3,
+    8,18,2,6,12,4,16,10,14
+]
+
+let CALUSA_PINES_GOLD_YARDS: [Int] = [
+    414,569,145,464,449,538,239,298,444,
+    422,194,453,607,336,439,180,418,510
+]
+
+let CALUSA_PINES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7119, rating: 75.2, slope: 143)
+]
+
+// =======================================================
+// MARK: - Built-in: Karoo (Black)
+// Brooksville, FL  •  Par 72  •  7562 yds  •  75.2 / 140
+// NOTE: Your screenshots did NOT show HCPs, so this is a TODO.
+// =======================================================
+
+private let KAROO_ID = UUID(uuidString: "0C6A3D27-1783-4AC1-9B41-0E2F70C7CDEE")!
+
+let KAROO_BLACK_PARS: [Int] = [
+    4,4,3,5,4,5,3,4,4,
+    3,4,4,4,5,4,3,5,4
+]
+
+let KAROO_BLACK_YARDS: [Int] = [
+    475,522,292,511,382,563,199,426,421,
+    242,427,496,447,581,388,201,500,489
+]
+
+
+let KAROO_BLACK_HCS_TODO: [Int] = [
+    9,7,1,17,5,15,13,11,3,8,14,4,2,12,16,10,18,6
+]
+
+let KAROO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7562, rating: 75.2, slope: 140),
+    TeeInfo(teeName: "Green", yardage: 6954, rating: 72.3, slope: 135),
+    TeeInfo(teeName: "Tangerine", yardage: 6431, rating: 70.0, slope: 123),
+    TeeInfo(teeName: "Hybrid", yardage: 6009, rating: 68.0, slope: 119),
+    TeeInfo(teeName: "Silver", yardage: 5325, rating: 64.9, slope: 109)
+]
+
+// =======================================================
+// MARK: - Built-in: Patriot GC (4 Star)
+// Owasso, OK  •  Par 72  •  7094 yds  •  74.7 / 144
+// =======================================================
+
+private let PATRIOT_GC_ID = UUID(uuidString: "62BE8D82-63CC-42C0-9F89-055629241C25")!
+
+let PATRIOT_GC_4STAR_PARS: [Int] = [
+    5,4,4,5,4,3,4,4,3,
+    5,3,4,3,4,5,5,3,4
+]
+
+let PATRIOT_GC_4STAR_HCS: [Int] = [
+    7,9,1,5,11,15,17,3,13,
+    2,14,10,18,6,8,12,16,4
+]
+
+let PATRIOT_GC_4STAR_YARDS: [Int] = [
+    560,426,482,493,315,138,387,476,240,
+    603,172,424,188,474,567,548,171,430
+]
+
+let PATRIOT_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "4 Star", yardage: 7094, rating: 74.7, slope: 144)
+]
+
+// =======================================================
+// MARK: - Built-in: Augusta National (Masters)
+// Augusta, GA  •  Par 72  •  7485 yds  •  76.2 / 148
+// =======================================================
+
+private let AUGUSTA_NATIONAL_ID = UUID(uuidString: "41BFA11C-487A-44AA-A126-5F9030347364")!
+
+let AUGUSTA_NATIONAL_MASTERS_PARS: [Int] = [
+    4,5,4,3,4,3,4,5,4,
+    4,4,3,5,4,5,3,4,4
+]
+
+let AUGUSTA_NATIONAL_MASTERS_HCS: [Int] = [
+    9,1,13,15,5,17,11,3,7,
+    6,8,16,4,12,2,18,14,10
+]
+
+let AUGUSTA_NATIONAL_MASTERS_YARDS: [Int] = [
+    455,575,350,240,495,180,450,570,460,
+    495,505,155,510,440,530,170,440,465
+]
+
+let AUGUSTA_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Masters", yardage: 7485, rating: 76.2, slope: 148)
+]
+
+// =======================================================
+// MARK: - Built-in: Forest Highlands – Meadow (White tees)
+// Flagstaff, AZ  •  Par 72  •  Total yardage (White): 6478
+// NOTE: Rating/Slope not shown on your scorecard image.
+// =======================================================
+
+private let FOREST_HIGHLANDS_MEADOW_ID = UUID(uuidString: "E94A3D13-5CDE-41A6-88B2-3226D8A2A48C")!
+
+let FOREST_HIGHLANDS_MEADOW_PARS: [Int] = [
+    4,3,3,4,5,4,4,3,4,
+    4,3,4,4,5,4,4,3,5
+]
+
+let FOREST_HIGHLANDS_MEADOW_MENS_HCS: [Int] = [
+    11,17,5,9,3,15,7,13,1,
+    12,18,16,8,2,10,4,14,6
+]
+
+let FOREST_HIGHLANDS_MEADOW_WHITE_YARDS: [Int] = [
+    392,176,510,397,501,392,389,150,387,
+    368,186,310,405,521,373,411,201,509
+]
+
+let FOREST_HIGHLANDS_MEADOW_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 6478, rating: nil, slope: nil)
+]
+
+
+
+// MARK: The Harvester GC — Black (Harvester, IA)
+// Par 72 | 7,463 yds | Rating 76.8 | Slope 148
+private let HARVESTER_GC_BLACK_ID = UUID(uuidString: "E2D7C4B1-2A61-4F5E-9B4B-2F1B3A5D7C91")!
+
+let HARVESTER_GC_BLACK_PARS: [Int] = [
+    4,4,3,5,4,5,4,3,4,
+    4,4,4,4,3,5,4,3,5
+]
+let HARVESTER_GC_BLACK_HCS: [Int] = [
+    12,10,16,2,14,4,8,18,6,
+    5,13,7,11,17,1,9,15,3
+]
+let HARVESTER_GC_BLACK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7463, rating: 76.8, slope: 148)
+]
+
+// MARK: Davenport CC — Black (Pleasant Valley, IA)
+// Par 70 | 6,790 yds | Rating 73.7 | Slope 140
+private let DAVENPORT_CC_BLACK_ID = UUID(uuidString: "8C5F1D3A-3B19-4F2E-9A7D-1C6B7E2A0D44")!
+
+let DAVENPORT_CC_BLACK_PARS: [Int] = [
+    4,5,4,4,3,4,4,3,5,
+    3,4,4,5,4,3,4,3,4
+]
+let DAVENPORT_CC_BLACK_HCS: [Int] = [
+    11,5,9,3,13,15,1,17,7,
+    10,6,16,12,4,18,2,14,8
+]
+let DAVENPORT_CC_BLACK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6790, rating: 73.7, slope: 140)
+]
+
+// MARK: TPC Deere Run — TPC (Silvis, IL)
+// Par 71 | 7,281 yds | Rating 75.5 | Slope 139
+private let TPC_DEERE_RUN_TPC_ID = UUID(uuidString: "F7B3A2C1-1E9C-4C3A-8D2B-7A0E4B9C6F10")!
+
+let TPC_DEERE_RUN_TPC_PARS: [Int] = [
+    4,5,3,4,4,4,3,4,4,
+    5,4,3,4,4,4,3,5,4
+]
+let TPC_DEERE_RUN_TPC_HCS: [Int] = [
+    17,7,9,3,5,13,15,11,1,
+    8,6,12,18,16,2,14,10,4
+]
+let TPC_DEERE_RUN_TPC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "TPC", yardage: 7281, rating: 75.5, slope: 139)
+]
+private let KIAWAH_OCEAN_CHAMP_ID =
+UUID(uuidString: "A1111111-1111-1111-1111-111111111111")!
+let KIAWAH_OCEAN_CHAMP_PARS: [Int] = [
+    4,5,4,4,3,4,5,3,4,
+    4,5,4,4,3,4,5,3,4
+]
+let KIAWAH_OCEAN_CHAMP_HCS: [Int] = [
+    15,3,9,1,11,13,7,17,5,
+    16,8,10,2,14,18,4,12,6
+]
+let KIAWAH_OCEAN_CHAMP_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Championship",
+        yardage: 7772,
+        rating: 79.1,
+        slope: 155
+    )
+]
+private func isUSAStateTitle(_ title: String) -> Bool {
+    // If it's 2 letters and not "USA (No State)", treat as state
+    return title.count == 2 && title != "USA (No State)"
+}
+
+// =======================================================
+// MARK: - Built-in: La Estancia Golf Resort (Tournament)
+// Dominican Republic  •  Par 72  •  7382 yds  •  78.2 / 137
+// =======================================================
+
+private let LA_ESTANCIA_ID = UUID(uuidString: "C29B2E0F-4D95-4DBE-B580-908D4C71B381")!
+
+let LA_ESTANCIA_TOURNAMENT_PARS: [Int] = [
+    4,5,3,4,3,4,5,4,4,
+    4,3,5,4,4,3,5,4,4
+]
+
+let LA_ESTANCIA_TOURNAMENT_HCS: [Int] = [
+    11,5,9,17,15,1,13,7,3,
+    14,18,4,16,2,12,8,10,6
+]
+
+let LA_ESTANCIA_TOURNAMENT_YARDS: [Int] = [
+    430,555,236,365,138,455,510,449,469,
+    429,174,594,339,454,195,666,452,472
+]
+
+let LA_ESTANCIA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 7382, rating: 78.2, slope: 137)
+]
+//=======================================================
+// MARK: - Built-in: Rock Creek Cattle Company (TEE I)
+// Deer Lodge, MT • Private • Architect: Tom Doak
+// 7486 yds • 75.9 rating • 153 slope • Par 71
+//=======================================================
+
+private let ROCK_CREEK_CATTLE_COMPANY_ID = UUID(uuidString: "B6A6C9D4-0E3A-4C2E-9F2A-7A6E2D0C1B55")!
+
+let ROCK_CREEK_CATTLE_COMPANY_TEE_I_PARS: [Int] = [
+    4,4,5,4,4,4,4,3,4,
+    5,4,3,3,4,4,4,3,5
+]
+
+let ROCK_CREEK_CATTLE_COMPANY_TEE_I_HCS: [Int] = [
+    9,3,13,1,17,7,5,15,11,
+    12,4,16,10,2,18,6,14,8
+]
+
+let ROCK_CREEK_CATTLE_COMPANY_TEE_I_YARDS: [Int] = [
+    435,471,577,457,354,443,486,193,403,
+    632,439,175,265,548,352,467,191,598
+]
+
+let ROCK_CREEK_CATTLE_COMPANY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "TEE I", yardage: 7486, rating: 75.9, slope: 153)
+]
+// MARK: Wade Hampton Club — Cashiers, NC (Tom Fazio)
+private let WADE_HAMPTON_CLUB_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A101")!
+let WADE_HAMPTON_CLUB_PARS_TODO: [Int] = [
+    5,4,3,5,4,3,4,4,4,
+    5,3,4,4,4,4,4,3,5
+]
+let WADE_HAMPTON_CLUB_HCS_TODO:  [Int] = [7,5,15,1,3,17,13,11,9,8,18,14,12,10,6,2,16,4]
+
+// MARK: Estancia — Scottsdale, AZ (Tom Fazio)
+private let ESTANCIA_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A102")!
+let ESTANCIA_PARS_TODO: [Int] = [4,4,3,5,4,4,3,4,5,4,3,4,4,5,4,3,5,4]
+
+let ESTANCIA_HCS_TODO:  [Int] = [9,7,17,5,1,13,15,3,11,14,18,8,10,2,4,16,12,6]
+   
+// MARK: Sand Valley (Lido) — Nekoosa, WI (Macdonald/Raynor/Doak/Schneider)
+private let SAND_VALLEY_LIDO_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A103")!
+let SAND_VALLEY_LIDO_PARS_TODO: [Int] = [4,4,3,5,4,5,5,3,4,4,4,4,4,3,4,3,5,4]
+
+let SAND_VALLEY_LIDO_HCS_TODO:  [Int] = [11,7,15,1,13,3,5,9,17,6,8,2,16,18,10,12,4,14]
+
+// MARK: Colorado Golf Club — Parker, CO (Bill Coore/Ben Crenshaw)
+private let COLORADO_GOLF_CLUB_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A104")!
+// MARK: Colorado Golf Club — Championship
+// 7,571 yds | Par 72
+
+let COLORADO_GOLF_CLUB_PARS: [Int] = [
+    5,3,4,4,4,3,5,4,4,
+    4,3,4,4,4,5,5,3,4
+]
+let COLORADO_GOLF_CLUB_HCS: [Int] = [
+    13,11,7,3,1,17,9,15,5,
+    8,14,2,12,18,6,10,16,4
+]
+
+// MARK: The Quarry at La Quinta — La Quinta, CA (Tom Fazio)
+private let QUARRY_LA_QUINTA_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A105")!
+let QUARRY_LA_QUINTA_PARS: [Int] = [
+    4,4,3,4,4,5,4,3,5,
+    4,4,3,5,4,4,3,4,5
+]
+let QUARRY_LA_QUINTA_HCS: [Int] = [
+    9,5,17,7,1,13,3,15,11,
+    10,6,18,2,8,4,16,14,12
+]
+
+// MARK: Martis Camp — Truckee, CA (Tom Fazio)
+private let MARTIS_CAMP_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A106")!
+let MARTIS_CAMP_MEDAL_PARS: [Int] = [
+    4,4,3,5,4,4,5,3,4,
+    5,4,4,4,3,5,4,3,4
+]
+
+let MARTIS_CAMP_MEDAL_HCS: [Int] = [
+    11,5,15,13,1,7,9,17,3,
+    8,4,10,2,18,12,14,16,6
+]
+
+// MARK: Shooting Star — Teton Village, WY (Tom Fazio)
+private let SHOOTING_STAR_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A107")!
+let SHOOTING_STAR_CHAMPIONSHIP_PARS: [Int] = [
+    4,3,5,4,4,3,4,4,5,
+    3,5,4,4,4,5,4,3,4
+]
+
+let SHOOTING_STAR_CHAMPIONSHIP_HCS: [Int] = [
+    11,17,5,9,1,15,13,3,7,
+    18,8,10,14,2,6,12,16,4
+]
+// MARK: Cornerstone — Montrose, CO (Greg Norman)
+private let CORNERSTONE_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A108")!
+let CORNERSTONE_PARS_TODO: [Int] = [4,5,3,4,3,5,3,4,5,4,3,4,5,4,4,5,3,4]
+let CORNERSTONE_HCS_TODO:  [Int] = [15,7,11,5,3,1,17,3,9,12,10,2,4,14,18,6,16,8]
+
+// MARK: Manele Golf Course — Nicklaus — Lanai City, HI
+// Par 72 | 7,039 yds | Rating 74.0 | Slope 134 | Type: Resort | Architect: Jack Nicklaus
+
+private let MANELE_GOLF_COURSE_NICKLAUS_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000001")!
+
+let MANELE_GOLF_COURSE_NICKLAUS_PARS: [Int] = [
+    4,4,3,5,4,5,3,3,5,
+    4,5,3,4,3,5,4,4,4
+]
+
+let MANELE_GOLF_COURSE_NICKLAUS_HCS: [Int] = [
+    13,3,17,11,1,9,15,5,7,
+    14,10,8,18,16,12,4,2,6
+]
+
+let MANELE_GOLF_COURSE_NICKLAUS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "NICKLAUS", yardage: 7039, rating: 74.0, slope: 134)
+]
+
+// MARK: Pinehurst No. 10 — Blue Tees — Pinehurst, NC
+// Par 70 | 7,020 yds | Rating 74.1 | Slope 142 | Type: Resort
+
+private let PINEHURST_NO10_BLUE_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000002")!
+
+let PINEHURST_NO10_BLUE_PARS: [Int] = [
+    4,3,5,4,4,4,3,4,4,
+    5,3,5,4,3,4,4,3,4
+]
+
+let PINEHURST_NO10_BLUE_HCS: [Int] = [
+    5,13,11,15,9,1,17,7,3,
+    6,14,16,2,10,12,4,18,8
+]
+
+let PINEHURST_NO10_BLUE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue Tees", yardage: 7020, rating: 74.1, slope: 142)
+]
+
+// MARK: Gamble Sands — Medal — Brewster, WA
+// Par 72 | 7,184 yds | Rating 73.7 | Slope 125 | Type: Daily-Fee | Architect: David McLay Kidd
+
+private let GAMBLE_SANDS_MEDAL_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000003")!
+
+let GAMBLE_SANDS_MEDAL_PARS: [Int] = [
+    4,4,5,3,4,3,5,4,4,
+    3,4,4,5,4,4,3,4,5
+]
+
+let GAMBLE_SANDS_MEDAL_HCS: [Int] = [
+    13,11,3,15,5,9,1,17,7,
+    14,6,18,12,4,8,10,2,16
+]
+
+let GAMBLE_SANDS_MEDAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "MEDAL", yardage: 7184, rating: 73.7, slope: 125)
+]
+// MARK: Kapalua Resort – Plantation — Tournament — Lahaina, HI
+// Par 73 | 7,596 yds | Rating 77.0 | Slope 144 | Type: Resort | Architect: Bill Coore & Ben Crenshaw
+
+private let KAPALUA_PLANTATION_TOURNAMENT_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000004")!
+
+let KAPALUA_PLANTATION_TOURNAMENT_PARS: [Int] = [
+    4,3,4,4,5,4,4,3,5,
+    4,3,4,4,4,5,4,4,5
+]
+
+let KAPALUA_PLANTATION_TOURNAMENT_HCS: [Int] = [
+    11,17,3,9,7,13,5,15,1,
+    10,18,14,4,16,6,12,2,8
+]
+
+let KAPALUA_PLANTATION_TOURNAMENT_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "TOURNAMENT", yardage: 7596, rating: 77.0, slope: 144)
+]
+
+
+
+// MARK: McLemore — The Keep — Rising Fawn, GA
+// Par 72 | 6,654 yds (Black) | Architect: Bill Bergen & Rees Jones | Type: Resort
+
+private let MCLEMORE_KEEP_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000005")!
+
+let MCLEMORE_KEEP_PARS: [Int] = [
+    4,5,3,4,4,4,5,3,4,
+    5,3,4,4,3,5,4,4,4
+]
+
+let MCLEMORE_KEEP_HCS: [Int] = [
+    1,7,11,5,15,17,13,9,3,
+    6,10,18,2,8,14,4,16,12
+]
+
+let MCLEMORE_KEEP_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6654)
+]
+// MARK: Sand Valley Resort — Sedge Valley — Championship — Nekoosa, WI
+// Par 68 | 6,198 yds | Rating 70.7 | Slope 133
+// Type: Private (Resort) | Architect: Tom Doak   // (set to nil if you don’t want to assume)
+
+private let SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000008")!
+
+let SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_PARS: [Int] = [
+    4,4,4,4,3,4,3,3,4,
+    4,5,4,3,4,3,4,4,4
+]
+
+let SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_HCS: [Int] = [
+    13,9,1,3,7,15,17,11,5,
+    8,2,14,18,6,16,4,10,12
+]
+
+let SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "CHAMPIONSHIP", yardage: 6198, rating: 70.7, slope: 133)
+]
+
+// MARK: Arcadia Bluffs — The Bluffs Course — Blue — Arcadia, MI
+// Par 72 | 6,858 yds | Rating 74.2 | Slope 150
+// Type: Daily-Fee | Architect: W. Henderson, R. Smith
+
+private let ARCADIA_BLUFFS_BLUFFS_BLUE_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000007")!
+
+let ARCADIA_BLUFFS_BLUFFS_BLUE_PARS: [Int] = [
+    5,3,5,4,5,3,4,4,3,
+    4,5,4,3,4,5,4,3,4
+]
+
+let ARCADIA_BLUFFS_BLUFFS_BLUE_HCS: [Int] = [
+    15,17,7,13,3,9,1,5,11,
+    2,12,10,8,14,18,4,16,6
+]
+
+let ARCADIA_BLUFFS_BLUFFS_BLUE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "BLUE", yardage: 6858, rating: 74.2, slope: 150)
+]
 // =======================================================
 // MARK: - Built-in Registry (ONE place that defines “built-in”)
 // =======================================================
@@ -712,6 +1231,8 @@ private struct BuiltInCourse {
     // ✅ NEW
     let country: String
     let state: String?
+    let architect: String?
+    let type: String?
 }
 // =======================================================
 // MARK: - Built-in Registry (ONE place that defines “built-in”)
@@ -726,7 +1247,7 @@ private struct BuiltInCourse {
 // =======================================================
 
 private enum BuiltIns {
-
+    
     // Keep this private so you never leak it outside this file
     private struct BuiltInCourse {
         let id: UUID
@@ -736,6 +1257,8 @@ private enum BuiltIns {
         let tees: [TeeInfo]?
         let country: String?
         let state: String?
+        let architect: String?
+        let type: String? // ✅ NEW
     }
 
     // ✅ Helper (defaults fix “Missing arguments for country/state” issues)
@@ -746,9 +1269,21 @@ private enum BuiltIns {
         _ hcs: [Int],
         _ tees: [TeeInfo]? = nil,
         country: String? = nil,
-        state: String? = nil
+        state: String? = nil,
+        architect: String? = nil,
+        type: String? = nil        // ✅ NEW
     ) -> BuiltInCourse {
-        .init(id: id, name: name, pars: pars, hcs: hcs, tees: tees, country: country, state: state)
+        .init(
+            id: id,
+            name: name,
+            pars: pars,
+            hcs: hcs,
+            tees: tees,
+            country: country,
+            state: state,
+            architect: architect,
+            type: type
+        )
     }
 
     // ✅ List stays private (so you can change internals later)
@@ -901,25 +1436,35 @@ private enum BuiltIns {
         c(MEDALIST_JT_ID, "Medalist GC (JT)", MEDALIST_JT_PARS, MEDALIST_JT_HCS,
           country: "USA", state: "FL"),
 
-    
         c(ROYAL_OAKS_SCHEFFLER_ID, "Royal Oaks CC (Scheff)", ROYAL_OAKS_SCHEFFLER_PARS, ROYAL_OAKS_SCHEFFLER_HCS,
           country: "USA", state: "TX"),
         c(SUMMIT_CLUB_MORIKAWA_ID, "Summit Club (Colin)", SUMMIT_CLUB_MORIKAWA_PARS, SUMMIT_CLUB_MORIKAWA_HCS,
           country: "USA", state: "NV"),
-        
+
         c(PINEHURST_NO2_USOPEN_ID, "Pinehurst No. 2 (U.S. Open)", PINEHURST_NO2_USOPEN_PARS, PINEHURST_NO2_USOPEN_HCS,
           country: "USA", state: "NC"),
 
-     
         c(BROOK_HOLLOW_TILLINGHAST_ID, "Brook Hollow GC (Tillinghast)", BROOK_HOLLOW_TILLINGHAST_PARS, BROOK_HOLLOW_TILLINGHAST_HCS, BROOK_HOLLOW_TILLINGHAST_TEES,
           country: "USA", state: "TX"),
-        
+
         // -------------------------
         // Georgia
         // -------------------------
-        c(SEA_ISLAND_RETREAT_RED_ID, "Sea Island Retreat", SEA_ISLAND_RETREAT_RED_PARS, SEA_ISLAND_RETREAT_RED_HCS, SEA_ISLAND_RETREAT_RED_TEES,
-          country: "USA", state: "GA"),
-
+        c(SEA_ISLAND_SEASIDE_RED_ID, "Sea Island (Seaside — Red)",
+          SEA_ISLAND_SEASIDE_RED_PARS,
+          SEA_ISLAND_SEASIDE_RED_HCS,
+          SEA_ISLAND_SEASIDE_RED_TEES,
+          country: "USA", state: "GA",
+          architect: "Davis Love III, Mark Love",
+          type: "Resort"),
+        
+        c(SEA_ISLAND_RETREAT_RED_ID, "Sea Island (Retreat — Red)",
+          SEA_ISLAND_RETREAT_RED_PARS,
+          SEA_ISLAND_RETREAT_RED_HCS,
+          SEA_ISLAND_RETREAT_RED_TEES,
+          country: "USA", state: "GA",
+          architect: "Davis Love III, Mark Love",
+          type: "Resort"),
         // -------------------------
         // Florida
         // -------------------------
@@ -937,6 +1482,7 @@ private enum BuiltIns {
           country: "USA", state: "AZ"),
         c(SCOTTSDALE_NATIONAL_XTEE_ID, "Scottsdale National GC (X-Tee)", SCOTTSDALE_NATIONAL_XTEE_PARS, SCOTTSDALE_NATIONAL_XTEE_HCS, SCOTTSDALE_NATIONAL_XTEE_TEES,
           country: "USA", state: "AZ"),
+
         c(MAKRAY_MEMORIAL_BLACK_ID, "Makray Memorial (Black)",
           MAKRAY_MEMORIAL_BLACK_PARS, MAKRAY_MEMORIAL_BLACK_HCS, MAKRAY_MEMORIAL_BLACK_TEES,
           country: "USA", state: "IL"),
@@ -956,7 +1502,110 @@ private enum BuiltIns {
         c(CHALET_HILLS_BLACK_ID, "Chalet Hills (Black)",
           CHALET_HILLS_BLACK_PARS, CHALET_HILLS_BLACK_HCS, CHALET_HILLS_BLACK_TEES,
           country: "USA", state: "IL"),
+
+        c(ERIN_HILLS_ID, "Erin Hills (Black)", ERIN_HILLS_BLACK_PARS, ERIN_HILLS_BLACK_HCS,
+          country: "USA", state: "WI"),
+
+        c(CALUSA_PINES_ID, "Calusa Pines (Gold)", CALUSA_PINES_GOLD_PARS, CALUSA_PINES_GOLD_HCS,
+          country: "USA", state: "FL"),
+
+        // NOTE: Karoo HCPs not visible in your screenshots yet.
+        c(KAROO_ID, "Karoo (Black)", KAROO_BLACK_PARS, KAROO_BLACK_HCS_TODO,
+          country: "USA", state: "FL"),
+
+        c(PATRIOT_GC_ID, "Patriot GC (4 Star)", PATRIOT_GC_4STAR_PARS, PATRIOT_GC_4STAR_HCS,
+          country: "USA", state: "OK"),
+
+        c(AUGUSTA_NATIONAL_ID, "Augusta National (Masters)", AUGUSTA_NATIONAL_MASTERS_PARS, AUGUSTA_NATIONAL_MASTERS_HCS,
+          country: "USA", state: "GA"),
+
+        c(FOREST_HIGHLANDS_MEADOW_ID, "Forest Highlands - Meadow (White)", FOREST_HIGHLANDS_MEADOW_PARS, FOREST_HIGHLANDS_MEADOW_MENS_HCS,
+          country: "USA", state: "AZ"),
+
+        c(HARVESTER_GC_BLACK_ID, "The Harvester GC (Black)", HARVESTER_GC_BLACK_PARS, HARVESTER_GC_BLACK_HCS, HARVESTER_GC_BLACK_TEES,
+          country: "USA", state: "IA"),
+
+        c(DAVENPORT_CC_BLACK_ID, "Davenport CC (Black)", DAVENPORT_CC_BLACK_PARS, DAVENPORT_CC_BLACK_HCS, DAVENPORT_CC_BLACK_TEES,
+          country: "USA", state: "IA"),
+
+        c(TPC_DEERE_RUN_TPC_ID, "TPC Deere Run (TPC)", TPC_DEERE_RUN_TPC_PARS, TPC_DEERE_RUN_TPC_HCS, TPC_DEERE_RUN_TPC_TEES,
+          country: "USA", state: "IL"),
+
+        c(KIAWAH_OCEAN_CHAMP_ID,
+          "Kiawah Island - Ocean Course (Championship)",
+          KIAWAH_OCEAN_CHAMP_PARS,
+          KIAWAH_OCEAN_CHAMP_HCS,
+          KIAWAH_OCEAN_CHAMP_TEES,
+          country: "USA",
+          state: "SC"),
         
+        c(ROCK_CREEK_CATTLE_COMPANY_ID,
+          "Rock Creek Cattle Company",
+          ROCK_CREEK_CATTLE_COMPANY_TEE_I_PARS,
+          ROCK_CREEK_CATTLE_COMPANY_TEE_I_HCS,
+          ROCK_CREEK_CATTLE_COMPANY_TEES,
+          country: "USA",
+          state: "MT"),
+        
+        c(MANELE_GOLF_COURSE_NICKLAUS_ID, "Four Seasons Lanai Manele",
+          MANELE_GOLF_COURSE_NICKLAUS_PARS,
+          MANELE_GOLF_COURSE_NICKLAUS_HCS,
+          country: "USA", state: "HI",
+          architect: "Jack Nicklaus",
+          type: "Resort"),
+
+        c(PINEHURST_NO10_BLUE_ID, "Pinehurst No. 10 (Blue)",
+          PINEHURST_NO10_BLUE_PARS,
+          PINEHURST_NO10_BLUE_HCS,
+          PINEHURST_NO10_BLUE_TEES,
+          country: "USA", state: "NC",
+          architect: "Tom Doak, Angela Moser",   // if you want to include it
+          type: "Resort"),
+       
+        c(GAMBLE_SANDS_MEDAL_ID, "Gamble Sands (Medal)",
+          GAMBLE_SANDS_MEDAL_PARS,
+          GAMBLE_SANDS_MEDAL_HCS,
+          GAMBLE_SANDS_MEDAL_TEES,
+          country: "USA", state: "WA",
+          architect: "David McLay Kidd",
+          type: "Daily-Fee"),
+       
+        c(KAPALUA_PLANTATION_TOURNAMENT_ID, "Kapalua (Plantation – Tournament)",
+          KAPALUA_PLANTATION_TOURNAMENT_PARS,
+          KAPALUA_PLANTATION_TOURNAMENT_HCS,
+          KAPALUA_PLANTATION_TOURNAMENT_TEES,
+          country: "USA", state: "HI",
+          architect: "Bill Coore, Ben Crenshaw",
+          type: "Resort"),
+        
+        c(MCLEMORE_KEEP_ID, "McLemore (The Keep)",
+          MCLEMORE_KEEP_PARS,
+          MCLEMORE_KEEP_HCS,
+          MCLEMORE_KEEP_TEES,
+          country: "USA", state: "GA",
+          architect: "Bill Bergen, Rees Jones",
+          type: "Resort"),
+        
+        
+
+        c(SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_ID, "Sand Valley (Sedge Valley — Championship)",
+          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_PARS,
+          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_HCS,
+          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_TEES,
+          country: "USA", state: "WI",
+          architect: "Tom Doak",
+          type: "Resort"),
+        c(ARCADIA_BLUFFS_BLUFFS_BLUE_ID, "Arcadia Bluffs (Bluffs — Blue)",
+          ARCADIA_BLUFFS_BLUFFS_BLUE_PARS,
+          ARCADIA_BLUFFS_BLUFFS_BLUE_HCS,
+          ARCADIA_BLUFFS_BLUFFS_BLUE_TEES,
+          country: "USA", state: "MI",
+          architect: "W. Henderson, R. Smith",
+          type: "Daily-Fee"),
+
+        c(LA_ESTANCIA_ID, "La Estancia Golf Resort (Tournament)", LA_ESTANCIA_TOURNAMENT_PARS, LA_ESTANCIA_TOURNAMENT_HCS,
+          country: "Dominican Republic", state: nil),
+
         // -------------------------
         // Ireland / UK / Travel set
         // -------------------------
@@ -972,20 +1621,78 @@ private enum BuiltIns {
           country: "Northern Ireland", state: nil),
         c(WATERVILLE_ID, "Waterville Golf Links", WATERVILLE_PARS, WATERVILLE_HCS,
           country: "Ireland", state: nil),
+        c(WADE_HAMPTON_CLUB_ID, "Wade Hampton Club",
+          WADE_HAMPTON_CLUB_PARS_TODO, WADE_HAMPTON_CLUB_HCS_TODO,
+          country: "USA", state: "NC", architect: "Tom Fazio"),
 
+        c(ESTANCIA_ID, "Estancia",
+          ESTANCIA_PARS_TODO, ESTANCIA_HCS_TODO,
+          country: "USA", state: "AZ", architect: "Tom Fazio"),
+
+        c(SAND_VALLEY_LIDO_ID, "Sand Valley (Lido)",
+          SAND_VALLEY_LIDO_PARS_TODO, SAND_VALLEY_LIDO_HCS_TODO,
+          country: "USA", state: "WI", architect: "C.B. Macdonald / Seth Raynor / Tom Doak / Brian Schneider"),
+
+        c(COLORADO_GOLF_CLUB_ID, "Colorado Golf Club",
+          QUARRY_LA_QUINTA_PARS, COLORADO_GOLF_CLUB_HCS,
+          country: "USA", state: "CO", architect: "Bill Coore / Ben Crenshaw"),
+
+        c(QUARRY_LA_QUINTA_ID, "The Quarry at La Quinta",
+          QUARRY_LA_QUINTA_PARS, QUARRY_LA_QUINTA_HCS,
+          country: "USA", state: "CA", architect: "Tom Fazio"),
+
+        c(MARTIS_CAMP_ID, "Martis Camp",
+          MARTIS_CAMP_MEDAL_PARS, MARTIS_CAMP_MEDAL_HCS,
+          country: "USA", state: "CA", architect: "Tom Fazio"),
+
+        c(SHOOTING_STAR_ID, "Shooting Star",
+          SHOOTING_STAR_CHAMPIONSHIP_PARS, SHOOTING_STAR_CHAMPIONSHIP_HCS,
+          country: "USA", state: "WY", architect: "Tom Fazio"),
+
+        c(CORNERSTONE_ID, "Cornerstone",
+          CORNERSTONE_PARS_TODO, CORNERSTONE_HCS_TODO,
+          country: "USA", state: "CO", architect: "Greg Norman"),
         // -------------------------
         // Must-have classic
         // -------------------------
         c(PINE_VALLEY_ID, "Pine Valley", PINE_VALLEY_PARS, PINE_VALLEY_HCS,
           country: "USA", state: "NJ"),
     ]
+    
+
+    // =======================================================
+    // ✅ DEBUG SAFETY: Crash fast if any BuiltInCourse IDs duplicate
+    // =======================================================
+    #if DEBUG
+    private static func assertNoDuplicateIDs() {
+        let ids = all.map(\.id)
+        let counts = Dictionary(grouping: ids, by: { $0 })
+        let dupes = counts
+            .filter { $0.value.count > 1 }
+            .map { "\($0.key.uuidString)  x\($0.value.count)" }
+            .sorted()
+
+        precondition(dupes.isEmpty, "🚨 Duplicate BuiltInCourse IDs found:\n" + dupes.joined(separator: "\n"))
+    }
+
+    // Runs once when BuiltIns is first touched (debug builds only)
+    private static let _validated: Bool = {
+        assertNoDuplicateIDs()
+        return true
+    }()
+    #endif
 
     // ✅ expose UUIDs only (safe)
-    static let ids: Set<UUID> = Set(all.map(\.id))
+    static let ids: Set<UUID> = {
+        #if DEBUG
+        _ = _validated
+        #endif
+        return Set(all.map(\.id))
+    }()
 
     // ✅ expose CourseProfile list (so CourseLibrary never touches BuiltInCourse)
     static var profiles: [CourseProfile] {
-        all.map {
+        return all.map {
             CourseProfile(
                 id: $0.id,
                 name: $0.name,
@@ -993,11 +1700,12 @@ private enum BuiltIns {
                 hcs: $0.hcs,
                 tees: $0.tees,
                 country: $0.country,
-                state: $0.state
+                state: $0.state,
+                architect: $0.architect,
+                type: $0.type
             )
         }
     }
-    
 }
 
 // =======================================================
@@ -1054,10 +1762,27 @@ final class CourseLibrary {
         save()
     }
 
-    func delete(id: UUID) {
-        if isBuiltIn(id: id) { return }   // hard safety
+    @discardableResult
+    func delete(id: UUID) -> Bool {
+        // Never delete built-ins
+        if isBuiltIn(id: id) { return false }
+
+        // ✅ If deleting Home course, clear it
+        if ProfileStore.homeCourseID == id.uuidString {
+            ProfileStore.homeCourseID = ""
+        }
+
+        // ✅ If deleting Selected course, clear or fall back
+        if selectedCourseID == id {
+            selectedCourseID = wolfMore()?.id   // or set to nil if you prefer
+        }
+
+        let before = courses.count
         courses.removeAll { $0.id == id }
-        save()
+        let didDelete = courses.count != before
+
+        if didDelete { save() }
+        return didDelete
     }
 
     // MARK: - Selected course
@@ -1144,5 +1869,67 @@ final class CourseLibrary {
     private func save() {
         let data = (try? JSONEncoder().encode(courses)) ?? Data()
         UserDefaults.standard.set(data, forKey: keyLibrary)
+    }
+}
+extension CourseLibrary {
+
+    // Group key used for sectioning
+    struct LocationSection: Hashable {
+        let isUSAState: Bool
+        let title: String        // "AZ", "FL", ... OR "Ireland", "Dominican Republic"
+        let sortKey: String      // normalized for sorting
+    }
+
+    /// USA states first (A→Z), then international (countries A→Z).
+    /// Courses inside each section are A→Z.
+    func coursesGroupedStateThenInternational() -> [(section: LocationSection, courses: [CourseProfile])] {
+
+        // 1) Build sections
+        let pairs: [(LocationSection, CourseProfile)] = courses.map { c in
+            let country = (c.country ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let state   = (c.state ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let isUSA = country.caseInsensitiveCompare("USA") == .orderedSame
+
+            if isUSA, !state.isEmpty {
+                // USA + state
+                let sec = LocationSection(
+                    isUSAState: true,
+                    title: state.uppercased(),
+                    sortKey: state.uppercased()
+                )
+                return (sec, c)
+            } else {
+                // International (or USA missing state -> treat as International bucket)
+                let label = country.isEmpty ? "International" : country
+                let sec = LocationSection(
+                    isUSAState: false,
+                    title: label,
+                    sortKey: label.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                )
+                return (sec, c)
+            }
+        }
+
+        // 2) Group
+        let grouped = Dictionary(grouping: pairs, by: { $0.0 })
+
+        // 3) Sort sections: USA states A→Z, then international A→Z
+        let sortedSections = grouped.keys.sorted {
+            if $0.isUSAState != $1.isUSAState { return $0.isUSAState && !$1.isUSAState }
+            return $0.sortKey.localizedCaseInsensitiveCompare($1.sortKey) == .orderedAscending
+        }
+
+        // 4) Build output with course sorting A→Z
+        return sortedSections.map { sec in
+            let list = (grouped[sec] ?? []).map { $0.1 }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            return (sec, list)
+        }
+    }
+
+    /// If you only need the section titles for your "States" picker:
+    func stateThenInternationalTitles() -> [String] {
+        coursesGroupedStateThenInternational().map { $0.section.title }
     }
 }

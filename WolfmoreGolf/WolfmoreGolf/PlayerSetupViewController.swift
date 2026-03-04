@@ -66,7 +66,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             target: self,
             action: #selector(trackFriendsTapped)
         )
-
+        configureGoToGameButton()
+        
         // Initial paint
         updateCourseLabel()
         populateFromModel()
@@ -309,7 +310,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             }
         }
     }
-
+    private func configureGoToGameButton() {
+        goToGameButton.configuration = wmStyledButton(title: "Go To Game", style: .primary)
+    }
     // MARK: - Cap + buttons
     private func enforceActivationCap() {
         let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count

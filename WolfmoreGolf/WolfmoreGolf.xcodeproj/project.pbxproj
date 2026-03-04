@@ -18,6 +18,7 @@
 		F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64DE8142EB2850000F8D625 /* AppDelegate.swift */; };
 		F64DE8202EB2864B00F8D625 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */; };
 		F64DE9522EB6AAE300F8D625 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F64DE9512EB6AAE300F8D625 /* Assets.xcassets */; };
+		F656E7BB2F565FE400F9B15C /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = F656E7BA2F565FE400F9B15C /* ButtonStyles.swift */; };
 		F657CEB42F01BBCA001CBFCD /* CourseLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */; };
 		F6590F052EFA225B0085D088 /* GameType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6590F042EFA225B0085D088 /* GameType.swift */; };
 		F688C7412F37F9E800A4B094 /* ContactsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F688C7402F37F9E800A4B094 /* ContactsViewController.swift */; };
@@ -53,6 +54,7 @@
 		F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		F64DE8462EB2940000F8D625 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		F64DE9512EB6AAE300F8D625 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		F656E7BA2F565FE400F9B15C /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
 		F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseLibrary.swift; sourceTree = "<group>"; };
 		F6590F042EFA225B0085D088 /* GameType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameType.swift; sourceTree = "<group>"; };
 		F688C7402F37F9E800A4B094 /* ContactsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsViewController.swift; sourceTree = "<group>"; };
@@ -99,6 +101,7 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F656E7BA2F565FE400F9B15C /* ButtonStyles.swift */,
 				F6B1DCD72F4CC65B0067838E /* ProGateViewController.swift */,
 				F6B1DCD52F4CB6230067838E /* RecipientPreview.swift */,
 				F6B1DCD02F4CA6D50067838E /* CustomGroupsViewController.swift */,
@@ -257,6 +260,7 @@
 				F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */,
 				F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */,
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
+				F656E7BB2F565FE400F9B15C /* ButtonStyles.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,
 				F6590F052EFA225B0085D088 /* GameType.swift in Sources */,
 			);

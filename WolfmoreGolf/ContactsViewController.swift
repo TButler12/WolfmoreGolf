@@ -113,7 +113,7 @@ final class ContactsViewController: UITableViewController {
 
         let close  = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(closeTapped))
         let add    = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped))
-        let select = UIBarButtonItem(title: "Custom Select", style: .plain, target: self, action: #selector(selectTapped))
+        let select = UIBarButtonItem(title: "Create Group", style: .plain, target: self, action: #selector(selectTapped))
 
         navigationItem.rightBarButtonItems = [close, add, select]
 
@@ -232,7 +232,7 @@ final class ContactsViewController: UITableViewController {
 
             let close  = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(closeTapped))
             let add    = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped))
-            let select = UIBarButtonItem(title: "Custom Select", style: .plain, target: self, action: #selector(selectTapped))
+            let select = UIBarButtonItem(title: "Create Group", style: .plain, target: self, action: #selector(selectTapped))
 
             navigationItem.rightBarButtonItems = [close, add, select]
         }
