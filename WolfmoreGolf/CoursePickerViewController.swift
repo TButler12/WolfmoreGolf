@@ -36,7 +36,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         let s = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
         return UUID(uuidString: s)
     }
-    
+    private let summaryHeader = UIView()
+       private let summaryLabel1 = UILabel()
+       private let summaryLabel2 = UILabel()
+
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -51,16 +54,100 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             action: #selector(cancelTapped)
         )
         
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .add,
-            target: self,
-            action: #selector(addTapped)
-        )
-        
+        navigationItem.rightBarButtonItems = [
+            UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped)),
+            UIBarButtonItem(title: "Filter", style: .plain, target: self, action: #selector(filterTapped))
+        ]
+        configureSummaryHeader()
         configureSearch()
         reloadCourses()
     }
-    
+    @objc private func filterTapped() {
+        let ac = UIAlertController(title: "Sort / Filter", message: nil, preferredStyle: .actionSheet)
+
+        // Sort
+        ac.addAction(UIAlertAction(title: "Sort: Grouped (Location)", style: .default) { [weak self] _ in
+            self?.sortMode = .groupedLocation
+            self?.applyFilter()
+        })
+        ac.addAction(UIAlertAction(title: "Sort: Name (A–Z)", style: .default) { [weak self] _ in
+            self?.sortMode = .name
+            self?.applyFilter()
+        })
+
+        ac.addAction(UIAlertAction(title: "Filter: All Types", style: .default) { [weak self] _ in
+            self?.typeFilter = nil
+            self?.applyFilter()
+        })
+
+        // Type options (build from your data so it never gets out of sync)
+        let types = Set(all.compactMap { $0.type?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty })
+
+        for t in types.sorted(by: { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }) {
+            ac.addAction(UIAlertAction(title: "Type: \(t)", style: .default) { [weak self] _ in
+                self?.typeFilter = t
+                self?.applyFilter()
+            })
+        }
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        // iPad safety
+        if let pop = ac.popoverPresentationController {
+            pop.barButtonItem = navigationItem.rightBarButtonItems?.last
+        }
+
+        present(ac, animated: true)
+    }
+    private func configureSummaryHeader() {
+        summaryHeader.backgroundColor = .clear
+
+        summaryLabel1.font = .systemFont(ofSize: 13, weight: .semibold)
+        summaryLabel1.textColor = .secondaryLabel
+
+        summaryLabel2.font = .systemFont(ofSize: 13, weight: .regular)
+        summaryLabel2.textColor = .secondaryLabel
+
+        let stack = UIStackView(arrangedSubviews: [summaryLabel1, summaryLabel2])
+        stack.axis = .vertical
+        stack.spacing = 4
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        summaryHeader.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: summaryHeader.leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: summaryHeader.trailingAnchor, constant: -16),
+            stack.topAnchor.constraint(equalTo: summaryHeader.topAnchor, constant: 10),
+            stack.bottomAnchor.constraint(equalTo: summaryHeader.bottomAnchor, constant: -10)
+        ])
+
+        // give it an initial height (we’ll also update it below)
+        summaryHeader.frame.size.height = 52
+        tableView.tableHeaderView = summaryHeader
+    }
+
+    private func updateSummaryHeader() {
+        let total = all.count
+        let builtInCount = all.filter { CourseLibrary.shared.isBuiltIn(id: $0.id) }.count
+        let customCount = total - builtInCount
+
+        summaryLabel1.text = "Loaded courses: \(total)"
+        summaryLabel2.text = "Built-in: \(builtInCount)   •   Custom: \(customCount)"
+
+        // Keep header height correct after text changes / rotations
+        summaryHeader.setNeedsLayout()
+        summaryHeader.layoutIfNeeded()
+        let targetSize = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
+        let height = summaryHeader.systemLayoutSizeFitting(targetSize).height
+        if summaryHeader.frame.height != height {
+            var f = summaryHeader.frame
+            f.size.height = height
+            summaryHeader.frame = f
+            tableView.tableHeaderView = summaryHeader
+        }
+    }
     private func configureSearch() {
         searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
@@ -77,18 +164,52 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         
         // Keep WolfMore at top of its section later
         applyFilter()
+        updateSummaryHeader()
     }
-    
+    private func inferredType(for name: String) -> String? {
+
+        let n = name.lowercased()
+
+        if n.contains("resort") { return "Resort" }
+        if n.contains("dunes") { return "Resort" }
+        if n.contains("valley") { return "Resort" }
+        if n.contains("national") { return "Private" }
+        if n.contains("club") { return "Private" }
+        if n.contains("country club") { return "Private" }
+        if n.contains("municipal") { return "Daily-Fee" }
+        if n.contains("golf course") { return "Daily-Fee" }
+
+        return nil
+    }
     private func applyFilter() {
-        if searchText.isEmpty {
-            filtered = all
-        } else {
+        // 1) Start from all
+        var list = all
+
+        // 2) Filter by search
+        if !searchText.isEmpty {
             let q = searchText.lowercased()
-            filtered = all.filter { $0.name.lowercased().contains(q) }
+            list = list.filter { $0.name.lowercased().contains(q) }
         }
-        
-        buildSections()
+
+        // 3) Filter by type (Resort, Private, Daily-Fee, etc.)
+        if let typeFilter = typeFilter?.lowercased() {
+            list = list.filter { ($0.type ?? "").lowercased() == typeFilter }
+        }
+
+        filtered = list
+
+        // 4) Sort / group
+        switch sortMode {
+        case .groupedLocation:
+            buildSections()          // uses filtered
+        case .name:
+            sections = [("All Courses", filtered.sorted {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            })]
+        }
+
         tableView.reloadData()
+        updateSummaryHeader() // if you added the header counts earlier
     }
     
     // MARK: - Grouping
@@ -183,25 +304,30 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     
     override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
+
         let reuseID = "CourseCell"
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseID)
-        ?? UITableViewCell(style: .default, reuseIdentifier: reuseID)
-        
+            ?? UITableViewCell(style: .subtitle, reuseIdentifier: reuseID)
+
         let c = course(at: indexPath)
         cell.textLabel?.text = c.name
-        
+
         // ✓ Selected course
         cell.accessoryType = (c.id == CourseLibrary.shared.selectedCourseID) ? .checkmark : .none
-        
-        // ⭐ Home/Tracking course
+
+        // ⭐ Home course
         if c.id == homeCourseUUID {
             cell.imageView?.image = UIImage(systemName: "star.fill")
             cell.imageView?.tintColor = .systemYellow
         } else {
             cell.imageView?.image = nil
         }
-        
+
+        // Built-in vs Custom
+        let isBuiltIn = CourseLibrary.shared.isBuiltIn(id: c.id)
+        cell.detailTextLabel?.text = isBuiltIn ? "Built-in course" : "Custom course"
+        cell.detailTextLabel?.textColor = .secondaryLabel
+
         return cell
     }
     
@@ -267,7 +393,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     
     
     // MARK: - Edit / Delete helpers
-    
+    private enum SortMode { case groupedLocation, name }
+    private var sortMode: SortMode = .groupedLocation
+
+    private var typeFilter: String? = nil  // nil = All
     private func editCourse(_ c: CourseProfile) {
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC") as! CourseSetupViewController

@@ -60,6 +60,8 @@ struct CourseProfile: Codable, Equatable {
         self.type = type              // ✅ NEW
     }
 }
+
+
 // =======================================================
 // MARK: - Built-in raw data (pars / hcs / optional tees)
 // =======================================================
@@ -572,6 +574,7 @@ let HERON_POINT_GOLD_HCS: [Int] = [
 
 // MARK: Pine Valley
 private let PINE_VALLEY_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000020")!
+
 let PINE_VALLEY_PARS: [Int] = [
     4,4,3,4,4,3,
     5,4,3,
@@ -1021,9 +1024,9 @@ let WADE_HAMPTON_CLUB_HCS_TODO:  [Int] = [7,5,15,1,3,17,13,11,9,8,18,14,12,10,6,
 
 // MARK: Estancia — Scottsdale, AZ (Tom Fazio)
 private let ESTANCIA_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A102")!
-let ESTANCIA_PARS_TODO: [Int] = [4,4,3,5,4,4,3,4,5,4,3,4,4,5,4,3,5,4]
+let ESTANCIA_PARS: [Int] = [4,4,3,5,4,4,3,4,5,4,3,4,4,5,4,3,5,4]
 
-let ESTANCIA_HCS_TODO:  [Int] = [9,7,17,5,1,13,15,3,11,14,18,8,10,2,4,16,12,6]
+let ESTANCIA_HCS:  [Int] = [9,7,17,5,1,13,15,3,11,14,18,8,10,2,4,16,12,6]
    
 // MARK: Sand Valley (Lido) — Nekoosa, WI (Macdonald/Raynor/Doak/Schneider)
 private let SAND_VALLEY_LIDO_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A103")!
@@ -1292,374 +1295,1112 @@ private enum BuiltIns {
         // -------------------------
         // Default
         // -------------------------
-        c(WOLFMORE_CC_ID, "WolfMore", WOLFMORE_PARS, WOLFMORE_HCS,
-          country: "USA", state: "IL"),
+        c(
+          WOLFMORE_CC_ID,
+          "WolfMore",
+          WOLFMORE_PARS,
+          WOLFMORE_HCS,
+          country: "USA",
+          state: "IL"
+        ),
 
         // -------------------------
         // Illinois / Midwest
         // -------------------------
-        c(CEDAR_RAPIDS_CC_ID, "Cedar Rapids CC", CEDAR_RAPIDS_PARS, CEDAR_RAPIDS_HCS,
-          country: "USA", state: "IA"),
-        c(WYNSTONE_SILVER_ID, "Wynstone", WYNSTONE_SILVER_PARS, WYNSTONE_SILVER_HCS,
-          country: "USA", state: "IL"),
-        c(BARRINGTON_HILLS_WHITE_ID, "Barrington Hills", BARRINGTON_HILLS_WHITE_PARS, BARRINGTON_HILLS_WHITE_HCS,
-          country: "USA", state: "IL"),
-        c(CRANES_LANDING_BLUE_ID, "Crane's Landing", CRANES_LANDING_BLUE_PARS, CRANES_LANDING_BLUE_HCS,
-          country: "USA", state: "IL"),
-        c(STONEWALL_ORCHARD_SILVER_ID, "Stonewall Orchard", STONEWALL_ORCHARD_SILVER_PARS, STONEWALL_ORCHARD_SILVER_HCS,
-          country: "USA", state: "IL"),
-        c(KEMPER_LAKES_GREEN_ID, "Kemper Lakes", KEMPER_LAKES_GREEN_PARS, KEMPER_LAKES_GREEN_HCS,
-          country: "USA", state: "IL"),
-        c(RICH_HARVEST_SILVER_ID, "Rich Harvest Farms", RICH_HARVEST_SILVER_PARS, RICH_HARVEST_SILVER_HCS,
-          country: "USA", state: "IL"),
+        c(
+          CEDAR_RAPIDS_CC_ID,
+          "Cedar Rapids CC",
+          CEDAR_RAPIDS_PARS,
+          CEDAR_RAPIDS_HCS,
+          country: "USA",
+          state: "IA",
+          architect: "Donald Ross",
+          type: "Private"
+        ),
+        c(DAVENPORT_CC_BLACK_ID,
+          "Davenport CC (Black)",
+          DAVENPORT_CC_BLACK_PARS,
+          DAVENPORT_CC_BLACK_HCS,
+          DAVENPORT_CC_BLACK_TEES,
+          country: "USA",
+          state: "IA",
+          architect: "Arthur Hills",
+          type: "Private"),
 
-        c(BUTLER_CC_BLUE_ID, "Butler National 6970", BUTLER_CC_BLUE_PARS, BUTLER_CC_BLUE_HCS, BUTLER_CC_BLUE_TEES,
-          country: "USA", state: "IL"),
-        c(BUTLER_NATIONAL_BUTLER_TEE_ID, "Butler National (7,550-yard)", BUTLER_NATIONAL_BUTLER_TEE_PARS, BUTLER_NATIONAL_BUTLER_TEE_HCS, BUTLER_NATIONAL_BUTLER_TEE_TEES,
-          country: "USA", state: "IL"),
+        c(HARVESTER_GC_BLACK_ID,
+          "The Harvester GC (Black)",
+          HARVESTER_GC_BLACK_PARS,
+          HARVESTER_GC_BLACK_HCS,
+          HARVESTER_GC_BLACK_TEES,
+          country: "USA",
+          state: "IA",
+          architect: "Keith Foster",
+          type: "Public"),
 
-        c(MEDINAH_CC_3_ID, "Medinah CC (Course #3)", MEDINAH_CC_3_PARS, MEDINAH_CC_3_HCS, MEDINAH_CC_3_TEES,
-          country: "USA", state: "IL"),
+        c(
+          WYNSTONE_SILVER_ID,
+          "Wynstone",
+          WYNSTONE_SILVER_PARS,
+          WYNSTONE_SILVER_HCS,
+          country: "USA",
+          state: "IL",
+          architect: "Jack Nicklaus",
+          type: "Private"
+        ),
 
+        c(
+          BARRINGTON_HILLS_WHITE_ID,
+          "Barrington Hills",
+          BARRINGTON_HILLS_WHITE_PARS,
+          BARRINGTON_HILLS_WHITE_HCS,
+          country: "USA",
+          state: "IL",
+          architect: "George O'Neil / Dick Wilson",
+          type: "Private"
+        ),
+
+        c(
+          CRANES_LANDING_BLUE_ID,
+          "Crane's Landing",
+          CRANES_LANDING_BLUE_PARS,
+          CRANES_LANDING_BLUE_HCS,
+          country: "USA",
+          state: "IL",
+          architect: "Keith Foster",
+          type: "Public"
+        ),
+
+        c(
+          STONEWALL_ORCHARD_SILVER_ID,
+          "Stonewall Orchard",
+          STONEWALL_ORCHARD_SILVER_PARS,
+          STONEWALL_ORCHARD_SILVER_HCS,
+          country: "USA",
+          state: "IL",
+          architect: "Arthur Hills",
+          type: "Public"
+        ),
+
+        c(
+          KEMPER_LAKES_GREEN_ID,
+          "Kemper Lakes",
+          KEMPER_LAKES_GREEN_PARS,
+          KEMPER_LAKES_GREEN_HCS,
+          country: "USA",
+          state: "IL",
+          architect: "Ken Killian / Dick Nugent",
+          type: "Public"
+        ),
+
+        c(
+          RICH_HARVEST_SILVER_ID,
+          "Rich Harvest Farms",
+          RICH_HARVEST_SILVER_PARS,
+          RICH_HARVEST_SILVER_HCS,
+          country: "USA",
+          state: "IL",
+          architect: "Greg Martin",
+          type: "Private"
+        ),
+
+        c(
+          BUTLER_CC_BLUE_ID,
+          "Butler National 6970",
+          BUTLER_CC_BLUE_PARS,
+          BUTLER_CC_BLUE_HCS,
+          BUTLER_CC_BLUE_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "George Fazio",
+          type: "Private"
+        ),
+
+        c(
+          BUTLER_NATIONAL_BUTLER_TEE_ID,
+          "Butler National (7,550-yard)",
+          BUTLER_NATIONAL_BUTLER_TEE_PARS,
+          BUTLER_NATIONAL_BUTLER_TEE_HCS,
+          BUTLER_NATIONAL_BUTLER_TEE_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "George Fazio",
+          type: "Private"
+        ),
+
+        c(
+          MEDINAH_CC_3_ID,
+          "Medinah CC (Course #3)",
+          MEDINAH_CC_3_PARS,
+          MEDINAH_CC_3_HCS,
+          MEDINAH_CC_3_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "Tom Bendelow / Rees Jones (renovation)",
+          type: "Private"
+        ),
+        
         // -------------------------
         // Florida / Southeast
         // -------------------------
-        c(CHAMPIONGATE_BLENDED_BLACK_ID, "Champions Gate", CHAMPIONGATE_BLENDED_BLACK_PARS, CHAMPIONGATE_BLENDED_BLACK_HCS,
-          country: "USA", state: "FL"),
-        c(TPC_SAWGRASS_STADIUM_ID, "TPC Sawgrass (Stadium)", TPC_SAWGRASS_STADIUM_PARS, TPC_SAWGRASS_STADIUM_HCS,
-          country: "USA", state: "FL"),
-        c(BAY_HILL_CHALLENGER_CHAMPION_ID, "Bay Hill (Challenger/Champion)", BAY_HILL_CHALLENGER_CHAMPION_PARS, BAY_HILL_CHALLENGER_CHAMPION_HCS, BAY_HILL_CHALLENGER_CHAMPION_TEES,
-          country: "USA", state: "FL"),
-        c(PGA_NATIONAL_CHAMPION_BEAR_ID, "PGA National (Champion – Bear)", PGA_NATIONAL_CHAMPION_BEAR_PARS, PGA_NATIONAL_CHAMPION_BEAR_HCS, PGA_NATIONAL_CHAMPION_BEAR_TEES,
-          country: "USA", state: "FL"),
-        c(PANTHER_NATIONAL_JT_ID, "Panther National (JT)", PANTHER_NATIONAL_JT_PARS, PANTHER_NATIONAL_JT_HCS, PANTHER_NATIONAL_JT_TEES,
-          country: "USA", state: "FL"),
+        c(
+          CHAMPIONGATE_BLENDED_BLACK_ID,
+          "Champions Gate",
+          CHAMPIONGATE_BLENDED_BLACK_PARS,
+          CHAMPIONGATE_BLENDED_BLACK_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Greg Norman",
+          type: "Resort"
+        ),
 
-        c(BEARS_CLUB_CHAMPION_ID, "The Bear's Club (7212 yds)", BEARS_CLUB_CHAMPION_PARS, BEARS_CLUB_CHAMPION_HCS, BEARS_CLUB_CHAMPION_TEES,
-          country: "USA", state: "FL"),
-        c(BEARS_CLUB_CHAMPIONSHIP_ID, "The Bear's Club (7328 yds)", BEARS_CLUB_CHAMPIONSHIP_PARS, BEARS_CLUB_CHAMPIONSHIP_HCS, BEARS_CLUB_CHAMPIONSHIP_TEES,
-          country: "USA", state: "FL"),
+        c(
+          TPC_SAWGRASS_STADIUM_ID,
+          "TPC Sawgrass (Stadium)",
+          TPC_SAWGRASS_STADIUM_PARS,
+          TPC_SAWGRASS_STADIUM_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye",
+          type: "Private"
+        ),
+
+        c(
+          BAY_HILL_CHALLENGER_CHAMPION_ID,
+          "Bay Hill (Challenger/Champion)",
+          BAY_HILL_CHALLENGER_CHAMPION_PARS,
+          BAY_HILL_CHALLENGER_CHAMPION_HCS,
+          BAY_HILL_CHALLENGER_CHAMPION_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Dick Wilson / Arnold Palmer (renovation)",
+          type: "Private"
+        ),
+
+        c(
+          PGA_NATIONAL_CHAMPION_BEAR_ID,
+          "PGA National (Champion – Bear)",
+          PGA_NATIONAL_CHAMPION_BEAR_PARS,
+          PGA_NATIONAL_CHAMPION_BEAR_HCS,
+          PGA_NATIONAL_CHAMPION_BEAR_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio / Jack Nicklaus (Bear Trap redesign)",
+          type: "Resort"
+        ),
+
+        c(
+          PANTHER_NATIONAL_JT_ID,
+          "Panther National (JT)",
+          PANTHER_NATIONAL_JT_PARS,
+          PANTHER_NATIONAL_JT_HCS,
+          PANTHER_NATIONAL_JT_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus, Justin Thomas",
+          type: "Private"
+        ),
+
+        c(
+          BEARS_CLUB_CHAMPION_ID,
+          "The Bear's Club (7212 yds)",
+          BEARS_CLUB_CHAMPION_PARS,
+          BEARS_CLUB_CHAMPION_HCS,
+          BEARS_CLUB_CHAMPION_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus",
+          type: "Private"
+        ),
+
+        c(
+          BEARS_CLUB_CHAMPIONSHIP_ID,
+          "The Bear's Club (7328 yds)",
+          BEARS_CLUB_CHAMPIONSHIP_PARS,
+          BEARS_CLUB_CHAMPIONSHIP_HCS,
+          BEARS_CLUB_CHAMPIONSHIP_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus",
+          type: "Private"
+        ),
 
         // -------------------------
         // Wisconsin / Resort
         // -------------------------
-        c(WHISTLING_STRAITS_STRAITS_ID, "Whistling Straits (Straits)", WHISTLING_STRAITS_STRAITS_PARS, WHISTLING_STRAITS_STRAITS_HCS, WHISTLING_STRAITS_STRAITS_TEES,
-          country: "USA", state: "WI"),
-        c(WHISTLING_STRAITS_IRISH_ID, "Whistling Straits (Irish)", WHISTLING_STRAITS_IRISH_PARS, WHISTLING_STRAITS_IRISH_HCS,
-          country: "USA", state: "WI"),
-        c(BLACKWOLF_RUN_RIVER_ID, "Blackwolf Run (River)", BLACKWOLF_RUN_RIVER_PARS, BLACKWOLF_RUN_RIVER_HCS,
-          country: "USA", state: "WI"),
-        c(BLACKWOLF_RUN_MEADOW_VALLEYS_ID, "Blackwolf Run (Meadow Valleys)", BLACKWOLF_RUN_MEADOW_VALLEYS_PARS, BLACKWOLF_RUN_MEADOW_VALLEYS_HCS,
-          country: "USA", state: "WI"),
-        c(SAND_VALLEY_ID, "Sand Valley", SAND_VALLEY_PARS, SAND_VALLEY_HCS,
-          country: "USA", state: "WI"),
-        c(MAMMOTH_DUNES_ID, "Mammoth Dunes", MAMMOTH_DUNES_PARS, MAMMOTH_DUNES_HCS,
-          country: "USA", state: "WI"),
+        c(
+          WHISTLING_STRAITS_STRAITS_ID,
+          "Whistling Straits (Straits)",
+          WHISTLING_STRAITS_STRAITS_PARS,
+          WHISTLING_STRAITS_STRAITS_HCS,
+          WHISTLING_STRAITS_STRAITS_TEES,
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort"
+        ),
+        c(
+          WHISTLING_STRAITS_IRISH_ID,
+          "Whistling Straits (Irish)",
+          WHISTLING_STRAITS_IRISH_PARS,
+          WHISTLING_STRAITS_IRISH_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort"
+        ),
 
-        c(GENEVA_NATIONAL_PALMER_ID, "Geneva National – Palmer", GENEVA_NATIONAL_PALMER_PARS, GENEVA_NATIONAL_PALMER_HCS,
-          country: "USA", state: "WI"),
-        c(GENEVA_NATIONAL_TREVINO_ID, "Geneva National – Trevino", GENEVA_NATIONAL_TREVINO_PARS, GENEVA_NATIONAL_TREVINO_HCS,
-          country: "USA", state: "WI"),
-        c(GENEVA_NATIONAL_PLAYER_ID, "Geneva National – Player", GENEVA_NATIONAL_PLAYER_PARS, GENEVA_NATIONAL_PLAYER_HCS,
-          country: "USA", state: "WI"),
+        c(
+          BLACKWOLF_RUN_RIVER_ID,
+          "Blackwolf Run (River)",
+          BLACKWOLF_RUN_RIVER_PARS,
+          BLACKWOLF_RUN_RIVER_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort"
+        ),
 
-        c(GRAND_GENEVA_HIGHLANDS_ID, "Grand Geneva – The Highlands", GRAND_GENEVA_HIGHLANDS_PARS, GRAND_GENEVA_HIGHLANDS_HCS,
-          country: "USA", state: "WI"),
-        c(GRAND_GENEVA_BRUTE_ID, "Grand Geneva – The Brute", GRAND_GENEVA_BRUTE_PARS, GRAND_GENEVA_BRUTE_HCS,
-          country: "USA", state: "WI"),
-        c(ESKER_HILLS_ID, "Esker Hills Golf Club", ESKER_HILLS_PARS, ESKER_HILLS_HCS,
-          country: "Ireland", state: "Offaly"),
+        c(
+          BLACKWOLF_RUN_MEADOW_VALLEYS_ID,
+          "Blackwolf Run (Meadow Valleys)",
+          BLACKWOLF_RUN_MEADOW_VALLEYS_PARS,
+          BLACKWOLF_RUN_MEADOW_VALLEYS_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort"
+        ),
 
+        c(
+          SAND_VALLEY_ID,
+          "Sand Valley",
+          SAND_VALLEY_PARS,
+          SAND_VALLEY_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Bill Coore, Ben Crenshaw",
+          type: "Resort"
+        ),
+
+        c(
+          MAMMOTH_DUNES_ID,
+          "Mammoth Dunes",
+          MAMMOTH_DUNES_PARS,
+          MAMMOTH_DUNES_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "David McLay Kidd",
+          type: "Resort"
+        ),
+
+        c(
+          GENEVA_NATIONAL_PALMER_ID,
+          "Geneva National – Palmer",
+          GENEVA_NATIONAL_PALMER_PARS,
+          GENEVA_NATIONAL_PALMER_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Arnold Palmer",
+          type: "Resort"
+        ),
+
+        c(
+          GENEVA_NATIONAL_TREVINO_ID,
+          "Geneva National – Trevino",
+          GENEVA_NATIONAL_TREVINO_PARS,
+          GENEVA_NATIONAL_TREVINO_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Lee Trevino",
+          type: "Resort"
+        ),
+
+        c(
+          GENEVA_NATIONAL_PLAYER_ID,
+          "Geneva National – Player",
+          GENEVA_NATIONAL_PLAYER_PARS,
+          GENEVA_NATIONAL_PLAYER_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Gary Player",
+          type: "Resort"
+        ),
+
+        c(
+          GRAND_GENEVA_HIGHLANDS_ID,
+          "Grand Geneva – The Highlands",
+          GRAND_GENEVA_HIGHLANDS_PARS,
+          GRAND_GENEVA_HIGHLANDS_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort"
+        ),
+
+        c(
+          GRAND_GENEVA_BRUTE_ID,
+          "Grand Geneva – The Brute",
+          GRAND_GENEVA_BRUTE_PARS,
+          GRAND_GENEVA_BRUTE_HCS,
+          country: "USA",
+          state: "WI",
+          architect: "Robert Bruce Harris",
+          type: "Resort"
+        ),
+
+        c(
+          ESKER_HILLS_ID,
+          "Esker Hills Golf Club",
+          ESKER_HILLS_PARS,
+          ESKER_HILLS_HCS,
+          country: "Ireland",
+          state: "Offaly",
+          architect: "Christy O'Connor Jr",
+          type: "Daily-Fee"
+        ),
         // -------------------------
         // Arizona / Southwest
         // -------------------------
-        c(TROON_NORTH_MONUMENT_ID, "Troon North (Monument)", TROON_NORTH_MONUMENT_PARS, TROON_NORTH_MONUMENT_HCS,
-          country: "USA", state: "AZ"),
-        c(TROON_NORTH_PINNACLE_ID, "Troon North (Pinnacle)", TROON_NORTH_PINNACLE_PARS, TROON_NORTH_PINNACLE_HCS,
-          country: "USA", state: "AZ"),
+        c(
+          TROON_NORTH_MONUMENT_ID,
+          "Troon North (Monument)",
+          TROON_NORTH_MONUMENT_PARS,
+          TROON_NORTH_MONUMENT_HCS,
+          country: "USA",
+          state: "AZ",
+          architect: "Tom Weiskopf",
+          type: "Resort"
+        ),
+
+        c(
+          TROON_NORTH_PINNACLE_ID,
+          "Troon North (Pinnacle)",
+          TROON_NORTH_PINNACLE_PARS,
+          TROON_NORTH_PINNACLE_HCS,
+          country: "USA",
+          state: "AZ",
+          architect: "Tom Weiskopf",
+          type: "Resort"
+        ),
 
         // -------------------------
         // Oregon / Bandon set
         // -------------------------
-        c(BANDON_DUNES_ID, "Bandon Dunes", BANDON_DUNES_PARS, BANDON_DUNES_HCS,
-          country: "USA", state: "OR"),
-        c(PACIFIC_DUNES_ID, "Pacific Dunes", PACIFIC_DUNES_PARS, PACIFIC_DUNES_HCS,
-          country: "USA", state: "OR"),
-        c(BANDON_TRAILS_ID, "Bandon Trails", BANDON_TRAILS_PARS, BANDON_TRAILS_HCS,
-          country: "USA", state: "OR"),
-        c(OLD_MACDONALD_ID, "Old Macdonald", OLD_MACDONALD_PARS, OLD_MACDONALD_HCS,
-          country: "USA", state: "OR"),
-        c(SHEEP_RANCH_ID, "Sheep Ranch", SHEEP_RANCH_PARS, SHEEP_RANCH_HCS,
-          country: "USA", state: "OR"),
+        c(
+          BANDON_DUNES_ID,
+          "Bandon Dunes",
+          BANDON_DUNES_PARS,
+          BANDON_DUNES_HCS,
+          country: "USA",
+          state: "OR",
+          architect: "David McLay Kidd",
+          type: "Resort"
+        ),
+
+        c(
+          PACIFIC_DUNES_ID,
+          "Pacific Dunes",
+          PACIFIC_DUNES_PARS,
+          PACIFIC_DUNES_HCS,
+          country: "USA",
+          state: "OR",
+          architect: "Tom Doak",
+          type: "Resort"
+        ),
+
+        c(
+          BANDON_TRAILS_ID,
+          "Bandon Trails",
+          BANDON_TRAILS_PARS,
+          BANDON_TRAILS_HCS,
+          country: "USA",
+          state: "OR",
+          architect: "Bill Coore, Ben Crenshaw",
+          type: "Resort"
+        ),
+
+        c(
+          OLD_MACDONALD_ID,
+          "Old Macdonald",
+          OLD_MACDONALD_PARS,
+          OLD_MACDONALD_HCS,
+          country: "USA",
+          state: "OR",
+          architect: "Tom Doak (concept: C.B. Macdonald / Seth Raynor)",
+          type: "Resort"
+        ),
+
+        c(
+          SHEEP_RANCH_ID,
+          "Sheep Ranch",
+          SHEEP_RANCH_PARS,
+          SHEEP_RANCH_HCS,
+          country: "USA",
+          state: "OR",
+          architect: "Bill Coore, Ben Crenshaw",
+          type: "Resort"
+        ),
 
         // -------------------------
         // California classics
         // -------------------------
-        c(PEBBLE_BEACH_ID, "Pebble Beach", PEBBLE_BEACH_PARS, PEBBLE_BEACH_HCS,
-          country: "USA", state: "CA"),
-        c(SPYGLASS_HILL_ID, "Spyglass Hill", SPYGLASS_HILL_PARS, SPYGLASS_HILL_HCS,
-          country: "USA", state: "CA"),
+        c(
+          PEBBLE_BEACH_ID,
+          "Pebble Beach",
+          PEBBLE_BEACH_PARS,
+          PEBBLE_BEACH_HCS,
+          country: "USA",
+          state: "CA",
+          architect: "Jack Neville, Douglas Grant",
+          type: "Resort"
+        ),
 
-        // -------------------------
+        c(
+          SPYGLASS_HILL_ID,
+          "Spyglass Hill",
+          SPYGLASS_HILL_PARS,
+          SPYGLASS_HILL_HCS,
+          country: "USA",
+          state: "CA",
+          architect: "Robert Trent Jones Sr.",
+          type: "Resort"
+        ),
+        // // -------------------------
         // Streamsong (FL)
         // -------------------------
-        c(STREAMSONG_BLUE_ID, "Streamsong (Blue)", STREAMSONG_BLUE_PARS, STREAMSONG_BLUE_HCS,
-          country: "USA", state: "FL"),
-        c(STREAMSONG_RED_ID, "Streamsong (Red)", STREAMSONG_RED_PARS, STREAMSONG_RED_HCS,
-          country: "USA", state: "FL"),
-        c(STREAMSONG_BLACK_ID, "Streamsong (Black)", STREAMSONG_BLACK_PARS, STREAMSONG_BLACK_HCS,
-          country: "USA", state: "FL"),
+        c(
+          STREAMSONG_BLUE_ID,
+          "Streamsong (Blue)",
+          STREAMSONG_BLUE_PARS,
+          STREAMSONG_BLUE_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Doak",
+          type: "Resort"
+        ),
+
+        c(
+          STREAMSONG_RED_ID,
+          "Streamsong (Red)",
+          STREAMSONG_RED_PARS,
+          STREAMSONG_RED_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Bill Coore, Ben Crenshaw",
+          type: "Resort"
+        ),
+
+        c(
+          STREAMSONG_BLACK_ID,
+          "Streamsong (Black)",
+          STREAMSONG_BLACK_PARS,
+          STREAMSONG_BLACK_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Gil Hanse, Jim Wagner",
+          type: "Resort"
+        ),
 
         // -------------------------
         // PGA Village (FL)
         // -------------------------
-        c(PGA_VILLAGE_WANAMAKER_ID, "PGA Village (Wanamaker)", PGA_VILLAGE_WANAMAKER_PARS, PGA_VILLAGE_WANAMAKER_HCS,
-          country: "USA", state: "FL"),
-        c(PGA_VILLAGE_RYDER_ID, "PGA Village (Ryder)", PGA_VILLAGE_RYDER_PARS, PGA_VILLAGE_RYDER_HCS,
-          country: "USA", state: "FL"),
-        c(PGA_VILLAGE_DYE_ID, "PGA Village (Dye)", PGA_VILLAGE_DYE_PARS, PGA_VILLAGE_DYE_HCS,
-          country: "USA", state: "FL"),
+        c(
+          PGA_VILLAGE_WANAMAKER_ID,
+          "PGA Village (Wanamaker)",
+          PGA_VILLAGE_WANAMAKER_PARS,
+          PGA_VILLAGE_WANAMAKER_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio",
+          type: "Resort"
+        ),
+
+        c(
+          PGA_VILLAGE_RYDER_ID,
+          "PGA Village (Ryder)",
+          PGA_VILLAGE_RYDER_PARS,
+          PGA_VILLAGE_RYDER_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio",
+          type: "Resort"
+        ),
+
+        c(
+          PGA_VILLAGE_DYE_ID,
+          "PGA Village (Dye)",
+          PGA_VILLAGE_DYE_PARS,
+          PGA_VILLAGE_DYE_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye",
+          type: "Resort"
+        ),
 
         // -------------------------
         // Hilton Head / Lowcountry
         // -------------------------
-        c(HARBOUR_TOWN_ID, "Harbour Town Golf Links", HARBOUR_TOWN_PARS, HARBOUR_TOWN_HCS,
-          country: "USA", state: "SC"),
-        c(LONG_COVE_GOLD_ID, "Long Cove Club (Gold)", LONG_COVE_GOLD_PARS, LONG_COVE_GOLD_HCS,
-          country: "USA", state: "SC"),
-        c(HERON_POINT_GOLD_ID, "Heron Point (Gold) — Sea Pines", HERON_POINT_GOLD_PARS, HERON_POINT_GOLD_HCS,
-          country: "USA", state: "SC"),
+        c(
+          HARBOUR_TOWN_ID,
+          "Harbour Town Golf Links",
+          HARBOUR_TOWN_PARS,
+          HARBOUR_TOWN_HCS,
+          country: "USA",
+          state: "SC",
+          architect: "Pete Dye, Jack Nicklaus",
+          type: "Resort"
+        ),
+
+        c(
+          LONG_COVE_GOLD_ID,
+          "Long Cove Club (Gold)",
+          LONG_COVE_GOLD_PARS,
+          LONG_COVE_GOLD_HCS,
+          country: "USA",
+          state: "SC",
+          architect: "Pete Dye",
+          type: "Private"
+        ),
+
+        c(
+          HERON_POINT_GOLD_ID,
+          "Heron Point (Gold) — Sea Pines",
+          HERON_POINT_GOLD_PARS,
+          HERON_POINT_GOLD_HCS,
+          country: "USA",
+          state: "SC",
+          architect: "Pete Dye",
+          type: "Resort"
+        ),
 
         // -------------------------
         // “Fantasy / Tracker” set
         // -------------------------
-        c(MEDALIST_JT_ID, "Medalist GC (JT)", MEDALIST_JT_PARS, MEDALIST_JT_HCS,
-          country: "USA", state: "FL"),
+        c(
+          MEDALIST_JT_ID,
+          "Medalist GC (JT)",
+          MEDALIST_JT_PARS,
+          MEDALIST_JT_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Greg Norman",
+          type: "Private"
+        ),
 
-        c(ROYAL_OAKS_SCHEFFLER_ID, "Royal Oaks CC (Scheff)", ROYAL_OAKS_SCHEFFLER_PARS, ROYAL_OAKS_SCHEFFLER_HCS,
-          country: "USA", state: "TX"),
-        c(SUMMIT_CLUB_MORIKAWA_ID, "Summit Club (Colin)", SUMMIT_CLUB_MORIKAWA_PARS, SUMMIT_CLUB_MORIKAWA_HCS,
-          country: "USA", state: "NV"),
+        c(
+          ROYAL_OAKS_SCHEFFLER_ID,
+          "Royal Oaks CC (Scheff)",
+          ROYAL_OAKS_SCHEFFLER_PARS,
+          ROYAL_OAKS_SCHEFFLER_HCS,
+          country: "USA",
+          state: "TX",
+          architect: "Robert Trent Jones Sr.",
+          type: "Private"
+        ),
 
-        c(PINEHURST_NO2_USOPEN_ID, "Pinehurst No. 2 (U.S. Open)", PINEHURST_NO2_USOPEN_PARS, PINEHURST_NO2_USOPEN_HCS,
-          country: "USA", state: "NC"),
+        c(
+          SUMMIT_CLUB_MORIKAWA_ID,
+          "Summit Club (Colin)",
+          SUMMIT_CLUB_MORIKAWA_PARS,
+          SUMMIT_CLUB_MORIKAWA_HCS,
+          country: "USA",
+          state: "NV",
+          architect: "Tom Fazio",
+          type: "Private"
+        ),
 
-        c(BROOK_HOLLOW_TILLINGHAST_ID, "Brook Hollow GC (Tillinghast)", BROOK_HOLLOW_TILLINGHAST_PARS, BROOK_HOLLOW_TILLINGHAST_HCS, BROOK_HOLLOW_TILLINGHAST_TEES,
-          country: "USA", state: "TX"),
+        c(
+          PINEHURST_NO2_USOPEN_ID,
+          "Pinehurst No. 2 (U.S. Open)",
+          PINEHURST_NO2_USOPEN_PARS,
+          PINEHURST_NO2_USOPEN_HCS,
+          country: "USA",
+          state: "NC",
+          architect: "Donald Ross",
+          type: "Resort"
+        ),
 
+        c(
+          BROOK_HOLLOW_TILLINGHAST_ID,
+          "Brook Hollow GC (Tillinghast)",
+          BROOK_HOLLOW_TILLINGHAST_PARS,
+          BROOK_HOLLOW_TILLINGHAST_HCS,
+          BROOK_HOLLOW_TILLINGHAST_TEES,
+          country: "USA",
+          state: "TX",
+          architect: "A.W. Tillinghast",
+          type: "Private"
+        ),
         // -------------------------
         // Georgia
         // -------------------------
-        c(SEA_ISLAND_SEASIDE_RED_ID, "Sea Island (Seaside — Red)",
+        c(SEA_ISLAND_SEASIDE_RED_ID,
+          "Sea Island (Seaside — Red)",
           SEA_ISLAND_SEASIDE_RED_PARS,
           SEA_ISLAND_SEASIDE_RED_HCS,
           SEA_ISLAND_SEASIDE_RED_TEES,
-          country: "USA", state: "GA",
+          country: "USA",
+          state: "GA",
           architect: "Davis Love III, Mark Love",
           type: "Resort"),
-        
-        c(SEA_ISLAND_RETREAT_RED_ID, "Sea Island (Retreat — Red)",
+
+        c(SEA_ISLAND_RETREAT_RED_ID,
+          "Sea Island (Retreat — Red)",
           SEA_ISLAND_RETREAT_RED_PARS,
           SEA_ISLAND_RETREAT_RED_HCS,
           SEA_ISLAND_RETREAT_RED_TEES,
-          country: "USA", state: "GA",
+          country: "USA",
+          state: "GA",
           architect: "Davis Love III, Mark Love",
           type: "Resort"),
+
+
         // -------------------------
         // Florida
         // -------------------------
-        c(DYE_PRESERVE_CHAMPIONSHIP_ID, "Dye Preserve (Championship)", DYE_PRESERVE_CHAMPIONSHIP_PARS, DYE_PRESERVE_CHAMPIONSHIP_HCS, DYE_PRESERVE_CHAMPIONSHIP_TEES,
-          country: "USA", state: "FL"),
-        c(SEMINOLE_GOLD_ID, "Seminole (Gold)", SEMINOLE_GOLD_PARS, SEMINOLE_GOLD_HCS, SEMINOLE_GOLD_TEES,
-          country: "USA", state: "FL"),
+        c(DYE_PRESERVE_CHAMPIONSHIP_ID,
+          "Dye Preserve (Championship)",
+          DYE_PRESERVE_CHAMPIONSHIP_PARS,
+          DYE_PRESERVE_CHAMPIONSHIP_HCS,
+          DYE_PRESERVE_CHAMPIONSHIP_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye",
+          type: "Private"),
+
+        c(SEMINOLE_GOLD_ID,
+          "Seminole (Gold)",
+          SEMINOLE_GOLD_PARS,
+          SEMINOLE_GOLD_HCS,
+          SEMINOLE_GOLD_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Donald Ross",
+          type: "Private"),
+
 
         // -------------------------
         // Arizona
         // -------------------------
-        c(WHISPER_ROCK_UPPER_ROCK_ID, "Whisper Rock Upper (Rock)", WHISPER_ROCK_UPPER_ROCK_PARS, WHISPER_ROCK_UPPER_ROCK_HCS, WHISPER_ROCK_UPPER_ROCK_TEES,
-          country: "USA", state: "AZ"),
-        c(SILVERLEAF_GC_SILVER_ID, "Silverleaf GC (Silver)", SILVERLEAF_GC_SILVER_PARS, SILVERLEAF_GC_SILVER_HCS, SILVERLEAF_GC_SILVER_TEES,
-          country: "USA", state: "AZ"),
-        c(SCOTTSDALE_NATIONAL_XTEE_ID, "Scottsdale National GC (X-Tee)", SCOTTSDALE_NATIONAL_XTEE_PARS, SCOTTSDALE_NATIONAL_XTEE_HCS, SCOTTSDALE_NATIONAL_XTEE_TEES,
-          country: "USA", state: "AZ"),
+        c(WHISPER_ROCK_UPPER_ROCK_ID,
+          "Whisper Rock Upper (Rock)",
+          WHISPER_ROCK_UPPER_ROCK_PARS,
+          WHISPER_ROCK_UPPER_ROCK_HCS,
+          WHISPER_ROCK_UPPER_ROCK_TEES,
+          country: "USA",
+          state: "AZ",
+          architect: nil,
+          type: "Private"),
 
-        c(MAKRAY_MEMORIAL_BLACK_ID, "Makray Memorial (Black)",
-          MAKRAY_MEMORIAL_BLACK_PARS, MAKRAY_MEMORIAL_BLACK_HCS, MAKRAY_MEMORIAL_BLACK_TEES,
-          country: "USA", state: "IL"),
+        c(SILVERLEAF_GC_SILVER_ID,
+          "Silverleaf GC (Silver)",
+          SILVERLEAF_GC_SILVER_PARS,
+          SILVERLEAF_GC_SILVER_HCS,
+          SILVERLEAF_GC_SILVER_TEES,
+          country: "USA",
+          state: "AZ",
+          architect: "Tom Weiskopf",
+          type: "Private"),
 
-        c(LAKE_BARRINGTON_SHORES_BLACK_ID, "Lake Barrington Shores (Black)",
-          LAKE_BARRINGTON_SHORES_BLACK_PARS, LAKE_BARRINGTON_SHORES_BLACK_HCS, LAKE_BARRINGTON_SHORES_BLACK_TEES,
-          country: "USA", state: "IL"),
+        c(SCOTTSDALE_NATIONAL_XTEE_ID,
+          "Scottsdale National GC (X-Tee)",
+          SCOTTSDALE_NATIONAL_XTEE_PARS,
+          SCOTTSDALE_NATIONAL_XTEE_HCS,
+          SCOTTSDALE_NATIONAL_XTEE_TEES,
+          country: "USA",
+          state: "AZ",
+          architect: nil,
+          type: "Private"),
 
-        c(FOXFORD_HILLS_BLACK_ID, "Foxford Hills (Black)",
-          FOXFORD_HILLS_BLACK_PARS, FOXFORD_HILLS_BLACK_HCS, FOXFORD_HILLS_BLACK_TEES,
-          country: "USA", state: "IL"),
+        c(FOREST_HIGHLANDS_MEADOW_ID,
+          "Forest Highlands - Meadow (White)",
+          FOREST_HIGHLANDS_MEADOW_PARS,
+          FOREST_HIGHLANDS_MEADOW_MENS_HCS,
+          country: "USA",
+          state: "AZ",
+          architect: nil,
+          type: "Private"),
 
-        c(CARY_CC_BLUE_ID, "Cary CC (Blue)",
-          CARY_CC_BLUE_PARS, CARY_CC_BLUE_HCS, CARY_CC_BLUE_TEES,
-          country: "USA", state: "IL"),
 
-        c(CHALET_HILLS_BLACK_ID, "Chalet Hills (Black)",
-          CHALET_HILLS_BLACK_PARS, CHALET_HILLS_BLACK_HCS, CHALET_HILLS_BLACK_TEES,
-          country: "USA", state: "IL"),
+        // -------------------------
+        // Illinois
+        // -------------------------
+        c(MAKRAY_MEMORIAL_BLACK_ID,
+          "Makray Memorial (Black)",
+          MAKRAY_MEMORIAL_BLACK_PARS,
+          MAKRAY_MEMORIAL_BLACK_HCS,
+          MAKRAY_MEMORIAL_BLACK_TEES,
+          country: "USA",
+          state: "IL",
+          architect: nil,
+          type: "Private"),
 
-        c(ERIN_HILLS_ID, "Erin Hills (Black)", ERIN_HILLS_BLACK_PARS, ERIN_HILLS_BLACK_HCS,
-          country: "USA", state: "WI"),
+        c(LAKE_BARRINGTON_SHORES_BLACK_ID,
+          "Lake Barrington Shores (Black)",
+          LAKE_BARRINGTON_SHORES_BLACK_PARS,
+          LAKE_BARRINGTON_SHORES_BLACK_HCS,
+          LAKE_BARRINGTON_SHORES_BLACK_TEES,
+          country: "USA",
+          state: "IL",
+          architect: nil,
+          type: "Public"),
 
-        c(CALUSA_PINES_ID, "Calusa Pines (Gold)", CALUSA_PINES_GOLD_PARS, CALUSA_PINES_GOLD_HCS,
-          country: "USA", state: "FL"),
+        c(FOXFORD_HILLS_BLACK_ID,
+          "Foxford Hills (Black)",
+          FOXFORD_HILLS_BLACK_PARS,
+          FOXFORD_HILLS_BLACK_HCS,
+          FOXFORD_HILLS_BLACK_TEES,
+          country: "USA",
+          state: "IL",
+          architect: nil,
+          type: "Public"),
 
-        // NOTE: Karoo HCPs not visible in your screenshots yet.
-        c(KAROO_ID, "Karoo (Black)", KAROO_BLACK_PARS, KAROO_BLACK_HCS_TODO,
-          country: "USA", state: "FL"),
+        c(CARY_CC_BLUE_ID,
+          "Cary CC (Blue)",
+          CARY_CC_BLUE_PARS,
+          CARY_CC_BLUE_HCS,
+          CARY_CC_BLUE_TEES,
+          country: "USA",
+          state: "IL",
+          architect: nil,
+          type: "Private"),
 
-        c(PATRIOT_GC_ID, "Patriot GC (4 Star)", PATRIOT_GC_4STAR_PARS, PATRIOT_GC_4STAR_HCS,
-          country: "USA", state: "OK"),
+        c(CHALET_HILLS_BLACK_ID,
+          "Chalet Hills (Black)",
+          CHALET_HILLS_BLACK_PARS,
+          CHALET_HILLS_BLACK_HCS,
+          CHALET_HILLS_BLACK_TEES,
+          country: "USA",
+          state: "IL",
+          architect: nil,
+          type: "Public"),
 
-        c(AUGUSTA_NATIONAL_ID, "Augusta National (Masters)", AUGUSTA_NATIONAL_MASTERS_PARS, AUGUSTA_NATIONAL_MASTERS_HCS,
-          country: "USA", state: "GA"),
+        c(TPC_DEERE_RUN_TPC_ID,
+          "TPC Deere Run (TPC)",
+          TPC_DEERE_RUN_TPC_PARS,
+          TPC_DEERE_RUN_TPC_HCS,
+          TPC_DEERE_RUN_TPC_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "D.A. Weibring",
+          type: "Public"),
 
-        c(FOREST_HIGHLANDS_MEADOW_ID, "Forest Highlands - Meadow (White)", FOREST_HIGHLANDS_MEADOW_PARS, FOREST_HIGHLANDS_MEADOW_MENS_HCS,
-          country: "USA", state: "AZ"),
 
-        c(HARVESTER_GC_BLACK_ID, "The Harvester GC (Black)", HARVESTER_GC_BLACK_PARS, HARVESTER_GC_BLACK_HCS, HARVESTER_GC_BLACK_TEES,
-          country: "USA", state: "IA"),
+        // -------------------------
+        // Wisconsin / Michigan
+        // -------------------------
+        c(ERIN_HILLS_ID,
+          "Erin Hills (Black)",
+          ERIN_HILLS_BLACK_PARS,
+          ERIN_HILLS_BLACK_HCS,
+          country: "USA",
+          state: "WI",
+          architect: nil,
+          type: "Public"),
 
-        c(DAVENPORT_CC_BLACK_ID, "Davenport CC (Black)", DAVENPORT_CC_BLACK_PARS, DAVENPORT_CC_BLACK_HCS, DAVENPORT_CC_BLACK_TEES,
-          country: "USA", state: "IA"),
+        c(SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_ID,
+          "Sand Valley (Sedge Valley — Championship)",
+          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_PARS,
+          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_HCS,
+          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_TEES,
+          country: "USA",
+          state: "WI",
+          architect: "Tom Doak",
+          type: "Resort"),
 
-        c(TPC_DEERE_RUN_TPC_ID, "TPC Deere Run (TPC)", TPC_DEERE_RUN_TPC_PARS, TPC_DEERE_RUN_TPC_HCS, TPC_DEERE_RUN_TPC_TEES,
-          country: "USA", state: "IL"),
+        c(ARCADIA_BLUFFS_BLUFFS_BLUE_ID,
+          "Arcadia Bluffs (Bluffs — Blue)",
+          ARCADIA_BLUFFS_BLUFFS_BLUE_PARS,
+          ARCADIA_BLUFFS_BLUFFS_BLUE_HCS,
+          ARCADIA_BLUFFS_BLUFFS_BLUE_TEES,
+          country: "USA",
+          state: "MI",
+          architect: "W. Henderson, R. Smith",
+          type: "Daily-Fee"),
 
+
+        // -------------------------
+        // Florida extras
+        // -------------------------
+        c(CALUSA_PINES_ID,
+          "Calusa Pines (Gold)",
+          CALUSA_PINES_GOLD_PARS,
+          CALUSA_PINES_GOLD_HCS,
+          country: "USA",
+          state: "FL",
+          architect: nil,
+          type: "Private"),
+
+        c(KAROO_ID,
+          "Karoo (Black)",
+          KAROO_BLACK_PARS,
+          KAROO_BLACK_HCS_TODO,
+          country: "USA",
+          state: "FL",
+          architect: nil,
+          type: "Resort"),
+
+
+        // -------------------------
+        // Oklahoma
+        // -------------------------
+        c(PATRIOT_GC_ID,
+          "Patriot GC (4 Star)",
+          PATRIOT_GC_4STAR_PARS,
+          PATRIOT_GC_4STAR_HCS,
+          country: "USA",
+          state: "OK",
+          architect: nil,
+          type: "Private"),
+
+
+        // -------------------------
+        // South Carolina
+        // -------------------------
         c(KIAWAH_OCEAN_CHAMP_ID,
           "Kiawah Island - Ocean Course (Championship)",
           KIAWAH_OCEAN_CHAMP_PARS,
           KIAWAH_OCEAN_CHAMP_HCS,
           KIAWAH_OCEAN_CHAMP_TEES,
           country: "USA",
-          state: "SC"),
+          state: "SC",
+          architect: "Pete Dye",
+          type: "Resort"),
+
+        // -------------------------
+        // Wyoming
+        //
         
+        c(SHOOTING_STAR_ID,
+          "Shooting Star",
+          SHOOTING_STAR_CHAMPIONSHIP_PARS,
+          SHOOTING_STAR_CHAMPIONSHIP_HCS,
+          country: "USA",
+          state: "WY",
+          architect: "Tom Fazio",
+          type: "Private"),
+        // -------------------------
+        // Montana
+        // -------------------------
         c(ROCK_CREEK_CATTLE_COMPANY_ID,
           "Rock Creek Cattle Company",
           ROCK_CREEK_CATTLE_COMPANY_TEE_I_PARS,
           ROCK_CREEK_CATTLE_COMPANY_TEE_I_HCS,
           ROCK_CREEK_CATTLE_COMPANY_TEES,
           country: "USA",
-          state: "MT"),
-        
-        c(MANELE_GOLF_COURSE_NICKLAUS_ID, "Four Seasons Lanai Manele",
+          state: "MT",
+          architect: "Tom Doak",
+          type: "Private"),
+
+
+        // -------------------------
+        // Hawaii
+        // -------------------------
+        c(MANELE_GOLF_COURSE_NICKLAUS_ID,
+          "Four Seasons Lanai Manele",
           MANELE_GOLF_COURSE_NICKLAUS_PARS,
           MANELE_GOLF_COURSE_NICKLAUS_HCS,
-          country: "USA", state: "HI",
+          country: "USA",
+          state: "HI",
           architect: "Jack Nicklaus",
           type: "Resort"),
 
-        c(PINEHURST_NO10_BLUE_ID, "Pinehurst No. 10 (Blue)",
-          PINEHURST_NO10_BLUE_PARS,
-          PINEHURST_NO10_BLUE_HCS,
-          PINEHURST_NO10_BLUE_TEES,
-          country: "USA", state: "NC",
-          architect: "Tom Doak, Angela Moser",   // if you want to include it
-          type: "Resort"),
-       
-        c(GAMBLE_SANDS_MEDAL_ID, "Gamble Sands (Medal)",
-          GAMBLE_SANDS_MEDAL_PARS,
-          GAMBLE_SANDS_MEDAL_HCS,
-          GAMBLE_SANDS_MEDAL_TEES,
-          country: "USA", state: "WA",
-          architect: "David McLay Kidd",
-          type: "Daily-Fee"),
-       
-        c(KAPALUA_PLANTATION_TOURNAMENT_ID, "Kapalua (Plantation – Tournament)",
+        c(KAPALUA_PLANTATION_TOURNAMENT_ID,
+          "Kapalua (Plantation – Tournament)",
           KAPALUA_PLANTATION_TOURNAMENT_PARS,
           KAPALUA_PLANTATION_TOURNAMENT_HCS,
           KAPALUA_PLANTATION_TOURNAMENT_TEES,
-          country: "USA", state: "HI",
+          country: "USA",
+          state: "HI",
           architect: "Bill Coore, Ben Crenshaw",
           type: "Resort"),
-        
-        c(MCLEMORE_KEEP_ID, "McLemore (The Keep)",
+
+
+        // -------------------------
+        // North Carolina / Washington / Georgia
+        // -------------------------
+        c(PINEHURST_NO10_BLUE_ID,
+          "Pinehurst No. 10 (Blue)",
+          PINEHURST_NO10_BLUE_PARS,
+          PINEHURST_NO10_BLUE_HCS,
+          PINEHURST_NO10_BLUE_TEES,
+          country: "USA",
+          state: "NC",
+          architect: "Tom Doak, Angela Moser",
+          type: "Resort"),
+
+        c(GAMBLE_SANDS_MEDAL_ID,
+          "Gamble Sands (Medal)",
+          GAMBLE_SANDS_MEDAL_PARS,
+          GAMBLE_SANDS_MEDAL_HCS,
+          GAMBLE_SANDS_MEDAL_TEES,
+          country: "USA",
+          state: "WA",
+          architect: "David McLay Kidd",
+          type: "Daily-Fee"),
+
+        c(MCLEMORE_KEEP_ID,
+          "McLemore (The Keep)",
           MCLEMORE_KEEP_PARS,
           MCLEMORE_KEEP_HCS,
           MCLEMORE_KEEP_TEES,
-          country: "USA", state: "GA",
+          country: "USA",
+          state: "GA",
           architect: "Bill Bergen, Rees Jones",
           type: "Resort"),
-        
-        
 
-        c(SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_ID, "Sand Valley (Sedge Valley — Championship)",
-          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_PARS,
-          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_HCS,
-          SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_TEES,
-          country: "USA", state: "WI",
-          architect: "Tom Doak",
+
+        // -------------------------
+        // Dominican Republic
+        // -------------------------
+        c(LA_ESTANCIA_ID,
+          "La Estancia Golf Resort (Tournament)",
+          LA_ESTANCIA_TOURNAMENT_PARS,
+          LA_ESTANCIA_TOURNAMENT_HCS,
+          country: "Dominican Republic",
+          state: nil,
+          architect: nil,
           type: "Resort"),
-        c(ARCADIA_BLUFFS_BLUFFS_BLUE_ID, "Arcadia Bluffs (Bluffs — Blue)",
-          ARCADIA_BLUFFS_BLUFFS_BLUE_PARS,
-          ARCADIA_BLUFFS_BLUFFS_BLUE_HCS,
-          ARCADIA_BLUFFS_BLUFFS_BLUE_TEES,
-          country: "USA", state: "MI",
-          architect: "W. Henderson, R. Smith",
-          type: "Daily-Fee"),
+        
+        c(ESTANCIA_ID,
+          "Estancia",
+          ESTANCIA_PARS,
+          ESTANCIA_HCS,
+          country: "USA",
+          state: "AZ",
+          architect: "Tom Fazio",
+          type: "Private"),
+        
+        c(QUARRY_LA_QUINTA_ID,
+          "The Quarry at La Quinta",
+          QUARRY_LA_QUINTA_PARS,
+          QUARRY_LA_QUINTA_HCS,
+          country: "USA",
+          state: "CA",
+          architect: "Tom Fazio",
+          type: "Private"),
+        
+        c(MARTIS_CAMP_ID,
+          "Martis Camp",
+          MARTIS_CAMP_MEDAL_PARS,
+          MARTIS_CAMP_MEDAL_HCS,
+          country: "USA",
+          state: "CA",
+          architect: "Tom Fazio",
+          type: "Private"),
 
-        c(LA_ESTANCIA_ID, "La Estancia Golf Resort (Tournament)", LA_ESTANCIA_TOURNAMENT_PARS, LA_ESTANCIA_TOURNAMENT_HCS,
-          country: "Dominican Republic", state: nil),
+        c(AUGUSTA_NATIONAL_ID,
+          "Augusta National (Masters)",
+          AUGUSTA_NATIONAL_MASTERS_PARS,
+          AUGUSTA_NATIONAL_MASTERS_HCS,
+          AUGUSTA_NATIONAL_TEES,
+          country: "USA",
+          state: "GA",
+          architect: "Alister MacKenzie, Bobby Jones",
+          type: "Private"),
+        
+        c(COLORADO_GOLF_CLUB_ID,
+          "Colorado Golf Club",
+          COLORADO_GOLF_CLUB_PARS,
+          COLORADO_GOLF_CLUB_HCS,
+          country: "USA",
+          state: "CO",
+          architect: "Bill Coore, Ben Crenshaw",
+          type: "Private"),
 
-        // -------------------------
-        // Ireland / UK / Travel set
-        // -------------------------
-        c(ADARE_MANOR_ID, "Adare Manor", ADARE_MANOR_PARS, ADARE_MANOR_HCS,
-          country: "Ireland", state: nil),
-        c(BALLYBUNION_OLD_ID, "Ballybunion (Old Course)", BALLYBUNION_OLD_PARS, BALLYBUNION_OLD_HCS,
-          country: "Ireland", state: nil),
-        c(OLD_HEAD_ID, "Old Head Golf Links", OLD_HEAD_PARS, OLD_HEAD_HCS,
-          country: "Ireland", state: nil),
-        c(ROYAL_COUNTY_DOWN_CHAMP_ID, "Royal County Down (Championship)", ROYAL_COUNTY_DOWN_CHAMP_PARS, ROYAL_COUNTY_DOWN_CHAMP_HCS,
-          country: "Northern Ireland", state: nil),
-        c(ROYAL_PORTRUSH_DUNLUCE_ID, "Royal Portrush (Dunluce)", ROYAL_PORTRUSH_DUNLUCE_PARS, ROYAL_PORTRUSH_DUNLUCE_HCS,
-          country: "Northern Ireland", state: nil),
-        c(WATERVILLE_ID, "Waterville Golf Links", WATERVILLE_PARS, WATERVILLE_HCS,
-          country: "Ireland", state: nil),
-        c(WADE_HAMPTON_CLUB_ID, "Wade Hampton Club",
-          WADE_HAMPTON_CLUB_PARS_TODO, WADE_HAMPTON_CLUB_HCS_TODO,
-          country: "USA", state: "NC", architect: "Tom Fazio"),
+        c(CORNERSTONE_ID,
+          "Cornerstone Club",
+          CORNERSTONE_PARS_TODO,
+          CORNERSTONE_HCS_TODO,
+          country: "USA",
+          state: "CO",
+          architect: "Greg Norman",
+          type: "Private"),
+        
+        c(PINE_VALLEY_ID,
+          "Pine Valley",
+          PINE_VALLEY_PARS,
+          PINE_VALLEY_HCS,
+          country: "USA",
+          state: "NJ",
+          architect: "George Crump",
+          type: "Private"),
+        
+        c(WADE_HAMPTON_CLUB_ID,
+          "Wade Hampton Club",
+          WADE_HAMPTON_CLUB_PARS_TODO,
+          WADE_HAMPTON_CLUB_HCS_TODO,
+          country: "USA",
+          state: "NC",
+          architect: "Tom Fazio",
+          type: "Private"),
+        
+        c(ADARE_MANOR_ID,
+          "Adare Manor",
+          ADARE_MANOR_PARS,
+          ADARE_MANOR_HCS,
+          country: "Ireland",
+          state: nil,
+          architect: "Tom Fazio",
+          type: "Resort"),
 
-        c(ESTANCIA_ID, "Estancia",
-          ESTANCIA_PARS_TODO, ESTANCIA_HCS_TODO,
-          country: "USA", state: "AZ", architect: "Tom Fazio"),
+        c(BALLYBUNION_OLD_ID,
+          "Ballybunion (Old Course)",
+          BALLYBUNION_OLD_PARS,
+          BALLYBUNION_OLD_HCS,
+          country: "Ireland",
+          state: nil,
+          architect: nil,
+          type: "Public"),
 
-        c(SAND_VALLEY_LIDO_ID, "Sand Valley (Lido)",
-          SAND_VALLEY_LIDO_PARS_TODO, SAND_VALLEY_LIDO_HCS_TODO,
-          country: "USA", state: "WI", architect: "C.B. Macdonald / Seth Raynor / Tom Doak / Brian Schneider"),
+        c(OLD_HEAD_ID,
+          "OLD_HEAD",
+          OLD_HEAD_PARS,
+          OLD_HEAD_HCS,
+          country: "Ireland",
+          state: nil,
+          architect: "Ron Kirby, Paddy Merrigan",
+          type: "Resort"),
 
-        c(COLORADO_GOLF_CLUB_ID, "Colorado Golf Club",
-          QUARRY_LA_QUINTA_PARS, COLORADO_GOLF_CLUB_HCS,
-          country: "USA", state: "CO", architect: "Bill Coore / Ben Crenshaw"),
+        c(ROYAL_COUNTY_DOWN_CHAMP_ID,
+          "Royal County Down (Championship)",
+          ROYAL_COUNTY_DOWN_CHAMP_PARS,
+          ROYAL_COUNTY_DOWN_CHAMP_HCS,
+          country: "Northern Ireland",
+          state: nil,
+          architect: nil,
+          type: "Private"),
 
-        c(QUARRY_LA_QUINTA_ID, "The Quarry at La Quinta",
-          QUARRY_LA_QUINTA_PARS, QUARRY_LA_QUINTA_HCS,
-          country: "USA", state: "CA", architect: "Tom Fazio"),
-
-        c(MARTIS_CAMP_ID, "Martis Camp",
-          MARTIS_CAMP_MEDAL_PARS, MARTIS_CAMP_MEDAL_HCS,
-          country: "USA", state: "CA", architect: "Tom Fazio"),
-
-        c(SHOOTING_STAR_ID, "Shooting Star",
-          SHOOTING_STAR_CHAMPIONSHIP_PARS, SHOOTING_STAR_CHAMPIONSHIP_HCS,
-          country: "USA", state: "WY", architect: "Tom Fazio"),
-
-        c(CORNERSTONE_ID, "Cornerstone",
-          CORNERSTONE_PARS_TODO, CORNERSTONE_HCS_TODO,
-          country: "USA", state: "CO", architect: "Greg Norman"),
-        // -------------------------
-        // Must-have classic
-        // -------------------------
-        c(PINE_VALLEY_ID, "Pine Valley", PINE_VALLEY_PARS, PINE_VALLEY_HCS,
-          country: "USA", state: "NJ"),
-    ]
-    
-
+        c(ROYAL_PORTRUSH_DUNLUCE_ID,
+          "Royal Portrush (Dunluce)",
+          ROYAL_PORTRUSH_DUNLUCE_PARS,
+          ROYAL_PORTRUSH_DUNLUCE_HCS,
+          country: "Northern Ireland",
+          state: nil,
+          architect: "Harry Colt",
+          type: "Private"),
+        
+        c(WATERVILLE_ID,
+          "Waterville Golf Links",
+          WATERVILLE_PARS,
+          WATERVILLE_HCS,
+          country: "Ireland",
+          state: nil,
+          architect: "Eddie Hackett",
+          type: "Resort"),
+        
+        c(
+          SAND_VALLEY_LIDO_ID,
+          "Sand Valley (Lido)",
+          SAND_VALLEY_LIDO_PARS_TODO,
+          SAND_VALLEY_LIDO_HCS_TODO,
+          nil,
+          country: "USA",
+          state: "WI",
+          architect: "C.B. Macdonald / Seth Raynor / Tom Doak / Brian Schneider",
+          type: "Resort"
+        ),
+]
     // =======================================================
     // ✅ DEBUG SAFETY: Crash fast if any BuiltInCourse IDs duplicate
     // =======================================================
@@ -1848,14 +2589,21 @@ final class CourseLibrary {
     }
 
     private func mergeKeepUserBits(existing: CourseProfile, incoming: CourseProfile) -> CourseProfile {
+
         CourseProfile(
             id: existing.id,
             name: incoming.name,
             pars: incoming.pars,
             hcs: incoming.hcs,
+
+            // keep user data if built-in doesn't provide it
             tees: incoming.tees ?? existing.tees,
             country: incoming.country ?? existing.country,
-            state: incoming.state ?? existing.state
+            state: incoming.state ?? existing.state,
+
+            // ✅ add these so built-ins keep their metadata
+            architect: incoming.architect ?? existing.architect,
+            type: incoming.type ?? existing.type
         )
     }
 

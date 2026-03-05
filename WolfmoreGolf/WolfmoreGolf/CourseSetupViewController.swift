@@ -105,22 +105,69 @@ final class CourseSetupViewController: UIViewController {
 
         let ac = UIAlertController(
             title: "Save Course",
-            message: "Enter a course name",
+            message: "Enter course details",
             preferredStyle: .alert
         )
+
+        // 1) Name
         ac.addTextField { tf in
-            tf.placeholder = "e.g., Cedar Rapids CC (Championship)"
+            tf.placeholder = "Course name (e.g., Sea Island — Seaside)"
             tf.autocapitalizationType = .words
             tf.clearButtonMode = .whileEditing
         }
+
+        // 2) Country
+        ac.addTextField { tf in
+            tf.placeholder = "Country (default: USA)"
+            tf.autocapitalizationType = .words
+            tf.clearButtonMode = .whileEditing
+            tf.text = "USA"
+        }
+
+        // 3) State / Region
+        ac.addTextField { tf in
+            tf.placeholder = "State / Region (e.g., IL, GA, County Down)"
+            tf.autocapitalizationType = .words
+            tf.clearButtonMode = .whileEditing
+        }
+
+        // 4) Type
+        ac.addTextField { tf in
+            tf.placeholder = "Type (Private / Resort / Daily-Fee / Municipal)"
+            tf.autocapitalizationType = .words
+            tf.clearButtonMode = .whileEditing
+        }
+
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
         ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
             guard let self else { return }
 
-            let raw = ac.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
-            let name = (raw?.isEmpty == false) ? raw! : "Unnamed Course"
+            let tfs = ac.textFields ?? []
 
-            let newCourse = CourseProfile(name: name, pars: pars, hcs: hcs)
+            let nameRaw = tfs[safe: 0]?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let countryRaw = tfs[safe: 1]?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let stateRaw = tfs[safe: 2]?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let typeRaw = tfs[safe: 3]?.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let name = (nameRaw?.isEmpty == false) ? nameRaw! : "Unnamed Course"
+            let country = (countryRaw?.isEmpty == false) ? countryRaw! : "USA"
+            let state = (stateRaw?.isEmpty == false) ? stateRaw : nil
+            let type = (typeRaw?.isEmpty == false) ? typeRaw : nil
+
+            // IMPORTANT: use memberwise init so it always compiles
+            let newCourse = CourseProfile(
+                id: UUID(),
+                name: name,
+                pars: pars,
+                hcs: hcs,
+                tees: nil,
+                country: country,
+                state: state,
+                architect: nil,
+                type: type
+            )
+
             CourseLibrary.shared.upsert(newCourse)
 
             self.activeCourseID = newCourse.id
@@ -131,6 +178,7 @@ final class CourseSetupViewController: UIViewController {
 
             UINotificationFeedbackGenerator().notificationOccurred(.success)
         })
+
         present(ac, animated: true)
     }
 
@@ -254,4 +302,9 @@ final class CourseSetupViewController: UIViewController {
     }
 
     @objc private func endEditingNow() { view.endEditing(true) }
+}
+private extension Array {
+    subscript(safe i: Int) -> Element? {
+        indices.contains(i) ? self[i] : nil
+    }
 }
