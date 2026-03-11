@@ -53,7 +53,7 @@ final class HoleStatsViewController: UITableViewController {
         let stored = ProfileStore.homeCourseID
         if !stored.isEmpty { return stored }
 
-        if let b = CourseLibrary.shared.WolfMore() {
+        if let b = CourseLibrary.shared.wolfMore() {
             return b.id.uuidString
         }
 

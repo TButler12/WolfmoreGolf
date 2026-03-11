@@ -311,6 +311,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
         let c = course(at: indexPath)
         cell.textLabel?.text = c.name
+        cell.textLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
 
         // ✓ Selected course
         cell.accessoryType = (c.id == CourseLibrary.shared.selectedCourseID) ? .checkmark : .none
@@ -323,14 +324,31 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             cell.imageView?.image = nil
         }
 
-        // Built-in vs Custom
         let isBuiltIn = CourseLibrary.shared.isBuiltIn(id: c.id)
-        cell.detailTextLabel?.text = isBuiltIn ? "Built-in course" : "Custom course"
+
+        var parts: [String] = []
+        parts.append(isBuiltIn ? "Built-in" : "Custom")
+
+        if let type = c.type, !type.isEmpty {
+            parts.append(type)
+        }
+
+        if let state = c.state, !state.isEmpty {
+            parts.append(state)
+        }
+
+        var iconText = ""
+
+        if c.hasPhone { iconText += "  📞" }
+        if c.hasWebsite { iconText += "  🌐" }
+        if c.isApproved { iconText += "  🐺" }
+
+        cell.detailTextLabel?.text = parts.joined(separator: " • ") + iconText
         cell.detailTextLabel?.textColor = .secondaryLabel
+        cell.detailTextLabel?.numberOfLines = 2
 
         return cell
     }
-    
     override func tableView(_ tableView: UITableView,
                             didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
@@ -343,10 +361,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     override func tableView(_ tableView: UITableView,
                             trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
-        
+
         let c = course(at: indexPath)
-        
-        // ⭐ Home
+        var actions: [UIContextualAction] = []
+
         let home = UIContextualAction(style: .normal, title: "Home") { [weak self] _, _, done in
             self?.setHomeCourse(c.id)
             tableView.reloadData()
@@ -354,19 +372,73 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         }
         home.backgroundColor = .systemYellow
         home.image = UIImage(systemName: "star.fill")
-        
-        // ✏️ Edit
-        let edit = UIContextualAction(style: .normal, title: "View/Edit") { [weak self] _, _, done in
+        actions.append(home)
+
+        let edit = UIContextualAction(style: .normal, title: "Edit") { [weak self] _, _, done in
             self?.editCourse(c)
             done(true)
         }
         edit.backgroundColor = .systemBlue
         edit.image = UIImage(systemName: "pencil")
-        
-        // 🗑️ Delete
+        actions.append(edit)
+
+        let info = UIContextualAction(style: .normal, title: "Info") { [weak self] _, _, done in
+            self?.showCourseInfo(c)
+            done(true)
+        }
+        info.backgroundColor = .systemTeal
+        info.image = UIImage(systemName: "info.circle")
+        actions.append(info)
+
+        if c.hasPhone {
+            let phone = UIContextualAction(style: .normal, title: "Call") { _, _, done in
+                let cleaned = (c.phone ?? "").filter { "0123456789+".contains($0) }
+                if let url = URL(string: "tel://\(cleaned)"),
+                   UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                }
+                done(true)
+            }
+            phone.backgroundColor = .systemGreen
+            phone.image = UIImage(systemName: "phone.fill")
+            actions.append(phone)
+        }
+
+        if c.hasWebsite {
+            let web = UIContextualAction(style: .normal, title: "Web") { _, _, done in
+                var text = c.website?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                if !text.lowercased().hasPrefix("http://") && !text.lowercased().hasPrefix("https://") {
+                    text = "https://\(text)"
+                }
+                if let url = URL(string: text) {
+                    UIApplication.shared.open(url)
+                }
+                done(true)
+            }
+            web.backgroundColor = .systemIndigo
+            web.image = UIImage(systemName: "globe")
+            actions.append(web)
+        }
+
+        if c.isApproved {
+            let wolf = UIContextualAction(style: .normal, title: "Wolf") { [weak self] _, _, done in
+                let ac = UIAlertController(
+                    title: "WolfMore Approved",
+                    message: "\(c.name) is marked as a WolfMore Approved course.",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                self?.present(ac, animated: true)
+                done(true)
+            }
+            wolf.backgroundColor = .systemOrange
+            wolf.image = UIImage(systemName: "checkmark.seal.fill")
+            actions.append(wolf)
+        }
+
         let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, done in
             guard let self else { done(false); return }
-            
+
             if CourseLibrary.shared.isBuiltIn(id: c.id) {
                 let ac = UIAlertController(
                     title: "Can’t Delete",
@@ -379,19 +451,91 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
                 self.present(ac, animated: true)
                 return
             }
-            
+
             self.confirmDeleteCourse(c) { didDelete in
-                done(didDelete) // ✅ only completes swipe after user decides
+                done(didDelete)
             }
         }
         delete.image = UIImage(systemName: "trash")
-        
-        let config = UISwipeActionsConfiguration(actions: [delete, edit, home])
+        actions.append(delete)
+
+        let config = UISwipeActionsConfiguration(actions: actions)
         config.performsFirstActionWithFullSwipe = false
         return config
-    }  // ✅ YOU WERE MISSING THIS BRACE
-    
-    
+    }
+    private func showCourseInfo(_ c: CourseProfile) {
+        var lines: [String] = []
+
+        if let type = c.type, !type.isEmpty {
+            lines.append("Type: \(type)")
+        }
+        if let architect = c.architect, !architect.isEmpty {
+            lines.append("Architect: \(architect)")
+        }
+        if let state = c.state, !state.isEmpty {
+            lines.append("State: \(state)")
+        }
+        if let country = c.country, !country.isEmpty {
+            lines.append("Country: \(country)")
+        }
+        if let address = c.address, !address.isEmpty {
+            lines.append("Address: \(address)")
+        }
+        if let phone = c.phone, !phone.isEmpty {
+            lines.append("Phone: \(phone)")
+        }
+        if let website = c.website, !website.isEmpty {
+            lines.append("Website: \(website)")
+        }
+        if c.isApproved {
+            lines.append("WolfMore Approved")
+        }
+
+        let message = lines.isEmpty ? "No extra course details yet." : lines.joined(separator: "\n")
+
+        let ac = UIAlertController(title: c.name, message: message, preferredStyle: .actionSheet)
+
+        if let phone = c.phone, !phone.isEmpty {
+            ac.addAction(UIAlertAction(title: "Call", style: .default) { _ in
+                let cleaned = phone.filter { "0123456789+".contains($0) }
+                if let url = URL(string: "tel://\(cleaned)"),
+                   UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                }
+            })
+        }
+
+        if let website = c.website, !website.isEmpty {
+            ac.addAction(UIAlertAction(title: "Open Website", style: .default) { _ in
+                var text = website.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !text.lowercased().hasPrefix("http://") && !text.lowercased().hasPrefix("https://") {
+                    text = "https://\(text)"
+                }
+                if let url = URL(string: text) {
+                    UIApplication.shared.open(url)
+                }
+            })
+        }
+
+        if let address = c.address, !address.isEmpty {
+            ac.addAction(UIAlertAction(title: "Open in Maps", style: .default) { _ in
+                let encoded = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? address
+                if let url = URL(string: "http://maps.apple.com/?q=\(encoded)") {
+                    UIApplication.shared.open(url)
+                }
+            })
+        }
+
+        ac.addAction(UIAlertAction(title: "Close", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = view
+            pop.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
+            pop.permittedArrowDirections = []
+        }
+
+        present(ac, animated: true)
+    }
     // MARK: - Edit / Delete helpers
     private enum SortMode { case groupedLocation, name }
     private var sortMode: SortMode = .groupedLocation
@@ -448,5 +592,22 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     // MARK: - UISearchResultsUpdating
     func updateSearchResults(for searchController: UISearchController) {
         applyFilter()
+    }
+}
+private extension CourseProfile {
+    var hasPhone: Bool {
+        !(phone?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+
+    var hasWebsite: Bool {
+        !(website?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+
+    var hasAddress: Bool {
+        !(address?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+    }
+
+    var isApproved: Bool {
+        isWolfApproved == true
     }
 }

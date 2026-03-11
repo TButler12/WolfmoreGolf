@@ -7,8 +7,34 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		F60E62802F610B2A0062F321 /* ProGateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60E627F2F610B2A0062F321 /* ProGateViewController.swift */; };
 		F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1702F3691E6009EEB12 /* ServiceContact.swift */; };
 		F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1722F369228009EEB12 /* ServiceContactStore.swift */; };
+		F63960632F60D62500EC0C30 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960472F60D62500EC0C30 /* AppNotifications.swift */; };
+		F63960642F60D62500EC0C30 /* Course.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960482F60D62500EC0C30 /* Course.swift */; };
+		F63960662F60D62500EC0C30 /* CourseStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639604A2F60D62500EC0C30 /* CourseStore.swift */; };
+		F63960672F60D62500EC0C30 /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639604B2F60D62500EC0C30 /* Game.swift */; };
+		F63960682F60D62500EC0C30 /* GameData.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639604C2F60D62500EC0C30 /* GameData.swift */; };
+		F63960692F60D62500EC0C30 /* GameData+HoleViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639604D2F60D62500EC0C30 /* GameData+HoleViews.swift */; };
+		F639606A2F60D62500EC0C30 /* GameData+Money.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639604E2F60D62500EC0C30 /* GameData+Money.swift */; };
+		F639606B2F60D62500EC0C30 /* GameManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639604F2F60D62500EC0C30 /* GameManager.swift */; };
+		F639606C2F60D62500EC0C30 /* GameManager+Scoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960502F60D62500EC0C30 /* GameManager+Scoring.swift */; };
+		F639606D2F60D62500EC0C30 /* GameModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960512F60D62500EC0C30 /* GameModels.swift */; };
+		F639606E2F60D62500EC0C30 /* GameStatsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960522F60D62500EC0C30 /* GameStatsViewController.swift */; };
+		F639606F2F60D62500EC0C30 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960532F60D62500EC0C30 /* GameViewController.swift */; };
+		F63960702F60D62500EC0C30 /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960542F60D62500EC0C30 /* HomeViewController.swift */; };
+		F63960712F60D62500EC0C30 /* KeyboardHelpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960552F60D62500EC0C30 /* KeyboardHelpers.swift */; };
+		F63960722F60D62500EC0C30 /* MyStatsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960572F60D62500EC0C30 /* MyStatsViewController.swift */; };
+		F63960732F60D62500EC0C30 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960582F60D62500EC0C30 /* Notification.swift */; };
+		F63960742F60D62500EC0C30 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960592F60D62500EC0C30 /* Player.swift */; };
+		F63960752F60D62500EC0C30 /* PlayerSetupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605A2F60D62500EC0C30 /* PlayerSetupStore.swift */; };
+		F63960772F60D62500EC0C30 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605C2F60D62500EC0C30 /* ProfileStore.swift */; };
+		F63960782F60D62500EC0C30 /* RoundStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605D2F60D62500EC0C30 /* RoundStore.swift */; };
+		F63960792F60D62500EC0C30 /* RoundSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605E2F60D62500EC0C30 /* RoundSummary.swift */; };
+		F639607A2F60D62500EC0C30 /* RulesEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605F2F60D62500EC0C30 /* RulesEngine.swift */; };
+		F639607B2F60D62500EC0C30 /* ScoreStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960602F60D62500EC0C30 /* ScoreStyle.swift */; };
+		F639607C2F60D62500EC0C30 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960612F60D62500EC0C30 /* UserProfile.swift */; };
+		F639607D2F60D62500EC0C30 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F63960562F60D62500EC0C30 /* LaunchScreen.storyboard */; };
 		F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */; };
 		F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */; };
 		F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D07132ED922D400F165CA /* ManagePlayerCell.swift */; };
@@ -19,8 +45,12 @@
 		F64DE9522EB6AAE300F8D625 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = F64DE9512EB6AAE300F8D625 /* Assets.xcassets */; };
 		F657CEB42F01BBCA001CBFCD /* CourseLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */; };
 		F6590F052EFA225B0085D088 /* GameType.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6590F042EFA225B0085D088 /* GameType.swift */; };
+		F66007422F60C56F00148767 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66006BF2F60C56F00148767 /* ButtonStyles.swift */; };
+		F66007462F60C56F00148767 /* CoursePickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66006C32F60C56F00148767 /* CoursePickerViewController.swift */; };
+		F66007472F60C56F00148767 /* CourseSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66006C42F60C56F00148767 /* CourseSetupViewController.swift */; };
 		F688C7412F37F9E800A4B094 /* ContactsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F688C7402F37F9E800A4B094 /* ContactsViewController.swift */; };
 		F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F688C7802F3906C400A4B094 /* SummaryFormatter.swift */; };
+		F6D041842F611C3200CABD08 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F6D041822F611C3200CABD08 /* Main.storyboard */; };
 		F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D351512EC0313E00CE24F9 /* RulesViewController.swift */; };
 		F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */; };
 		F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66A7E2F26971300367C08 /* Entitlements.swift */; };
@@ -36,8 +66,38 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		F60E627F2F610B2A0062F321 /* ProGateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProGateViewController.swift; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
+		F63960472F60D62500EC0C30 /* AppNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotifications.swift; sourceTree = "<group>"; };
+		F63960482F60D62500EC0C30 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
+		F63960492F60D62500EC0C30 /* CourseSetupViewController 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CourseSetupViewController 2.swift"; sourceTree = "<group>"; };
+		F639604A2F60D62500EC0C30 /* CourseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseStore.swift; sourceTree = "<group>"; };
+		F639604B2F60D62500EC0C30 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		F639604C2F60D62500EC0C30 /* GameData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameData.swift; sourceTree = "<group>"; };
+		F639604D2F60D62500EC0C30 /* GameData+HoleViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameData+HoleViews.swift"; sourceTree = "<group>"; };
+		F639604E2F60D62500EC0C30 /* GameData+Money.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameData+Money.swift"; sourceTree = "<group>"; };
+		F639604F2F60D62500EC0C30 /* GameManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameManager.swift; sourceTree = "<group>"; };
+		F63960502F60D62500EC0C30 /* GameManager+Scoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameManager+Scoring.swift"; sourceTree = "<group>"; };
+		F63960512F60D62500EC0C30 /* GameModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameModels.swift; sourceTree = "<group>"; };
+		F63960522F60D62500EC0C30 /* GameStatsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameStatsViewController.swift; sourceTree = "<group>"; };
+		F63960532F60D62500EC0C30 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		F63960542F60D62500EC0C30 /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
+		F63960552F60D62500EC0C30 /* KeyboardHelpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeyboardHelpers.swift; sourceTree = "<group>"; };
+		F63960572F60D62500EC0C30 /* MyStatsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyStatsViewController.swift; sourceTree = "<group>"; };
+		F63960582F60D62500EC0C30 /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
+		F63960592F60D62500EC0C30 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
+		F639605A2F60D62500EC0C30 /* PlayerSetupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSetupStore.swift; sourceTree = "<group>"; };
+		F639605B2F60D62500EC0C30 /* PlayerSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSetupViewController.swift; sourceTree = "<group>"; };
+		F639605C2F60D62500EC0C30 /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
+		F639605D2F60D62500EC0C30 /* RoundStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundStore.swift; sourceTree = "<group>"; };
+		F639605E2F60D62500EC0C30 /* RoundSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundSummary.swift; sourceTree = "<group>"; };
+		F639605F2F60D62500EC0C30 /* RulesEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesEngine.swift; sourceTree = "<group>"; };
+		F63960602F60D62500EC0C30 /* ScoreStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreStyle.swift; sourceTree = "<group>"; };
+		F63960612F60D62500EC0C30 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
+		F63960622F60D62500EC0C30 /* Base 2C */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = "Base 2C"; path = "Base 2C.lproj/LaunchScreen.storyboard"; sourceTree = "<group>"; };
+		F63960862F60D62500EC0C30 /* CustomGroupsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomGroupsViewController.swift; sourceTree = "<group>"; };
+		F63960C12F60D62500EC0C30 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
 		F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterAndTrackingViewController.swift; sourceTree = "<group>"; };
 		F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagePlayersViewController.swift; sourceTree = "<group>"; };
 		F63D07132ED922D400F165CA /* ManagePlayerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManagePlayerCell.swift; sourceTree = "<group>"; };
@@ -49,8 +109,14 @@
 		F64DE9512EB6AAE300F8D625 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseLibrary.swift; sourceTree = "<group>"; };
 		F6590F042EFA225B0085D088 /* GameType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameType.swift; sourceTree = "<group>"; };
+		F66006BF2F60C56F00148767 /* ButtonStyles.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ButtonStyles.swift; sourceTree = "<group>"; };
+		F66006C32F60C56F00148767 /* CoursePickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CoursePickerViewController.swift; sourceTree = "<group>"; };
+		F66006C42F60C56F00148767 /* CourseSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseSetupViewController.swift; sourceTree = "<group>"; };
+		F66007022F60C56F00148767 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
+		F66007052F60C56F00148767 /* Base */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = Base; path = "Base.lproj/AppDelegate 2.swift"; sourceTree = "<group>"; };
 		F688C7402F37F9E800A4B094 /* ContactsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsViewController.swift; sourceTree = "<group>"; };
 		F688C7802F3906C400A4B094 /* SummaryFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryFormatter.swift; sourceTree = "<group>"; };
+		F6D041832F611C3200CABD08 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WolfmoreGolf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6D351512EC0313E00CE24F9 /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerSeat.swift; sourceTree = "<group>"; };
@@ -64,15 +130,8 @@
 		F6D6A49B2EC786D10000F576 /* FriendStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendStore.swift; sourceTree = "<group>"; };
 		F6D6A49D2EC786FF0000F576 /* FriendTrackStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendTrackStore.swift; sourceTree = "<group>"; };
 		F6D6A4A22EC78A100000F576 /* TrackFriendsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackFriendsViewController.swift; sourceTree = "<group>"; };
+		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		F64DE78A2EB0396000F8D625 /* WolfmoreGolf */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = WolfmoreGolf;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		F64DE7852EB0396000F8D625 /* Frameworks */ = {
@@ -86,10 +145,20 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		F63960C22F60D62500EC0C30 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F6D041822F611C3200CABD08 /* Main.storyboard */,
+				F60E627F2F610B2A0062F321 /* ProGateViewController.swift */,
 				F688C7802F3906C400A4B094 /* SummaryFormatter.swift */,
+				F66006BB2F60C56F00148767 /* AppDelegate.swift */,
 				F688C7402F37F9E800A4B094 /* ContactsViewController.swift */,
 				F618A1722F369228009EEB12 /* ServiceContactStore.swift */,
 				F618A1702F3691E6009EEB12 /* ServiceContact.swift */,
@@ -98,7 +167,11 @@
 				F6D66A822F2BCD4900367C08 /* ProViewController.swift */,
 				F6D66A802F26994400367C08 /* Notifications.swift */,
 				F6D66A7E2F26971300367C08 /* Entitlements.swift */,
+				F66006BF2F60C56F00148767 /* ButtonStyles.swift */,
 				F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */,
+				F66006C32F60C56F00148767 /* CoursePickerViewController.swift */,
+				F66006C42F60C56F00148767 /* CourseSetupViewController.swift */,
+				F63960472F60D62500EC0C30 /* AppNotifications.swift */,
 				F6590F042EFA225B0085D088 /* GameType.swift */,
 				F63D07132ED922D400F165CA /* ManagePlayerCell.swift */,
 				F63D08042EDFA66800F165CA /* CourseSummaryViewController.swift */,
@@ -111,7 +184,33 @@
 				F6D6A4992EC786BC0000F576 /* Friend.swift */,
 				F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */,
 				F6D351512EC0313E00CE24F9 /* RulesViewController.swift */,
-				F64DE78A2EB0396000F8D625 /* WolfmoreGolf */,
+				F63960482F60D62500EC0C30 /* Course.swift */,
+				F639604C2F60D62500EC0C30 /* GameData.swift */,
+				F639604A2F60D62500EC0C30 /* CourseStore.swift */,
+				F639604D2F60D62500EC0C30 /* GameData+HoleViews.swift */,
+				F639604F2F60D62500EC0C30 /* GameManager.swift */,
+				F63960502F60D62500EC0C30 /* GameManager+Scoring.swift */,
+				F63960512F60D62500EC0C30 /* GameModels.swift */,
+				F63960522F60D62500EC0C30 /* GameStatsViewController.swift */,
+				F63960492F60D62500EC0C30 /* CourseSetupViewController 2.swift */,
+				F63960532F60D62500EC0C30 /* GameViewController.swift */,
+				F639604E2F60D62500EC0C30 /* GameData+Money.swift */,
+				F63960542F60D62500EC0C30 /* HomeViewController.swift */,
+				F63960552F60D62500EC0C30 /* KeyboardHelpers.swift */,
+				F63960572F60D62500EC0C30 /* MyStatsViewController.swift */,
+				F63960582F60D62500EC0C30 /* Notification.swift */,
+				F63960592F60D62500EC0C30 /* Player.swift */,
+				F639605A2F60D62500EC0C30 /* PlayerSetupStore.swift */,
+				F639604B2F60D62500EC0C30 /* Game.swift */,
+				F639605B2F60D62500EC0C30 /* PlayerSetupViewController.swift */,
+				F63960602F60D62500EC0C30 /* ScoreStyle.swift */,
+				F639605F2F60D62500EC0C30 /* RulesEngine.swift */,
+				F639605E2F60D62500EC0C30 /* RoundSummary.swift */,
+				F639605C2F60D62500EC0C30 /* ProfileStore.swift */,
+				F63960612F60D62500EC0C30 /* UserProfile.swift */,
+				F639605D2F60D62500EC0C30 /* RoundStore.swift */,
+				F63960862F60D62500EC0C30 /* CustomGroupsViewController.swift */,
+				F63960562F60D62500EC0C30 /* LaunchScreen.storyboard */,
 				F64DE7892EB0396000F8D625 /* Products */,
 				F64DE8142EB2850000F8D625 /* AppDelegate.swift */,
 				F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */,
@@ -129,12 +228,26 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		F66007032F60C56F00148767 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		F6D66AC42F327AC400367C08 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
 				F6D66AC52F327AC400367C08 /* StoreKit.framework */,
 			);
 			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		F6F213F12F60F6D700809504 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -151,9 +264,6 @@
 			buildRules = (
 			);
 			dependencies = (
-			);
-			fileSystemSynchronizedGroups = (
-				F64DE78A2EB0396000F8D625 /* WolfmoreGolf */,
 			);
 			name = WolfmoreGolf;
 			packageProductDependencies = (
@@ -187,12 +297,28 @@
 				"Base 2",
 				"Base 2C",
 				"base 2C",
+				"Base 2B",
+				"Base 3",
 			);
 			mainGroup = F64DE77F2EB0396000F8D625;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F64DE7892EB0396000F8D625 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = F63960C22F60D62500EC0C30 /* Products */;
+					ProjectRef = F63960C12F60D62500EC0C30 /* WolfmoreGolf.xcodeproj */;
+				},
+				{
+					ProductGroup = F6F213F12F60F6D700809504 /* Products */;
+					ProjectRef = F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */;
+				},
+				{
+					ProductGroup = F66007032F60C56F00148767 /* Products */;
+					ProjectRef = F66007022F60C56F00148767 /* WolfmoreGolf.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				F64DE7872EB0396000F8D625 /* WolfmoreGolf */,
@@ -205,6 +331,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F6D041842F611C3200CABD08 /* Main.storyboard in Resources */,
+				F639607D2F60D62500EC0C30 /* LaunchScreen.storyboard in Resources */,
 				F64DE9522EB6AAE300F8D625 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -223,6 +351,9 @@
 				F6D66A812F26994400367C08 /* Notifications.swift in Sources */,
 				F6D66AD12F356B7E00367C08 /* TextViewController.swift in Sources */,
 				F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */,
+				F66007422F60C56F00148767 /* ButtonStyles.swift in Sources */,
+				F66007462F60C56F00148767 /* CoursePickerViewController.swift in Sources */,
+				F66007472F60C56F00148767 /* CourseSetupViewController.swift in Sources */,
 				F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */,
 				F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */,
 				F6D6A49E2EC786FF0000F576 /* FriendTrackStore.swift in Sources */,
@@ -232,10 +363,35 @@
 				F64CDA962ECD0AA900019EE0 /* HoleStatsViewController.swift in Sources */,
 				F6D6A4A32EC78A100000F576 /* TrackFriendsViewController.swift in Sources */,
 				F6D6A49A2EC786BC0000F576 /* Friend.swift in Sources */,
+				F63960632F60D62500EC0C30 /* AppNotifications.swift in Sources */,
+				F63960642F60D62500EC0C30 /* Course.swift in Sources */,
+				F63960662F60D62500EC0C30 /* CourseStore.swift in Sources */,
+				F63960672F60D62500EC0C30 /* Game.swift in Sources */,
+				F63960682F60D62500EC0C30 /* GameData.swift in Sources */,
+				F63960692F60D62500EC0C30 /* GameData+HoleViews.swift in Sources */,
+				F639606A2F60D62500EC0C30 /* GameData+Money.swift in Sources */,
+				F639606B2F60D62500EC0C30 /* GameManager.swift in Sources */,
+				F639606C2F60D62500EC0C30 /* GameManager+Scoring.swift in Sources */,
+				F639606D2F60D62500EC0C30 /* GameModels.swift in Sources */,
+				F639606E2F60D62500EC0C30 /* GameStatsViewController.swift in Sources */,
+				F639606F2F60D62500EC0C30 /* GameViewController.swift in Sources */,
+				F63960702F60D62500EC0C30 /* HomeViewController.swift in Sources */,
+				F63960712F60D62500EC0C30 /* KeyboardHelpers.swift in Sources */,
+				F63960722F60D62500EC0C30 /* MyStatsViewController.swift in Sources */,
+				F63960732F60D62500EC0C30 /* Notification.swift in Sources */,
+				F63960742F60D62500EC0C30 /* Player.swift in Sources */,
+				F63960752F60D62500EC0C30 /* PlayerSetupStore.swift in Sources */,
+				F63960772F60D62500EC0C30 /* ProfileStore.swift in Sources */,
+				F63960782F60D62500EC0C30 /* RoundStore.swift in Sources */,
+				F63960792F60D62500EC0C30 /* RoundSummary.swift in Sources */,
+				F639607A2F60D62500EC0C30 /* RulesEngine.swift in Sources */,
+				F639607B2F60D62500EC0C30 /* ScoreStyle.swift in Sources */,
+				F639607C2F60D62500EC0C30 /* UserProfile.swift in Sources */,
 				F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */,
 				F657CEB42F01BBCA001CBFCD /* CourseLibrary.swift in Sources */,
 				F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */,
 				F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */,
+				F60E62802F610B2A0062F321 /* ProGateViewController.swift in Sources */,
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
 				F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,
@@ -244,6 +400,33 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		F63960562F60D62500EC0C30 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F63960622F60D62500EC0C30 /* Base 2C */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		F66006BB2F60C56F00148767 /* AppDelegate.swift */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F66007052F60C56F00148767 /* Base */,
+			);
+			name = AppDelegate.swift;
+			sourceTree = "<group>";
+		};
+		F6D041822F611C3200CABD08 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				F6D041832F611C3200CABD08 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		F64DE79C2EB0396100F8D625 /* Debug */ = {

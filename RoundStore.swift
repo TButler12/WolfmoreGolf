@@ -139,7 +139,7 @@ private var trackingCourseID: String {
 
 private var trackedFriendStats: [(friend: Friend, stats: MyStats)] {
     let trackedFriends = FriendStore.shared.friends.filter { friend in
-        FriendTrackStore.shared.isTracked(friendID: friend.id, courseID: trackingCourseID)
+        FriendTrackStore.shared.isTracked(friend.id, on: trackingCourseID)
     }
 
     return trackedFriends.compactMap { friend in
