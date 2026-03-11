@@ -1,13 +1,4 @@
-//
-//  CourseLibrary.swift
-//  WolfmoreGolf
-//
-//  Created by Tom BUTLER on 12/28/25.
-//
-//
-//  CourseLibrary.swift
-//  WolfmoreGolf
-//
+
 //  Created by Tom BUTLER on 12/28/25.
 //  Refactor: central built-in registry + looped seeding + derived builtInIDs
 //
@@ -981,10 +972,7 @@ let KIAWAH_OCEAN_CHAMP_TEES: [TeeInfo] = [
         slope: 155
     )
 ]
-private func isUSAStateTitle(_ title: String) -> Bool {
-    // If it's 2 letters and not "USA (No State)", treat as state
-    return title.count == 2 && title != "USA (No State)"
-}
+
 
 // =======================================================
 // MARK: - Built-in: La Estancia Golf Resort (Tournament)
@@ -1244,615 +1232,708 @@ let ARCADIA_BLUFFS_BLUFFS_BLUE_HCS: [Int] = [
 let ARCADIA_BLUFFS_BLUFFS_BLUE_TEES: [TeeInfo] = [
     TeeInfo(teeName: "BLUE", yardage: 6858, rating: 74.2, slope: 150)
 ]
-// =======================================================
-// MARK: - Built-in Registry (ONE place that defines “built-in”)
-// =======================================================
-private struct BuiltInCourse {
-    let id: UUID
-    let name: String
-    let pars: [Int]
-    let hcs: [Int]
-    let tees: [TeeInfo]?
+// MARK: The Old White — Greenbrier — White Sulphur Springs, WV
+private let OLD_WHITE_GREENBRIER_ID = UUID(uuidString: "F2010001-0000-0000-0000-000000000001")!
 
-    // ✅ NEW
-    let country: String
-    let state: String?
-    let architect: String?
-    let type: String?
-    let phone: String?
-    let website: String?
+let OLD_WHITE_GREENBRIER_PARS: [Int] = [
+    4,4,3,4,4,4,4,3,4,
+    4,4,5,4,4,3,4,5,3
+]
+
+let OLD_WHITE_GREENBRIER_HCS: [Int] = [
+    3,5,17,13,11,1,7,15,9,
+    14,12,2,6,10,16,8,4,18
+]
+
+let OLD_WHITE_GREENBRIER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7246, rating: 76.0, slope: 145),
+    TeeInfo(teeName: "Gold",  yardage: 6894, rating: 74.1, slope: 137),
+    TeeInfo(teeName: "Blue",  yardage: 6426, rating: 71.7, slope: 130),
+    TeeInfo(teeName: "White", yardage: 5853, rating: 69.1, slope: 127),
+    TeeInfo(teeName: "Green", yardage: 5062, rating: 64.2, slope: 113)
+]
+
+// MARK: The Greenbrier Course — White Sulphur Springs, WV
+private let GREENBRIER_COURSE_ID = UUID(uuidString: "F2010001-0000-0000-0000-000000000002")!
+
+let GREENBRIER_COURSE_PARS: [Int] = [
+    4,4,5,3,5,4,3,4,3,
+    4,5,3,5,4,3,4,3,5
+]
+
+let GREENBRIER_COURSE_HCS: [Int] = [
+    9,5,11,13,3,1,15,7,17,
+    6,12,14,4,2,16,8,18,10
+]
+
+let GREENBRIER_COURSE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 6655, rating: 72.5, slope: 132),
+    TeeInfo(teeName: "Blue",  yardage: 6377, rating: 71.5, slope: 129),
+    TeeInfo(teeName: "White", yardage: 6003, rating: 68.9, slope: 119),
+    TeeInfo(teeName: "Green", yardage: 5057, rating: 65.5, slope: 115)
+]
+
+// MARK: Conway Farms GC — Lake Forest, IL
+private let CONWAY_FARMS_ID = UUID(uuidString: "F2010001-0000-0000-0000-000000000003")!
+
+let CONWAY_FARMS_PARS: [Int] = [
+    4,3,4,4,4,3,4,5,4,
+    4,3,4,4,5,4,4,3,5
+]
+
+let CONWAY_FARMS_HCS: [Int] = [
+    11,17,9,3,1,13,15,5,7,
+    10,18,12,2,6,14,4,16,8
+]
+
+let CONWAY_FARMS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",     yardage: 7233, rating: 76.3, slope: 152),
+    TeeInfo(teeName: "Green",     yardage: 6803, rating: nil,  slope: nil),
+    TeeInfo(teeName: "Blue Plus", yardage: 6609, rating: nil,  slope: nil),
+    TeeInfo(teeName: "Blue",      yardage: 6294, rating: nil,  slope: nil),
+    TeeInfo(teeName: "Classic",   yardage: 6147, rating: nil,  slope: nil),
+    TeeInfo(teeName: "White",     yardage: 5939, rating: nil,  slope: nil),
+    TeeInfo(teeName: "Gold Plus", yardage: 5469, rating: nil,  slope: nil),
+    TeeInfo(teeName: "Gold",      yardage: 5146, rating: nil,  slope: nil)
+]
+
+// MARK: The Links at Spanish Bay — Pebble Beach, CA
+private let SPANISH_BAY_ID = UUID(uuidString: "F2010001-0000-0000-0000-000000000004")!
+
+let SPANISH_BAY_PARS: [Int] = [
+    5,4,4,3,4,4,4,3,4,
+    5,4,4,3,5,4,3,4,5
+]
+
+let SPANISH_BAY_HCS: [Int] = [
+    9,13,5,15,1,11,3,17,7,
+    8,14,6,18,2,12,16,4,10
+]
+
+let SPANISH_BAY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6739, rating: 73.8, slope: 143),
+    TeeInfo(teeName: "Gold",  yardage: 6428, rating: 72.4, slope: 135),
+    TeeInfo(teeName: "White", yardage: 6037, rating: 71.7, slope: 133),
+    TeeInfo(teeName: "Green", yardage: 5720, rating: 69.3, slope: 127),
+    TeeInfo(teeName: "Red",   yardage: 5218, rating: 67.3, slope: 114)
+]
+
+// =======================================================
+// MARK: - Built-in Registry
+// =======================================================
+
+private enum BuiltIns {
+
+    private struct BuiltInCourse {
+        let id: UUID
+        let name: String
+        let pars: [Int]
+        let hcs: [Int]
+        let tees: [TeeInfo]?
+        let country: String?
+        let state: String?
+        let architect: String?
+        let type: String?
+        let phone: String?
+        let website: String?
+        let address: String?
+        let isWolfApproved: Bool?
+    }
+
+    private static func c(
+        _ id: UUID,
+        _ name: String,
+        _ pars: [Int],
+        _ hcs: [Int],
+        _ tees: [TeeInfo]? = nil,
+        country: String? = nil,
+        state: String? = nil,
+        architect: String? = nil,
+        type: String? = nil,
+        phone: String? = nil,
+        website: String? = nil,
+        address: String? = nil,
+        isWolfApproved: Bool? = nil
+    ) -> BuiltInCourse {
+        .init(
+            id: id,
+            name: name,
+            pars: pars,
+            hcs: hcs,
+            tees: tees,
+            country: country,
+            state: state,
+            architect: architect,
+            type: type,
+            phone: phone,
+            website: website,
+            address: address,
+            isWolfApproved: isWolfApproved
+        )
+    }
+
+    private static func profile(from b: BuiltInCourse) -> CourseProfile {
+        CourseProfile(
+            id: b.id,
+            name: b.name,
+            pars: b.pars,
+            hcs: b.hcs,
+            tees: b.tees,
+            country: b.country,
+            state: b.state,
+            architect: b.architect,
+            type: b.type,
+            phone: b.phone,
+            website: b.website,
+            address: b.address,
+            isWolfApproved: b.isWolfApproved
+        )
+    }
+
+    private static let all: [BuiltInCourse] = [
+
+        // -------------------------
+        // Default
+        // -------------------------
+        c(WOLFMORE_CC_ID, "WolfMore", WOLFMORE_PARS, WOLFMORE_HCS,
+          country: "USA", state: "IL"),
+
+        // -------------------------
+        // Illinois / Midwest
+        // -------------------------
+        c(
+            BILTMORE_CC_ID,
+            "Biltmore Country Club",
+            BILTMORE_CC_PARS,
+            BILTMORE_CC_HCS,
+            BILTMORE_CC_TEES,
+            country: "USA",
+            state: "IL",
+            type: "Private",
+            phone: "(847) 381-1960",
+            website: "https://www.biltmore-cc.com",
+            address: "160 Biltmore Drive, North Barrington, IL 60010",
+            isWolfApproved: true
+        ),
+        c(
+            CEDAR_RAPIDS_CC_ID,
+            "Cedar Rapids Country Club",
+            CEDAR_RAPIDS_PARS,
+            CEDAR_RAPIDS_HCS,
+            country: "USA",
+            state: "IA",
+            architect: "Donald Ross",
+            type: "Private",
+            phone: "(319) 363-9673",
+            website: "https://www.cedarrapidscc.com",
+            address: "550 27th St Dr SE, Cedar Rapids, IA 52403",
+            isWolfApproved: false
+        ),
+
+        c(WYNSTONE_SILVER_ID, "Wynstone", WYNSTONE_SILVER_PARS, WYNSTONE_SILVER_HCS,
+          country: "USA", state: "IL"),
+        c(BARRINGTON_HILLS_WHITE_ID, "Barrington Hills", BARRINGTON_HILLS_WHITE_PARS, BARRINGTON_HILLS_WHITE_HCS,
+          country: "USA", state: "IL"),
+        c(CRANES_LANDING_BLUE_ID, "Crane's Landing", CRANES_LANDING_BLUE_PARS, CRANES_LANDING_BLUE_HCS,
+          country: "USA", state: "IL"),
+        c(STONEWALL_ORCHARD_SILVER_ID, "Stonewall Orchard", STONEWALL_ORCHARD_SILVER_PARS, STONEWALL_ORCHARD_SILVER_HCS,
+          country: "USA", state: "IL"),
+        c(KEMPER_LAKES_GREEN_ID, "Kemper Lakes", KEMPER_LAKES_GREEN_PARS, KEMPER_LAKES_GREEN_HCS,
+          country: "USA", state: "IL"),
+        c(RICH_HARVEST_SILVER_ID, "Rich Harvest Farms", RICH_HARVEST_SILVER_PARS, RICH_HARVEST_SILVER_HCS,
+          country: "USA", state: "IL"),
+        c(BUTLER_CC_BLUE_ID, "Butler National 6970", BUTLER_CC_BLUE_PARS, BUTLER_CC_BLUE_HCS, BUTLER_CC_BLUE_TEES,
+          country: "USA", state: "IL"),
+        c(BUTLER_NATIONAL_BUTLER_TEE_ID, "Butler National (7,550-yard)", BUTLER_NATIONAL_BUTLER_TEE_PARS, BUTLER_NATIONAL_BUTLER_TEE_HCS, BUTLER_NATIONAL_BUTLER_TEE_TEES,
+          country: "USA", state: "IL"),
+        c(MEDINAH_CC_3_ID, "Medinah CC (Course #3)", MEDINAH_CC_3_PARS, MEDINAH_CC_3_HCS, MEDINAH_CC_3_TEES,
+          country: "USA", state: "IL"),
+        c(MAKRAY_MEMORIAL_BLACK_ID, "Makray Memorial (Black)", MAKRAY_MEMORIAL_BLACK_PARS, MAKRAY_MEMORIAL_BLACK_HCS, MAKRAY_MEMORIAL_BLACK_TEES,
+          country: "USA", state: "IL"),
+        c(LAKE_BARRINGTON_SHORES_BLACK_ID, "Lake Barrington Shores (Black)", LAKE_BARRINGTON_SHORES_BLACK_PARS, LAKE_BARRINGTON_SHORES_BLACK_HCS, LAKE_BARRINGTON_SHORES_BLACK_TEES,
+          country: "USA", state: "IL"),
+        c(FOXFORD_HILLS_BLACK_ID, "Foxford Hills (Black)", FOXFORD_HILLS_BLACK_PARS, FOXFORD_HILLS_BLACK_HCS, FOXFORD_HILLS_BLACK_TEES,
+          country: "USA", state: "IL"),
+        c(CARY_CC_BLUE_ID, "Cary CC (Blue)", CARY_CC_BLUE_PARS, CARY_CC_BLUE_HCS, CARY_CC_BLUE_TEES,
+          country: "USA", state: "IL"),
+        c(CHALET_HILLS_BLACK_ID, "Chalet Hills (Black)", CHALET_HILLS_BLACK_PARS, CHALET_HILLS_BLACK_HCS, CHALET_HILLS_BLACK_TEES,
+          country: "USA", state: "IL"),
+        c(TPC_DEERE_RUN_TPC_ID, "TPC Deere Run (TPC)", TPC_DEERE_RUN_TPC_PARS, TPC_DEERE_RUN_TPC_HCS, TPC_DEERE_RUN_TPC_TEES,
+          country: "USA", state: "IL"),
+
+        // -------------------------
+        // Iowa
+        // -------------------------
+        c(HARVESTER_GC_BLACK_ID, "The Harvester GC (Black)", HARVESTER_GC_BLACK_PARS, HARVESTER_GC_BLACK_HCS, HARVESTER_GC_BLACK_TEES,
+          country: "USA", state: "IA"),
+        c(DAVENPORT_CC_BLACK_ID, "Davenport CC (Black)", DAVENPORT_CC_BLACK_PARS, DAVENPORT_CC_BLACK_HCS, DAVENPORT_CC_BLACK_TEES,
+          country: "USA", state: "IA"),
+
+        // -------------------------
+        // Florida
+        // -------------------------
+        c(CHAMPIONGATE_BLENDED_BLACK_ID, "Champions Gate", CHAMPIONGATE_BLENDED_BLACK_PARS, CHAMPIONGATE_BLENDED_BLACK_HCS,
+          country: "USA", state: "FL"),
+        c(TPC_SAWGRASS_STADIUM_ID, "TPC Sawgrass (Stadium)", TPC_SAWGRASS_STADIUM_PARS, TPC_SAWGRASS_STADIUM_HCS,
+          country: "USA", state: "FL"),
+        c(BAY_HILL_CHALLENGER_CHAMPION_ID, "Bay Hill (Challenger/Champion)", BAY_HILL_CHALLENGER_CHAMPION_PARS, BAY_HILL_CHALLENGER_CHAMPION_HCS, BAY_HILL_CHALLENGER_CHAMPION_TEES,
+          country: "USA", state: "FL"),
+        c(PGA_NATIONAL_CHAMPION_BEAR_ID, "PGA National (Champion – Bear)", PGA_NATIONAL_CHAMPION_BEAR_PARS, PGA_NATIONAL_CHAMPION_BEAR_HCS, PGA_NATIONAL_CHAMPION_BEAR_TEES,
+          country: "USA", state: "FL"),
+        c(PANTHER_NATIONAL_JT_ID, "Panther National (JT)", PANTHER_NATIONAL_JT_PARS, PANTHER_NATIONAL_JT_HCS, PANTHER_NATIONAL_JT_TEES,
+          country: "USA", state: "FL"),
+        c(BEARS_CLUB_CHAMPION_ID, "The Bear's Club (7212 yds)", BEARS_CLUB_CHAMPION_PARS, BEARS_CLUB_CHAMPION_HCS, BEARS_CLUB_CHAMPION_TEES,
+          country: "USA", state: "FL"),
+        c(BEARS_CLUB_CHAMPIONSHIP_ID, "The Bear's Club (7328 yds)", BEARS_CLUB_CHAMPIONSHIP_PARS, BEARS_CLUB_CHAMPIONSHIP_HCS, BEARS_CLUB_CHAMPIONSHIP_TEES,
+          country: "USA", state: "FL"),
+        c(STREAMSONG_BLUE_ID, "Streamsong (Blue)", STREAMSONG_BLUE_PARS, STREAMSONG_BLUE_HCS,
+          country: "USA", state: "FL"),
+        c(STREAMSONG_RED_ID, "Streamsong (Red)", STREAMSONG_RED_PARS, STREAMSONG_RED_HCS,
+          country: "USA", state: "FL"),
+        c(STREAMSONG_BLACK_ID, "Streamsong (Black)", STREAMSONG_BLACK_PARS, STREAMSONG_BLACK_HCS,
+          country: "USA", state: "FL"),
+        c(PGA_VILLAGE_WANAMAKER_ID, "PGA Village (Wanamaker)", PGA_VILLAGE_WANAMAKER_PARS, PGA_VILLAGE_WANAMAKER_HCS,
+          country: "USA", state: "FL"),
+        c(PGA_VILLAGE_RYDER_ID, "PGA Village (Ryder)", PGA_VILLAGE_RYDER_PARS, PGA_VILLAGE_RYDER_HCS,
+          country: "USA", state: "FL"),
+        c(PGA_VILLAGE_DYE_ID, "PGA Village (Dye)", PGA_VILLAGE_DYE_PARS, PGA_VILLAGE_DYE_HCS,
+          country: "USA", state: "FL"),
+        c(MEDALIST_JT_ID, "Medalist GC (JT)", MEDALIST_JT_PARS, MEDALIST_JT_HCS,
+          country: "USA", state: "FL"),
+        c(DYE_PRESERVE_CHAMPIONSHIP_ID, "Dye Preserve (Championship)", DYE_PRESERVE_CHAMPIONSHIP_PARS, DYE_PRESERVE_CHAMPIONSHIP_HCS, DYE_PRESERVE_CHAMPIONSHIP_TEES,
+          country: "USA", state: "FL"),
+        c(SEMINOLE_GOLD_ID, "Seminole (Gold)", SEMINOLE_GOLD_PARS, SEMINOLE_GOLD_HCS, SEMINOLE_GOLD_TEES,
+          country: "USA", state: "FL"),
+        c(CALUSA_PINES_ID, "Calusa Pines (Gold)", CALUSA_PINES_GOLD_PARS, CALUSA_PINES_GOLD_HCS,
+          country: "USA", state: "FL"),
+        c(KAROO_ID, "Karoo (Black)", KAROO_BLACK_PARS, KAROO_BLACK_HCS_TODO,
+          country: "USA", state: "FL"),
+
+        // -------------------------
+        // Wisconsin
+        // -------------------------
+        c(WHISTLING_STRAITS_STRAITS_ID, "Whistling Straits (Straits)", WHISTLING_STRAITS_STRAITS_PARS, WHISTLING_STRAITS_STRAITS_HCS, WHISTLING_STRAITS_STRAITS_TEES,
+          country: "USA", state: "WI"),
+        c(WHISTLING_STRAITS_IRISH_ID, "Whistling Straits (Irish)", WHISTLING_STRAITS_IRISH_PARS, WHISTLING_STRAITS_IRISH_HCS,
+          country: "USA", state: "WI"),
+        c(BLACKWOLF_RUN_RIVER_ID, "Blackwolf Run (River)", BLACKWOLF_RUN_RIVER_PARS, BLACKWOLF_RUN_RIVER_HCS,
+          country: "USA", state: "WI"),
+        c(BLACKWOLF_RUN_MEADOW_VALLEYS_ID, "Blackwolf Run (Meadow Valleys)", BLACKWOLF_RUN_MEADOW_VALLEYS_PARS, BLACKWOLF_RUN_MEADOW_VALLEYS_HCS,
+          country: "USA", state: "WI"),
+        c(SAND_VALLEY_ID, "Sand Valley", SAND_VALLEY_PARS, SAND_VALLEY_HCS,
+          country: "USA", state: "WI"),
+        c(MAMMOTH_DUNES_ID, "Mammoth Dunes", MAMMOTH_DUNES_PARS, MAMMOTH_DUNES_HCS,
+          country: "USA", state: "WI"),
+        c(GENEVA_NATIONAL_PALMER_ID, "Geneva National – Palmer", GENEVA_NATIONAL_PALMER_PARS, GENEVA_NATIONAL_PALMER_HCS,
+          country: "USA", state: "WI"),
+        c(GENEVA_NATIONAL_TREVINO_ID, "Geneva National – Trevino", GENEVA_NATIONAL_TREVINO_PARS, GENEVA_NATIONAL_TREVINO_HCS,
+          country: "USA", state: "WI"),
+        c(GENEVA_NATIONAL_PLAYER_ID, "Geneva National – Player", GENEVA_NATIONAL_PLAYER_PARS, GENEVA_NATIONAL_PLAYER_HCS,
+          country: "USA", state: "WI"),
+        c(GRAND_GENEVA_HIGHLANDS_ID, "Grand Geneva – The Highlands", GRAND_GENEVA_HIGHLANDS_PARS, GRAND_GENEVA_HIGHLANDS_HCS,
+          country: "USA", state: "WI"),
+        c(GRAND_GENEVA_BRUTE_ID, "Grand Geneva – The Brute", GRAND_GENEVA_BRUTE_PARS, GRAND_GENEVA_BRUTE_HCS,
+          country: "USA", state: "WI"),
+        c(ERIN_HILLS_ID, "Erin Hills (Black)", ERIN_HILLS_BLACK_PARS, ERIN_HILLS_BLACK_HCS,
+          country: "USA", state: "WI"),
+        c(SAND_VALLEY_LIDO_ID, "Sand Valley (Lido)", SAND_VALLEY_LIDO_PARS_TODO, SAND_VALLEY_LIDO_HCS_TODO,
+          country: "USA", state: "WI", architect: "C.B. Macdonald / Seth Raynor / Tom Doak / Brian Schneider"),
+        c(SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_ID, "Sand Valley (Sedge Valley — Championship)", SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_PARS, SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_HCS, SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_TEES,
+          country: "USA", state: "WI", architect: "Tom Doak", type: "Resort"),
+
+        // -------------------------
+        // Arizona
+        // -------------------------
+        c(TROON_NORTH_MONUMENT_ID, "Troon North (Monument)", TROON_NORTH_MONUMENT_PARS, TROON_NORTH_MONUMENT_HCS,
+          country: "USA", state: "AZ"),
+        c(TROON_NORTH_PINNACLE_ID, "Troon North (Pinnacle)", TROON_NORTH_PINNACLE_PARS, TROON_NORTH_PINNACLE_HCS,
+          country: "USA", state: "AZ"),
+        c(WHISPER_ROCK_UPPER_ROCK_ID, "Whisper Rock Upper (Rock)", WHISPER_ROCK_UPPER_ROCK_PARS, WHISPER_ROCK_UPPER_ROCK_HCS, WHISPER_ROCK_UPPER_ROCK_TEES,
+          country: "USA", state: "AZ"),
+        c(SILVERLEAF_GC_SILVER_ID, "Silverleaf GC (Silver)", SILVERLEAF_GC_SILVER_PARS, SILVERLEAF_GC_SILVER_HCS, SILVERLEAF_GC_SILVER_TEES,
+          country: "USA", state: "AZ"),
+        c(SCOTTSDALE_NATIONAL_XTEE_ID, "Scottsdale National GC (X-Tee)", SCOTTSDALE_NATIONAL_XTEE_PARS, SCOTTSDALE_NATIONAL_XTEE_HCS, SCOTTSDALE_NATIONAL_XTEE_TEES,
+          country: "USA", state: "AZ"),
+        c(ESTANCIA_ID, "Estancia", ESTANCIA_PARS_TODO, ESTANCIA_HCS_TODO,
+          country: "USA", state: "AZ", architect: "Tom Fazio"),
+        c(FOREST_HIGHLANDS_MEADOW_ID, "Forest Highlands - Meadow (White)", FOREST_HIGHLANDS_MEADOW_PARS, FOREST_HIGHLANDS_MEADOW_MENS_HCS,
+          country: "USA", state: "AZ"),
+
+        // -------------------------
+        // Oregon
+        // -------------------------
+        c(BANDON_DUNES_ID, "Bandon Dunes", BANDON_DUNES_PARS, BANDON_DUNES_HCS,
+          country: "USA", state: "OR"),
+        c(PACIFIC_DUNES_ID, "Pacific Dunes", PACIFIC_DUNES_PARS, PACIFIC_DUNES_HCS,
+          country: "USA", state: "OR"),
+        c(BANDON_TRAILS_ID, "Bandon Trails", BANDON_TRAILS_PARS, BANDON_TRAILS_HCS,
+          country: "USA", state: "OR"),
+        c(OLD_MACDONALD_ID, "Old Macdonald", OLD_MACDONALD_PARS, OLD_MACDONALD_HCS,
+          country: "USA", state: "OR"),
+        c(SHEEP_RANCH_ID, "Sheep Ranch", SHEEP_RANCH_PARS, SHEEP_RANCH_HCS,
+          country: "USA", state: "OR"),
+
+        // -------------------------
+        // California
+        // -------------------------
+        c(PEBBLE_BEACH_ID, "Pebble Beach", PEBBLE_BEACH_PARS, PEBBLE_BEACH_HCS,
+          country: "USA", state: "CA"),
+        c(SPYGLASS_HILL_ID, "Spyglass Hill", SPYGLASS_HILL_PARS, SPYGLASS_HILL_HCS,
+          country: "USA", state: "CA"),
+        c(QUARRY_LA_QUINTA_ID, "The Quarry at La Quinta", QUARRY_LA_QUINTA_PARS, QUARRY_LA_QUINTA_HCS,
+          country: "USA", state: "CA", architect: "Tom Fazio"),
+        c(MARTIS_CAMP_ID, "Martis Camp", MARTIS_CAMP_MEDAL_PARS, MARTIS_CAMP_MEDAL_HCS,
+          country: "USA", state: "CA", architect: "Tom Fazio"),
+
+        // -------------------------
+        // South Carolina
+        // -------------------------
+        c(HARBOUR_TOWN_ID, "Harbour Town Golf Links", HARBOUR_TOWN_PARS, HARBOUR_TOWN_HCS,
+          country: "USA", state: "SC"),
+        c(LONG_COVE_GOLD_ID, "Long Cove Club (Gold)", LONG_COVE_GOLD_PARS, LONG_COVE_GOLD_HCS,
+          country: "USA", state: "SC"),
+        c(HERON_POINT_GOLD_ID, "Heron Point (Gold) — Sea Pines", HERON_POINT_GOLD_PARS, HERON_POINT_GOLD_HCS,
+          country: "USA", state: "SC"),
+        c(KIAWAH_OCEAN_CHAMP_ID, "Kiawah Island - Ocean Course (Championship)", KIAWAH_OCEAN_CHAMP_PARS, KIAWAH_OCEAN_CHAMP_HCS, KIAWAH_OCEAN_CHAMP_TEES,
+          country: "USA", state: "SC"),
+
+        // -------------------------
+        // Texas / Nevada / Oklahoma / Colorado / Wyoming / Montana
+        // -------------------------
+        c(ROYAL_OAKS_SCHEFFLER_ID, "Royal Oaks CC (Scheff)", ROYAL_OAKS_SCHEFFLER_PARS, ROYAL_OAKS_SCHEFFLER_HCS,
+          country: "USA", state: "TX"),
+        c(BROOK_HOLLOW_TILLINGHAST_ID, "Brook Hollow GC (Tillinghast)", BROOK_HOLLOW_TILLINGHAST_PARS, BROOK_HOLLOW_TILLINGHAST_HCS, BROOK_HOLLOW_TILLINGHAST_TEES,
+          country: "USA", state: "TX"),
+        c(SUMMIT_CLUB_MORIKAWA_ID, "Summit Club (Colin)", SUMMIT_CLUB_MORIKAWA_PARS, SUMMIT_CLUB_MORIKAWA_HCS,
+          country: "USA", state: "NV"),
+        c(PATRIOT_GC_ID, "Patriot GC (4 Star)", PATRIOT_GC_4STAR_PARS, PATRIOT_GC_4STAR_HCS,
+          country: "USA", state: "OK"),
+        c(COLORADO_GOLF_CLUB_ID, "Colorado Golf Club", COLORADO_GOLF_CLUB_PARS, COLORADO_GOLF_CLUB_HCS,
+          country: "USA", state: "CO", architect: "Bill Coore / Ben Crenshaw"),
+        c(CORNERSTONE_ID, "Cornerstone", CORNERSTONE_PARS_TODO, CORNERSTONE_HCS_TODO,
+          country: "USA", state: "CO", architect: "Greg Norman"),
+        c(SHOOTING_STAR_ID, "Shooting Star", SHOOTING_STAR_CHAMPIONSHIP_PARS, SHOOTING_STAR_CHAMPIONSHIP_HCS,
+          country: "USA", state: "WY", architect: "Tom Fazio"),
+        c(ROCK_CREEK_CATTLE_COMPANY_ID, "Rock Creek Cattle Company", ROCK_CREEK_CATTLE_COMPANY_TEE_I_PARS, ROCK_CREEK_CATTLE_COMPANY_TEE_I_HCS, ROCK_CREEK_CATTLE_COMPANY_TEES,
+          country: "USA", state: "MT"),
+
+        // -------------------------
+        // Georgia
+        // -------------------------
+        c(SEA_ISLAND_SEASIDE_RED_ID, "Sea Island (Seaside — Red)", SEA_ISLAND_SEASIDE_RED_PARS, SEA_ISLAND_SEASIDE_RED_HCS, SEA_ISLAND_SEASIDE_RED_TEES,
+          country: "USA", state: "GA", architect: "Davis Love III, Mark Love", type: "Resort"),
+        c(SEA_ISLAND_RETREAT_RED_ID, "Sea Island (Retreat — Red)", SEA_ISLAND_RETREAT_RED_PARS, SEA_ISLAND_RETREAT_RED_HCS, SEA_ISLAND_RETREAT_RED_TEES,
+          country: "USA", state: "GA", architect: "Davis Love III, Mark Love", type: "Resort"),
+        c(AUGUSTA_NATIONAL_ID, "Augusta National (Masters)", AUGUSTA_NATIONAL_MASTERS_PARS, AUGUSTA_NATIONAL_MASTERS_HCS,
+          country: "USA", state: "GA"),
+        c(MCLEMORE_KEEP_ID, "McLemore (The Keep)", MCLEMORE_KEEP_PARS, MCLEMORE_KEEP_HCS, MCLEMORE_KEEP_TEES,
+          country: "USA", state: "GA", architect: "Bill Bergen, Rees Jones", type: "Resort"),
+
+        // -------------------------
+        // North Carolina / Hawaii / Washington / Michigan
+        // -------------------------
+        c(PINEHURST_NO2_USOPEN_ID, "Pinehurst No. 2 (U.S. Open)", PINEHURST_NO2_USOPEN_PARS, PINEHURST_NO2_USOPEN_HCS,
+          country: "USA", state: "NC"),
+        c(WADE_HAMPTON_CLUB_ID, "Wade Hampton Club", WADE_HAMPTON_CLUB_PARS_TODO, WADE_HAMPTON_CLUB_HCS_TODO,
+          country: "USA", state: "NC", architect: "Tom Fazio"),
+        c(PINEHURST_NO10_BLUE_ID, "Pinehurst No. 10 (Blue)", PINEHURST_NO10_BLUE_PARS, PINEHURST_NO10_BLUE_HCS, PINEHURST_NO10_BLUE_TEES,
+          country: "USA", state: "NC", architect: "Tom Doak, Angela Moser", type: "Resort"),
+        c(MANELE_GOLF_COURSE_NICKLAUS_ID, "Four Seasons Lanai Manele", MANELE_GOLF_COURSE_NICKLAUS_PARS, MANELE_GOLF_COURSE_NICKLAUS_HCS, MANELE_GOLF_COURSE_NICKLAUS_TEES,
+          country: "USA", state: "HI", architect: "Jack Nicklaus", type: "Resort"),
+        c(KAPALUA_PLANTATION_TOURNAMENT_ID, "Kapalua (Plantation – Tournament)", KAPALUA_PLANTATION_TOURNAMENT_PARS, KAPALUA_PLANTATION_TOURNAMENT_HCS, KAPALUA_PLANTATION_TOURNAMENT_TEES,
+          country: "USA", state: "HI", architect: "Bill Coore, Ben Crenshaw", type: "Resort"),
+        c(GAMBLE_SANDS_MEDAL_ID, "Gamble Sands (Medal)", GAMBLE_SANDS_MEDAL_PARS, GAMBLE_SANDS_MEDAL_HCS, GAMBLE_SANDS_MEDAL_TEES,
+          country: "USA", state: "WA", architect: "David McLay Kidd", type: "Daily-Fee"),
+        c(ARCADIA_BLUFFS_BLUFFS_BLUE_ID, "Arcadia Bluffs (Bluffs — Blue)", ARCADIA_BLUFFS_BLUFFS_BLUE_PARS, ARCADIA_BLUFFS_BLUFFS_BLUE_HCS, ARCADIA_BLUFFS_BLUFFS_BLUE_TEES,
+          country: "USA", state: "MI", architect: "W. Henderson, R. Smith", type: "Daily-Fee"),
+
+        // -------------------------
+        // International
+        // -------------------------
+        c(ESKER_HILLS_ID, "Esker Hills Golf Club", ESKER_HILLS_PARS, ESKER_HILLS_HCS,
+          country: "Ireland", state: "Offaly"),
+        c(ADARE_MANOR_ID, "Adare Manor", ADARE_MANOR_PARS, ADARE_MANOR_HCS,
+          country: "Ireland", state: nil),
+        c(BALLYBUNION_OLD_ID, "Ballybunion (Old Course)", BALLYBUNION_OLD_PARS, BALLYBUNION_OLD_HCS,
+          country: "Ireland", state: nil),
+        c(OLD_HEAD_ID, "Old Head Golf Links", OLD_HEAD_PARS, OLD_HEAD_HCS,
+          country: "Ireland", state: nil),
+        c(WATERVILLE_ID, "Waterville Golf Links", WATERVILLE_PARS, WATERVILLE_HCS,
+          country: "Ireland", state: nil),
+        c(ROYAL_COUNTY_DOWN_CHAMP_ID, "Royal County Down (Championship)", ROYAL_COUNTY_DOWN_CHAMP_PARS, ROYAL_COUNTY_DOWN_CHAMP_HCS,
+          country: "Northern Ireland", state: nil),
+        c(ROYAL_PORTRUSH_DUNLUCE_ID, "Royal Portrush (Dunluce)", ROYAL_PORTRUSH_DUNLUCE_PARS, ROYAL_PORTRUSH_DUNLUCE_HCS,
+          country: "Northern Ireland", state: nil),
+        c(LA_ESTANCIA_ID, "La Estancia Golf Resort (Tournament)", LA_ESTANCIA_TOURNAMENT_PARS, LA_ESTANCIA_TOURNAMENT_HCS,
+          country: "Dominican Republic", state: nil),
+
+        // -------------------------
+        // Must-have classic
+        // -------------------------
+        c(PINE_VALLEY_ID, "Pine Valley", PINE_VALLEY_PARS, PINE_VALLEY_HCS,
+          country: "USA", state: "NJ"),
+        
+        c(OLD_WHITE_GREENBRIER_ID, "The Old White", OLD_WHITE_GREENBRIER_PARS, OLD_WHITE_GREENBRIER_HCS, OLD_WHITE_GREENBRIER_TEES,
+          country: "USA", state: "WV", architect: "Charles Blair Macdonald", type: "Resort",
+          phone: "800-624-6070",
+          website: "https://www.greenbrier.com",
+          address: "101 Main St W, White Sulphur Springs, WV 24986"),
+
+        c(GREENBRIER_COURSE_ID, "The Greenbrier Course", GREENBRIER_COURSE_PARS, GREENBRIER_COURSE_HCS, GREENBRIER_COURSE_TEES,
+          country: "USA", state: "WV", architect: "Seth Raynor / Jack Nicklaus", type: "Resort",
+          phone: "800-624-6070",
+          website: "https://www.greenbrier.com",
+          address: "101 Main St W, White Sulphur Springs, WV 24986"),
+
+        c(CONWAY_FARMS_ID, "Conway Farms", CONWAY_FARMS_PARS, CONWAY_FARMS_HCS, CONWAY_FARMS_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "847-234-7160",
+          website: "https://www.conwayfarmsgolfclub.org",
+          address: "425 S. Conway Farms Drive, Lake Forest, IL 60045"),
+
+        c(SPANISH_BAY_ID, "The Links at Spanish Bay", SPANISH_BAY_PARS, SPANISH_BAY_HCS, SPANISH_BAY_TEES,
+          country: "USA",
+          state: "CA",
+          type: "Resort",
+          phone: "800-654-9300",
+          website: "https://www.pebblebeach.com",
+          address: "2700 17-Mile Drive, Pebble Beach, California 93953"),
+    ]
+
+#if DEBUG
+    private static func assertNoDuplicateIDs() {
+        let ids = all.map(\.id)
+        let counts = Dictionary(grouping: ids, by: { $0 })
+        let dupes = counts
+            .filter { $0.value.count > 1 }
+            .map { "\($0.key.uuidString) x\($0.value.count)" }
+            .sorted()
+
+        precondition(dupes.isEmpty, "Duplicate BuiltInCourse IDs found:\n" + dupes.joined(separator: "\n"))
+    }
+
+    private static let _validated: Bool = {
+        assertNoDuplicateIDs()
+        return true
+    }()
+#endif
+
+    static let ids: Set<UUID> = {
+#if DEBUG
+        _ = _validated
+#endif
+        return Set(all.map(\.id))
+    }()
+
+    static var profiles: [CourseProfile] {
+        all.map(profile(from:))
+    }
 }
 
+// =======================================================
+// MARK: - CourseLibrary
+// =======================================================
 
- // =======================================================
-    // MARK: - Built-in Registry
-    // =======================================================
-    
-    private enum BuiltIns {
-        
-        private struct BuiltInCourse {
-            let id: UUID
-            let name: String
-            let pars: [Int]
-            let hcs: [Int]
-            let tees: [TeeInfo]?
-            let country: String?
-            let state: String?
-            let architect: String?
-            let type: String?
-            let phone: String?
-            let website: String?
-            let address: String?
-            let isWolfApproved: Bool?
-        }
-        
-        private static func c(
-            _ id: UUID,
-            _ name: String,
-            _ pars: [Int],
-            _ hcs: [Int],
-            _ tees: [TeeInfo]? = nil,
-            country: String? = nil,
-            state: String? = nil,
-            architect: String? = nil,
-            type: String? = nil,
-            phone: String? = nil,
-            website: String? = nil,
-            address: String? = nil,
-            isWolfApproved: Bool? = nil
-        ) -> BuiltInCourse {
-            .init(
-                id: id,
-                name: name,
-                pars: pars,
-                hcs: hcs,
-                tees: tees,
-                country: country,
-                state: state,
-                architect: architect,
-                type: type,
-                phone: phone,
-                website: website,
-                address: address,
-                isWolfApproved: isWolfApproved
-            )
-        }
-        
-        private static let all: [BuiltInCourse] = [
-            
-            // -------------------------
-            // Default
-            // -------------------------
-            c(WOLFMORE_CC_ID, "WolfMore", WOLFMORE_PARS, WOLFMORE_HCS,
-              country: "USA", state: "IL"),
-            
-            // -------------------------
-            // Illinois / Midwest
-            // -------------------------
-            c(
-                BILTMORE_CC_ID,
-                "Biltmore Country Club",
-                BILTMORE_CC_PARS,
-                BILTMORE_CC_HCS,
-                BILTMORE_CC_TEES,
-                country: "USA",
-                state: "IL",
-                type: "Private",
-                phone: "(847) 381-1960",
-                website: "https://www.biltmore-cc.com",
-                address: "160 Biltmore Drive, North Barrington, IL 60010",
-                isWolfApproved: true
-            ),
-            c(CEDAR_RAPIDS_CC_ID, "Cedar Rapids CC", CEDAR_RAPIDS_PARS, CEDAR_RAPIDS_HCS,
-              country: "USA", state: "IA"),
-            c(WYNSTONE_SILVER_ID, "Wynstone", WYNSTONE_SILVER_PARS, WYNSTONE_SILVER_HCS,
-              country: "USA", state: "IL"),
-            c(BARRINGTON_HILLS_WHITE_ID, "Barrington Hills", BARRINGTON_HILLS_WHITE_PARS, BARRINGTON_HILLS_WHITE_HCS,
-              country: "USA", state: "IL"),
-            c(CRANES_LANDING_BLUE_ID, "Crane's Landing", CRANES_LANDING_BLUE_PARS, CRANES_LANDING_BLUE_HCS,
-              country: "USA", state: "IL"),
-            c(STONEWALL_ORCHARD_SILVER_ID, "Stonewall Orchard", STONEWALL_ORCHARD_SILVER_PARS, STONEWALL_ORCHARD_SILVER_HCS,
-              country: "USA", state: "IL"),
-            c(KEMPER_LAKES_GREEN_ID, "Kemper Lakes", KEMPER_LAKES_GREEN_PARS, KEMPER_LAKES_GREEN_HCS,
-              country: "USA", state: "IL"),
-            c(RICH_HARVEST_SILVER_ID, "Rich Harvest Farms", RICH_HARVEST_SILVER_PARS, RICH_HARVEST_SILVER_HCS,
-              country: "USA", state: "IL"),
-            c(BUTLER_CC_BLUE_ID, "Butler National 6970", BUTLER_CC_BLUE_PARS, BUTLER_CC_BLUE_HCS, BUTLER_CC_BLUE_TEES,
-              country: "USA", state: "IL"),
-            c(BUTLER_NATIONAL_BUTLER_TEE_ID, "Butler National (7,550-yard)", BUTLER_NATIONAL_BUTLER_TEE_PARS, BUTLER_NATIONAL_BUTLER_TEE_HCS, BUTLER_NATIONAL_BUTLER_TEE_TEES,
-              country: "USA", state: "IL"),
-            c(MEDINAH_CC_3_ID, "Medinah CC (Course #3)", MEDINAH_CC_3_PARS, MEDINAH_CC_3_HCS, MEDINAH_CC_3_TEES,
-              country: "USA", state: "IL"),
-            c(MAKRAY_MEMORIAL_BLACK_ID, "Makray Memorial (Black)", MAKRAY_MEMORIAL_BLACK_PARS, MAKRAY_MEMORIAL_BLACK_HCS, MAKRAY_MEMORIAL_BLACK_TEES,
-              country: "USA", state: "IL"),
-            c(LAKE_BARRINGTON_SHORES_BLACK_ID, "Lake Barrington Shores (Black)", LAKE_BARRINGTON_SHORES_BLACK_PARS, LAKE_BARRINGTON_SHORES_BLACK_HCS, LAKE_BARRINGTON_SHORES_BLACK_TEES,
-              country: "USA", state: "IL"),
-            c(FOXFORD_HILLS_BLACK_ID, "Foxford Hills (Black)", FOXFORD_HILLS_BLACK_PARS, FOXFORD_HILLS_BLACK_HCS, FOXFORD_HILLS_BLACK_TEES,
-              country: "USA", state: "IL"),
-            c(CARY_CC_BLUE_ID, "Cary CC (Blue)", CARY_CC_BLUE_PARS, CARY_CC_BLUE_HCS, CARY_CC_BLUE_TEES,
-              country: "USA", state: "IL"),
-            c(CHALET_HILLS_BLACK_ID, "Chalet Hills (Black)", CHALET_HILLS_BLACK_PARS, CHALET_HILLS_BLACK_HCS, CHALET_HILLS_BLACK_TEES,
-              country: "USA", state: "IL"),
-            c(TPC_DEERE_RUN_TPC_ID, "TPC Deere Run (TPC)", TPC_DEERE_RUN_TPC_PARS, TPC_DEERE_RUN_TPC_HCS, TPC_DEERE_RUN_TPC_TEES,
-              country: "USA", state: "IL"),
-            
-            // -------------------------
-            // Iowa
-            // -------------------------
-            c(HARVESTER_GC_BLACK_ID, "The Harvester GC (Black)", HARVESTER_GC_BLACK_PARS, HARVESTER_GC_BLACK_HCS, HARVESTER_GC_BLACK_TEES,
-              country: "USA", state: "IA"),
-            c(DAVENPORT_CC_BLACK_ID, "Davenport CC (Black)", DAVENPORT_CC_BLACK_PARS, DAVENPORT_CC_BLACK_HCS, DAVENPORT_CC_BLACK_TEES,
-              country: "USA", state: "IA"),
-            
-            // -------------------------
-            // Florida
-            // -------------------------
-            c(CHAMPIONGATE_BLENDED_BLACK_ID, "Champions Gate", CHAMPIONGATE_BLENDED_BLACK_PARS, CHAMPIONGATE_BLENDED_BLACK_HCS,
-              country: "USA", state: "FL"),
-            c(TPC_SAWGRASS_STADIUM_ID, "TPC Sawgrass (Stadium)", TPC_SAWGRASS_STADIUM_PARS, TPC_SAWGRASS_STADIUM_HCS,
-              country: "USA", state: "FL"),
-            c(BAY_HILL_CHALLENGER_CHAMPION_ID, "Bay Hill (Challenger/Champion)", BAY_HILL_CHALLENGER_CHAMPION_PARS, BAY_HILL_CHALLENGER_CHAMPION_HCS, BAY_HILL_CHALLENGER_CHAMPION_TEES,
-              country: "USA", state: "FL"),
-            c(PGA_NATIONAL_CHAMPION_BEAR_ID, "PGA National (Champion – Bear)", PGA_NATIONAL_CHAMPION_BEAR_PARS, PGA_NATIONAL_CHAMPION_BEAR_HCS, PGA_NATIONAL_CHAMPION_BEAR_TEES,
-              country: "USA", state: "FL"),
-            c(PANTHER_NATIONAL_JT_ID, "Panther National (JT)", PANTHER_NATIONAL_JT_PARS, PANTHER_NATIONAL_JT_HCS, PANTHER_NATIONAL_JT_TEES,
-              country: "USA", state: "FL"),
-            c(BEARS_CLUB_CHAMPION_ID, "The Bear's Club (7212 yds)", BEARS_CLUB_CHAMPION_PARS, BEARS_CLUB_CHAMPION_HCS, BEARS_CLUB_CHAMPION_TEES,
-              country: "USA", state: "FL"),
-            c(BEARS_CLUB_CHAMPIONSHIP_ID, "The Bear's Club (7328 yds)", BEARS_CLUB_CHAMPIONSHIP_PARS, BEARS_CLUB_CHAMPIONSHIP_HCS, BEARS_CLUB_CHAMPIONSHIP_TEES,
-              country: "USA", state: "FL"),
-            c(STREAMSONG_BLUE_ID, "Streamsong (Blue)", STREAMSONG_BLUE_PARS, STREAMSONG_BLUE_HCS,
-              country: "USA", state: "FL"),
-            c(STREAMSONG_RED_ID, "Streamsong (Red)", STREAMSONG_RED_PARS, STREAMSONG_RED_HCS,
-              country: "USA", state: "FL"),
-            c(STREAMSONG_BLACK_ID, "Streamsong (Black)", STREAMSONG_BLACK_PARS, STREAMSONG_BLACK_HCS,
-              country: "USA", state: "FL"),
-            c(PGA_VILLAGE_WANAMAKER_ID, "PGA Village (Wanamaker)", PGA_VILLAGE_WANAMAKER_PARS, PGA_VILLAGE_WANAMAKER_HCS,
-              country: "USA", state: "FL"),
-            c(PGA_VILLAGE_RYDER_ID, "PGA Village (Ryder)", PGA_VILLAGE_RYDER_PARS, PGA_VILLAGE_RYDER_HCS,
-              country: "USA", state: "FL"),
-            c(PGA_VILLAGE_DYE_ID, "PGA Village (Dye)", PGA_VILLAGE_DYE_PARS, PGA_VILLAGE_DYE_HCS,
-              country: "USA", state: "FL"),
-            c(MEDALIST_JT_ID, "Medalist GC (JT)", MEDALIST_JT_PARS, MEDALIST_JT_HCS,
-              country: "USA", state: "FL"),
-            c(DYE_PRESERVE_CHAMPIONSHIP_ID, "Dye Preserve (Championship)", DYE_PRESERVE_CHAMPIONSHIP_PARS, DYE_PRESERVE_CHAMPIONSHIP_HCS, DYE_PRESERVE_CHAMPIONSHIP_TEES,
-              country: "USA", state: "FL"),
-            c(SEMINOLE_GOLD_ID, "Seminole (Gold)", SEMINOLE_GOLD_PARS, SEMINOLE_GOLD_HCS, SEMINOLE_GOLD_TEES,
-              country: "USA", state: "FL"),
-            c(CALUSA_PINES_ID, "Calusa Pines (Gold)", CALUSA_PINES_GOLD_PARS, CALUSA_PINES_GOLD_HCS,
-              country: "USA", state: "FL"),
-            c(KAROO_ID, "Karoo (Black)", KAROO_BLACK_PARS, KAROO_BLACK_HCS_TODO,
-              country: "USA", state: "FL"),
-            
-            // -------------------------
-            // Wisconsin
-            // -------------------------
-            c(WHISTLING_STRAITS_STRAITS_ID, "Whistling Straits (Straits)", WHISTLING_STRAITS_STRAITS_PARS, WHISTLING_STRAITS_STRAITS_HCS, WHISTLING_STRAITS_STRAITS_TEES,
-              country: "USA", state: "WI"),
-            c(WHISTLING_STRAITS_IRISH_ID, "Whistling Straits (Irish)", WHISTLING_STRAITS_IRISH_PARS, WHISTLING_STRAITS_IRISH_HCS,
-              country: "USA", state: "WI"),
-            c(BLACKWOLF_RUN_RIVER_ID, "Blackwolf Run (River)", BLACKWOLF_RUN_RIVER_PARS, BLACKWOLF_RUN_RIVER_HCS,
-              country: "USA", state: "WI"),
-            c(BLACKWOLF_RUN_MEADOW_VALLEYS_ID, "Blackwolf Run (Meadow Valleys)", BLACKWOLF_RUN_MEADOW_VALLEYS_PARS, BLACKWOLF_RUN_MEADOW_VALLEYS_HCS,
-              country: "USA", state: "WI"),
-            c(SAND_VALLEY_ID, "Sand Valley", SAND_VALLEY_PARS, SAND_VALLEY_HCS,
-              country: "USA", state: "WI"),
-            c(MAMMOTH_DUNES_ID, "Mammoth Dunes", MAMMOTH_DUNES_PARS, MAMMOTH_DUNES_HCS,
-              country: "USA", state: "WI"),
-            c(GENEVA_NATIONAL_PALMER_ID, "Geneva National – Palmer", GENEVA_NATIONAL_PALMER_PARS, GENEVA_NATIONAL_PALMER_HCS,
-              country: "USA", state: "WI"),
-            c(GENEVA_NATIONAL_TREVINO_ID, "Geneva National – Trevino", GENEVA_NATIONAL_TREVINO_PARS, GENEVA_NATIONAL_TREVINO_HCS,
-              country: "USA", state: "WI"),
-            c(GENEVA_NATIONAL_PLAYER_ID, "Geneva National – Player", GENEVA_NATIONAL_PLAYER_PARS, GENEVA_NATIONAL_PLAYER_HCS,
-              country: "USA", state: "WI"),
-            c(GRAND_GENEVA_HIGHLANDS_ID, "Grand Geneva – The Highlands", GRAND_GENEVA_HIGHLANDS_PARS, GRAND_GENEVA_HIGHLANDS_HCS,
-              country: "USA", state: "WI"),
-            c(GRAND_GENEVA_BRUTE_ID, "Grand Geneva – The Brute", GRAND_GENEVA_BRUTE_PARS, GRAND_GENEVA_BRUTE_HCS,
-              country: "USA", state: "WI"),
-            c(ERIN_HILLS_ID, "Erin Hills (Black)", ERIN_HILLS_BLACK_PARS, ERIN_HILLS_BLACK_HCS,
-              country: "USA", state: "WI"),
-            c(SAND_VALLEY_LIDO_ID, "Sand Valley (Lido)", SAND_VALLEY_LIDO_PARS_TODO, SAND_VALLEY_LIDO_HCS_TODO,
-              country: "USA", state: "WI", architect: "C.B. Macdonald / Seth Raynor / Tom Doak / Brian Schneider"),
-            c(SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_ID, "Sand Valley (Sedge Valley — Championship)", SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_PARS, SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_HCS, SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_TEES,
-              country: "USA", state: "WI", architect: "Tom Doak", type: "Resort"),
-            
-            // -------------------------
-            // Arizona
-            // -------------------------
-            c(TROON_NORTH_MONUMENT_ID, "Troon North (Monument)", TROON_NORTH_MONUMENT_PARS, TROON_NORTH_MONUMENT_HCS,
-              country: "USA", state: "AZ"),
-            c(TROON_NORTH_PINNACLE_ID, "Troon North (Pinnacle)", TROON_NORTH_PINNACLE_PARS, TROON_NORTH_PINNACLE_HCS,
-              country: "USA", state: "AZ"),
-            c(WHISPER_ROCK_UPPER_ROCK_ID, "Whisper Rock Upper (Rock)", WHISPER_ROCK_UPPER_ROCK_PARS, WHISPER_ROCK_UPPER_ROCK_HCS, WHISPER_ROCK_UPPER_ROCK_TEES,
-              country: "USA", state: "AZ"),
-            c(SILVERLEAF_GC_SILVER_ID, "Silverleaf GC (Silver)", SILVERLEAF_GC_SILVER_PARS, SILVERLEAF_GC_SILVER_HCS, SILVERLEAF_GC_SILVER_TEES,
-              country: "USA", state: "AZ"),
-            c(SCOTTSDALE_NATIONAL_XTEE_ID, "Scottsdale National GC (X-Tee)", SCOTTSDALE_NATIONAL_XTEE_PARS, SCOTTSDALE_NATIONAL_XTEE_HCS, SCOTTSDALE_NATIONAL_XTEE_TEES,
-              country: "USA", state: "AZ"),
-            c(ESTANCIA_ID, "Estancia", ESTANCIA_PARS_TODO, ESTANCIA_HCS_TODO,
-              country: "USA", state: "AZ", architect: "Tom Fazio"),
-            c(FOREST_HIGHLANDS_MEADOW_ID, "Forest Highlands - Meadow (White)", FOREST_HIGHLANDS_MEADOW_PARS, FOREST_HIGHLANDS_MEADOW_MENS_HCS,
-              country: "USA", state: "AZ"),
-            
-            // -------------------------
-            // Oregon
-            // -------------------------
-            c(BANDON_DUNES_ID, "Bandon Dunes", BANDON_DUNES_PARS, BANDON_DUNES_HCS,
-              country: "USA", state: "OR"),
-            c(PACIFIC_DUNES_ID, "Pacific Dunes", PACIFIC_DUNES_PARS, PACIFIC_DUNES_HCS,
-              country: "USA", state: "OR"),
-            c(BANDON_TRAILS_ID, "Bandon Trails", BANDON_TRAILS_PARS, BANDON_TRAILS_HCS,
-              country: "USA", state: "OR"),
-            c(OLD_MACDONALD_ID, "Old Macdonald", OLD_MACDONALD_PARS, OLD_MACDONALD_HCS,
-              country: "USA", state: "OR"),
-            c(SHEEP_RANCH_ID, "Sheep Ranch", SHEEP_RANCH_PARS, SHEEP_RANCH_HCS,
-              country: "USA", state: "OR"),
-            
-            // -------------------------
-            // California
-            // -------------------------
-            c(PEBBLE_BEACH_ID, "Pebble Beach", PEBBLE_BEACH_PARS, PEBBLE_BEACH_HCS,
-              country: "USA", state: "CA"),
-            c(SPYGLASS_HILL_ID, "Spyglass Hill", SPYGLASS_HILL_PARS, SPYGLASS_HILL_HCS,
-              country: "USA", state: "CA"),
-            c(QUARRY_LA_QUINTA_ID, "The Quarry at La Quinta", QUARRY_LA_QUINTA_PARS, QUARRY_LA_QUINTA_HCS,
-              country: "USA", state: "CA", architect: "Tom Fazio"),
-            c(MARTIS_CAMP_ID, "Martis Camp", MARTIS_CAMP_MEDAL_PARS, MARTIS_CAMP_MEDAL_HCS,
-              country: "USA", state: "CA", architect: "Tom Fazio"),
-            
-            // -------------------------
-            // South Carolina
-            // -------------------------
-            c(HARBOUR_TOWN_ID, "Harbour Town Golf Links", HARBOUR_TOWN_PARS, HARBOUR_TOWN_HCS,
-              country: "USA", state: "SC"),
-            c(LONG_COVE_GOLD_ID, "Long Cove Club (Gold)", LONG_COVE_GOLD_PARS, LONG_COVE_GOLD_HCS,
-              country: "USA", state: "SC"),
-            c(HERON_POINT_GOLD_ID, "Heron Point (Gold) — Sea Pines", HERON_POINT_GOLD_PARS, HERON_POINT_GOLD_HCS,
-              country: "USA", state: "SC"),
-            c(KIAWAH_OCEAN_CHAMP_ID, "Kiawah Island - Ocean Course (Championship)", KIAWAH_OCEAN_CHAMP_PARS, KIAWAH_OCEAN_CHAMP_HCS, KIAWAH_OCEAN_CHAMP_TEES,
-              country: "USA", state: "SC"),
-            
-            // -------------------------
-            // Texas / Nevada / Oklahoma / Colorado / Wyoming / Montana
-            // -------------------------
-            c(ROYAL_OAKS_SCHEFFLER_ID, "Royal Oaks CC (Scheff)", ROYAL_OAKS_SCHEFFLER_PARS, ROYAL_OAKS_SCHEFFLER_HCS,
-              country: "USA", state: "TX"),
-            c(BROOK_HOLLOW_TILLINGHAST_ID, "Brook Hollow GC (Tillinghast)", BROOK_HOLLOW_TILLINGHAST_PARS, BROOK_HOLLOW_TILLINGHAST_HCS, BROOK_HOLLOW_TILLINGHAST_TEES,
-              country: "USA", state: "TX"),
-            c(SUMMIT_CLUB_MORIKAWA_ID, "Summit Club (Colin)", SUMMIT_CLUB_MORIKAWA_PARS, SUMMIT_CLUB_MORIKAWA_HCS,
-              country: "USA", state: "NV"),
-            c(PATRIOT_GC_ID, "Patriot GC (4 Star)", PATRIOT_GC_4STAR_PARS, PATRIOT_GC_4STAR_HCS,
-              country: "USA", state: "OK"),
-            c(COLORADO_GOLF_CLUB_ID, "Colorado Golf Club", COLORADO_GOLF_CLUB_PARS, COLORADO_GOLF_CLUB_HCS,
-              country: "USA", state: "CO", architect: "Bill Coore / Ben Crenshaw"),
-            c(CORNERSTONE_ID, "Cornerstone", CORNERSTONE_PARS_TODO, CORNERSTONE_HCS_TODO,
-              country: "USA", state: "CO", architect: "Greg Norman"),
-            c(SHOOTING_STAR_ID, "Shooting Star", SHOOTING_STAR_CHAMPIONSHIP_PARS, SHOOTING_STAR_CHAMPIONSHIP_HCS,
-              country: "USA", state: "WY", architect: "Tom Fazio"),
-            c(ROCK_CREEK_CATTLE_COMPANY_ID, "Rock Creek Cattle Company", ROCK_CREEK_CATTLE_COMPANY_TEE_I_PARS, ROCK_CREEK_CATTLE_COMPANY_TEE_I_HCS, ROCK_CREEK_CATTLE_COMPANY_TEES,
-              country: "USA", state: "MT"),
-            
-            // -------------------------
-            // Georgia
-            // -------------------------
-            c(SEA_ISLAND_SEASIDE_RED_ID, "Sea Island (Seaside — Red)", SEA_ISLAND_SEASIDE_RED_PARS, SEA_ISLAND_SEASIDE_RED_HCS, SEA_ISLAND_SEASIDE_RED_TEES,
-              country: "USA", state: "GA", architect: "Davis Love III, Mark Love", type: "Resort"),
-            c(SEA_ISLAND_RETREAT_RED_ID, "Sea Island (Retreat — Red)", SEA_ISLAND_RETREAT_RED_PARS, SEA_ISLAND_RETREAT_RED_HCS, SEA_ISLAND_RETREAT_RED_TEES,
-              country: "USA", state: "GA", architect: "Davis Love III, Mark Love", type: "Resort"),
-            c(AUGUSTA_NATIONAL_ID, "Augusta National (Masters)", AUGUSTA_NATIONAL_MASTERS_PARS, AUGUSTA_NATIONAL_MASTERS_HCS,
-              country: "USA", state: "GA"),
-            c(MCLEMORE_KEEP_ID, "McLemore (The Keep)", MCLEMORE_KEEP_PARS, MCLEMORE_KEEP_HCS, MCLEMORE_KEEP_TEES,
-              country: "USA", state: "GA", architect: "Bill Bergen, Rees Jones", type: "Resort"),
-            
-            // -------------------------
-            // North Carolina / Hawaii / Washington / Michigan
-            // -------------------------
-            c(PINEHURST_NO2_USOPEN_ID, "Pinehurst No. 2 (U.S. Open)", PINEHURST_NO2_USOPEN_PARS, PINEHURST_NO2_USOPEN_HCS,
-              country: "USA", state: "NC"),
-            c(WADE_HAMPTON_CLUB_ID, "Wade Hampton Club", WADE_HAMPTON_CLUB_PARS_TODO, WADE_HAMPTON_CLUB_HCS_TODO,
-              country: "USA", state: "NC", architect: "Tom Fazio"),
-            c(PINEHURST_NO10_BLUE_ID, "Pinehurst No. 10 (Blue)", PINEHURST_NO10_BLUE_PARS, PINEHURST_NO10_BLUE_HCS, PINEHURST_NO10_BLUE_TEES,
-              country: "USA", state: "NC", architect: "Tom Doak, Angela Moser", type: "Resort"),
-            c(MANELE_GOLF_COURSE_NICKLAUS_ID, "Four Seasons Lanai Manele", MANELE_GOLF_COURSE_NICKLAUS_PARS, MANELE_GOLF_COURSE_NICKLAUS_HCS, MANELE_GOLF_COURSE_NICKLAUS_TEES,
-              country: "USA", state: "HI", architect: "Jack Nicklaus", type: "Resort"),
-            c(KAPALUA_PLANTATION_TOURNAMENT_ID, "Kapalua (Plantation – Tournament)", KAPALUA_PLANTATION_TOURNAMENT_PARS, KAPALUA_PLANTATION_TOURNAMENT_HCS, KAPALUA_PLANTATION_TOURNAMENT_TEES,
-              country: "USA", state: "HI", architect: "Bill Coore, Ben Crenshaw", type: "Resort"),
-            c(GAMBLE_SANDS_MEDAL_ID, "Gamble Sands (Medal)", GAMBLE_SANDS_MEDAL_PARS, GAMBLE_SANDS_MEDAL_HCS, GAMBLE_SANDS_MEDAL_TEES,
-              country: "USA", state: "WA", architect: "David McLay Kidd", type: "Daily-Fee"),
-            c(ARCADIA_BLUFFS_BLUFFS_BLUE_ID, "Arcadia Bluffs (Bluffs — Blue)", ARCADIA_BLUFFS_BLUFFS_BLUE_PARS, ARCADIA_BLUFFS_BLUFFS_BLUE_HCS, ARCADIA_BLUFFS_BLUFFS_BLUE_TEES,
-              country: "USA", state: "MI", architect: "W. Henderson, R. Smith", type: "Daily-Fee"),
-            
-            // -------------------------
-            // International
-            // -------------------------
-            c(ESKER_HILLS_ID, "Esker Hills Golf Club", ESKER_HILLS_PARS, ESKER_HILLS_HCS,
-              country: "Ireland", state: "Offaly"),
-            c(ADARE_MANOR_ID, "Adare Manor", ADARE_MANOR_PARS, ADARE_MANOR_HCS,
-              country: "Ireland", state: nil),
-            c(BALLYBUNION_OLD_ID, "Ballybunion (Old Course)", BALLYBUNION_OLD_PARS, BALLYBUNION_OLD_HCS,
-              country: "Ireland", state: nil),
-            c(OLD_HEAD_ID, "Old Head Golf Links", OLD_HEAD_PARS, OLD_HEAD_HCS,
-              country: "Ireland", state: nil),
-            c(WATERVILLE_ID, "Waterville Golf Links", WATERVILLE_PARS, WATERVILLE_HCS,
-              country: "Ireland", state: nil),
-            c(ROYAL_COUNTY_DOWN_CHAMP_ID, "Royal County Down (Championship)", ROYAL_COUNTY_DOWN_CHAMP_PARS, ROYAL_COUNTY_DOWN_CHAMP_HCS,
-              country: "Northern Ireland", state: nil),
-            c(ROYAL_PORTRUSH_DUNLUCE_ID, "Royal Portrush (Dunluce)", ROYAL_PORTRUSH_DUNLUCE_PARS, ROYAL_PORTRUSH_DUNLUCE_HCS,
-              country: "Northern Ireland", state: nil),
-            c(LA_ESTANCIA_ID, "La Estancia Golf Resort (Tournament)", LA_ESTANCIA_TOURNAMENT_PARS, LA_ESTANCIA_TOURNAMENT_HCS,
-              country: "Dominican Republic", state: nil),
-            
-            // -------------------------
-            // Must-have classic
-            // -------------------------
-            c(PINE_VALLEY_ID, "Pine Valley", PINE_VALLEY_PARS, PINE_VALLEY_HCS,
-              country: "USA", state: "NJ")
-        ]
-        
-#if DEBUG
-        private static func assertNoDuplicateIDs() {
-            let ids = all.map(\.id)
-            let counts = Dictionary(grouping: ids, by: { $0 })
-            let dupes = counts
-                .filter { $0.value.count > 1 }
-                .map { "\($0.key.uuidString) x\($0.value.count)" }
-                .sorted()
-            
-            precondition(dupes.isEmpty, "Duplicate BuiltInCourse IDs found:\n" + dupes.joined(separator: "\n"))
-        }
-        
-        private static let _validated: Bool = {
-            assertNoDuplicateIDs()
-            return true
-        }()
-#endif
-        
-        static let ids: Set<UUID> = {
-#if DEBUG
-            _ = _validated
-#endif
-            return Set(all.map(\.id))
-        }()
-        
-        static var profiles: [CourseProfile] {
-            all.map {
-                CourseProfile(
-                    id: $0.id,
-                    name: $0.name,
-                    pars: $0.pars,
-                    hcs: $0.hcs,
-                    tees: $0.tees,
-                    country: $0.country,
-                    state: $0.state,
-                    architect: $0.architect,
-                    type: $0.type
-                )
-            }
-        }
-    }
-    
-
-    // =======================================================
-    // MARK: - CourseLibrary
-    // =======================================================
-    
 final class CourseLibrary {
     static let shared = CourseLibrary()
-    
-    
+
     private let keyLibrary = "course.library.v1"
     private let keySelected = "course.selected.id.v1"
-    
+
     private(set) var courses: [CourseProfile] = []
-    
+
     private init() {
         load()
         seedBuiltIns()
     }
-    
+
     func wolfMore() -> CourseProfile? {
         if let c = get(id: WOLFMORE_CC_ID) { return c }
         return courses.first { $0.name.caseInsensitiveCompare("WolfMore") == .orderedSame }
     }
-    
+
     func allSorted() -> [CourseProfile] {
         courses.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
     }
-    
+
     func get(id: UUID) -> CourseProfile? {
         courses.first { $0.id == id }
     }
-    
+
     func isBuiltIn(id: UUID) -> Bool {
         BuiltIns.ids.contains(id)
     }
 
-        func upsert(_ c: CourseProfile) {
-            if let i = courses.firstIndex(where: { $0.id == c.id }) {
-                courses[i] = mergeKeepUserBits(existing: courses[i], incoming: c)
-            } else if let j = courses.firstIndex(where: { $0.name.caseInsensitiveCompare(c.name) == .orderedSame }) {
-                courses[j] = CourseProfile(
-                    id: courses[j].id,
-                    name: c.name,
-                    pars: c.pars,
-                    hcs: c.hcs,
-                    tees: c.tees ?? courses[j].tees,
-                    country: c.country ?? courses[j].country,
-                    state: c.state ?? courses[j].state,
-                    architect: c.architect ?? courses[j].architect,
-                    type: c.type ?? courses[j].type
-                )
-            } else {
-                courses.append(c)
-            }
-            save()
+    var selectedCourseID: UUID? {
+        get {
+            guard let s = UserDefaults.standard.string(forKey: keySelected) else { return nil }
+            return UUID(uuidString: s)
         }
-        
-        @discardableResult
-        func delete(id: UUID) -> Bool {
-            if isBuiltIn(id: id) { return false }
-            
-            if ProfileStore.homeCourseID == id.uuidString {
-                ProfileStore.homeCourseID = ""
-            }
-            
-            if selectedCourseID == id {
-                selectedCourseID = wolfMore()?.id
-            }
-            
-            let before = courses.count
-            courses.removeAll { $0.id == id }
-            let didDelete = courses.count != before
-            
-            if didDelete { save() }
-            return didDelete
+        set {
+            UserDefaults.standard.set(newValue?.uuidString, forKey: keySelected)
         }
-        
-        var selectedCourseID: UUID? {
-            get {
-                guard let s = UserDefaults.standard.string(forKey: keySelected) else { return nil }
-                return UUID(uuidString: s)
-            }
-            set {
-                UserDefaults.standard.set(newValue?.uuidString, forKey: keySelected)
-            }
-        }
-        
-        var selectedCourseName: String? {
-            guard let id = selectedCourseID else { return nil }
-            return get(id: id)?.name
-        }
-        
-        func seedIfNeeded() {
-            seedBuiltIns()
-        }
-        
-        private func seedBuiltIns() {
-            let builtIns = BuiltIns.profiles
-            var changed = false
-            
-            for p in builtIns {
-                changed = upsertBuiltIn(p) || changed
-            }
-            
-            if changed { save() }
-        }
-        
-        @discardableResult
-        private func upsertBuiltIn(_ c: CourseProfile) -> Bool {
-            if let i = courses.firstIndex(where: { $0.id == c.id }) {
-                let merged = mergeKeepUserBits(existing: courses[i], incoming: c)
-                if courses[i] != merged {
-                    courses[i] = merged
-                    return true
-                }
-                return false
-            }
-            
-            if let j = courses.firstIndex(where: { $0.name.caseInsensitiveCompare(c.name) == .orderedSame }) {
-                let merged = CourseProfile(
-                    id: courses[j].id,
-                    name: c.name,
-                    pars: c.pars,
-                    hcs: c.hcs,
-                    tees: c.tees ?? courses[j].tees,
-                    country: c.country ?? courses[j].country,
-                    state: c.state ?? courses[j].state,
-                    architect: c.architect ?? courses[j].architect,
-                    type: c.type ?? courses[j].type
-                )
-                
-                if courses[j] != merged {
-                    courses[j] = merged
-                    return true
-                }
-                return false
-            }
-            
+    }
+
+    var selectedCourseName: String? {
+        guard let id = selectedCourseID else { return nil }
+        return get(id: id)?.name
+    }
+
+    func seedIfNeeded() {
+        seedBuiltIns()
+    }
+
+    func upsert(_ c: CourseProfile) {
+        if let i = courses.firstIndex(where: { $0.id == c.id }) {
+            courses[i] = mergedCourse(base: courses[i], incoming: c)
+        } else if let j = courses.firstIndex(where: { $0.name.caseInsensitiveCompare(c.name) == .orderedSame }) {
+            courses[j] = mergedCourse(base: courses[j], incoming: c)
+        } else {
             courses.append(c)
-            return true
         }
-        
-        private func mergeKeepUserBits(existing: CourseProfile, incoming: CourseProfile) -> CourseProfile {
-            CourseProfile(
-                id: existing.id,
-                name: incoming.name,
-                pars: incoming.pars,
-                hcs: incoming.hcs,
-                tees: incoming.tees ?? existing.tees,
-                country: incoming.country ?? existing.country,
-                state: incoming.state ?? existing.state,
-                architect: incoming.architect ?? existing.architect,
-                type: incoming.type ?? existing.type
-            )
+        save()
+    }
+
+    @discardableResult
+    func delete(id: UUID) -> Bool {
+        if isBuiltIn(id: id) { return false }
+
+        if ProfileStore.homeCourseID == id.uuidString {
+            ProfileStore.homeCourseID = ""
         }
-        
-        private func load() {
-            guard let data = UserDefaults.standard.data(forKey: keyLibrary) else { return }
-            courses = (try? JSONDecoder().decode([CourseProfile].self, from: data)) ?? []
+
+        if selectedCourseID == id {
+            selectedCourseID = wolfMore()?.id
         }
-        
-        private func save() {
-            let data = (try? JSONEncoder().encode(courses)) ?? Data()
-            UserDefaults.standard.set(data, forKey: keyLibrary)
+
+        let before = courses.count
+        courses.removeAll { $0.id == id }
+        let didDelete = courses.count != before
+
+        if didDelete { save() }
+        return didDelete
+    }
+
+    private func seedBuiltIns() {
+        let builtIns = BuiltIns.profiles
+        var changed = false
+
+        for p in builtIns {
+            changed = upsertBuiltIn(p) || changed
+        }
+
+        if changed { save() }
+    }
+
+    @discardableResult
+    private func upsertBuiltIn(_ c: CourseProfile) -> Bool {
+        if let i = courses.firstIndex(where: { $0.id == c.id }) {
+            let merged = mergedCourse(base: courses[i], incoming: c)
+            if courses[i] != merged {
+                courses[i] = merged
+                return true
+            }
+            return false
+        }
+
+        if let j = courses.firstIndex(where: { $0.name.caseInsensitiveCompare(c.name) == .orderedSame }) {
+            let merged = mergedCourse(base: courses[j], incoming: c)
+            if courses[j] != merged {
+                courses[j] = merged
+                return true
+            }
+            return false
+        }
+
+        courses.append(c)
+        return true
+    }
+
+    private func mergedCourse(base: CourseProfile?, incoming: CourseProfile) -> CourseProfile {
+        CourseProfile(
+            id: base?.id ?? incoming.id,
+            name: incoming.name,
+            pars: incoming.pars,
+            hcs: incoming.hcs,
+            tees: incoming.tees ?? base?.tees,
+            country: incoming.country ?? base?.country,
+            state: incoming.state ?? base?.state,
+            architect: incoming.architect ?? base?.architect,
+            type: incoming.type ?? base?.type,
+            phone: incoming.phone ?? base?.phone,
+            website: incoming.website ?? base?.website,
+            address: incoming.address ?? base?.address,
+            isWolfApproved: incoming.isWolfApproved ?? base?.isWolfApproved
+        )
+    }
+
+    private func load() {
+        guard let data = UserDefaults.standard.data(forKey: keyLibrary) else { return }
+        courses = (try? JSONDecoder().decode([CourseProfile].self, from: data)) ?? []
+    }
+
+    private func save() {
+        let data = (try? JSONEncoder().encode(courses)) ?? Data()
+        UserDefaults.standard.set(data, forKey: keyLibrary)
+    }
+}
+
+// =======================================================
+// MARK: - Grouping helpers
+// =======================================================
+
+extension CourseLibrary {
+
+    struct LocationSection: Hashable {
+        let isUSAState: Bool
+        let title: String
+        let sortKey: String
+    }
+
+    func coursesGroupedStateThenInternational() -> [(section: LocationSection, courses: [CourseProfile])] {
+        let pairs: [(LocationSection, CourseProfile)] = courses.map { c in
+            let country = (c.country ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let state = (c.state ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let isUSA = country.caseInsensitiveCompare("USA") == .orderedSame
+
+            if isUSA, !state.isEmpty {
+                let sec = LocationSection(
+                    isUSAState: true,
+                    title: state.uppercased(),
+                    sortKey: state.uppercased()
+                )
+                return (sec, c)
+            } else {
+                let label = country.isEmpty ? "International" : country
+                let sec = LocationSection(
+                    isUSAState: false,
+                    title: label,
+                    sortKey: label.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
+                )
+                return (sec, c)
+            }
+        }
+
+        let grouped = Dictionary(grouping: pairs, by: { $0.0 })
+
+        let sortedSections = grouped.keys.sorted {
+            if $0.isUSAState != $1.isUSAState {
+                return $0.isUSAState && !$1.isUSAState
+            }
+            return $0.sortKey.localizedCaseInsensitiveCompare($1.sortKey) == .orderedAscending
+        }
+
+        return sortedSections.map { sec in
+            let list = (grouped[sec] ?? [])
+                .map { $0.1 }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+            return (sec, list)
         }
     }
 
-    // =======================================================
-    // MARK: - Grouping helpers
-    // =======================================================
-    
-    extension CourseLibrary {
-        
-        struct LocationSection: Hashable {
-            let isUSAState: Bool
-            let title: String
-            let sortKey: String
-        }
-        
-        func coursesGroupedStateThenInternational() -> [(section: LocationSection, courses: [CourseProfile])] {
-            let pairs: [(LocationSection, CourseProfile)] = courses.map { c in
-                let country = (c.country ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                let state = (c.state ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                let isUSA = country.caseInsensitiveCompare("USA") == .orderedSame
-                
-                if isUSA, !state.isEmpty {
-                    let sec = LocationSection(
-                        isUSAState: true,
-                        title: state.uppercased(),
-                        sortKey: state.uppercased()
-                    )
-                    return (sec, c)
-                } else {
-                    let label = country.isEmpty ? "International" : country
-                    let sec = LocationSection(
-                        isUSAState: false,
-                        title: label,
-                        sortKey: label.folding(options: [.diacriticInsensitive, .caseInsensitive], locale: .current)
-                    )
-                    return (sec, c)
-                }
-            }
-            
-            let grouped = Dictionary(grouping: pairs, by: { $0.0 })
-            
-            let sortedSections = grouped.keys.sorted {
-                if $0.isUSAState != $1.isUSAState {
-                    return $0.isUSAState && !$1.isUSAState
-                }
-                return $0.sortKey.localizedCaseInsensitiveCompare($1.sortKey) == .orderedAscending
-            }
-            
-            return sortedSections.map { sec in
-                let list = (grouped[sec] ?? [])
-                    .map { $0.1 }
-                    .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-                return (sec, list)
-            }
-        }
-        
-        func stateThenInternationalTitles() -> [String] {
-            coursesGroupedStateThenInternational().map { $0.section.title }
-        }
+    func stateThenInternationalTitles() -> [String] {
+        coursesGroupedStateThenInternational().map { $0.section.title }
     }
-
+}

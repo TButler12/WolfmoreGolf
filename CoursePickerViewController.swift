@@ -338,11 +338,14 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         }
 
         var iconText = ""
-
+        
         if c.hasPhone { iconText += "  📞" }
         if c.hasWebsite { iconText += "  🌐" }
+        if c.hasAddress { iconText += "  📍" }
         if c.isApproved { iconText += "  🐺" }
-
+        if c.name == "Cedar Rapids Country Club" {
+            print("DEBUG:", c.phone ?? "nil", c.website ?? "nil", c.address ?? "nil")
+        }
         cell.detailTextLabel?.text = parts.joined(separator: " • ") + iconText
         cell.detailTextLabel?.textColor = .secondaryLabel
         cell.detailTextLabel?.numberOfLines = 2
@@ -356,14 +359,11 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         onPickCourse?(c.id)
     }
     
-    // Swipe actions: Home ⭐, Edit ✏️, Delete 🗑️
-    // Swipe actions: Home ⭐, Edit ✏️, Delete 🗑️
     override func tableView(_ tableView: UITableView,
-                            trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
+                            leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
 
         let c = course(at: indexPath)
-        var actions: [UIContextualAction] = []
 
         let home = UIContextualAction(style: .normal, title: "Home") { [weak self] _, _, done in
             self?.setHomeCourse(c.id)
@@ -372,15 +372,18 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         }
         home.backgroundColor = .systemYellow
         home.image = UIImage(systemName: "star.fill")
-        actions.append(home)
 
-        let edit = UIContextualAction(style: .normal, title: "Edit") { [weak self] _, _, done in
-            self?.editCourse(c)
-            done(true)
-        }
-        edit.backgroundColor = .systemBlue
-        edit.image = UIImage(systemName: "pencil")
-        actions.append(edit)
+        let config = UISwipeActionsConfiguration(actions: [home])
+        config.performsFirstActionWithFullSwipe = false
+        return config
+    }
+    // Swipe actions: Home ⭐, Edit ✏️, Delete 🗑️
+ 
+    override func tableView(_ tableView: UITableView,
+                            trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
+    -> UISwipeActionsConfiguration? {
+
+        let c = course(at: indexPath)
 
         let info = UIContextualAction(style: .normal, title: "Info") { [weak self] _, _, done in
             self?.showCourseInfo(c)
@@ -388,60 +391,23 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         }
         info.backgroundColor = .systemTeal
         info.image = UIImage(systemName: "info.circle")
-        actions.append(info)
 
-        if c.hasPhone {
-            let phone = UIContextualAction(style: .normal, title: "Call") { _, _, done in
-                let cleaned = (c.phone ?? "").filter { "0123456789+".contains($0) }
-                if let url = URL(string: "tel://\(cleaned)"),
-                   UIApplication.shared.canOpenURL(url) {
-                    UIApplication.shared.open(url)
-                }
-                done(true)
-            }
-            phone.backgroundColor = .systemGreen
-            phone.image = UIImage(systemName: "phone.fill")
-            actions.append(phone)
+        let edit = UIContextualAction(style: .normal, title: "Edit") { [weak self] _, _, done in
+            self?.editCourse(c)
+            done(true)
         }
-
-        if c.hasWebsite {
-            let web = UIContextualAction(style: .normal, title: "Web") { _, _, done in
-                var text = c.website?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                if !text.lowercased().hasPrefix("http://") && !text.lowercased().hasPrefix("https://") {
-                    text = "https://\(text)"
-                }
-                if let url = URL(string: text) {
-                    UIApplication.shared.open(url)
-                }
-                done(true)
-            }
-            web.backgroundColor = .systemIndigo
-            web.image = UIImage(systemName: "globe")
-            actions.append(web)
-        }
-
-        if c.isApproved {
-            let wolf = UIContextualAction(style: .normal, title: "Wolf") { [weak self] _, _, done in
-                let ac = UIAlertController(
-                    title: "WolfMore Approved",
-                    message: "\(c.name) is marked as a WolfMore Approved course.",
-                    preferredStyle: .alert
-                )
-                ac.addAction(UIAlertAction(title: "OK", style: .default))
-                self?.present(ac, animated: true)
-                done(true)
-            }
-            wolf.backgroundColor = .systemOrange
-            wolf.image = UIImage(systemName: "checkmark.seal.fill")
-            actions.append(wolf)
-        }
+        edit.backgroundColor = .systemBlue
+        edit.image = UIImage(systemName: "pencil")
 
         let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, done in
-            guard let self else { done(false); return }
+            guard let self else {
+                done(false)
+                return
+            }
 
             if CourseLibrary.shared.isBuiltIn(id: c.id) {
                 let ac = UIAlertController(
-                    title: "Can’t Delete",
+                    title: "Can't Delete",
                     message: "\(c.name) is a built-in course.",
                     preferredStyle: .alert
                 )
@@ -457,9 +423,8 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             }
         }
         delete.image = UIImage(systemName: "trash")
-        actions.append(delete)
 
-        let config = UISwipeActionsConfiguration(actions: actions)
+        let config = UISwipeActionsConfiguration(actions: [delete, edit, info])
         config.performsFirstActionWithFullSwipe = false
         return config
     }
@@ -495,8 +460,8 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
         let ac = UIAlertController(title: c.name, message: message, preferredStyle: .actionSheet)
 
-        if let phone = c.phone, !phone.isEmpty {
-            ac.addAction(UIAlertAction(title: "Call", style: .default) { _ in
+        if let phone = c.phone?.trimmingCharacters(in: .whitespacesAndNewlines), !phone.isEmpty {
+            ac.addAction(UIAlertAction(title: "Call Course", style: .default) { _ in
                 let cleaned = phone.filter { "0123456789+".contains($0) }
                 if let url = URL(string: "tel://\(cleaned)"),
                    UIApplication.shared.canOpenURL(url) {
@@ -505,22 +470,24 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             })
         }
 
-        if let website = c.website, !website.isEmpty {
+        if let website = c.website?.trimmingCharacters(in: .whitespacesAndNewlines), !website.isEmpty {
             ac.addAction(UIAlertAction(title: "Open Website", style: .default) { _ in
-                var text = website.trimmingCharacters(in: .whitespacesAndNewlines)
+                var text = website
                 if !text.lowercased().hasPrefix("http://") && !text.lowercased().hasPrefix("https://") {
                     text = "https://\(text)"
                 }
-                if let url = URL(string: text) {
+                if let url = URL(string: text),
+                   UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url)
                 }
             })
         }
 
-        if let address = c.address, !address.isEmpty {
+        if let address = c.address?.trimmingCharacters(in: .whitespacesAndNewlines), !address.isEmpty {
             ac.addAction(UIAlertAction(title: "Open in Maps", style: .default) { _ in
                 let encoded = address.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? address
-                if let url = URL(string: "http://maps.apple.com/?q=\(encoded)") {
+                if let url = URL(string: "http://maps.apple.com/?q=\(encoded)"),
+                   UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url)
                 }
             })
