@@ -34,7 +34,6 @@
 		F639607A2F60D62500EC0C30 /* RulesEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605F2F60D62500EC0C30 /* RulesEngine.swift */; };
 		F639607B2F60D62500EC0C30 /* ScoreStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960602F60D62500EC0C30 /* ScoreStyle.swift */; };
 		F639607C2F60D62500EC0C30 /* UserProfile.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960612F60D62500EC0C30 /* UserProfile.swift */; };
-		F639607D2F60D62500EC0C30 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F63960562F60D62500EC0C30 /* LaunchScreen.storyboard */; };
 		F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */; };
 		F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D070F2ED8B20400F165CA /* ManagePlayersViewController.swift */; };
 		F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63D07132ED922D400F165CA /* ManagePlayerCell.swift */; };
@@ -95,7 +94,6 @@
 		F639605F2F60D62500EC0C30 /* RulesEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesEngine.swift; sourceTree = "<group>"; };
 		F63960602F60D62500EC0C30 /* ScoreStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScoreStyle.swift; sourceTree = "<group>"; };
 		F63960612F60D62500EC0C30 /* UserProfile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfile.swift; sourceTree = "<group>"; };
-		F63960622F60D62500EC0C30 /* Base 2C */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = "Base 2C"; path = "Base 2C.lproj/LaunchScreen.storyboard"; sourceTree = "<group>"; };
 		F63960862F60D62500EC0C30 /* CustomGroupsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomGroupsViewController.swift; sourceTree = "<group>"; };
 		F63960C12F60D62500EC0C30 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
 		F63D06952ED5143B00F165CA /* RosterAndTrackingViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RosterAndTrackingViewController.swift; sourceTree = "<group>"; };
@@ -209,7 +207,6 @@
 				F63960612F60D62500EC0C30 /* UserProfile.swift */,
 				F639605D2F60D62500EC0C30 /* RoundStore.swift */,
 				F63960862F60D62500EC0C30 /* CustomGroupsViewController.swift */,
-				F63960562F60D62500EC0C30 /* LaunchScreen.storyboard */,
 				F64DE7892EB0396000F8D625 /* Products */,
 				F64DE8142EB2850000F8D625 /* AppDelegate.swift */,
 				F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */,
@@ -295,7 +292,6 @@
 				Base,
 				"Base 2",
 				"Base 2C",
-				"base 2C",
 				"Base 2B",
 				"Base 3",
 			);
@@ -331,7 +327,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				F6D041842F611C3200CABD08 /* Main.storyboard in Resources */,
-				F639607D2F60D62500EC0C30 /* LaunchScreen.storyboard in Resources */,
 				F64DE9522EB6AAE300F8D625 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -402,14 +397,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		F63960562F60D62500EC0C30 /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				F63960622F60D62500EC0C30 /* Base 2C */,
-			);
-			name = LaunchScreen.storyboard;
-			sourceTree = "<group>";
-		};
 		F66006BB2F60C56F00148767 /* AppDelegate.swift */ = {
 			isa = PBXVariantGroup;
 			children = (
