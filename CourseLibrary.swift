@@ -1317,7 +1317,203 @@ let SPANISH_BAY_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green", yardage: 5720, rating: 69.3, slope: 127),
     TeeInfo(teeName: "Red",   yardage: 5218, rating: 67.3, slope: 114)
 ]
+// =======================================================
+// MARK: - Built-in: French Lick Resort – Pete Dye
+// French Lick, IN • Resort • Pete Dye
+// Gold: Par 72 | 8,102 yds | 80.5 / 151
+// =======================================================
 
+private let FRENCH_LICK_PETE_DYE_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000001")!
+
+let FRENCH_LICK_PETE_DYE_PARS: [Int] = [
+    4,4,5,3,4,4,5,3,4,
+    4,4,4,3,5,4,3,4,5
+]
+
+let FRENCH_LICK_PETE_DYE_HCS: [Int] = [
+    7,13,1,11,15,5,9,17,3,
+    14,10,4,18,8,16,6,12,2
+]
+
+let FRENCH_LICK_PETE_DYE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 8102, rating: 80.5, slope: 151)
+]
+
+// =======================================================
+// MARK: - Built-in: French Lick Resort – Donald Ross
+// French Lick, IN • Resort • Donald Ross
+// Gold Medal: Par 70 | 7,030 yds | 75.7 / 149
+// =======================================================
+
+private let FRENCH_LICK_DONALD_ROSS_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000002")!
+
+let FRENCH_LICK_DONALD_ROSS_PARS: [Int] = [
+    4,4,4,3,4,3,5,4,4,
+    4,4,4,3,4,5,3,4,4
+]
+
+let FRENCH_LICK_DONALD_ROSS_HCS: [Int] = [
+    5,17,7,15,3,11,1,9,13,
+    12,16,8,6,10,2,18,14,4
+]
+
+let FRENCH_LICK_DONALD_ROSS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold Medal", yardage: 7030, rating: 75.7, slope: 149)
+]
+
+// =======================================================
+// MARK: - Built-in: Silvies Valley Resort & Links – Craddock
+// Seneca, OR • Resort
+// Challenge: Par 72 | 7,170 yds | 73.8 / 132
+// =======================================================
+
+private let SILVIES_CRADDOCK_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000003")!
+
+let SILVIES_CRADDOCK_PARS: [Int] = [
+    5,4,4,3,5,4,3,4,4,
+    3,4,3,5,5,4,4,4,4
+]
+
+let SILVIES_CRADDOCK_HCS: [Int] = [
+    13,5,17,15,11,1,3,9,7,
+    8,4,10,14,6,16,2,18,12
+]
+
+let SILVIES_CRADDOCK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Challenge", yardage: 7170, rating: 73.8, slope: 132)
+]
+
+// =======================================================
+// MARK: - Built-in: ArborLinks
+// Nebraska City, NE • Private • Arnold Palmer
+// Black: Par 72 | 7,222 yds | 75.4 / 141
+// =======================================================
+
+private let ARBORLINKS_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000004")!
+
+let ARBORLINKS_PARS: [Int] = [
+    5,4,3,5,4,3,4,4,4,
+    5,3,4,4,3,4,5,4,4
+]
+
+let ARBORLINKS_HCS: [Int] = [
+    12,14,18,2,8,16,10,4,6,
+    11,15,7,13,17,1,5,3,9
+]
+
+let ARBORLINKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7222, rating: 75.4, slope: 141)
+]
+// =======================================================
+// MARK: - Built-in: Mid Pines
+// Southern Pines, NC • Resort • Donald Ross
+// Medal: Par 72 | 6,710 yds | 73.5 / 142
+// =======================================================
+
+private let MID_PINES_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000101")!
+
+let MID_PINES_PARS: [Int] = [
+    4,3,4,4,5,5,4,3,4,
+    5,3,4,3,4,5,4,4,4
+]
+
+let MID_PINES_HCS: [Int] = [
+    5,15,7,13,9,1,3,17,11,
+    2,18,8,10,16,12,6,14,4
+]
+
+let MID_PINES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Medal", yardage: 6710, rating: 73.5, slope: 142)
+]
+
+// =======================================================
+// MARK: - Built-in: Makai Course
+// Princeville, HI • Resort • Robert Trent Jones Jr.
+// Black: Par 72 | 7,223 yds | 75.4 / 134
+// =======================================================
+
+private let MAKAI_COURSE_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000102")!
+
+let MAKAI_COURSE_PARS: [Int] = [
+    4,5,3,4,5,4,3,4,4,
+    4,5,4,3,4,4,3,4,5
+]
+
+let MAKAI_COURSE_HCS: [Int] = [
+    13,9,15,1,11,3,7,17,5,
+    6,14,2,4,18,10,12,8,16
+]
+
+let MAKAI_COURSE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7223, rating: 75.4, slope: 134)
+]
+
+// =======================================================
+// MARK: - Built-in: Pine Needles
+// Southern Pines, NC • Resort • Donald Ross
+// Medal: Par 71 | 7,035 yds | 73.5 / 134
+// =======================================================
+
+private let PINE_NEEDLES_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000103")!
+
+let PINE_NEEDLES_PARS: [Int] = [
+    5,4,3,4,3,4,4,4,4,
+    5,4,4,3,4,5,3,4,4
+]
+
+let PINE_NEEDLES_HCS: [Int] = [
+    11,5,17,9,7,1,3,15,13,
+    4,12,14,16,2,6,18,8,10
+]
+
+let PINE_NEEDLES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Medal", yardage: 7035, rating: 73.5, slope: 134)
+]
+
+// =======================================================
+// MARK: - Built-in: Southern Pines Golf Club
+// Southern Pines, NC • Resort • Donald Ross
+// Medal routing: Par 71 | 6,695 yds | 73.8 / 139
+// NOTE: Scorecard shows special dual-routing / Lost Hole layout.
+// This setup uses the men's medal routing shown on the card.
+// =======================================================
+
+private let SOUTHERN_PINES_GC_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000104")!
+
+let SOUTHERN_PINES_GC_PARS: [Int] = [
+    4,5,3,4,5,4,3,4,3,
+    4,4,4,4,3,5,4,4,4
+]
+
+let SOUTHERN_PINES_GC_HCS: [Int] = [
+    11,7,13,3,5,1,17,9,15,
+    10,14,2,8,18,6,16,4,12
+]
+
+let SOUTHERN_PINES_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Medal", yardage: 6695, rating: 73.8, slope: 139)
+]
+// =======================================================
+// MARK: - Built-in: Troon Country Club
+// Scottsdale, AZ • Private • Jay Morrish / Tom Weiskopf
+// Black: Par 72 | 6,707 yds | 73.0 / 136
+// =======================================================
+
+private let TROON_COUNTRY_CLUB_ID = UUID(uuidString: "A1F10001-0000-0000-0000-000000000105")!
+
+let TROON_COUNTRY_CLUB_PARS: [Int] = [
+    4,4,5,4,3,4,3,5,4,
+    4,5,4,3,4,3,4,5,4
+]
+
+let TROON_COUNTRY_CLUB_HCS: [Int] = [
+    7,3,15,17,9,1,11,13,5,
+    4,14,8,16,2,18,12,6,10
+]
+
+let TROON_COUNTRY_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6707, rating: 73.0, slope: 136)
+]
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -1431,248 +1627,1053 @@ private enum BuiltIns {
         ),
 
         c(WYNSTONE_SILVER_ID, "Wynstone", WYNSTONE_SILVER_PARS, WYNSTONE_SILVER_HCS,
-          country: "USA", state: "IL"),
-        c(BARRINGTON_HILLS_WHITE_ID, "Barrington Hills", BARRINGTON_HILLS_WHITE_PARS, BARRINGTON_HILLS_WHITE_HCS,
-          country: "USA", state: "IL"),
-        c(CRANES_LANDING_BLUE_ID, "Crane's Landing", CRANES_LANDING_BLUE_PARS, CRANES_LANDING_BLUE_HCS,
-          country: "USA", state: "IL"),
-        c(STONEWALL_ORCHARD_SILVER_ID, "Stonewall Orchard", STONEWALL_ORCHARD_SILVER_PARS, STONEWALL_ORCHARD_SILVER_HCS,
-          country: "USA", state: "IL"),
-        c(KEMPER_LAKES_GREEN_ID, "Kemper Lakes", KEMPER_LAKES_GREEN_PARS, KEMPER_LAKES_GREEN_HCS,
-          country: "USA", state: "IL"),
-        c(RICH_HARVEST_SILVER_ID, "Rich Harvest Farms", RICH_HARVEST_SILVER_PARS, RICH_HARVEST_SILVER_HCS,
-          country: "USA", state: "IL"),
-        c(BUTLER_CC_BLUE_ID, "Butler National 6970", BUTLER_CC_BLUE_PARS, BUTLER_CC_BLUE_HCS, BUTLER_CC_BLUE_TEES,
-          country: "USA", state: "IL"),
-        c(BUTLER_NATIONAL_BUTLER_TEE_ID, "Butler National (7,550-yard)", BUTLER_NATIONAL_BUTLER_TEE_PARS, BUTLER_NATIONAL_BUTLER_TEE_HCS, BUTLER_NATIONAL_BUTLER_TEE_TEES,
-          country: "USA", state: "IL"),
-        c(MEDINAH_CC_3_ID, "Medinah CC (Course #3)", MEDINAH_CC_3_PARS, MEDINAH_CC_3_HCS, MEDINAH_CC_3_TEES,
-          country: "USA", state: "IL"),
-        c(MAKRAY_MEMORIAL_BLACK_ID, "Makray Memorial (Black)", MAKRAY_MEMORIAL_BLACK_PARS, MAKRAY_MEMORIAL_BLACK_HCS, MAKRAY_MEMORIAL_BLACK_TEES,
-          country: "USA", state: "IL"),
-        c(LAKE_BARRINGTON_SHORES_BLACK_ID, "Lake Barrington Shores (Black)", LAKE_BARRINGTON_SHORES_BLACK_PARS, LAKE_BARRINGTON_SHORES_BLACK_HCS, LAKE_BARRINGTON_SHORES_BLACK_TEES,
-          country: "USA", state: "IL"),
-        c(FOXFORD_HILLS_BLACK_ID, "Foxford Hills (Black)", FOXFORD_HILLS_BLACK_PARS, FOXFORD_HILLS_BLACK_HCS, FOXFORD_HILLS_BLACK_TEES,
-          country: "USA", state: "IL"),
-        c(CARY_CC_BLUE_ID, "Cary CC (Blue)", CARY_CC_BLUE_PARS, CARY_CC_BLUE_HCS, CARY_CC_BLUE_TEES,
-          country: "USA", state: "IL"),
-        c(CHALET_HILLS_BLACK_ID, "Chalet Hills (Black)", CHALET_HILLS_BLACK_PARS, CHALET_HILLS_BLACK_HCS, CHALET_HILLS_BLACK_TEES,
-          country: "USA", state: "IL"),
-        c(TPC_DEERE_RUN_TPC_ID, "TPC Deere Run (TPC)", TPC_DEERE_RUN_TPC_PARS, TPC_DEERE_RUN_TPC_HCS, TPC_DEERE_RUN_TPC_TEES,
-          country: "USA", state: "IL"),
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(847) 304-2800",
+          website: "https://www.wynstone.org",
+          address: "1 South Wynstone Drive, North Barrington, IL 60010"),
 
+        c(BARRINGTON_HILLS_WHITE_ID, "Barrington Hills", BARRINGTON_HILLS_WHITE_PARS, BARRINGTON_HILLS_WHITE_HCS,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(847) 381-4200",
+          website: "https://www.barringtonhillscc.com",
+          address: "300 W. County Line Road, Barrington Hills, IL 60010"),
+
+        c(CRANES_LANDING_BLUE_ID, "Crane's Landing", CRANES_LANDING_BLUE_PARS, CRANES_LANDING_BLUE_HCS,
+          country: "USA",
+          state: "IL",
+          type: "Resort",
+          phone: "(847) 634-5935",
+          website: "https://www.craneslandinggolf.com",
+          address: "10 Marriott Drive, Lincolnshire, IL 60069"),
+
+        c(STONEWALL_ORCHARD_SILVER_ID, "Stonewall Orchard", STONEWALL_ORCHARD_SILVER_PARS, STONEWALL_ORCHARD_SILVER_HCS,
+          country: "USA",
+          state: "IL",
+          architect: "Arthur Hills",
+          type: "Daily-Fee",
+          phone: "(847) 740-4890",
+          website: "https://www.stonewallorchard.com",
+          address: "25675 W IL Highway 60, Grayslake, IL 60030"),
+
+        c(KEMPER_LAKES_GREEN_ID, "Kemper Lakes", KEMPER_LAKES_GREEN_PARS, KEMPER_LAKES_GREEN_HCS,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(847) 320-3450",
+          website: "https://www.kemperlakesgolf.com",
+          address: "24000 N. Old McHenry Road, Kildeer, IL 60047"),
+
+        c(RICH_HARVEST_SILVER_ID, "Rich Harvest Farms", RICH_HARVEST_SILVER_PARS, RICH_HARVEST_SILVER_HCS,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(630) 466-7610",
+          website: "https://www.richharvestfarms.com",
+          address: "7S771 Dugan Road, Sugar Grove, IL 60554"),
+
+        c(BUTLER_CC_BLUE_ID, "Butler National 6970", BUTLER_CC_BLUE_PARS, BUTLER_CC_BLUE_HCS, BUTLER_CC_BLUE_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(630) 990-3333",
+          website: "https://www.butlernational.org",
+          address: "2616 S York Road, Oak Brook, IL 60523"),
+
+        c(BUTLER_NATIONAL_BUTLER_TEE_ID, "Butler National (7,550-yard)", BUTLER_NATIONAL_BUTLER_TEE_PARS, BUTLER_NATIONAL_BUTLER_TEE_HCS, BUTLER_NATIONAL_BUTLER_TEE_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(630) 990-3333",
+          website: "https://www.butlernational.org",
+          address: "2616 S York Road, Oak Brook, IL 60523"),
+
+        c(MEDINAH_CC_3_ID, "Medinah CC (Course #3)", MEDINAH_CC_3_PARS, MEDINAH_CC_3_HCS, MEDINAH_CC_3_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(630) 773-1700",
+          website: "https://www.medinahcc.org",
+          address: "6N001 Medinah Road, Medinah, IL 60157"),
+
+        c(MAKRAY_MEMORIAL_BLACK_ID, "Makray Memorial (Black)", MAKRAY_MEMORIAL_BLACK_PARS, MAKRAY_MEMORIAL_BLACK_HCS, MAKRAY_MEMORIAL_BLACK_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Daily-Fee",
+          phone: "(847) 381-6500",
+          website: "https://www.makraygolf.com",
+          address: "1010 S. Northwest Highway, Barrington, IL 60010"),
+
+        c(LAKE_BARRINGTON_SHORES_BLACK_ID, "Lake Barrington Shores (Black)", LAKE_BARRINGTON_SHORES_BLACK_PARS, LAKE_BARRINGTON_SHORES_BLACK_HCS, LAKE_BARRINGTON_SHORES_BLACK_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(847) 382-4240",
+          website: "https://www.golflakebarrington.com",
+          address: "40 Shoreline Road, Lake Barrington, IL 60010"),
+
+        c(FOXFORD_HILLS_BLACK_ID, "Foxford Hills (Black)", FOXFORD_HILLS_BLACK_PARS, FOXFORD_HILLS_BLACK_HCS, FOXFORD_HILLS_BLACK_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Daily-Fee",
+          phone: "(847) 639-0400",
+          website: "https://www.foxfordhillsgolfclub.com",
+          address: "6800 S. Rawson Bridge Road, Cary, IL 60013"),
+
+        c(CARY_CC_BLUE_ID, "Cary CC (Blue)", CARY_CC_BLUE_PARS, CARY_CC_BLUE_HCS, CARY_CC_BLUE_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(847) 639-3161",
+          website: "https://www.carycountryclub.com",
+          address: "2400 Grove Lane, Cary, IL 60013"),
+
+        c(CHALET_HILLS_BLACK_ID, "Chalet Hills (Black)", CHALET_HILLS_BLACK_PARS, CHALET_HILLS_BLACK_HCS, CHALET_HILLS_BLACK_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Daily-Fee",
+          phone: "(847) 639-0666",
+          website: "https://www.chalethillsgolfclub.com",
+          address: "943 Rawson Bridge Road, Cary, IL 60013"),
+
+        c(TPC_DEERE_RUN_TPC_ID, "TPC Deere Run (TPC)", TPC_DEERE_RUN_TPC_PARS, TPC_DEERE_RUN_TPC_HCS, TPC_DEERE_RUN_TPC_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Daily-Fee",
+          phone: "(309) 796-6000",
+          website: "https://tpc.com/deererun/",
+          address: "3100 Heather Knoll, Silvis, IL 61282"),
         // -------------------------
         // Iowa
         // -------------------------
         c(HARVESTER_GC_BLACK_ID, "The Harvester GC (Black)", HARVESTER_GC_BLACK_PARS, HARVESTER_GC_BLACK_HCS, HARVESTER_GC_BLACK_TEES,
-          country: "USA", state: "IA"),
+          country: "USA",
+          state: "IA",
+          architect: "Keith Foster",
+          type: "Private",
+          phone: "(515) 986-4653",
+          website: "https://www.theharvestergolfclub.com",
+          address: "833 Foster Drive, Rhodes, IA 50234"),
         c(DAVENPORT_CC_BLACK_ID, "Davenport CC (Black)", DAVENPORT_CC_BLACK_PARS, DAVENPORT_CC_BLACK_HCS, DAVENPORT_CC_BLACK_TEES,
-          country: "USA", state: "IA"),
+          country: "USA",
+          state: "IA",
+          architect: "H.S. Colt / Donald Ross influence",
+          type: "Private",
+          phone: "(563) 322-3000",
+          website: "https://www.davenportcc.com",
+          address: "25500 Valley Drive, Pleasant Valley, IA 52767"),
 
         // -------------------------
         // Florida
         // -------------------------
         c(CHAMPIONGATE_BLENDED_BLACK_ID, "Champions Gate", CHAMPIONGATE_BLENDED_BLACK_PARS, CHAMPIONGATE_BLENDED_BLACK_HCS,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Greg Norman",
+          type: "Resort",
+          phone: "(407) 787-4653",
+          website: "https://www.championsgategolf.com",
+          address: "8575 White Shark Blvd, ChampionsGate, FL 33896"),
         c(TPC_SAWGRASS_STADIUM_ID, "TPC Sawgrass (Stadium)", TPC_SAWGRASS_STADIUM_PARS, TPC_SAWGRASS_STADIUM_HCS,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye",
+          type: "Daily-Fee",
+          phone: "(904) 273-3235",
+          website: "https://tpc.com/sawgrass/",
+          address: "110 Championship Way, Ponte Vedra Beach, FL 32082"),
         c(BAY_HILL_CHALLENGER_CHAMPION_ID, "Bay Hill (Challenger/Champion)", BAY_HILL_CHALLENGER_CHAMPION_PARS, BAY_HILL_CHALLENGER_CHAMPION_HCS, BAY_HILL_CHALLENGER_CHAMPION_TEES,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Dick Wilson / Arnold Palmer redesign",
+          type: "Private",
+          phone: "(407) 876-2429",
+          website: "https://www.bayhill.com",
+          address: "9000 Bay Hill Blvd, Orlando, FL 32819"),
         c(PGA_NATIONAL_CHAMPION_BEAR_ID, "PGA National (Champion – Bear)", PGA_NATIONAL_CHAMPION_BEAR_PARS, PGA_NATIONAL_CHAMPION_BEAR_HCS, PGA_NATIONAL_CHAMPION_BEAR_TEES,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio / Jack Nicklaus redesign",
+          type: "Resort",
+          phone: "(561) 627-1800",
+          website: "https://www.pgaresort.com",
+          address: "400 Avenue of the Champions, Palm Beach Gardens, FL 33418"),
         c(PANTHER_NATIONAL_JT_ID, "Panther National (JT)", PANTHER_NATIONAL_JT_PARS, PANTHER_NATIONAL_JT_HCS, PANTHER_NATIONAL_JT_TEES,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus / Justin Thomas",
+          type: "Private",
+          phone: "(561) 440-1000",
+          website: "https://panthernational.com",
+          address: "11880 Panther Parkway, Palm Beach Gardens, FL 33412"),
         c(BEARS_CLUB_CHAMPION_ID, "The Bear's Club (7212 yds)", BEARS_CLUB_CHAMPION_PARS, BEARS_CLUB_CHAMPION_HCS, BEARS_CLUB_CHAMPION_TEES,
-          country: "USA", state: "FL"),
-        c(BEARS_CLUB_CHAMPIONSHIP_ID, "The Bear's Club (7328 yds)", BEARS_CLUB_CHAMPIONSHIP_PARS, BEARS_CLUB_CHAMPIONSHIP_HCS, BEARS_CLUB_CHAMPIONSHIP_TEES,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus",
+          type: "Private",
+          phone: "(561) 626-2327",
+          website: "https://www.thebearsclub.com",
+          address: "250 Bears Club Drive, Jupiter, FL 33477"),
         c(STREAMSONG_BLUE_ID, "Streamsong (Blue)", STREAMSONG_BLUE_PARS, STREAMSONG_BLUE_HCS,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Tom Doak",
+          type: "Resort",
+          phone: "(863) 428-1000",
+          website: "https://www.streamsongresort.com",
+          address: "1000 Streamsong Drive, Bowling Green, FL 33834"),
         c(STREAMSONG_RED_ID, "Streamsong (Red)", STREAMSONG_RED_PARS, STREAMSONG_RED_HCS,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Tom Doak",
+          type: "Resort",
+          phone: "(863) 428-1000",
+          website: "https://www.streamsongresort.com",
+          address: "1000 Streamsong Drive, Bowling Green, FL 33834"),
         c(STREAMSONG_BLACK_ID, "Streamsong (Black)", STREAMSONG_BLACK_PARS, STREAMSONG_BLACK_HCS,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Tom Doak",
+          type: "Resort",
+          phone: "(863) 428-1000",
+          website: "https://www.streamsongresort.com",
+          address: "1000 Streamsong Drive, Bowling Green, FL 33834"),
         c(PGA_VILLAGE_WANAMAKER_ID, "PGA Village (Wanamaker)", PGA_VILLAGE_WANAMAKER_PARS, PGA_VILLAGE_WANAMAKER_HCS,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio",
+          type: "Resort",
+          phone: "(772) 467-1300",
+          website: "https://www.pgavillage.com",
+          address: "1916 Perfect Drive, Port St. Lucie, FL 34986"),
         c(PGA_VILLAGE_RYDER_ID, "PGA Village (Ryder)", PGA_VILLAGE_RYDER_PARS, PGA_VILLAGE_RYDER_HCS,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio",
+          type: "Resort",
+          phone: "(772) 467-1300",
+          website: "https://www.pgavillage.com",
+          address: "1916 Perfect Drive, Port St. Lucie, FL 34986"),
         c(PGA_VILLAGE_DYE_ID, "PGA Village (Dye)", PGA_VILLAGE_DYE_PARS, PGA_VILLAGE_DYE_HCS,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye",
+          type: "Resort",
+          phone: "(772) 467-1300",
+          website: "https://www.pgavillage.com",
+          address: "1916 Perfect Drive, Port St. Lucie, FL 34986"),
         c(MEDALIST_JT_ID, "Medalist GC (JT)", MEDALIST_JT_PARS, MEDALIST_JT_HCS,
-          country: "USA", state: "FL"),
+          architect: "Tom Fazio",
+          type: "Resort",
+          phone: "(772) 467-1300",
+          website: "https://www.pgavillage.com",
+          address: "1916 Perfect Drive, Port St. Lucie, FL 34986"),
+        
         c(DYE_PRESERVE_CHAMPIONSHIP_ID, "Dye Preserve (Championship)", DYE_PRESERVE_CHAMPIONSHIP_PARS, DYE_PRESERVE_CHAMPIONSHIP_HCS, DYE_PRESERVE_CHAMPIONSHIP_TEES,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye",
+          type: "Private",
+          phone: "(561) 575-7011",
+          website: "https://www.dyepreserve.com",
+          address: "1800 SE Bridge Road, Jupiter, FL 33469"),
+        
         c(SEMINOLE_GOLD_ID, "Seminole (Gold)", SEMINOLE_GOLD_PARS, SEMINOLE_GOLD_HCS, SEMINOLE_GOLD_TEES,
-          country: "USA", state: "FL"),
+          country: "USA",
+          state: "FL",
+          architect: "Donald Ross,Ren:Gil Hanse/Jim Wagner.",
+          type: "Private",
+          phone: "(561) 626-0280",
+          website: "https://www.seminolegolfclub.com",
+          address: "901 Seminole Boulevard, Juno Beach, FL 33408"),
+        
         c(CALUSA_PINES_ID, "Calusa Pines (Gold)", CALUSA_PINES_GOLD_PARS, CALUSA_PINES_GOLD_HCS,
-          country: "USA", state: "FL"),
+          country: "USA", state: "FL",
+          phone: "(239) 352-2200",
+          website: "https://www.calusapinesgolfclub.com",
+          address: "2000 Calusa Pines Drive, Naples, FL 34120"),
+      
         c(KAROO_ID, "Karoo (Black)", KAROO_BLACK_PARS, KAROO_BLACK_HCS_TODO,
-          country: "USA", state: "FL"),
+          country: "USA", state: "FL",
+          phone: "(239) 352-2200",
+          website: "https://www.calusapinesgolfclub.com",
+          address: "2000 Calusa Pines Drive, Naples, FL 34120"),
 
         // -------------------------
         // Wisconsin
         // -------------------------
         c(WHISTLING_STRAITS_STRAITS_ID, "Whistling Straits (Straits)", WHISTLING_STRAITS_STRAITS_PARS, WHISTLING_STRAITS_STRAITS_HCS, WHISTLING_STRAITS_STRAITS_TEES,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort",
+          phone: "(920) 565-6000",
+          website: "https://www.americanclubresort.com/golf/whistling-straits",
+          address: "N8501 Lakeshore Rd, Sheboygan, WI 53083"),
+        
         c(WHISTLING_STRAITS_IRISH_ID, "Whistling Straits (Irish)", WHISTLING_STRAITS_IRISH_PARS, WHISTLING_STRAITS_IRISH_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort",
+          phone: "(920) 565-6000",
+          website: "https://www.americanclubresort.com/golf/whistling-straits",
+          address: "N8501 Lakeshore Rd, Sheboygan, WI 53083"),
+        
         c(BLACKWOLF_RUN_RIVER_ID, "Blackwolf Run (River)", BLACKWOLF_RUN_RIVER_PARS, BLACKWOLF_RUN_RIVER_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort",
+          phone: "(920) 457-4441",
+          website: "https://www.americanclubresort.com/golf/blackwolf-run",
+          address: "1111 W Riverside Dr, Kohler, WI 53044"),
+        
         c(BLACKWOLF_RUN_MEADOW_VALLEYS_ID, "Blackwolf Run (Meadow Valleys)", BLACKWOLF_RUN_MEADOW_VALLEYS_PARS, BLACKWOLF_RUN_MEADOW_VALLEYS_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort",
+          phone: "(920) 457-4441",
+          website: "https://www.americanclubresort.com/golf/blackwolf-run",
+          address: "1111 W Riverside Dr, Kohler, WI 53044"),
+        
         c(SAND_VALLEY_ID, "Sand Valley", SAND_VALLEY_PARS, SAND_VALLEY_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Coore & Crenshaw",
+          type: "Resort",
+          phone: "(888) 651-5539",
+          website: "https://www.sandvalley.com",
+          address: "1697 Leopold Way, Nekoosa, WI 54457"),
+        
         c(MAMMOTH_DUNES_ID, "Mammoth Dunes", MAMMOTH_DUNES_PARS, MAMMOTH_DUNES_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "David McLay Kidd",
+          type: "Resort",
+          phone: "(888) 651-5539",
+          website: "https://www.sandvalley.com",
+          address: "1697 Leopold Way, Nekoosa, WI 54457"),
+        
         c(GENEVA_NATIONAL_PALMER_ID, "Geneva National – Palmer", GENEVA_NATIONAL_PALMER_PARS, GENEVA_NATIONAL_PALMER_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Arnold Palmer",
+          type: "Resort",
+          phone: "(262) 245-7000",
+          website: "https://www.genevanationalresort.com",
+          address: "1221 Geneva National Ave S, Lake Geneva, WI 53147"),
         c(GENEVA_NATIONAL_TREVINO_ID, "Geneva National – Trevino", GENEVA_NATIONAL_TREVINO_PARS, GENEVA_NATIONAL_TREVINO_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Lee Trevino",
+          type: "Resort",
+          phone: "(262) 245-7000",
+          website: "https://www.genevanationalresort.com",
+          address: "1221 Geneva National Ave S, Lake Geneva, WI 53147"),
         c(GENEVA_NATIONAL_PLAYER_ID, "Geneva National – Player", GENEVA_NATIONAL_PLAYER_PARS, GENEVA_NATIONAL_PLAYER_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Gary Player",
+          type: "Resort",
+          phone: "(262) 245-7000",
+          website: "https://www.genevanationalresort.com",
+          address: "1221 Geneva National Ave S, Lake Geneva, WI 53147"),
         c(GRAND_GENEVA_HIGHLANDS_ID, "Grand Geneva – The Highlands", GRAND_GENEVA_HIGHLANDS_PARS, GRAND_GENEVA_HIGHLANDS_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Pete Dye",
+          type: "Resort",
+          phone: "(262) 248-8811",
+          website: "https://www.grandgeneva.com",
+          address: "7036 Grand Geneva Way, Lake Geneva, WI 53147"),
         c(GRAND_GENEVA_BRUTE_ID, "Grand Geneva – The Brute", GRAND_GENEVA_BRUTE_PARS, GRAND_GENEVA_BRUTE_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Robert Bruce Harris",
+          type: "Resort",
+          phone: "(262) 248-8811",
+          website: "https://www.grandgeneva.com",
+          address: "7036 Grand Geneva Way, Lake Geneva, WI 53147"),
         c(ERIN_HILLS_ID, "Erin Hills (Black)", ERIN_HILLS_BLACK_PARS, ERIN_HILLS_BLACK_HCS,
-          country: "USA", state: "WI"),
+          country: "USA",
+          state: "WI",
+          architect: "Dr. Michael Hurdzan / Dana Fry / Ron Whitten",
+          type: "Daily-Fee",
+          phone: "(866) 772-4769",
+          website: "https://www.erinhills.com",
+          address: "7169 County Road O, Erin, WI 53027"),
         c(SAND_VALLEY_LIDO_ID, "Sand Valley (Lido)", SAND_VALLEY_LIDO_PARS_TODO, SAND_VALLEY_LIDO_HCS_TODO,
-          country: "USA", state: "WI", architect: "C.B. Macdonald / Seth Raynor / Tom Doak / Brian Schneider"),
+          country: "USA",
+          state: "WI",
+          architect: "C.B. Macdonald / Seth Raynor / Tom Doak / Brian Schneider",
+          type: "Resort",
+          phone: "(888) 651-5539",
+          website: "https://www.sandvalley.com",
+          address: "1697 Leopold Way, Nekoosa, WI 54457"),
+        
         c(SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_ID, "Sand Valley (Sedge Valley — Championship)", SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_PARS, SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_HCS, SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_TEES,
-          country: "USA", state: "WI", architect: "Tom Doak", type: "Resort"),
-
+          country: "USA",
+          state: "WI",
+          architect: "Tom Doak",
+          type: "Resort",
+          phone: "(888) 651-5539",
+          website: "https://www.sandvalley.com",
+          address: "1697 Leopold Way, Nekoosa, WI 54457"),
+        
         // -------------------------
         // Arizona
         // -------------------------
-        c(TROON_NORTH_MONUMENT_ID, "Troon North (Monument)", TROON_NORTH_MONUMENT_PARS, TROON_NORTH_MONUMENT_HCS,
-          country: "USA", state: "AZ"),
-        c(TROON_NORTH_PINNACLE_ID, "Troon North (Pinnacle)", TROON_NORTH_PINNACLE_PARS, TROON_NORTH_PINNACLE_HCS,
-          country: "USA", state: "AZ"),
-        c(WHISPER_ROCK_UPPER_ROCK_ID, "Whisper Rock Upper (Rock)", WHISPER_ROCK_UPPER_ROCK_PARS, WHISPER_ROCK_UPPER_ROCK_HCS, WHISPER_ROCK_UPPER_ROCK_TEES,
-          country: "USA", state: "AZ"),
-        c(SILVERLEAF_GC_SILVER_ID, "Silverleaf GC (Silver)", SILVERLEAF_GC_SILVER_PARS, SILVERLEAF_GC_SILVER_HCS, SILVERLEAF_GC_SILVER_TEES,
-          country: "USA", state: "AZ"),
-        c(SCOTTSDALE_NATIONAL_XTEE_ID, "Scottsdale National GC (X-Tee)", SCOTTSDALE_NATIONAL_XTEE_PARS, SCOTTSDALE_NATIONAL_XTEE_HCS, SCOTTSDALE_NATIONAL_XTEE_TEES,
-          country: "USA", state: "AZ"),
-        c(ESTANCIA_ID, "Estancia", ESTANCIA_PARS_TODO, ESTANCIA_HCS_TODO,
-          country: "USA", state: "AZ", architect: "Tom Fazio"),
-        c(FOREST_HIGHLANDS_MEADOW_ID, "Forest Highlands - Meadow (White)", FOREST_HIGHLANDS_MEADOW_PARS, FOREST_HIGHLANDS_MEADOW_MENS_HCS,
-          country: "USA", state: "AZ"),
-
+        c(
+            TROON_NORTH_MONUMENT_ID,
+            "Troon North (Monument)",
+            TROON_NORTH_MONUMENT_PARS,
+            TROON_NORTH_MONUMENT_HCS,
+            country: "USA",
+            state: "AZ",
+            type: "Daily-Fee",
+            phone: "(480) 585-7700",
+            address: "10320 E Dynamite Blvd, Scottsdale, AZ 85262"
+        ),
+        c(
+            TROON_NORTH_PINNACLE_ID,
+            "Troon North (Pinnacle)",
+            TROON_NORTH_PINNACLE_PARS,
+            TROON_NORTH_PINNACLE_HCS,
+            country: "USA",
+            state: "AZ",
+            type: "Daily-Fee",
+            phone: "(480) 585-7700",
+            address: "10320 E Dynamite Blvd, Scottsdale, AZ 85262"
+        ),
+        c(
+            WHISPER_ROCK_UPPER_ROCK_ID,
+            "Whisper Rock Upper (Rock)",
+            WHISPER_ROCK_UPPER_ROCK_PARS,
+            WHISPER_ROCK_UPPER_ROCK_HCS,
+            WHISPER_ROCK_UPPER_ROCK_TEES,
+            country: "USA",
+            state: "AZ",
+            type: "Private",
+            phone: "(480) 575-8700",
+            address: "32000 N Old Bridge Rd, Scottsdale, AZ 85266"
+        ),
+        c(
+            SILVERLEAF_GC_SILVER_ID,
+            "Silverleaf GC (Silver)",
+            SILVERLEAF_GC_SILVER_PARS,
+            SILVERLEAF_GC_SILVER_HCS,
+            SILVERLEAF_GC_SILVER_TEES,
+            country: "USA",
+            state: "AZ",
+            type: "Private",
+            phone: "(480) 515-3200",
+            address: "18701 N Silverleaf Dr, Scottsdale, AZ 85255"
+        ),
+        c(
+            SCOTTSDALE_NATIONAL_XTEE_ID,
+            "Scottsdale National GC (X-Tee)",
+            SCOTTSDALE_NATIONAL_XTEE_PARS,
+            SCOTTSDALE_NATIONAL_XTEE_HCS,
+            SCOTTSDALE_NATIONAL_XTEE_TEES,
+            country: "USA",
+            state: "AZ",
+            type: "Private",
+            phone: "(480) 443-8868",
+            address: "28265 N Scottsdale National Dr, Scottsdale, AZ 85262"
+        ),
+        c(
+            ESTANCIA_ID,
+            "Estancia",
+            ESTANCIA_PARS_TODO,
+            ESTANCIA_HCS_TODO,
+            country: "USA",
+            state: "AZ",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(480) 473-4400",
+            address: "27998 N 99th Pl, Scottsdale, AZ 85262"
+        ),
+        c(
+            FOREST_HIGHLANDS_MEADOW_ID,
+            "Forest Highlands - Meadow (White)",
+            FOREST_HIGHLANDS_MEADOW_PARS,
+            FOREST_HIGHLANDS_MEADOW_MENS_HCS,
+            country: "USA",
+            state: "AZ",
+            type: "Private",
+            phone: "(928) 525-5200",
+            address: "2425 William Palmer, Flagstaff, AZ 86005"
+        ),
         // -------------------------
         // Oregon
         // -------------------------
-        c(BANDON_DUNES_ID, "Bandon Dunes", BANDON_DUNES_PARS, BANDON_DUNES_HCS,
-          country: "USA", state: "OR"),
-        c(PACIFIC_DUNES_ID, "Pacific Dunes", PACIFIC_DUNES_PARS, PACIFIC_DUNES_HCS,
-          country: "USA", state: "OR"),
-        c(BANDON_TRAILS_ID, "Bandon Trails", BANDON_TRAILS_PARS, BANDON_TRAILS_HCS,
-          country: "USA", state: "OR"),
-        c(OLD_MACDONALD_ID, "Old Macdonald", OLD_MACDONALD_PARS, OLD_MACDONALD_HCS,
-          country: "USA", state: "OR"),
-        c(SHEEP_RANCH_ID, "Sheep Ranch", SHEEP_RANCH_PARS, SHEEP_RANCH_HCS,
-          country: "USA", state: "OR"),
-
+        // -------------------------
+        // Oregon
+        // -------------------------
+        c(
+            BANDON_DUNES_ID,
+            "Bandon Dunes",
+            BANDON_DUNES_PARS,
+            BANDON_DUNES_HCS,
+            country: "USA",
+            state: "OR",
+            type: "Resort",
+            phone: "(541) 347-5888",
+            website: "https://www.bandondunesgolf.com/golf/golf-courses/bandon-dunes",
+            address: "57744 Round Lake Road, Bandon, OR 97411"
+        ),
+        c(
+            PACIFIC_DUNES_ID,
+            "Pacific Dunes",
+            PACIFIC_DUNES_PARS,
+            PACIFIC_DUNES_HCS,
+            country: "USA",
+            state: "OR",
+            type: "Resort",
+            phone: "(541) 347-5831",
+            website: "https://www.bandondunesgolf.com/golf/golf-courses/pacific-dunes",
+            address: "57744 Round Lake Road, Bandon, OR 97411"
+        ),
+        c(
+            BANDON_TRAILS_ID,
+            "Bandon Trails",
+            BANDON_TRAILS_PARS,
+            BANDON_TRAILS_HCS,
+            country: "USA",
+            state: "OR",
+            type: "Resort",
+            phone: "(541) 347-5958",
+            website: "https://www.bandondunesgolf.com/golf/golf-courses/bandon-trails",
+            address: "57744 Round Lake Road, Bandon, OR 97411"
+        ),
+        c(
+            OLD_MACDONALD_ID,
+            "Old Macdonald",
+            OLD_MACDONALD_PARS,
+            OLD_MACDONALD_HCS,
+            country: "USA",
+            state: "OR",
+            type: "Resort",
+            phone: "(541) 347-5935",
+            website: "https://www.bandondunesgolf.com/golf/golf-courses/old-macdonald",
+            address: "57744 Round Lake Road, Bandon, OR 97411"
+        ),
+        c(
+            SHEEP_RANCH_ID,
+            "Sheep Ranch",
+            SHEEP_RANCH_PARS,
+            SHEEP_RANCH_HCS,
+            country: "USA",
+            state: "OR",
+            type: "Resort",
+            phone: "(541) 347-5985",
+            website: "https://www.bandondunesgolf.com/golf/golf-courses/sheep-ranch",
+            address: "57744 Round Lake Road, Bandon, OR 97411"
+        ),
         // -------------------------
         // California
         // -------------------------
-        c(PEBBLE_BEACH_ID, "Pebble Beach", PEBBLE_BEACH_PARS, PEBBLE_BEACH_HCS,
-          country: "USA", state: "CA"),
-        c(SPYGLASS_HILL_ID, "Spyglass Hill", SPYGLASS_HILL_PARS, SPYGLASS_HILL_HCS,
-          country: "USA", state: "CA"),
-        c(QUARRY_LA_QUINTA_ID, "The Quarry at La Quinta", QUARRY_LA_QUINTA_PARS, QUARRY_LA_QUINTA_HCS,
-          country: "USA", state: "CA", architect: "Tom Fazio"),
-        c(MARTIS_CAMP_ID, "Martis Camp", MARTIS_CAMP_MEDAL_PARS, MARTIS_CAMP_MEDAL_HCS,
-          country: "USA", state: "CA", architect: "Tom Fazio"),
-
+        c(
+            PEBBLE_BEACH_ID,
+            "Pebble Beach",
+            PEBBLE_BEACH_PARS,
+            PEBBLE_BEACH_HCS,
+            country: "USA",
+            state: "CA",
+            type: "Resort",
+            phone: "(800) 877-0597",
+            website: "https://www.pebblebeach.com/golf/pebble-beach-golf-links/",
+            address: "1700 17-Mile Drive, Pebble Beach, CA 93953"
+        ),
+        c(
+            SPYGLASS_HILL_ID,
+            "Spyglass Hill",
+            SPYGLASS_HILL_PARS,
+            SPYGLASS_HILL_HCS,
+            country: "USA",
+            state: "CA",
+            type: "Resort",
+            phone: "(831) 625-8563",
+            website: "https://www.pebblebeach.com/golf/spyglass-hill-golf-course/",
+            address: "Stevenson Drive, Pebble Beach, CA 93953"
+        ),
+        c(
+            QUARRY_LA_QUINTA_ID,
+            "The Quarry at La Quinta",
+            QUARRY_LA_QUINTA_PARS,
+            QUARRY_LA_QUINTA_HCS,
+            country: "USA",
+            state: "CA",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(760) 777-1100",
+            website: "https://www.thequarrygc.com/",
+            address: "1 Quarry Lane, La Quinta, CA 92253"
+        ),
+        c(
+            MARTIS_CAMP_ID,
+            "Martis Camp",
+            MARTIS_CAMP_MEDAL_PARS,
+            MARTIS_CAMP_MEDAL_HCS,
+            country: "USA",
+            state: "CA",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(530) 550-6000",
+            website: "https://www.martiscamp.com/",
+            address: "7951 Fleur du Lac Drive, Truckee, CA 96161"
+        ),
         // -------------------------
         // South Carolina
         // -------------------------
-        c(HARBOUR_TOWN_ID, "Harbour Town Golf Links", HARBOUR_TOWN_PARS, HARBOUR_TOWN_HCS,
-          country: "USA", state: "SC"),
-        c(LONG_COVE_GOLD_ID, "Long Cove Club (Gold)", LONG_COVE_GOLD_PARS, LONG_COVE_GOLD_HCS,
-          country: "USA", state: "SC"),
-        c(HERON_POINT_GOLD_ID, "Heron Point (Gold) — Sea Pines", HERON_POINT_GOLD_PARS, HERON_POINT_GOLD_HCS,
-          country: "USA", state: "SC"),
-        c(KIAWAH_OCEAN_CHAMP_ID, "Kiawah Island - Ocean Course (Championship)", KIAWAH_OCEAN_CHAMP_PARS, KIAWAH_OCEAN_CHAMP_HCS, KIAWAH_OCEAN_CHAMP_TEES,
-          country: "USA", state: "SC"),
-
+        c(
+            HARBOUR_TOWN_ID,
+            "Harbour Town Golf Links",
+            HARBOUR_TOWN_PARS,
+            HARBOUR_TOWN_HCS,
+            country: "USA",
+            state: "SC",
+            architect: "Pete Dye / Jack Nicklaus",
+            type: "Resort",
+            phone: "(843) 785-3333",
+            website: "https://www.seapines.com/golf/courses/harbour-town-golf-links",
+            address: "32 Greenwood Dr, Hilton Head Island, SC 29928"
+        ),
+        c(
+            LONG_COVE_GOLD_ID,
+            "Long Cove Club (Gold)",
+            LONG_COVE_GOLD_PARS,
+            LONG_COVE_GOLD_HCS,
+            country: "USA",
+            state: "SC",
+            architect: "Pete Dye",
+            type: "Private",
+            phone: "(843) 686-1020",
+            website: "https://longcoveclub.com/",
+            address: "44 Long Cove Drive, Hilton Head Island, SC 29928"
+        ),
+        c(
+            HERON_POINT_GOLD_ID,
+            "Heron Point (Gold) — Sea Pines",
+            HERON_POINT_GOLD_PARS,
+            HERON_POINT_GOLD_HCS,
+            country: "USA",
+            state: "SC",
+            architect: "Pete Dye",
+            type: "Resort",
+            phone: "(843) 785-3333",
+            website: "https://www.seapines.com/golf/courses/heron-point-by-pete-dye",
+            address: "32 Greenwood Dr, Hilton Head Island, SC 29928"
+        ),
+        c(
+            KIAWAH_OCEAN_CHAMP_ID,
+            "Kiawah Island - Ocean Course (Championship)",
+            KIAWAH_OCEAN_CHAMP_PARS,
+            KIAWAH_OCEAN_CHAMP_HCS,
+            KIAWAH_OCEAN_CHAMP_TEES,
+            country: "USA",
+            state: "SC",
+            architect: "Pete Dye",
+            type: "Resort",
+            phone: "(800) 654-2924",
+            website: "https://kiawahresort.com/golf/the-ocean-course/",
+            address: "1 Sanctuary Beach Drive, Kiawah Island, SC 29455"
+        ),
         // -------------------------
         // Texas / Nevada / Oklahoma / Colorado / Wyoming / Montana
         // -------------------------
-        c(ROYAL_OAKS_SCHEFFLER_ID, "Royal Oaks CC (Scheff)", ROYAL_OAKS_SCHEFFLER_PARS, ROYAL_OAKS_SCHEFFLER_HCS,
-          country: "USA", state: "TX"),
-        c(BROOK_HOLLOW_TILLINGHAST_ID, "Brook Hollow GC (Tillinghast)", BROOK_HOLLOW_TILLINGHAST_PARS, BROOK_HOLLOW_TILLINGHAST_HCS, BROOK_HOLLOW_TILLINGHAST_TEES,
-          country: "USA", state: "TX"),
-        c(SUMMIT_CLUB_MORIKAWA_ID, "Summit Club (Colin)", SUMMIT_CLUB_MORIKAWA_PARS, SUMMIT_CLUB_MORIKAWA_HCS,
-          country: "USA", state: "NV"),
-        c(PATRIOT_GC_ID, "Patriot GC (4 Star)", PATRIOT_GC_4STAR_PARS, PATRIOT_GC_4STAR_HCS,
-          country: "USA", state: "OK"),
-        c(COLORADO_GOLF_CLUB_ID, "Colorado Golf Club", COLORADO_GOLF_CLUB_PARS, COLORADO_GOLF_CLUB_HCS,
-          country: "USA", state: "CO", architect: "Bill Coore / Ben Crenshaw"),
-        c(CORNERSTONE_ID, "Cornerstone", CORNERSTONE_PARS_TODO, CORNERSTONE_HCS_TODO,
-          country: "USA", state: "CO", architect: "Greg Norman"),
-        c(SHOOTING_STAR_ID, "Shooting Star", SHOOTING_STAR_CHAMPIONSHIP_PARS, SHOOTING_STAR_CHAMPIONSHIP_HCS,
-          country: "USA", state: "WY", architect: "Tom Fazio"),
-        c(ROCK_CREEK_CATTLE_COMPANY_ID, "Rock Creek Cattle Company", ROCK_CREEK_CATTLE_COMPANY_TEE_I_PARS, ROCK_CREEK_CATTLE_COMPANY_TEE_I_HCS, ROCK_CREEK_CATTLE_COMPANY_TEES,
-          country: "USA", state: "MT"),
-
+        c(
+            ROYAL_OAKS_SCHEFFLER_ID,
+            "Royal Oaks CC (Scheff)",
+            ROYAL_OAKS_SCHEFFLER_PARS,
+            ROYAL_OAKS_SCHEFFLER_HCS,
+            country: "USA",
+            state: "TX",
+            type: "Private",
+            phone: "(214) 691-6091",
+            website: "https://www.roccdallas.com/",
+            address: "7915 Greenville Avenue, Dallas, TX 75231"
+        ),
+        c(
+            BROOK_HOLLOW_TILLINGHAST_ID,
+            "Brook Hollow GC (Tillinghast)",
+            BROOK_HOLLOW_TILLINGHAST_PARS,
+            BROOK_HOLLOW_TILLINGHAST_HCS,
+            BROOK_HOLLOW_TILLINGHAST_TEES,
+            country: "USA",
+            state: "TX",
+            type: "Private",
+            phone: "(214) 637-1900",
+            website: "https://www.brookhollowgc.org/",
+            address: "8301 Harry Hines Blvd., Dallas, TX 75235"
+        ),
+        c(
+            SUMMIT_CLUB_MORIKAWA_ID,
+            "Summit Club (Colin)",
+            SUMMIT_CLUB_MORIKAWA_PARS,
+            SUMMIT_CLUB_MORIKAWA_HCS,
+            country: "USA",
+            state: "NV",
+            type: "Private",
+            phone: "(702) 970-2207",
+            website: "https://summitclubnv.com/",
+            address: "11660 Summit Club Drive, Las Vegas, NV 89135"
+        ),
+        c(
+            PATRIOT_GC_ID,
+            "Patriot GC (4 Star)",
+            PATRIOT_GC_4STAR_PARS,
+            PATRIOT_GC_4STAR_HCS,
+            country: "USA",
+            state: "OK",
+            type: "Private",
+            phone: "(918) 272-1260",
+            website: "https://www.patriotgolfclub.com/",
+            address: "5790 N. Patriot Dr., Owasso, OK 74055"
+        ),
+        c(
+            COLORADO_GOLF_CLUB_ID,
+            "Colorado Golf Club",
+            COLORADO_GOLF_CLUB_PARS,
+            COLORADO_GOLF_CLUB_HCS,
+            country: "USA",
+            state: "CO",
+            architect: "Bill Coore / Ben Crenshaw",
+            type: "Private",
+            phone: "(303) 840-5400",
+            website: "https://www.coloradogolfclub.com/",
+            address: "8000 Preservation Trail, Parker, CO 80134"
+        ),
+        c(
+            CORNERSTONE_ID,
+            "Cornerstone",
+            CORNERSTONE_PARS_TODO,
+            CORNERSTONE_HCS_TODO,
+            country: "USA",
+            state: "CO",
+            architect: "Greg Norman",
+            type: "Private",
+            phone: "(970) 249-1922",
+            website: "https://www.cornerstonemontrose.com/",
+            address: "1 Club Terrace, Montrose, CO 81403"
+        ),
+        c(
+            SHOOTING_STAR_ID,
+            "Shooting Star",
+            SHOOTING_STAR_CHAMPIONSHIP_PARS,
+            SHOOTING_STAR_CHAMPIONSHIP_HCS,
+            country: "USA",
+            state: "WY",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(307) 734-9773",
+            website: "https://www.shootingstarjh.com/",
+            address: "18 Shooting Star Drive, Teton Village, WY 83025"
+        ),
+        c(
+            ROCK_CREEK_CATTLE_COMPANY_ID,
+            "Rock Creek Cattle Company",
+            ROCK_CREEK_CATTLE_COMPANY_TEE_I_PARS,
+            ROCK_CREEK_CATTLE_COMPANY_TEE_I_HCS,
+            ROCK_CREEK_CATTLE_COMPANY_TEES,
+            country: "USA",
+            state: "MT",
+            type: "Private",
+            phone: "(406) 846-4020",
+            website: "https://www.rockcreekcattlecompany.com/",
+            address: "6848 S. Rock Creek Road, Deer Lodge, MT 59722"
+        ),
         // -------------------------
         // Georgia
         // -------------------------
-        c(SEA_ISLAND_SEASIDE_RED_ID, "Sea Island (Seaside — Red)", SEA_ISLAND_SEASIDE_RED_PARS, SEA_ISLAND_SEASIDE_RED_HCS, SEA_ISLAND_SEASIDE_RED_TEES,
-          country: "USA", state: "GA", architect: "Davis Love III, Mark Love", type: "Resort"),
-        c(SEA_ISLAND_RETREAT_RED_ID, "Sea Island (Retreat — Red)", SEA_ISLAND_RETREAT_RED_PARS, SEA_ISLAND_RETREAT_RED_HCS, SEA_ISLAND_RETREAT_RED_TEES,
-          country: "USA", state: "GA", architect: "Davis Love III, Mark Love", type: "Resort"),
-        c(AUGUSTA_NATIONAL_ID, "Augusta National (Masters)", AUGUSTA_NATIONAL_MASTERS_PARS, AUGUSTA_NATIONAL_MASTERS_HCS,
-          country: "USA", state: "GA"),
-        c(MCLEMORE_KEEP_ID, "McLemore (The Keep)", MCLEMORE_KEEP_PARS, MCLEMORE_KEEP_HCS, MCLEMORE_KEEP_TEES,
-          country: "USA", state: "GA", architect: "Bill Bergen, Rees Jones", type: "Resort"),
-
+        c(
+            SEA_ISLAND_SEASIDE_RED_ID,
+            "Sea Island (Seaside — Red)",
+            SEA_ISLAND_SEASIDE_RED_PARS,
+            SEA_ISLAND_SEASIDE_RED_HCS,
+            SEA_ISLAND_SEASIDE_RED_TEES,
+            country: "USA",
+            state: "GA",
+            architect: "Davis Love III, Mark Love",
+            type: "Resort",
+            phone: "(800) 732-4752",
+            website: "https://www.seaisland.com/golf/courses/seaside/",
+            address: "100 Retreat Avenue, St. Simons Island, GA 31522"
+        ),
+        c(
+            SEA_ISLAND_RETREAT_RED_ID,
+            "Sea Island (Retreat — Red)",
+            SEA_ISLAND_RETREAT_RED_PARS,
+            SEA_ISLAND_RETREAT_RED_HCS,
+            SEA_ISLAND_RETREAT_RED_TEES,
+            country: "USA",
+            state: "GA",
+            architect: "Davis Love III, Mark Love",
+            type: "Resort",
+            phone: "(800) 732-4752",
+            website: "https://www.seaisland.com/golf/",
+            address: "100 Retreat Avenue, St. Simons Island, GA 31522"
+        ),
+        c(
+            AUGUSTA_NATIONAL_ID,
+            "Augusta National (Masters)",
+            AUGUSTA_NATIONAL_MASTERS_PARS,
+            AUGUSTA_NATIONAL_MASTERS_HCS,
+            country: "USA",
+            state: "GA",
+            architect: "Bobby Jones / Alister MacKenzie",
+            type: "Private",
+            phone: "(706) 667-6000",
+            website: "https://www.masters.com",
+            address: "PO Box 2068, Augusta, GA 30903-2068"
+        ),
+        c(
+            MCLEMORE_KEEP_ID,
+            "McLemore (The Keep)",
+            MCLEMORE_KEEP_PARS,
+            MCLEMORE_KEEP_HCS,
+            MCLEMORE_KEEP_TEES,
+            country: "USA",
+            state: "GA",
+            architect: "Bill Bergen, Rees Jones",
+            type: "Resort",
+            phone: "(800) 329-8154",
+            website: "https://www.themclemore.com/golf/the-keep-at-mclemore",
+            address: "32 Clubhouse Lane, Rising Fawn, GA 30738"
+        ),
         // -------------------------
         // North Carolina / Hawaii / Washington / Michigan
         // -------------------------
-        c(PINEHURST_NO2_USOPEN_ID, "Pinehurst No. 2 (U.S. Open)", PINEHURST_NO2_USOPEN_PARS, PINEHURST_NO2_USOPEN_HCS,
-          country: "USA", state: "NC"),
-        c(WADE_HAMPTON_CLUB_ID, "Wade Hampton Club", WADE_HAMPTON_CLUB_PARS_TODO, WADE_HAMPTON_CLUB_HCS_TODO,
-          country: "USA", state: "NC", architect: "Tom Fazio"),
-        c(PINEHURST_NO10_BLUE_ID, "Pinehurst No. 10 (Blue)", PINEHURST_NO10_BLUE_PARS, PINEHURST_NO10_BLUE_HCS, PINEHURST_NO10_BLUE_TEES,
-          country: "USA", state: "NC", architect: "Tom Doak, Angela Moser", type: "Resort"),
-        c(MANELE_GOLF_COURSE_NICKLAUS_ID, "Four Seasons Lanai Manele", MANELE_GOLF_COURSE_NICKLAUS_PARS, MANELE_GOLF_COURSE_NICKLAUS_HCS, MANELE_GOLF_COURSE_NICKLAUS_TEES,
-          country: "USA", state: "HI", architect: "Jack Nicklaus", type: "Resort"),
-        c(KAPALUA_PLANTATION_TOURNAMENT_ID, "Kapalua (Plantation – Tournament)", KAPALUA_PLANTATION_TOURNAMENT_PARS, KAPALUA_PLANTATION_TOURNAMENT_HCS, KAPALUA_PLANTATION_TOURNAMENT_TEES,
-          country: "USA", state: "HI", architect: "Bill Coore, Ben Crenshaw", type: "Resort"),
-        c(GAMBLE_SANDS_MEDAL_ID, "Gamble Sands (Medal)", GAMBLE_SANDS_MEDAL_PARS, GAMBLE_SANDS_MEDAL_HCS, GAMBLE_SANDS_MEDAL_TEES,
-          country: "USA", state: "WA", architect: "David McLay Kidd", type: "Daily-Fee"),
-        c(ARCADIA_BLUFFS_BLUFFS_BLUE_ID, "Arcadia Bluffs (Bluffs — Blue)", ARCADIA_BLUFFS_BLUFFS_BLUE_PARS, ARCADIA_BLUFFS_BLUFFS_BLUE_HCS, ARCADIA_BLUFFS_BLUFFS_BLUE_TEES,
-          country: "USA", state: "MI", architect: "W. Henderson, R. Smith", type: "Daily-Fee"),
+        c(
+            PINEHURST_NO2_USOPEN_ID,
+            "Pinehurst No. 2 (U.S. Open)",
+            PINEHURST_NO2_USOPEN_PARS,
+            PINEHURST_NO2_USOPEN_HCS,
+            country: "USA",
+            state: "NC",
+            architect: "Donald Ross",
+            type: "Resort",
+            phone: "(855) 235-8507",
+            website: "https://www.pinehurst.com/golf/courses/no-2/",
+            address: "80 Carolina Vista Dr, Pinehurst, NC 28374"
+        ),
+        c(
+            WADE_HAMPTON_CLUB_ID,
+            "Wade Hampton Club",
+            WADE_HAMPTON_CLUB_PARS_TODO,
+            WADE_HAMPTON_CLUB_HCS_TODO,
+            country: "USA",
+            state: "NC",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(828) 743-2244",
+            website: "https://www.wadehampton.com",
+            address: "68 Hampton Dr, Cashiers, NC 28717"
+        ),
+        c(
+            PINEHURST_NO10_BLUE_ID,
+            "Pinehurst No. 10 (Blue)",
+            PINEHURST_NO10_BLUE_PARS,
+            PINEHURST_NO10_BLUE_HCS,
+            PINEHURST_NO10_BLUE_TEES,
+            country: "USA",
+            state: "NC",
+            architect: "Tom Doak, Angela Moser",
+            type: "Resort",
+            phone: "(855) 235-8507",
+            website: "https://www.pinehurst.com/golf/courses/no-10/",
+            address: "80 Carolina Vista Dr, Pinehurst, NC 28374"
+        ),
+
+        c(
+            MANELE_GOLF_COURSE_NICKLAUS_ID,
+            "Four Seasons Lanai Manele",
+            MANELE_GOLF_COURSE_NICKLAUS_PARS,
+            MANELE_GOLF_COURSE_NICKLAUS_HCS,
+            MANELE_GOLF_COURSE_NICKLAUS_TEES,
+            country: "USA",
+            state: "HI",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            phone: "(808) 565-2222",
+            website: "https://www.fourseasons.com/lanai/golf/",
+            address: "1 Manele Bay Rd, Lanai City, HI 96763"
+        ),
+        c(
+            KAPALUA_PLANTATION_TOURNAMENT_ID,
+            "Kapalua (Plantation – Tournament)",
+            KAPALUA_PLANTATION_TOURNAMENT_PARS,
+            KAPALUA_PLANTATION_TOURNAMENT_HCS,
+            KAPALUA_PLANTATION_TOURNAMENT_TEES,
+            country: "USA",
+            state: "HI",
+            architect: "Bill Coore, Ben Crenshaw",
+            type: "Resort",
+            phone: "(808) 669-8044",
+            website: "https://www.golfatkapalua.com",
+            address: "2000 Plantation Club Dr, Lahaina, HI 96761"
+        ),
+
+        c(
+            GAMBLE_SANDS_MEDAL_ID,
+            "Gamble Sands (Medal)",
+            GAMBLE_SANDS_MEDAL_PARS,
+            GAMBLE_SANDS_MEDAL_HCS,
+            GAMBLE_SANDS_MEDAL_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "David McLay Kidd",
+            type: "Daily-Fee",
+            phone: "(509) 436-8323",
+            website: "https://www.gamblesands.com",
+            address: "200 Sands Trail Rd, Brewster, WA 98812"
+        ),
+        c(
+            ARCADIA_BLUFFS_BLUFFS_BLUE_ID,
+            "Arcadia Bluffs (Bluffs — Blue)",
+            ARCADIA_BLUFFS_BLUFFS_BLUE_PARS,
+            ARCADIA_BLUFFS_BLUFFS_BLUE_HCS,
+            ARCADIA_BLUFFS_BLUFFS_BLUE_TEES,
+            country: "USA",
+            state: "MI",
+            architect: "Warren Henderson, Rick Smith",
+            type: "Daily-Fee",
+            phone: "(231) 889-3001",
+            website: "https://www.arcadiabluffs.com",
+            address: "14710 Northwood Hwy, Arcadia, MI 49613"
+        ),
 
         // -------------------------
         // International
         // -------------------------
-        c(ESKER_HILLS_ID, "Esker Hills Golf Club", ESKER_HILLS_PARS, ESKER_HILLS_HCS,
-          country: "Ireland", state: "Offaly"),
-        c(ADARE_MANOR_ID, "Adare Manor", ADARE_MANOR_PARS, ADARE_MANOR_HCS,
-          country: "Ireland", state: nil),
-        c(BALLYBUNION_OLD_ID, "Ballybunion (Old Course)", BALLYBUNION_OLD_PARS, BALLYBUNION_OLD_HCS,
-          country: "Ireland", state: nil),
-        c(OLD_HEAD_ID, "Old Head Golf Links", OLD_HEAD_PARS, OLD_HEAD_HCS,
-          country: "Ireland", state: nil),
-        c(WATERVILLE_ID, "Waterville Golf Links", WATERVILLE_PARS, WATERVILLE_HCS,
-          country: "Ireland", state: nil),
-        c(ROYAL_COUNTY_DOWN_CHAMP_ID, "Royal County Down (Championship)", ROYAL_COUNTY_DOWN_CHAMP_PARS, ROYAL_COUNTY_DOWN_CHAMP_HCS,
-          country: "Northern Ireland", state: nil),
-        c(ROYAL_PORTRUSH_DUNLUCE_ID, "Royal Portrush (Dunluce)", ROYAL_PORTRUSH_DUNLUCE_PARS, ROYAL_PORTRUSH_DUNLUCE_HCS,
-          country: "Northern Ireland", state: nil),
-        c(LA_ESTANCIA_ID, "La Estancia Golf Resort (Tournament)", LA_ESTANCIA_TOURNAMENT_PARS, LA_ESTANCIA_TOURNAMENT_HCS,
-          country: "Dominican Republic", state: nil),
+
+        c(
+            ESKER_HILLS_ID,
+            "Esker Hills Golf Club",
+            ESKER_HILLS_PARS,
+            ESKER_HILLS_HCS,
+            country: "Ireland",
+            state: "Offaly",
+            architect: "Christy O’Connor Jr.",
+            type: "Public",
+            phone: "+353 90 648 3219",
+            website: "https://www.eskerhillsgolf.com",
+            address: "Rahan, Tullamore, Co. Offaly, Ireland"
+        ),
+        c(
+            ADARE_MANOR_ID,
+            "Adare Manor",
+            ADARE_MANOR_PARS,
+            ADARE_MANOR_HCS,
+            country: "Ireland",
+            state: nil,
+            architect: "Tom Fazio",
+            type: "Resort",
+            phone: "+353 61 605200",
+            website: "https://www.adaremanor.com",
+            address: "Adare Manor, Adare, Co. Limerick, Ireland"
+        ),
+        c(
+            BALLYBUNION_OLD_ID,
+            "Ballybunion (Old Course)",
+            BALLYBUNION_OLD_PARS,
+            BALLYBUNION_OLD_HCS,
+            country: "Ireland",
+            state: nil,
+            architect: "Old Tom Morris (original)",
+            type: "Public",
+            phone: "+353 68 27146",
+            website: "https://www.ballybuniongolfclub.com",
+            address: "Sandhill Rd, Ballybunion, Co. Kerry, Ireland"
+        ),
+        c(
+            OLD_HEAD_ID,
+            "Old Head Golf Links",
+            OLD_HEAD_PARS,
+            OLD_HEAD_HCS,
+            country: "Ireland",
+            state: nil,
+            architect: "Ron Kirby / Eddie Hackett",
+            type: "Private",
+            phone: "+353 21 477 8444",
+            website: "https://www.oldhead.com",
+            address: "Old Head, Kinsale, Co. Cork, Ireland"
+        ),
+        c(
+            WATERVILLE_ID,
+            "Waterville Golf Links",
+            WATERVILLE_PARS,
+            WATERVILLE_HCS,
+            country: "Ireland",
+            state: nil,
+            architect: "Eddie Hackett / Tom Fazio redesign",
+            type: "Public",
+            phone: "+353 66 947 4102",
+            website: "https://www.watervillegolflinks.ie",
+            address: "Waterville, Co. Kerry, Ireland"
+        ),
+        c(
+            ROYAL_COUNTY_DOWN_CHAMP_ID,
+            "Royal County Down (Championship)",
+            ROYAL_COUNTY_DOWN_CHAMP_PARS,
+            ROYAL_COUNTY_DOWN_CHAMP_HCS,
+            country: "Northern Ireland",
+            state: nil,
+            architect: "Old Tom Morris / Harry Colt",
+            type: "Private",
+            phone: "+44 28 4372 3314",
+            website: "https://www.royalcountydown.org",
+            address: "36 Golf Links Rd, Newcastle BT33 0AN, Northern Ireland"
+        ),
+        c(
+            ROYAL_PORTRUSH_DUNLUCE_ID,
+            "Royal Portrush (Dunluce)",
+            ROYAL_PORTRUSH_DUNLUCE_PARS,
+            ROYAL_PORTRUSH_DUNLUCE_HCS,
+            country: "Northern Ireland",
+            state: nil,
+            architect: "Harry Colt / Martin Ebert redesign",
+            type: "Public",
+            phone: "+44 28 7082 2311",
+            website: "https://www.royalportrushgolfclub.com",
+            address: "Dunluce Rd, Portrush BT56 8JQ, Northern Ireland"
+        ),
+        c(
+            LA_ESTANCIA_ID,
+            "La Estancia Golf Resort (Tournament)",
+            LA_ESTANCIA_TOURNAMENT_PARS,
+            LA_ESTANCIA_TOURNAMENT_HCS,
+            country: "Dominican Republic",
+            state: nil,
+            architect: "P.B. Dye",
+            type: "Resort",
+            phone: "+1 809-412-0000",
+            website: "https://laestanciagolf.com",
+            address: "Carretera La Romana – Higuey, La Romana, Dominican Republic"
+        ),
 
         // -------------------------
         // Must-have classic
         // -------------------------
-        c(PINE_VALLEY_ID, "Pine Valley", PINE_VALLEY_PARS, PINE_VALLEY_HCS,
-          country: "USA", state: "NJ"),
-        
+
+        c(
+            PINE_VALLEY_ID,
+            "Pine Valley",
+            PINE_VALLEY_PARS,
+            PINE_VALLEY_HCS,
+            country: "USA",
+            state: "NJ",
+            architect: "George Crump / Harry Colt",
+            type: "Private",
+            phone: "(856) 783-3000",
+            website: "https://www.pinevalleygolfclub.com",
+            address: "1 East Atlantic Ave, Pine Valley, NJ 08021"
+        ),
         c(OLD_WHITE_GREENBRIER_ID, "The Old White", OLD_WHITE_GREENBRIER_PARS, OLD_WHITE_GREENBRIER_HCS, OLD_WHITE_GREENBRIER_TEES,
           country: "USA", state: "WV", architect: "Charles Blair Macdonald", type: "Resort",
           phone: "800-624-6070",
@@ -1700,6 +2701,133 @@ private enum BuiltIns {
           phone: "800-654-9300",
           website: "https://www.pebblebeach.com",
           address: "2700 17-Mile Drive, Pebble Beach, California 93953"),
+        
+        c(
+            FRENCH_LICK_PETE_DYE_ID,
+            "French Lick Resort – Pete Dye",
+            FRENCH_LICK_PETE_DYE_PARS,
+            FRENCH_LICK_PETE_DYE_HCS,
+            FRENCH_LICK_PETE_DYE_TEES,
+            country: "USA",
+            state: "IN",
+            architect: "Pete Dye",
+            type: "Resort",
+            phone: "(888) 936-9360",
+            website: "https://www.frenchlick.com/golf.htm",
+            address: "8670 West State Road 56, French Lick, IN 47432"
+        ),
+        c(
+            FRENCH_LICK_DONALD_ROSS_ID,
+            "French Lick Resort – Donald Ross",
+            FRENCH_LICK_DONALD_ROSS_PARS,
+            FRENCH_LICK_DONALD_ROSS_HCS,
+            FRENCH_LICK_DONALD_ROSS_TEES,
+            country: "USA",
+            state: "IN",
+            architect: "Donald Ross",
+            type: "Resort",
+            phone: "(888) 936-9360",
+            website: "https://www.frenchlick.com/golf.htm",
+            address: "8670 West State Road 56, French Lick, IN 47432"
+        ),
+        c(
+            SILVIES_CRADDOCK_ID,
+            "Silvies Valley Resort & Links – Craddock",
+            SILVIES_CRADDOCK_PARS,
+            SILVIES_CRADDOCK_HCS,
+            SILVIES_CRADDOCK_TEES,
+            country: "USA",
+            state: "OR",
+            architect: "Dan Hixson",
+            type: "Resort",
+            phone: "(541) 573-5150",
+            website: "https://silvies.us/golf-at-silvies-valley-ranch/",
+            address: "10000 Rendezvous Lane, Seneca, OR 97873"
+        ),
+        c(
+            ARBORLINKS_ID,
+            "ArborLinks",
+            ARBORLINKS_PARS,
+            ARBORLINKS_HCS,
+            ARBORLINKS_TEES,
+            country: "USA",
+            state: "NE",
+            architect: "Arnold Palmer",
+            type: "Private",
+            phone: "(402) 873-4334",
+            website: "https://arborlinks.com/",
+            address: "6038 H Road, Nebraska City, NE 68410-6198"
+        ),
+        c(
+            MID_PINES_ID,
+            "Mid Pines",
+            MID_PINES_PARS,
+            MID_PINES_HCS,
+            MID_PINES_TEES,
+            country: "USA",
+            state: "NC",
+            architect: "Donald Ross",
+            type: "Resort",
+            phone: "(800) 323-2114",
+            website: "https://www.midpinesinn.com/",
+            address: "1010 Midland Road, Southern Pines, NC 28387"
+        ),
+        c(
+            MAKAI_COURSE_ID,
+            "Makai Course",
+            MAKAI_COURSE_PARS,
+            MAKAI_COURSE_HCS,
+            MAKAI_COURSE_TEES,
+            country: "USA",
+            state: "HI",
+            architect: "Robert Trent Jones Jr.",
+            type: "Resort",
+            phone: "(808) 826-1912",
+            website: "https://www.makaigolf.com/",
+            address: "4080 Lei O Papa Rd, Princeville, HI 96722"
+        ),
+        c(
+            PINE_NEEDLES_ID,
+            "Pine Needles",
+            PINE_NEEDLES_PARS,
+            PINE_NEEDLES_HCS,
+            PINE_NEEDLES_TEES,
+            country: "USA",
+            state: "NC",
+            architect: "Donald Ross",
+            type: "Resort",
+            phone: "(800) 747-7272",
+            website: "https://www.pineneedleslodge.com/",
+            address: "1005 Midland Road, Southern Pines, NC 28387"
+        ),
+        c(
+            SOUTHERN_PINES_GC_ID,
+            "Southern Pines Golf Club",
+            SOUTHERN_PINES_GC_PARS,
+            SOUTHERN_PINES_GC_HCS,
+            SOUTHERN_PINES_GC_TEES,
+            country: "USA",
+            state: "NC",
+            architect: "Donald Ross",
+            type: "Resort",
+            phone: "(910) 692-6551",
+            website: "https://www.southernpinesgolfclub.com/",
+            address: "290 Country Club Circle, Southern Pines, NC 28387"
+        ),
+        c(
+            TROON_COUNTRY_CLUB_ID,
+            "Troon Country Club",
+            TROON_COUNTRY_CLUB_PARS,
+            TROON_COUNTRY_CLUB_HCS,
+            TROON_COUNTRY_CLUB_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jay Morrish / Tom Weiskopf",
+            type: "Private",
+            phone: "(480) 585-4310",
+            website: "https://www.trooncc.com/",
+            address: "25000 N. Windy Walk Drive, Scottsdale, AZ 85255"
+        ),
     ]
 
 #if DEBUG

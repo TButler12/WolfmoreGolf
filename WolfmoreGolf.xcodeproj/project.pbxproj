@@ -48,6 +48,7 @@
 		F66007422F60C56F00148767 /* ButtonStyles.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66006BF2F60C56F00148767 /* ButtonStyles.swift */; };
 		F66007462F60C56F00148767 /* CoursePickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66006C32F60C56F00148767 /* CoursePickerViewController.swift */; };
 		F66007472F60C56F00148767 /* CourseSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F66006C42F60C56F00148767 /* CourseSetupViewController.swift */; };
+		F681886C2F62898D004162EE /* PlayerSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605B2F60D62500EC0C30 /* PlayerSetupViewController.swift */; };
 		F688C7412F37F9E800A4B094 /* ContactsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F688C7402F37F9E800A4B094 /* ContactsViewController.swift */; };
 		F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F688C7802F3906C400A4B094 /* SummaryFormatter.swift */; };
 		F6D041842F611C3200CABD08 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F6D041822F611C3200CABD08 /* Main.storyboard */; };
@@ -71,7 +72,6 @@
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
 		F63960472F60D62500EC0C30 /* AppNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotifications.swift; sourceTree = "<group>"; };
 		F63960482F60D62500EC0C30 /* Course.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Course.swift; sourceTree = "<group>"; };
-		F63960492F60D62500EC0C30 /* CourseSetupViewController 2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "CourseSetupViewController 2.swift"; sourceTree = "<group>"; };
 		F639604A2F60D62500EC0C30 /* CourseStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseStore.swift; sourceTree = "<group>"; };
 		F639604B2F60D62500EC0C30 /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
 		F639604C2F60D62500EC0C30 /* GameData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameData.swift; sourceTree = "<group>"; };
@@ -192,7 +192,6 @@
 				F63960502F60D62500EC0C30 /* GameManager+Scoring.swift */,
 				F63960512F60D62500EC0C30 /* GameModels.swift */,
 				F63960522F60D62500EC0C30 /* GameStatsViewController.swift */,
-				F63960492F60D62500EC0C30 /* CourseSetupViewController 2.swift */,
 				F63960532F60D62500EC0C30 /* GameViewController.swift */,
 				F639604E2F60D62500EC0C30 /* GameData+Money.swift */,
 				F63960542F60D62500EC0C30 /* HomeViewController.swift */,
@@ -395,6 +394,7 @@
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
 				F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,
+				F681886C2F62898D004162EE /* PlayerSetupViewController.swift in Sources */,
 				F6590F052EFA225B0085D088 /* GameType.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -431,7 +431,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="k0I-Jv-xJ7" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="9226.7175572519081" y="-131.69014084507043"/>
+            <point key="canvasLocation" x="9234" y="-340"/>
         </scene>
         <!--My Stats View Controller-->
         <scene sceneID="9nP-1Z-EhZ">
@@ -1778,7 +1778,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="qiX-z0-WR4" userLabel="First Responder" customClass="UIResponder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="9881.6793893129761" y="-1.4084507042253522"/>
+            <point key="canvasLocation" x="9883" y="-425"/>
         </scene>
         <!--Roster And Tracking View Controller-->
         <scene sceneID="Vcj-px-ub8">
