@@ -9,6 +9,9 @@ import Foundation
 
 struct GameData: Codable {
 
+    var holeCommitted: [Bool] = Array(repeating: false, count: 18)
+
+    var nassauState: NassauState?
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: 18)
 

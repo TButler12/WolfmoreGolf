@@ -53,6 +53,9 @@
 		F6D041842F611C3200CABD08 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F6D041822F611C3200CABD08 /* Main.storyboard */; };
 		F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D351512EC0313E00CE24F9 /* RulesViewController.swift */; };
 		F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */; };
+		F6D541682F63B3C40020588F /* NassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D541672F63B3C40020588F /* NassauViewController.swift */; };
+		F6D5416A2F646D880020588F /* NassauModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D541692F646D880020588F /* NassauModel.swift */; };
+		F6D5416C2F646EA70020588F /* NassauEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D5416B2F646EA70020588F /* NassauEngine.swift */; };
 		F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66A7E2F26971300367C08 /* Entitlements.swift */; };
 		F6D66A812F26994400367C08 /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66A802F26994400367C08 /* Notifications.swift */; };
 		F6D66A832F2BCD4900367C08 /* ProViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66A822F2BCD4900367C08 /* ProViewController.swift */; };
@@ -118,6 +121,9 @@
 		F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WolfmoreGolf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6D351512EC0313E00CE24F9 /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
 		F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerSeat.swift; sourceTree = "<group>"; };
+		F6D541672F63B3C40020588F /* NassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauViewController.swift; sourceTree = "<group>"; };
+		F6D541692F646D880020588F /* NassauModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauModel.swift; sourceTree = "<group>"; };
+		F6D5416B2F646EA70020588F /* NassauEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauEngine.swift; sourceTree = "<group>"; };
 		F6D66A7E2F26971300367C08 /* Entitlements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entitlements.swift; sourceTree = "<group>"; };
 		F6D66A802F26994400367C08 /* Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifications.swift; sourceTree = "<group>"; };
 		F6D66A822F2BCD4900367C08 /* ProViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProViewController.swift; sourceTree = "<group>"; };
@@ -153,7 +159,10 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F6D5416B2F646EA70020588F /* NassauEngine.swift */,
+				F6D541692F646D880020588F /* NassauModel.swift */,
 				F6D041822F611C3200CABD08 /* Main.storyboard */,
+				F6D541672F63B3C40020588F /* NassauViewController.swift */,
 				F60E627F2F610B2A0062F321 /* ProGateViewController.swift */,
 				F688C7802F3906C400A4B094 /* SummaryFormatter.swift */,
 				F66006BB2F60C56F00148767 /* AppDelegate.swift */,
@@ -341,6 +350,7 @@
 				F64DE8202EB2864B00F8D625 /* SceneDelegate.swift in Sources */,
 				F688C7412F37F9E800A4B094 /* ContactsViewController.swift in Sources */,
 				F63D08052EDFA66800F165CA /* CourseSummaryViewController.swift in Sources */,
+				F6D541682F63B3C40020588F /* NassauViewController.swift in Sources */,
 				F6D66AC32F327A2B00367C08 /* ProStore.swift in Sources */,
 				F6D66A812F26994400367C08 /* Notifications.swift in Sources */,
 				F6D66AD12F356B7E00367C08 /* TextViewController.swift in Sources */,
@@ -364,6 +374,7 @@
 				F63960682F60D62500EC0C30 /* GameData.swift in Sources */,
 				F63960692F60D62500EC0C30 /* GameData+HoleViews.swift in Sources */,
 				F639606A2F60D62500EC0C30 /* GameData+Money.swift in Sources */,
+				F6D5416A2F646D880020588F /* NassauModel.swift in Sources */,
 				F639606B2F60D62500EC0C30 /* GameManager.swift in Sources */,
 				F639606C2F60D62500EC0C30 /* GameManager+Scoring.swift in Sources */,
 				F639606D2F60D62500EC0C30 /* GameModels.swift in Sources */,
@@ -374,6 +385,7 @@
 				F63960722F60D62500EC0C30 /* MyStatsViewController.swift in Sources */,
 				F63960732F60D62500EC0C30 /* Notification.swift in Sources */,
 				F63960742F60D62500EC0C30 /* Player.swift in Sources */,
+				F6D5416C2F646EA70020588F /* NassauEngine.swift in Sources */,
 				F63960752F60D62500EC0C30 /* PlayerSetupStore.swift in Sources */,
 				F63960772F60D62500EC0C30 /* ProfileStore.swift in Sources */,
 				F63960782F60D62500EC0C30 /* RoundStore.swift in Sources */,

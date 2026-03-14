@@ -64,16 +64,36 @@ extension GameData {
     }
 
     // MARK: Setters for the *current* hole (no press touched)
+    // MARK: Setters for the *current* hole (no press touched)
     mutating func setScoreForCurrentHole(player seat: Int, _ value: Int?) {
         guard (0..<Self.capacity).contains(seat), (0..<Self.holes).contains(hole) else { return }
         scores[seat][hole] = value
+        recalculateNassauIfNeeded()
+    }
+
+    mutating func recalculateNassauIfNeeded() {
+        guard var nassau = nassauState else {
+            print("NASSAU: no nassauState")
+            return
+        }
+        print("NASSAU: recalculating for hole \(hole + 1)")
+        print("NASSAU scores row 0:", scores[0])
+        print("NASSAU scores row 1:", scores[1])
+
+        NassauEngine.recalculate(state: &nassau, gameData: self)
+        nassauState = nassau
+
+        if let first = nassau.oneVsOneMatches.first {
+            print("NASSAU first match:", first.title)
+            print("Front:", first.frontStatusByHole)
+            print("Total:", first.overallStatusByHole)
+        }
     }
 
     mutating func setMoneyForCurrentHole(player seat: Int, _ value: Double) {
         guard (0..<Self.capacity).contains(seat), (0..<Self.holes).contains(hole) else { return }
         playerMoney[seat][hole] = value
     }
-
     mutating func toggleProxForCurrentHole(player seat: Int) {
         guard (0..<Self.holes).contains(hole) else { return }
         proxWinnerPerHole[hole] = (proxWinnerPerHole[hole] == seat) ? nil : seat

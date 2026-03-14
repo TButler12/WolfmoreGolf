@@ -28,6 +28,8 @@ final class GameViewController: UIViewController {
     }
 
     // MARK: - Outlets
+    
+    
     @IBOutlet private weak var umbrellaButton: UIButton!
 
     @IBOutlet weak var holeStatsTapped: UIView!
@@ -166,6 +168,11 @@ final class GameViewController: UIViewController {
         present(nav, animated: true)
     }
    
+    @IBAction func nassauTapped(_ sender: UIButton) {
+        let vc = storyboard?.instantiateViewController(withIdentifier: "NassauViewController") as! NassauViewController
+        vc.gameData = GameManager.shared.currentGame
+        present(vc, animated: true)
+    }
     @IBOutlet private weak var gameModeSegment: UISegmentedControl!
 
     
@@ -269,6 +276,7 @@ final class GameViewController: UIViewController {
         ac.addAction(UIAlertAction(title: "OK", style: .default))
         present(ac, animated: true)
     }
+    
     private func allThreeGameRulesText() -> String {
         """
         • Teams of two vs two or three
@@ -1471,18 +1479,20 @@ final class GameViewController: UIViewController {
 
     @IBAction func updateScorePushed(_ sender: UIButton) {
         sender.isEnabled = false
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { sender.isEnabled = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            sender.isEnabled = true
+        }
+
         GameManager.shared.update { g in
-                if g.startHole == nil { g.startHole = g.hole }
-            }
-        paintEverythingForCurrentHole()
+            if g.startHole == nil { g.startHole = g.hole }
+        }
 
         // 0) get current game / hole
         guard let snap = GameManager.shared.currentGame else { return }
         let hole = snap.hole
         guard (0..<18).contains(hole) else { return }
 
-        // ✅ USE GLOBAL FLAG (true = mute double everywhere)
+        // ✅ use global flag (true = mute double everywhere)
         let umbrellaMuted = (snap.resolvedGameType == .sixPointScotch) ? snap.isUmbrella : false
 
         // keep your press logic
@@ -1492,22 +1502,36 @@ final class GameViewController: UIViewController {
 
         // 1) save scores from UI
         GameManager.shared.update { g in
-            if g.scores.count != 5 || g.scores.first?.count != 18 {
+            if g.scores.count != 5 || g.scores.contains(where: { $0.count != 18 }) {
                 g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
             }
+
             let seats = min(5, scoreFields.count, g.scores.count)
             for s in 0..<seats {
                 g.scores[s][hole] = Int(scoreFields[s].text ?? "")
             }
         }
 
-        // 2) press carry-forward (unchanged)
+        // mark this hole as officially posted for Nassau
+        holeCommitted[hole] = true
+
+        // recalculate Nassau immediately
+        GameManager.shared.update { g in
+            if var ns = g.nassauState {
+                NassauEngine.recalculate(state: &ns, gameData: g)
+                g.nassauState = ns
+            }
+        }
+
+        // 2) press carry-forward
         if pressOnThisHole {
             GameManager.shared.update { g in
                 guard hole < g.gameHoleDollarsArray.count,
                       hole < g.pressedPushedToggleArray.count else { return }
-                let end  = (hole < 9) ? 9 : 18
+
+                let end = (hole < 9) ? 9 : 18
                 let base = g.gameHoleDollarsArray[hole]
+
                 for idx in hole..<min(end, g.gameHoleDollarsArray.count) {
                     if idx < g.pressedPushedToggleArray.count {
                         g.pressedPushedToggleArray[idx] = true
@@ -1517,18 +1541,18 @@ final class GameViewController: UIViewController {
             }
         }
 
-        // 3) ✅ compute payouts using GLOBAL umbrella
-        // your engine: if !umbePressed && diff >= 6 { diff *= 2 }
+        // 3) compute payouts using GLOBAL umbrella
         let payouts = GameManager.shared.computeHolePayout(
             hole: hole,
-            umbePressed: umbrellaMuted   // 👈 now this matches your button
+            umbePressed: umbrellaMuted
         )
 
         // 4) save payouts
         GameManager.shared.update { g in
-            if g.playerMoney.count != 5 || g.playerMoney.first?.count != 18 {
+            if g.playerMoney.count != 5 || g.playerMoney.contains(where: { $0.count != 18 }) {
                 g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 5)
             }
+
             let seats = min(5, playerMoneyFields.count, g.playerMoney.count, payouts.count)
             for s in 0..<seats {
                 g.playerMoney[s][hole] = payouts[s]
@@ -1536,20 +1560,21 @@ final class GameViewController: UIViewController {
         }
 
         // 5) paint
-        let seatsToPaint = min(5, min(playerMoneyFields.count, payouts.count))
+        let seatsToPaint = min(5, playerMoneyFields.count, payouts.count)
         for s in 0..<seatsToPaint {
             setMoneyField(playerMoneyFields[s], to: payouts[s])
         }
+
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
 
         // 6) debug
         if let g = GameManager.shared.currentGame {
-            let h = g.hole
             let seats = min(5, g.scores.count, g.playerNames.count)
+
             let scorePart = (0..<seats).map { s -> String in
-                let name = g.playerNames[s].isEmpty ? "P\(s+1)" : g.playerNames[s]
-                let sc   = g.scores[s][h].map(String.init) ?? "-"
+                let name = g.playerNames[s].isEmpty ? "P\(s + 1)" : g.playerNames[s]
+                let sc = g.scores[s][hole].map(String.init) ?? "-"
                 return "\(name):\(sc)"
             }.joined(separator: "  ")
 
@@ -1557,10 +1582,9 @@ final class GameViewController: UIViewController {
                 .map { String(format: "%+.1f", Double($0)) }
                 .joined(separator: "  ")
 
-            print("H\(h+1)  umbMuted=\(umbrellaMuted)  \(scorePart)  |  $ \(payoutPart)")
+            print("H\(hole + 1)  umbMuted=\(umbrellaMuted)  \(scorePart)  |  $ \(payoutPart)")
         }
     }
-
     @IBAction func statsButtonTapped(_ sender: UIButton) {
         let vc = GameStatsViewController()
         vc.modalPresentationStyle = .overCurrentContext
@@ -1569,24 +1593,26 @@ final class GameViewController: UIViewController {
     }
     private func updateHoleUI() {
         guard let game = GameManager.shared.currentGame else { return }
-        let row = game.scores[currentHole]          // [Int?] for the current hole
-        let fields = scoreFields.sorted { $0.tag < $1.tag }
+        guard (0..<18).contains(currentHole) else { return }
 
-        // Fill up to the number of visible fields (should be 5)
-        for player in 0..<min(5, fields.count) {
-            let val = row[safe: player] ?? nil
+        let fields = scoreFields.sorted { $0.tag < $1.tag }
+        let seats = min(5, fields.count, game.scores.count)
+
+        for player in 0..<seats {
+            let val = game.scores[player][currentHole]
             fields[player].text = val.map(String.init) ?? ""
         }
-        // Clear extras if any
-        if fields.count > 5 {
-            for i in 5..<fields.count { fields[i].text = "" }
+
+        if fields.count > seats {
+            for i in seats..<fields.count {
+                fields[i].text = ""
+            }
         }
 
-        // Update headers if you have them
+        // Optional:
         // holePlayingLabel.text = "Hole \(currentHole + 1)"
         // parLabel.text = "Par \(game.course.pars[currentHole])"
     }
-    
     private func paintReRoll(_ g: GameData, hole h: Int) {
         let rollOn   = g.rollApplied[safe: h]   ?? false
         let rerollOn = (g.rerollApplied[safe: h] ?? false) && rollOn
@@ -1667,9 +1693,8 @@ final class GameViewController: UIViewController {
         GameManager.shared.update { g in
             guard (0..<GameData.capacity).contains(seat),
                   (0..<GameData.holes).contains(g.hole) else { return }
-            g.scores[seat][g.hole] = val          // store per player/per hole
+            g.setScoreForCurrentHole(player: seat, val)
         }
-
         // Optional: if you show totals or derived UI, repaint here
         // refreshForCurrentHole()
     }

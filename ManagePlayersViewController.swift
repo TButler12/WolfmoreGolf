@@ -408,11 +408,28 @@ final class ManagePlayersViewController: UIViewController,
             if g.hcPlayers.count != 5       { g.hcPlayers       = Array(repeating: 0,     count: 5) }
             if g.playerActivated.count != 5 { g.playerActivated = Array(repeating: false, count: 5) }
 
+            // clear old seats first
+            g.playerNames = Array(repeating: "", count: 5)
+            g.hcPlayers = Array(repeating: 0, count: 5)
+            g.playerActivated = Array(repeating: false, count: 5)
+
             for (seat, friend) in active.enumerated() {
                 g.playerNames[seat]     = friend.name
                 g.hcPlayers[seat]       = friend.defaultHC
                 g.playerActivated[seat] = true
             }
+
+            // build Nassau automatically from the active players
+            g.nassauState = NassauEngine.makeDefaultState(
+                playerNames: g.playerNames,
+                activeFlags: g.playerActivated
+            )
+
+            if var ns = g.nassauState {
+                NassauEngine.recalculate(state: &ns, gameData: g)
+                g.nassauState = ns
+            }
+        
 
             if active.count < 5 {
                 for seat in active.count..<5 {

@@ -230,7 +230,15 @@ extension Notification.Name {
 
         // Roster picker list
         g.rosterNames = []
-
+        
+        // Nassau defaults
+        g.nassauState = NassauEngine.makeDefaultState(
+            playerNames: g.playerNames,
+            activeFlags: g.playerActivated
+        )
+        holeCommitted = Array(repeating: false, count: 18)
+        holeCommitted = Array(repeating: false, count: 18)
+        
         return g
     }
 
