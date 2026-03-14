@@ -1514,6 +1514,267 @@ let TROON_COUNTRY_CLUB_HCS: [Int] = [
 let TROON_COUNTRY_CLUB_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6707, rating: 73.0, slope: 136)
 ]
+// MARK: Top of the Rock
+
+private let TOP_OF_THE_ROCK_ID = UUID(uuidString: "9E2B7F01-7C49-4D13-BD4E-9A1F88A6F101")!
+
+let TOP_OF_THE_ROCK_PARS: [Int] = [
+3,3,3,3,3,3,3,3,3
+]
+
+let TOP_OF_THE_ROCK_HCS: [Int] = [
+8,9,1,3,2,5,7,4,6
+]
+
+let TOP_OF_THE_ROCK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 1420, rating: 27.7, slope: nil),
+    TeeInfo(teeName: "Red", yardage: 885, rating: 27.2, slope: nil)
+]
+// MARK: Payne's Valley
+
+private let PAYNES_VALLEY_ID = UUID(uuidString: "9E2B7F01-7C49-4D13-BD4E-9A1F88A6F102")!
+
+let PAYNES_VALLEY_PARS: [Int] = [
+4,3,4,5,3,4,4,5,4,
+3,4,4,5,4,4,3,4,5
+]
+
+let PAYNES_VALLEY_HCS: [Int] = [
+3,7,17,11,9,13,15,5,1,
+16,12,18,2,10,4,14,8,6
+]
+// MARK: Cliffhangers
+
+private let CLIFFHANGERS_ID = UUID(uuidString: "9E2B7F01-7C49-4D13-BD4E-9A1F88A6F103")!
+
+let CLIFFHANGERS_PARS: [Int] = [
+3,3,3,3,3,3,3,3,3,
+3,3,3,3,3,3,3,3,3
+]
+
+let CLIFFHANGERS_HCS: [Int] = [
+1,2,3,4,5,6,7,8,9,
+10,11,12,13,14,15,16,17,18
+]
+// MARK: Buffalo Ridge
+
+private let BUFFALO_RIDGE_ID = UUID(uuidString: "9E2B7F01-7C49-4D13-BD4E-9A1F88A6F104")!
+
+let BUFFALO_RIDGE_PARS: [Int] = [
+5,4,4,3,4,4,3,5,3,
+4,3,4,4,5,4,3,4,5
+]
+
+let BUFFALO_RIDGE_HCS: [Int] = [
+5,1,9,17,7,13,11,3,15,
+12,18,4,8,2,14,10,16,6
+]
+// MARK: - The Homestead - The Old Course
+
+private let HOMESTEAD_OLD_COURSE_ID = UUID(uuidString: "A1F0C7D2-3C4A-4D69-9F12-100000000001")!
+
+let HOMESTEAD_OLD_COURSE_PARS: [Int] = [
+    5,3,5,5,3,4,4,4,3,
+    4,3,5,5,4,5,3,4,3
+]
+
+let HOMESTEAD_OLD_COURSE_HCS: [Int] = [
+    1,15,5,3,13,7,9,11,17,
+    8,14,4,2,10,6,18,12,16
+]
+// MARK: - The Prairie Club - Dunes Course
+
+private let PRAIRIE_CLUB_DUNES_ID = UUID(uuidString: "A1F0C7D2-3C4A-4D69-9F12-100000000002")!
+
+let PRAIRIE_CLUB_DUNES_PARS: [Int] = [
+    4,4,5,3,4,5,3,4,4,
+    5,4,5,4,3,5,3,4,4
+]
+
+let PRAIRIE_CLUB_DUNES_HCS: [Int] = [
+    5,7,9,17,13,11,15,1,3,
+    4,18,10,8,16,12,14,6,2
+]
+// MARK: - The Loop - Black Course
+
+private let LOOP_BLACK_ID = UUID(uuidString: "A1F0C7D2-3C4A-4D69-9F12-100000000003")!
+
+let LOOP_BLACK_PARS: [Int] = [
+    4,3,4,4,3,5,4,3,4,
+    5,4,4,3,4,3,4,5,4
+]
+
+let LOOP_BLACK_HCS: [Int] = [
+    5,15,1,9,13,7,11,17,3,
+    4,8,10,12,2,18,6,16,14
+]
+// MARK: - The Loop - Red Course
+
+private let LOOP_RED_ID = UUID(uuidString: "A1F0C7D2-3C4A-4D69-9F12-100000000004")!
+
+let LOOP_RED_PARS: [Int] = [
+    4,5,4,3,4,3,4,4,5,
+    4,3,4,5,3,4,4,3,4
+]
+
+let LOOP_RED_HCS: [Int] = [
+    11,9,7,13,3,17,15,1,5,
+    2,12,14,8,16,6,4,18,10
+]
+// MARK: - Forest Dunes
+
+private let FOREST_DUNES_ID = UUID(uuidString: "A1F0C7D2-3C4A-4D69-9F12-100000000005")!
+
+let FOREST_DUNES_PARS: [Int] = [
+    4,4,3,4,5,4,5,4,3,
+    4,3,4,4,4,5,3,4,5
+]
+
+let FOREST_DUNES_HCS: [Int] = [
+    15,1,13,9,5,11,7,3,17,
+    4,18,10,14,2,6,8,16,12
+]
+// MARK: - The Legend at Giants Ridge
+
+private let THE_LEGEND_ID = UUID(uuidString: "A1F0C7D2-3C4A-4D69-9F12-100000000006")!
+
+let THE_LEGEND_PARS: [Int] = [
+    4, 4, 4, 4, 4, 4, 5, 4, 3,
+    4, 3, 4, 4, 5, 4, 3, 4, 5
+]
+
+let THE_LEGEND_HCS: [Int] = [
+    5, 1, 9, 17, 7, 13, 11, 3, 15,
+    12, 18, 4, 8, 2, 14, 10, 16, 6
+]
+
+let THE_LEGEND_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7562, rating: 75.5, slope: 133),
+    TeeInfo(teeName: "Blue", yardage: 6981, rating: 72.6, slope: 127),
+    TeeInfo(teeName: "Blue/White", yardage: 6663, rating: 71.0, slope: 123)
+]
+// MARK: - The Quarry at Giants Ridge
+
+private let THE_QUARRY_ID = UUID(uuidString: "A1F0C7D2-3C4A-4D69-9F12-100000000007")!
+
+let THE_QUARRY_PARS: [Int] = [
+    5, 4, 4, 4, 5, 4, 4, 3, 5,
+    4, 3, 4, 4, 5, 4, 4, 3, 5
+]
+
+let THE_QUARRY_HCS: [Int] = [
+    5, 1, 9, 17, 7, 13, 11, 3, 15,
+    12, 18, 4, 8, 2, 14, 10, 16, 6
+]
+
+let THE_QUARRY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Buffalo", yardage: 7036, rating: 73.4, slope: 130),
+    TeeInfo(teeName: "Blue", yardage: 6616, rating: 71.4, slope: 127),
+    TeeInfo(teeName: "Blue/White Combo", yardage: 6183, rating: 69.5, slope: 125),
+    TeeInfo(teeName: "White", yardage: 5881, rating: 67.5, slope: 123),
+    TeeInfo(teeName: "White/Red Combo", yardage: 5367, rating: 65.7, slope: 118),
+    TeeInfo(teeName: "Red", yardage: 5004, rating: 63.8, slope: 113)
+]
+// MARK: - Richter Park Golf Course
+private let RICHTER_PARK_GOLF_COURSE_ID = UUID(uuidString: "E3C2A8A1-7F5E-4B90-9B5D-0C6B1D2E3F41")!
+let RICHTER_PARK_GOLF_COURSE_PARS: [Int] = [4,5,3,4,3,4,5,4,4, 3,4,5,3,4,4,5,3,4]
+let RICHTER_PARK_GOLF_COURSE_HCS:  [Int] = [9,11,17,3,15,1,7,5,13, 14,10,6,16,8,12,4,18,2]
+
+let RICHTER_PARK_GOLF_COURSE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6547, rating: 71.3, slope: 130)
+]
+
+// MARK: - Lake of Isles
+private let LAKE_OF_ISLES_ID = UUID(uuidString: "F4D3B9C2-8E6F-4A11-9C22-1D7E2F3A4B52")!
+
+// North Course (Shell)
+let LAKE_OF_ISLES_NORTH_PARS: [Int] = [5,3,4,4,5,4,3,4,4, 4,3,5,4,4,5,3,4,4]
+let LAKE_OF_ISLES_NORTH_HCS:  [Int] = [6,14,8,18,12,4,16,10,2, 1,13,15,5,11,7,17,9,3]
+
+let LAKE_OF_ISLES_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7279, rating: 76.3, slope: 148),
+    TeeInfo(teeName: "Gold", yardage: 6757, rating: 73.9, slope: 141),
+    TeeInfo(teeName: "Gold/Silver", yardage: 6312, rating: 71.7, slope: 136),
+    TeeInfo(teeName: "Silver", yardage: 6005, rating: 69.9, slope: 130),
+    TeeInfo(teeName: "Copper", yardage: 5387, rating: 67.1, slope: 122),
+    TeeInfo(teeName: "Jade", yardage: 4895, rating: 68.9, slope: 124)
+]
+
+// South Course (Turtle)
+let LAKE_OF_ISLES_SOUTH_PARS: [Int] = [4,4,4,3,5,3,4,5,4, 4,3,4,4,5,4,3,5,4]
+let LAKE_OF_ISLES_SOUTH_HCS:  [Int] = [9,1,15,11,17,13,7,5,3, 2,18,6,16,4,12,8,10,14]
+
+let LAKE_OF_ISLES_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7346, rating: 76.2, slope: 141),
+    TeeInfo(teeName: "Gold", yardage: 6845, rating: 74.0, slope: 136),
+    TeeInfo(teeName: "Gold/Silver", yardage: 6524, rating: 72.1, slope: 133),
+    TeeInfo(teeName: "Silver", yardage: 6278, rating: 71.4, slope: 130),
+    TeeInfo(teeName: "Silver/Copper", yardage: 5535, rating: 67.3, slope: 125),
+    TeeInfo(teeName: "Copper", yardage: 5231, rating: 65.6, slope: 122),
+    TeeInfo(teeName: "Jade", yardage: 4858, rating: 68.3, slope: 123)
+]
+
+// MARK: - Brooklawn Country Club
+private let BROOKLAWN_COUNTRY_CLUB_ID = UUID(uuidString: "A7B8C9D1-2E3F-4A5B-8C6D-7E8F9A0B1C62")!
+let BROOKLAWN_COUNTRY_CLUB_PARS: [Int] = [4,3,4,4,3,4,5,5,4, 3,5,4,4,4,3,4,4,4]
+let BROOKLAWN_COUNTRY_CLUB_HCS:  [Int] = [5,17,13,3,15,7,1,9,11, 18,2,14,4,6,16,12,8,10]
+
+let BROOKLAWN_COUNTRY_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6744, rating: 73.2, slope: 136)
+]
+
+// MARK: - Sterling Farms Golf Course
+private let STERLING_FARMS_GC_ID = UUID(uuidString: "7C3F0C11-9C6B-4D4E-9F61-5C9E6F7E2A11")!
+
+let STERLING_FARMS_GC_PARS: [Int] = [
+4,5,4,4,3,5,4,3,4,
+4,4,4,5,4,3,4,3,5
+]
+let STERLING_FARMS_GC_HCS: [Int] = [
+11,15,17,1,7,13,9,3,5,
+12,10,4,8,2,14,16,6,18
+]
+let STERLING_FARMS_GC_TEES: [TeeInfo] = [
+
+TeeInfo(
+teeName: "Black",
+yardage: 6423,
+rating: 71.5,
+slope: 134
+),
+
+TeeInfo(
+teeName: "Blue",
+yardage: 6227,
+rating: 70.4,
+slope: 132
+),
+
+TeeInfo(
+teeName: "White",
+yardage: 5899,
+rating: 69.3,
+slope: 126
+),
+
+TeeInfo(
+teeName: "Gold",
+yardage: 5423,
+rating: 66.4,
+slope: 121
+),
+
+TeeInfo(
+teeName: "Red",
+yardage: 5402,
+rating: 71.4,
+slope: 122
+)
+
+]
+
+
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -2828,7 +3089,252 @@ private enum BuiltIns {
             website: "https://www.trooncc.com/",
             address: "25000 N. Windy Walk Drive, Scottsdale, AZ 85255"
         ),
+        c(
+            TOP_OF_THE_ROCK_ID,
+            "Top of the Rock",
+            TOP_OF_THE_ROCK_PARS,
+            TOP_OF_THE_ROCK_HCS,
+            TOP_OF_THE_ROCK_TEES,
+            country: "USA",
+            state: "MO",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            phone: "417-339-5343",
+            website: "https://www.bigcedar.com",
+            address: "150 Top of the Rock Rd, Ridgedale, MO 65739",
+            isWolfApproved: true
+        ),
+        c(
+            PAYNES_VALLEY_ID,
+            "Payne's Valley",
+            PAYNES_VALLEY_PARS,
+            PAYNES_VALLEY_HCS,
+            nil,
+            country: "USA",
+            state: "MO",
+            architect: "Tiger Woods / TGR Design",
+            type: "Resort",
+            phone: "417-339-5343",
+            website: "https://www.bigcedar.com/golf/paynes-valley/",
+            address: "1250 Buffalo Ridge Blvd, Hollister, MO 65672",
+            isWolfApproved: true
+        ),
+        c(
+            CLIFFHANGERS_ID,
+            "Cliffhangers",
+            CLIFFHANGERS_PARS,
+            CLIFFHANGERS_HCS,
+            nil,
+            country: "USA",
+            state: "MO",
+            architect: "Big Cedar Lodge",
+            type: "Resort",
+            phone: "417-339-5343",
+            website: "https://www.bigcedar.com/golf/cliffhangers/",
+            address: "1250 Buffalo Ridge Blvd, Hollister, MO 65672",
+            isWolfApproved: true
+        ),
+        c(
+            BUFFALO_RIDGE_ID,
+            "Buffalo Ridge",
+            BUFFALO_RIDGE_PARS,
+            BUFFALO_RIDGE_HCS,
+            nil,
+            country: "USA",
+            state: "MO",
+            architect: "Tom Fazio",
+            type: "Resort",
+            phone: "417-339-5343",
+            website: "https://www.bigcedar.com/golf/buffalo-ridge/",
+            address: "1001 Buffalo Ridge Blvd, Hollister, MO 65672",
+            isWolfApproved: true
+        ),
+        c(
+            HOMESTEAD_OLD_COURSE_ID,
+            "The Homestead - The Old Course",
+            HOMESTEAD_OLD_COURSE_PARS,
+            HOMESTEAD_OLD_COURSE_HCS,
+            nil,
+            country: "USA",
+            state: "VA",
+            architect: "William S. Flynn",
+            type: "Resort",
+            phone: "(540) 839-1766",
+            website: "https://www.omnihotels.com/hotels/homestead-virginia/golf/old-course",
+            address: "7696 Sam Snead Highway, Hot Springs, VA 24445",
+            isWolfApproved: true
+        ),
+        c(
+            PRAIRIE_CLUB_DUNES_ID,
+            "The Prairie Club - Dunes Course",
+            PRAIRIE_CLUB_DUNES_PARS,
+            PRAIRIE_CLUB_DUNES_HCS,
+            nil,
+            country: "USA",
+            state: "NE",
+            architect: "Tom Lehman / Chris Brands",
+            type: "Resort",
+            phone: "(888) 402-1101",
+            website: "https://theprairieclub.com/golf/dunes-course/",
+            address: "88897 State Hwy. 97, Valentine, NE 69201",
+            isWolfApproved: true
+        ),
+        c(
+            LOOP_BLACK_ID,
+            "The Loop - Black Course",
+            LOOP_BLACK_PARS,
+            LOOP_BLACK_HCS,
+            nil,
+            country: "USA",
+            state: "MI",
+            architect: "Tom Doak",
+            type: "Resort",
+            phone: "(989) 275-0700",
+            website: "https://forestdunesgolf.com/play-the-loop",
+            address: "6376 Forest Dunes Drive, Roscommon, MI 48653",
+            isWolfApproved: true
+        ),
+        c(
+            LOOP_RED_ID,
+            "The Loop - Red Course",
+            LOOP_RED_PARS,
+            LOOP_RED_HCS,
+            nil,
+            country: "USA",
+            state: "MI",
+            architect: "Tom Doak",
+            type: "Resort",
+            phone: "(989) 275-0700",
+            website: "https://forestdunesgolf.com/play-the-loop",
+            address: "6376 Forest Dunes Drive, Roscommon, MI 48653",
+            isWolfApproved: true
+        ),
+        c(
+            FOREST_DUNES_ID,
+            "Forest Dunes",
+            FOREST_DUNES_PARS,
+            FOREST_DUNES_HCS,
+            nil,
+            country: "USA",
+            state: "MI",
+            architect: "Tom Weiskopf",
+            type: "Resort",
+            phone: "(989) 275-0700",
+            website: "https://forestdunesgolf.com/play-forest-dunes",
+            address: "6376 Forest Dunes Drive, Roscommon, MI 48653",
+            isWolfApproved: true
+        ),
+        c(
+            THE_LEGEND_ID,
+            "The Legend at Giants Ridge",
+            THE_LEGEND_PARS,
+            THE_LEGEND_HCS,
+            THE_LEGEND_TEES,
+            country: "USA",
+            state: "MN",
+            architect: "Jeffrey Brauer",
+            type: "Resort",
+            phone: "(218) 865-8030",
+            website: "https://www.giantsridge.com/the-legend/",
+            address: "6329 Wynne Creek Drive, Biwabik, MN 55708",
+            isWolfApproved: true
+        ),
+        c(
+            THE_QUARRY_ID,
+            "The Quarry at Giants Ridge",
+            THE_QUARRY_PARS,
+            THE_QUARRY_HCS,
+            THE_QUARRY_TEES,
+            country: "USA",
+            state: "MN",
+            architect: "Jeffrey Brauer",
+            type: "Resort",
+            phone: "(800) 688-7669",
+            website: "https://www.giantsridge.com/the-quarry/",
+            address: "6329 Wynne Creek Drive, Biwabik, MN 55708",
+            isWolfApproved: true
+        ),
+        c(
+            RICHTER_PARK_GOLF_COURSE_ID,
+            "Richter Park Golf Course",
+            RICHTER_PARK_GOLF_COURSE_PARS,
+            RICHTER_PARK_GOLF_COURSE_HCS,
+            RICHTER_PARK_GOLF_COURSE_TEES,
+            country: "USA",
+            state: "CT",
+            type: "Daily-Fee",
+            phone: "(203) 792-2550",
+            website: "https://www.richterpark.com",
+            address: "100 Aunt Hack Rd, Danbury, CT 06811",
+            isWolfApproved: true
+        ),
+
+        c(
+            LAKE_OF_ISLES_ID,
+            "Lake of Isles (North Course)",
+            LAKE_OF_ISLES_NORTH_PARS,
+            LAKE_OF_ISLES_NORTH_HCS,
+            LAKE_OF_ISLES_NORTH_TEES,
+            country: "USA",
+            state: "CT",
+            architect: "Rees Jones, Inc.",
+            type: "Resort",
+            phone: "(860) 312-3636",
+            website: "https://www.lakeofisles.com",
+            address: "1 Clubhouse Drive, North Stonington, CT 06359",
+            isWolfApproved: true
+        ),
+
+        c(
+            UUID(uuidString: "B8C9D0E2-3F4A-5B6C-9D7E-8F0A1B2C3D73")!,
+            "Lake of Isles (South Course)",
+            LAKE_OF_ISLES_SOUTH_PARS,
+            LAKE_OF_ISLES_SOUTH_HCS,
+            LAKE_OF_ISLES_SOUTH_TEES,
+            country: "USA",
+            state: "CT",
+            architect: "Rees Jones, Inc.",
+            type: "Resort",
+            phone: "(860) 312-3636",
+            website: "https://www.lakeofisles.com",
+            address: "1 Clubhouse Drive, North Stonington, CT 06359",
+            isWolfApproved: true
+        ),
+
+        c(
+            BROOKLAWN_COUNTRY_CLUB_ID,
+            "Brooklawn Country Club",
+            BROOKLAWN_COUNTRY_CLUB_PARS,
+            BROOKLAWN_COUNTRY_CLUB_HCS,
+            BROOKLAWN_COUNTRY_CLUB_TEES,
+            country: "USA",
+            state: "CT",
+            architect: "A. W. Tillinghast",
+            type: "Private",
+            phone: "(203) 334-5116",
+            website: "https://brooklawncc.com",
+            address: "500 Algonquin Road, Fairfield, CT 06825",
+            isWolfApproved: true
+        ),
+        c(
+            STERLING_FARMS_GC_ID,
+            "Sterling Farms Golf Course",
+            STERLING_FARMS_GC_PARS,
+            STERLING_FARMS_GC_HCS,
+            STERLING_FARMS_GC_TEES,
+            country: "USA",
+            state: "CT",
+            architect: "Geoffrey Cornish",
+            type: "Municipal",
+            phone: "(203) 461-9090",
+            website: "https://www.sterlingfarmsgc.com",
+            address: "1349 Newfield Avenue, Stamford, CT 06905",
+            isWolfApproved: true
+        ),
+        
     ]
+    
+    
 
 #if DEBUG
     private static func assertNoDuplicateIDs() {
