@@ -250,7 +250,65 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
 
         present(ac, animated: true)
     }
+    @IBAction private func customGroupsTapped(_ sender: UIButton) {
+        let groups = TextGroupStore.shared.allSorted()
+        guard !groups.isEmpty else {
+            showAlert("No Custom Groups", "Create a custom group first in Contacts.")
+            return
+        }
 
+        let vc = CustomGroupsViewController(style: .insetGrouped)
+
+        vc.onPick = { [weak self] (group: TextGroup) in
+            guard let self else { return }
+
+            let members = FriendStore.shared.friends
+                .filter { group.memberIDs.contains($0.id) }
+
+            let phones = members
+                .map { self.normalizePhone($0.phone) }
+                .filter { !$0.isEmpty }
+
+            guard !phones.isEmpty else {
+                self.showAlert("No Numbers", "This custom group has no valid phone numbers.")
+                return
+            }
+
+            let names = members
+                .map { $0.name }
+                .sorted()
+
+            let message = names.isEmpty
+                ? "No names found."
+                : names.joined(separator: "\n")
+
+            let ac = UIAlertController(
+                title: group.name,
+                message: "Texting:\n\n\(message)",
+                preferredStyle: .actionSheet
+            )
+
+            ac.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
+                self.pickQuickTextAndSend(to: phones, target: .allFriends)
+            })
+
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+            if let pop = ac.popoverPresentationController {
+                pop.sourceView = self.view
+                pop.sourceRect = CGRect(x: self.view.bounds.midX,
+                                        y: self.view.bounds.midY,
+                                        width: 1,
+                                        height: 1)
+            }
+
+            self.present(ac, animated: true)
+        }
+
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = UIModalPresentationStyle.formSheet
+        present(nav, animated: true)
+    }
     // MARK: - Targets + Quick Text
 
     private enum TextTarget {

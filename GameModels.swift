@@ -8,14 +8,14 @@ import Foundation
 
 public struct Player: Codable, Equatable {
     public var name: String
-    public var handicap: Int?          // nil if unknown
+    public var handicap: Int?
     public var isActive: Bool
 }
 
 public struct CourseData: Codable, Equatable {
     public var name: String
-    public var pars: [Int]             // usually 18
-    public var holeHandicaps: [Int]    // 1 = hardest ... 18 = easiest
+    public var pars: [Int]
+    public var holeHandicaps: [Int]
 
     public static let `default` = CourseData(
         name: "Default",
@@ -30,7 +30,39 @@ public struct Game: Codable {
     public var holeIndex: Int
     public var dollars: Double
     public var umbrellaOn: Bool
-    public var scores: [[Int?]]        // [player][hole]
+    public var scores: [[Int?]]
     public var popsTable: [[Int]]
-    // [hole][player]
+}
+
+// MARK: - Course / Location Promo Models
+
+public enum PromoType: String, Codable {
+    case deal
+    case event
+    case featured
+}
+
+public enum VenueType: String, Codable {
+    case golfCourse
+    case resort
+    case indoorGolf
+}
+
+public struct LocationPromo: Codable, Equatable {
+    public var type: PromoType
+    public var title: String
+    public var subtitle: String?
+    public var isActive: Bool
+
+    public init(
+        type: PromoType,
+        title: String,
+        subtitle: String? = nil,
+        isActive: Bool = true
+    ) {
+        self.type = type
+        self.title = title
+        self.subtitle = subtitle
+        self.isActive = isActive
+    }
 }

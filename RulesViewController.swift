@@ -130,10 +130,10 @@ extension RulesViewController: UISearchResultsUpdating {
 
 // MARK: - Rules content builder
 private extension RulesViewController {
-
+    
     func makeRulesText() -> NSAttributedString {
         let text = NSMutableAttributedString()
-
+        
         func header(_ str: String) {
             text.append(NSAttributedString(
                 string: "\(str)\n",
@@ -148,7 +148,7 @@ private extension RulesViewController {
                                             .foregroundColor: UIColor.tertiaryLabel
                                            ]))
         }
-
+        
         func body(_ str: String) {
             text.append(NSAttributedString(
                 string: "\(str)\n\n",
@@ -158,96 +158,129 @@ private extension RulesViewController {
                 ]
             ))
         }
-
+        
         header("WOLFMORE — HOW TO PLAY")
         body("""
         Scoring and bet tracking made easy!
         
-        Hover or long press over most buttons for decription of that button.
-
-        WolfMore Pro: unlocks premium stat tracking (full history, friend comparisons, home course, by hole summaries).
-
-        Play up to 5 players (yes 5 players, 3 against 2 wolf is the most fun!)
+        Hover or long press over most buttons for a description of that button.
         
-        Set your course, add players through new game button, and start scoring.
+        WolfMore Pro unlocks premium stat tracking including full history, friend comparisons, home course summaries, and by-hole summaries.
         
-        Supports Wolf, Six-Point Scotch, and Hammer play.
+        Play up to 5 players. Yes, 5 players — and 3 vs 2 Wolf can be the most fun.
         
-        WolfMore is perfect for competing on your home course with supporting course stat tracking, away-course games and great for indoor simualtor golf games. 
+        Set your course, add players through the New Game button, and start scoring.
+        
+        Supports Wolf, Six-Point Scotch, Hammer, and Nassau play.
+        
+        WolfMore is perfect for competing on your home course, tracking stats with friends, playing away-course games, and even indoor simulator golf.
         """)
-
+        
         header("GETTING STARTED")
         body("""
         • Set your course pars and handicaps
-        • Select a Home Course if you want personal stat tracking of you and your friends. This is your personal data on your phone only.
-        • Press "New Game" and select up to 5 players. If you're new to WolfMore, first add players and activate players through "New Game" button
-        • Add new players by using new game button 
+        • Select a Home Course if you want personal stat tracking for you and your friends. This data stays on your phone.
+        • Press "New Game" and select up to 5 players
+        • If you're new to WolfMore, first add players and activate them through the New Game screen
+        • Add new players using the New Game button
         """)
-
+        
+        header("COURSES")
+        body("""
+        • WolfMore includes built-in courses plus any custom courses you add
+        • Built-in courses help you get started quickly and may include phone, website, address, and other course details
+        • On the course picker, swipe left to mark a course as your Home Course
+        • Swipe right on a course for more information, including phone, website, address, and any available deal or promo details
+        • Swipe left to set your Home Course which is used for personal course and player stat tracking and friend comparisons 
+        """)
+        
         header("WAGERS")
         body("""
         • Default wager is $2.00
         • Use + / – to adjust for the present hole or the game
-        • Tap $ to apply wager to entire game
+        • Tap $ to apply wager to the entire game
         """)
-
+        
         header("HAMMER")
         body("""
-        • Doubles the hole wager
-        • Each tap doubles again (2× → 4× → 8×)
-        • Reject removes last hammer
+        • Hammer doubles the hole wager
+        • Each additional tap doubles again (2× → 4× → 8×)
+        • Reject removes the last hammer
         """)
-
-        header("GAME MODES - All modes accessed in game scorng page")
+        
+        header("GAME MODES — ALL MODES ARE ACCESSED FROM THE IN-GAME SCORING PAGE")
         body("""
         • Six-Point Scotch (default)
         • Wolf (2 Point)
         • Wolf (1 Point)
-        • User can change Game Modes mid-round if you want to mix it up!
+        • Nassau
+        • You can change game modes mid-round if you want to mix it up
         """)
-
+        
+        header("NASSAU")
+        body("""
+        • Nassau runs in parallel with your main WolfMore scoring
+        • Nassau is tracked automatically 
+        • WolfMore automatically creates Nassau matches based on the active players in the game
+        • Front 9, Back 9, and Overall 18 are tracked automatically
+        • Auto Press also runs automatically when a side goes 2-holes down 
+        • Nassau can be used alongside your regular Wolf, Six-Point, or Hammer round so you do not need a separate score entry flow
+        • Nassau results and presses update as scores are entered and holes are committed. 
+        """)
+        
+        header("AUTO PRESS")
+        body("""
+        • Auto Press is available for Nassau
+        • When enabled, WolfMore automatically creates a new press when a side reaches the configured number down
+        • Presses are tracked in parallel with the main Nassau bet
+        • Presses update automatically as hole results are entered
+        """)
+        
         header("LONE WOLF")
         body("""
         • Player goes solo (Lone Wolf)
-        • Lone Wolf Total Score = (Lone Wolf Score + ((Lone Wolf Score + Bogey) ÷ 2)
-        • Doubles hole wager
+        • Lone Wolf Total Score = (Lone Wolf Score + ((Lone Wolf Score + Bogey) ÷ 2))
+        • Lone Wolf doubles the hole wager
         """)
-
+        
         header("UMBIE")
         body("""
         • Sweep rule for Six-Point
         • Winning all 6 points doubles the hole
-        • Can be toggled on/off
+        • Can be toggled on or off
         """)
-
+        
         header("SCORING")
         body("""
         Enter scores → Select options → Update Scores
+        
         W = Wolf partners
         P = Prox
         """)
-
+        
         header("TRACKING")
         body("""
         Your personal stat tracking.
-        View stats by player, course, and hole.
-        Access and select tracking from the player activation screen
+        
+        • View stats by player, course, and hole
+        • Access and select tracking from the player activation screen
+        • Home Course tracking helps you compare performance for you and your friends over time
         """)
-
-        // ✅ Added Pro section (matches your screenshot content)
+        
         header("WOLFMORE PRO — PREMIUM STATS")
         body("""
         Join WolfMore Pro to unlock premium stat tracking:
-
+        
         • Full history (no limits)
         • Friend tracking and comparisons
         • Home Course summaries
         • By-hole summaries and trends over time
-
+        
         Pro is an optional subscription. You can cancel anytime in your Apple ID subscriptions.
+        
         If you already joined Pro on this device, tap "Restore Purchases" on the Pro screen to re-enable access.
         """)
-
+        
         return text
     }
 }

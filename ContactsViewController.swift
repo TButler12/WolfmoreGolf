@@ -15,6 +15,8 @@ final class ContactsViewController: UITableViewController {
         static let starSize = CGSize(width: 28, height: 28)
         static let trackLimit = 30
     }
+    private var isBuildingGroup = false
+    private var selectedGroupMemberIDs = Set<UUID>()
 
     // MARK: - Data
     private var friends: [Friend] { FriendStore.shared.friends }
@@ -33,11 +35,15 @@ final class ContactsViewController: UITableViewController {
         tableView.keyboardDismissMode = .onDrag
         tableView.tableFooterView = UIView()
 
-        navigationItem.rightBarButtonItem =
+        navigationItem.rightBarButtonItems = [
+            UIBarButtonItem(title: "New Group",
+                            style: .plain,
+                            target: self,
+                            action: #selector(newGroupTapped)),
             UIBarButtonItem(barButtonSystemItem: .add,
                             target: self,
                             action: #selector(addTapped))
-
+        ]
         navigationItem.leftItemsSupplementBackButton = true
         navigationItem.leftBarButtonItem =
             UIBarButtonItem(title: "Import",
@@ -75,28 +81,48 @@ final class ContactsViewController: UITableViewController {
         cell.detailTextLabel?.text = phone.isEmpty ? "No mobile" : formattedPhone(phone)
 
         let isTracked = FriendTrackStore.shared.isTracked(friend.id, on: courseID)
+        let isSelectedForGroup = selectedGroupMemberIDs.contains(friend.id)
 
-        cell.accessoryType = isTracked ? .checkmark : .none
-        cell.tintColor = isTracked ? .systemGreen : .systemGray
+        if isBuildingGroup {
+            cell.accessoryType = isSelectedForGroup ? .checkmark : .none
+            cell.tintColor = .systemBlue
+            cell.accessoryView = nil
+            cell.textLabel?.textColor = .label
+            cell.detailTextLabel?.textColor = .secondaryLabel
+        } else {
+            cell.accessoryType = isTracked ? .checkmark : .none
+            cell.tintColor = isTracked ? .systemGreen : .systemGray
+            cell.textLabel?.textColor = isTracked ? .systemGreen : .label
+            cell.detailTextLabel?.textColor = isTracked ? .systemGreen : .secondaryLabel
+            cell.accessoryView = makeFavoriteButton(isFavorite: friend.isFavorite, friendID: friend.id)
+        }
 
-        // Optional: make tracked friends visually different
-        cell.textLabel?.textColor = isTracked ? .systemGreen : .label
-        cell.detailTextLabel?.textColor = isTracked ? .systemGreen : .secondaryLabel
-
-        cell.accessoryView = makeFavoriteButton(isFavorite: friend.isFavorite, friendID: friend.id)
         cell.selectionStyle = .default
     }
 
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        presentEdit(for: friends[indexPath.row])
+
+        let friend = friends[indexPath.row]
+
+        if isBuildingGroup {
+            if selectedGroupMemberIDs.contains(friend.id) {
+                selectedGroupMemberIDs.remove(friend.id)
+            } else {
+                selectedGroupMemberIDs.insert(friend.id)
+            }
+            tableView.reloadRows(at: [indexPath], with: .automatic)
+            return
+        }
+
+        presentEdit(for: friend)
     }
 
     override func tableView(_ tableView: UITableView,
                             trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
-
+        if isBuildingGroup { return nil }
         let friend = friends[indexPath.row]
         let isTracked = FriendTrackStore.shared.isTracked(friend.id, on: courseID)
 
@@ -145,7 +171,111 @@ final class ContactsViewController: UITableViewController {
         button.addTarget(self, action: #selector(favoriteTapped(_:)), for: .touchUpInside)
         return button
     }
+    @objc private func newGroupTapped() {
+        if isBuildingGroup {
+            promptToSaveCustomGroup()
+        } else {
+            isBuildingGroup = true
+            selectedGroupMemberIDs.removeAll()
 
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(title: "Save Group",
+                                style: .done,
+                                target: self,
+                                action: #selector(newGroupTapped)),
+                UIBarButtonItem(title: "Cancel",
+                                style: .plain,
+                                target: self,
+                                action: #selector(cancelNewGroupTapped))
+            ]
+
+            title = "Select Friends"
+            tableView.reloadData()
+        }
+    }
+
+    @objc private func cancelNewGroupTapped() {
+        isBuildingGroup = false
+        selectedGroupMemberIDs.removeAll()
+
+        navigationItem.rightBarButtonItems = [
+            UIBarButtonItem(title: "New Group",
+                            style: .plain,
+                            target: self,
+                            action: #selector(newGroupTapped)),
+            UIBarButtonItem(barButtonSystemItem: .add,
+                            target: self,
+                            action: #selector(addTapped))
+        ]
+
+        title = "Contacts"
+        tableView.reloadData()
+    }
+
+    private func promptToSaveCustomGroup() {
+        guard !selectedGroupMemberIDs.isEmpty else {
+            let ac = UIAlertController(
+                title: "No Contacts Selected",
+                message: "Select at least one contact for this custom group.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+            return
+        }
+
+        let ac = UIAlertController(
+            title: "New Custom Group",
+            message: "Enter a group name.",
+            preferredStyle: .alert
+        )
+
+        ac.addTextField {
+            $0.placeholder = "Group name"
+            $0.autocapitalizationType = .words
+            $0.clearButtonMode = .whileEditing
+        }
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            guard let self else { return }
+
+            let finalName = (ac.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            guard !finalName.isEmpty else { return }
+
+            let ids = Array(self.selectedGroupMemberIDs)
+            TextGroupStore.shared.upsert(TextGroup(name: finalName, memberIDs: ids))
+
+            self.isBuildingGroup = false
+            self.selectedGroupMemberIDs.removeAll()
+
+            self.navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(title: "New Group",
+                                style: .plain,
+                                target: self,
+                                action: #selector(self.newGroupTapped)),
+                UIBarButtonItem(barButtonSystemItem: .add,
+                                target: self,
+                                action: #selector(self.addTapped))
+            ]
+
+            self.title = "Contacts"
+            self.tableView.reloadData()
+
+            let done = UIAlertController(
+                title: "Saved",
+                message: "\"\(finalName)\" was added to Custom Groups.",
+                preferredStyle: .alert
+            )
+            done.addAction(UIAlertAction(title: "OK", style: .default))
+            self.present(done, animated: true)
+        })
+
+        present(ac, animated: true)
+    }
     @objc private func favoriteTapped(_ sender: UIButton) {
         guard
             let idString = sender.accessibilityIdentifier,

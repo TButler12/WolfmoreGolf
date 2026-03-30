@@ -236,8 +236,6 @@ extension Notification.Name {
             playerNames: g.playerNames,
             activeFlags: g.playerActivated
         )
-        holeCommitted = Array(repeating: false, count: 18)
-        holeCommitted = Array(repeating: false, count: 18)
         
         return g
     }

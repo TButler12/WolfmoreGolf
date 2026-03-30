@@ -22,9 +22,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     private var filtered: [CourseProfile] = []
     
     // Sections (e.g., "IL", "WI", "FL", "Ireland", "Northern Ireland")
-    private var sections: [(title: String, items: [CourseProfile])] = []
     
+    private var sections: [(title: String, items: [CourseProfile])] = []
     // Search
+    
     private let searchController = UISearchController(searchResultsController: nil)
     private var searchText: String {
         (searchController.searchBar.text ?? "")
@@ -161,11 +162,15 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     
     private func reloadCourses() {
         all = CourseLibrary.shared.allSorted()
-        
-        // Keep WolfMore at top of its section later
+
+        if let wj = all.first(where: { $0.name == "WJ Golf at Arboretum Golf Club" }) {
+            print("RELOAD WJ:", wj.name, wj.promo?.title ?? "no promo")
+        }
+
         applyFilter()
         updateSummaryHeader()
     }
+    
     private func inferredType(for name: String) -> String? {
 
         let n = name.lowercased()
@@ -221,59 +226,94 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         || t.caseInsensitiveCompare("United States") == .orderedSame
         || t.caseInsensitiveCompare("United States of America") == .orderedSame
     }
-    
-    private func sectionTitle(for c: CourseProfile) -> String {
-        if isUSA(c.country) {
-            let st = (c.state ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            return st.isEmpty ? "USA (No State)" : st
-        } else {
-            let ct = (c.country ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            return ct.isEmpty ? "International" : ct
+
+    private func sectionSortKey(_ title: String) -> (Int, String) {
+        if title == "RTJ Trail" {
+            return (0, title)
         }
+        return (1, title)
     }
-    
-    
+   
     private func buildSections() {
-        
-        let grouped = Dictionary(grouping: filtered, by: sectionTitle(for:))
-        
-        var built: [(title: String, items: [CourseProfile])] = grouped.map { title, items in
-            let sortedItems = items.sorted {
+        let source = filtered
+
+        let rtjCourses = source.filter {
+            ($0.type ?? "").trimmingCharacters(in: .whitespacesAndNewlines) == "RTJ Trail"
+        }
+
+        let nonRTJ = source.filter {
+            ($0.type ?? "").trimmingCharacters(in: .whitespacesAndNewlines) != "RTJ Trail"
+        }
+
+        var newSections: [(title: String, items: [CourseProfile])] = []
+
+        if !rtjCourses.isEmpty {
+            let sortedRTJ = rtjCourses.sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
-            return (title: title, items: sortedItems)
+            newSections.append(("AL • RTJ Trail", sortedRTJ))
         }
-        
-        // Pin WolfMore to top of its section
-        for i in built.indices {
-            if let idx = built[i].items.firstIndex(where: {
-                $0.name.caseInsensitiveCompare("WolfMore") == .orderedSame
-            }) {
-                let w = built[i].items.remove(at: idx)
-                built[i].items.insert(w, at: 0)
+
+        let groupedByState = Dictionary(grouping: nonRTJ) { course in
+            let state = (course.state ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return state.isEmpty ? "Other" : state
+        }
+
+        let sortedStates = groupedByState.keys.sorted {
+            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
+        }
+
+        for state in sortedStates {
+            let stateItems = groupedByState[state] ?? []
+
+            let groupedByRegion = Dictionary(grouping: stateItems) { course -> String in
+                if course.venueType == .indoorGolf {
+                    return "Indoor"
+                }
+
+                let region = (course.region ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                return region
+            }
+
+            let sortedRegions = groupedByRegion.keys.sorted { lhs, rhs in
+                let lhsIsIndoor = lhs.caseInsensitiveCompare("Indoor") == .orderedSame
+                let rhsIsIndoor = rhs.caseInsensitiveCompare("Indoor") == .orderedSame
+
+                if lhsIsIndoor != rhsIsIndoor { return lhsIsIndoor }
+
+                if lhs.isEmpty && !rhs.isEmpty { return false }
+                if !lhs.isEmpty && rhs.isEmpty { return true }
+
+                return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+            }
+
+            for region in sortedRegions {
+                let items = (groupedByRegion[region] ?? []).sorted {
+                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+                }
+
+                let title: String
+                if region.isEmpty {
+                    title = state
+                } else {
+                    title = "\(state) • \(region)"
+                }
+
+                newSections.append((title: title, items: items))
             }
         }
-        
-        // 🔥 THIS is the important part:
-        built.sort { a, b in
-            
-            let aIsUSAState = isUSAStateTitle(a.title)
-            let bIsUSAState = isUSAStateTitle(b.title)
-            
-            // USA states always first
-            if aIsUSAState != bIsUSAState {
-                return aIsUSAState && !bIsUSAState
-            }
-            
-            // Alphabetical inside their group
-            return a.title.localizedCaseInsensitiveCompare(b.title) == .orderedAscending
-        }
-        
-        sections = built
+
+        sections = newSections
+    }
+    private enum CourseRow {
+        case regionHeader(String)
+        case course(CourseProfile)
     }
     private func isUSAStateTitle(_ title: String) -> Bool {
-        // If it's 2 letters and not "USA (No State)", treat as state
-        return title.count == 2 && title != "USA (No State)"
+        if title == "USA (No State)" { return false }
+        if title.count == 2 { return true }
+        if title.hasPrefix("CA — ") { return true }
+        return false
     }
     private func course(at indexPath: IndexPath) -> CourseProfile {
         sections[indexPath.section].items[indexPath.row]
@@ -301,7 +341,6 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         sections[section].items.count
     }
-    
     override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
@@ -312,9 +351,12 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         let c = course(at: indexPath)
         cell.textLabel?.text = c.name
         cell.textLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        print(c.name, c.promo?.type.rawValue ?? "no promo", c.promo?.isActive ?? false)
+        let isSelectedCourse = (c.id == CourseLibrary.shared.selectedCourseID)
 
-        // ✓ Selected course
-        cell.accessoryType = (c.id == CourseLibrary.shared.selectedCourseID) ? .checkmark : .none
+        // Do NOT use accessoryType anymore if showing promo badge
+        cell.accessoryType = .none
+        cell.accessoryView = makeAccessoryView(for: c, isSelected: isSelectedCourse)
 
         // ⭐ Home course
         if c.id == homeCourseUUID {
@@ -334,18 +376,21 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         }
 
         if let state = c.state, !state.isEmpty {
-            parts.append(state)
+            if state == "CA", let region = c.region, !region.isEmpty {
+                parts.append(region)
+            } else {
+                parts.append(state)
+            }
         }
-
+        print(c.name, c.promo?.type.rawValue ?? "no promo", c.promo?.isActive ?? false)
         var iconText = ""
+
+        //if c.hasPhone { iconText += "  📞" }
+       // if c.hasWebsite { iconText += "  🌐" }
+       // if c.hasAddress { iconText += "  📍" }
+       // if c.isApproved { iconText += "  🐺" }
         
-        if c.hasPhone { iconText += "  📞" }
-        if c.hasWebsite { iconText += "  🌐" }
-        if c.hasAddress { iconText += "  📍" }
-        if c.isApproved { iconText += "  🐺" }
-        if c.name == "Cedar Rapids Country Club" {
-            print("DEBUG:", c.phone ?? "nil", c.website ?? "nil", c.address ?? "nil")
-        }
+     
         cell.detailTextLabel?.text = parts.joined(separator: " • ") + iconText
         cell.detailTextLabel?.textColor = .secondaryLabel
         cell.detailTextLabel?.numberOfLines = 2
@@ -428,6 +473,66 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         config.performsFirstActionWithFullSwipe = false
         return config
     }
+    
+    private func promoText(for course: CourseProfile) -> String? {
+        guard let promo = course.promo, promo.isActive else { return nil }
+
+        let kind: String
+        switch promo.type {
+        case .deal: kind = "Deal"
+        case .event: kind = "Event"
+        case .featured: kind = "Featured"
+        }
+
+        if let subtitle = promo.subtitle, !subtitle.isEmpty {
+            return "\(kind): \(promo.title)\n\(subtitle)"
+        } else {
+            return "\(kind): \(promo.title)"
+        }
+    }
+
+    private func makeAccessoryView(for course: CourseProfile, isSelected: Bool) -> UIView? {
+        if let promo = course.promo,
+           promo.isActive,
+           promo.type == .deal {
+            return makeDealBadge(for: promo)
+        }
+
+        guard isSelected else { return nil }
+
+        let iv = UIImageView(image: UIImage(systemName: "checkmark"))
+        iv.tintColor = .systemBlue
+        iv.contentMode = .scaleAspectFit
+        iv.frame = CGRect(x: 0, y: 0, width: 18, height: 18)
+        return iv
+    }
+
+    private func makeDealBadge(for promo: LocationPromo) -> UIView {
+        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 58, height: 24))
+        label.font = .systemFont(ofSize: 10, weight: .bold)
+        label.textAlignment = .center
+        label.layer.cornerRadius = 7
+        label.clipsToBounds = true
+        label.text = "DEAL"
+        label.backgroundColor = .systemGreen
+        label.textColor = .white
+        return label
+    }
+    final class PaddingLabel: UILabel {
+        var textInsets = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+
+        override func drawText(in rect: CGRect) {
+            super.drawText(in: rect.inset(by: textInsets))
+        }
+
+        override var intrinsicContentSize: CGSize {
+            let size = super.intrinsicContentSize
+            return CGSize(
+                width: size.width + textInsets.left + textInsets.right,
+                height: size.height + textInsets.top + textInsets.bottom
+            )
+        }
+    }
     private func showCourseInfo(_ c: CourseProfile) {
         var lines: [String] = []
 
@@ -452,6 +557,12 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         if let website = c.website, !website.isEmpty {
             lines.append("Website: \(website)")
         }
+
+        if let promo = promoText(for: c) {
+            lines.append("")
+            lines.append(promo)
+        }
+
         if c.isApproved {
             lines.append("WolfMore Approved")
         }

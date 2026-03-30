@@ -169,12 +169,15 @@ final class GameViewController: UIViewController {
     }
    
     @IBAction func nassauTapped(_ sender: UIButton) {
-        let vc = storyboard?.instantiateViewController(withIdentifier: "NassauViewController") as! NassauViewController
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "NassauViewController") as! NassauViewController
         vc.gameData = GameManager.shared.currentGame
-        present(vc, animated: true)
+
+        let nav = UINavigationController(rootViewController: vc)
+        present(nav, animated: true)
     }
     @IBOutlet private weak var gameModeSegment: UISegmentedControl!
-
+    @IBOutlet weak var nassauButton: UIButton!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -245,14 +248,20 @@ final class GameViewController: UIViewController {
               
            
         // 👇 Take over back behavior
-        navigationItem.hidesBackButton = true
-        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
-        
+       
         addHoldRulesToGameModeSegment()
-
+       
+            let longPress = UILongPressGestureRecognizer(
+                target: self,
+                action: #selector(showNassauInfo(_:))
+            )
+            longPress.minimumPressDuration = 0.5
+            nassauButton.addGestureRecognizer(longPress)
         
+    
+        navigationItem.backButtonTitle = "Players"
     }
-
+    
 
     deinit {
         NotificationCenter.default.removeObserver(self, name: .reloadUI, object: nil)
@@ -264,7 +273,35 @@ final class GameViewController: UIViewController {
         lp.cancelsTouchesInView = false   // keeps normal taps working
         gameModeSegment.addGestureRecognizer(lp)
     }
-    
+    @objc private func showNassauInfo(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+
+        let message = """
+  Nassau is a side game that runs in parallel with whatever main game you are playing.
+
+  It tracks separate match-play bets for:
+  • Front 9
+  • Back 9
+  • 18-hole total
+
+  Nassau does not replace Wolf, Skins, Hammer, or other formats. It simply runs automtically, alongside them as an additional side game.
+
+  WolfMore uses a default $1 Nassau bet. Players can apply any multiplier they choose to match their group's usual stakes.
+
+  WolfMore automatically starts a Nassau press bet whenever a side falls 2-down. A press creates an additional parallel bet and does not replace the original Nassau bet.
+
+  Press bets apply separately to the Front 9 and Back 9 matches.
+  """
+
+        let alert = UIAlertController(
+            title: "How Nassau Works",
+            message: message,
+            preferredStyle: .alert
+        )
+
+        alert.addAction(UIAlertAction(title: "Got It", style: .default))
+        present(alert, animated: true)
+    }
     @objc private func gameModeSegmentHeld(_ gr: UILongPressGestureRecognizer) {
         guard gr.state == .began else { return }
 
@@ -1484,7 +1521,9 @@ final class GameViewController: UIViewController {
         }
 
         GameManager.shared.update { g in
-            if g.startHole == nil { g.startHole = g.hole }
+            if g.startHole == nil {
+                g.startHole = g.hole
+            }
         }
 
         // 0) get current game / hole
@@ -1500,22 +1539,25 @@ final class GameViewController: UIViewController {
             ? snap.pressedPushedToggleArray[hole]
             : false
 
-        // 1) save scores from UI
+        // 1) save scores from UI + mark hole committed
         GameManager.shared.update { g in
             if g.scores.count != 5 || g.scores.contains(where: { $0.count != 18 }) {
                 g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+            }
+
+            if g.holeCommitted.count != 18 {
+                g.holeCommitted = Array(repeating: false, count: 18)
             }
 
             let seats = min(5, scoreFields.count, g.scores.count)
             for s in 0..<seats {
                 g.scores[s][hole] = Int(scoreFields[s].text ?? "")
             }
+
+            g.holeCommitted[hole] = true
         }
 
-        // mark this hole as officially posted for Nassau
-        holeCommitted[hole] = true
-
-        // recalculate Nassau immediately
+        // 2) recalculate Nassau immediately
         GameManager.shared.update { g in
             if var ns = g.nassauState {
                 NassauEngine.recalculate(state: &ns, gameData: g)
@@ -1523,7 +1565,7 @@ final class GameViewController: UIViewController {
             }
         }
 
-        // 2) press carry-forward
+        // 3) press carry-forward
         if pressOnThisHole {
             GameManager.shared.update { g in
                 guard hole < g.gameHoleDollarsArray.count,
@@ -1541,13 +1583,13 @@ final class GameViewController: UIViewController {
             }
         }
 
-        // 3) compute payouts using GLOBAL umbrella
+        // 4) compute payouts using GLOBAL umbrella
         let payouts = GameManager.shared.computeHolePayout(
             hole: hole,
             umbePressed: umbrellaMuted
         )
 
-        // 4) save payouts
+        // 5) save payouts
         GameManager.shared.update { g in
             if g.playerMoney.count != 5 || g.playerMoney.contains(where: { $0.count != 18 }) {
                 g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 5)
@@ -1559,7 +1601,7 @@ final class GameViewController: UIViewController {
             }
         }
 
-        // 5) paint
+        // 6) paint
         let seatsToPaint = min(5, playerMoneyFields.count, payouts.count)
         for s in 0..<seatsToPaint {
             setMoneyField(playerMoneyFields[s], to: payouts[s])
@@ -1568,7 +1610,7 @@ final class GameViewController: UIViewController {
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
 
-        // 6) debug
+        // 7) debug
         if let g = GameManager.shared.currentGame {
             let seats = min(5, g.scores.count, g.playerNames.count)
 
@@ -1584,7 +1626,36 @@ final class GameViewController: UIViewController {
 
             print("H\(hole + 1)  umbMuted=\(umbrellaMuted)  \(scorePart)  |  $ \(payoutPart)")
         }
+        paintEverythingForCurrentHole()
+        refreshTotalMoneyLabels()
+        refreshHoleValueLabel()
     }
+    private func refreshHoleValueLabel() {
+        guard let g = GameManager.shared.currentGame else {
+            gameDollarsField.text = "$0"
+            return
+        }
+
+        let hole = g.hole
+        guard hole >= 0, hole < g.gameHoleDollarsArray.count else {
+            gameDollarsField.text = "$0"
+            return
+        }
+
+        let value = g.gameHoleDollarsArray[hole]
+
+        gameDollarsField.text = "$\(formatMoney(value))"
+    }
+
+    private func formatMoney(_ value: Double) -> String {
+        if value == floor(value) {
+            return String(Int(value))
+        } else {
+            return String(format: "%.2f", value)
+        }
+    }
+
+    
     @IBAction func statsButtonTapped(_ sender: UIButton) {
         let vc = GameStatsViewController()
         vc.modalPresentationStyle = .overCurrentContext

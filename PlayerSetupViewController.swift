@@ -13,10 +13,11 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet private weak var randomizeButton: UIButton!
     @IBOutlet private weak var goToGameButton: UIButton!
    
+  
     var isInRoundEdit: Bool = false   // ✅ NEW
 
     
-       
+    var gameData: GameData!
 
     // Optional
     @IBOutlet private weak var plusPointDollars: UIButton?
@@ -29,7 +30,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        
         // Ensure we have a game first
         if GameManager.shared.currentGame == nil {
             if !GameManager.shared.loadLastOpened() {
@@ -41,7 +42,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         GameManager.shared.update { g in
             self.ensureModelHasCapacity(&g)
         }
-
+      
         CourseLibrary.shared.seedIfNeeded()
 
         // Sort/retag UI rows 0..4
@@ -75,6 +76,26 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         enforceActivationCap()
         updateGoButtonEnabled()
         refreshRandomizeEnabled()
+      
+    }
+    
+    @IBAction func gameSettingsTapped(_ sender: UIButton) {
+        guard let g = GameManager.shared.currentGame else { return }
+
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "GameSettingsViewController") as! GameSettingsViewController
+        vc.gameData = g
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    @objc private func baseStakeChanged() {
+        guard let g = GameManager.shared.currentGame else { return }
+
+      
+       
+
+       
+
+        GameManager.shared.saveCurrent()
     }
     enum Mode { case preRound, inRound }
        var mode: Mode = .preRound
@@ -110,7 +131,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         // 3) Fallback: just pop to root if we're pushed
         navigationController?.popToRootViewController(animated: animated)
     }
-
+   
     private func pushManagePlayers() {
            let sb = UIStoryboard(name: "Main", bundle: nil)
            let mp = sb.instantiateViewController(withIdentifier: "ManagePlayersVC")
@@ -381,22 +402,46 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         refreshRandomizeEnabled()
         persistEntireSetupFromUI()
     }
+    @IBAction func nassauSettingsTapped(_ sender: UIButton) {
+        guard GameManager.shared.currentGame != nil else { return }
 
-    @IBAction private func randomizePlayersTapped(_ sender: UIButton) {
+        GameManager.shared.update { g in
+            if g.nassauState == nil {
+                g.nassauState = NassauState(
+                    settings: NassauSettings(),
+                    oneVsOneMatches: [],
+                    twoVsTwoMatches: []
+                )
+            }
+        }
+
+        guard let updatedGame = GameManager.shared.currentGame else { return }
+
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "NassauSettingsViewController") as! NassauSettingsViewController
+        vc.gameData = updatedGame
+        navigationController?.pushViewController(vc, animated: true)
+    }
+     @IBAction private func randomizePlayersTapped(_ sender: UIButton) {
         let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
         guard GameManager.shared.canRandomizeTeams, activeCount >= 2 else {
             UIImpactFeedbackGenerator(style: .light).impactOccurred()
             shake(sender)
             return
         }
+
         view.endEditing(true)
 
-        struct Row { var name: String; var hc: Int; var active: Bool }
+        struct Row {
+            var name: String
+            var hc: Int
+            var active: Bool
+        }
 
-        var rows: [Row] = (0..<uiCount).map { i in
+        let rows: [Row] = (0..<uiCount).map { i in
             Row(
                 name: (nameFields[i].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
-                hc:   Int(handicapFields[i].text ?? "") ?? 0,
+                hc: Int(handicapFields[i].text ?? "") ?? 0,
                 active: activeSwitches[i].isOn
             )
         }
@@ -424,6 +469,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         recalcStrokesFromUI()
         updateGoButtonEnabled()
         persistEntireSetupFromUI()
+        rebuildNassauAfterRandomize()
 
         GameManager.shared.canRandomizeTeams = false
         refreshRandomizeEnabled()
@@ -468,21 +514,15 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
     @IBAction private func goToGameTapped(_ sender: Any) {
         if isInRoundEdit {
-              dismiss(animated: true) { [weak self] in
-                  self?.onDone?()
-              }
-              return
-          }
+            dismiss(animated: true) { [weak self] in
+                self?.onDone?()
+            }
+            return
+        }
+
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let game = sb.instantiateViewController(withIdentifier: "GameViewController")
-
-        guard let nav = navigationController else { return }
-        nav.pushViewController(game, animated: true)
-
-        // Remove ManagePlayers so back goes to Home (not ManagePlayers)
-        var vcs = nav.viewControllers
-        vcs.removeAll { $0 is ManagePlayersViewController }
-        nav.setViewControllers(vcs, animated: false)
+        navigationController?.pushViewController(game, animated: true)
     }
 
     // MARK: - Editing hooks
@@ -535,6 +575,34 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
                 g.hcPlayers[i] = Int(handicapFields[i].text ?? "") ?? 0
                 g.playerActivated[i] = activeSwitches[i].isOn
             }
+        }
+    }
+    private func rebuildNassauAfterRandomize() {
+        GameManager.shared.update { g in
+            self.ensureModelHasCapacity(&g)
+
+            let existingSettings = g.nassauState?.settings ?? NassauSettings()
+
+            var newState = NassauEngine.makeDefaultState(
+                playerNames: g.playerNames,
+                activeFlags: g.playerActivated
+            )
+
+            newState.settings = existingSettings
+            newState.oneVsOneMatches = NassauEngine.makeAllOneVsOneMatches(
+                playerNames: g.playerNames,
+                activeFlags: g.playerActivated,
+                scoringMode: .net,
+                stake: existingSettings.baseStake
+            )
+            newState.twoVsTwoMatches = NassauEngine.makeDefaultTwoVsTwoMatches(
+                playerNames: g.playerNames,
+                activeFlags: g.playerActivated,
+                scoringMode: .net,
+                stake: existingSettings.baseStake
+            )
+
+            g.nassauState = newState
         }
     }
 

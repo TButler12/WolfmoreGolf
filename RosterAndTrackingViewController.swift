@@ -409,7 +409,9 @@ final class RosterAndTrackingViewController: UIViewController,
                 }
             }
         }
-
+        GameManager.shared.update { g in
+            g.gameHoleDollarsArray = Array(repeating: Double(g.baseGameStake), count: 18)
+        }
         performSegue(withIdentifier: "showGame", sender: self)
     }
 
