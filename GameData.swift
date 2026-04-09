@@ -9,11 +9,13 @@ import Foundation
 
 struct GameData: Codable {
    
+    var scorePerHole: [[Int?]] = []
     var umbrellaMode: Bool = false
     var baseGameStake: Int = 2
     var holeCommitted: [Bool] = Array(repeating: false, count: 18)
     
     var nassauState: NassauState?
+    var skinsState: SkinsState?
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: 18)
 
@@ -95,7 +97,20 @@ struct GameData: Codable {
     var isRerollOn: Bool = false
     var isAlone:    Bool = false
 
+    var fairwayHit: [[Bool?]] = Array(
+        repeating: Array(repeating: nil, count: 18),
+        count: 5
+    )
 
+    var girHit: [[Bool?]] = Array(
+        repeating: Array(repeating: nil, count: 18),
+        count: 5
+    )
+
+    var puttsPerHole: [[Int?]] = Array(
+        repeating: Array(repeating: nil, count: 18),
+        count: 5
+    )
     // MARK: - Course passthrough
 
     var courseParToPass: [Int] {
@@ -128,6 +143,9 @@ struct GameData: Codable {
         pad(&hammerCountPerHole!, with: 0)
         pad(&wolfPlayerPerHole!, with: nil as Int?)
         pad(&wolfWentAlonePerHole!, with: false)
+        if skinsState == nil {
+            skinsState = SkinsEngine.makeDefaultState()
+        }
     }
     
 

@@ -13,13 +13,12 @@ final class TextGroupStore {
 
     private let key = "wolfmore.textgroups.v1"
 
-    private var groups: [TextGroup] = []
-
+   
     private init() {
         load()
     }
-
-    // MARK: - Public
+    private(set) var groups: [TextGroup] = []
+   
 
     func allSorted() -> [TextGroup] {
         groups.sorted {

@@ -21,7 +21,13 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
     @IBOutlet private weak var proShopButton: UIButton!
     @IBOutlet private weak var drinkCartButton: UIButton!
     @IBOutlet private weak var coordinatorButton: UIButton!
-
+    @IBOutlet private weak var todaysGroupButton: UIButton!
+    @IBOutlet private weak var favoritesButton: UIButton!
+    @IBOutlet private weak var customGroupsButton: UIButton!
+    @IBOutlet private weak var allFriendsButton: UIButton?
+    @IBOutlet private weak var editServiceNumbersButton: UIButton!
+    @IBOutlet private weak var groupsSectionLabel: UILabel?
+    @IBOutlet private weak var servicesSectionLabel: UILabel?
     @IBOutlet private weak var trackedFriendsButton: UIButton!
 
     // MARK: - Lifecycle

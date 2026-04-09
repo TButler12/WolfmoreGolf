@@ -25,31 +25,78 @@ final class ContactsViewController: UITableViewController {
         let stored = ProfileStore.homeCourseID
         return stored.isEmpty ? "HOME-COURSE" : stored
     }
-
-    // MARK: - Lifecycle
+    
+    var editingGroup: TextGroup?
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        title = "Contacts"
         tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.keyboardDismissMode = .onDrag
         tableView.tableFooterView = UIView()
 
-        navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(title: "New Group",
-                            style: .plain,
-                            target: self,
-                            action: #selector(newGroupTapped)),
-            UIBarButtonItem(barButtonSystemItem: .add,
-                            target: self,
-                            action: #selector(addTapped))
-        ]
         navigationItem.leftItemsSupplementBackButton = true
         navigationItem.leftBarButtonItem =
             UIBarButtonItem(title: "Import",
                             style: .plain,
                             target: self,
                             action: #selector(importTapped))
+        if let group = editingGroup {
+            title = "Edit Group"
+            isBuildingGroup = true
+            selectedGroupMemberIDs = Set(group.memberIDs)
+
+            navigationItem.leftBarButtonItems = [
+                UIBarButtonItem(title: "Delete",
+                                style: .plain,
+                                target: self,
+                                action: #selector(deleteEditingGroupTapped)),
+                UIBarButtonItem(title: "Import",
+                                style: .plain,
+                                target: self,
+                                action: #selector(importTapped))
+            ]
+
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(title: "Save",
+                                style: .done,
+                                target: self,
+                                action: #selector(newGroupTapped)),
+                UIBarButtonItem(title: "Cancel",
+                                style: .plain,
+                                target: self,
+                                action: #selector(cancelNewGroupTapped))
+            ]
+        }
+        if let group = editingGroup {
+            title = "Edit Group"
+            isBuildingGroup = true
+            selectedGroupMemberIDs = Set(group.memberIDs)
+
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(title: "Save",
+                                style: .done,
+                                target: self,
+                                action: #selector(newGroupTapped)),
+                UIBarButtonItem(title: "Cancel",
+                                style: .plain,
+                                target: self,
+                                action: #selector(cancelNewGroupTapped))
+            ]
+        } else {
+            title = "Contacts"
+
+            navigationItem.rightBarButtonItems = [
+                UIBarButtonItem(title: "Create Group",
+                                style: .plain,
+                                target: self,
+                                action: #selector(newGroupTapped)),
+                UIBarButtonItem(barButtonSystemItem: .add,
+                                target: self,
+                                action: #selector(addTapped))
+            ]
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -73,7 +120,24 @@ final class ContactsViewController: UITableViewController {
         configure(cell, with: friend)
         return cell
     }
+    @objc private func deleteEditingGroupTapped() {
+        guard let group = editingGroup else { return }
 
+        let ac = UIAlertController(
+            title: "Delete Group",
+            message: "Delete \"\(group.name)\"?",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            TextGroupStore.shared.delete(id: group.id)
+            self?.navigationController?.popViewController(animated: true)
+        })
+
+        present(ac, animated: true)
+    }
     private func configure(_ cell: UITableViewCell, with friend: Friend) {
         cell.textLabel?.text = friend.name
 
@@ -158,7 +222,70 @@ final class ContactsViewController: UITableViewController {
         cfg.performsFirstActionWithFullSwipe = false
         return cfg
     }
+    private func importSelectedContact(name: String, phone: String) {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let digits = phone.filter(\.isNumber)
 
+        guard !trimmedName.isEmpty else { return }
+
+        let existingHC = FriendStore.shared.friends.first(where: {
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                .caseInsensitiveCompare(trimmedName) == .orderedSame
+        })?.defaultHC
+
+        showImportHCPrompt(name: trimmedName, phone: digits, prefillHC: existingHC)
+    }
+
+    private func showImportHCPrompt(name: String, phone: String, prefillHC: Int?) {
+        let ac = UIAlertController(
+            title: "Handicap",
+            message: "Enter HC for \(name)",
+            preferredStyle: .alert
+        )
+
+        ac.addTextField { tf in
+            tf.placeholder = "HC (optional)"
+            tf.keyboardType = .numberPad
+            if let prefillHC, prefillHC > 0 {
+                tf.text = "\(prefillHC)"
+            }
+        }
+
+        ac.addAction(UIAlertAction(title: "Skip", style: .cancel) { [weak self] _ in
+            self?.upsertImportedFriend(name: name, phone: phone, hc: nil)
+        })
+
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            let raw = (ac.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+            let hc = Int(raw)
+            self?.upsertImportedFriend(name: name, phone: phone, hc: hc)
+        })
+
+        present(ac, animated: true)
+    }
+
+    private func upsertImportedFriend(name: String, phone: String, hc: Int?) {
+        if var existing = FriendStore.shared.friends.first(where: {
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                .caseInsensitiveCompare(name) == .orderedSame
+        }) {
+            if let hc {
+                existing.defaultHC = max(0, hc)
+            }
+            if !phone.isEmpty {
+                existing.phone = phone
+            }
+            FriendStore.shared.upsert(existing)
+        } else {
+            let friend = Friend(
+                name: name,
+                defaultHC: max(0, hc ?? 0),
+                phone: phone
+            )
+            FriendStore.shared.upsert(friend)
+        }
+    }
     // MARK: - Favorites
     private func makeFavoriteButton(isFavorite: Bool, friendID: UUID) -> UIButton {
         let button = UIButton(type: .system)
@@ -199,7 +326,7 @@ final class ContactsViewController: UITableViewController {
         selectedGroupMemberIDs.removeAll()
 
         navigationItem.rightBarButtonItems = [
-            UIBarButtonItem(title: "New Group",
+            UIBarButtonItem(title: "Add Group",
                             style: .plain,
                             target: self,
                             action: #selector(newGroupTapped)),
@@ -224,16 +351,17 @@ final class ContactsViewController: UITableViewController {
             return
         }
 
+        let isEditing = (editingGroup != nil)
+
         let ac = UIAlertController(
-            title: "New Custom Group",
-            message: "Enter a group name.",
+            title: isEditing ? "Edit Group" : "New Custom Group",
+            message: isEditing ? "Update group name" : "Enter a group name.",
             preferredStyle: .alert
         )
 
-        ac.addTextField {
-            $0.placeholder = "Group name"
-            $0.autocapitalizationType = .words
-            $0.clearButtonMode = .whileEditing
+        ac.addTextField { [weak self] tf in
+            tf.placeholder = "Group name"
+            tf.text = self?.editingGroup?.name   // 👈 prefill
         }
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -247,13 +375,24 @@ final class ContactsViewController: UITableViewController {
             guard !finalName.isEmpty else { return }
 
             let ids = Array(self.selectedGroupMemberIDs)
-            TextGroupStore.shared.upsert(TextGroup(name: finalName, memberIDs: ids))
 
+            if var group = self.editingGroup {
+                // 🔥 EDIT EXISTING
+                group.name = finalName
+                group.memberIDs = ids
+                TextGroupStore.shared.upsert(group)
+            } else {
+                // 🔥 CREATE NEW
+                TextGroupStore.shared.upsert(TextGroup(name: finalName, memberIDs: ids))
+            }
+
+            // RESET STATE
             self.isBuildingGroup = false
+            self.editingGroup = nil
             self.selectedGroupMemberIDs.removeAll()
 
             self.navigationItem.rightBarButtonItems = [
-                UIBarButtonItem(title: "New Group",
+                UIBarButtonItem(title: "Add Group",
                                 style: .plain,
                                 target: self,
                                 action: #selector(self.newGroupTapped)),
@@ -264,18 +403,13 @@ final class ContactsViewController: UITableViewController {
 
             self.title = "Contacts"
             self.tableView.reloadData()
-
-            let done = UIAlertController(
-                title: "Saved",
-                message: "\"\(finalName)\" was added to Custom Groups.",
-                preferredStyle: .alert
-            )
-            done.addAction(UIAlertAction(title: "OK", style: .default))
-            self.present(done, animated: true)
+            self.navigationController?.popViewController(animated: true)
         })
 
         present(ac, animated: true)
     }
+    
+    
     @objc private func favoriteTapped(_ sender: UIButton) {
         guard
             let idString = sender.accessibilityIdentifier,
@@ -307,7 +441,7 @@ final class ContactsViewController: UITableViewController {
             guard let self else { return }
             let name = ac.textFields?[0].text ?? ""
             let phone = ac.textFields?[1].text ?? ""
-            self.handleNewOrImportedFriend(named: name, phone: phone)
+            self.importSelectedContact(name: name, phone: phone)
         })
 
         present(ac, animated: true)
@@ -463,6 +597,9 @@ extension ContactsViewController: CNContactPickerDelegate {
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         let raw = phone.stringValue
-        handleNewOrImportedFriend(named: name, phone: raw)
+
+        picker.dismiss(animated: true) { [weak self] in
+            self?.importSelectedContact(name: name, phone: raw)
+        }
     }
 }

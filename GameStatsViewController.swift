@@ -33,7 +33,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     private let closeBtn = UIButton(type: .system)
     private let sendBtn = UIButton(type: .system)
     private let historyBtn = UIButton(type: .system)
-
+    private let lastRoundLabel = UILabel()
     // MARK: - State
 
     private var rows: [Row] = []
@@ -130,13 +130,13 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             sendBtn.bottomAnchor.constraint(equalTo: historyBtn.topAnchor, constant: -10),
             sendBtn.heightAnchor.constraint(equalToConstant: 52),
 
-            tableView.topAnchor.constraint(equalTo: closeBtn.bottomAnchor, constant: 4),
+            tableView.topAnchor.constraint(equalTo: closeBtn.bottomAnchor, constant: 12),
             tableView.leadingAnchor.constraint(equalTo: panel.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: panel.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: sendBtn.topAnchor, constant: -10),
         ])
     }
-
+  
     private func setupHeader() {
         header.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 44)
         tableView.tableHeaderView = header
@@ -355,6 +355,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
 
         rows = built
         applySortAndReload()
+        //buildLastRoundText()
     }
 
     private func totalScoreForSeat(_ seat: Int, in g: GameData) -> Int? {

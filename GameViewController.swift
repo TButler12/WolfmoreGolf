@@ -251,12 +251,12 @@ final class GameViewController: UIViewController {
        
         addHoldRulesToGameModeSegment()
        
-            let longPress = UILongPressGestureRecognizer(
-                target: self,
-                action: #selector(showNassauInfo(_:))
-            )
-            longPress.minimumPressDuration = 0.5
-            nassauButton.addGestureRecognizer(longPress)
+         //   let longPress = UILongPressGestureRecognizer(
+          //      target: self,
+           //     action: #selector(showNassauInfo(_:))
+         //   )
+         //   longPress.minimumPressDuration = 0.5
+         //   nassauButton.addGestureRecognizer(longPress)
         
     
         navigationItem.backButtonTitle = "Players"
@@ -762,6 +762,17 @@ final class GameViewController: UIViewController {
             $0.textColor = .label
             $0.backgroundColor = .clear
         }
+    }
+    @IBAction func skinsTapped(_ sender: UIButton) {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+
+        guard let vc = sb.instantiateViewController(withIdentifier: "SkinsViewController") as? SkinsViewController else {
+            print("❌ Could not load SkinsViewController")
+            return
+        }
+
+        vc.gameData = GameManager.shared.currentGame
+        navigationController?.pushViewController(vc, animated: true)
     }
     @IBAction private func gameModeChanged(_ sender: UISegmentedControl) {
         let newType: GameType
@@ -1519,7 +1530,7 @@ final class GameViewController: UIViewController {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             sender.isEnabled = true
         }
-
+        
         GameManager.shared.update { g in
             if g.startHole == nil {
                 g.startHole = g.hole
@@ -1625,11 +1636,137 @@ final class GameViewController: UIViewController {
                 .joined(separator: "  ")
 
             print("H\(hole + 1)  umbMuted=\(umbrellaMuted)  \(scorePart)  |  $ \(payoutPart)")
+            if let g = GameManager.shared.currentGame {
+                print("Hole \(hole + 1) Stats:")
+                print("FW:", g.fairwayHit.map { $0[hole] })
+                print("GIR:", g.girHit.map { $0[hole] })
+                print("PUTTS:", g.puttsPerHole.map { $0[hole] })
+            }
         }
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
         refreshHoleValueLabel()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.presentStatsPrompt()
+        }
     }
+    private func presentStatsPrompt() {
+        let ac = UIAlertController(
+            title: "Add Hole Stats?",
+            message: "Track Fairway, GIR, and Putts for this hole.",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Add Stats", style: .default) { _ in
+            self.openHoleStatsEntry()
+        })
+
+        ac.addAction(UIAlertAction(title: "Skip", style: .cancel))
+
+        present(ac, animated: true)
+    }
+    private func openHoleStatsEntry() {
+        let vc = HoleStatsEntryViewController()
+
+        if let game = GameManager.shared.currentGame {
+            let hole = game.hole
+
+            let myName = (ProfileStore.name ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+
+            let seats = 0..<min(game.playerNames.count, game.playerActivated.count)
+
+            if let playerIndex = seats.first(where: { i in
+                game.playerActivated[i] &&
+                game.playerNames[i]
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .caseInsensitiveCompare(myName) == .orderedSame
+            }) {
+                vc.existingFairway =
+                    playerIndex < game.fairwayHit.count &&
+                    hole < game.fairwayHit[playerIndex].count
+                    ? game.fairwayHit[playerIndex][hole]
+                    : nil
+
+                vc.existingGIR =
+                    playerIndex < game.girHit.count &&
+                    hole < game.girHit[playerIndex].count
+                    ? game.girHit[playerIndex][hole]
+                    : nil
+
+                vc.existingPutts =
+                    playerIndex < game.puttsPerHole.count &&
+                    hole < game.puttsPerHole[playerIndex].count
+                    ? game.puttsPerHole[playerIndex][hole]
+                    : nil
+                vc.existingWasSaved =
+                    vc.existingFairway != nil ||
+                    vc.existingGIR != nil ||
+                    vc.existingPutts != nil
+            }
+        }
+        vc.modalPresentationStyle = .overFullScreen
+        vc.modalTransitionStyle = .crossDissolve
+
+        vc.onSave = { [weak self] fairway, gir, putts, score in
+            guard let self else { return }
+
+            GameManager.shared.update { g in
+                let hole = g.hole
+                guard (0..<18).contains(hole) else { return }
+
+                let myName = (ProfileStore.name ?? "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+                let seats = 0..<min(g.playerNames.count, g.playerActivated.count)
+
+                guard let playerIndex = seats.first(where: { i in
+                    g.playerActivated[i] &&
+                    g.playerNames[i]
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                        .caseInsensitiveCompare(myName) == .orderedSame
+                }) else {
+                    return
+                }
+
+                while g.fairwayHit.count <= playerIndex {
+                    g.fairwayHit.append(Array(repeating: nil, count: 18))
+                }
+                while g.girHit.count <= playerIndex {
+                    g.girHit.append(Array(repeating: nil, count: 18))
+                }
+                while g.puttsPerHole.count <= playerIndex {
+                    g.puttsPerHole.append(Array(repeating: nil, count: 18))
+                }
+                while g.scorePerHole.count <= playerIndex {
+                    g.scorePerHole.append(Array(repeating: nil, count: 18))
+                }
+
+                if g.fairwayHit[playerIndex].count < 18 {
+                    g.fairwayHit[playerIndex] += Array(repeating: nil, count: 18 - g.fairwayHit[playerIndex].count)
+                }
+                if g.girHit[playerIndex].count < 18 {
+                    g.girHit[playerIndex] += Array(repeating: nil, count: 18 - g.girHit[playerIndex].count)
+                }
+                if g.puttsPerHole[playerIndex].count < 18 {
+                    g.puttsPerHole[playerIndex] += Array(repeating: nil, count: 18 - g.puttsPerHole[playerIndex].count)
+                }
+                if g.scorePerHole[playerIndex].count < 18 {
+                    g.scorePerHole[playerIndex] += Array(repeating: nil, count: 18 - g.scorePerHole[playerIndex].count)
+                }
+
+                g.fairwayHit[playerIndex][hole] = fairway
+                g.girHit[playerIndex][hole] = gir
+                g.puttsPerHole[playerIndex][hole] = putts
+                g.scorePerHole[playerIndex][hole] = score
+            }
+
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
+        }
+        present(vc, animated: true)
+    }
+    
     private func refreshHoleValueLabel() {
         guard let g = GameManager.shared.currentGame else {
             gameDollarsField.text = "$0"
@@ -1655,6 +1792,15 @@ final class GameViewController: UIViewController {
         }
     }
 
+    @IBAction func statsTapped(_ sender: UIButton) {
+        let vc = StatsContainerViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet // or .fullScreen
+        
+        present(nav, animated: true)
+        
+        
+    }
     
     @IBAction func statsButtonTapped(_ sender: UIButton) {
         let vc = GameStatsViewController()

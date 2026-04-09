@@ -21,6 +21,12 @@ struct TeeInfo: Codable, Equatable {
         self.slope = slope
     }
 }
+enum CourseRouting: String, Codable {
+    case eighteenStandard
+    case loopAtoB
+    case loopBtoC
+    case loopAtoC
+}
 struct CourseProfile: Codable, Equatable {
     var id: UUID
     var name: String
@@ -39,7 +45,8 @@ struct CourseProfile: Codable, Equatable {
     var venueType: VenueType?
     var resortBrand: String?
     var promo: LocationPromo?
-
+    var routing: CourseRouting = .eighteenStandard
+    
     init(
         id: UUID = UUID(),
         name: String,
@@ -57,12 +64,13 @@ struct CourseProfile: Codable, Equatable {
         isWolfApproved: Bool? = nil,
         venueType: VenueType? = nil,
         resortBrand: String? = nil,
-        promo: LocationPromo? = nil
+        promo: LocationPromo? = nil,
+        routing: CourseRouting = .eighteenStandard
     ) {
         self.id = id
         self.name = name
-        self.pars = Array(pars.prefix(18))
-        self.hcs = Array(hcs.prefix(18))
+        self.pars = pars
+        self.hcs = hcs
         self.tees = tees
         self.country = country
         self.state = state
@@ -76,8 +84,10 @@ struct CourseProfile: Codable, Equatable {
         self.venueType = venueType
         self.resortBrand = resortBrand
         self.promo = promo
+        self.routing = routing
     }
-
+    
+    
 }
 // =======================================================
 // MARK: - Built-in raw data (pars / hcs / optional tees)
@@ -126,22 +136,7 @@ private let CHAMPIONGATE_BLENDED_BLACK_ID = UUID(uuidString: "55555555-5555-5555
 let CHAMPIONGATE_BLENDED_BLACK_PARS: [Int] = [4,3,4,5,4,3,4,4,5, 5,3,4,4,3,4,4,4,5]
 let CHAMPIONGATE_BLENDED_BLACK_HCS:  [Int] = [7,15,3,1,11,17,13,9,5, 14,18,2,10,16,6,8,4,12]
 
-// MARK: Butler CC (Blue)
-// MARK: Butler National (Blue)  — Par 71 (from your Blue card: 6,970 yds)
-private let BUTLER_CC_BLUE_ID = UUID(uuidString: "66666666-6666-6666-6666-666666666666")!
 
-let BUTLER_CC_BLUE_PARS: [Int] = [
-    4,5,4,3,4,3,4,4,4,   // OUT = 35
-    3,4,5,4,4,3,5,4,4    // IN  = 36  ✅ hole 16 is 5
-]
-let BUTLER_CC_BLUE_HCS:  [Int] = [
-    3,9,5,17,11,15,7,13,1,
-    12,14,6,4,8,16,18,2,10
-]
-// Optional tee metadata you *do* have
-let BUTLER_CC_BLUE_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Blue", yardage: 6970, rating: nil, slope: nil)
-]
 // MARK: Butler National (BUTLER / Championship) — Oak Brook, IL
 // Par 71 | 7,550 yds | Rating 78.4 | Slope 155
 private let BUTLER_NATIONAL_BUTLER_TEE_ID = UUID(uuidString: "A6E1C1F2-4E2B-4C4C-9B1A-2B3C4D5E6F70")!
@@ -216,10 +211,120 @@ private let TROON_NORTH_MONUMENT_ID = UUID(uuidString: "0B8D8A31-7E7A-4C5B-9B40-
 let TROON_NORTH_MONUMENT_PARS: [Int] = [4,3,5,4,4,4,3,4,5, 4,5,4,3,5,4,3,4,3]
 let TROON_NORTH_MONUMENT_HCS:  [Int] = [5,17,3,11,1,13,15,9,7, 10,6,12,16,2,14,18,4,8]
 
-// MARK: TPC Sawgrass (Stadium)
+// MARK: - TPC Sawgrass (Stadium)
+
 private let TPC_SAWGRASS_STADIUM_ID = UUID(uuidString: "7D9F0A2B-6B7A-4D6E-8E0D-8A6A1E93C102")!
-let TPC_SAWGRASS_STADIUM_PARS: [Int] = [4,5,3,4,4,4,4,3,5, 4,5,4,3,4,4,5,3,4]
-let TPC_SAWGRASS_STADIUM_HCS:  [Int] = [11,15,17,9,3,13,1,7,5, 12,8,16,18,4,6,10,14,2]
+
+let TPC_SAWGRASS_STADIUM_PARS: [Int] = [
+    4,5,3,4,4,4,4,3,5,
+    4,5,4,3,4,4,5,3,4
+]
+
+let TPC_SAWGRASS_STADIUM_HCS: [Int] = [
+    11,15,17,9,3,13,1,7,5,
+    12,8,16,18,4,6,10,14,2
+]
+let TPC_SAWGRASS_STADIUM_TEES: [TeeInfo] = [
+
+    TeeInfo(
+        teeName: "THE PLAYERS",
+        yardage: 7560,
+        rating: 74.5,
+        slope: 145
+    ),
+
+    TeeInfo(
+        teeName: "Blue",
+        yardage: 7300,
+        rating: 73.8,
+        slope: 148
+    ),
+
+    TeeInfo(
+        teeName: "B&W Blended",
+        yardage: 7075,
+        rating: 72.6,
+        slope: 144
+    ),
+
+    TeeInfo(
+        teeName: "White",
+        yardage: 6700,
+        rating: 70.8,
+        slope: 138
+    ),
+
+    TeeInfo(
+        teeName: "W&G Blended",
+        yardage: 6400,
+        rating: 69.2,
+        slope: 132
+    ),
+
+    TeeInfo(
+        teeName: "Green",
+        yardage: 6100,
+        rating: 67.8,
+        slope: 126
+    )
+]
+// MARK: - TPC Sawgrass (Dye’s Valley)
+
+private let TPC_SAWGRASS_DYES_VALLEY_ID = UUID(uuidString: "C1A9E3B4-8F21-4A7E-9B44-5F1C2D9A7301")!
+
+let TPC_SAWGRASS_DYES_VALLEY_PARS: [Int] = [
+    5,3,4,4,3,4,4,5,4,
+    4,3,4,4,3,4,5,5,4
+]
+
+let TPC_SAWGRASS_DYES_VALLEY_HCS: [Int] = [
+    7,11,17,5,15,1,13,9,3,
+    4,6,14,8,12,16,10,18,2
+]
+let TPC_SAWGRASS_DYES_VALLEY_TEES: [TeeInfo] = [
+
+    TeeInfo(
+        teeName: "TPC",
+        yardage: 6847,
+        rating: 74.0,
+        slope: 134
+    ),
+
+    TeeInfo(
+        teeName: "Blue",
+        yardage: 6502,
+        rating: 72.1,
+        slope: 131
+    ),
+
+    TeeInfo(
+        teeName: "B&W Blended",
+        yardage: 6272,
+        rating: 71.0,
+        slope: 128
+    ),
+
+    TeeInfo(
+        teeName: "White",
+        yardage: 6079,
+        rating: 70.1,
+        slope: 127
+    ),
+
+    TeeInfo(
+        teeName: "W&G Blended",
+        yardage: 5526,
+        rating: 67.8,
+        slope: 117
+    ),
+
+    TeeInfo(
+        teeName: "Green",
+        yardage: 5126,
+        rating: 65.9,
+        slope: 113
+    )
+]
 
 // MARK: Bay Hill (Challenger/Champion)
 private let BAY_HILL_CHALLENGER_CHAMPION_ID = UUID(uuidString: "2E6C1D5A-ACB6-4E47-9F09-2B7E0C52A203")!
@@ -229,14 +334,74 @@ let BAY_HILL_CHALLENGER_CHAMPION_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green", yardage: 7409, rating: 76.4, slope: 138)
 ]
 
-// MARK: Medinah CC (Course #3) — Gold  ✅ RE-ADDED
+// MARK: - Medinah Country Club (Course #3)
+
 private let MEDINAH_CC_3_ID = UUID(uuidString: "9A1C0F37-9B11-4E2C-8D49-7A5A6E6F2404")!
-let MEDINAH_CC_3_PARS: [Int] = [4,3,4,4,5,4,5,4,4, 5,3,4,3,4,4,4,3,5]
-let MEDINAH_CC_3_HCS:  [Int] = [13,15,11,3,5,7,1,17,9, 2,16,8,14,10,4,12,18,6]
-let MEDINAH_CC_3_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Gold", yardage: 7564, rating: 76.8, slope: 143)
+
+let MEDINAH_CC_3_PARS: [Int] = [
+    4,3,4,4,5,4,5,4,4,
+    5,3,4,3,4,4,4,3,5
 ]
 
+let MEDINAH_CC_3_HCS: [Int] = [
+    13,15,11,3,5,7,1,17,9,
+    2,16,8,14,10,4,12,18,6
+]
+
+let MEDINAH_CC_3_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 7564,
+        rating: 76.8,
+        slope: 143
+    )
+]
+
+// MARK: - Medinah Country Club (Course #2)
+
+private let MEDINAH_CC_2_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000102")!
+
+let MEDINAH_CC_2_PARS: [Int] = [
+    4,4,4,5,4,3,5,3,4,
+    4,4,3,4,4,3,5,4,5
+]
+
+let MEDINAH_CC_2_HCS: [Int] = [
+    11,3,7,1,9,17,5,13,15,
+    12,2,18,8,14,16,4,6,10
+]
+
+let MEDINAH_CC_2_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6412,
+        rating: 70.6,
+        slope: 126
+    )
+]
+
+// MARK: - Medinah Country Club (Course #1)
+
+private let MEDINAH_CC_1_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000101")!
+
+let MEDINAH_CC_1_PARS: [Int] = [
+    5,4,4,4,3,4,3,4,5,
+    4,4,4,4,4,3,4,5,3
+]
+
+let MEDINAH_CC_1_HCS: [Int] = [
+    9,13,17,3,11,1,15,5,7,
+    12,8,6,18,10,16,2,4,14
+]
+
+let MEDINAH_CC_1_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6895,
+        rating: 73.5,
+        slope: 138
+    )
+]
 // MARK: Troon North (Pinnacle)
 private let TROON_NORTH_PINNACLE_ID = UUID(uuidString: "0E3D4F5A-8B8E-4C2F-A8B7-6A1E0B2C8C11")!
 let TROON_NORTH_PINNACLE_PARS: [Int] = [4,4,4,4,5,3,4,3,4, 4,5,4,3,5,4,3,4,4]
@@ -530,6 +695,19 @@ private let WATERVILLE_ID = UUID(uuidString: "D101A001-0000-0000-0000-0000000000
 let WATERVILLE_PARS: [Int] = [4,4,3,5,4,4, 5,3,4, 4,5,4, 4,3,4, 4,4,5]
 let WATERVILLE_HCS:  [Int] = [13,5,17,3,11,1, 15,7,9, 6,2,14, 16,10,8, 18,12,4]
 
+// MARK: - Lahinch Golf Club (Old Course)
+private let LAHINCH_OLD_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000001")!
+
+let LAHINCH_OLD_PARS: [Int] = [
+    4,3,4,5,4,3,4,5,4,
+    4,4,5,3,4,4,4,4,4
+]
+
+let LAHINCH_OLD_HCS: [Int] = [
+    8,14,4,18,16,2,12,10,6,
+    13,5,9,17,15,1,7,3,11
+]
+
 // =======================================================
 // MARK: - ADD THESE BUILT-INS (from your screenshots)
 // =======================================================
@@ -549,6 +727,154 @@ let ESKER_HILLS_HCS: [Int] = [
     18,4,6,
     14,10,8,
     16,2,12
+]
+// MARK: - St Andrews Links (Old Course)
+
+private let ST_ANDREWS_OLD_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000002")!
+
+let ST_ANDREWS_OLD_PARS: [Int] = [
+    4,4,4,4,5,4,4,3,4,
+    4,3,4,4,5,4,4,4,4
+]
+
+let ST_ANDREWS_OLD_HCS: [Int] = [
+    11,3,7,1,13,9,5,15,17,
+    18,6,14,2,12,8,10,4,16
+]
+
+let ST_ANDREWS_OLD_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Championship",
+        yardage: 7190,
+        rating: 75.7,
+        slope: 143
+    )
+]
+// MARK: - Muirfield (The Honourable Company of Edinburgh Golfers)
+
+private let MUIRFIELD_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000003")!
+
+let MUIRFIELD_PARS: [Int] = [
+    4,4,4,3,4,4,3,5,4,
+    4,4,5,3,4,4,3,4,5
+]
+
+let MUIRFIELD_HCS: [Int] = [
+    9,5,13,11,15,1,7,17,3,
+    10,4,16,2,14,6,18,8,12
+]
+
+let MUIRFIELD_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Championship",
+        yardage: 7245,
+        rating: 73.8,
+        slope: 142
+    )
+]
+private let TURNBERRY_AILSA_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000004")!
+
+let TURNBERRY_AILSA_PARS: [Int] = [
+    4,4,4,3,5,3,5,4,3,
+    5,3,4,4,5,3,4,4,4
+]
+
+let TURNBERRY_AILSA_HCS: [Int] = [
+    6,10,4,16,8,18,12,2,14,
+    9,15,3,13,11,17,1,5,7
+]
+
+let TURNBERRY_AILSA_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7489,
+        rating: 70.0,
+        slope: 113
+    )
+]
+private let TURNBERRY_KRTB_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000005")!
+
+let TURNBERRY_KRTB_PARS: [Int] = [
+    5,3,4,4,4,3,4,5,4,
+    3,5,3,4,5,4,3,4,5
+]
+
+let TURNBERRY_KRTB_HCS: [Int] = [
+    8,16,18,6,4,14,10,12,2,
+    17,5,13,7,9,3,15,1,11
+]
+
+let TURNBERRY_KRTB_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7203,
+        rating: 0.0,
+        slope: 0
+    )
+]
+private let SUNNINGDALE_OLD_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000006")!
+
+let SUNNINGDALE_OLD_PARS: [Int] = [
+    5,4,4,3,4,4,4,3,4,
+    4,4,4,3,5,3,4,4,4
+]
+
+let SUNNINGDALE_OLD_HCS: [Int] = [
+    8,4,12,16,2,10,6,18,14,
+    7,15,1,17,5,11,3,13,9
+]
+let SUNNINGDALE_OLD_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Championship",
+        yardage: 6660,
+        rating: 70.0,
+        slope: 113
+    ),
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6820,
+        rating: 73.7,
+        slope: 134
+    )
+]
+private let ROYAL_DORNOCH_CHAMP_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000007")!
+
+let ROYAL_DORNOCH_CHAMP_PARS: [Int] = [
+    4,3,4,4,4,3,4,4,5,
+    3,4,5,3,4,4,4,4,4
+]
+
+let ROYAL_DORNOCH_CHAMP_HCS: [Int] = [
+    12,6,14,4,18,8,2,16,10,
+    11,3,7,15,1,17,5,13,9
+]
+
+let ROYAL_DORNOCH_CHAMP_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Blue",
+        yardage: 6799,
+        rating: 0.0,   // not shown → leave 0
+        slope: 0
+    )
+]
+private let ROYAL_ST_GEORGES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000008")!
+
+let ROYAL_ST_GEORGES_PARS: [Int] = [
+    4,4,3,4,4,3,5,4,4,
+    4,3,4,4,5,4,3,4,4
+]
+
+let ROYAL_ST_GEORGES_HCS: [Int] = [
+    10,8,16,2,6,18,14,4,12,
+    9,7,15,3,13,1,17,5,11
+]
+let ROYAL_ST_GEORGES_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Championship",
+        yardage: 7204,
+        rating: 75.2,
+        slope: 138
+    )
 ]
 
 // MARK: Geneva National – Player
@@ -1241,21 +1567,49 @@ let PINEHURST_NO10_BLUE_TEES: [TeeInfo] = [
 // MARK: Gamble Sands — Medal — Brewster, WA
 // Par 72 | 7,184 yds | Rating 73.7 | Slope 125 | Type: Daily-Fee | Architect: David McLay Kidd
 
-private let GAMBLE_SANDS_MEDAL_ID = UUID(uuidString: "E1A00001-0000-0000-0000-000000000003")!
+private let GAMBLE_SANDS_ID = UUID(uuidString: "7C8E2C4D-0B3A-4F7F-8A11-100000000301")!
 
-let GAMBLE_SANDS_MEDAL_PARS: [Int] = [
+let GAMBLE_SANDS_PARS: [Int] = [
     4,4,5,3,4,3,5,4,4,
     3,4,4,5,4,4,3,4,5
 ]
 
-let GAMBLE_SANDS_MEDAL_HCS: [Int] = [
-    13,11,3,15,5,9,1,17,7,
-    14,6,18,12,4,8,10,2,16
+let GAMBLE_SANDS_HCS: [Int] = [
+    7,11,1,15,5,13,3,17,9,
+    14,6,18,12,2,8,10,4,16
 ]
 
-let GAMBLE_SANDS_MEDAL_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "MEDAL", yardage: 7184, rating: 73.7, slope: 125)
+let GAMBLE_SANDS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Medal",        yardage: 7151, rating: 73.4, slope: 120),
+    TeeInfo(teeName: "Back",         yardage: 6664, rating: 70.7, slope: 114),
+    TeeInfo(teeName: "Sands",        yardage: 6389, rating: 69.4, slope: 111),
+    TeeInfo(teeName: "Regular",      yardage: 6113, rating: 68.6, slope: 109),
+    TeeInfo(teeName: "Intermediate", yardage: 5623, rating: 66.0, slope: 103),
+    TeeInfo(teeName: "Forward",      yardage: 4804, rating: 66.4, slope: 102)
 ]
+// MARK: - Scarecrow
+
+private let SCARECROW_ID = UUID(uuidString: "9B4A1A52-1C33-4D1B-8D11-100000000402")!
+
+let SCARECROW_PARS: [Int] = [
+    4,3,5,3,4,5,4,4,3,
+    4,3,5,4,4,5,3,4,4
+]
+
+let SCARECROW_HCS: [Int] = [
+    3,9,11,5,17,15,1,7,13,
+    4,18,16,8,2,10,12,6,14
+]
+
+let SCARECROW_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Medal",        yardage: 6921, rating: 73.9, slope: 131),
+    TeeInfo(teeName: "Back",         yardage: 6501, rating: 71.1, slope: 127),
+    TeeInfo(teeName: "Sands",        yardage: 6261, rating: 70.0, slope: 122),
+    TeeInfo(teeName: "Regular",      yardage: 6061, rating: 69.1, slope: 119),
+    TeeInfo(teeName: "Intermediate", yardage: 5204, rating: 65.3, slope: 113),
+    TeeInfo(teeName: "Forward",      yardage: 4656, rating: 66.9, slope: 110)
+]
+
 // MARK: Kapalua Resort – Plantation — Tournament — Lahaina, HI
 // Par 73 | 7,596 yds | Rating 77.0 | Slope 144 | Type: Resort | Architect: Bill Coore & Ben Crenshaw
 
@@ -3656,6 +4010,1488 @@ let IRONWOOD_CC_NORTH_TEES: [TeeInfo] = [
         slope: 121
     )
 ]
+// MARK: - Wynn Golf Club
+
+private let WYNN_GOLF_CLUB_ID = UUID(uuidString: "E8C4A9D1-6F22-4D11-9A33-500000000001")!
+
+let WYNN_GOLF_CLUB_PARS: [Int] = [
+    4,3,5,4,3,4,3,5,4,
+    3,5,3,5,4,4,4,4,3
+]
+
+let WYNN_GOLF_CLUB_HCS: [Int] = [
+    13,11,1,5,17,9,15,7,3,
+    10,2,16,12,6,18,4,14,8
+]
+
+let WYNN_GOLF_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6722,
+        rating: 71.1,
+        slope: 119
+    )
+]
+// MARK: - Cascata
+
+private let CASCATA_BLACK_ID = UUID(uuidString: "E8C4A9D1-6F22-4D11-9A33-500000000008")!
+
+let CASCATA_BLACK_PARS: [Int] = [
+    4,4,5,3,5,4,3,4,4,
+    4,4,3,4,4,3,5,4,5
+]
+
+let CASCATA_BLACK_HCS: [Int] = [
+    11,1,15,9,13,5,17,3,7,
+    6,12,18,4,8,10,14,2,16
+]
+
+let CASCATA_BLACK_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6980,
+        rating: 73.4,
+        slope: 141
+    )
+]
+// MARK: - Las Vegas Paiute Golf Resort (The Wolf)
+
+private let PAIUTE_WOLF_ID = UUID(uuidString: "F1A7C3D2-9E44-4B11-8A21-600000000002")!
+
+let PAIUTE_WOLF_PARS: [Int] = [
+    4,4,5,3,4,5,4,3,4,
+    5,4,3,5,4,3,4,4,4
+]
+
+let PAIUTE_WOLF_HCS: [Int] = [
+    7,17,3,11,9,15,1,13,5,
+    6,18,10,12,2,16,14,4,8
+]
+
+let PAIUTE_WOLF_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Tournament",
+        yardage: 7604,
+        rating: 76.3,
+        slope: 149
+    ),
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7009,
+        rating: 73.5,
+        slope: 134
+    ),
+    TeeInfo(
+        teeName: "Yellow",
+        yardage: 6483,
+        rating: 71.4,
+        slope: 130
+    )
+]
+private let BALI_HAI_GC_ID = UUID(uuidString: "E8C4A9D1-6F22-4D11-9A33-500000000002")!
+
+let BALI_HAI_GC_PARS: [Int] = [
+    4,5,4,4,4,3,5,4,3,
+    5,3,4,4,3,5,3,4,4
+]
+
+let BALI_HAI_GC_HCS: [Int] = [
+    17,7,3,13,11,15,5,1,9,
+    14,18,10,4,12,8,16,6,2
+]
+
+let BALI_HAI_GC_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6858,
+        rating: 74.1,
+        slope: 137
+    )
+]
+private let BEARS_BEST_LV_ID = UUID(uuidString: "E8C4A9D1-6F22-4D11-9A33-500000000003")!
+
+let BEARS_BEST_LV_PARS: [Int] = [
+    4,5,4,3,4,4,3,5,4,
+    4,4,5,3,4,3,4,5,4
+]
+
+let BEARS_BEST_LV_HCS: [Int] = [
+    11,5,3,9,1,15,13,17,7,
+    6,18,10,16,4,8,14,12,2
+]
+
+let BEARS_BEST_LV_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 7194,
+        rating: 74.5,
+        slope: 140
+    )
+]
+private let REFLECTION_BAY_GC_ID = UUID(uuidString: "E8C4A9D1-6F22-4D11-9A33-500000000004")!
+
+let REFLECTION_BAY_GC_PARS: [Int] = [
+    4,4,3,4,4,5,4,3,5,
+    4,4,5,3,5,4,4,3,4
+]
+
+let REFLECTION_BAY_GC_HCS: [Int] = [
+    8,18,16,12,2,6,10,14,4,
+    13,7,9,17,15,1,3,11,5
+]
+
+let REFLECTION_BAY_GC_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 7261,
+        rating: 75.6,
+        slope: 150
+    )
+]
+
+private let REVERE_LEXINGTON_ID = UUID(uuidString: "E8C4A9D1-6F22-4D11-9A33-500000000005")!
+
+let REVERE_LEXINGTON_PARS: [Int] = [
+    4,5,4,3,4,4,5,3,4,
+    4,5,4,3,4,4,5,3,4
+]
+
+let REVERE_LEXINGTON_HCS: [Int] = [
+    18,16,2,14,10,6,8,12,4,
+    3,5,13,17,1,11,9,15,7
+]
+
+let REVERE_LEXINGTON_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7123,
+        rating: 74.7,
+        slope: 145
+    ),
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6590,
+        rating: 71.4,
+        slope: 135
+    ),
+    TeeInfo(
+        teeName: "Silver",
+        yardage: 5941,
+        rating: 68.7,
+        slope: 123
+    ),
+    TeeInfo(
+        teeName: "Bronze",
+        yardage: 5216,
+        rating: 65.9,
+        slope: 120
+    )
+]
+private let CASCATA_SERKET_ID = UUID(uuidString: "E8C4A9D1-6F22-4D11-9A33-500000000007")!
+
+let CASCATA_SERKET_PARS: [Int] = [
+    4,4,3,4,4,3,4,5,5,
+    4,4,3,4,5,4,3,5,4
+]
+
+let CASCATA_SERKET_HCS: [Int] = [
+    13,3,11,17,1,7,9,15,5,
+    8,2,18,14,12,6,10,16,4
+]
+
+let CASCATA_SERKET_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Tournament",
+        yardage: 7215,
+        rating: 74.7,
+        slope: 140
+    )
+]
+private let REVERE_CONCORD_ID = UUID(uuidString: "E8C4A9D1-6F22-4D11-9A33-500000000006")!
+
+let REVERE_CONCORD_PARS: [Int] = [
+    4,5,4,4,3,4,4,3,5,
+    4,5,3,4,4,4,3,4,5
+]
+
+let REVERE_CONCORD_HCS: [Int] = [
+    12,18,2,8,16,14,6,10,4,
+    11,17,9,15,3,13,5,1,7
+]
+
+let REVERE_CONCORD_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7069,
+        rating: 73.5,
+        slope: 140
+    ),
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6545,
+        rating: 71.0,
+        slope: 130
+    ),
+    TeeInfo(
+        teeName: "Silver",
+        yardage: 6094,
+        rating: 67.9,
+        slope: 126
+    ),
+    TeeInfo(
+        teeName: "Bronze",
+        yardage: 5171,
+        rating: 64.5,
+        slope: 111
+    )
+]
+// MARK: - TPC Las Vegas
+
+private let TPC_LAS_VEGAS_ID = UUID(uuidString: "D9F3B8C1-9E77-4C2F-9A11-900000000001")!
+
+let TPC_LAS_VEGAS_PARS: [Int] = [
+    4,3,4,5,4,3,4,3,4,
+    4,4,3,4,4,3,4,3,5
+]
+
+let TPC_LAS_VEGAS_HCS: [Int] = [
+    17,5,11,15,9,7,13,3,1,
+    12,4,18,2,16,6,14,8,10
+]
+
+// TPC / Tournament Tees (~7016 yards)
+let TPC_LAS_VEGAS_TEES: [TeeInfo] = [
+
+    TeeInfo(
+        teeName: "TPC",
+        yardage: 7016,
+        rating: 73.4,
+        slope: 136
+    )
+
+]
+
+// Yardages (TPC / Tournament)
+let TPC_LAS_VEGAS_YARDS: [Int] = [
+    365,193,458,541,367,595,203,454,346,
+    418,444,173,437,347,440,346,445,350
+]
+private let TPC_SUMMERLIN_ID = UUID(uuidString: "A1B2C3D4-1111-4444-8888-000000000001")!
+
+let TPC_SUMMERLIN_PARS: [Int] = [
+4,4,5,4,3,4,4,3,5,
+4,4,4,5,3,4,5,3,4
+]
+
+let TPC_SUMMERLIN_HCS: [Int] = [
+7,5,15,3,13,1,11,9,17,
+8,2,4,12,18,16,6,14,10
+]
+
+let TPC_SUMMERLIN_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Shriners",
+        yardage: 7198,
+        rating: 74.7,
+        slope: 143
+    )
+]
+private let TRUMP_DORAL_BLUE_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000101")!
+
+let TRUMP_DORAL_BLUE_PARS: [Int] = [
+    5,4,4,3,4,4,4,5,3,
+    5,4,5,3,4,3,4,4,4
+]
+
+let TRUMP_DORAL_BLUE_HCS: [Int] = [
+    5,17,3,13,15,7,1,9,11,
+    4,16,8,10,6,18,14,12,2
+]
+
+let TRUMP_DORAL_BLUE_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7545,
+        rating: 77.4,
+        slope: 146
+    )
+]
+// MARK: - Trump International Golf Club - Championship
+
+private let TRUMP_INTL_WEST_PALM_CHAMPIONSHIP_ID = UUID(uuidString: "C8D20000-0000-0000-0000-100000000201")!
+
+let TRUMP_INTL_WEST_PALM_CHAMPIONSHIP_PARS: [Int] = [
+    4,4,5,4,3,4,3,4,5,
+    4,3,5,4,4,5,4,3,4
+]
+
+let TRUMP_INTL_WEST_PALM_CHAMPIONSHIP_HCS: [Int] = [
+    3,13,5,17,9,15,11,1,7,
+    16,18,6,4,12,14,10,8,2
+]
+
+let TRUMP_INTL_WEST_PALM_CHAMPIONSHIP_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7210,
+        rating: 76.3,
+        slope: 155
+    )
+]
+
+
+// MARK: - Trump National Golf Club Jupiter
+
+private let TRUMP_NATIONAL_JUPITER_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000202")!
+
+let TRUMP_NATIONAL_JUPITER_PARS: [Int] = [
+    4,5,4,3,4,5,3,4,4,
+    4,3,4,5,3,4,4,5,4
+]
+
+let TRUMP_NATIONAL_JUPITER_HCS: [Int] = [
+    15,7,1,17,5,11,13,3,9,
+    8,16,2,14,18,6,12,10,4
+]
+
+let TRUMP_NATIONAL_JUPITER_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7404,
+        rating: 76.5,
+        slope: 150
+    )
+]
+
+
+// MARK: - Trump National Golf Club Bedminster (Old Course)
+
+private let TRUMP_BEDMINSTER_OLD_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000203")!
+
+let TRUMP_BEDMINSTER_OLD_PARS: [Int] = [
+    4,4,4,3,4,4,3,5,4,
+    4,4,4,4,3,4,3,4,5
+]
+
+let TRUMP_BEDMINSTER_OLD_HCS: [Int] = [
+    13,11,3,17,1,7,15,9,5,
+    12,4,8,2,18,14,16,6,10
+]
+
+let TRUMP_BEDMINSTER_OLD_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7781,
+        rating: 77.6,
+        slope: 153
+    )
+]
+private let TRUMP_BEDMINSTER_NEW_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000204")!
+
+let TRUMP_BEDMINSTER_NEW_PARS: [Int] = [
+    4,3,4,5,4,3,4,5,4,
+    3,5,4,4,3,5,4,4,4
+]
+
+let TRUMP_BEDMINSTER_NEW_HCS: [Int] = [
+    3,15,11,13,1,17,7,9,5,
+    18,4,14,10,16,2,12,6,8
+]
+
+let TRUMP_BEDMINSTER_NEW_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7564,
+        rating: 76.7,
+        slope: 150
+    )
+]
+
+
+
+// MARK: - Trump National Golf Club Colts Neck
+
+private let TRUMP_COLTS_NECK_ID = UUID(uuidString: "C8D20000-0000-0000-0000-200000000204")!
+
+let TRUMP_COLTS_NECK_PARS: [Int] = [
+    4,5,3,4,4,4,5,3,4,
+    4,3,4,5,4,3,4,4,5
+]
+
+let TRUMP_COLTS_NECK_HCS: [Int] = [
+    3,15,11,17,1,7,13,9,5,
+    4,18,8,16,2,10,12,6,14
+]
+
+let TRUMP_COLTS_NECK_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 7579,
+        rating: 77.2,
+        slope: 149
+    )
+]
+
+
+// MARK: - Trump National GC - Philly
+
+private let TRUMP_NATIONAL_PHILLY_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000205")!
+
+let TRUMP_NATIONAL_PHILLY_PARS: [Int] = [
+    5,3,4,4,3,4,5,3,5,
+    4,4,4,3,5,4,3,4,4
+]
+
+let TRUMP_NATIONAL_PHILLY_HCS: [Int] = [
+    17,15,3,1,9,7,5,11,13,
+    4,10,8,18,16,2,14,6,12
+]
+
+let TRUMP_NATIONAL_PHILLY_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Trump",
+        yardage: 7191,
+        rating: 75.4,
+        slope: 147
+    )
+]
+
+private let TRUMP_NATIONAL_WESTCHESTER_ID = UUID(uuidString: "C8D20000-0000-0000-0000-200000000201")!
+
+let TRUMP_NATIONAL_WESTCHESTER_PARS: [Int] = [
+    4,5,4,4,5,3,4,3,4,
+    4,4,5,3,4,3,5,4,4
+]
+
+let TRUMP_NATIONAL_WESTCHESTER_HCS: [Int] = [
+    13,11,1,9,5,17,15,7,3,
+    8,6,2,12,16,18,4,14,10
+]
+
+let TRUMP_NATIONAL_WESTCHESTER_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7361,
+        rating: 77.8,
+        slope: 153
+    )
+]
+private let TRUMP_NATIONAL_HUDSON_VALLEY_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000206")!
+
+let TRUMP_NATIONAL_HUDSON_VALLEY_PARS: [Int] = [
+    4,5,3,5,4,4,3,4,4,
+    4,4,3,4,5,5,4,3,4
+]
+
+let TRUMP_NATIONAL_HUDSON_VALLEY_HCS: [Int] = [
+    5,1,17,9,7,3,13,15,11,
+    6,18,14,4,12,2,16,10,8
+]
+
+let TRUMP_NATIONAL_HUDSON_VALLEY_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 7693,
+        rating: 77.3,
+        slope: 147
+    )
+]
+
+private let TRUMP_NATIONAL_LOS_ANGELES_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000207")!
+
+let TRUMP_NATIONAL_LOS_ANGELES_PARS: [Int] = [
+    4,5,4,3,4,4,5,3,4,
+    4,3,5,4,5,3,4,3,4
+]
+
+let TRUMP_NATIONAL_LOS_ANGELES_HCS: [Int] = [
+    11,15,13,17,3,5,9,7,1,
+    10,8,12,4,6,16,18,14,2
+]
+
+let TRUMP_NATIONAL_LOS_ANGELES_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6871,
+        rating: 75.0,
+        slope: 144
+    )
+]
+
+private let TRUMP_NATIONAL_CHARLOTTE_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000208")!
+
+let TRUMP_NATIONAL_CHARLOTTE_PARS: [Int] = [
+    4,5,3,4,4,4,3,5,4,
+    4,4,5,3,4,3,5,4,4
+]
+
+let TRUMP_NATIONAL_CHARLOTTE_HCS: [Int] = [
+    8,6,14,12,4,2,16,18,10,
+    1,7,15,9,5,17,11,13,3
+]
+
+let TRUMP_NATIONAL_CHARLOTTE_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black Tees",
+        yardage: 7296,
+        rating: 75.7,
+        slope: 146
+    )
+]
+
+private let TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000209")!
+
+let TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_PARS: [Int] = [
+    4,5,3,4,4,5,4,4,3,
+    4,4,5,4,3,4,3,5,4
+]
+
+let TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_HCS: [Int] = [
+    13,9,15,1,5,7,3,17,11,
+    14,2,10,6,18,4,16,8,12
+]
+
+let TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 7793,
+        rating: 78.0,
+        slope: 142
+    )
+]
+
+private let BALLYS_FERRY_POINT_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000210")!
+
+let BALLYS_FERRY_POINT_PARS: [Int] = [
+    4,4,3,5,4,4,4,3,4,
+    4,4,3,4,4,5,4,3,5
+]
+
+let BALLYS_FERRY_POINT_HCS: [Int] = [
+    9,1,15,3,7,5,13,17,11,
+    6,14,18,8,10,2,4,16,12
+]
+
+let BALLYS_FERRY_POINT_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7407,
+        rating: 76.1,
+        slope: 141
+    )
+]
+private let OLD_MEMORIAL_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000122")!
+
+let OLD_MEMORIAL_PARS: [Int] = [
+    4,4,5,3,4,4,3,4,5,
+    4,3,5,4,4,4,3,4,4
+]
+
+let OLD_MEMORIAL_HCS: [Int] = [
+    9,5,3,13,1,11,17,7,15,
+    8,18,2,12,6,4,16,10,14
+]
+
+let OLD_MEMORIAL_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7401,
+        rating: 75.9,
+        slope: 144
+    )
+]
+private let CONCESSION_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000103")!
+
+let CONCESSION_GC_PARS: [Int] = [
+    4,4,5,3,4,3,5,4,4,
+    4,3,4,5,4,4,5,3,4
+]
+
+let CONCESSION_GC_HCS: [Int] = [
+    13,7,5,17,3,15,1,11,9,
+    10,18,6,2,8,4,12,16,14
+]
+
+let CONCESSION_GC_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7492,
+        rating: 78.1,
+        slope: 155
+    )
+]
+private let INNISBROOK_COPPERHEAD_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000104")!
+
+let INNISBROOK_COPPERHEAD_PARS: [Int] = [
+    5,4,4,3,5,4,4,3,4,
+    4,5,4,3,5,3,4,3,4
+]
+
+let INNISBROOK_COPPERHEAD_HCS: [Int] = [
+    5,11,7,17,1,3,13,15,9,
+    8,6,12,18,2,14,4,16,10
+]
+
+let INNISBROOK_COPPERHEAD_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7209,
+        rating: 75.6,
+        slope: 144
+    ),
+    TeeInfo(
+        teeName: "Green",
+        yardage: 6624,
+        rating: 73.0,
+        slope: 138
+    ),
+    TeeInfo(
+        teeName: "White",
+        yardage: 6243,
+        rating: 71.2,
+        slope: 134
+    ),
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 5676,
+        rating: 69.0,
+        slope: 131
+    )
+]
+private let FLORIDIAN_NATIONAL_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000105")!
+
+let FLORIDIAN_NATIONAL_PARS: [Int] = [
+    4,3,4,3,5,4,5,3,4,
+    4,4,3,5,4,5,3,4,4
+]
+
+let FLORIDIAN_NATIONAL_HCS: [Int] = [
+    9,13,7,11,1,17,5,15,3,
+    12,8,18,6,10,4,16,14,2
+]
+
+let FLORIDIAN_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6958,
+        rating: 74.7,
+        slope: 145
+    )
+]
+private let INVERNESS_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000106")!
+
+let INVERNESS_GC_PARS: [Int] = [
+    4,4,4,4,4,4,3,5,3,
+    4,4,4,4,4,4,4,4,4
+]
+
+let INVERNESS_GC_HCS: [Int] = [
+    12,4,10,2,6,16,14,8,18,
+    11,3,7,15,1,17,5,13,9
+]
+
+let INVERNESS_GC_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Championship",
+        yardage: 6600,   // estimate from front/back totals (~3241 + ~3350 range)
+        rating: 73.3,
+        slope: 139
+    ),
+    TeeInfo(
+        teeName: "Member",
+        yardage: 6200,
+        rating: 71.8,
+        slope: 136
+    ),
+    TeeInfo(
+        teeName: "Intermediate",
+        yardage: 5900,
+        rating: 70.9,
+        slope: 134
+    )
+    
+]
+// MARK: - Wynstone Golf Club
+
+private let WYNSTONE_GC_ID = UUID(uuidString: "D4A1F8E2-9C3A-4D91-B8A1-100000000111")!
+
+let WYNSTONE_GC_PARS: [Int] = [
+    4,4,5,3,4,4,3,4,5,
+    4,3,5,4,3,4,4,4,5
+]
+
+let WYNSTONE_GC_HCS: [Int] = [
+    18,10,2,14,6,4,16,12,8,
+    1,17,7,15,13,3,11,5,9
+]
+
+let WYNSTONE_GC_TEES: [TeeInfo] = [
+
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7162,
+        rating: 75.4,
+        slope: 147
+    ),
+
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6864,
+        rating: 74.0,
+        slope: 143
+    ),
+
+    TeeInfo(
+        teeName: "Silver",
+        yardage: 6384,
+        rating: 71.8,
+        slope: 138
+    ),
+
+    TeeInfo(
+        teeName: "Blue",
+        yardage: 5946,
+        rating: 69.8,
+        slope: 133
+    ),
+
+    TeeInfo(
+        teeName: "Red",
+        yardage: 5201,
+        rating: 71.3,
+        slope: 134
+    )
+]
+// MARK: - Shingle Creek Golf Club
+
+private let SHINGLE_CREEK_GC_ID = UUID(uuidString: "D4A1C2B3-9876-4F21-ABCD-1234567890AB")!
+
+let SHINGLE_CREEK_GC_PARS: [Int] = [
+    4,5,4,4,3,4,4,3,5,
+    4,4,3,4,5,4,3,4,5
+]
+
+let SHINGLE_CREEK_GC_HCS: [Int] = [
+    9,5,11,1,15,7,13,17,3,
+    10,6,16,2,8,12,18,14,4
+]
+
+let SHINGLE_CREEK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 7213, rating: 74.0, slope: 140),
+    TeeInfo(teeName: "Gold",   yardage: 6749, rating: 71.7, slope: 134),
+    TeeInfo(teeName: "Blue",   yardage: 6320, rating: 69.9, slope: 130),
+    TeeInfo(teeName: "White",  yardage: 5810, rating: 67.5, slope: 125),
+    TeeInfo(teeName: "Silver", yardage: 5290, rating: 65.2, slope: 120)
+]
+// MARK: - TPC Scottsdale (Stadium Course)
+
+private let TPC_SCOTTSDALE_STADIUM_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000202")!
+
+let TPC_SCOTTSDALE_STADIUM_PARS: [Int] = [
+    4,4,5,3,4,4,3,4,4,
+    4,4,3,5,4,5,3,4,4
+]
+
+let TPC_SCOTTSDALE_STADIUM_HCS: [Int] = [
+    14,8,4,18,6,12,16,2,10,
+    11,1,15,5,7,9,17,13,3
+]
+
+let TPC_SCOTTSDALE_STADIUM_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Championship",
+        yardage: 7261,
+        rating: 74.7,
+        slope: 142
+    )
+]
+// MARK: - TPC Scottsdale (Champions Course)
+
+private let TPC_SCOTTSDALE_CHAMPIONS_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000201")!
+
+let TPC_SCOTTSDALE_CHAMPIONS_PARS: [Int] = [
+    4,4,3,5,4,3,4,3,5,
+    5,4,4,3,4,4,3,5,4
+]
+
+let TPC_SCOTTSDALE_CHAMPIONS_HCS: [Int] = [
+    16,8,18,6,2,12,14,10,4,
+    11,7,5,17,13,15,9,3,1
+]
+
+let TPC_SCOTTSDALE_CHAMPIONS_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7091,
+        rating: 73.2,
+        slope: 135
+    )
+]
+// MARK: - Talking Stick Golf Club (Piipaash Course)
+
+private let TALKING_STICK_PIIPAASH_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000203")!
+
+let TALKING_STICK_PIIPAASH_PARS: [Int] = [
+    4,4,3,4,4,4,5,4,3,
+    4,4,4,3,5,4,5,3,4
+]
+
+let TALKING_STICK_PIIPAASH_HCS: [Int] = [
+    13,3,7,17,1,15,9,5,11,
+    10,8,2,16,6,4,14,18,12
+]
+
+let TALKING_STICK_PIIPAASH_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6833,
+        rating: 72.0,
+        slope: 126
+    ),
+
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6430,
+        rating: 69.6,
+        slope: 120
+    ),
+
+    TeeInfo(
+        teeName: "Gold/Jade",
+        yardage: 6040,
+        rating: 67.4,
+        slope: 112
+    ),
+
+    TeeInfo(
+        teeName: "Jade",
+        yardage: 5331,
+        rating: 64.9,
+        slope: 108
+    )
+]
+// MARK: - Talking Stick Golf Club (O’odham Course)
+
+private let TALKING_STICK_ODHAM_ID = UUID(uuidString: "E4A1C9B2-7F3D-4D11-9C22-6B8A2E1F5501")!
+
+let TALKING_STICK_ODHAM_PARS: [Int] = [
+    4,5,4,4,4,3,4,3,4,
+    4,3,4,4,4,4,3,5,4
+]
+
+let TALKING_STICK_ODHAM_HCS: [Int] = [
+    15,13,3,1,11,5,9,17,7,
+    12,6,2,16,8,14,18,4,10
+]
+let TALKING_STICK_ODHAM_TEES: [TeeInfo] = [
+
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7133,
+        rating: 72.2,
+        slope: 125
+    ),
+
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6510,
+        rating: 69.7,
+        slope: 120
+    ),
+
+    TeeInfo(
+        teeName: "Gold/Jade",
+        yardage: 5945,
+        rating: 66.4,
+        slope: 115
+    ),
+
+    TeeInfo(
+        teeName: "Jade",
+        yardage: 5532,
+        rating: 64.6,
+        slope: 113
+    )
+]
+
+// MARK: - Kierland Golf Club (Acacia / Mesquite)
+
+private let KIERLAND_ACACIA_MESQUITE_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000204")!
+
+let KIERLAND_ACACIA_MESQUITE_PARS: [Int] = [
+    5,4,4,3,5,3,4,3,5,
+    4,4,4,3,5,4,5,3,4
+]
+
+let KIERLAND_ACACIA_MESQUITE_HCS: [Int] = [
+    16,8,4,18,2,12,10,14,6,
+    11,9,17,15,5,3,7,13,1
+]
+
+let KIERLAND_ACACIA_MESQUITE_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Cinder",
+        yardage: 6914,
+        rating: 72.5,
+        slope: 127
+    )
+]
+
+// MARK: - Kierland Golf Club (Ironwood / Mesquite)
+
+private let KIERLAND_IRONWOOD_MESQUITE_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000206")!
+
+let KIERLAND_IRONWOOD_MESQUITE_PARS: [Int] = [
+    4,4,3,4,3,4,5,4,5,   // Ironwood
+    4,4,4,3,5,4,5,3,4    // Mesquite
+]
+
+let KIERLAND_IRONWOOD_MESQUITE_HCS: [Int] = [
+    1,5,17,7,13,11,15,9,3,
+    12,10,18,16,6,4,8,14,2
+]
+let KIERLAND_IRONWOOD_MESQUITE_TEES: [TeeInfo] = [
+
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7017,
+        rating: 72.8,
+        slope: 128
+    ),
+
+    TeeInfo(
+        teeName: "Copper",
+        yardage: 6340,
+        rating: 70.5,
+        slope: 124
+    ),
+
+    TeeInfo(
+        teeName: "Indigo",
+        yardage: 5851,
+        rating: 68.4,
+        slope: 120
+    ),
+
+    TeeInfo(
+        teeName: "Turquoise",
+        yardage: 5432,
+        rating: 66.5,
+        slope: 116
+    ),
+
+    TeeInfo(
+        teeName: "Lava",
+        yardage: 5017,
+        rating: 64.0,
+        slope: 110
+    )
+]
+// MARK: - Kierland Golf Club (Ironwood / Acacia)
+
+private let KIERLAND_IRONWOOD_ACACIA_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000205")!
+
+let KIERLAND_IRONWOOD_ACACIA_PARS: [Int] = [
+    4,4,3,4,3,4,5,4,5,
+    5,4,4,3,5,3,4,3,5
+]
+
+let KIERLAND_IRONWOOD_ACACIA_HCS: [Int] = [
+    1,5,17,7,13,11,15,9,3,
+    16,8,4,18,2,12,10,14,6
+]
+
+let KIERLAND_IRONWOOD_ACACIA_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Cinder",
+        yardage: 6976,
+        rating: 72.8,
+        slope: 128
+    )
+]
+// MARK: - Camelback Golf Club (Ambiente)
+
+private let CAMELBACK_AMBIENTE_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000301")!
+
+let CAMELBACK_AMBIENTE_PARS: [Int] = [
+    4,3,5,4,4,4,5,3,4,
+    4,3,4,4,5,3,5,4,4
+]
+
+let CAMELBACK_AMBIENTE_HCS: [Int] = [
+    5,11,17,13,15,1,7,9,3,
+    18,12,2,14,6,8,16,4,10
+]
+
+let CAMELBACK_AMBIENTE_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7225,
+        rating: 74.2,
+        slope: 138
+    )
+]
+// MARK: - Camelback Golf Club (Padre)
+
+private let CAMELBACK_PADRE_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000302")!
+
+let CAMELBACK_PADRE_PARS: [Int] = [
+    4,4,3,4,5,4,4,3,5,
+    4,3,4,5,4,4,3,5,4
+]
+
+let CAMELBACK_PADRE_HCS: [Int] = [
+    7,13,17,9,1,3,15,11,5,
+    2,18,16,10,14,6,12,8,4
+]
+
+let CAMELBACK_PADRE_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6868,
+        rating: 72.2,
+        slope: 130
+    )
+]
+
+// MARK: - The Boulders (North Course)
+
+private let BOULDERS_NORTH_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000303")!
+
+let BOULDERS_NORTH_PARS: [Int] = [
+    5,3,5,4,4,3,4,4,4,
+    4,4,5,4,3,4,4,3,4
+]
+
+let BOULDERS_NORTH_HCS: [Int] = [
+    6,18,4,10,2,16,12,8,14,
+    1,5,3,11,7,13,9,17,15
+]
+
+let BOULDERS_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6849,
+        rating: 73.3,
+        slope: 138
+    )
+]
+// MARK: - The Boulders (South Course)
+
+private let BOULDERS_SOUTH_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000304")!
+
+let BOULDERS_SOUTH_PARS: [Int] = [
+    4,3,4,5,4,3,4,5,4,
+    4,5,4,4,3,4,3,4,5
+]
+
+let BOULDERS_SOUTH_HCS: [Int] = [
+    9,13,7,1,3,15,11,5,17,
+    2,6,12,10,8,14,18,4,16
+]
+
+let BOULDERS_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6917,
+        rating: 72.9,
+        slope: 142
+    )
+]
+// MARK: - Ak-Chin Southern Dunes Golf Club
+
+private let AK_CHIN_SOUTHERN_DUNES_ID = UUID(uuidString: "B7C2D1E4-5F63-4A91-9A12-3E8B7F2C4401")!
+
+let AK_CHIN_SOUTHERN_DUNES_PARS: [Int] = [
+    4,4,5,3,4,3,5,4,4,
+    4,3,4,5,4,4,5,3,4
+]
+
+let AK_CHIN_SOUTHERN_DUNES_HCS: [Int] = [
+    9,15,1,17,7,13,3,5,11,
+    14,18,8,2,12,6,4,16,10
+]
+let AK_CHIN_SOUTHERN_DUNES_TEES: [TeeInfo] = [
+
+    TeeInfo(
+        teeName: "Tips",
+        yardage: 7546,
+        rating: 76.5,
+        slope: 142
+    ),
+
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7330,
+        rating: 75.2,
+        slope: 138
+    ),
+
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6902,
+        rating: 72.7,
+        slope: 132
+    ),
+
+    TeeInfo(
+        teeName: "Blue",
+        yardage: 6493,
+        rating: 71.2,
+        slope: 129
+    ),
+
+    TeeInfo(
+        teeName: "White",
+        yardage: 5981,
+        rating: 68.7,
+        slope: 124
+    ),
+
+    TeeInfo(
+        teeName: "Red",
+        yardage: 5055,
+        rating: 64.3,
+        slope: 105
+    )
+]
+// MARK: - Quintero Golf Club
+
+private let QUINTERO_GC_ID = UUID(uuidString: "9E7C3A21-4B2F-4C6D-8A11-5D9F7B3E2201")!
+
+let QUINTERO_GC_PARS: [Int] = [
+    4,5,4,4,4,3,4,5,3,
+    5,4,4,3,5,4,3,4,4
+]
+
+let QUINTERO_GC_HCS: [Int] = [
+    13,7,5,3,11,17,9,1,15,
+    10,8,4,18,2,14,16,12,6
+]
+let QUINTERO_GC_TEES: [TeeInfo] = [
+
+    TeeInfo(
+        teeName: "Black",
+        yardage: 7153,
+        rating: 74.9,
+        slope: 146
+    ),
+
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6800,
+        rating: 73.2,
+        slope: 140
+    ),
+
+    TeeInfo(
+        teeName: "Blue",
+        yardage: 6450,
+        rating: 71.5,
+        slope: 136
+    ),
+
+    TeeInfo(
+        teeName: "White",
+        yardage: 6100,
+        rating: 69.8,
+        slope: 130
+    ),
+
+    TeeInfo(
+        teeName: "Red",
+        yardage: 5400,
+        rating: 66.5,
+        slope: 120
+    )
+]
+// MARK: - American Dunes Golf Club
+
+private let AMERICAN_DUNES_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1001")!
+
+let AMERICAN_DUNES_PARS: [Int] = [
+    4,5,4,3,4,5,3,4,4,
+    4,4,3,5,4,3,4,4,5
+]
+
+let AMERICAN_DUNES_HCS: [Int] = [
+    10,18,6,14,2,12,16,4,8,
+    3,13,15,11,7,9,1,5,17
+]
+
+let AMERICAN_DUNES_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Jet",
+        yardage: 7213,
+        rating: 75.4,
+        slope: 148
+    ),
+    TeeInfo(
+        teeName: "Valor",
+        yardage: 6701,
+        rating: 73.0,
+        slope: 142
+    ),
+    TeeInfo(
+        teeName: "Freedom",
+        yardage: 6131,
+        rating: 70.3,
+        slope: 133
+    ),
+    TeeInfo(
+        teeName: "Honor",
+        yardage: 5573,
+        rating: 67.8,
+        slope: 126
+    ),
+    TeeInfo(
+        teeName: "Bear",
+        yardage: 4772,
+        rating: 63.9,
+        slope: 116
+    )
+]
+private let GOLDEN_HORSESHOE_GOLD_ID = UUID(uuidString: "D34B7E90-2C51-4C98-8B42-3D9E8A6F2002")!
+
+let GOLDEN_HORSESHOE_GOLD_PARS: [Int] = [
+    4,5,3,4,4,5,3,4,4,
+    4,4,3,4,4,5,3,4,4
+]
+
+let GOLDEN_HORSESHOE_GOLD_HCS: [Int] = [
+    11,3,9,1,15,5,7,17,13,
+    8,14,12,18,2,10,16,4,6
+]
+
+let GOLDEN_HORSESHOE_GOLD_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 6817,
+        rating: 73.4,
+        slope: 140
+    ),
+    TeeInfo(
+        teeName: "Blue",
+        yardage: 6522,
+        rating: 72.1,
+        slope: 136
+    ),
+    TeeInfo(
+        teeName: "White",
+        yardage: 6248,
+        rating: 70.8,
+        slope: 134
+    ),
+    TeeInfo(
+        teeName: "Silver",
+        yardage: 5504,
+        rating: 67.4,
+        slope: 128
+    ),
+    TeeInfo(
+        teeName: "Red",
+        yardage: 4599,
+        rating: 63.0,
+        slope: 114
+    )
+]
+private let POLO_FIELDS_ANN_ARBOR_ID = UUID(uuidString: "E56C8FA1-3D62-4DA9-9C53-4E0F9B7A3003")!
+
+let POLO_FIELDS_ANN_ARBOR_PARS: [Int] = [
+    5,4,3,4,4,4,4,5,3,
+    4,5,3,4,3,4,5,4,4
+]
+
+let POLO_FIELDS_ANN_ARBOR_HCS: [Int] = [
+    13,1,9,11,5,3,7,15,17,
+    18,8,16,4,12,2,10,6,14
+]
+
+let POLO_FIELDS_ANN_ARBOR_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Black",
+        yardage: 6705,
+        rating: 73.3,
+        slope: 146
+    )
+]
+private let LAWSONIA_LINKS_ID = UUID(uuidString: "F71D9A22-4E83-4F9A-8D21-5C1E9A8B4004")!
+
+let LAWSONIA_LINKS_PARS: [Int] = [
+    4,4,4,3,5,4,3,4,5,
+    3,5,3,5,3,4,4,4,5
+]
+
+let LAWSONIA_LINKS_HCS: [Int] = [
+    8,14,10,18,6,4,16,12,2,
+    15,7,13,1,17,9,5,11,3
+]
+
+let LAWSONIA_LINKS_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Blue",
+        yardage: 6853,
+        rating: 73.0,
+        slope: 130
+    ),
+    TeeInfo(
+        teeName: "White",
+        yardage: 6494,
+        rating: 71.5,
+        slope: 128
+    ),
+    TeeInfo(
+        teeName: "Gold",
+        yardage: 5889,
+        rating: 68.8,
+        slope: 124
+    ),
+    TeeInfo(
+        teeName: "Red",
+        yardage: 5078,
+        rating: 65.2,
+        slope: 115
+    )
+]
+private let PAAKO_RIDGE_1_18_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5005")!
+private let PAAKO_RIDGE_10_27_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5006")!
+private let PAAKO_RIDGE_1_9_19_27_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5007")!
+
+let PAAKO_RIDGE_1_18_PARS: [Int] = [
+    4,4,5,3,5,4,4,3,4,
+    4,4,5,4,3,5,3,4,4
+]
+
+let PAAKO_RIDGE_1_18_HCS: [Int] = [
+    13,11,5,17,7,15,1,9,3,
+    10,2,14,16,8,4,18,12,6
+]
+let PAAKO_RIDGE_10_27_PARS: [Int] = [
+    4,4,5,4,3,5,3,4,4,
+    5,4,4,3,5,3,5,3,4
+]
+
+let PAAKO_RIDGE_10_27_HCS: [Int] = [
+    10,2,14,16,8,4,18,12,6,
+    5,7,2,8,1,9,3,6,4
+]
+private let PAAKO_RIDGE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7562, rating: 75.7, slope: 150),
+    TeeInfo(teeName: "Blue", yardage: 7218, rating: 74.0, slope: 145),
+    TeeInfo(teeName: "Green", yardage: 6727, rating: 71.8, slope: 139),
+    TeeInfo(teeName: "Brown", yardage: 6265, rating: 69.6, slope: 134),
+    TeeInfo(teeName: "Gray", yardage: 5755, rating: 67.0, slope: 126),
+    TeeInfo(teeName: "Turquoise", yardage: 4776, rating: 64.7, slope: 115)
+
+]
+// MARK: - Trinity Forest GC (Plates)
+
+private let TRINITY_FOREST_ID = UUID(uuidString: "C3E8A6F1-9D55-4B77-8A33-100000000503")!
+
+let TRINITY_FOREST_PARS: [Int] = [
+    4,5,3,4,5,4,4,3,4,   // Front 9 = 36
+    5,3,4,4,4,5,3,4,4    // Back 9 = 36
+]
+
+let TRINITY_FOREST_HCS: [Int] = [
+    11,7,17,1,3,9,13,15,5,
+    10,14,12,4,16,8,6,18,2
+]
+
+let TRINITY_FOREST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Plates", yardage: 7617, rating: 76.0, slope: 134),
+    TeeInfo(teeName: "Blue",   yardage: 7109, rating: 74.8, slope: 132),
+    TeeInfo(teeName: "White",  yardage: 6576, rating: 71.8, slope: 129),
+    TeeInfo(teeName: "Red",    yardage: 5902, rating: 75.3, slope: 133) // women's rating
+]
+private let AUSTIN_CC_ID = UUID(uuidString: "C3A7F1D2-7B22-4E11-8C11-100000000303")!
+
+let AUSTIN_CC_PARS: [Int] = [
+    4,3,5,4,4,4,5,3,4,
+    4,4,4,3,4,5,3,5,4
+]
+
+let AUSTIN_CC_HCS: [Int] = [
+    9,11,5,13,1,7,3,17,15,
+    12,2,8,18,16,4,14,10,6
+]
+let AUSTIN_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Harvey", yardage: 7062, rating: 74.7, slope: 150)
+    ]
+// MARK: - Colonial Country Club
+
+private let COLONIAL_CC_ID = UUID(uuidString: "B2D7C5E3-8F42-4A99-9B22-100000000502")!
+
+let COLONIAL_CC_PARS: [Int] = [
+    5,4,4,3,4,4,4,3,4,
+    4,5,4,3,4,4,3,4,4
+]
+
+let COLONIAL_CC_HCS: [Int] = [
+    9,17,5,15,1,13,3,11,7,
+    16,8,4,14,10,2,18,6,12
+]
+
+let COLONIAL_CC_TEES: [TeeInfo] = [
+    TeeInfo(
+        teeName: "Championship",
+        yardage: 7289,
+        rating: 76.5,
+        slope: 137
+    )
+]
+private let DALLAS_NATIONAL_ID = UUID(uuidString: "B2E4D7A1-6C31-4F22-8C11-100000000302")!
+
+let DALLAS_NATIONAL_PARS: [Int] = [
+    4,5,3,5,3,4,4,4,4,
+    5,4,4,3,4,4,4,3,5
+]
+
+let DALLAS_NATIONAL_HCS: [Int] = [
+    16,4,18,2,10,6,14,8,12,
+    3,11,9,17,15,5,1,13,7
+]
+
+let DALLAS_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Texas", yardage: 7372, rating: 75.9, slope: 145),
+    TeeInfo(teeName: "I",     yardage: 6862, rating: 73.5, slope: 140),
+    TeeInfo(teeName: "II",    yardage: 6514, rating: 71.6, slope: 133),
+    TeeInfo(teeName: "III",   yardage: 6045, rating: 69.3, slope: 129)
+]
+private let WHISPERING_PINES_ID = UUID(uuidString: "D4B8E2F3-8A11-4C22-8C11-100000000304")!
+
+let WHISPERING_PINES_PARS: [Int] = [
+    4,5,3,4,5,4,4,3,4,
+    4,4,5,4,4,3,3,5,4
+]
+
+let WHISPERING_PINES_HCS: [Int] = [
+    17,5,15,3,7,9,1,13,11,
+    14,6,18,4,16,10,12,8,2
+]
+
+let WHISPERING_PINES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Spirit", yardage: 7468, rating: 77.0, slope: 150),
+    TeeInfo(teeName: "I",      yardage: 6842, rating: 74.1, slope: 145),
+    TeeInfo(teeName: "II",     yardage: 6420, rating: 71.7, slope: 139),
+    TeeInfo(teeName: "III",    yardage: 5876, rating: 69.5, slope: 134),
+    TeeInfo(teeName: "IV",     yardage: 4996, rating: 65.5, slope: 126)
+]
+private let BLUEJACK_NATIONAL_ID = UUID(uuidString: "E5C9F3A4-9D11-4D22-8C11-100000000305")!
+
+let BLUEJACK_NATIONAL_PARS: [Int] = [
+    4,5,3,4,5,4,3,4,4,
+    4,5,3,5,4,3,4,4,4
+]
+
+let BLUEJACK_NATIONAL_HCS: [Int] = [
+    9,11,15,5,7,3,17,13,1,
+    10,6,16,8,12,18,4,14,2
+]
+
+let BLUEJACK_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tiger", yardage: 7552, rating: 75.8, slope: 135)
+]
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -3680,6 +5516,8 @@ private enum BuiltIns {
         let venueType: VenueType?    // ✅ ADD (not String)
         let resortBrand: String?
         let promo: LocationPromo?    // ✅ ADD (not String)
+        let routing: CourseRouting
+        
     }
 
     private static func c(
@@ -3699,7 +5537,8 @@ private enum BuiltIns {
         isWolfApproved: Bool? = nil,
         venueType: VenueType? = nil,
         resortBrand: String? = nil,
-        promo: LocationPromo? = nil
+        promo: LocationPromo? = nil,
+        routing: CourseRouting = .eighteenStandard   // 👈 ADD
     ) -> BuiltInCourse {
         .init(
             id: id,
@@ -3718,7 +5557,8 @@ private enum BuiltIns {
             isWolfApproved: isWolfApproved,
             venueType: venueType,
             resortBrand: resortBrand,
-            promo: promo
+            promo: promo,
+            routing: routing   // 👈 ADD
         )
     }
     private static func profile(from b: BuiltInCourse) -> CourseProfile {
@@ -3739,10 +5579,10 @@ private enum BuiltIns {
             isWolfApproved: b.isWolfApproved,
             venueType: b.venueType,
             resortBrand: b.resortBrand,
-            promo: b.promo
+            promo: b.promo,
+            routing: b.routing   // 👈 ADD THIS
         )
     }
-
     private static let all: [BuiltInCourse] = [
 
         // -------------------------
@@ -3856,13 +5696,6 @@ private enum BuiltIns {
           website: "https://www.richharvestfarms.com",
           address: "7S771 Dugan Road, Sugar Grove, IL 60554"),
 
-        c(BUTLER_CC_BLUE_ID, "Butler National 6970", BUTLER_CC_BLUE_PARS, BUTLER_CC_BLUE_HCS, BUTLER_CC_BLUE_TEES,
-          country: "USA",
-          state: "IL",
-          type: "Private",
-          phone: "(630) 990-3333",
-          website: "https://www.butlernational.org",
-          address: "2616 S York Road, Oak Brook, IL 60523"),
 
         c(BUTLER_NATIONAL_BUTLER_TEE_ID, "Butler National (7,550-yard)", BUTLER_NATIONAL_BUTLER_TEE_PARS, BUTLER_NATIONAL_BUTLER_TEE_HCS, BUTLER_NATIONAL_BUTLER_TEE_TEES,
           country: "USA",
@@ -3872,14 +5705,63 @@ private enum BuiltIns {
           website: "https://www.butlernational.org",
           address: "2616 S York Road, Oak Brook, IL 60523"),
 
-        c(MEDINAH_CC_3_ID, "Medinah CC (Course #3)", MEDINAH_CC_3_PARS, MEDINAH_CC_3_HCS, MEDINAH_CC_3_TEES,
-          country: "USA",
-          state: "IL",
-          type: "Private",
-          phone: "(630) 773-1700",
-          website: "https://www.medinahcc.org",
-          address: "6N001 Medinah Road, Medinah, IL 60157"),
+        c(
+            MEDINAH_CC_3_ID,
+            "Medinah CC (Course #3)",
+            MEDINAH_CC_3_PARS,
+            MEDINAH_CC_3_HCS,
+            MEDINAH_CC_3_TEES,
+            country: "USA",
+            state: "IL",
+            region: nil,
+            architect: nil,
+            type: "Private",
+            phone: "(630) 773-1700",
+            website: "https://www.medinahcc.org",
+            address: "6N001 Medinah Road, Medinah, IL 60157",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
 
+        c(
+            MEDINAH_CC_2_ID,
+            "Medinah CC (Course #2)",
+            MEDINAH_CC_2_PARS,
+            MEDINAH_CC_2_HCS,
+            MEDINAH_CC_2_TEES,
+            country: "USA",
+            state: "IL",
+            region: nil,
+            architect: nil,
+            type: "Private",
+            phone: "(630) 773-1700",
+            website: "https://www.medinahcc.org",
+            address: "6N001 Medinah Road, Medinah, IL 60157",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+
+        c(
+            MEDINAH_CC_1_ID,
+            "Medinah CC (Course #1)",
+            MEDINAH_CC_1_PARS,
+            MEDINAH_CC_1_HCS,
+            MEDINAH_CC_1_TEES,
+            country: "USA",
+            state: "IL",
+            region: nil,
+            architect: "Tom Bendelow",
+            type: "Private",
+            phone: "(630) 773-1700",
+            website: "https://www.medinahcc.org",
+            address: "6N001 Medinah Road, Medinah, IL 60157",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        
         c(MAKRAY_MEMORIAL_BLACK_ID, "Makray Memorial (Black)", MAKRAY_MEMORIAL_BLACK_PARS, MAKRAY_MEMORIAL_BLACK_HCS, MAKRAY_MEMORIAL_BLACK_TEES,
           country: "USA",
           state: "IL",
@@ -3958,14 +5840,42 @@ private enum BuiltIns {
           phone: "(407) 787-4653",
           website: "https://www.championsgategolf.com",
           address: "8575 White Shark Blvd, ChampionsGate, FL 33896"),
-        c(TPC_SAWGRASS_STADIUM_ID, "TPC Sawgrass (Stadium)", TPC_SAWGRASS_STADIUM_PARS, TPC_SAWGRASS_STADIUM_HCS,
-          country: "USA",
-          state: "FL",
-          architect: "Pete Dye",
-          type: "Daily-Fee",
-          phone: "(904) 273-3235",
-          website: "https://tpc.com/sawgrass/",
-          address: "110 Championship Way, Ponte Vedra Beach, FL 32082"),
+        
+        c(
+            TPC_SAWGRASS_STADIUM_ID,
+            "TPC Sawgrass (Stadium)",
+            TPC_SAWGRASS_STADIUM_PARS,
+            TPC_SAWGRASS_STADIUM_HCS,
+            TPC_SAWGRASS_STADIUM_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Pete Dye",
+            type: "Daily-Fee",
+            phone: "(904) 273-3235",
+            website: "https://tpc.com/sawgrass/",
+            address: "110 Championship Way, Ponte Vedra Beach, FL 32082",
+            isWolfApproved: true,
+            resortBrand: "TPC",
+            promo: nil
+        ),
+ 
+        c(
+            TPC_SAWGRASS_DYES_VALLEY_ID,
+            "TPC Sawgrass (Dye’s Valley)",
+            TPC_SAWGRASS_DYES_VALLEY_PARS,
+            TPC_SAWGRASS_DYES_VALLEY_HCS,
+            TPC_SAWGRASS_DYES_VALLEY_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Pete Dye & Bobby Weed",
+            type: "Daily-Fee",
+            phone: "(904) 273-3235",
+            website: "https://tpc.com/sawgrass/",
+            address: "110 Championship Way, Ponte Vedra Beach, FL 32082",
+            isWolfApproved: true,
+            resortBrand: "TPC",
+            promo: nil
+        ),
         c(BAY_HILL_CHALLENGER_CHAMPION_ID, "Bay Hill (Challenger/Champion)", BAY_HILL_CHALLENGER_CHAMPION_PARS, BAY_HILL_CHALLENGER_CHAMPION_HCS, BAY_HILL_CHALLENGER_CHAMPION_TEES,
           country: "USA",
           state: "FL",
@@ -4038,7 +5948,9 @@ private enum BuiltIns {
           phone: "(772) 467-1300",
           website: "https://www.pgavillage.com",
           address: "1916 Perfect Drive, Port St. Lucie, FL 34986"),
-        c(PGA_VILLAGE_DYE_ID, "PGA Village (Dye)", PGA_VILLAGE_DYE_PARS, PGA_VILLAGE_DYE_HCS,
+      
+        c(PGA_VILLAGE_DYE_ID, "PGA Village (Dye)",
+          PGA_VILLAGE_DYE_PARS, PGA_VILLAGE_DYE_HCS,
           country: "USA",
           state: "FL",
           architect: "Pete Dye",
@@ -4046,12 +5958,16 @@ private enum BuiltIns {
           phone: "(772) 467-1300",
           website: "https://www.pgavillage.com",
           address: "1916 Perfect Drive, Port St. Lucie, FL 34986"),
-        c(MEDALIST_JT_ID, "Medalist GC (JT)", MEDALIST_JT_PARS, MEDALIST_JT_HCS,
-          architect: "Tom Fazio",
-          type: "Resort",
-          phone: "(772) 467-1300",
-          website: "https://www.pgavillage.com",
-          address: "1916 Perfect Drive, Port St. Lucie, FL 34986"),
+       
+        c(MEDALIST_JT_ID, "Medalist GC ",
+          MEDALIST_JT_PARS, MEDALIST_JT_HCS,
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye and Greg Norman",
+          type: "Private",
+          phone: "((772) 545-9600",
+          website: "https://www.medalistgolfclub.org",
+          address: "9908 SE Cottage Lane, Hobe Sound, FL 33455"),
         
         c(DYE_PRESERVE_CHAMPIONSHIP_ID, "Dye Preserve (Championship)", DYE_PRESERVE_CHAMPIONSHIP_PARS, DYE_PRESERVE_CHAMPIONSHIP_HCS, DYE_PRESERVE_CHAMPIONSHIP_TEES,
           country: "USA",
@@ -4705,18 +6621,38 @@ private enum BuiltIns {
         ),
 
         c(
-            GAMBLE_SANDS_MEDAL_ID,
-            "Gamble Sands (Medal)",
-            GAMBLE_SANDS_MEDAL_PARS,
-            GAMBLE_SANDS_MEDAL_HCS,
-            GAMBLE_SANDS_MEDAL_TEES,
+            GAMBLE_SANDS_ID,
+            "Gamble Sands",
+            GAMBLE_SANDS_PARS,
+            GAMBLE_SANDS_HCS,
+            GAMBLE_SANDS_TEES,
             country: "USA",
             state: "WA",
             architect: "David McLay Kidd",
-            type: "Daily-Fee",
-            phone: "(509) 436-8323",
-            website: "https://www.gamblesands.com",
-            address: "200 Sands Trail Rd, Brewster, WA 98812"
+            type: "Resort",
+            phone: nil,
+            website: "https://www.gamblesands.com/gamble-sands/",
+            address: "200 Sands Trail Rd, Brewster, WA 98812",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            SCARECROW_ID,
+            "Gamble Sands - Scarecrow",
+            SCARECROW_PARS,
+            SCARECROW_HCS,
+            SCARECROW_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "David McLay Kidd / Nick Schaan",
+            type: "Resort",
+            phone: nil,
+            website: "https://www.gamblesands.com/scarecrow/",
+            address: "200 Sands Trail Rd, Brewster, WA 98812",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
         ),
         c(
             ARCADIA_BLUFFS_BLUFFS_BLUE_ID,
@@ -4743,7 +6679,7 @@ private enum BuiltIns {
             ESKER_HILLS_PARS,
             ESKER_HILLS_HCS,
             country: "Ireland",
-            state: "Offaly",
+            state: nil,
             architect: "Christy O’Connor Jr.",
             type: "Public",
             phone: "+353 90 648 3219",
@@ -4803,6 +6739,20 @@ private enum BuiltIns {
             address: "Waterville, Co. Kerry, Ireland"
         ),
         c(
+            LAHINCH_OLD_ID,
+            "Lahinch Golf Club (Old Course)",
+            LAHINCH_OLD_PARS,
+            LAHINCH_OLD_HCS,
+            country: "Ireland",
+            state: nil,
+            architect: "Old Tom Morris / Alister MacKenzie",
+            type: "Public",
+            phone: "+353 65 708 1003",
+            website: "https://www.lahinchgolf.com",
+            address: "Lahinch, Co. Clare, V95 HD00, Ireland",
+            isWolfApproved: false
+        ),
+        c(
             ROYAL_COUNTY_DOWN_CHAMP_ID,
             "Royal County Down (Championship)",
             ROYAL_COUNTY_DOWN_CHAMP_PARS,
@@ -4829,6 +6779,66 @@ private enum BuiltIns {
             address: "Dunluce Rd, Portrush BT56 8JQ, Northern Ireland"
         ),
         c(
+            ST_ANDREWS_OLD_ID,
+            "St Andrews Links (Old Course)",
+            ST_ANDREWS_OLD_PARS,
+            ST_ANDREWS_OLD_HCS,
+            ST_ANDREWS_OLD_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Old Tom Morris / Alister MacKenzie",
+            type: "Public",
+            phone: "+44 1334 466666",
+            website: "https://standrews.com/golf/courses/old-course",
+            address: "St Andrews, Fife KY16 9SF, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            MUIRFIELD_ID,
+            "Muirfield",
+            MUIRFIELD_PARS,
+            MUIRFIELD_HCS,
+            MUIRFIELD_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Tom Morris (Old Tom Morris)",
+            type: "Private",
+            phone: "+44 1620 842123",
+            website: "https://www.muirfield.org.uk",
+            address: "Duncur Rd, Gullane EH31 2EG, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        
+        c(
+            TURNBERRY_AILSA_ID,
+            "Trump Turnberry Resort (Ailsa)",
+            TURNBERRY_AILSA_PARS,
+            TURNBERRY_AILSA_HCS,
+            TURNBERRY_AILSA_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Willie Fernie / Mackenzie Ross / Martin Ebert",
+            type: "Resort",
+            website: "https://www.trumphotels.com/turnberry",
+            address: "Turnberry, Ayrshire KA26 9LT, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+
+        c(
+            TURNBERRY_KRTB_ID,
+            "Trump Turnberry Resort (King Robert the Bruce)",
+            TURNBERRY_KRTB_PARS,
+            TURNBERRY_KRTB_HCS,
+            TURNBERRY_KRTB_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Mackenzie Ross / Donald Steel",
+            type: "Resort",
+            website: "https://www.trumphotels.com/turnberry",
+            address: "Turnberry, Ayrshire KA26 9LT, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
             LA_ESTANCIA_ID,
             "La Estancia Golf Resort (Tournament)",
             LA_ESTANCIA_TOURNAMENT_PARS,
@@ -4841,11 +6851,50 @@ private enum BuiltIns {
             website: "https://laestanciagolf.com",
             address: "Carretera La Romana – Higuey, La Romana, Dominican Republic"
         ),
+        c(
+            SUNNINGDALE_OLD_ID,
+            "Sunningdale Golf Club (Old Course)",
+            SUNNINGDALE_OLD_PARS,
+            SUNNINGDALE_OLD_HCS,
+            SUNNINGDALE_OLD_TEES,
+            country: "England",
+            state: nil,
+            architect: "Willie Park Jr.",
+            type: "Private",
+            website: "https://www.sunningdalegolfclub.co.uk",
+            address: "Ridgemount Rd, Sunningdale, Ascot SL5 9RR, England, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            ROYAL_DORNOCH_CHAMP_ID,
+            "Royal Dornoch Golf Club (Championship Course)",
+            ROYAL_DORNOCH_CHAMP_PARS,
+            ROYAL_DORNOCH_CHAMP_HCS,
+            ROYAL_DORNOCH_CHAMP_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Old Tom Morris",
+            type: "Public",
+            website: "https://royaldornoch.com",
+            address: "Golf Rd, Dornoch IV25 3LW, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            ROYAL_ST_GEORGES_ID,
+            "Royal St George's Golf Club",
+            ROYAL_ST_GEORGES_PARS,
+            ROYAL_ST_GEORGES_HCS,
+            ROYAL_ST_GEORGES_TEES,
+            country: "England",
+            state: nil,
+            architect: "William Laidlaw Purves",
+            type: "Private",
+            website: "https://www.royalstgeorges.com",
+            address: "Golf Rd, Sandwich CT13 9PB, England, United Kingdom",
+            isWolfApproved: true
+        ),
 
-        // -------------------------
-        // Must-have classic
-        // -------------------------
-
+    
         c(
             PINE_VALLEY_ID,
             "Pine Valley",
@@ -5887,14 +7936,13 @@ private enum BuiltIns {
             PGA_FRISCO_EAST_TEES,
             country: "USA",
             state: "TX",
-            region: "Dallas",
+            region: nil,
             architect: "Gil Hanse",
             type: "Resort",
             phone: "(800) 843-6664",
             website: "https://pgafrisco.com/",
             address: "3255 PGA Parkway, Frisco, TX",
             isWolfApproved: true,
-           
             resortBrand: "Omni",
             promo: nil
         ),
@@ -5915,22 +7963,22 @@ private enum BuiltIns {
             resortBrand: "Omni",
             promo: nil
         ),
+        
         c(
             BARTON_CREEK_CRENSHAW_ID,
-            "Omni Barton Creek (Crenshaw Cliffside)",
+            "Omni Barton Creek (Crenshaw Course)",
             BARTON_CREEK_CRENSHAW_PARS,
             BARTON_CREEK_CRENSHAW_HCS,
             BARTON_CREEK_CRENSHAW_TEES,
             country: "USA",
             state: "TX",
-            architect: "Coore & Crenshaw",
+            architect: "Ben Crenshaw & Bill Coore",
             type: "Resort",
             phone: "(512) 329-4000",
-            website: "https://www.omnihotels.com/hotels/austin-barton-creek/golf",
-            address: "8212 Barton Club Dr, Austin, TX",
+            website: "https://www.omnihotels.com/hotels/austin-barton-creek/golf/crenshaw-course",
+            address: "8212 Barton Club Dr, Austin, TX 78735",
             isWolfApproved: true,
             resortBrand: "Omni",
-            promo: nil
         ),
         c(
             BARTON_CREEK_PALMER_ID,
@@ -6225,6 +8273,7 @@ private enum BuiltIns {
             IRONWOOD_CC_SOUTH_TEES,
             country: "USA",
             state: "CA",
+            region: "Palm Springs",
             architect: "Desmond Muirhead",
             type: "Private",
             phone: "(760) 346-0551",
@@ -6240,6 +8289,7 @@ private enum BuiltIns {
             IRONWOOD_CC_NORTH_TEES,
             country: "USA",
             state: "CA",
+            region: "Palm Springs",
             architect: "Desmond Muirhead",
             type: "Private",
             phone: "(760) 346-0551",
@@ -6247,8 +8297,915 @@ private enum BuiltIns {
             address: "73735 Irontree Dr, Palm Desert, CA 92260",
             isWolfApproved: false
         ),
-    ]
+        c(
+            WYNN_GOLF_CLUB_ID,
+            "Wynn Golf Club",
+            WYNN_GOLF_CLUB_PARS,
+            WYNN_GOLF_CLUB_HCS,
+            WYNN_GOLF_CLUB_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Tom Fazio",
+            type: "Resort",
+            phone: "(702) 770-7000",
+            website: "https://www.wynnlasvegas.com",
+            address: "3131 Las Vegas Blvd S, Las Vegas, NV 89109",
+            isWolfApproved: false
+        ),
+        c(
+            CASCATA_BLACK_ID,
+            "Cascata",
+            CASCATA_BLACK_PARS,
+            CASCATA_BLACK_HCS,
+            CASCATA_BLACK_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Rees Jones",
+            type: "Resort",
+            phone: "(702) 294-2005",
+            website: "https://golfcascata.com",
+            address: "1 Cascata Drive, Boulder City, NV 89005",
+            isWolfApproved: false
     
+        ),
+        c(
+            PAIUTE_WOLF_ID,
+            "Las Vegas Paiute Golf Resort – The Wolf",
+            PAIUTE_WOLF_PARS,
+            PAIUTE_WOLF_HCS,
+            PAIUTE_WOLF_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Pete Dye",
+            type: "Resort",
+            phone: "(800) 711-2833",
+            website: "https://www.lvpaiutegolf.com",
+            address: "10325 Nu-Wav Kaiv Blvd, Las Vegas, NV 89124",
+            isWolfApproved: false
+        ),
+        // MARK: - Bali Hai Golf Club
+
+        c(
+            BALI_HAI_GC_ID,
+            "Bali Hai Golf Club",
+            BALI_HAI_GC_PARS,
+            BALI_HAI_GC_HCS,
+            BALI_HAI_GC_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Schmidt & Curley",
+            type: "Resort",
+            phone: "(702) 597-2400",
+            website: "https://www.balihaigolfclub.com",
+            address: "5160 Las Vegas Blvd S, Las Vegas, NV 89119",
+            isWolfApproved: true
+        ),
+
+        // MARK: - Bear's Best Las Vegas
+
+        c(
+            BEARS_BEST_LV_ID,
+            "Bear's Best Las Vegas",
+            BEARS_BEST_LV_PARS,
+            BEARS_BEST_LV_HCS,
+            BEARS_BEST_LV_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            phone: "(702) 804-8500",
+            website: "https://nicklausdesign.com/course/bearsbestlasvegas/",
+            address: "11111 W Flamingo Rd, Las Vegas, NV 89135",
+            isWolfApproved: true
+        ),
+
+        // MARK: - Reflection Bay Golf Club
+
+        c(
+            REFLECTION_BAY_GC_ID,
+            "Reflection Bay Golf Club",
+            REFLECTION_BAY_GC_PARS,
+            REFLECTION_BAY_GC_HCS,
+            REFLECTION_BAY_GC_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            phone: "(702) 740-4653",
+            website: "https://reflectionbaygolf.com",
+            address: "75 Montelago Blvd, Henderson, NV 89011",
+            isWolfApproved: true
+        ),
+        // MARK: - Revere Golf Club - Lexington
+
+        c(
+            REVERE_LEXINGTON_ID,
+            "Revere Golf Club - Lexington",
+            REVERE_LEXINGTON_PARS,
+            REVERE_LEXINGTON_HCS,
+            REVERE_LEXINGTON_TEES,
+            country: "USA",
+            state: "NV",
+            type: "Daily-Fee",
+            phone: "(877) 273-8373",
+            website: "https://reveregolf.com",
+            address: "2600 Hampton Rd, Henderson, NV 89052",
+            isWolfApproved: true
+        ),
+
+        // MARK: - Revere Golf Club - Concord
+
+        c(
+            REVERE_CONCORD_ID,
+            "Revere Golf Club - Concord",
+            REVERE_CONCORD_PARS,
+            REVERE_CONCORD_HCS,
+            REVERE_CONCORD_TEES,
+            country: "USA",
+            state: "NV",
+            type: "Daily-Fee",
+            phone: "(877) 273-8373",
+            website: "https://reveregolf.com",
+            address: "2600 Hampton Rd, Henderson, NV 89052",
+            isWolfApproved: true
+        ),
+
+        // MARK: - Cascata - Serket
+
+        c(
+            CASCATA_SERKET_ID,
+            "Cascata - Serket",
+            CASCATA_SERKET_PARS,
+            CASCATA_SERKET_HCS,
+            CASCATA_SERKET_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Rees Jones",
+            type: "Resort",
+            website: "https://cascata.com",
+            isWolfApproved: true
+        ),
+        c(
+            TPC_SUMMERLIN_ID,
+            "TPC Summerlin",
+            TPC_SUMMERLIN_PARS,
+            TPC_SUMMERLIN_HCS,
+            TPC_SUMMERLIN_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Bobby Weed",
+            type: "Private",
+            phone: "(702) 256-0111",
+            website: "https://tpc.com/summerlin",
+            address: "1700 Village Center Cir, Las Vegas, NV 89134",
+            isWolfApproved: true
+        ),
+        c(
+            TPC_LAS_VEGAS_ID,
+            "TPC Las Vegas",
+            TPC_LAS_VEGAS_PARS,
+            TPC_LAS_VEGAS_HCS,
+            TPC_LAS_VEGAS_TEES,
+            country: "USA",
+            state: "NV",
+            architect: "Bobby Weed / Raymond Floyd",
+            type: "Resort",
+            phone: "(702) 256-2000",
+            website: "https://tpc.com/lasvegas",
+            address: "9851 Canyon Run Dr, Las Vegas, NV 89144",
+            isWolfApproved: false
+        ),
+        c(
+            TRUMP_DORAL_BLUE_ID,
+            "Trump National Doral (Blue Monster)",
+            TRUMP_DORAL_BLUE_PARS,
+            TRUMP_DORAL_BLUE_HCS,
+            TRUMP_DORAL_BLUE_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Dick Wilson / Gil Hanse redesign",
+            type: "Resort",
+            phone: "(305) 592-2000",
+            website: "https://www.trumphotels.com/miami/golf",
+            address: "4400 NW 87th Ave, Miami, FL 33178",
+            isWolfApproved: false
+        ),
+        c(
+            TRUMP_INTL_WEST_PALM_CHAMPIONSHIP_ID,
+            "Trump International Golf Club - Championship",
+            TRUMP_INTL_WEST_PALM_CHAMPIONSHIP_PARS,
+            TRUMP_INTL_WEST_PALM_CHAMPIONSHIP_HCS,
+            TRUMP_INTL_WEST_PALM_CHAMPIONSHIP_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Jim Fazio",
+            type: "Private",
+            phone: "(561) 973-1550",
+            website: "https://www.trump.com",
+            address: "3505 Summit Blvd, West Palm Beach, FL 33406",
+            isWolfApproved: false
+        ),
+
+        c(
+            TRUMP_NATIONAL_JUPITER_ID,
+            "Trump National Golf Club Jupiter",
+            TRUMP_NATIONAL_JUPITER_PARS,
+            TRUMP_NATIONAL_JUPITER_HCS,
+            TRUMP_NATIONAL_JUPITER_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(561) 691-8700", // standard club line (not in image but correct)
+            website: "https://www.trump.com",
+            address: "115 Eagle Tree Terrace, Jupiter, FL 33477",
+            isWolfApproved: false
+        ),
+
+       
+
+        c(
+            TRUMP_COLTS_NECK_ID,
+            "Trump National Golf Club - Colts Neck",
+            TRUMP_COLTS_NECK_PARS,
+            TRUMP_COLTS_NECK_HCS,
+            TRUMP_COLTS_NECK_TEES,
+            country: "USA",
+            state: "NJ",
+            architect: "Jerry Pate",
+            type: "Private",
+            phone: "(732) 305-9250",
+            website: "https://www.trump.com",
+            address: "1 Trump National Blvd, Colts Neck, NJ 07722",
+            isWolfApproved: false
+        ),
+
+        c(
+            TRUMP_NATIONAL_PHILLY_ID,
+            "Trump National GC - Philadelphia",
+            TRUMP_NATIONAL_PHILLY_PARS,
+            TRUMP_NATIONAL_PHILLY_HCS,
+            TRUMP_NATIONAL_PHILLY_TEES,
+            country: "USA",
+            state: "NJ",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(856) 754-2160",
+            website: "https://www.trump.com",
+            address: "500 W Branch Ave, Pine Hill, NJ 08021",
+            isWolfApproved: false
+        ),
+        c(
+            TRUMP_NATIONAL_WESTCHESTER_ID,
+            "Trump National Golf Club (Westchester)",
+            TRUMP_NATIONAL_WESTCHESTER_PARS,
+            TRUMP_NATIONAL_WESTCHESTER_HCS,
+            TRUMP_NATIONAL_WESTCHESTER_TEES,
+            country: "USA",
+            state: "NY",
+            architect: "Jim Fazio",
+            type: "Private",
+            phone: "(914) 944-0900",
+            website: "https://www.trump.com",
+            address: "100 Shadow Tree Ln, Briarcliff Manor, NY 10510",
+            isWolfApproved: false,
+            resortBrand: "Trump",
+            promo: nil
+        ),
+        c(
+            TRUMP_BEDMINSTER_OLD_ID,
+            "Trump National Golf Club (Bedminster - Old Course)",
+            TRUMP_BEDMINSTER_OLD_PARS,
+            TRUMP_BEDMINSTER_OLD_HCS,
+            TRUMP_BEDMINSTER_OLD_TEES,
+            country: "USA",
+            state: "NJ",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(908) 470-4400",
+            website: "https://www.trump.com",
+            address: "900 Lamington Rd, Bedminster, NJ 07921",
+            isWolfApproved: false
+        ),
+        c(
+            TRUMP_BEDMINSTER_NEW_ID,
+            "Trump National Golf Club (Bedminster - New Course)",
+            TRUMP_BEDMINSTER_NEW_PARS,
+            TRUMP_BEDMINSTER_NEW_HCS,
+            TRUMP_BEDMINSTER_NEW_TEES,
+            country: "USA",
+            state: "NJ",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(908) 470-4400",
+            website: "https://www.trump.com",
+            address: "900 Lamington Rd, Bedminster, NJ 07921",
+            isWolfApproved: false,
+            resortBrand: "Trump",
+            promo: nil
+        ),
+        c(
+            TRUMP_NATIONAL_HUDSON_VALLEY_ID,
+            "Trump National Golf Club (Hudson Valley)",
+            TRUMP_NATIONAL_HUDSON_VALLEY_PARS,
+            TRUMP_NATIONAL_HUDSON_VALLEY_HCS,
+            TRUMP_NATIONAL_HUDSON_VALLEY_TEES,
+            country: "USA",
+            state: "NY",
+            architect: nil,
+            type: "Private",
+            phone: "(703) 444-4801",
+            website: "https://www.trump.com",
+            address: "178 Stormville Rd, Hopewell Junction, NY 12533",
+            isWolfApproved: false,
+            resortBrand: "Trump",
+            promo: nil
+        ),
+
+        c(
+            TRUMP_NATIONAL_LOS_ANGELES_ID,
+            "Trump National Golf Club (Los Angeles)",
+            TRUMP_NATIONAL_LOS_ANGELES_PARS,
+            TRUMP_NATIONAL_LOS_ANGELES_HCS,
+            TRUMP_NATIONAL_LOS_ANGELES_TEES,
+            country: "USA",
+            state: "CA",
+            region: "SoCal",
+            architect: "Pete Dye",
+            type: "Semi-Private",
+            phone: "(310) 870-9560",
+            website: "https://www.trumpnationallosangeles.com",
+            address: "One Trump National Dr, Rancho Palos Verdes, CA 90275",
+            isWolfApproved: false,
+            resortBrand: "Trump",
+            promo: nil
+        ),
+        c(
+            TRUMP_NATIONAL_CHARLOTTE_ID,
+            "Trump National Golf Club (Charlotte)",
+            TRUMP_NATIONAL_CHARLOTTE_PARS,
+            TRUMP_NATIONAL_CHARLOTTE_HCS,
+            TRUMP_NATIONAL_CHARLOTTE_TEES,
+            country: "USA",
+            state: "NC",
+            architect: "Greg Norman",
+            type: "Private",
+            phone: "(980) 514-1860",
+            website: "https://www.trumpnationalcharlotte.com",
+            address: "120 Trump Sq, Mooresville, NC 28117",
+            isWolfApproved: false,
+            resortBrand: "Trump",
+            promo: nil
+        ),
+
+        c(
+            TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_ID,
+            "Trump National Golf Club (Washington D.C. - Championship)",
+            TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_PARS,
+            TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_HCS,
+            TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_TEES,
+            country: "USA",
+            state: "VA",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(703) 444-4801",
+            website: "https://www.trumpnationaldc.com",
+            address: "20391 Lowes Island Blvd, Sterling, VA 20165",
+            isWolfApproved: false,
+            resortBrand: "Trump",
+            promo: nil
+        ),
+
+        c(
+            BALLYS_FERRY_POINT_ID,
+            "Bally's Golf Links at Ferry Point",
+            BALLYS_FERRY_POINT_PARS,
+            BALLYS_FERRY_POINT_HCS,
+            BALLYS_FERRY_POINT_TEES,
+            country: "USA",
+            state: "NY",
+            architect: "Jack Nicklaus",
+            type: "Daily-Fee",
+            phone: "(718) 414-1555",
+            website: "https://casinos.ballys.com/golf-links-ferry-point",
+            address: "500 Hutchinson River Pkwy, Bronx, NY 10465",
+            isWolfApproved: false,
+            resortBrand: "Bally's",
+            promo: nil
+        ),
+        c(
+            OLD_MEMORIAL_ID,
+            "Old Memorial Golf Club",
+            OLD_MEMORIAL_PARS,
+            OLD_MEMORIAL_HCS,
+            OLD_MEMORIAL_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Steve Smyers",
+            type: "Private",
+            phone: nil,
+            website: "https://www.oldmemorialgolfclub.com",
+            address: "13600 Hixon Rd, Tampa, FL 33626",
+            isWolfApproved: false
+        ),
+        c(
+            CONCESSION_GC_ID,
+            "The Concession Golf Club",
+            CONCESSION_GC_PARS,
+            CONCESSION_GC_HCS,
+            CONCESSION_GC_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Jack Nicklaus / Tony Jacklin",
+            type: "Private",
+            phone: "(941) 322-1461",
+            website: "https://www.theconcession.com",
+            address: "7700 Lindrick Ln, Bradenton, FL 34202",
+            isWolfApproved: false
+        ),
+        c(
+            INNISBROOK_COPPERHEAD_ID,
+            "Innisbrook Resort (Copperhead)",
+            INNISBROOK_COPPERHEAD_PARS,
+            INNISBROOK_COPPERHEAD_HCS,
+            INNISBROOK_COPPERHEAD_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Larry Packard",
+            type: "Resort",
+            phone: "(800) 492-6899",
+            website: "https://www.innisbrookgolfresort.com",
+            address: "36750 US Highway 19 N, Palm Harbor, FL 34684",
+            isWolfApproved: true
+        ),
+        c(
+            FLORIDIAN_NATIONAL_ID,
+            "Floridian National Golf Club",
+            FLORIDIAN_NATIONAL_PARS,
+            FLORIDIAN_NATIONAL_HCS,
+            FLORIDIAN_NATIONAL_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(772) 781-1000",
+            website: "https://floridian.cc",
+            address: "14020 NW Gilson Rd, Palm City, FL 34990",
+            isWolfApproved: true
+        ),
+        c(
+            INVERNESS_GC_ID,
+            "Inverness Golf Club",
+            INVERNESS_GC_PARS,
+            INVERNESS_GC_HCS,
+            INVERNESS_GC_TEES,
+            country: "USA",
+            state: "IL",
+            architect: "Donald Ross",
+            type: "Private",
+            phone: "(847) 358-2340",
+            website: "https://invernessgolfclub.org",
+            address: "102 N Roselle Rd, Inverness, IL 60067",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+       
+        c(
+            WYNSTONE_GC_ID,
+            "Wynstone Golf Club",
+            WYNSTONE_GC_PARS,
+            WYNSTONE_GC_HCS,
+            WYNSTONE_GC_TEES,
+            country: "USA",
+            state: "IL",
+            region: nil,
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(847) 304-2800",
+            website: "https://www.wynstone.org",
+            address: "1 South Wynstone Drive, North Barrington, IL 60010",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            SHINGLE_CREEK_GC_ID,
+            "Shingle Creek Golf Club",
+            SHINGLE_CREEK_GC_PARS,
+            SHINGLE_CREEK_GC_HCS,
+            SHINGLE_CREEK_GC_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Arnold Palmer Design Company",
+            type: "Resort",
+            phone: "(407) 996-1559",
+            website: "https://www.shinglecreekgolf.com",
+            address: "9939 Universal Blvd, Orlando, FL 32819",
+            isWolfApproved: true,
+            resortBrand: "Omni",
+        ),
+        c(
+            TPC_SCOTTSDALE_CHAMPIONS_ID,
+            "TPC Scottsdale (Champions Course)",
+            TPC_SCOTTSDALE_CHAMPIONS_PARS,
+            TPC_SCOTTSDALE_CHAMPIONS_HCS,
+            TPC_SCOTTSDALE_CHAMPIONS_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Randy Heckenkemper",
+            type: "Public",
+            isWolfApproved: true
+        ),
+        c(
+            TPC_SCOTTSDALE_STADIUM_ID,
+            "TPC Scottsdale (Stadium Course)",
+            TPC_SCOTTSDALE_STADIUM_PARS,
+            TPC_SCOTTSDALE_STADIUM_HCS,
+            TPC_SCOTTSDALE_STADIUM_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Jay Morrish and Tom Weiskopf",
+            type: "Public",
+            isWolfApproved: true
+        ),
+        c(
+            TALKING_STICK_PIIPAASH_ID,
+            "Talking Stick Golf Club (Piipaash Course)",
+            TALKING_STICK_PIIPAASH_PARS,
+            TALKING_STICK_PIIPAASH_HCS,
+            TALKING_STICK_PIIPAASH_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Bill Coore and Ben Crenshaw",
+            type: "Resort",
+            phone: "(480) 860-2221",
+            website: "https://www.talkingstickgolfclub.com/",
+            address: "9998 E Talking Stick Way, Scottsdale, AZ 85256",
+            isWolfApproved: true
+        ),
+        c(
+            TALKING_STICK_ODHAM_ID,
+            "Talking Stick Golf Club (O’odham Course)",
+            TALKING_STICK_ODHAM_PARS,
+            TALKING_STICK_ODHAM_HCS,
+            TALKING_STICK_ODHAM_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Bill Coore & Ben Crenshaw",
+            type: "Resort",
+            phone: "(480) 860-2221",
+            website: "https://talkingstickgolfclub.com/",
+            address: "9998 E Talking Stick Way, Scottsdale, AZ 85256",
+            isWolfApproved: true,
+            resortBrand: "Talking Stick",
+            promo: nil
+        ),
+        c(
+            KIERLAND_ACACIA_MESQUITE_ID,
+            "Kierland Golf Club (Acacia / Mesquite)",
+            KIERLAND_ACACIA_MESQUITE_PARS,
+            KIERLAND_ACACIA_MESQUITE_HCS,
+            KIERLAND_ACACIA_MESQUITE_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Scott Miller",
+            type: "Resort",
+            phone: "(480) 922-9283",
+            website: "https://www.kierlandgolf.com/",
+            address: "15636 N Clubgate Dr, Scottsdale, AZ 85254",
+            isWolfApproved: true
+        ),
+        c(
+            KIERLAND_IRONWOOD_ACACIA_ID,
+            "Kierland Golf Club (Ironwood / Acacia)",
+            KIERLAND_IRONWOOD_ACACIA_PARS,
+            KIERLAND_IRONWOOD_ACACIA_HCS,
+            KIERLAND_IRONWOOD_ACACIA_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Scott Miller",
+            type: "Resort",
+            phone: "(480) 922-9283",
+            website: "https://www.kierlandgolf.com/",
+            address: "15636 N Clubgate Dr, Scottsdale, AZ 85254",
+            isWolfApproved: true
+        ),
+        c(
+            KIERLAND_IRONWOOD_MESQUITE_ID,
+            "Kierland Golf Club (Ironwood / Mesquite)",
+            KIERLAND_IRONWOOD_MESQUITE_PARS,
+            KIERLAND_IRONWOOD_MESQUITE_HCS,
+            KIERLAND_IRONWOOD_MESQUITE_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Scott Miller",
+            type: "Resort",
+            phone: "(480) 922-9283",
+            website: "https://www.kierlandgolf.com/",
+            address: "15636 N Clubgate Dr, Scottsdale, AZ 85254",
+            isWolfApproved: true
+        ),
+        c(
+            CAMELBACK_AMBIENTE_ID,
+            "Camelback Golf Club (Ambiente)",
+            CAMELBACK_AMBIENTE_PARS,
+            CAMELBACK_AMBIENTE_HCS,
+            CAMELBACK_AMBIENTE_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Jason Straka",
+            type: "Resort",
+            phone: "(480) 905-7902",
+            website: "https://www.camelbackgolf.com/",
+            address: "7847 N Mockingbird Ln, Scottsdale, AZ 85253",
+            isWolfApproved: true
+        ),
+
+        c(
+            CAMELBACK_PADRE_ID,
+            "Camelback Golf Club (Padre)",
+            CAMELBACK_PADRE_PARS,
+            CAMELBACK_PADRE_HCS,
+            CAMELBACK_PADRE_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Arthur Hills",
+            type: "Resort",
+            phone: "(480) 905-7902",
+            website: "https://www.camelbackgolf.com/",
+            address: "7847 N Mockingbird Ln, Scottsdale, AZ 85253",
+            isWolfApproved: true
+        ),
+        c(
+            BOULDERS_NORTH_ID,
+            "The Boulders (North Course)",
+            BOULDERS_NORTH_PARS,
+            BOULDERS_NORTH_HCS,
+            BOULDERS_NORTH_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Jay Morrish",
+            type: "Resort",
+            phone: "(480) 488-9028",
+            website: "https://www.theboulders.com/",
+            address: "34631 N Tom Darlington Dr, Carefree, AZ 85377",
+            isWolfApproved: true
+        ),
+
+        c(
+            BOULDERS_SOUTH_ID,
+            "The Boulders (South Course)",
+            BOULDERS_SOUTH_PARS,
+            BOULDERS_SOUTH_HCS,
+            BOULDERS_SOUTH_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Scottsdale",
+            architect: "Jay Morrish",
+            type: "Resort",
+            phone: "(480) 488-9028",
+            website: "https://www.theboulders.com/",
+            address: "34631 N Tom Darlington Dr, Carefree, AZ 85377",
+            isWolfApproved: true
+        ),
+        c(
+            AK_CHIN_SOUTHERN_DUNES_ID,
+            "Ak-Chin Southern Dunes Golf Club",
+            AK_CHIN_SOUTHERN_DUNES_PARS,
+            AK_CHIN_SOUTHERN_DUNES_HCS,
+            AK_CHIN_SOUTHERN_DUNES_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Fred Couples / Schmidt-Curley",
+            type: "Daily-Fee",
+            phone: "(480) 367-8949",
+            website: "https://akchinsoutherndunes.com/",
+            address: "48456 AZ-238, Maricopa, AZ 85139",
+            isWolfApproved: true,
+            resortBrand: "Troon",
+            promo: nil
+        ),
+        c(
+            QUINTERO_GC_ID,
+            "Quintero Golf Club",
+            QUINTERO_GC_PARS,
+            QUINTERO_GC_HCS,
+            QUINTERO_GC_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Rees Jones",
+            type: "Daily-Fee",
+            phone: "(928) 501-1500",
+            website: "https://quinterogolf.com/",
+            address: "16752 W State Route 74, Peoria, AZ 85383",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            AMERICAN_DUNES_ID,
+            "American Dunes Golf Club",
+            AMERICAN_DUNES_PARS,
+            AMERICAN_DUNES_HCS,
+            AMERICAN_DUNES_TEES,
+            country: "USA",
+            state: "MI",
+            architect: "Jack Nicklaus",
+            type: "Daily-Fee",
+            phone: "(616) 842-4040",
+            website: "https://americandunesgolfclub.com/",
+            address: "17000 Lincoln Street, Grand Haven, MI 49417",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            GOLDEN_HORSESHOE_GOLD_ID,
+            "Golden Horseshoe Golf Club (Gold Course)",
+            GOLDEN_HORSESHOE_GOLD_PARS,
+            GOLDEN_HORSESHOE_GOLD_HCS,
+            GOLDEN_HORSESHOE_GOLD_TEES,
+            country: "USA",
+            state: "VA",
+            architect: "Robert Trent Jones, Sr.",
+            type: "Resort",
+            phone: "(757) 565-8470",
+            website: "https://www.colonialwilliamsburg.org/stay-play/recreation-wellness/golden-horseshoe-golf-club/gold-course/",
+            address: "401 S England St, Williamsburg, VA 23185",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            POLO_FIELDS_ANN_ARBOR_ID,
+            "Polo Fields Golf & Country Club",
+            POLO_FIELDS_ANN_ARBOR_PARS,
+            POLO_FIELDS_ANN_ARBOR_HCS,
+            POLO_FIELDS_ANN_ARBOR_TEES,
+            country: "USA",
+            state: "MI",
+            architect: "William Newcomb",
+            type: "Private",
+            phone: "(734) 998-1555",
+            website: "https://polofieldsccmi.com/",
+            address: "5200 Polo Fields Drive, Ann Arbor, MI 48103",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            LAWSONIA_LINKS_ID,
+            "Lawsonia Links",
+            LAWSONIA_LINKS_PARS,
+            LAWSONIA_LINKS_HCS,
+            LAWSONIA_LINKS_TEES,
+            country: "USA",
+            state: "WI",
+            architect: "William Langford / Theodore Moreau",
+            type: "Public",
+            phone: "(920) 294-3320",
+            website: "https://www.lawsonia.com/",
+            address: "W2615 S Valley View Dr, Green Lake, WI 54941",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            PAAKO_RIDGE_1_18_ID,
+            "Paako Ridge Golf Club (1–18)",
+            PAAKO_RIDGE_1_18_PARS,
+            PAAKO_RIDGE_1_18_HCS,
+            PAAKO_RIDGE_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Ken Dye",
+            type: "Public",
+            phone: "(505) 281-6000",
+            website: "https://paakogolf.com/",
+            address: "1 Club House Dr, Sandia Park, NM 87047",
+            isWolfApproved: true,
+            promo: nil
+        ),
+        c(
+            PAAKO_RIDGE_10_27_ID,
+            "Paako Ridge Golf Club (10–27)",
+            PAAKO_RIDGE_10_27_PARS,
+            PAAKO_RIDGE_10_27_HCS,
+            PAAKO_RIDGE_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Ken Dye",
+            type: "Public",
+            phone: "(505) 281-6000",
+            website: "https://paakogolf.com/",
+            address: "1 Club House Dr, Sandia Park, NM 87047",
+            isWolfApproved: true,
+            promo: nil
+        ),
+        c(
+            TRINITY_FOREST_ID,
+            "Trinity Forest Golf Club",
+            TRINITY_FOREST_PARS,
+            TRINITY_FOREST_HCS,
+            TRINITY_FOREST_TEES,
+            country: "USA",
+            state: "TX",
+            architect: "Bill Coore & Ben Crenshaw",
+            type: "Private",
+            phone: "(214) 646-3570",
+            website: "https://trinityforestgc.com/",
+            address: "5000 Great Trinity Forest Way, Dallas, TX 75217",
+            isWolfApproved: true
+        ),
+
+        c(
+            COLONIAL_CC_ID,
+            "Colonial Country Club",
+            COLONIAL_CC_PARS,
+            COLONIAL_CC_HCS,
+            COLONIAL_CC_TEES,
+            country: "USA",
+            state: "TX",
+            architect: "John Bredemus / Perry Maxwell",
+            type: "Private",
+            phone: "(817) 927-4200",
+            website: "https://colonialfw.com/",
+            address: "3735 Country Club Circle, Fort Worth, TX 76109",
+            isWolfApproved: false,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            DALLAS_NATIONAL_ID,
+            "Dallas National Golf Club",
+            DALLAS_NATIONAL_PARS,
+            DALLAS_NATIONAL_HCS,
+            DALLAS_NATIONAL_TEES,
+            country: "USA",
+            state: "TX",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(214) 331-4195",
+            website: "https://www.dallasnationalgolfclub.com/",
+            address: "1515 Knoxville St, Dallas, TX 75211",
+            isWolfApproved: false
+        ),
+        c(
+            AUSTIN_CC_ID,
+            "Austin Country Club",
+            AUSTIN_CC_PARS,
+            AUSTIN_CC_HCS,
+            AUSTIN_CC_TEES,
+            country: "USA",
+            state: "TX",
+            architect: "Pete Dye",
+            type: "Private",
+            phone: "(512) 328-0090",
+            website: "https://austincountryclub.com/",
+            address: "4408 Long Champ Dr, Austin, TX 78746",
+            isWolfApproved: true
+        ),
+        c(
+            WHISPERING_PINES_ID,
+            "Whispering Pines Golf Club",
+            WHISPERING_PINES_PARS,
+            WHISPERING_PINES_HCS,
+            WHISPERING_PINES_TEES,
+            country: "USA",
+            state: "TX",
+            architect: "Chet Williams (Nicklaus Design)",
+            type: "Private",
+            phone: "(936) 594-4980",
+            website: "https://whisperingpinesgolfclub.com/",
+            address: "1532 Whispering Pines Dr, Trinity, TX 75862",
+            isWolfApproved: true
+        ),
+        c(
+            BLUEJACK_NATIONAL_ID,
+            "Bluejack National",
+            BLUEJACK_NATIONAL_PARS,
+            BLUEJACK_NATIONAL_HCS,
+            BLUEJACK_NATIONAL_TEES,
+            country: "USA",
+            state: "TX",
+            architect: "Tiger Woods",
+            type: "Private",
+            phone: "(281) 475-2165",
+            website: "https://bluejacknational.com/",
+            address: "4430 S FM 1486, Montgomery, TX 77316",
+            isWolfApproved: true
+        ),
+        ]
     
 #if DEBUG
     private static func assertNoDuplicateIDs() {
@@ -6488,5 +9445,15 @@ extension CourseLibrary {
 
     func stateThenInternationalTitles() -> [String] {
         coursesGroupedStateThenInternational().map { $0.section.title }
+    }
+}
+extension CourseRouting {
+    var displayName: String {
+        switch self {
+        case .eighteenStandard: return "Standard 18"
+        case .loopAtoB: return "A → B"
+        case .loopBtoC: return "B → C"
+        case .loopAtoC: return "A → C"
+        }
     }
 }

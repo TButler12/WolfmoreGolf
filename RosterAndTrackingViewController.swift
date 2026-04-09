@@ -95,6 +95,10 @@ final class RosterAndTrackingViewController: UIViewController,
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        print("✅ RosterVC viewWillAppear count =", FriendStore.shared.friends.count)
+        for f in FriendStore.shared.friends {
+            print("   roster sees:", f.name, "hc:", f.defaultHC, "phone:", f.phone)
+        }
         // In case home course / tracking changed elsewhere
         rebuildRowsFromStores()
         updateCourseLabel()
@@ -124,25 +128,35 @@ final class RosterAndTrackingViewController: UIViewController,
         let g = GameManager.shared.currentGame
 
         rows = friends.map { friend in
-            var hc = 0
+            var hc = friend.defaultHC
             var isActive = false
 
             if let g = g {
-                let seats = 0..<min(5, min(g.playerNames.count,
-                                           min(g.playerActivated.count, g.hcPlayers.count)))
+                let seats = 0..<min(
+                    5,
+                    min(g.playerNames.count,
+                        min(g.playerActivated.count, g.hcPlayers.count))
+                )
 
                 if let seat = seats.first(where: { i in
                     g.playerNames[i]
                         .trimmingCharacters(in: .whitespacesAndNewlines)
                         .caseInsensitiveCompare(friend.name) == .orderedSame
                 }) {
-                    hc = g.hcPlayers[seat]
+                    let gameHC = g.hcPlayers[seat]
+                    hc = gameHC == 0 ? friend.defaultHC : gameHC
                     isActive = g.playerActivated[seat]
                 }
             }
 
             let tracked = FriendTrackStore.shared.isTracked(friend.id, on: courseID)
-            return RowModel(friend: friend, hc: hc, isActive: isActive, isTracked: tracked)
+
+            return RowModel(
+                friend: friend,
+                hc: hc,
+                isActive: isActive,
+                isTracked: tracked
+            )
         }
 
         tableView.reloadData()
@@ -245,16 +259,19 @@ final class RosterAndTrackingViewController: UIViewController,
         let idx = textField.tag
         guard rows.indices.contains(idx) else { return }
 
-        let raw = (textField.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let val = Int(raw) ?? 0
-        rows[idx].hc = max(0, val)
+        let raw = (textField.text ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let val = max(0, Int(raw) ?? 0)
 
-        // (Optional) If this person is active, you can re-evaluate Go button state
+        rows[idx].hc = val
+
+        let friendID = rows[idx].friend.id
+        FriendStore.shared.update(friendID: friendID, defaultHC: val)
+
         updateGoButtonState()
     }
 
-    // MARK: - Go button state
-
+  
     private func updateGoButtonState() {
         let activeCount = rows.filter { $0.isActive }.count
 

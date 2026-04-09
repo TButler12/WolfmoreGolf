@@ -12,95 +12,97 @@
 import UIKit
 
 final class CoursePickerViewController: UITableViewController, UISearchResultsUpdating {
-    
-    // Callbacks
+
+    // MARK: - Types
+
+    private enum SortMode {
+        case groupedLocation
+        case nameAZ
+    }
+
+    private enum CourseFilter: Equatable {
+        case all
+        case resort
+        case privateClub
+        case publicCourse
+        case rtj
+        case resortBrand
+        case trump
+        case omni
+    }
+    private enum LocationGrouping {
+        case state
+        case region
+    }
+
+    // MARK: - Callbacks
+
     var onPickCourse: ((UUID) -> Void)?
     var onTapAddCourse: (() -> Void)?
-    
-    // Data
+
+    // MARK: - Data
+
     private var all: [CourseProfile] = []
     private var filtered: [CourseProfile] = []
-    
-    // Sections (e.g., "IL", "WI", "FL", "Ireland", "Northern Ireland")
-    
     private var sections: [(title: String, items: [CourseProfile])] = []
-    // Search
-    
+
+    // MARK: - UI State
+
+    private var sortMode: SortMode = .groupedLocation
+    private var activeFilter: CourseFilter = .all
+    private var locationGrouping: LocationGrouping = .state
+
     private let searchController = UISearchController(searchResultsController: nil)
+
     private var searchText: String {
         (searchController.searchBar.text ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
     }
-    
-    // Home course star
+
     private var homeCourseUUID: UUID? {
-        let s = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
-        return UUID(uuidString: s)
+        let raw = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
+        return UUID(uuidString: raw)
     }
+
     private let summaryHeader = UIView()
-       private let summaryLabel1 = UILabel()
-       private let summaryLabel2 = UILabel()
+    private let summaryLabel1 = UILabel()
+    private let summaryLabel2 = UILabel()
 
     // MARK: - Lifecycle
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
         title = "Choose Course"
         tableView = UITableView(frame: .zero, style: .insetGrouped)
-        
+
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
             target: self,
             action: #selector(cancelTapped)
         )
-        
+
         navigationItem.rightBarButtonItems = [
             UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addTapped)),
             UIBarButtonItem(title: "Filter", style: .plain, target: self, action: #selector(filterTapped))
         ]
+
         configureSummaryHeader()
         configureSearch()
         reloadCourses()
     }
-    @objc private func filterTapped() {
-        let ac = UIAlertController(title: "Sort / Filter", message: nil, preferredStyle: .actionSheet)
 
-        // Sort
-        ac.addAction(UIAlertAction(title: "Sort: Grouped (Location)", style: .default) { [weak self] _ in
-            self?.sortMode = .groupedLocation
-            self?.applyFilter()
-        })
-        ac.addAction(UIAlertAction(title: "Sort: Name (A–Z)", style: .default) { [weak self] _ in
-            self?.sortMode = .name
-            self?.applyFilter()
-        })
+    // MARK: - Setup
 
-        ac.addAction(UIAlertAction(title: "Filter: All Types", style: .default) { [weak self] _ in
-            self?.typeFilter = nil
-            self?.applyFilter()
-        })
-
-        // Type options (build from your data so it never gets out of sync)
-        let types = Set(all.compactMap { $0.type?.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty })
-
-        for t in types.sorted(by: { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending }) {
-            ac.addAction(UIAlertAction(title: "Type: \(t)", style: .default) { [weak self] _ in
-                self?.typeFilter = t
-                self?.applyFilter()
-            })
-        }
-
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        // iPad safety
-        if let pop = ac.popoverPresentationController {
-            pop.barButtonItem = navigationItem.rightBarButtonItems?.last
-        }
-
-        present(ac, animated: true)
+    private func configureSearch() {
+        searchController.searchResultsUpdater = self
+        searchController.obscuresBackgroundDuringPresentation = false
+        searchController.searchBar.placeholder = "Search courses"
+        navigationItem.searchController = searchController
+        navigationItem.hidesSearchBarWhenScrolling = false
+        definesPresentationContext = true
     }
+
     private func configureSummaryHeader() {
         summaryHeader.backgroundColor = .clear
 
@@ -124,7 +126,6 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             stack.bottomAnchor.constraint(equalTo: summaryHeader.bottomAnchor, constant: -10)
         ])
 
-        // give it an initial height (we’ll also update it below)
         summaryHeader.frame.size.height = 52
         tableView.tableHeaderView = summaryHeader
     }
@@ -135,279 +136,387 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         let customCount = total - builtInCount
 
         summaryLabel1.text = "Loaded courses: \(total)"
-        summaryLabel2.text = "Built-in: \(builtInCount)   •   Custom: \(customCount)"
+        summaryLabel2.text = "Built-in: \(builtInCount) • Custom: \(customCount)"
 
-        // Keep header height correct after text changes / rotations
         summaryHeader.setNeedsLayout()
         summaryHeader.layoutIfNeeded()
-        let targetSize = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
-        let height = summaryHeader.systemLayoutSizeFitting(targetSize).height
+
+        let target = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
+        let height = summaryHeader.systemLayoutSizeFitting(target).height
+
         if summaryHeader.frame.height != height {
-            var f = summaryHeader.frame
-            f.size.height = height
-            summaryHeader.frame = f
+            var frame = summaryHeader.frame
+            frame.size.height = height
+            summaryHeader.frame = frame
             tableView.tableHeaderView = summaryHeader
         }
     }
-    private func configureSearch() {
-        searchController.searchResultsUpdater = self
-        searchController.obscuresBackgroundDuringPresentation = false
-        searchController.searchBar.placeholder = "Search courses"
-        navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = false
-        definesPresentationContext = true
-    }
-    
+
     // MARK: - Data
-    
+
     private func reloadCourses() {
         all = CourseLibrary.shared.allSorted()
-
-        if let wj = all.first(where: { $0.name == "WJ Golf at Arboretum Golf Club" }) {
-            print("RELOAD WJ:", wj.name, wj.promo?.title ?? "no promo")
-        }
-
-        applyFilter()
+        applySearchSortAndFilter()
         updateSummaryHeader()
     }
-    
-    private func inferredType(for name: String) -> String? {
 
-        let n = name.lowercased()
+    // MARK: - Filter Menu
 
-        if n.contains("resort") { return "Resort" }
-        if n.contains("dunes") { return "Resort" }
-        if n.contains("valley") { return "Resort" }
-        if n.contains("national") { return "Private" }
-        if n.contains("club") { return "Private" }
-        if n.contains("country club") { return "Private" }
-        if n.contains("municipal") { return "Daily-Fee" }
-        if n.contains("golf course") { return "Daily-Fee" }
+    @objc private func filterTapped() {
+        let ac = UIAlertController(title: "Sort / Filter", message: nil, preferredStyle: .actionSheet)
 
-        return nil
+        ac.addAction(UIAlertAction(
+            title: sortMode == .groupedLocation ? "✓ Sort: Grouped (Location)" : "Sort: Grouped (Location)",
+            style: .default
+        ) { [weak self] _ in
+            self?.sortMode = .groupedLocation
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: sortMode == .nameAZ ? "✓ Sort: Name (A–Z)" : "Sort: Name (A–Z)",
+            style: .default
+        ) { [weak self] _ in
+            self?.sortMode = .nameAZ
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: activeFilter == .all ? "✓ Filter: All Courses" : "Filter: All Courses",
+            style: .default
+        ) { [weak self] _ in
+            self?.activeFilter = .all
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: activeFilter == .resort ? "✓ Type: Resort" : "Type: Resort",
+            style: .default
+        ) { [weak self] _ in
+            self?.activeFilter = .resort
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: activeFilter == .privateClub ? "✓ Type: Private" : "Type: Private",
+            style: .default
+        ) { [weak self] _ in
+            self?.activeFilter = .privateClub
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: activeFilter == .publicCourse ? "✓ Type: Public" : "Type: Public",
+            style: .default
+        ) { [weak self] _ in
+            self?.activeFilter = .publicCourse
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: activeFilter == .rtj ? "✓ Special: RTJ Trail" : "Special: RTJ Trail",
+            style: .default
+        ) { [weak self] _ in
+            self?.activeFilter = .rtj
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: activeFilter == .resortBrand ? "✓ Special: Resort Brand" : "Special: Resort Brand",
+            style: .default
+        ) { [weak self] _ in
+            self?.activeFilter = .resortBrand
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: locationGrouping == .state ? "✓ Group By: State" : "Group By: State",
+            style: .default
+        ) { [weak self] _ in
+            self?.locationGrouping = .state
+            self?.sortMode = .groupedLocation
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
+            title: locationGrouping == .region ? "✓ Group By: Region" : "Group By: Region",
+            style: .default
+        ) { [weak self] _ in
+            self?.locationGrouping = .region
+            self?.sortMode = .groupedLocation
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.barButtonItem = navigationItem.rightBarButtonItems?.last
+        }
+
+        present(ac, animated: true)
     }
-    private func applyFilter() {
-        // 1) Start from all
-        var list = all
 
-        // 2) Filter by search
-        if !searchText.isEmpty {
-            let q = searchText.lowercased()
-            list = list.filter { $0.name.lowercased().contains(q) }
+    // MARK: - Search / Sort / Filter
+
+    private func applySearchSortAndFilter() {
+        let q = searchText.lowercased()
+
+        var working = all.filter { course in
+            guard !q.isEmpty else { return true }
+
+            return course.name.lowercased().contains(q)
+                || (course.state ?? "").lowercased().contains(q)
+                || (course.country ?? "").lowercased().contains(q)
+                || (course.region ?? "").lowercased().contains(q)
+                || (course.type ?? "").lowercased().contains(q)
         }
 
-        // 3) Filter by type (Resort, Private, Daily-Fee, etc.)
-        if let typeFilter = typeFilter?.lowercased() {
-            list = list.filter { ($0.type ?? "").lowercased() == typeFilter }
-        }
+        working = working.filter { matchesFilter($0) }
+        filtered = working
 
-        filtered = list
-
-        // 4) Sort / group
         switch sortMode {
-        case .groupedLocation:
-            buildSections()          // uses filtered
-        case .name:
-            sections = [("All Courses", filtered.sorted {
+        case .nameAZ:
+            let sorted = working.sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-            })]
+            }
+            sections = [("All Courses", sorted)]
+
+        case .groupedLocation:
+            buildSections(from: working)
         }
 
         tableView.reloadData()
-        updateSummaryHeader() // if you added the header counts earlier
+        updateSummaryHeader()
     }
-    
+
+    private func matchesFilter(_ course: CourseProfile) -> Bool {
+        switch activeFilter {
+        case .all:
+            return true
+        case .resort:
+            return normalizedType(course.type) == "Resort"
+        case .privateClub:
+            return normalizedType(course.type) == "Private"
+        case .publicCourse:
+            return normalizedType(course.type) == "Public"
+        case .rtj:
+            return isRTJCourse(course)
+        case .resortBrand:
+            return resortBrandName(for: course) != nil
+        case .trump:
+            return isTrumpCourse(course)
+        case .omni:
+            return isOmniCourse(course)
+        }
+    }
     // MARK: - Grouping
-    
-    private func isUSA(_ country: String?) -> Bool {
-        let t = (country ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        if t.isEmpty { return true } // treat nil as USA default in your app
-        return t.caseInsensitiveCompare("USA") == .orderedSame
-        || t.caseInsensitiveCompare("United States") == .orderedSame
-        || t.caseInsensitiveCompare("United States of America") == .orderedSame
-    }
 
-    private func sectionSortKey(_ title: String) -> (Int, String) {
-        if title == "RTJ Trail" {
-            return (0, title)
+    private func buildSections(from courses: [CourseProfile]) {
+        var grouped: [String: [CourseProfile]] = [:]
+
+        for course in courses {
+            let country = cleaned(course.country)
+            let state = cleaned(course.state)
+            let region = cleaned(course.region)
+
+            let sectionTitle: String
+
+            // International always grouped by country
+            if !(country.isEmpty || country.caseInsensitiveCompare("USA") == .orderedSame) {
+                let internationalCountry = country.isEmpty ? "Unknown" : country
+                sectionTitle = "International • \(internationalCountry)"
+            } else {
+                // USA courses
+                let stateTitle = state.isEmpty ? "Unknown" : state
+
+                if locationGrouping == .region, !region.isEmpty {
+                    // Region is only shown as a subcategory of state
+                    sectionTitle = "\(stateTitle) • \(region)"
+                } else {
+                    sectionTitle = stateTitle
+                }
+            }
+
+            grouped[sectionTitle, default: []].append(course)
         }
-        return (1, title)
-    }
-   
-    private func buildSections() {
-        let source = filtered
 
-        let rtjCourses = source.filter {
-            ($0.type ?? "").trimmingCharacters(in: .whitespacesAndNewlines) == "RTJ Trail"
+        let titles = grouped.keys.sorted { lhs, rhs in
+            func rank(_ title: String) -> Int {
+                if title == "Unknown" { return 98 }
+                if title.hasPrefix("International • ") { return 99 }
+                return 10
+            }
+
+            let lRank = rank(lhs)
+            let rRank = rank(rhs)
+
+            if lRank != rRank { return lRank < rRank }
+
+            // Keep state groups together nicely
+            let lBase = lhs.components(separatedBy: " • ").first ?? lhs
+            let rBase = rhs.components(separatedBy: " • ").first ?? rhs
+
+            if lBase != rBase {
+                return lBase.localizedCaseInsensitiveCompare(rBase) == .orderedAscending
+            }
+
+            return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
         }
 
-        let nonRTJ = source.filter {
-            ($0.type ?? "").trimmingCharacters(in: .whitespacesAndNewlines) != "RTJ Trail"
-        }
-
-        var newSections: [(title: String, items: [CourseProfile])] = []
-
-        if !rtjCourses.isEmpty {
-            let sortedRTJ = rtjCourses.sorted {
+        sections = titles.map { title in
+            let items = (grouped[title] ?? []).sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
-            newSections.append(("AL • RTJ Trail", sortedRTJ))
+            return (title: title, items: items)
         }
-
-        let groupedByState = Dictionary(grouping: nonRTJ) { course in
-            let state = (course.state ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            return state.isEmpty ? "Other" : state
-        }
-
-        let sortedStates = groupedByState.keys.sorted {
-            $0.localizedCaseInsensitiveCompare($1) == .orderedAscending
-        }
-
-        for state in sortedStates {
-            let stateItems = groupedByState[state] ?? []
-
-            let groupedByRegion = Dictionary(grouping: stateItems) { course -> String in
-                if course.venueType == .indoorGolf {
-                    return "Indoor"
-                }
-
-                let region = (course.region ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-                return region
-            }
-
-            let sortedRegions = groupedByRegion.keys.sorted { lhs, rhs in
-                let lhsIsIndoor = lhs.caseInsensitiveCompare("Indoor") == .orderedSame
-                let rhsIsIndoor = rhs.caseInsensitiveCompare("Indoor") == .orderedSame
-
-                if lhsIsIndoor != rhsIsIndoor { return lhsIsIndoor }
-
-                if lhs.isEmpty && !rhs.isEmpty { return false }
-                if !lhs.isEmpty && rhs.isEmpty { return true }
-
-                return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
-            }
-
-            for region in sortedRegions {
-                let items = (groupedByRegion[region] ?? []).sorted {
-                    $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-                }
-
-                let title: String
-                if region.isEmpty {
-                    title = state
-                } else {
-                    title = "\(state) • \(region)"
-                }
-
-                newSections.append((title: title, items: items))
-            }
-        }
-
-        sections = newSections
     }
-    private enum CourseRow {
-        case regionHeader(String)
-        case course(CourseProfile)
+    // MARK: - Helpers
+    private func isTrumpCourse(_ course: CourseProfile) -> Bool {
+        let name = course.name.lowercased()
+        return name.contains("trump")
     }
-    private func isUSAStateTitle(_ title: String) -> Bool {
-        if title == "USA (No State)" { return false }
-        if title.count == 2 { return true }
-        if title.hasPrefix("CA — ") { return true }
-        return false
+
+    private func isOmniCourse(_ course: CourseProfile) -> Bool {
+        let name = course.name.lowercased()
+        return name.contains("omni")
     }
+    private func cleaned(_ value: String?) -> String {
+        (value ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func normalizedType(_ raw: String?) -> String {
+        let value = cleaned(raw).lowercased()
+
+        switch value {
+        case "resort":
+            return "Resort"
+        case "private":
+            return "Private"
+        case "public", "daily-fee", "daily fee", "municipal", "semi-private", "semi private":
+            return "Public"
+        default:
+            return cleaned(raw)
+        }
+    }
+
+    private func isRTJCourse(_ course: CourseProfile) -> Bool {
+        let name = course.name.lowercased()
+        let type = (course.type ?? "").lowercased()
+
+        return type.contains("rtj")
+            || name.contains("rtj")
+            || name.contains("robert trent jones")
+    }
+
+    private func resortBrandName(for course: CourseProfile) -> String? {
+        let name = course.name.lowercased()
+
+        let brands = [
+            "omni": "Omni",
+            "pinehurst": "Pinehurst",
+            "bandon": "Bandon",
+            "streamsong": "Streamsong",
+            "trump": "Trump",
+            "kiawah": "Kiawah",
+            "boyne": "Boyne",
+            "kohler": "Kohler",
+            "sea island": "Sea Island",
+            "sand valley": "Sand Valley",
+            "big cedar": "Big Cedar"
+        ]
+
+        for (key, brand) in brands {
+            if name.contains(key) {
+                return brand
+            }
+        }
+        return nil
+    }
+
+    // MARK: - Actions
+
+    @objc private func cancelTapped() {
+        dismiss(animated: true)
+    }
+
+    @objc private func addTapped() {
+        onTapAddCourse?()
+    }
+
     private func course(at indexPath: IndexPath) -> CourseProfile {
         sections[indexPath.section].items[indexPath.row]
     }
-    
+
     private func setHomeCourse(_ id: UUID) {
         ProfileStore.homeCourseID = id.uuidString
     }
-    
-    // MARK: - Actions
-    
-    @objc private func cancelTapped() { dismiss(animated: true) }
-    @objc private func addTapped() { onTapAddCourse?() }
-    
-    // MARK: - UITableView
-    
+
+    // MARK: - Table View
+
     override func numberOfSections(in tableView: UITableView) -> Int {
         sections.count
     }
-    
+
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         sections[section].title
     }
-    
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         sections[section].items.count
     }
+
     override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-
         let reuseID = "CourseCell"
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseID)
             ?? UITableViewCell(style: .subtitle, reuseIdentifier: reuseID)
 
-        let c = course(at: indexPath)
-        cell.textLabel?.text = c.name
+        let course = course(at: indexPath)
+        let isBuiltIn = CourseLibrary.shared.isBuiltIn(id: course.id)
+        let isSelectedCourse = (course.id == CourseLibrary.shared.selectedCourseID)
+
+        cell.textLabel?.text = course.name
         cell.textLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
-        print(c.name, c.promo?.type.rawValue ?? "no promo", c.promo?.isActive ?? false)
-        let isSelectedCourse = (c.id == CourseLibrary.shared.selectedCourseID)
 
-        // Do NOT use accessoryType anymore if showing promo badge
-        cell.accessoryType = .none
-        cell.accessoryView = makeAccessoryView(for: c, isSelected: isSelectedCourse)
+        var parts: [String] = []
+        parts.append(isBuiltIn ? "Built-in" : "Custom")
 
-        // ⭐ Home course
-        if c.id == homeCourseUUID {
+        let type = normalizedType(course.type)
+        if !type.isEmpty {
+            parts.append(type)
+        }
+
+        if let region = course.region, !region.isEmpty, locationGrouping == .region {
+            parts.append(region)
+        } else if let state = course.state, !state.isEmpty {
+            parts.append(state)
+        }
+
+        cell.detailTextLabel?.text = parts.joined(separator: " • ")
+        cell.detailTextLabel?.textColor = .secondaryLabel
+        cell.detailTextLabel?.numberOfLines = 2
+
+        if course.id == homeCourseUUID {
             cell.imageView?.image = UIImage(systemName: "star.fill")
             cell.imageView?.tintColor = .systemYellow
         } else {
             cell.imageView?.image = nil
         }
 
-        let isBuiltIn = CourseLibrary.shared.isBuiltIn(id: c.id)
-
-        var parts: [String] = []
-        parts.append(isBuiltIn ? "Built-in" : "Custom")
-
-        if let type = c.type, !type.isEmpty {
-            parts.append(type)
-        }
-
-        if let state = c.state, !state.isEmpty {
-            if state == "CA", let region = c.region, !region.isEmpty {
-                parts.append(region)
-            } else {
-                parts.append(state)
-            }
-        }
-        print(c.name, c.promo?.type.rawValue ?? "no promo", c.promo?.isActive ?? false)
-        var iconText = ""
-
-        //if c.hasPhone { iconText += "  📞" }
-       // if c.hasWebsite { iconText += "  🌐" }
-       // if c.hasAddress { iconText += "  📍" }
-       // if c.isApproved { iconText += "  🐺" }
-        
-     
-        cell.detailTextLabel?.text = parts.joined(separator: " • ") + iconText
-        cell.detailTextLabel?.textColor = .secondaryLabel
-        cell.detailTextLabel?.numberOfLines = 2
+        cell.accessoryType = .none
+        cell.accessoryView = makeAccessoryView(for: course, isSelected: isSelectedCourse)
 
         return cell
     }
-    override func tableView(_ tableView: UITableView,
-                            didSelectRowAt indexPath: IndexPath) {
+
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let c = course(at: indexPath)
-        onPickCourse?(c.id)
+        onPickCourse?(course(at: indexPath).id)
     }
-    
+
     override func tableView(_ tableView: UITableView,
                             leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
-
         let c = course(at: indexPath)
 
         let home = UIContextualAction(style: .normal, title: "Home") { [weak self] _, _, done in
@@ -415,6 +524,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             tableView.reloadData()
             done(true)
         }
+
         home.backgroundColor = .systemYellow
         home.image = UIImage(systemName: "star.fill")
 
@@ -422,12 +532,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         config.performsFirstActionWithFullSwipe = false
         return config
     }
-    // Swipe actions: Home ⭐, Edit ✏️, Delete 🗑️
- 
+
     override func tableView(_ tableView: UITableView,
                             trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
-
         let c = course(at: indexPath)
 
         let info = UIContextualAction(style: .normal, title: "Info") { [weak self] _, _, done in
@@ -456,9 +564,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
                     message: "\(c.name) is a built-in course.",
                     preferredStyle: .alert
                 )
-                ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-                    done(false)
-                })
+                ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in done(false) })
                 self.present(ac, animated: true)
                 return
             }
@@ -473,29 +579,20 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         config.performsFirstActionWithFullSwipe = false
         return config
     }
-    
-    private func promoText(for course: CourseProfile) -> String? {
-        guard let promo = course.promo, promo.isActive else { return nil }
 
-        let kind: String
-        switch promo.type {
-        case .deal: kind = "Deal"
-        case .event: kind = "Event"
-        case .featured: kind = "Featured"
-        }
-
-        if let subtitle = promo.subtitle, !subtitle.isEmpty {
-            return "\(kind): \(promo.title)\n\(subtitle)"
-        } else {
-            return "\(kind): \(promo.title)"
-        }
-    }
+    // MARK: - Accessory View
 
     private func makeAccessoryView(for course: CourseProfile, isSelected: Bool) -> UIView? {
-        if let promo = course.promo,
-           promo.isActive,
-           promo.type == .deal {
-            return makeDealBadge(for: promo)
+        if let promo = course.promo, promo.isActive, promo.type == .deal {
+            let label = UILabel(frame: CGRect(x: 0, y: 0, width: 58, height: 24))
+            label.font = .systemFont(ofSize: 10, weight: .bold)
+            label.textAlignment = .center
+            label.layer.cornerRadius = 7
+            label.clipsToBounds = true
+            label.text = "DEAL"
+            label.backgroundColor = .systemGreen
+            label.textColor = .white
+            return label
         }
 
         guard isSelected else { return nil }
@@ -507,65 +604,64 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         return iv
     }
 
-    private func makeDealBadge(for promo: LocationPromo) -> UIView {
-        let label = UILabel(frame: CGRect(x: 0, y: 0, width: 58, height: 24))
-        label.font = .systemFont(ofSize: 10, weight: .bold)
-        label.textAlignment = .center
-        label.layer.cornerRadius = 7
-        label.clipsToBounds = true
-        label.text = "DEAL"
-        label.backgroundColor = .systemGreen
-        label.textColor = .white
-        return label
+    // MARK: - Course Actions
+
+    private func editCourse(_ course: CourseProfile) {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC") as! CourseSetupViewController
+        vc.loadCourseID = course.id
+        navigationController?.pushViewController(vc, animated: true)
     }
-    final class PaddingLabel: UILabel {
-        var textInsets = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
 
-        override func drawText(in rect: CGRect) {
-            super.drawText(in: rect.inset(by: textInsets))
-        }
-
-        override var intrinsicContentSize: CGSize {
-            let size = super.intrinsicContentSize
-            return CGSize(
-                width: size.width + textInsets.left + textInsets.right,
-                height: size.height + textInsets.top + textInsets.bottom
+    private func confirmDeleteCourse(_ course: CourseProfile, completion: @escaping (Bool) -> Void) {
+        if course.name.caseInsensitiveCompare("WolfMore") == .orderedSame {
+            let ac = UIAlertController(
+                title: "Can’t Delete",
+                message: "WolfMore is the built-in default.",
+                preferredStyle: .alert
             )
+            ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in completion(false) })
+            present(ac, animated: true)
+            return
         }
+
+        let ac = UIAlertController(
+            title: "Delete \(course.name)?",
+            message: "This removes the course from your device.",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completion(false) })
+
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            guard let self else {
+                completion(false)
+                return
+            }
+
+            if ProfileStore.homeCourseID == course.id.uuidString {
+                ProfileStore.homeCourseID = ""
+            }
+
+            CourseLibrary.shared.delete(id: course.id)
+            self.reloadCourses()
+            completion(true)
+        })
+
+        present(ac, animated: true)
     }
+
     private func showCourseInfo(_ c: CourseProfile) {
         var lines: [String] = []
 
-        if let type = c.type, !type.isEmpty {
-            lines.append("Type: \(type)")
-        }
-        if let architect = c.architect, !architect.isEmpty {
-            lines.append("Architect: \(architect)")
-        }
-        if let state = c.state, !state.isEmpty {
-            lines.append("State: \(state)")
-        }
-        if let country = c.country, !country.isEmpty {
-            lines.append("Country: \(country)")
-        }
-        if let address = c.address, !address.isEmpty {
-            lines.append("Address: \(address)")
-        }
-        if let phone = c.phone, !phone.isEmpty {
-            lines.append("Phone: \(phone)")
-        }
-        if let website = c.website, !website.isEmpty {
-            lines.append("Website: \(website)")
-        }
-
-        if let promo = promoText(for: c) {
-            lines.append("")
-            lines.append(promo)
-        }
-
-        if c.isApproved {
-            lines.append("WolfMore Approved")
-        }
+        if let type = c.type, !type.isEmpty { lines.append("Type: \(type)") }
+        if let architect = c.architect, !architect.isEmpty { lines.append("Architect: \(architect)") }
+        if let state = c.state, !state.isEmpty { lines.append("State: \(state)") }
+        if let country = c.country, !country.isEmpty { lines.append("Country: \(country)") }
+        if let address = c.address, !address.isEmpty { lines.append("Address: \(address)") }
+        if let phone = c.phone, !phone.isEmpty { lines.append("Phone: \(phone)") }
+        if let website = c.website, !website.isEmpty { lines.append("Website: \(website)") }
+        if c.isWolfApproved == true { lines.append("WolfMore Approved") }
 
         let message = lines.isEmpty ? "No extra course details yet." : lines.joined(separator: "\n")
 
@@ -574,8 +670,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         if let phone = c.phone?.trimmingCharacters(in: .whitespacesAndNewlines), !phone.isEmpty {
             ac.addAction(UIAlertAction(title: "Call Course", style: .default) { _ in
                 let cleaned = phone.filter { "0123456789+".contains($0) }
-                if let url = URL(string: "tel://\(cleaned)"),
-                   UIApplication.shared.canOpenURL(url) {
+                if let url = URL(string: "tel://\(cleaned)"), UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url)
                 }
             })
@@ -587,8 +682,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
                 if !text.lowercased().hasPrefix("http://") && !text.lowercased().hasPrefix("https://") {
                     text = "https://\(text)"
                 }
-                if let url = URL(string: text),
-                   UIApplication.shared.canOpenURL(url) {
+                if let url = URL(string: text), UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url)
                 }
             })
@@ -614,78 +708,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
         present(ac, animated: true)
     }
-    // MARK: - Edit / Delete helpers
-    private enum SortMode { case groupedLocation, name }
-    private var sortMode: SortMode = .groupedLocation
 
-    private var typeFilter: String? = nil  // nil = All
-    private func editCourse(_ c: CourseProfile) {
-        let sb = UIStoryboard(name: "Main", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC") as! CourseSetupViewController
-        vc.loadCourseID = c.id
-        navigationController?.pushViewController(vc, animated: true)
-    }
-    
-    private func confirmDeleteCourse(_ c: CourseProfile, completion: @escaping (Bool) -> Void) {
-        
-        if c.name.caseInsensitiveCompare("WolfMore") == .orderedSame {
-            let ac = UIAlertController(
-                title: "Can’t Delete",
-                message: "WolfMore is the built-in default.",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "OK", style: .default) { _ in
-                completion(false)
-            })
-            present(ac, animated: true)
-            return
-        }
-        
-        let ac = UIAlertController(
-            title: "Delete \(c.name)?",
-            message: "This removes the course from your device.",
-            preferredStyle: .alert
-        )
-        
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in
-            completion(false)
-        })
-        
-        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
-            guard let self else { completion(false); return }
-            
-            if ProfileStore.homeCourseID == c.id.uuidString {
-                ProfileStore.homeCourseID = ""
-            }
-            
-            CourseLibrary.shared.delete(id: c.id)
-            self.reloadCourses()
-            completion(true)
-        })
-        
-        present(ac, animated: true)
-    }
-    
-    
-    // MARK: - UISearchResultsUpdating
+    // MARK: - Search Updating
+
     func updateSearchResults(for searchController: UISearchController) {
-        applyFilter()
-    }
-}
-private extension CourseProfile {
-    var hasPhone: Bool {
-        !(phone?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
-    }
-
-    var hasWebsite: Bool {
-        !(website?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
-    }
-
-    var hasAddress: Bool {
-        !(address?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
-    }
-
-    var isApproved: Bool {
-        isWolfApproved == true
+        applySearchSortAndFilter()
     }
 }

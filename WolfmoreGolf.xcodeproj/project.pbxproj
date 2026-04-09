@@ -70,6 +70,11 @@
 		F6D6A49C2EC786D10000F576 /* FriendStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D6A49B2EC786D10000F576 /* FriendStore.swift */; };
 		F6D6A49E2EC786FF0000F576 /* FriendTrackStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D6A49D2EC786FF0000F576 /* FriendTrackStore.swift */; };
 		F6D6A4A32EC78A100000F576 /* TrackFriendsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D6A4A22EC78A100000F576 /* TrackFriendsViewController.swift */; };
+		F6E007F32F8017AC00763694 /* SkinsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F22F8017AC00763694 /* SkinsModel.swift */; };
+		F6E007F52F8017F300763694 /* SkinsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F42F8017F300763694 /* SkinsEngine.swift */; };
+		F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F62F80182400763694 /* SkinsViewController.swift */; };
+		F6E007F92F80D19B00763694 /* HoleStatsEntryViewController..swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F82F80D19B00763694 /* HoleStatsEntryViewController..swift */; };
+		F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FA2F81913500763694 /* StatsContainerViewController.swift */; };
 		F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -142,6 +147,11 @@
 		F6D6A49B2EC786D10000F576 /* FriendStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendStore.swift; sourceTree = "<group>"; };
 		F6D6A49D2EC786FF0000F576 /* FriendTrackStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FriendTrackStore.swift; sourceTree = "<group>"; };
 		F6D6A4A22EC78A100000F576 /* TrackFriendsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackFriendsViewController.swift; sourceTree = "<group>"; };
+		F6E007F22F8017AC00763694 /* SkinsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsModel.swift; sourceTree = "<group>"; };
+		F6E007F42F8017F300763694 /* SkinsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsEngine.swift; sourceTree = "<group>"; };
+		F6E007F62F80182400763694 /* SkinsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsViewController.swift; sourceTree = "<group>"; };
+		F6E007F82F80D19B00763694 /* HoleStatsEntryViewController..swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsEntryViewController..swift; sourceTree = "<group>"; };
+		F6E007FA2F81913500763694 /* StatsContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsContainerViewController.swift; sourceTree = "<group>"; };
 		F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauSettingsViewController.swift; sourceTree = "<group>"; };
 		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -168,6 +178,11 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F6E007FA2F81913500763694 /* StatsContainerViewController.swift */,
+				F6E007F82F80D19B00763694 /* HoleStatsEntryViewController..swift */,
+				F6E007F62F80182400763694 /* SkinsViewController.swift */,
+				F6E007F42F8017F300763694 /* SkinsEngine.swift */,
+				F6E007F22F8017AC00763694 /* SkinsModel.swift */,
 				F6750CFF2F785E24001828D2 /* GameSettingsViewController.swift */,
 				F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */,
 				F6D5417B2F7498740020588F /* TextGroupStore.swift */,
@@ -380,11 +395,13 @@
 				F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */,
 				F6D6A49C2EC786D10000F576 /* FriendStore.swift in Sources */,
 				F64CDA962ECD0AA900019EE0 /* HoleStatsViewController.swift in Sources */,
+				F6E007F32F8017AC00763694 /* SkinsModel.swift in Sources */,
 				F6D6A4A32EC78A100000F576 /* TrackFriendsViewController.swift in Sources */,
 				F6D6A49A2EC786BC0000F576 /* Friend.swift in Sources */,
 				F63960632F60D62500EC0C30 /* AppNotifications.swift in Sources */,
 				F63960642F60D62500EC0C30 /* Course.swift in Sources */,
 				F63960662F60D62500EC0C30 /* CourseStore.swift in Sources */,
+				F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */,
 				F63960672F60D62500EC0C30 /* Game.swift in Sources */,
 				F63960682F60D62500EC0C30 /* GameData.swift in Sources */,
 				F63960692F60D62500EC0C30 /* GameData+HoleViews.swift in Sources */,
@@ -400,6 +417,8 @@
 				F63960712F60D62500EC0C30 /* KeyboardHelpers.swift in Sources */,
 				F63960722F60D62500EC0C30 /* MyStatsViewController.swift in Sources */,
 				F63960732F60D62500EC0C30 /* Notification.swift in Sources */,
+				F6E007F92F80D19B00763694 /* HoleStatsEntryViewController..swift in Sources */,
+				F6E007F52F8017F300763694 /* SkinsEngine.swift in Sources */,
 				F63960742F60D62500EC0C30 /* Player.swift in Sources */,
 				F6D5416C2F646EA70020588F /* NassauEngine.swift in Sources */,
 				F63960752F60D62500EC0C30 /* PlayerSetupStore.swift in Sources */,
@@ -417,6 +436,7 @@
 				F6D5417A2F7498150020588F /* TextGroup.swift in Sources */,
 				F60E62802F610B2A0062F321 /* ProGateViewController.swift in Sources */,
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
+				F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */,
 				F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,
 				F681886C2F62898D004162EE /* PlayerSetupViewController.swift in Sources */,
@@ -469,7 +489,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1..7;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -510,7 +530,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1..7;
+				MARKETING_VERSION = 2.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

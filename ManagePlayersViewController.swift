@@ -34,6 +34,10 @@ final class ManagePlayersViewController: UIViewController,
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        print("✅ ManagePlayersVC count =", FriendStore.shared.friends.count)
+        for f in FriendStore.shared.friends {
+            print("   manage sees:", f.name, "hc:", f.defaultHC, "phone:", f.phone)
+        }
         tableView.reloadData()
     }
 

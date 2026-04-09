@@ -6,8 +6,6 @@
 //
 import Foundation
 
-// MARK: - Model
-
 struct RoundSummary: Codable, Identifiable {
 
     /// Unique per player-row.
@@ -40,20 +38,24 @@ struct RoundSummary: Codable, Identifiable {
     // Umbie per hole
     var umbieWonPerHole: [Bool]
 
+    // NEW
+    var gameTypePerHole: [GameType]?
+    var fairwayHitPerHole: [Bool?]
+    var girPerHole: [Bool?]
+    var puttsPerHole: [Int?]
+
     enum CodingKeys: String, CodingKey {
         case id, gameID, date, courseID, playerName, totalMoney, totalProx, totalScore,
              holesPlayed, moneyPerHole, proxPerHole, scorePerHole,
-             wolfCalledPerHole, wolfTeamWonPerHole, umbieWonPerHole
+             wolfCalledPerHole, wolfTeamWonPerHole, umbieWonPerHole,
+             gameTypePerHole, fairwayHitPerHole, girPerHole, puttsPerHole
     }
 
-    /// Backwards compatible decode (legacy saves won’t have gameID / arrays).
+    /// Backwards compatible decode (legacy saves won’t have newer fields).
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
 
         id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
-
-        // Legacy saves won’t have gameID.
-        // Using id makes “each saved row is its own game” for old data.
         gameID = try c.decodeIfPresent(UUID.self, forKey: .gameID) ?? id
 
         date        = try c.decode(Date.self, forKey: .date)
@@ -75,9 +77,17 @@ struct RoundSummary: Codable, Identifiable {
             ?? Array(repeating: false, count: 18)
         wolfTeamWonPerHole = try c.decodeIfPresent([Bool].self, forKey: .wolfTeamWonPerHole)
             ?? Array(repeating: false, count: 18)
-
         umbieWonPerHole = try c.decodeIfPresent([Bool].self, forKey: .umbieWonPerHole)
             ?? Array(repeating: false, count: 18)
+
+        gameTypePerHole = try c.decodeIfPresent([GameType].self, forKey: .gameTypePerHole)
+
+        fairwayHitPerHole = try c.decodeIfPresent([Bool?].self, forKey: .fairwayHitPerHole)
+            ?? Array(repeating: nil, count: 18)
+        girPerHole = try c.decodeIfPresent([Bool?].self, forKey: .girPerHole)
+            ?? Array(repeating: nil, count: 18)
+        puttsPerHole = try c.decodeIfPresent([Int?].self, forKey: .puttsPerHole)
+            ?? Array(repeating: nil, count: 18)
     }
 
     init(
@@ -95,7 +105,11 @@ struct RoundSummary: Codable, Identifiable {
         scorePerHole: [Int?],
         wolfCalledPerHole: [Bool],
         wolfTeamWonPerHole: [Bool],
-        umbieWonPerHole: [Bool]
+        umbieWonPerHole: [Bool],
+        gameTypePerHole: [GameType]? = nil,
+        fairwayHitPerHole: [Bool?] = Array(repeating: nil, count: 18),
+        girPerHole: [Bool?] = Array(repeating: nil, count: 18),
+        puttsPerHole: [Int?] = Array(repeating: nil, count: 18)
     ) {
         self.id = id
         self.gameID = gameID
@@ -113,9 +127,13 @@ struct RoundSummary: Codable, Identifiable {
         self.wolfCalledPerHole  = Array(wolfCalledPerHole.prefix(18))
         self.wolfTeamWonPerHole = Array(wolfTeamWonPerHole.prefix(18))
         self.umbieWonPerHole    = Array(umbieWonPerHole.prefix(18))
+
+        self.gameTypePerHole = gameTypePerHole.map { Array($0.prefix(18)) }
+        self.fairwayHitPerHole = Array(fairwayHitPerHole.prefix(18))
+        self.girPerHole = Array(girPerHole.prefix(18))
+        self.puttsPerHole = Array(puttsPerHole.prefix(18))
     }
 }
-
 
 // MARK: - Aggregate stats model
 
@@ -125,6 +143,25 @@ struct MyStats {
     let avgMoneyPerRound: Double   // normalized to “per 18 holes”
     let totalProx: Int
     let avgProxPerRound: Double    // normalized to “per 18 holes”
+    var fairwaysHit: Int = 0
+    var fairwaysPossible: Int = 0
+
+    var girHit: Int = 0
+    var girPossible: Int = 0
+
+    var totalPutts: Int = 0
+    var holesWithPutts: Int = 0
+    var fairwayPct: Double {
+        fairwaysPossible > 0 ? (Double(fairwaysHit) / Double(fairwaysPossible)) * 100 : 0
+    }
+
+    var girPct: Double {
+        girPossible > 0 ? (Double(girHit) / Double(girPossible)) * 100 : 0
+    }
+
+    var avgPutts: Double {
+        holesWithPutts > 0 ? Double(totalPutts) / Double(holesWithPutts) : 0
+    }
 }
 
 
@@ -183,7 +220,21 @@ final class RoundStore {
         rounds.removeFirst()
         save()
     }
+    struct HoleAverage {
+        let hole: Int
+        let fairwayPct: Double?
+        let girPct: Double?
+        let avgPutts: Double?
+    }
+    func lastRound(forPlayer name: String) -> RoundSummary? {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
 
+        let rows = visibleRows(isPro: ProStore.shared.isPro)
+            .filter { $0.playerName.caseInsensitiveCompare(trimmed) == .orderedSame }
+
+        return rows.sorted { $0.date > $1.date }.first
+    }
     // MARK: - Prox rate (grouped by game)
 
     private func proxRateForHoleGroupedByGame(
@@ -329,6 +380,26 @@ extension RoundStore {
         let wolfCalled: [Bool]  = pad(Array(g.wolfCalledPerHole),   to: 18, with: false)
         let wolfTeamWon: [Bool] = pad(Array(g.wolfTeamWonPerHole),  to: 18, with: false)
         let umbieWon: [Bool]    = pad(Array(g.umbieWonPerHole),     to: 18, with: false)
+        // ---------- GAME TYPE / FIR / GIR / PUTTS ----------
+        let gameTypes: [GameType]? = {
+            guard !g.gameTypePerHole.isEmpty else { return nil }
+            return Array(g.gameTypePerHole.prefix(18))
+        }()
+
+        let firForSeat: [Bool?] = {
+            guard seat < g.fairwayHit.count else { return Array(repeating: nil, count: 18) }
+            return pad(g.fairwayHit[seat], to: 18, with: nil)
+        }()
+
+        let girForSeat: [Bool?] = {
+            guard seat < g.girHit.count else { return Array(repeating: nil, count: 18) }
+            return pad(g.girHit[seat], to: 18, with: nil)
+        }()
+
+        let puttsForSeat: [Int?] = {
+            guard seat < g.puttsPerHole.count else { return Array(repeating: nil, count: 18) }
+            return pad(g.puttsPerHole[seat], to: 18, with: nil)
+        }()
 
         // ---------- SCORES (18 optional ints) ----------
         var scoresForSeat = [Int?](repeating: nil, count: 18)
@@ -417,7 +488,11 @@ extension RoundStore {
             scorePerHole: scoresForSeat,
             wolfCalledPerHole: wolfCalled,
             wolfTeamWonPerHole: wolfTeamWon,
-            umbieWonPerHole: umbieWon
+            umbieWonPerHole: umbieWon,
+            gameTypePerHole: gameTypes,
+            fairwayHitPerHole: firForSeat,
+            girPerHole: girForSeat,
+            puttsPerHole: puttsForSeat
         )
 
         add(summary)
@@ -442,7 +517,6 @@ extension RoundStore {
         }
         guard !rowsForPlayer.isEmpty else { return nil }
 
-        // Unique games, not player-rows.
         let roundCount = Set(rowsForPlayer.map(\.gameID)).count
 
         let totalMoney = rowsForPlayer.reduce(0) { $0 + $1.totalMoney }
@@ -460,12 +534,51 @@ extension RoundStore {
             ? Double(totalProx) / Double(totalHoles) * 18.0
             : 0
 
+        // ✅ NEW STATS
+        var fairwaysHit = 0
+        var fairwaysPossible = 0
+
+        var girHit = 0
+        var girPossible = 0
+
+        var totalPutts = 0
+        var holesWithPutts = 0
+
+        for r in rowsForPlayer {
+            for h in 0..<min(18, r.holesPlayed) {
+
+                // FIR (count only when value exists)
+                if let fw = r.fairwayHitPerHole[h] {
+                    fairwaysPossible += 1
+                    if fw { fairwaysHit += 1 }
+                }
+
+                // GIR
+                if let gir = r.girPerHole[h] {
+                    girPossible += 1
+                    if gir { girHit += 1 }
+                }
+
+                // PUTTS
+                if let p = r.puttsPerHole[h] {
+                    totalPutts += p
+                    holesWithPutts += 1
+                }
+            }
+        }
+
         return MyStats(
             rounds: roundCount,
             totalMoney: totalMoney,
             avgMoneyPerRound: moneyPer18,
             totalProx: totalProx,
-            avgProxPerRound: proxPer18
+            avgProxPerRound: proxPer18,
+            fairwaysHit: fairwaysHit,
+            fairwaysPossible: fairwaysPossible,
+            girHit: girHit,
+            girPossible: girPossible,
+            totalPutts: totalPutts,
+            holesWithPutts: holesWithPutts
         )
     }
 }
@@ -550,5 +663,60 @@ extension RoundStore {
 
         // unique, stable-ish order (or remove sorted() if you want original order)
         return Array(Set(phones)).sorted()
+    }
+}
+extension RoundStore {
+
+    func averagesByHole(forPlayer name: String) -> [HoleAverage] {
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+
+        let rows = visibleRows(isPro: ProStore.shared.isPro)
+            .filter { $0.playerName.caseInsensitiveCompare(trimmed) == .orderedSame }
+
+        guard !rows.isEmpty else { return [] }
+
+        var results: [HoleAverage] = []
+
+        for h in 0..<18 {
+            var fwHit = 0
+            var fwTotal = 0
+            var girHit = 0
+            var girTotal = 0
+            var puttSum = 0
+            var puttTotal = 0
+
+            for r in rows {
+                guard h < min(18, r.holesPlayed) else { continue }
+
+                if h < r.fairwayHitPerHole.count, let fw = r.fairwayHitPerHole[h] {
+                    fwTotal += 1
+                    if fw { fwHit += 1 }
+                }
+
+                if h < r.girPerHole.count, let gir = r.girPerHole[h] {
+                    girTotal += 1
+                    if gir { girHit += 1 }
+                }
+
+                if h < r.puttsPerHole.count, let p = r.puttsPerHole[h] {
+                    puttSum += p
+                    puttTotal += 1
+                }
+            }
+
+            let fairwayPct = fwTotal > 0 ? (Double(fwHit) / Double(fwTotal)) * 100.0 : nil
+            let girPct = girTotal > 0 ? (Double(girHit) / Double(girTotal)) * 100.0 : nil
+            let avgPutts = puttTotal > 0 ? Double(puttSum) / Double(puttTotal) : nil
+
+            results.append(HoleAverage(
+                hole: h + 1,
+                fairwayPct: fairwayPct,
+                girPct: girPct,
+                avgPutts: avgPutts
+            ))
+        }
+
+        return results
     }
 }

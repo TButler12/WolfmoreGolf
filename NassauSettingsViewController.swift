@@ -64,6 +64,7 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate 
         let isAuto = (pressModeSegmentedControl.selectedSegmentIndex == 0)
         triggerField.isHidden = !isAuto
         triggerLabel.isHidden = !isAuto
+        
     }
 
     @objc private func dismissKeyboard() {

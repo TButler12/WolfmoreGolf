@@ -26,8 +26,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Constants
     private let capacity = 5
     private var maxActive: Int { capacity }
-
-    // MARK: - Lifecycle
+    private let settingsButton = UIButton(type: .system)
+   
+ 
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -76,7 +77,20 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         enforceActivationCap()
         updateGoButtonEnabled()
         refreshRandomizeEnabled()
-      
+        settingsButton.setTitle("$ettings", for: .normal)
+        settingsButton.setImage(UIImage(systemName: "gearshape.fill"), for: .normal)
+        settingsButton.tintColor = UIColor(red: 0.10, green: 0.35, blue: 0.20, alpha: 1.0)
+        settingsButton.setTitle("  $take and Game Settings", for: .normal)
+        settingsButton.backgroundColor = .clear
+         settingsButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
+         settingsButton.addTarget(self, action: #selector(settingsTapped), for: .touchUpInside)
+        view.addSubview(settingsButton)
+        settingsButton.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            settingsButton.topAnchor.constraint(equalTo: randomizeButton.bottomAnchor, constant: 20),
+            settingsButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60)
+        ])
     }
     
     @IBAction func gameSettingsTapped(_ sender: UIButton) {
@@ -86,6 +100,71 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let vc = sb.instantiateViewController(withIdentifier: "GameSettingsViewController") as! GameSettingsViewController
         vc.gameData = g
         navigationController?.pushViewController(vc, animated: true)
+    }
+    @objc private func settingsTapped() {
+        let ac = UIAlertController(title: "Settings", message: "Choose settings to edit", preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Wolf Settings", style: .default) { _ in
+            self.openGameSettings()
+        })
+
+        ac.addAction(UIAlertAction(title: "Nassau Settings", style: .default) { _ in
+            self.openNassauSettings()
+        })
+
+        ac.addAction(UIAlertAction(title: "Skins Settings", style: .default) { _ in
+            self.openSkinsSettings()
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = settingsButton
+            pop.sourceRect = settingsButton.bounds
+        }
+
+        present(ac, animated: true)
+    }
+    private func openGameSettings() {
+        guard let g = GameManager.shared.currentGame else { return }
+
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let vc = sb.instantiateViewController(withIdentifier: "GameSettingsViewController") as? GameSettingsViewController else {
+            return
+        }
+
+        vc.gameData = g
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func openNassauSettings() {
+        guard GameManager.shared.currentGame != nil else { return }
+
+        GameManager.shared.update { g in
+            if g.nassauState == nil {
+                g.nassauState = NassauState(
+                    settings: NassauSettings(),
+                    oneVsOneMatches: [],
+                    twoVsTwoMatches: []
+                )
+            }
+        }
+
+        guard let updatedGame = GameManager.shared.currentGame else { return }
+
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let vc = sb.instantiateViewController(withIdentifier: "NassauSettingsViewController") as? NassauSettingsViewController else {
+            return
+        }
+
+        vc.gameData = updatedGame
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func openSkinsSettings() {
+        let vc = SkinsViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        present(nav, animated: true)
     }
     @objc private func baseStakeChanged() {
         guard let g = GameManager.shared.currentGame else { return }
