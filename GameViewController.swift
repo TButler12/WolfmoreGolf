@@ -3,6 +3,7 @@
 //  Wolfmore-7 Man
 
 import UIKit
+import MessageUI
 
 extension UIImage {
     static func pixel(of color: UIColor) -> UIImage {
@@ -14,8 +15,7 @@ extension UIImage {
         return img.resizableImage(withCapInsets: .zero, resizingMode: .stretch)
     }
 }
-final class GameViewController: UIViewController {
-    
+final class GameViewController: UIViewController, MFMessageComposeViewControllerDelegate {
     var isUmbrella: Bool = false   // true = mute double for ENTIRE game
     @IBAction private func closeTapped(_ sender: Any) {
         // capture the presenter BEFORE dismiss
@@ -1523,14 +1523,340 @@ final class GameViewController: UIViewController {
         }
     }
 
+    @IBAction func sendRemoteInviteTapped(_ sender: UIButton) {
+        guard let g = GameManager.shared.currentGame else { return }
+        guard let myIndex = myPlayerIndex(in: g) else { return }
 
+        let round = SharedRoundBuilder.make(from: g, playerIndex: myIndex)
 
+        guard let encoded = RemoteRoundCodec.encode(round) else {
+            showRemoteImportError(message: "Could not create remote invite.")
+            return
+        }
+
+        print("📤 SENDING round.playerName =", round.playerName)
+        print("📤 SENDING encoded =")
+        print(encoded)
+
+        let messageBody = """
+        WolfMore Remote Nassau Invite
+
+        Player: \(round.playerName)
+        Course: \(round.courseName)
+
+        Paste this code into WolfMore:
+        \(encoded)
+        """
+
+        if MFMessageComposeViewController.canSendText() {
+            let composer = MFMessageComposeViewController()
+            composer.messageComposeDelegate = self
+            composer.body = messageBody
+            present(composer, animated: true)
+        } else {
+            UIPasteboard.general.string = encoded
+
+            let ac = UIAlertController(
+                title: "Messages Unavailable",
+                message: "This device cannot send texts. The invite code was copied to the clipboard instead.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+        }
+    }
+    func messageComposeViewController(_ controller: MFMessageComposeViewController,
+                                      didFinishWith result: MessageComposeResult) {
+        controller.dismiss(animated: true)
+
+        switch result {
+        case .sent:
+            print("✅ Remote invite message sent")
+        case .cancelled:
+            print("ℹ️ Remote invite message cancelled")
+        case .failed:
+            print("❌ Remote invite message failed")
+            showRemoteImportError(message: "Message failed to send.")
+        @unknown default:
+            break
+        }
+    }
+    @IBAction func startRemoteNassauTapped(_ sender: UIButton) {
+        guard let g = GameManager.shared.currentGame else { return }
+
+        guard let myIndex = myPlayerIndex(in: g) else {
+            print("❌ Could not find local player")
+            return
+        }
+
+        let myRound = SharedRoundBuilder.make(from: g, playerIndex: myIndex)
+
+        promptForRemoteStake { [weak self] stake in
+            guard let self else { return }
+
+            self.importRemoteRoundFromClipboardOrPrompt { [weak self] opponentRound in
+                guard let self else { return }
+
+                if self.isSamePlayer(myRound.playerName, opponentRound.playerName) {
+                    self.showRemoteImportError(
+                        message: "You pasted your own remote round code. Paste your opponent’s code instead."
+                    )
+                    return
+                }
+
+                let savedMatch = RemoteMatch(
+                    myRound: myRound,
+                    opponentName: opponentRound.playerName,
+                    stakePerBet: stake,
+                    inviteCode: nil,
+                    isAccepted: true,
+                    opponentRound: opponentRound
+                )
+
+                RemoteMatchStore.shared.add(savedMatch)
+                print("💾 Saved Remote Match vs \(opponentRound.playerName)")
+
+                let ac = UIAlertController(title: "Compare Mode", message: nil, preferredStyle: .actionSheet)
+
+                ac.addAction(UIAlertAction(title: "Hole by Hole", style: .default) { [weak self] _ in
+                    self?.openRemoteMatch(savedMatch, mode: .holeByHole)
+                })
+
+                ac.addAction(UIAlertAction(title: "Front / Back 9 by HC", style: .default) { [weak self] _ in
+                    self?.openRemoteMatch(savedMatch, mode: .frontBackByHC)
+                })
+
+                ac.addAction(UIAlertAction(title: "18 Holes by HC", style: .default) { [weak self] _ in
+                    self?.openRemoteMatch(savedMatch, mode: .all18ByHC)
+                })
+
+                ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+                self.present(ac, animated: true)
+            }
+        }
+    }
+    private func openRemoteMatch(_ match: RemoteMatch, mode: RemoteCompareMode) {
+        guard let opponentRound = match.opponentRound,
+              let result = match.result else {
+            showRemoteImportError(message: "Could not calculate Remote Nassau result.")
+            return
+        }
+
+        let vc = RemoteNassauViewController()
+        vc.myRound = match.myRound
+        vc.opponentRound = opponentRound
+        vc.result = result
+        vc.compareMode = mode
+
+        navigationController?.pushViewController(vc, animated: true)
+    }
+    @IBAction func remoteNassauTapped(_ sender: UIButton) {
+        let ac = UIAlertController(title: "Remote Nassau", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Send Invite", style: .default) { [weak self] _ in
+            self?.sendRemoteInviteTapped(UIButton())
+        })
+
+        ac.addAction(UIAlertAction(title: "Import Invite", style: .default) { [weak self] _ in
+            self?.startRemoteNassauTapped(UIButton())
+        })
+
+        ac.addAction(UIAlertAction(title: "View Matches", style: .default) { [weak self] _ in
+            let vc = RemoteMatchesViewController()
+            self?.navigationController?.pushViewController(vc, animated: true)
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = sender
+            pop.sourceRect = sender.bounds
+        }
+
+        present(ac, animated: true)
+    }
+    
+    private func isSamePlayer(_ a: String, _ b: String) -> Bool {
+          a.trimmingCharacters(in: .whitespacesAndNewlines)
+              .localizedCaseInsensitiveCompare(
+                  b.trimmingCharacters(in: .whitespacesAndNewlines)
+              ) == .orderedSame
+      }
+    private func promptForRemoteStake(completion: @escaping (Int) -> Void) {
+        let ac = UIAlertController(
+            title: "Nassau Stake",
+            message: "Enter the stake per bet (Front / Back / Overall)",
+            preferredStyle: .alert
+        )
+
+        ac.addTextField { tf in
+            tf.placeholder = "10"
+            tf.text = "10"
+            tf.keyboardType = .numberPad
+        }
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
+            let rawText = ac.textFields?.first?.text ?? "10"
+            let stake = Int(rawText.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 10
+            completion(max(1, stake))
+        })
+
+        present(ac, animated: true)
+    }
+    private func myPlayerIndex(in g: GameData) -> Int? {
+        let myName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !myName.isEmpty else { return nil }
+
+        return g.playerNames.firstIndex {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                .localizedCaseInsensitiveCompare(myName) == .orderedSame
+        }
+    }
+    private func nassauText(for value: Int) -> String {
+        if value > 0 { return "\(value) up" }
+        if value < 0 { return "\(-value) down" }
+        return "All square"
+    }
+    // MARK: - Remote Nassau Import
+
+    private func promptForRemoteRound(completion: @escaping (SharedRound) -> Void) {
+        let vc = ImportRemoteRoundViewController()
+        vc.modalPresentationStyle = .formSheet
+
+        vc.onImport = { [weak self, weak vc] rawText in
+            guard let self else { return }
+
+            let cleaned = rawText
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: "\n", with: "")
+                .replacingOccurrences(of: "\r", with: "")
+
+            let code: String
+            if let range = cleaned.range(of: "WOLFMORE_REMOTE_NASSAU:") {
+                code = String(cleaned[range.lowerBound...])
+            } else {
+                code = cleaned
+            }
+
+            print("📥 Raw typed text:")
+            print(rawText)
+
+            print("📥 Cleaned typed text:")
+            print(cleaned)
+
+            print("📥 Extracted code:")
+            print(code)
+
+            guard !code.isEmpty else {
+                vc?.dismiss(animated: true) {
+                    self.showRemoteImportError(message: "Paste a shared round code first.")
+                }
+                return
+            }
+
+            //
+            // 🔥 SIMPLE TEST MODE (ADD THIS BLOCK)
+            //
+            if code.contains("-") {
+                let parts = code.split(separator: "-")
+                
+                if parts.count == 2 {
+                    let name = String(parts[0])
+                    let scoreString = String(parts[1])
+                    
+                    let scores = scoreString.compactMap { Int(String($0)) }
+                    
+                    if scores.count == 18 {
+                        let round = SharedRound(
+                            playerName: name,
+                            courseName: "WolfMore",
+                            pars: Array(repeating: 4, count: 18),
+                            hcs: Array(1...18),
+                            scores: scores,
+                            fairways: Array(repeating: nil, count: 18),
+                            girs: Array(repeating: nil, count: 18),
+                            putts: Array(repeating: nil, count: 18),
+                            courseHandicap: 0
+                        )
+
+                        print("✅ SIMPLE IMPORT =", round.playerName)
+
+                        vc?.dismiss(animated: true) {
+                            completion(round)
+                        }
+                        return
+                    }
+                }
+            }
+            //
+            // 🔥 END SIMPLE MODE
+            //
+
+            guard let round = RemoteRoundCodec.decode(code) else {
+                vc?.dismiss(animated: true) {
+                    self.showRemoteImportError(message: "That shared round code could not be read.")
+                }
+                return
+            }
+
+            vc?.dismiss(animated: true) {
+                completion(round)
+            }
+        }
+
+        present(vc, animated: true)
+    }
+    private func showRemoteImportError(message: String = "That shared round code could not be read.") {
+        let ac = UIAlertController(
+            title: "Import Failed",
+            message: message,
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+    private func importRemoteRoundFromClipboardOrPrompt(completion: @escaping (SharedRound) -> Void) {
+        if let clipboard = UIPasteboard.general.string?
+            .trimmingCharacters(in: .whitespacesAndNewlines),
+           !clipboard.isEmpty {
+
+            let cleaned = clipboard
+                .replacingOccurrences(of: "\n", with: "")
+                .replacingOccurrences(of: "\r", with: "")
+
+            let code: String
+            if let range = cleaned.range(of: "WOLFMORE_REMOTE_NASSAU:") {
+                code = String(cleaned[range.lowerBound...])
+            } else {
+                code = cleaned
+            }
+
+            print("📋 Clipboard text:")
+            print(cleaned)
+
+            if let round = RemoteRoundCodec.decode(code) {
+                print("✅ Imported from clipboard =", round.playerName)
+                completion(round)
+                return
+            }
+        }
+
+        promptForRemoteRound(completion: completion)
+    }
+    
+    @IBAction func remoteMatchesTapped(_ sender: UIButton) {
+        let vc = RemoteMatchesViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
     @IBAction func updateScorePushed(_ sender: UIButton) {
         sender.isEnabled = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             sender.isEnabled = true
         }
-        
+
         GameManager.shared.update { g in
             if g.startHole == nil {
                 g.startHole = g.hole
@@ -1566,6 +1892,12 @@ final class GameViewController: UIViewController {
             }
 
             g.holeCommitted[hole] = true
+        }
+
+        // ✅ SAVE LAST ROUND after hole 18 score is actually stored
+        if hole == 17 {
+            GameManager.shared.saveCurrentRoundAsLastRound()
+            print("✅ Last round saved at end of hole 18")
         }
 
         // 2) recalculate Nassau immediately
@@ -1636,13 +1968,12 @@ final class GameViewController: UIViewController {
                 .joined(separator: "  ")
 
             print("H\(hole + 1)  umbMuted=\(umbrellaMuted)  \(scorePart)  |  $ \(payoutPart)")
-            if let g = GameManager.shared.currentGame {
-                print("Hole \(hole + 1) Stats:")
-                print("FW:", g.fairwayHit.map { $0[hole] })
-                print("GIR:", g.girHit.map { $0[hole] })
-                print("PUTTS:", g.puttsPerHole.map { $0[hole] })
-            }
+            print("Hole \(hole + 1) Stats:")
+            print("FW:", g.fairwayHit.map { $0[hole] })
+            print("GIR:", g.girHit.map { $0[hole] })
+            print("PUTTS:", g.puttsPerHole.map { $0[hole] })
         }
+
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
         refreshHoleValueLabel()
@@ -1973,7 +2304,32 @@ final class GameViewController: UIViewController {
             b.layer.masksToBounds = true
         }
     }
+    // MARK: - Debug Tests
 
+    @IBAction func testPasteParsingTapped(_ sender: UIButton) {
+        let sharedText = """
+        WolfMore Remote Round
+
+        Copy this code into WolfMore:
+
+        eyJwYXJzIjpbNCw0LDQsNCw0LDQsNCw0LDQsNCw0LDQsNCw0LDQsNCw0LDRdLCJoY3MiOlsxLDIsMyw0LDUsNiw3LDgsOSwxMCwxMSwxMiwxMywxNCwxNSwxNiwxNywxOF0sInNjb3JlcyI6WzMsNCw0LDQsNCw0LDQsNCw0LDQsNCw0LDQsNCw0LDQsNCw0XSwiZmFpcndheXMiOltudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbF0sInBsYXllck5hbWUiOiJCdWNreSIsImNvdXJzZU5hbWUiOiJXb2xmTW9yZSIsImdpcnMiOltudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbF0sInB1dHRzIjpbbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGwsbnVsbCxudWxsLG51bGxdfQ==
+        """
+
+        let lines = sharedText
+            .components(separatedBy: .newlines)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        let code = lines.last ?? sharedText
+
+        print("Extracted code:", code.prefix(50))
+
+        if let round = RemoteRoundCodec.decode(code) {
+            print("✅ Parsed player:", round.playerName)
+        } else {
+            print("❌ Failed to parse pasted share text")
+        }
+    }
 }
    
 

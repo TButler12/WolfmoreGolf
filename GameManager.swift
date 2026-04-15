@@ -9,26 +9,26 @@ extension Notification.Name {
 // MARK: - GameManager
 
     
-    final class GameManager {
-        static let shared = GameManager()
-        // ...
-        var canRandomizeTeams = false   // Only true right after a Reset
-        var randomizeUnlocked: Bool = false   // locked by default
-
+final class GameManager {
+    static let shared = GameManager()
+    // ...
+    var canRandomizeTeams = false   // Only true right after a Reset
+    var randomizeUnlocked: Bool = false   // locked by default
+    
     
     private init() {}
-
+    
     // Single save slot (no external store, no ids)
     private let currentKey = "currentGame_v1"
-
+    
     // In-memory model
     var currentGame: GameData?
     var hasActiveGame: Bool {
-            return currentGame != nil
-        }
-
+        return currentGame != nil
+    }
+    
     // MARK: - Create / Load / Save
-
+    
     /// Create a brand-new game with defaults, save, and notify once.
     func startNewGame(name: String = "New Game") {
         let g = baselineNewGame(named: name)
@@ -36,12 +36,12 @@ extension Notification.Name {
         saveCurrent()
         requestReload()
     }
-
+    
     
     /// Save current game to UserDefaults (no notify here).
     func saveCurrent() {
         guard var g = currentGame
- else { return }
+        else { return }
         do {
             let data = try JSONEncoder().encode(g)
             UserDefaults.standard.set(data, forKey: currentKey)
@@ -49,7 +49,7 @@ extension Notification.Name {
             print("💾 Save failed:", error)
         }
     }
-
+    
     /// Load the single saved game (if any), normalize, and optionally notify UI.
     @discardableResult
     func loadLastOpened(notify: Bool = true) -> Bool {
@@ -65,16 +65,16 @@ extension Notification.Name {
             return false
         }
     }
-
+    
     // MARK: - Mutations
-
+    
     /// For typing/continuous edits. No save, no notify.
     func updateDuringEditing(_ mutate: (inout GameData) -> Void) {
         guard var g = currentGame else { return }
         mutate(&g)
         currentGame = g
     }
-
+    
     /// Persist immediately (no auto-reload). Call requestReload() yourself if needed.
     func update(_ mutate: (inout GameData) -> Void) {
         guard var g = currentGame else { return }
@@ -82,43 +82,43 @@ extension Notification.Name {
         currentGame = g
         saveCurrent()
     }
-
+    
     /// Mutate, save, then repaint once.
     func updateAndReload(_ mutate: (inout GameData) -> Void) {
         update(mutate)
         requestReload()
     }
-
+    
     // MARK: - Round Reset (keep course & roster)
-
+    
     /// Start a fresh round but keep: course (pars/HC), roster (names/HC/active), rosterNames.
     func resetForNewRoundPreservingCourseAndRoster() {
         guard let old = currentGame else { return }
-
-       let keepCoursePar  = old.courseParToPass
-      let keepCourseHC   = old.courseHCToPass
+        
+        let keepCoursePar  = old.courseParToPass
+        let keepCourseHC   = old.courseHCToPass
         let keepNames      = old.playerNames
         let keepHCs        = old.hcPlayers
         let keepActives    = old.playerActivated
         let keepRosterList = old.rosterNames
-
-     var fresh = baselineNewGame(named: old.gameName)
-     fresh.courseParToPass   = keepCoursePar
-      fresh.courseHCToPass    = keepCourseHC
+        
+        var fresh = baselineNewGame(named: old.gameName)
+        fresh.courseParToPass   = keepCoursePar
+        fresh.courseHCToPass    = keepCourseHC
         fresh.playerNames       = keepNames
         fresh.hcPlayers         = keepHCs
         fresh.playerActivated   = keepActives
         fresh.rosterNames       = keepRosterList
         // If you want to keep the existing per-hole stakes, uncomment:
         // fresh.gameHoleDollarsArray = old.gameHoleDollarsArray
-
-       currentGame = fresh
-       saveCurrent()
-       requestReload()
+        
+        currentGame = fresh
+        saveCurrent()
+        requestReload()
     }
-
+    
     // MARK: - Roster helper
-
+    
     /// Add a name to the persisted roster if not already present (case-insensitive).
     func addNameToRoster(_ raw: String) {
         let name = raw.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -128,18 +128,18 @@ extension Notification.Name {
             if !exists { g.rosterNames.append(name) }
         }
     }
-
+    
     // MARK: - Notify
-
+    
     /// Explicitly tell the UI to repaint (main thread).
     func requestReload() {
         DispatchQueue.main.async {
             NotificationCenter.default.post(name: .reloadUI, object: nil)
         }
     }
-
+    
     // MARK: - Bootstrap helpers
-
+    
     /// If `currentGame` exists, normalize shapes and save.
     func normalizeCurrentIfNeeded() {
         guard var g = currentGame else { return }
@@ -149,85 +149,85 @@ extension Notification.Name {
     }
     
     
-        func resetCurrentGame(keepCourse: Bool = true, defaultBet: Double = 2.0) {
-            guard var g = currentGame else { return }
-
-            // Preserve course-related values
-            let savedCourse = g.course
-            let savedPars   = g.courseParToPass
-            let savedHCs    = g.courseHCToPass
-
-            // Round-only reset
-            g.hole = 0
-            g.scores               = Array(repeating: Array(repeating: nil, count: 18), count: 5)
-            g.playerMoney          = Array(repeating: Array(repeating: 0.0, count: 18), count: 5)
-            g.rollApplied          = Array(repeating: false, count: 18)
-            g.rerollApplied        = Array(repeating: false, count: 18)
-            g.rerollBaseAmount     = Array(repeating: 0.0, count: 18)
-            g.aloneApplied         = Array(repeating: false, count: 18)
-            g.pressMask            = Array(repeating: false, count: 18)
-            g.proxWinnerPerHole    = Array(repeating: nil, count: 18)
-            g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: 18), count: 5)
-            g.gameHoleDollarsArray = Array(repeating: defaultBet, count: 18)
-
-            // ✅ NEW: Wolf/Hammer state reset (safe defaults)
-            g.hammerCountPerHole   = Array(repeating: 0, count: 18)
-            g.wolfPlayerPerHole    = Array(repeating: nil, count: 18)
-            g.wolfWentAlonePerHole = Array(repeating: false, count: 18)
-
-            if keepCourse {
-                g.course          = savedCourse
-                g.courseParToPass = savedPars
-                g.courseHCToPass  = savedHCs
-            }
-
-            currentGame = g
-            saveCurrent()
-            NotificationCenter.default.post(name: .reloadUI, object: nil)
+    func resetCurrentGame(keepCourse: Bool = true, defaultBet: Double = 2.0) {
+        guard var g = currentGame else { return }
+        
+        // Preserve course-related values
+        let savedCourse = g.course
+        let savedPars   = g.courseParToPass
+        let savedHCs    = g.courseHCToPass
+        
+        // Round-only reset
+        g.hole = 0
+        g.scores               = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+        g.playerMoney          = Array(repeating: Array(repeating: 0.0, count: 18), count: 5)
+        g.rollApplied          = Array(repeating: false, count: 18)
+        g.rerollApplied        = Array(repeating: false, count: 18)
+        g.rerollBaseAmount     = Array(repeating: 0.0, count: 18)
+        g.aloneApplied         = Array(repeating: false, count: 18)
+        g.pressMask            = Array(repeating: false, count: 18)
+        g.proxWinnerPerHole    = Array(repeating: nil, count: 18)
+        g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: 18), count: 5)
+        g.gameHoleDollarsArray = Array(repeating: defaultBet, count: 18)
+        
+        // ✅ NEW: Wolf/Hammer state reset (safe defaults)
+        g.hammerCountPerHole   = Array(repeating: 0, count: 18)
+        g.wolfPlayerPerHole    = Array(repeating: nil, count: 18)
+        g.wolfWentAlonePerHole = Array(repeating: false, count: 18)
+        
+        if keepCourse {
+            g.course          = savedCourse
+            g.courseParToPass = savedPars
+            g.courseHCToPass  = savedHCs
         }
-
-
+        
+        currentGame = g
+        saveCurrent()
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+    }
+    
+    
     // MARK: - Private builders / normalizers
-
+    
     /// Build a fresh game with all arrays sized and defaults filled.
     private func baselineNewGame(named name: String) -> GameData {
         var g = GameData()
         
         // Game type default (keeps  current behavior)
         g.gameType = .sixPointScotch
-
+        
         // Hammer/Wolf storage
         g.hammerCountPerHole   = Array(repeating: 0,   count: 18)
         g.wolfPlayerPerHole    = Array(repeating: nil, count: 18)
         g.wolfWentAlonePerHole = Array(repeating: false, count: 18)
-
+        
         g.gameName = name
         g.hole = 0
-
+        
         // Seats (9)
         g.playerNames     = Array(repeating: "",    count: 5)
         g.hcPlayers       = Array(repeating: 0,     count: 5)   // S-column deltas
         g.playerActivated = Array(repeating: false, count: 5)
-
+        
         // Course (18)
-     // g.courseParToPass = Array(repeating: 4, count: 18)
-     // g.courseHCToPass  = Array(1...18)
-
+        // g.courseParToPass = Array(repeating: 4, count: 18)
+        // g.courseHCToPass  = Array(1...18)
+        
         // Stakes per hole
         g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18)
-
+        
         // Wolves (5×18) & Prox (seat 0…4 or nil)
         g.wolfButtonStatus  = Array(repeating: Array(repeating: false, count: 18), count: 5)
         g.proxWinnerPerHole = Array(repeating: nil, count: 18)
-
+        
         // Scores & per-player payouts (9×18)
         g.scores      = Array(repeating: Array(repeating: nil, count: 18), count: 5)
         g.playerMoney = Array(repeating: Array(repeating: 0,   count: 18), count: 5)
-
+        
         // Press / previous press flags
         g.pressedPushedToggleArray         = Array(repeating: false, count: 18)
         g.previousPressedPushedToggleArray = Array(repeating: false, count: 18)
-
+        
         // Roster picker list
         g.rosterNames = []
         
@@ -239,66 +239,117 @@ extension Notification.Name {
         
         return g
     }
-
+    
     /// Ensure an old save has all fields with correct sizes/defaults.
-        private func normalizeShapes(_ g: inout GameData) {
-            g.normalize()   // ✅ handles gameType + hammer/wolf arrays
-
-            // Seats
-            if g.playerNames.count != 5     { g.playerNames     = pad(g.playerNames,     to: 5,  fill: "") }
-            if g.hcPlayers.count != 5       { g.hcPlayers       = pad(g.hcPlayers,       to: 5,  fill: 0) }
-            if g.playerActivated.count != 5 { g.playerActivated = pad(g.playerActivated, to: 5,  fill: false) }
-
-            // Course
-            if g.courseParToPass.count != 18 { g.courseParToPass = pad(g.courseParToPass, to: 18, fill: 4) }
-            if g.courseHCToPass.count  != 18 { g.courseHCToPass  = pad(g.courseHCToPass,  to: 18, fill: 1) }
-
-            // Stakes
-            if g.gameHoleDollarsArray.count != 18 {
-                g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: 18, fill: 2.0)
-            }
-
-            // Wolves & Prox
-            if g.wolfButtonStatus.count != 5 || g.wolfButtonStatus.first?.count != 18 {
-                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: 18), count: 5)
-            }
-            if g.proxWinnerPerHole.count != 18 {
-                g.proxWinnerPerHole = Array(repeating: nil, count: 18)
-            }
-
-            // Scores & Money
-            if g.scores.count != 5 || g.scores.first?.count != 18 {
-                g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
-            }
-            if g.playerMoney.count != 5 || g.playerMoney.first?.count != 18 {
-                g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 5)
-            }
-
-            // Press
-            if g.pressedPushedToggleArray.count != 18 {
-                g.pressedPushedToggleArray = Array(repeating: false, count: 18)
-            }
-            if g.previousPressedPushedToggleArray.count != 18 {
-                g.previousPressedPushedToggleArray = Array(repeating: false, count: 18)
-            }
-
-            // Roster list ok even if empty
-            if g.rosterNames.isEmpty { g.rosterNames = [] }
-
-            // Clamp current hole
-            g.hole = max(0, min(17, g.hole))
+    private func normalizeShapes(_ g: inout GameData) {
+        g.normalize()   // ✅ handles gameType + hammer/wolf arrays
+        
+        // Seats
+        if g.playerNames.count != 5     { g.playerNames     = pad(g.playerNames,     to: 5,  fill: "") }
+        if g.hcPlayers.count != 5       { g.hcPlayers       = pad(g.hcPlayers,       to: 5,  fill: 0) }
+        if g.playerActivated.count != 5 { g.playerActivated = pad(g.playerActivated, to: 5,  fill: false) }
+        
+        // Course
+        if g.courseParToPass.count != 18 { g.courseParToPass = pad(g.courseParToPass, to: 18, fill: 4) }
+        if g.courseHCToPass.count  != 18 { g.courseHCToPass  = pad(g.courseHCToPass,  to: 18, fill: 1) }
+        
+        // Stakes
+        if g.gameHoleDollarsArray.count != 18 {
+            g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: 18, fill: 2.0)
         }
-
-
+        
+        // Wolves & Prox
+        if g.wolfButtonStatus.count != 5 || g.wolfButtonStatus.first?.count != 18 {
+            g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: 18), count: 5)
+        }
+        if g.proxWinnerPerHole.count != 18 {
+            g.proxWinnerPerHole = Array(repeating: nil, count: 18)
+        }
+        
+        // Scores & Money
+        if g.scores.count != 5 || g.scores.first?.count != 18 {
+            g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+        }
+        if g.playerMoney.count != 5 || g.playerMoney.first?.count != 18 {
+            g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 5)
+        }
+        
+        // Press
+        if g.pressedPushedToggleArray.count != 18 {
+            g.pressedPushedToggleArray = Array(repeating: false, count: 18)
+        }
+        if g.previousPressedPushedToggleArray.count != 18 {
+            g.previousPressedPushedToggleArray = Array(repeating: false, count: 18)
+        }
+        
+        // Roster list ok even if empty
+        if g.rosterNames.isEmpty { g.rosterNames = [] }
+        
+        // Clamp current hole
+        g.hole = max(0, min(17, g.hole))
+    }
+    
+    
     private func pad<T>(_ a: [T], to n: Int, fill: T) -> [T] {
         a.count >= n ? Array(a.prefix(n)) : a + Array(repeating: fill, count: n - a.count)
     }
     
     
+    
+    func saveCurrentRoundAsLastRound() {
+        guard let g = currentGame else { return }
+        
+        let profileName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let playerName = profileName.isEmpty ? (g.playerNames.first ?? "Player") : profileName
+        
+        let myIndex = g.playerNames.firstIndex {
+            $0.trimmingCharacters(in: .whitespacesAndNewlines)
+                .localizedCaseInsensitiveCompare(playerName) == .orderedSame
+        } ?? 0
+        
+        let scores: [Int?] = myIndex < g.scores.count
+        ? Array(g.scores[myIndex].prefix(18))
+        : Array(repeating: nil, count: 18)
+        
+        let pars = Array(g.course.pars.prefix(18))
+        
+        let fairways: [Bool?] = myIndex < g.fairwayHit.count
+        ? Array(g.fairwayHit[myIndex].prefix(18))
+        : Array(repeating: nil, count: 18)
+        
+        let girs: [Bool?] = myIndex < g.girHit.count
+        ? Array(g.girHit[myIndex].prefix(18))
+        : Array(repeating: nil, count: 18)
+        
+        let putts: [Int?] = myIndex < g.puttsPerHole.count
+        ? Array(g.puttsPerHole[myIndex].prefix(18))
+        : Array(repeating: nil, count: 18)
+        
+        let totalScore = scores.compactMap { $0 }.reduce(0, +)
+        let totalPutts = putts.compactMap { $0 }.reduce(0, +)
+        let fairwaysHitCount = fairways.compactMap { $0 }.filter { $0 }.count
+        let girCount = girs.compactMap { $0 }.filter { $0 }.count
+        
+        let completed = CompletedRound(
+            date: Date(),
+            courseName: g.course.name,
+            playerName: playerName,
+            holeScores: scores,
+            pars: pars,
+            fairwaysHit: fairways,
+            girs: girs,
+            putts: putts,
+            totalScore: totalScore,
+            totalPutts: totalPutts,
+            fairwaysHitCount: fairwaysHitCount,
+            girCount: girCount
+        )
+        
+        RoundHistoryStore.shared.saveLastRound(completed)
+    }
 }
 
-// Put this in GameManager.swift (or its own file) **outside** the GameManager class,
-// but in the same target.
+
 extension GameManager {
 
     /// For the current game, pre-fill every hole for each ACTIVE player with the

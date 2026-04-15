@@ -1,21 +1,15 @@
-//
-//  GameData.swift
-//  Wolfmore-7Man
-//
-//  Created by Tom BUTLER on 9/29/25.
-//
-// GameData.swift
 import Foundation
 
 struct GameData: Codable {
-   
+
     var scorePerHole: [[Int?]] = []
     var umbrellaMode: Bool = false
     var baseGameStake: Int = 2
     var holeCommitted: [Bool] = Array(repeating: false, count: 18)
-    
+
     var nassauState: NassauState?
     var skinsState: SkinsState?
+
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: 18)
 
@@ -23,25 +17,17 @@ struct GameData: Codable {
     var hammerCountPerHole: [Int]?
     var wolfPlayerPerHole: [Int?]?
     var wolfWentAlonePerHole: [Bool]?
-    
+
     // Convenience so your existing code can stay mostly unchanged
     var resolvedGameType: GameType { gameType ?? .sixPointScotch }
 
-    // MARK: - Wolf stats per hole (for Hole Stats / Wolf% views)
-    // In GameData.swift
+    // MARK: - Wolf stats per hole
     var umbieWonPerHole: [Bool] = Array(repeating: false, count: 18)
-
-    /// true if any Wolf was called on that hole
     var wolfCalledPerHole: [Bool] = Array(repeating: false, count: 18)
-
-    /// true if the Wolf team actually won that hole (given a Wolf was called)
     var wolfTeamWonPerHole: [Bool] = Array(repeating: false, count: 18)
 
-
     // MARK: - Core game state
-
-    var startHole: Int? = nil      // shotgun start hole (0…17); nil until set
-
+    var startHole: Int? = nil
     var course: Course = .default
     var gameName: String = "New Game"
     var popsTable: [[Int]] = []
@@ -50,13 +36,13 @@ struct GameData: Codable {
     var previousPressedPushedToggleArray: [Bool] = Array(repeating: false, count: 18)
     var gameHoleDollarsArray: [Double] = Array(repeating: 2.0, count: 18)
 
-    // 9 players × 18 holes; nil = no score entered yet
+    // 5 players × 18 holes; nil = no score entered yet
     var scores: [[Int?]] = Array(
         repeating: Array(repeating: nil, count: 18),
         count: 5
     )
 
-    // Per-player payout per hole (what you show on the game screen)
+    // Per-player payout per hole
     var playerMoney: [[Double]] = Array(
         repeating: Array(repeating: 0, count: 18),
         count: 5
@@ -65,37 +51,35 @@ struct GameData: Codable {
     var rosterNames: [String] = []
     var proxWinnerPerHole: [Int?] = Array(repeating: nil, count: 18)
 
-    var pressMask:        [Bool]   = Array(repeating: false, count: 18)
-    var pressBaseDollars: [Double] = Array(repeating: 0.0,  count: 18)
-    var pressBaseAmount:  [Double] = Array(repeating: 0.0,  count: 18)
+    var pressMask: [Bool] = Array(repeating: false, count: 18)
+    var pressBaseDollars: [Double] = Array(repeating: 0.0, count: 18)
+    var pressBaseAmount: [Double] = Array(repeating: 0.0, count: 18)
 
     var rollBaseAmount: [Double] = Array(repeating: 0.0, count: 18)
-    var rollApplied:    [Bool]   = Array(repeating: false, count: 18)
+    var rollApplied: [Bool] = Array(repeating: false, count: 18)
 
-    // Re-roll state per hole (depends on Roll)
-    var rerollApplied:    [Bool]   = Array(repeating: false, count: 18)
-    var rerollBaseAmount: [Double] = Array(repeating: 0.0,    count: 18)
+    var rerollApplied: [Bool] = Array(repeating: false, count: 18)
+    var rerollBaseAmount: [Double] = Array(repeating: 0.0, count: 18)
 
-    var aloneApplied:    [Bool]   = Array(repeating: false, count: 18)
-    var aloneBaseAmount: [Double] = Array(repeating: 0.0,  count: 18)
+    var aloneApplied: [Bool] = Array(repeating: false, count: 18)
+    var aloneBaseAmount: [Double] = Array(repeating: 0.0, count: 18)
 
     var wolfButtonStatus: [[Bool]] = Array(
         repeating: Array(repeating: false, count: 18),
-        count: 9  // exactly 9 buttons/players
+        count: 9
     )
 
-    var playerNames:   [String] = Array(repeating: "",    count: 5)
-    var hcPlayers:     [Int]    = Array(repeating: 0,     count: 5)
+    var playerNames: [String] = Array(repeating: "", count: 5)
+    var hcPlayers: [Int] = Array(repeating: 0, count: 5)
     var playerActivated: [Bool] = Array(repeating: false, count: 5)
 
     var hole: Int = 0
 
-    var isUmbrella: Bool = false   // true = MUTE the double for the whole game
-
-    var isPressOn:  Bool = false
-    var isRollOn:   Bool = false
+    var isUmbrella: Bool = false
+    var isPressOn: Bool = false
+    var isRollOn: Bool = false
     var isRerollOn: Bool = false
-    var isAlone:    Bool = false
+    var isAlone: Bool = false
 
     var fairwayHit: [[Bool?]] = Array(
         repeating: Array(repeating: nil, count: 18),
@@ -111,8 +95,8 @@ struct GameData: Codable {
         repeating: Array(repeating: nil, count: 18),
         count: 5
     )
-    // MARK: - Course passthrough
 
+    // MARK: - Course passthrough
     var courseParToPass: [Int] {
         get { course.pars }
         set { course.pars = Array(newValue.prefix(18)) }
@@ -128,9 +112,9 @@ struct GameData: Codable {
             course.holeHandicaps = Array(fixed)
         }
     }
+
     mutating func normalize(holes: Int = 18) {
         if gameType == nil { gameType = .sixPointScotch }
-
         if hammerCountPerHole == nil { hammerCountPerHole = Array(repeating: 0, count: holes) }
         if wolfPlayerPerHole == nil { wolfPlayerPerHole = Array(repeating: nil, count: holes) }
         if wolfWentAlonePerHole == nil { wolfWentAlonePerHole = Array(repeating: false, count: holes) }
@@ -143,17 +127,17 @@ struct GameData: Codable {
         pad(&hammerCountPerHole!, with: 0)
         pad(&wolfPlayerPerHole!, with: nil as Int?)
         pad(&wolfWentAlonePerHole!, with: false)
+
         if skinsState == nil {
             skinsState = SkinsEngine.makeDefaultState()
         }
     }
-    
-
 }
+
 extension GameData {
     func hammerMultiplier(for hole: Int) -> Double {
         let c = hammerCountPerHole?[safe: hole] ?? 0
-        return Double(1 << max(0, c))   // 1,2,4,8...
+        return Double(1 << max(0, c))
     }
 }
 

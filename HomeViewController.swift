@@ -165,6 +165,27 @@ final class ViewController: UIViewController {
 
         present(ac, animated: true)
     }
+    func makeSharedRound(for playerIndex: Int) -> SharedRound? {
+        guard let g = GameManager.shared.currentGame else { return nil }
+        guard playerIndex < g.playerNames.count else { return nil }
+        guard playerIndex < g.scorePerHole.count else { return nil }
+        guard playerIndex < g.fairwayHit.count else { return nil }
+        guard playerIndex < g.girHit.count else { return nil }
+        guard playerIndex < g.puttsPerHole.count else { return nil }
+
+        return SharedRound(
+            playerName: g.playerNames[playerIndex],
+            courseName: g.course.name,
+            pars: Array(g.course.pars.prefix(18)),
+            hcs: Array(g.course.holeHandicaps.prefix(18)),
+            scores: Array(g.scores[playerIndex].prefix(18)).map { $0 ?? 0 },
+            fairways: Array(g.fairwayHit[playerIndex].prefix(18)),
+            girs: Array(g.girHit[playerIndex].prefix(18)),
+            putts: Array(g.puttsPerHole[playerIndex].prefix(18)),
+            courseHandicap: playerIndex < g.hcPlayers.count ? g.hcPlayers[playerIndex] : 0
+        )
+    }
+    
     
     private func yellowPillConfig(title: String, trailingChevron: Bool = false) -> UIButton.Configuration {
         var config = UIButton.Configuration.filled()

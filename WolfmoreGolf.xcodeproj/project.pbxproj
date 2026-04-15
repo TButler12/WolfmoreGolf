@@ -73,8 +73,20 @@
 		F6E007F32F8017AC00763694 /* SkinsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F22F8017AC00763694 /* SkinsModel.swift */; };
 		F6E007F52F8017F300763694 /* SkinsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F42F8017F300763694 /* SkinsEngine.swift */; };
 		F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F62F80182400763694 /* SkinsViewController.swift */; };
-		F6E007F92F80D19B00763694 /* HoleStatsEntryViewController..swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F82F80D19B00763694 /* HoleStatsEntryViewController..swift */; };
+		F6E007F92F80D19B00763694 /* HoleStatsEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */; };
 		F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FA2F81913500763694 /* StatsContainerViewController.swift */; };
+		F6E008032F884A6500763694 /* SharedRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008022F884A6500763694 /* SharedRound.swift */; };
+		F6E008052F884A9D00763694 /* RemoteRoundCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */; };
+		F6E008072F89403800763694 /* SharedRoundBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008062F89403800763694 /* SharedRoundBuilder.swift */; };
+		F6E008092F89408500763694 /* RemoteNassauScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008082F89408500763694 /* RemoteNassauScorer.swift */; };
+		F6E0080B2F8965B600763694 /* RemoteNassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E0080A2F8965B600763694 /* RemoteNassauViewController.swift */; };
+		F6E008132F8D269F00763694 /* RemoteMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008122F8D269F00763694 /* RemoteMatch.swift */; };
+		F6E008152F8D26FC00763694 /* RemoteMatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008142F8D26FC00763694 /* RemoteMatchStore.swift */; };
+		F6E008172F8D273200763694 /* RemoteMatchInvite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008162F8D273200763694 /* RemoteMatchInvite.swift */; };
+		F6E008192F8D27EB00763694 /* RemoteMatchInviteCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008182F8D27EB00763694 /* RemoteMatchInviteCodec.swift */; };
+		F6E0081E2F8DBF2A00763694 /* ImportRemoteRoundViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E0081D2F8DBF2A00763694 /* ImportRemoteRoundViewController.swift */; };
+		F6E008232F8E62C600763694 /* RoundHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008222F8E62C600763694 /* RoundHistoryStore.swift */; };
+		F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */; };
 		F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -150,8 +162,20 @@
 		F6E007F22F8017AC00763694 /* SkinsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsModel.swift; sourceTree = "<group>"; };
 		F6E007F42F8017F300763694 /* SkinsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsEngine.swift; sourceTree = "<group>"; };
 		F6E007F62F80182400763694 /* SkinsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsViewController.swift; sourceTree = "<group>"; };
-		F6E007F82F80D19B00763694 /* HoleStatsEntryViewController..swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsEntryViewController..swift; sourceTree = "<group>"; };
+		F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsEntryViewController.swift; sourceTree = "<group>"; };
 		F6E007FA2F81913500763694 /* StatsContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsContainerViewController.swift; sourceTree = "<group>"; };
+		F6E008022F884A6500763694 /* SharedRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRound.swift; sourceTree = "<group>"; };
+		F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteRoundCodec.swift; sourceTree = "<group>"; };
+		F6E008062F89403800763694 /* SharedRoundBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRoundBuilder.swift; sourceTree = "<group>"; };
+		F6E008082F89408500763694 /* RemoteNassauScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauScorer.swift; sourceTree = "<group>"; };
+		F6E0080A2F8965B600763694 /* RemoteNassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauViewController.swift; sourceTree = "<group>"; };
+		F6E008122F8D269F00763694 /* RemoteMatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatch.swift; sourceTree = "<group>"; };
+		F6E008142F8D26FC00763694 /* RemoteMatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchStore.swift; sourceTree = "<group>"; };
+		F6E008162F8D273200763694 /* RemoteMatchInvite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchInvite.swift; sourceTree = "<group>"; };
+		F6E008182F8D27EB00763694 /* RemoteMatchInviteCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchInviteCodec.swift; sourceTree = "<group>"; };
+		F6E0081D2F8DBF2A00763694 /* ImportRemoteRoundViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImportRemoteRoundViewController.swift; sourceTree = "<group>"; };
+		F6E008222F8E62C600763694 /* RoundHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundHistoryStore.swift; sourceTree = "<group>"; };
+		F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchesViewController.swift; sourceTree = "<group>"; };
 		F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauSettingsViewController.swift; sourceTree = "<group>"; };
 		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -178,8 +202,20 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */,
+				F6E008222F8E62C600763694 /* RoundHistoryStore.swift */,
+				F6E0081D2F8DBF2A00763694 /* ImportRemoteRoundViewController.swift */,
+				F6E008182F8D27EB00763694 /* RemoteMatchInviteCodec.swift */,
+				F6E008162F8D273200763694 /* RemoteMatchInvite.swift */,
+				F6E008142F8D26FC00763694 /* RemoteMatchStore.swift */,
+				F6E008122F8D269F00763694 /* RemoteMatch.swift */,
+				F6E0080A2F8965B600763694 /* RemoteNassauViewController.swift */,
+				F6E008082F89408500763694 /* RemoteNassauScorer.swift */,
+				F6E008062F89403800763694 /* SharedRoundBuilder.swift */,
+				F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */,
+				F6E008022F884A6500763694 /* SharedRound.swift */,
 				F6E007FA2F81913500763694 /* StatsContainerViewController.swift */,
-				F6E007F82F80D19B00763694 /* HoleStatsEntryViewController..swift */,
+				F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */,
 				F6E007F62F80182400763694 /* SkinsViewController.swift */,
 				F6E007F42F8017F300763694 /* SkinsEngine.swift */,
 				F6E007F22F8017AC00763694 /* SkinsModel.swift */,
@@ -381,16 +417,19 @@
 				F6D541682F63B3C40020588F /* NassauViewController.swift in Sources */,
 				F6D66AC32F327A2B00367C08 /* ProStore.swift in Sources */,
 				F6D66A812F26994400367C08 /* Notifications.swift in Sources */,
+				F6E008072F89403800763694 /* SharedRoundBuilder.swift in Sources */,
 				F6D66AD12F356B7E00367C08 /* TextViewController.swift in Sources */,
 				F63D06962ED5143B00F165CA /* RosterAndTrackingViewController.swift in Sources */,
 				F66007422F60C56F00148767 /* ButtonStyles.swift in Sources */,
 				F66007462F60C56F00148767 /* CoursePickerViewController.swift in Sources */,
 				F6D5417D2F749C1E0020588F /* CustomGroupsViewController.swift in Sources */,
 				F66007472F60C56F00148767 /* CourseSetupViewController.swift in Sources */,
+				F6E008132F8D269F00763694 /* RemoteMatch.swift in Sources */,
 				F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */,
 				F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */,
 				F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */,
 				F6D6A49E2EC786FF0000F576 /* FriendTrackStore.swift in Sources */,
+				F6E008172F8D273200763694 /* RemoteMatchInvite.swift in Sources */,
 				F6D66A832F2BCD4900367C08 /* ProViewController.swift in Sources */,
 				F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */,
 				F6D6A49C2EC786D10000F576 /* FriendStore.swift in Sources */,
@@ -402,6 +441,8 @@
 				F63960642F60D62500EC0C30 /* Course.swift in Sources */,
 				F63960662F60D62500EC0C30 /* CourseStore.swift in Sources */,
 				F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */,
+				F6E008152F8D26FC00763694 /* RemoteMatchStore.swift in Sources */,
+				F6E008052F884A9D00763694 /* RemoteRoundCodec.swift in Sources */,
 				F63960672F60D62500EC0C30 /* Game.swift in Sources */,
 				F63960682F60D62500EC0C30 /* GameData.swift in Sources */,
 				F63960692F60D62500EC0C30 /* GameData+HoleViews.swift in Sources */,
@@ -412,17 +453,21 @@
 				F6D5417C2F7498740020588F /* TextGroupStore.swift in Sources */,
 				F639606D2F60D62500EC0C30 /* GameModels.swift in Sources */,
 				F639606E2F60D62500EC0C30 /* GameStatsViewController.swift in Sources */,
+				F6E008032F884A6500763694 /* SharedRound.swift in Sources */,
 				F639606F2F60D62500EC0C30 /* GameViewController.swift in Sources */,
 				F63960702F60D62500EC0C30 /* HomeViewController.swift in Sources */,
 				F63960712F60D62500EC0C30 /* KeyboardHelpers.swift in Sources */,
 				F63960722F60D62500EC0C30 /* MyStatsViewController.swift in Sources */,
 				F63960732F60D62500EC0C30 /* Notification.swift in Sources */,
-				F6E007F92F80D19B00763694 /* HoleStatsEntryViewController..swift in Sources */,
+				F6E007F92F80D19B00763694 /* HoleStatsEntryViewController.swift in Sources */,
 				F6E007F52F8017F300763694 /* SkinsEngine.swift in Sources */,
 				F63960742F60D62500EC0C30 /* Player.swift in Sources */,
 				F6D5416C2F646EA70020588F /* NassauEngine.swift in Sources */,
+				F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */,
+				F6E008232F8E62C600763694 /* RoundHistoryStore.swift in Sources */,
 				F63960752F60D62500EC0C30 /* PlayerSetupStore.swift in Sources */,
 				F6750D002F785E24001828D2 /* GameSettingsViewController.swift in Sources */,
+				F6E0080B2F8965B600763694 /* RemoteNassauViewController.swift in Sources */,
 				F63960772F60D62500EC0C30 /* ProfileStore.swift in Sources */,
 				F63960782F60D62500EC0C30 /* RoundStore.swift in Sources */,
 				F63960792F60D62500EC0C30 /* RoundSummary.swift in Sources */,
@@ -431,7 +476,9 @@
 				F639607C2F60D62500EC0C30 /* UserProfile.swift in Sources */,
 				F63D07102ED8B20400F165CA /* ManagePlayersViewController.swift in Sources */,
 				F657CEB42F01BBCA001CBFCD /* CourseLibrary.swift in Sources */,
+				F6E008192F8D27EB00763694 /* RemoteMatchInviteCodec.swift in Sources */,
 				F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */,
+				F6E008092F89408500763694 /* RemoteNassauScorer.swift in Sources */,
 				F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */,
 				F6D5417A2F7498150020588F /* TextGroup.swift in Sources */,
 				F60E62802F610B2A0062F321 /* ProGateViewController.swift in Sources */,
@@ -440,6 +487,7 @@
 				F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,
 				F681886C2F62898D004162EE /* PlayerSetupViewController.swift in Sources */,
+				F6E0081E2F8DBF2A00763694 /* ImportRemoteRoundViewController.swift in Sources */,
 				F6590F052EFA225B0085D088 /* GameType.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

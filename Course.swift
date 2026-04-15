@@ -9,10 +9,13 @@
 import Foundation
 
 struct Course: Codable {
+    var id: UUID = UUID()
+    var name: String = "Course"
     var pars: [Int]
     var holeHandicaps: [Int]
 
     static let `default` = Course(
+        name: "WolfMore",
         pars: Array(repeating: 4, count: 18),
         holeHandicaps: Array(1...18)
     )
