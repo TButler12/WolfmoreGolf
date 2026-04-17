@@ -5492,6 +5492,58 @@ let BLUEJACK_NATIONAL_HCS: [Int] = [
 let BLUEJACK_NATIONAL_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Tiger", yardage: 7552, rating: 75.8, slope: 135)
 ]
+
+// MARK: - Valhalla Golf Club (Gold / Championship)
+
+private let VALHALLA_GOLD_ID = UUID(uuidString: "9E7C1F42-8A6D-4F91-B2A1-6D9C3E5F7201")!
+
+let VALHALLA_GOLD_PARS: [Int] = [
+    4,5,3,4,4,4,5,3,4,
+    5,3,4,4,3,4,4,4,5
+]
+
+let VALHALLA_GOLD_HCS: [Int] = [
+    13,9,11,15,3,1,5,17,7,
+    6,16,2,14,18,10,4,8,12
+]
+
+let VALHALLA_GOLD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7575, rating: 78.5, slope: 155)
+]
+// MARK: - Audubon Country Club (Cardinal)
+
+private let AUDUBON_CARDINAL_ID = UUID(uuidString: "C1A9D2E4-5F6B-4A91-8C3D-9E7B2F4D6102")!
+
+let AUDUBON_CARDINAL_PARS: [Int] = [
+    4,4,3,5,3,4,5,4,4,
+    4,4,5,3,4,5,4,3,4
+]
+
+let AUDUBON_CARDINAL_HCS: [Int] = [
+    5,11,15,1,17,13,3,7,9,
+    10,12,2,18,8,4,6,16,14
+]
+
+let AUDUBON_CARDINAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Cardinal", yardage: 6843, rating: 74.1, slope: 134)
+]
+// MARK: - Dothan Country Club
+
+private let DOTHAN_COUNTRY_CLUB_ID = UUID(uuidString: "D8B3C1A4-5E72-4F69-9C10-2A7E4D5F8301")!
+
+let DOTHAN_COUNTRY_CLUB_PARS: [Int] = [
+    4,4,3,5,3,4,4,4,4,
+    5,3,4,3,4,4,4,4,4
+]
+
+let DOTHAN_COUNTRY_CLUB_HCS: [Int] = [
+    15,7,13,1,17,5,3,9,11,
+    2,18,10,14,4,12,6,16,8
+]
+
+let DOTHAN_COUNTRY_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "1", yardage: 6479, rating: 71.4, slope: 130)
+]
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -9204,6 +9256,57 @@ private enum BuiltIns {
             website: "https://bluejacknational.com/",
             address: "4430 S FM 1486, Montgomery, TX 77316",
             isWolfApproved: true
+        ),
+        c(
+            VALHALLA_GOLD_ID,
+            "Valhalla Golf Club",
+            VALHALLA_GOLD_PARS,
+            VALHALLA_GOLD_HCS,
+            VALHALLA_GOLD_TEES,
+            country: "USA",
+            state: "KY",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(502) 245-4475",
+            website: "https://www.valhallagolfclub.com/",
+            address: "15503 Shelbyville Rd, Louisville, KY 40245",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            AUDUBON_CARDINAL_ID,
+            "Audubon Country Club",
+            AUDUBON_CARDINAL_PARS,
+            AUDUBON_CARDINAL_HCS,
+            AUDUBON_CARDINAL_TEES,
+            country: "USA",
+            state: "KY",
+            architect: "Tom Bendelow",
+            type: "Private",
+            phone: "(502) 636-1331",
+            website: "https://www.auduboncc.org/",
+            address: "3265 Robin Rd, Louisville, KY 40213",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            DOTHAN_COUNTRY_CLUB_ID,
+            "Dothan Country Club",
+            DOTHAN_COUNTRY_CLUB_PARS,
+            DOTHAN_COUNTRY_CLUB_HCS,
+            DOTHAN_COUNTRY_CLUB_TEES,
+            country: "USA",
+            state: "AL",
+            architect: nil,
+            type: "Private",
+            phone: "(334) 792-6650",
+            website: "https://www.dothancountryclub.com/",
+            address: "200 South Cherokee Avenue, Dothan, AL 36301",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
         ),
         ]
     

@@ -1594,7 +1594,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         promptForRemoteStake { [weak self] stake in
             guard let self else { return }
 
-            self.importRemoteRoundFromClipboardOrPrompt { [weak self] opponentRound in
+            self.promptForRemoteRound { [weak self] opponentRound in
                 guard let self else { return }
 
                 if self.isSamePlayer(myRound.playerName, opponentRound.playerName) {

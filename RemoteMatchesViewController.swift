@@ -78,8 +78,22 @@ extension RemoteMatchesViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: "MatchCell", for: indexPath)
 
         var content = cell.defaultContentConfiguration()
-        content.text = match.opponentName
-        content.secondaryText = "\(match.statusText) • $\(match.stakePerBet)"
+        let myCourse = match.myRound.courseName
+        let oppCourse = match.opponentRound?.courseName ?? "Waiting..."
+
+        let myCompleted = match.myRound.scores.filter { $0 != nil }.count
+        let oppCompleted = match.opponentRound?.scores.filter { $0 != nil }.count ?? 0
+        let myHoleText = myCompleted >= 18 ? "F" : "H\(myCompleted + 1)"
+        let oppHoleText = match.opponentRound == nil
+            ? "Waiting..."
+            : (oppCompleted >= 18 ? "F" : "H\(oppCompleted + 1)")
+        content.text = "\(match.opponentName)"
+
+        content.secondaryText =
+        """
+        \(myCourse) (\(myHoleText)) vs \(oppCourse) (\(oppHoleText))
+        \(match.statusText) • $\(match.stakePerBet)
+        """
         content.textProperties.font = .systemFont(ofSize: 18, weight: .medium)
         content.secondaryTextProperties.color = .secondaryLabel
         content.secondaryTextProperties.numberOfLines = 2
@@ -98,12 +112,44 @@ extension RemoteMatchesViewController: UITableViewDelegate {
 
         let match = matches[indexPath.row]
 
-        guard let opponentRound = match.opponentRound else {
+        guard match.opponentRound != nil else {
             showAlert(title: "Match Not Ready", message: "Waiting for opponent round.")
             return
         }
 
-        guard let result = match.result else {
+        guard match.result != nil else {
+            showAlert(title: "Error", message: "Could not calculate Remote Nassau result.")
+            return
+        }
+
+        let ac = UIAlertController(title: "Compare Mode", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Hole by Hole", style: .default) { [weak self] _ in
+            self?.openMatch(match, mode: .holeByHole)
+        })
+
+        ac.addAction(UIAlertAction(title: "Front / Back 9 by HC", style: .default) { [weak self] _ in
+            self?.openMatch(match, mode: .frontBackByHC)
+        })
+
+        ac.addAction(UIAlertAction(title: "18 Holes by HC", style: .default) { [weak self] _ in
+            self?.openMatch(match, mode: .all18ByHC)
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController,
+           let cell = tableView.cellForRow(at: indexPath) {
+            pop.sourceView = cell
+            pop.sourceRect = cell.bounds
+        }
+
+        present(ac, animated: true)
+    }
+
+    private func openMatch(_ match: RemoteMatch, mode: RemoteCompareMode) {
+        guard let opponentRound = match.opponentRound,
+              let result = match.result else {
             showAlert(title: "Error", message: "Could not calculate Remote Nassau result.")
             return
         }
@@ -112,7 +158,7 @@ extension RemoteMatchesViewController: UITableViewDelegate {
         vc.myRound = match.myRound
         vc.opponentRound = opponentRound
         vc.result = result
-        vc.compareMode = .holeByHole
+        vc.compareMode = mode
 
         navigationController?.pushViewController(vc, animated: true)
     }

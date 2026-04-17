@@ -1,10 +1,10 @@
 
-//
 //  RemoteNassauViewController.swift
 //  WolfmoreGolf
 //
 //  Created by Tom BUTLER on 4/10/26.
 //
+
 import UIKit
 
 final class RemoteNassauViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
@@ -13,13 +13,14 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     var opponentRound: SharedRound!
     var result: RemoteNassauResult!
     var compareMode: RemoteCompareMode = .holeByHole
+
     private let matchupLabel = UILabel()
     private let frontLabel = UILabel()
     private let backLabel = UILabel()
     private let overallLabel = UILabel()
     private let totalLabel = UILabel()
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
-    
+
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
@@ -52,7 +53,6 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
         totalLabel.font = .systemFont(ofSize: 20, weight: .bold)
 
         let summaryStack = UIStackView(arrangedSubviews: [frontLabel, backLabel, overallLabel, totalLabel])
-        
         summaryStack.axis = .vertical
         summaryStack.spacing = 12
 
@@ -69,6 +69,7 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "HoleCell")
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 96
+
         NSLayoutConstraint.activate([
             matchupLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             matchupLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
@@ -100,11 +101,32 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
 
         tableView.reloadData()
     }
+
+    private var displayedHoles: [RemoteHoleResult] {
+        guard myRound != nil, opponentRound != nil else {
+            return result.holeResults
+        }
+
+        switch compareMode {
+        case .holeByHole:
+            return result.holeResults.sorted { $0.holeNumberA < $1.holeNumberA }
+
+        case .frontBackByHC:
+            let front = RemoteNassauScorer.sortedFront9ByHCA(playerA: myRound, playerB: opponentRound)
+            let back = RemoteNassauScorer.sortedBack9ByHCA(playerA: myRound, playerB: opponentRound)
+            return front + back
+
+        case .all18ByHC:
+            return RemoteNassauScorer.sortedAll18ByHCA(playerA: myRound, playerB: opponentRound)
+        }
+    }
+
     private func moneyText(for value: Int) -> String {
         if value > 0 { return "+$\(value)" }
         if value < 0 { return "-$\(abs(value))" }
         return "$0"
     }
+
     private func nassauText(for value: Int) -> String {
         if value > 0 { return "\(value) up" }
         if value < 0 { return "\(-value) down" }
@@ -139,7 +161,7 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        result?.holeResults.count ?? 0
+        displayedHoles.count
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -152,62 +174,62 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
 
         var content = cell.defaultContentConfiguration()
 
-        let grossAText = hole.grossA.map { "\($0)" } ?? "-"
-        let grossBText = hole.grossB.map { "\($0)" } ?? "-"
-
-        let netAText = hole.netA.map { "\($0)" } ?? "-"
-        let netBText = hole.netB.map { "\($0)" } ?? "-"
+        let grossAText = hole.grossA.map(String.init) ?? "-"
+        let grossBText = hole.grossB.map(String.init) ?? "-"
+        let netAText = hole.netA.map(String.init) ?? "-"
+        let netBText = hole.netB.map(String.init) ?? "-"
 
         let prefix: String
-        if compareMode == .frontBackByHC {
+        switch compareMode {
+        case .frontBackByHC:
             prefix = indexPath.row < 9 ? "F9 • " : "B9 • "
-        } else {
+        case .holeByHole, .all18ByHC:
             prefix = ""
         }
 
-        let hcText: String
+        let displayHC: Int
         switch compareMode {
+        case .frontBackByHC:
+            displayHC = hole.holeHandicapA
+        case .all18ByHC:
+            displayHC = hole.holeHandicapA
         case .holeByHole:
-            hcText = ""
-        case .frontBackByHC, .all18ByHC:
-            hcText = " • HC \(hole.holeHandicapA)"
+            displayHC = hole.holeHandicapA
         }
 
-        content.text = "\(prefix)Hole \(hole.holeNumber)\(hcText): Gross \(grossAText) - \(grossBText)"
+        switch compareMode {
+        case .holeByHole:
+            content.text = "Hole \(hole.holeNumberA): Gross \(grossAText) - \(grossBText)"
+
+        case .frontBackByHC:
+            content.text = "\(prefix)HC \(displayHC): Hole \(hole.holeNumberA) vs Hole \(hole.holeNumberB): Gross \(grossAText) - \(grossBText)"
+
+        case .all18ByHC:
+            let isFront = indexPath.row < 9
+            let prefix = isFront ? "F9" : "B9"
+
+            // HC 1–9 for front, 10–18 for back
+            let displayHC = isFront
+                ? (indexPath.row + 1)
+                : (indexPath.row + 1)
+
+            content.text = "\(prefix) • HC \(displayHC): Hole \(hole.holeNumberA) vs Hole \(hole.holeNumberB): Gross \(grossAText) - \(grossBText)"
+        }
+
         content.secondaryText = """
         Net: \(netAText) - \(netBText)   Strokes: \(hole.strokesA) - \(hole.strokesB)
         Winner: \(winnerText(for: hole.winner))
         """
 
-        content.textProperties.font = .systemFont(ofSize: 18, weight: .medium)
-        content.secondaryTextProperties.font = .systemFont(ofSize: 15, weight: .regular)
+        content.textProperties.font = .systemFont(ofSize: 18, weight: .semibold)
         content.secondaryTextProperties.color = .secondaryLabel
-        content.secondaryTextProperties.numberOfLines = 0
+        content.secondaryTextProperties.numberOfLines = 2
 
         cell.contentConfiguration = content
         cell.selectionStyle = .none
-
         return cell
     }
-    private var displayedHoles: [RemoteHoleResult] {
-        guard let myRound, let opponentRound else {
-            return result.holeResults
-        }
 
-        switch compareMode {
-        case .holeByHole:
-            return result.holeResults
-
-        case .frontBackByHC:
-            let front = RemoteNassauScorer.sortedFront9ByHCA(playerA: myRound, playerB: opponentRound)
-            let back = RemoteNassauScorer.sortedBack9ByHCA(playerA: myRound, playerB: opponentRound)
-            return front + back
-
-        case .all18ByHC:
-            return RemoteNassauScorer.sortedAll18ByHCA(playerA: myRound, playerB: opponentRound)
-        }
-    }
-    
     private func myPlayerIndex(in g: GameData) -> Int? {
         let myName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !myName.isEmpty else { return nil }
@@ -217,6 +239,7 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
                 .localizedCaseInsensitiveCompare(myName) == .orderedSame
         }
     }
+
     private func debugLocalPlayerMatch(in g: GameData) {
         print("ProfileStore.name =", ProfileStore.name ?? "nil")
         print("Round players =", g.playerNames)
