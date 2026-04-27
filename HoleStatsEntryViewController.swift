@@ -39,6 +39,11 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
 
     private let cancelButton = UIButton(type: .system)
     private let saveButton = UIButton(type: .system)
+    private let scrollView = UIScrollView()
+    private let contentView = UIView()
+    private let stackView = UIStackView()
+
+    private weak var activeField: UIView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,6 +51,12 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
 
         applyExistingValuesIfNeeded()   // 👈 ADD
         updateSelectionUI()
+        let tap = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+        tap.cancelsTouchesInView = false
+        view.addGestureRecognizer(tap)
+    }
+    @objc private func backgroundTapped() {
+        view.endEditing(true)
     }
     private func applyExistingValuesIfNeeded() {
         subtitleLabel.text = hasExistingStats
@@ -64,6 +75,20 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
         if let existingScore {
             scoreField.text = "\(existingScore)"
         }
+    }
+    private func makeNumberPadToolbar() -> UIToolbar {
+        let toolbar = UIToolbar()
+        toolbar.sizeToFit()
+
+        let flex = UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil)
+        let done = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(doneTapped))
+
+        toolbar.items = [flex, done]
+        return toolbar
+    }
+
+    @objc private func doneTapped() {
+        view.endEditing(true)
     }
     private func setupUI() {
         view.backgroundColor = UIColor.black.withAlphaComponent(0.35)
@@ -111,7 +136,9 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
         configureChoiceButton(girHitButton, title: "● Hit", action: #selector(girHitTapped))
         configureChoiceButton(girMissButton, title: "○ Miss", action: #selector(girMissTapped))
         configureChoiceButton(girNAButton, title: "– N/A", action: #selector(girNATapped))
-
+        let toolbar = makeNumberPadToolbar()
+        scoreField.inputAccessoryView = toolbar
+        puttsField.inputAccessoryView = toolbar
         puttsField.translatesAutoresizingMaskIntoConstraints = false
         puttsField.borderStyle = .roundedRect
         puttsField.placeholder = "Putts"
@@ -249,8 +276,7 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
         button.setTitleColor(selected ? tint : .label, for: .normal)
     }
     func textFieldDidBeginEditing(_ textField: UITextField) {
-        cardCenterYConstraint.constant = -90
-
+        cardCenterYConstraint.constant = -50
         UIView.animate(withDuration: 0.25) {
             self.view.layoutIfNeeded()
         }
@@ -258,7 +284,6 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
 
     func textFieldDidEndEditing(_ textField: UITextField) {
         cardCenterYConstraint.constant = 0
-
         UIView.animate(withDuration: 0.25) {
             self.view.layoutIfNeeded()
         }

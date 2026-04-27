@@ -93,7 +93,37 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     }
 
     // MARK: - Setup
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        showHomeCourseHintIfNeeded()
+    }
+    private func showHomeCourseHintIfNeeded() {
+        let key = "onboarding_home_course"
+        let defaults = UserDefaults.standard
 
+        if defaults.bool(forKey: key) { return }
+
+        let ac = UIAlertController(
+            title: "⭐ Set Your Home Course",
+            message: """
+    Your Home Course helps WolfMore:
+
+    • Track your stats by course  
+    • Improve remote Nassau matchups  
+    • Personalize your experience  
+
+    You can set it when selecting a course.
+    """,
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Got It", style: .default))
+        ac.addAction(UIAlertAction(title: "Don't Show Again", style: .destructive) { _ in
+            defaults.set(true, forKey: key)
+        })
+
+        present(ac, animated: true)
+    }
     private func configureSearch() {
         searchController.searchResultsUpdater = self
         searchController.obscuresBackgroundDuringPresentation = false
@@ -511,7 +541,9 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        onPickCourse?(course(at: indexPath).id)
+
+        let c = course(at: indexPath)
+        showCourseOptions(c)
     }
 
     override func tableView(_ tableView: UITableView,
@@ -581,7 +613,33 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     }
 
     // MARK: - Accessory View
+    private func showCourseOptions(_ course: CourseProfile) {
+        let ac = UIAlertController(
+            title: course.name,
+            message: "Choose how you'd like to use this course.",
+            preferredStyle: .actionSheet
+        )
 
+        // Play normally
+        ac.addAction(UIAlertAction(title: "Play This Course", style: .default) { _ in
+            self.onPickCourse?(course.id)
+        })
+
+        // ⭐ Home course (this is the key addition)
+        ac.addAction(UIAlertAction(title: "⭐ Set as Home Course", style: .default) { _ in
+            self.setHomeCourse(course.id)
+            self.onPickCourse?(course.id)
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = self.view
+            pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 1, height: 1)
+        }
+
+        present(ac, animated: true)
+    }
     private func makeAccessoryView(for course: CourseProfile, isSelected: Bool) -> UIView? {
         if let promo = course.promo, promo.isActive, promo.type == .deal {
             let label = UILabel(frame: CGRect(x: 0, y: 0, width: 58, height: 24))

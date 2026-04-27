@@ -5527,6 +5527,37 @@ let AUDUBON_CARDINAL_HCS: [Int] = [
 let AUDUBON_CARDINAL_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Cardinal", yardage: 6843, rating: 74.1, slope: 134)
 ]
+private let KNOLLWOOD_CLUB_ID = UUID(uuidString: "A1B2C3D4-1111-4AAA-8C11-100000000402")!
+
+let KNOLLWOOD_CLUB_PARS: [Int] = [
+    5,4,4,3,4,5,3,5,4,
+    5,4,3,4,4,4,5,3,5
+]
+
+let KNOLLWOOD_CLUB_HCS: [Int] = [
+    7,5,9,15,1,11,17,3,13,
+    2,8,16,10,4,6,14,18,12
+]
+
+let KNOLLWOOD_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back", yardage: 7202, rating: 75.0, slope: 140),
+    TeeInfo(teeName: "Member", yardage: 6682, rating: 72.5, slope: 136)
+]
+private let BOB_OLINK_ID = UUID(uuidString: "A1B2C3D4-1111-4AAA-8C11-100000000403")!
+
+let BOB_OLINK_PARS: [Int] = [
+    4,4,4,3,5,5,4,3,4,
+    5,4,3,4,4,4,3,4,4
+]
+
+let BOB_OLINK_HCS: [Int] = [
+    5,11,3,17,1,9,13,15,7,
+    2,12,14,4,6,8,18,16,10
+]
+
+let BOB_OLINK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Green", yardage: 7247, rating: 75.6, slope: 140)
+]
 // MARK: - Dothan Country Club
 
 private let DOTHAN_COUNTRY_CLUB_ID = UUID(uuidString: "D8B3C1A4-5E72-4F69-9C10-2A7E4D5F8301")!
@@ -5543,6 +5574,171 @@ let DOTHAN_COUNTRY_CLUB_HCS: [Int] = [
 
 let DOTHAN_COUNTRY_CLUB_TEES: [TeeInfo] = [
     TeeInfo(teeName: "1", yardage: 6479, rating: 71.4, slope: 130)
+]
+private let SHOREACRES_ID = UUID(uuidString: "A1B2C3D4-1111-4AAA-8C11-100000000404")!
+
+let SHOREACRES_PARS: [Int] = [
+    5,4,4,4,4,3,4,3,4,
+    4,4,3,4,3,5,4,4,5
+]
+
+let SHOREACRES_HCS: [Int] = [
+    15,9,17,5,1,11,3,13,7,
+    2,8,18,6,10,16,4,14,12
+]
+
+let SHOREACRES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6725, rating: 73.2, slope: 142)
+]
+private let EXMOOR_CC_ID = UUID(uuidString: "A1B2C3D4-1111-4AAA-8C11-100000000405")!
+
+let EXMOOR_CC_PARS: [Int] = [
+    5,4,4,4,3,5,4,3,4,
+    4,5,3,4,3,5,4,4,4
+]
+
+let EXMOOR_CC_HCS: [Int] = [
+    17,3,5,1,11,15,7,13,9,
+    4,10,18,16,14,12,2,6,8
+]
+
+let EXMOOR_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7180, rating: 75.0, slope: 140)
+]
+private let BOWES_CREEK_ID = UUID(uuidString: "A7A10006-0000-0000-0000-000000000006")!
+
+let BOWES_CREEK_PARS: [Int] = [
+    4,4,3,4,3,5,4,5,4,
+    5,4,4,4,3,4,3,4,4
+]
+
+let BOWES_CREEK_HCS: [Int] = [
+    9,7,17,11,15,3,5,1,13,
+    2,10,8,14,18,4,16,12,6
+]
+
+let BOWES_CREEK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6794, rating: 73.6, slope: 143)
+]
+private let THUNDERHAWK_ID = UUID(uuidString: "A7A10005-0000-0000-0000-000000000005")!
+
+let THUNDERHAWK_PARS: [Int] = [
+    4,5,3,4,4,3,5,4,4,
+    4,5,4,3,4,3,5,3,5
+]
+
+let THUNDERHAWK_HCS: [Int] = [
+    17,5,9,3,7,11,15,13,1,
+    14,16,4,8,12,18,2,10,6
+]
+
+let THUNDERHAWK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7031, rating: 74.2, slope: 141),
+    TeeInfo(teeName: "Brass", yardage: 6761, rating: 72.4, slope: 137),
+    TeeInfo(teeName: "Bronze", yardage: 6361, rating: 71.2, slope: 134),
+    TeeInfo(teeName: "Silver", yardage: 6124, rating: 70.1, slope: 131)
+]
+private let GLEN_CLUB_ID = UUID(uuidString: "A7A10004-0000-0000-0000-000000000004")!
+
+let GLEN_CLUB_PARS: [Int] = [
+    5,4,4,3,5,4,4,4,3,
+    4,3,4,4,5,4,4,3,5
+]
+
+let GLEN_CLUB_HCS: [Int] = [
+    7,15,3,17,9,5,1,11,13,
+    18,6,8,10,14,12,2,16,4
+]
+
+let GLEN_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",       yardage: 7133, rating: 74.9, slope: 141),
+    TeeInfo(teeName: "Blue/Gold",  yardage: 6846, rating: 73.5, slope: 137),
+    TeeInfo(teeName: "Blue",       yardage: 6575, rating: 72.2, slope: 133),
+    TeeInfo(teeName: "Silver/Blue",yardage: 6300, rating: 71.0, slope: 129),
+    TeeInfo(teeName: "Silver/White", yardage: 5900, rating: 70.0, slope: 126),
+    TeeInfo(teeName: "White",      yardage: 5300, rating: 69.5, slope: 122)
+]
+private let CANTIGNY_WOODSIDE_LAKESIDE_ID = UUID(uuidString: "A7A10001-0000-0000-0000-000000000001")!
+private let CANTIGNY_WOODSIDE_HILLSIDE_ID = UUID(uuidString: "A7A10002-0000-0000-0000-000000000002")!
+private let CANTIGNY_LAKESIDE_HILLSIDE_ID = UUID(uuidString: "A7A10003-0000-0000-0000-000000000003")!
+
+let CANTIGNY_WOODSIDE_LAKESIDE_PARS: [Int] = [
+    4,5,3,4,4,4,5,3,4,
+    4,5,4,3,5,4,4,3,4
+]
+
+let CANTIGNY_WOODSIDE_LAKESIDE_HCS: [Int] = [
+    11,1,15,17,9,3,5,13,7,
+    10,2,12,14,6,18,8,16,4
+]
+
+let CANTIGNY_WOODSIDE_LAKESIDE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Champ", yardage: 7055, rating: 74.3, slope: 143)
+]
+
+let CANTIGNY_WOODSIDE_HILLSIDE_PARS: [Int] = [
+    4,5,3,4,4,4,5,3,4,
+    4,5,4,4,3,4,5,3,4
+]
+
+let CANTIGNY_WOODSIDE_HILLSIDE_HCS: [Int] = [
+    11,1,15,17,9,3,5,13,7,
+    10,4,16,12,18,2,6,14,8
+]
+
+let CANTIGNY_WOODSIDE_HILLSIDE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Champ", yardage: 7012, rating: 74.1, slope: 142)
+]
+
+let CANTIGNY_LAKESIDE_HILLSIDE_PARS: [Int] = [
+    4,5,4,3,5,4,4,3,4,
+    4,5,4,4,3,4,5,3,4
+]
+
+let CANTIGNY_LAKESIDE_HILLSIDE_HCS: [Int] = [
+    9,1,11,13,5,17,7,15,3,
+    10,4,16,12,18,2,6,14,8
+]
+
+let CANTIGNY_LAKESIDE_HILLSIDE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Champ", yardage: 6831, rating: 73.0, slope: 139)
+]
+private let WHITE_DEER_RUN_ID = UUID(uuidString: "A7A10005-0000-0000-0000-000000000015")!
+
+let WHITE_DEER_RUN_PARS: [Int] = [
+    4,4,5,3,4,5,4,3,4,
+    4,4,3,4,5,3,4,5,4
+]
+
+let WHITE_DEER_RUN_HCS: [Int] = [
+    7,9,3,15,5,1,11,13,17,
+    2,6,18,14,10,16,8,4,12
+]
+
+let WHITE_DEER_RUN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7149, rating: 73.6, slope: 143),
+    TeeInfo(teeName: "Gold",  yardage: 6816, rating: 72.0, slope: 140),
+    TeeInfo(teeName: "Blue",  yardage: 6464, rating: 70.5, slope: 137),
+    TeeInfo(teeName: "White", yardage: 6023, rating: 69.0, slope: 133),
+    TeeInfo(teeName: "Red",   yardage: 5012, rating: 66.5, slope: 125)
+]
+private let BETHPAGE_BLACK_ID = UUID(uuidString: "A4E7A4A1-3A8F-4F4F-9B2F-6E9C1A0B4001")!
+
+private let BETHPAGE_BLACK_PARS: [Int] = [
+    4, 4, 3, 5, 4, 4, 5, 3, 4,
+    4, 4, 4, 5, 3, 4, 4, 3, 4
+]
+
+private let BETHPAGE_BLACK_HCS: [Int] = [
+    8, 16, 18, 2, 4, 10, 6, 14, 12,
+    9, 11, 7, 3, 17, 1, 5, 13, 15
+]
+
+private let BETHPAGE_BLACK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 7468, rating: 78.1, slope: 152),
+    TeeInfo(teeName: "White", yardage: 6684, rating: 74.0, slope: 145),
+    TeeInfo(teeName: "Red",   yardage: 6223, rating: 71.2, slope: 137),
+    TeeInfo(teeName: "Red (L)", yardage: 6223, rating: 77.8, slope: 150)
 ]
 // =======================================================
 // MARK: - Built-in Registry
@@ -9308,7 +9504,206 @@ private enum BuiltIns {
             resortBrand: nil,
             promo: nil
         ),
+        c(
+            KNOLLWOOD_CLUB_ID,
+            "Knollwood Club",
+            KNOLLWOOD_CLUB_PARS,
+            KNOLLWOOD_CLUB_HCS,
+            KNOLLWOOD_CLUB_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago North Shore",
+            architect: "H.S. Colt / C.H. Alison",
+            type: "Private",
+            phone: "(847) 234-1600",
+            website: "https://www.knollwoodclub.org",
+            address: "1890 Knollwood Rd, Lake Forest, IL 60045",
+            isWolfApproved: true
+        ),
+        c(
+            BOB_OLINK_ID,
+            "Bob O'Link Golf Club",
+            BOB_OLINK_PARS,
+            BOB_OLINK_HCS,
+            BOB_OLINK_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago North Shore",
+            architect: "Donald Ross / C.H. Alison",
+            type: "Private",
+            phone: "(847) 432-0917",
+            website: "https://www.bobolinkgolfclub.com",
+            address: "408 Skokie Blvd, Highland Park, IL 60035",
+            isWolfApproved: true
+        ),
+        c(
+            SHOREACRES_ID,
+            "Shoreacres",
+            SHOREACRES_PARS,
+            SHOREACRES_HCS,
+            SHOREACRES_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago North Shore",
+            architect: "Seth Raynor",
+            type: "Private",
+            phone: "(847) 234-1470",
+            website: "https://www.shoreacres.com",
+            address: "1601 Shoreacres Rd, Lake Bluff, IL 60044",
+            isWolfApproved: true
+        ),
+        c(
+            EXMOOR_CC_ID,
+            "Exmoor Country Club",
+            EXMOOR_CC_PARS,
+            EXMOOR_CC_HCS,
+            EXMOOR_CC_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago North Shore",
+            architect: "Donald Ross",
+            type: "Private",
+            phone: "(847) 432-3600",
+            website: "https://www.exmoorcountryclub.org",
+            address: "700 Vine Ave, Highland Park, IL 60035",
+            isWolfApproved: true
+        ),
+        
+        c(
+            CANTIGNY_WOODSIDE_LAKESIDE_ID,
+            "Cantigny (Woodside / Lakeside)",
+            CANTIGNY_WOODSIDE_LAKESIDE_PARS,
+            CANTIGNY_WOODSIDE_LAKESIDE_HCS,
+            CANTIGNY_WOODSIDE_LAKESIDE_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago West",
+            architect: "Roger Packard",
+            type: "Daily-Fee",
+            phone: "(630) 668-8463",
+            website: "https://cantignygolf.com",
+            address: "27W270 Mack Rd, Wheaton, IL 60189",
+            isWolfApproved: true,
+            resortBrand: "Cantigny"
+        ),
+
+        c(
+            CANTIGNY_WOODSIDE_HILLSIDE_ID,
+            "Cantigny (Woodside / Hillside)",
+            CANTIGNY_WOODSIDE_HILLSIDE_PARS,
+            CANTIGNY_WOODSIDE_HILLSIDE_HCS,
+            CANTIGNY_WOODSIDE_HILLSIDE_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago West",
+            architect: "Roger Packard",
+            type: "Daily-Fee",
+            phone: "(630) 668-8463",
+            website: "https://cantignygolf.com",
+            address: "27W270 Mack Rd, Wheaton, IL 60189",
+            isWolfApproved: true,
+            resortBrand: "Cantigny"
+        ),
+
+        c(
+            CANTIGNY_LAKESIDE_HILLSIDE_ID,
+            "Cantigny (Lakeside / Hillside)",
+            CANTIGNY_LAKESIDE_HILLSIDE_PARS,
+            CANTIGNY_LAKESIDE_HILLSIDE_HCS,
+            CANTIGNY_LAKESIDE_HILLSIDE_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago West",
+            architect: "Roger Packard",
+            type: "Daily-Fee",
+            phone: "(630) 668-8463",
+            website: "https://cantignygolf.com",
+            address: "27W270 Mack Rd, Wheaton, IL 60189",
+            isWolfApproved: true,
+            resortBrand: "Cantigny"
+        ),
+        
+        c(
+            GLEN_CLUB_ID,
+            "The Glen Club",
+            GLEN_CLUB_PARS,
+            GLEN_CLUB_HCS,
+            GLEN_CLUB_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago North Shore",
+            architect: "Tom Fazio",
+            type: "Daily-Fee",
+            phone: "(847) 724-7272",
+            website: "https://www.theglenclub.com",
+            address: "2901 West Lake Ave, Glenview, IL 60026",
+            isWolfApproved: true,
+            resortBrand: "KemperSports"
+        ),
+        c(
+            THUNDERHAWK_ID,
+            "ThunderHawk Golf Club",
+            THUNDERHAWK_PARS,
+            THUNDERHAWK_HCS,
+            THUNDERHAWK_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Lake County",
+            architect: "Robert Trent Jones Jr.",
+            type: "Daily-Fee",
+            phone: "(847) 968-3100",
+            website: "https://www.thunderhawkgolfclub.org",
+            address: "39700 N Lewis Ave, Beach Park, IL 60099",
+            isWolfApproved: true
+        ),
+        c(
+            BOWES_CREEK_ID,
+            "Bowes Creek Country Club",
+            BOWES_CREEK_PARS,
+            BOWES_CREEK_HCS,
+            BOWES_CREEK_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago Northwest",
+            architect: "Rick Jacobson",
+            type: "Daily-Fee",
+            phone: "(847) 214-5880",
+            website: "https://bowescreekcc.com",
+            address: "1250 Bowes Creek Blvd, Elgin, IL 60124",
+            isWolfApproved: true
+        ),
+        c(
+            WHITE_DEER_RUN_ID,
+            "White Deer Run Golf Club",
+            WHITE_DEER_RUN_PARS,
+            WHITE_DEER_RUN_HCS,
+            WHITE_DEER_RUN_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago North Suburbs",
+            type: "Public",
+            phone: "(847) 680-6100",
+            website: "https://www.whitedeergolf.com",
+            address: "250 W Greggs Pkwy, Vernon Hills, IL",
+            isWolfApproved: true
+        ),
+        c(
+        BETHPAGE_BLACK_ID,
+        "Bethpage State Park - Black",
+        BETHPAGE_BLACK_PARS,
+        BETHPAGE_BLACK_HCS,
+        BETHPAGE_BLACK_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Long Island",
+        type: "Public",
+        phone: "(516) 249-0700",
+        website: "https://www.bethpagegolfcourse.com",
+        address: "99 Quaker Meeting House Rd, Farmingdale, NY",
+        isWolfApproved: true
+        )
         ]
+    
     
 #if DEBUG
     private static func assertNoDuplicateIDs() {

@@ -28,21 +28,26 @@ final class NassauViewController: UIViewController {
     private func setupUI() {
         textView.translatesAutoresizingMaskIntoConstraints = false
         textView.isEditable = false
+        textView.isSelectable = false
         textView.isScrollEnabled = true
-        textView.backgroundColor = .clear
-        textView.font = .monospacedSystemFont(ofSize: 17, weight: .regular)
-        textView.textContainerInset = UIEdgeInsets(top: 16, left: 8, bottom: 24, right: 8)
+
+        textView.backgroundColor = .secondarySystemBackground
+        textView.layer.cornerRadius = 16
+        textView.clipsToBounds = true
+
+        textView.font = .systemFont(ofSize: 18, weight: .semibold)
+        textView.textColor = .label
+        textView.textContainerInset = UIEdgeInsets(top: 20, left: 16, bottom: 30, right: 16)
 
         view.addSubview(textView)
 
         NSLayoutConstraint.activate([
-            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 12),
-            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
-            textView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12)
         ])
     }
-
     private func loadGame() {
         gameData = GameManager.shared.currentGame
     }
@@ -129,63 +134,32 @@ final class NassauViewController: UIViewController {
         gameData = workingGame
     }
 
-    private func matchBlock(for match: NassauMatch, game: GameData) -> String {
-        let playerNames = game.playerNames
+    private func cleanResult(_ text: String, label: String) -> String {
+        let lower = text.lowercased()
 
-        let frontLive = NassauEngine.runningStatusText(match.frontStatusByHole)
-        let backLive = NassauEngine.runningStatusText(match.backStatusByHole)
-        let totalLive = NassauEngine.runningStatusText(match.overallStatusByHole)
-
-        let frontResult = NassauEngine.frontResultText(
-            for: match,
-            playerNames: playerNames,
-            gameData: game
-        )
-
-        let backResult = NassauEngine.backResultText(
-            for: match,
-            playerNames: playerNames,
-            gameData: game
-        )
-
-        let overallResult = NassauEngine.overallResultText(
-            for: match,
-            playerNames: playerNames,
-            gameData: game
-        )
-
-        let netMoney = NassauEngine.netNassauMoneyText(
-            for: match,
-            playerNames: playerNames,
-            gameData: game
-        )
-
-        var lines: [String] = []
-
-        lines.append(match.title)
-        lines.append("  Mode: \(match.scoringMode == .net ? "Net" : "Gross")")
-        lines.append("  Front: \(frontLive)")
-        lines.append("  Front Result: \(frontResult)")
-        lines.append("  Back: \(backLive)")
-        lines.append("  Back Result: \(backResult)")
-        lines.append("  Total: \(totalLive)")
-        lines.append("  18 Result: \(overallResult)")
-        lines.append("  Presses: \(match.presses.count)")
-
-        if !match.presses.isEmpty {
-            for (index, press) in match.presses.enumerated() {
-                let pressStatus = NassauEngine.runningStatusText(press.runningStatus)
-                lines.append("    Press \(index + 1): H\(press.startHole)-\(press.endHole)  \(pressStatus)")
-            }
+        if lower.contains("halved") {
+            return "\(label): Halved"
         }
 
-        lines.append("  -------------------------")
-        lines.append("  NET NASSAU Status: \(netMoney)")
-        lines.append("  -------------------------")
+        if lower.contains("all square") {
+            return "\(label): All Square"
+        }
 
-        return lines.joined(separator: "\n")
+        if let range = text.range(of: " won ") {
+            let winner = String(text[..<range.lowerBound])
+            return "\(label): \(winner) won \(label)"
+        }
+
+        return "\(label): \(text)"
     }
 
+    private func cleanPressStatus(_ text: String) -> String {
+        if text == "AS" || text.lowercased().contains("square") {
+            return "All Square"
+        }
+
+        return text
+    }
     private func updateNavButtons() {
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: "Matches",
@@ -247,7 +221,7 @@ final class NassauViewController: UIViewController {
 
         present(ac, animated: true)
     }
-
+    
     private func showOneVsOnePicker() {
         guard let game = GameManager.shared.currentGame,
               let state = game.nassauState else { return }
@@ -684,5 +658,55 @@ final class NassauViewController: UIViewController {
         } else {
             return String(format: "%.2f", value)
         }
+    }
+    private func matchBlock(for match: NassauMatch, game: GameData) -> String {
+        let playerNames = game.playerNames
+
+        let frontResult = NassauEngine.frontResultText(
+            for: match,
+            playerNames: playerNames,
+            gameData: game
+        )
+
+        let backResult = NassauEngine.backResultText(
+            for: match,
+            playerNames: playerNames,
+            gameData: game
+        )
+
+        let overallResult = NassauEngine.overallResultText(
+            for: match,
+            playerNames: playerNames,
+            gameData: game
+        )
+
+        let netMoney = NassauEngine.netNassauMoneyText(
+            for: match,
+            playerNames: playerNames,
+            gameData: game
+        )
+
+        var lines: [String] = []
+
+        lines.append(match.title)
+        lines.append("  \(cleanResult(frontResult, label: "Front 9"))")
+        lines.append("  \(cleanResult(backResult, label: "Back 9"))")
+        lines.append("  \(cleanResult(overallResult, label: "18"))")
+
+        if !match.presses.isEmpty {
+            lines.append("")
+            lines.append("  Presses: \(match.presses.count)")
+
+            for (index, press) in match.presses.enumerated() {
+                let pressStatus = NassauEngine.runningStatusText(press.runningStatus)
+                lines.append("    \(index + 1). H\(press.startHole)-\(press.endHole)  \(cleanPressStatus(pressStatus))")
+            }
+        }
+
+        lines.append("")
+        lines.append("  NET: \(netMoney)")
+        lines.append("  -------------------------")
+
+        return lines.joined(separator: "\n")
     }
 }

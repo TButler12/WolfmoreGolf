@@ -89,19 +89,29 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     private func populateUI() {
         matchupLabel.text = "\(myRound.playerName) vs \(opponentRound.playerName)"
 
-        frontLabel.text = "Front: \(nassauText(for: result.frontScore))"
-        backLabel.text = "Back: \(nassauText(for: result.backScore))"
-        overallLabel.text = "Overall: \(nassauText(for: result.overallScore))"
-        totalLabel.text = "Total Outcome: \(nassauText(for: result.totalOutcome)) (\(moneyText(for: result.dollarOutcome)))"
+        let holes = displayedHoles
+        let front = Array(holes.prefix(9))
+        let back = Array(holes.suffix(9))
 
-        styledResultLabel(frontLabel, value: result.frontScore)
-        styledResultLabel(backLabel, value: result.backScore)
-        styledResultLabel(overallLabel, value: result.overallScore)
-        styledResultLabel(totalLabel, value: result.totalOutcome)
+        let frontScore = scoreSlice(front)
+        let backScore = scoreSlice(back)
+        let overallScore = scoreSlice(holes)
+
+        let totalOutcome = frontScore + backScore + overallScore
+        let dollarOutcome = totalOutcome * result.stakePerBet
+
+        frontLabel.text = "Front: \(nassauText(for: frontScore))"
+        backLabel.text = "Back: \(nassauText(for: backScore))"
+        overallLabel.text = "Overall: \(nassauText(for: overallScore))"
+        totalLabel.text = "Total Outcome: \(nassauText(for: totalOutcome)) (\(moneyText(for: dollarOutcome)))"
+
+        styledResultLabel(frontLabel, value: frontScore)
+        styledResultLabel(backLabel, value: backScore)
+        styledResultLabel(overallLabel, value: overallScore)
+        styledResultLabel(totalLabel, value: totalOutcome)
 
         tableView.reloadData()
     }
-
     private var displayedHoles: [RemoteHoleResult] {
         guard myRound != nil, opponentRound != nil else {
             return result.holeResults
@@ -239,7 +249,21 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
                 .localizedCaseInsensitiveCompare(myName) == .orderedSame
         }
     }
+    private func scoreSlice(_ holes: [RemoteHoleResult]) -> Int {
+        var total = 0
 
+        for hole in holes {
+            switch hole.winner {
+            case .playerA: total += 1
+            case .playerB: total -= 1
+            case .tie, .noResult: break
+            }
+        }
+
+        if total > 0 { return 1 }
+        if total < 0 { return -1 }
+        return 0
+    }
     private func debugLocalPlayerMatch(in g: GameData) {
         print("ProfileStore.name =", ProfileStore.name ?? "nil")
         print("Round players =", g.playerNames)

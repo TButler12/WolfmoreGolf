@@ -162,25 +162,27 @@ final class MyStatsViewController: UIViewController {
     private func buildMyStatsMessage() -> String {
         let myName = (ProfileStore.name ?? "Player 1")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         guard let s = RoundStore.shared.stats(forPlayerNamed: myName) else {
             return "No rounds saved yet for \(myName)."
         }
-        
-        var text = formatBlock(name: myName, stats: s)
-        
+
+        var text = formatBlock(name: myName, stats: s, showDetailStats: true)
+
         if let lastRound = RoundStore.shared.lastRound(forPlayer: myName) {
             text += "\n\n— LAST ROUND (BY HOLE) —\n"
             text += formatLastRoundByHole(lastRound)
         }
-        
-        let holeAverages = RoundStore.shared.averagesByHole(forPlayer: myName)
-        if !holeAverages.isEmpty {
-            text += "\n\n— AVERAGES BY HOLE —\n"
-            text += formatHoleAverages(holeAverages)
+
+        let parText = formatAveragesByPar()
+
+        if !parText.isEmpty {
+            text += "\n\n— AVERAGES BY PAR —\n"
+            text += parText
         }
-        
+
         return text
+    
     }
     
     private func attributedLastRoundByHole(_ r: RoundSummary) -> NSAttributedString {
@@ -260,22 +262,22 @@ final class MyStatsViewController: UIViewController {
     }
     private func buildMyStatsAttributedText() -> NSAttributedString {
         let result = NSMutableAttributedString()
-        
+
         let myName = (ProfileStore.name ?? "Player 1")
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        
+
         guard let s = RoundStore.shared.stats(forPlayerNamed: myName) else {
             return NSAttributedString(
                 string: "No rounds saved yet for \(myName).",
                 attributes: attrs(font: bodyFont)
             )
         }
-        
+
         result.append(NSAttributedString(
-            string: formatBlock(name: myName, stats: s),
+            string: formatBlock(name: myName, stats: s, showDetailStats: true),
             attributes: attrs(font: bodyFont)
         ))
-        
+
         if let lastRound = RoundStore.shared.lastRound(forPlayer: myName) {
             result.append(NSAttributedString(
                 string: "\n\n— LAST ROUND (BY HOLE) —\n",
@@ -285,16 +287,21 @@ final class MyStatsViewController: UIViewController {
             result.append(NSAttributedString(string: "\n", attributes: attrs(font: bodyFont)))
             result.append(attributedLastRoundTotals(lastRound))
         }
-        
-        let holeAverages = RoundStore.shared.averagesByHole(forPlayer: myName)
-        if !holeAverages.isEmpty {
+
+        let parText = formatAveragesByPar()
+
+        if !parText.isEmpty {
             result.append(NSAttributedString(
-                string: "\n\n— AVERAGES BY HOLE —\n",
+                string: "\n\n— AVERAGES BY PAR —\n",
                 attributes: attrs(font: boldFont)
             ))
-            result.append(attributedHoleAverages(holeAverages))
+
+            result.append(NSAttributedString(
+                string: parText,
+                attributes: attrs(font: bodyFont, color: .secondaryLabel)
+            ))
         }
-        
+
         return result
     }
     private func buildFriendStatsAttributedTextPinnedMe() -> NSAttributedString {
@@ -330,12 +337,18 @@ final class MyStatsViewController: UIViewController {
             }
 
             let holeAverages = RoundStore.shared.averagesByHole(forPlayer: myName)
-            if !holeAverages.isEmpty {
+            let parText = formatAveragesByPar()
+
+            if !parText.isEmpty {
                 result.append(NSAttributedString(
-                    string: "\n\n— AVERAGES BY HOLE —\n",
+                    string: "\n\n— AVERAGES BY PAR —\n",
                     attributes: attrs(font: boldFont)
                 ))
-                result.append(attributedHoleAverages(holeAverages))
+
+                result.append(NSAttributedString(
+                    string: parText,
+                    attributes: attrs(font: bodyFont, color: .secondaryLabel)
+                ))
             }
         }
 
@@ -375,7 +388,7 @@ final class MyStatsViewController: UIViewController {
                 }
 
                 result.append(NSAttributedString(
-                    string: formatBlock(name: row.name, stats: row.stats),
+                    string: formatBlock(name: row.name, stats: row.stats, showDetailStats: false),
                     attributes: attrs(font: bodyFont)
                 ))
             }
@@ -389,6 +402,61 @@ final class MyStatsViewController: UIViewController {
         }
 
         return result
+    }
+    private func formatAveragesByPar() -> String {
+        guard let g = GameManager.shared.currentGame else { return "" }
+
+        let myName = (ProfileStore.name ?? "Player 1")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let holeAverages = RoundStore.shared.averagesByHole(forPlayer: myName)
+        guard !holeAverages.isEmpty else { return "" }
+
+        let pars = Array(g.course.pars.prefix(18))
+
+        func line(for par: Int) -> String {
+            let holes = holeAverages.filter { avg in
+                let index = avg.hole - 1
+                return pars.indices.contains(index) && pars[index] == par
+            }
+
+            guard !holes.isEmpty else {
+                return "Par \(par)s\n  No data"
+            }
+
+            let fwValues = holes.compactMap { $0.fairwayPct }
+            let girValues = holes.compactMap { $0.girPct }
+            let puttValues = holes.compactMap { $0.avgPutts }
+
+            let fwText: String
+            if par == 3 || fwValues.isEmpty {
+                fwText = "FW —"
+            } else {
+                let avg = fwValues.reduce(0, +) / Double(fwValues.count)
+                fwText = String(format: "FW %.0f%%", avg)
+            }
+
+            let girText: String = {
+                guard !girValues.isEmpty else { return "GIR —" }
+                let avg = girValues.reduce(0, +) / Double(girValues.count)
+                return String(format: "GIR %.0f%%", avg)
+            }()
+
+            let puttsText: String = {
+                guard !puttValues.isEmpty else { return "Putts —" }
+                let avg = puttValues.reduce(0, +) / Double(puttValues.count)
+                return String(format: "Putts %.1f", avg)
+            }()
+
+            return """
+            Par \(par)s
+              \(fwText)   \(girText)   \(puttsText)
+            """
+        }
+
+        return [3, 4, 5]
+            .map { line(for: $0) }
+            .joined(separator: "\n\n")
     }
     private func rowParagraphStyle() -> NSParagraphStyle {
         let p = NSMutableParagraphStyle()
@@ -486,10 +554,11 @@ final class MyStatsViewController: UIViewController {
                 meBlock += "\n" + formatLastRoundTotals(lastRound)
             }
             
-            let holeAverages = RoundStore.shared.averagesByHole(forPlayer: myName)
-            if !holeAverages.isEmpty {
-                meBlock += "\n\n— AVERAGES BY HOLE —\n"
-                meBlock += formatHoleAverages(holeAverages)
+            let parText = formatAveragesByPar()
+
+            if !parText.isEmpty {
+                meBlock += "\n\n— AVERAGES BY PAR —\n"
+                meBlock += parText
             }
             
             blocks.append("— ME —\n" + meBlock)
@@ -570,24 +639,33 @@ final class MyStatsViewController: UIViewController {
         Avg Putts \(avgPutts)
         """
     }
-    private func formatBlock(name: String, stats s: MyStats) -> String {
+    private func formatBlock(name: String, stats s: MyStats, showDetailStats: Bool = true) -> String {
         let totalLine = wonLostText(totalMoney: s.totalMoney)
         let avgMoneyStr = String(format: "%.1f", s.avgMoneyPerRound)
         let avgProxStr  = String(format: "%.1f", s.avgProxPerRound)
-        let fwPct = String(format: "%.0f", s.fairwayPct)
-        let girPct = String(format: "%.0f", s.girPct)
-        let puttsAvg = String(format: "%.1f", s.avgPutts)
-        
-        return """
+
+        var text = """
         • \(name)
           \(s.rounds) rds
           \(totalLine)
           avg $\(avgMoneyStr) per 18
           prox \(s.totalProx) total (avg \(avgProxStr) per 18)
-          FIR \(s.fairwaysHit)/\(s.fairwaysPossible) (\(fwPct)%)
-          GIR \(s.girHit)/\(s.girPossible) (\(girPct)%)
-          avg putts \(puttsAvg)
         """
+
+        if showDetailStats {
+            let fwPct = String(format: "%.0f", s.fairwayPct)
+            let girPct = String(format: "%.0f", s.girPct)
+            let puttsAvg = String(format: "%.1f", s.avgPutts)
+
+            text += """
+
+              FIR \(s.fairwaysHit)/\(s.fairwaysPossible) (\(fwPct)%)
+              GIR \(s.girHit)/\(s.girPossible) (\(girPct)%)
+              avg putts \(puttsAvg)
+            """
+        }
+
+        return text
     }
     
     private func col(_ value: String, width: Int) -> String {

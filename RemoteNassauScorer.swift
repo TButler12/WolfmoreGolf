@@ -111,22 +111,21 @@ enum RemoteNassauScorer {
         let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)
         let bStrokesToApply = max(0, playerB.courseHandicap - lowerCH)
 
-        // FRONT 9 (HC pairing)
-        let aFront = (0..<9).sorted {
-            let hc0 = playerA.hcs[safe: $0] ?? 9
-            let hc1 = playerA.hcs[safe: $1] ?? 9
+        let aOrder = (0..<18).sorted {
+            let hc0 = playerA.hcs[safe: $0] ?? 18
+            let hc1 = playerA.hcs[safe: $1] ?? 18
             if hc0 == hc1 { return $0 < $1 }
             return hc0 < hc1
         }
 
-        let bFront = (0..<9).sorted {
-            let hc0 = playerB.hcs[safe: $0] ?? 9
-            let hc1 = playerB.hcs[safe: $1] ?? 9
+        let bOrder = (0..<18).sorted {
+            let hc0 = playerB.hcs[safe: $0] ?? 18
+            let hc1 = playerB.hcs[safe: $1] ?? 18
             if hc0 == hc1 { return $0 < $1 }
             return hc0 < hc1
         }
 
-        let frontResults = zip(aFront, bFront).map { aIndex, bIndex in
+        return zip(aOrder, bOrder).map { aIndex, bIndex in
             makeHoleResult(
                 playerA: playerA,
                 playerB: playerB,
@@ -136,36 +135,7 @@ enum RemoteNassauScorer {
                 bStrokesToApply: bStrokesToApply
             )
         }
-
-        // BACK 9 (HC pairing)
-        let aBack = (9..<18).sorted {
-            let hc0 = playerA.hcs[safe: $0] ?? 9
-            let hc1 = playerA.hcs[safe: $1] ?? 9
-            if hc0 == hc1 { return $0 < $1 }
-            return hc0 < hc1
-        }
-
-        let bBack = (9..<18).sorted {
-            let hc0 = playerB.hcs[safe: $0] ?? 9
-            let hc1 = playerB.hcs[safe: $1] ?? 9
-            if hc0 == hc1 { return $0 < $1 }
-            return hc0 < hc1
-        }
-
-        let backResults = zip(aBack, bBack).map { aIndex, bIndex in
-            makeHoleResult(
-                playerA: playerA,
-                playerB: playerB,
-                aIndex: aIndex,
-                bIndex: bIndex,
-                aStrokesToApply: aStrokesToApply,
-                bStrokesToApply: bStrokesToApply
-            )
-        }
-
-        return frontResults + backResults
     }
-
     static func sortedFront9ByHCA(playerA: SharedRound, playerB: SharedRound) -> [RemoteHoleResult] {
         let lowerCH = min(playerA.courseHandicap, playerB.courseHandicap)
         let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)

@@ -1,7 +1,7 @@
 import Foundation
 
 struct GameData: Codable {
-
+    var holeStatsPromptMuted: Bool = false
     var scorePerHole: [[Int?]] = []
     var umbrellaMode: Bool = false
     var baseGameStake: Int = 2

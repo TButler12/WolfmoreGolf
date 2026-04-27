@@ -183,9 +183,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         updateCourseLabel()
-        
+        showPlayerSetupOnboardingIfNeeded()
     }
-
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
@@ -712,6 +711,36 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             segue.destination.modalPresentationStyle = .fullScreen
             segue.destination.modalTransitionStyle = .coverVertical
         }
+    }
+    private func showPlayerSetupOnboardingIfNeeded() {
+        let key = "onboarding_player_setup_shown"
+        let defaults = UserDefaults.standard
+
+        if defaults.bool(forKey: key) { return }
+
+        let ac = UIAlertController(
+            title: "Before You Start",
+            message: """
+    Activate the golfers playing this round.
+
+    Then open Stake and Game Settings to choose your game, stake, and options.
+    """,
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Activate Players", style: .default))
+
+        ac.addAction(UIAlertAction(title: "Open Settings", style: .default) { _ in
+            self.settingsTapped()
+        })
+
+        ac.addAction(UIAlertAction(title: "Later", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Don't Show Again", style: .destructive) { _ in
+            defaults.set(true, forKey: key)
+        })
+
+        present(ac, animated: true)
     }
 }
 

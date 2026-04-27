@@ -16,7 +16,8 @@ extension UIImage {
     }
 }
 final class GameViewController: UIViewController, MFMessageComposeViewControllerDelegate {
-    var isUmbrella: Bool = false   // true = mute double for ENTIRE game
+    
+     var isUmbrella: Bool = false   // true = mute double for ENTIRE game
     @IBAction private func closeTapped(_ sender: Any) {
         // capture the presenter BEFORE dismiss
         let presenter = navigationController?.presentingViewController ?? presentingViewController
@@ -135,8 +136,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshDollarsLabel()
         setRejectHammerEnabled(newCount > 0)
     }
-
-
+    private let holeStatsSwitch = UISwitch()
+    private var hasPromptedForThisHole = false
     private var proxButtons: [UIButton] { [p0, p1, p2, p3, p4] }
 
     private var currentHole: Int = 0
@@ -260,11 +261,19 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         
     
         navigationItem.backButtonTitle = "Players"
+        holeStatsSwitch.isOn = !AppSettings.holeStatsPromptMuted
+        holeStatsSwitch.addTarget(self, action: #selector(holeStatsSwitchChanged), for: .valueChanged)
     }
-    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        showGameOnboardingIfNeeded()
+    }
 
     deinit {
         NotificationCenter.default.removeObserver(self, name: .reloadUI, object: nil)
+    }
+    @objc private func holeStatsSwitchChanged(_ sender: UISwitch) {
+        AppSettings.holeStatsPromptMuted = !sender.isOn
     }
     private func addHoldRulesToGameModeSegment() {
         let lp = UILongPressGestureRecognizer(target: self,
@@ -1059,6 +1068,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 m.scores[seat][hole] = val
             }
         }
+        //DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+        //    self?.maybePromptForHoleStats()
+       // }
     }
     // MARK: - Quick Help (Long-press)
 
@@ -1252,7 +1264,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshWolfButtons()
       
         refreshTotalMoneyLabels()
-
+        hasPromptedForThisHole = false
         
     }
     
@@ -1264,7 +1276,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshWolfButtons()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
-
+        hasPromptedForThisHole = false
         
     }
 
@@ -1979,125 +1991,108 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshHoleValueLabel()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.presentStatsPrompt()
+            guard let self = self else { return }
+            guard let game = GameManager.shared.currentGame else { return }
+            guard !game.holeStatsPromptMuted else { return }
+
+            self.presentStatsPrompt()
         }
     }
+ 
     private func presentStatsPrompt() {
+        guard !(GameManager.shared.currentGame?.holeStatsPromptMuted ?? false) else { return }
         let ac = UIAlertController(
             title: "Add Hole Stats?",
             message: "Track Fairway, GIR, and Putts for this hole.",
             preferredStyle: .alert
         )
 
-        ac.addAction(UIAlertAction(title: "Add Stats", style: .default) { _ in
-            self.openHoleStatsEntry()
+        ac.addAction(UIAlertAction(title: "Add Stats", style: .default) { [weak self] _ in
+            self?.openHoleStatsEntry()
         })
 
         ac.addAction(UIAlertAction(title: "Skip", style: .cancel))
 
+        ac.addAction(UIAlertAction(title: "Don't Ask Again", style: .destructive) { _ in
+            GameManager.shared.currentGame?.holeStatsPromptMuted = true
+            GameManager.shared.saveCurrent()
+        })
+
         present(ac, animated: true)
     }
+    
     private func openHoleStatsEntry() {
-        let vc = HoleStatsEntryViewController()
+        guard let game = GameManager.shared.currentGame else { return }
 
-        if let game = GameManager.shared.currentGame {
-            let hole = game.hole
+        let hole = max(0, min(17, game.hole))
 
-            let myName = (ProfileStore.name ?? "")
+        let myName = (ProfileStore.name ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+
+        let seats = 0..<min(game.playerNames.count, game.playerActivated.count)
+
+        guard let playerIndex = seats.first(where: { i in
+            game.playerActivated[i] &&
+            game.playerNames[i]
                 .trimmingCharacters(in: .whitespacesAndNewlines)
-
-            let seats = 0..<min(game.playerNames.count, game.playerActivated.count)
-
-            if let playerIndex = seats.first(where: { i in
-                game.playerActivated[i] &&
-                game.playerNames[i]
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-                    .caseInsensitiveCompare(myName) == .orderedSame
-            }) {
-                vc.existingFairway =
-                    playerIndex < game.fairwayHit.count &&
-                    hole < game.fairwayHit[playerIndex].count
-                    ? game.fairwayHit[playerIndex][hole]
-                    : nil
-
-                vc.existingGIR =
-                    playerIndex < game.girHit.count &&
-                    hole < game.girHit[playerIndex].count
-                    ? game.girHit[playerIndex][hole]
-                    : nil
-
-                vc.existingPutts =
-                    playerIndex < game.puttsPerHole.count &&
-                    hole < game.puttsPerHole[playerIndex].count
-                    ? game.puttsPerHole[playerIndex][hole]
-                    : nil
-                vc.existingWasSaved =
-                    vc.existingFairway != nil ||
-                    vc.existingGIR != nil ||
-                    vc.existingPutts != nil
-            }
+                .localizedCaseInsensitiveCompare(myName) == .orderedSame
+        }) else {
+            print("❌ Hole stats: could not match ProfileStore.name to active player")
+            print("ProfileStore.name =", myName)
+            print("Players =", game.playerNames)
+            return
         }
+
+        let vc = HoleStatsEntryViewController()
         vc.modalPresentationStyle = .overFullScreen
-        vc.modalTransitionStyle = .crossDissolve
 
-        vc.onSave = { [weak self] fairway, gir, putts, score in
-            guard let self else { return }
+        vc.hasExistingStats =
+            game.fairwayHit[safe: playerIndex]?[safe: hole] != nil ||
+            game.girHit[safe: playerIndex]?[safe: hole] != nil ||
+            game.puttsPerHole[safe: playerIndex]?[safe: hole] != nil ||
+            game.scores[safe: playerIndex]?[safe: hole] != nil
 
+        vc.existingFairway = game.fairwayHit[safe: playerIndex]?[safe: hole] ?? nil
+        vc.existingGIR = game.girHit[safe: playerIndex]?[safe: hole] ?? nil
+        vc.existingPutts = game.puttsPerHole[safe: playerIndex]?[safe: hole] ?? nil
+        vc.existingScore = game.scores[safe: playerIndex]?[safe: hole] ?? nil
+
+        vc.onSave = { fairwayHit, girHit, putts, score in
             GameManager.shared.update { g in
-                let hole = g.hole
-                guard (0..<18).contains(hole) else { return }
+                g.normalize(holes: 18)
 
-                let myName = (ProfileStore.name ?? "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
-
-                let seats = 0..<min(g.playerNames.count, g.playerActivated.count)
-
-                guard let playerIndex = seats.first(where: { i in
-                    g.playerActivated[i] &&
-                    g.playerNames[i]
-                        .trimmingCharacters(in: .whitespacesAndNewlines)
-                        .caseInsensitiveCompare(myName) == .orderedSame
-                }) else {
-                    return
+                if g.fairwayHit.count != 5 || g.fairwayHit.contains(where: { $0.count != 18 }) {
+                    g.fairwayHit = Array(repeating: Array(repeating: nil, count: 18), count: 5)
                 }
 
-                while g.fairwayHit.count <= playerIndex {
-                    g.fairwayHit.append(Array(repeating: nil, count: 18))
-                }
-                while g.girHit.count <= playerIndex {
-                    g.girHit.append(Array(repeating: nil, count: 18))
-                }
-                while g.puttsPerHole.count <= playerIndex {
-                    g.puttsPerHole.append(Array(repeating: nil, count: 18))
-                }
-                while g.scorePerHole.count <= playerIndex {
-                    g.scorePerHole.append(Array(repeating: nil, count: 18))
+                if g.girHit.count != 5 || g.girHit.contains(where: { $0.count != 18 }) {
+                    g.girHit = Array(repeating: Array(repeating: nil, count: 18), count: 5)
                 }
 
-                if g.fairwayHit[playerIndex].count < 18 {
-                    g.fairwayHit[playerIndex] += Array(repeating: nil, count: 18 - g.fairwayHit[playerIndex].count)
-                }
-                if g.girHit[playerIndex].count < 18 {
-                    g.girHit[playerIndex] += Array(repeating: nil, count: 18 - g.girHit[playerIndex].count)
-                }
-                if g.puttsPerHole[playerIndex].count < 18 {
-                    g.puttsPerHole[playerIndex] += Array(repeating: nil, count: 18 - g.puttsPerHole[playerIndex].count)
-                }
-                if g.scorePerHole[playerIndex].count < 18 {
-                    g.scorePerHole[playerIndex] += Array(repeating: nil, count: 18 - g.scorePerHole[playerIndex].count)
+                if g.puttsPerHole.count != 5 || g.puttsPerHole.contains(where: { $0.count != 18 }) {
+                    g.puttsPerHole = Array(repeating: Array(repeating: nil, count: 18), count: 5)
                 }
 
-                g.fairwayHit[playerIndex][hole] = fairway
-                g.girHit[playerIndex][hole] = gir
+                if g.scores.count != 5 || g.scores.contains(where: { $0.count != 18 }) {
+                    g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+                }
+
+                g.fairwayHit[playerIndex][hole] = fairwayHit
+                g.girHit[playerIndex][hole] = girHit
                 g.puttsPerHole[playerIndex][hole] = putts
-                g.scorePerHole[playerIndex][hole] = score
+                g.scores[playerIndex][hole] = score
             }
 
-            NotificationCenter.default.post(name: .reloadUI, object: nil)
+            GameManager.shared.saveCurrent()
+            self.refreshForCurrentHole()
+
+            print("✅ Saved hole stats")
+            print("Player:", playerIndex, "Hole:", hole + 1)
+            print("FIR:", fairwayHit as Any, "GIR:", girHit as Any, "Putts:", putts as Any, "Score:", score as Any)
         }
+
         present(vc, animated: true)
     }
-    
     private func refreshHoleValueLabel() {
         guard let g = GameManager.shared.currentGame else {
             gameDollarsField.text = "$0"
@@ -2132,7 +2127,32 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         
         
     }
-    
+    private func maybePromptForHoleStats() {
+        guard let game = GameManager.shared.currentGame,
+              !game.holeStatsPromptMuted else { return }
+        guard !hasPromptedForThisHole else { return }
+
+        hasPromptedForThisHole = true
+
+        let ac = UIAlertController(
+            title: "Add Hole Stats?",
+            message: "Track Fairway, GIR, and Putts for this hole.",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Skip", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Add Stats", style: .default) { [weak self] _ in
+            self?.holeStatsTapped(UIButton())
+        })
+
+        ac.addAction(UIAlertAction(title: "Don't Ask Again", style: .destructive) { _ in
+            GameManager.shared.currentGame?.holeStatsPromptMuted = true
+            GameManager.shared.saveCurrent()
+        })
+
+        present(ac, animated: true)
+    }
     @IBAction func statsButtonTapped(_ sender: UIButton) {
         let vc = GameStatsViewController()
         vc.modalPresentationStyle = .overCurrentContext
@@ -2259,6 +2279,34 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         alonePushed.isSelected   = aloneOn
         pressedPushed2.isSelected = pressOn
     }
+    private func showGameOnboardingIfNeeded() {
+        let key = "onboarding_game_shown"
+        let defaults = UserDefaults.standard
+
+        if defaults.bool(forKey: key) { return }
+
+        let ac = UIAlertController(
+            title: "How to Score a Hole",
+            message: """
+    Enter each player’s score.
+
+    Set Prox if needed and choose the Wolf player.
+
+    Tap Update Scores to calculate the hole.
+    """,
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Got It", style: .default))
+
+        ac.addAction(UIAlertAction(title: "Later", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Don't Show Again", style: .destructive) { _ in
+            defaults.set(true, forKey: key)
+        })
+
+        present(ac, animated: true)
+    }
     @objc private func moneyChanged(_ sender: UITextField) {
         let seat = sender.tag
         let amount = Double(sender.text ?? "") ?? 0.0
@@ -2305,7 +2353,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
     }
     // MARK: - Debug Tests
+    private enum AppSettingsKeys {
+        static let holeStatsPromptMuted = "holeStatsPromptMuted"
+    }
 
+    enum AppSettings {
+        static var holeStatsPromptMuted: Bool {
+            get { UserDefaults.standard.bool(forKey: AppSettingsKeys.holeStatsPromptMuted) }
+            set { UserDefaults.standard.set(newValue, forKey: AppSettingsKeys.holeStatsPromptMuted) }
+        }
+    }
     @IBAction func testPasteParsingTapped(_ sender: UIButton) {
         let sharedText = """
         WolfMore Remote Round

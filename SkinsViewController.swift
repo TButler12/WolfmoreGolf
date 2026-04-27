@@ -38,7 +38,9 @@ final class SkinsViewController: UIViewController {
         textView.isEditable = false
         textView.isScrollEnabled = true
         textView.backgroundColor = .clear
-        textView.font = .monospacedSystemFont(ofSize: 16, weight: .regular)
+        textView.font = .monospacedSystemFont(ofSize: 18, weight: .medium)
+        textView.textColor = .label
+        textView.adjustsFontForContentSizeCategory = true
         textView.textContainerInset = UIEdgeInsets(top: 16, left: 10, bottom: 24, right: 10)
 
         view.addSubview(textView)
@@ -83,7 +85,50 @@ final class SkinsViewController: UIViewController {
         GameManager.shared.currentGame = data
         GameManager.shared.saveCurrent()
 
-        textView.text = SkinsEngine.summaryText(state: skins, gameData: data)
+        textView.attributedText = buildStyledSummary(
+            SkinsEngine.summaryText(state: skins, gameData: data)
+        )
+    }
+    private func buildStyledSummary(_ text: String) -> NSAttributedString {
+        let result = NSMutableAttributedString()
+
+        let paragraph = NSMutableParagraphStyle()
+        paragraph.lineSpacing = 4
+        paragraph.paragraphSpacing = 10
+
+        let baseFont = UIFont.monospacedSystemFont(ofSize: 18, weight: .medium)
+        let boldFont = UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)
+        let sectionFont = UIFont.monospacedSystemFont(ofSize: 22, weight: .heavy)
+
+        let lines = text.components(separatedBy: "\n")
+
+        for line in lines {
+
+            let attr: [NSAttributedString.Key: Any]
+
+            if line.contains("SKINS") || line.contains("TOTALS") || line.contains("BY HOLE") {
+                attr = [
+                    .font: sectionFont,
+                    .paragraphStyle: paragraph
+                ]
+            }
+            else if line.contains(":") {
+                attr = [
+                    .font: boldFont,
+                    .paragraphStyle: paragraph
+                ]
+            }
+            else {
+                attr = [
+                    .font: baseFont,
+                    .paragraphStyle: paragraph
+                ]
+            }
+
+            result.append(NSAttributedString(string: line + "\n", attributes: attr))
+        }
+
+        return result
     }
     @objc private func settingsTapped() {
         guard var data = gameData,
