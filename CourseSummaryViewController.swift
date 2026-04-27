@@ -209,7 +209,7 @@ final class CourseSummaryViewController: UITableViewController {
         let pars = resolvePars()
         _ = resolveHC()
 
-        return (0..<18).map { h in
+        return (0..<STANDARD_HOLES).map { h in
             buildHoleRow(holeIndex: h, par: pars.safe(h) ?? 4, games: games)
         }
     }
@@ -223,47 +223,47 @@ final class CourseSummaryViewController: UITableViewController {
     }
 
     private func isDefaultPars(_ pars: [Int]) -> Bool {
-        guard pars.count >= 18 else { return true }
-        return pars.prefix(18).allSatisfy { $0 == 4 }
+        guard pars.count >= STANDARD_HOLES else { return true }
+        return pars.prefix(STANDARD_HOLES).allSatisfy { $0 == 4 }
     }
 
     private func isDefaultHC(_ hcs: [Int]) -> Bool {
-        guard hcs.count >= 18 else { return true }
-        return Array(hcs.prefix(18)) == Array(1...18)
+        guard hcs.count >= STANDARD_HOLES else { return true }
+        return Array(hcs.prefix(STANDARD_HOLES)) == Array(1...STANDARD_HOLES)
     }
 
     private func resolvePars() -> [Int] {
         // 1) Home Course
         if let uuid = homeCourseUUID(),
            let course = CourseLibrary.shared.get(id: uuid),
-           course.pars.count >= 18,
+           course.pars.count >= STANDARD_HOLES,
            !isDefaultPars(course.pars) {
-            return Array(course.pars.prefix(18))
+            return Array(course.pars.prefix(STANDARD_HOLES))
         }
 
         // 2) Current game course pars (if non-default)
         if let g = GameManager.shared.currentGame {
-            let pars = Array(g.course.pars.prefix(18))
-            if pars.count == 18, !isDefaultPars(pars) {
+            let pars = Array(g.course.pars.prefix(STANDARD_HOLES))
+            if pars.count == STANDARD_HOLES, !isDefaultPars(pars) {
                 return pars
             }
         }
 
         // 3) last resort
-        return Array(repeating: 4, count: 18)
+        return Array(repeating: 4, count: STANDARD_HOLES)
     }
 
     private func resolveHC() -> [Int] {
         // 1) Home Course
         if let uuid = homeCourseUUID(),
            let course = CourseLibrary.shared.get(id: uuid),
-           course.hcs.count >= 18,
+           course.hcs.count >= STANDARD_HOLES,
            !isDefaultHC(course.hcs) {
-            return Array(course.hcs.prefix(18))
+            return Array(course.hcs.prefix(STANDARD_HOLES))
         }
 
         // 3) last resort
-        return Array(1...18)
+        return Array(1...STANDARD_HOLES)
     }
 
     // MARK: - Build per-hole

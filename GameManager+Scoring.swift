@@ -11,10 +11,10 @@ import os
 
 private let popsLog = Logger(subsystem: Bundle.main.bundleIdentifier ?? "app",
                              category: "POPS")
-var proxEnabled: [Bool] = Array(repeating: false, count: 18)
+var proxEnabled: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
 
-var wolfCalledPerHole: [Bool] = Array(repeating: false, count: 18)
-var wolfTeamWonPerHole: [Bool] = Array(repeating: false, count: 18)
+var wolfCalledPerHole: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+var wolfTeamWonPerHole: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
 
 extension GameManager {
 
@@ -27,24 +27,24 @@ extension GameManager {
     ///   - hole: 0…17
     ///   - umbePressed: true if Umbrella is pressed (disables doubling at ≥6)
     func computeHolePayout(hole: Int, umbePressed: Bool) -> [Double] {
-        guard let g = currentGame, (0..<18).contains(hole) else {
-            return Array(repeating: 0.0, count: 5)
+        guard let g = currentGame, (0..<STANDARD_HOLES).contains(hole) else {
+            return Array(repeating: 0.0, count: MAX_PLAYERS)
         }
 
         let mode = g.resolvedGameType
 
         // Seats shown on the Game screen
-        let seatsRange = 0..<min(5, min(g.playerActivated.count, g.hcPlayers.count, g.playerNames.count))
+        let seatsRange = 0..<min(MAX_PLAYERS, min(g.playerActivated.count, g.hcPlayers.count, g.playerNames.count))
 
         // Active seats with a non-empty name
         let activeSeats = seatsRange.filter {
             g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
-        if activeSeats.isEmpty { return Array(repeating: 0.0, count: 5) }
+        if activeSeats.isEmpty { return Array(repeating: 0.0, count: MAX_PLAYERS) }
 
         // Wolves for this hole (by seat)
         var wolfSeats = Set<Int>()
-        if g.wolfButtonStatus.count >= 5, (g.wolfButtonStatus.first?.count ?? 0) >= 18 {
+        if g.wolfButtonStatus.count >= MAX_PLAYERS, (g.wolfButtonStatus.first?.count ?? 0) >= STANDARD_HOLES {
             for s in activeSeats where g.wolfButtonStatus[s][hole] { wolfSeats.insert(s) }
         }
 
@@ -54,7 +54,7 @@ extension GameManager {
 
         // ✅ Need both sides or money math becomes nonsense
         guard !wolfTeam.isEmpty, !nonWolfTeam.isEmpty else {
-            return Array(repeating: 0.0, count: 5)
+            return Array(repeating: 0.0, count: MAX_PLAYERS)
         }
 
         let numWolf    = wolfTeam.count
@@ -62,8 +62,8 @@ extension GameManager {
 
         // Hole constants
         let par   = g.courseParToPass[safe: hole] ?? 4
-        let rawSI = g.courseHCToPass[safe: hole] ?? 18
-        let si    = max(1, min(18, rawSI == 0 ? 18 : rawSI)) // 1…18 (0 → 18)
+        let rawSI = g.courseHCToPass[safe: hole] ?? STANDARD_HOLES
+        let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI)) // 1…18 (0 → 18)
 
         // Stake (includes hammer multiplier)
         let baseStake = (g.gameHoleDollarsArray[safe: hole] ?? 2.0)
@@ -86,8 +86,8 @@ extension GameManager {
         @inline(__always)
         func strokesGiven(delta S: Int, strokeIndex si: Int) -> Int {
             let d = max(0, S)
-            if d <= 18 { return (si <= d) ? 1 : 0 }
-            return 1 + ((si <= (d - 18)) ? 1 : 0)
+            if d <= STANDARD_HOLES { return (si <= d) ? 1 : 0 }
+            return 1 + ((si <= (d - STANDARD_HOLES)) ? 1 : 0)
         }
 
         // Baseline = lowest HC among ACTIVE players
@@ -208,7 +208,7 @@ extension GameManager {
         // ---------------------------------------------------------
         //  PAYOUTS (whole-dollar)
         // ---------------------------------------------------------
-        var payouts = Array(repeating: 0.0, count: 5)
+        var payouts = Array(repeating: 0.0, count: MAX_PLAYERS)
 
         guard diff != 0 else { return payouts }
 

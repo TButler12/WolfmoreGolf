@@ -64,30 +64,30 @@ struct RoundSummary: Codable, Identifiable {
         totalMoney  = try c.decode(Int.self, forKey: .totalMoney)
         totalProx   = try c.decode(Int.self, forKey: .totalProx)
         totalScore  = try c.decodeIfPresent(Int.self, forKey: .totalScore)
-        holesPlayed = try c.decodeIfPresent(Int.self, forKey: .holesPlayed) ?? 18
+        holesPlayed = try c.decodeIfPresent(Int.self, forKey: .holesPlayed) ?? STANDARD_HOLES
 
         moneyPerHole = try c.decodeIfPresent([Int].self, forKey: .moneyPerHole)
-            ?? Array(repeating: 0, count: 18)
+            ?? Array(repeating: 0, count: STANDARD_HOLES)
         proxPerHole = try c.decodeIfPresent([Bool].self, forKey: .proxPerHole)
-            ?? Array(repeating: false, count: 18)
+            ?? Array(repeating: false, count: STANDARD_HOLES)
         scorePerHole = try c.decodeIfPresent([Int?].self, forKey: .scorePerHole)
-            ?? Array(repeating: nil, count: 18)
+            ?? Array(repeating: nil, count: STANDARD_HOLES)
 
         wolfCalledPerHole = try c.decodeIfPresent([Bool].self, forKey: .wolfCalledPerHole)
-            ?? Array(repeating: false, count: 18)
+            ?? Array(repeating: false, count: STANDARD_HOLES)
         wolfTeamWonPerHole = try c.decodeIfPresent([Bool].self, forKey: .wolfTeamWonPerHole)
-            ?? Array(repeating: false, count: 18)
+            ?? Array(repeating: false, count: STANDARD_HOLES)
         umbieWonPerHole = try c.decodeIfPresent([Bool].self, forKey: .umbieWonPerHole)
-            ?? Array(repeating: false, count: 18)
+            ?? Array(repeating: false, count: STANDARD_HOLES)
 
         gameTypePerHole = try c.decodeIfPresent([GameType].self, forKey: .gameTypePerHole)
 
         fairwayHitPerHole = try c.decodeIfPresent([Bool?].self, forKey: .fairwayHitPerHole)
-            ?? Array(repeating: nil, count: 18)
+            ?? Array(repeating: nil, count: STANDARD_HOLES)
         girPerHole = try c.decodeIfPresent([Bool?].self, forKey: .girPerHole)
-            ?? Array(repeating: nil, count: 18)
+            ?? Array(repeating: nil, count: STANDARD_HOLES)
         puttsPerHole = try c.decodeIfPresent([Int?].self, forKey: .puttsPerHole)
-            ?? Array(repeating: nil, count: 18)
+            ?? Array(repeating: nil, count: STANDARD_HOLES)
     }
 
     init(
@@ -107,9 +107,9 @@ struct RoundSummary: Codable, Identifiable {
         wolfTeamWonPerHole: [Bool],
         umbieWonPerHole: [Bool],
         gameTypePerHole: [GameType]? = nil,
-        fairwayHitPerHole: [Bool?] = Array(repeating: nil, count: 18),
-        girPerHole: [Bool?] = Array(repeating: nil, count: 18),
-        puttsPerHole: [Int?] = Array(repeating: nil, count: 18)
+        fairwayHitPerHole: [Bool?] = Array(repeating: nil, count: STANDARD_HOLES),
+        girPerHole: [Bool?] = Array(repeating: nil, count: STANDARD_HOLES),
+        puttsPerHole: [Int?] = Array(repeating: nil, count: STANDARD_HOLES)
     ) {
         self.id = id
         self.gameID = gameID
@@ -121,17 +121,17 @@ struct RoundSummary: Codable, Identifiable {
         self.totalScore = totalScore
         self.holesPlayed = holesPlayed
 
-        self.moneyPerHole       = Array(moneyPerHole.prefix(18))
-        self.proxPerHole        = Array(proxPerHole.prefix(18))
-        self.scorePerHole       = Array(scorePerHole.prefix(18))
-        self.wolfCalledPerHole  = Array(wolfCalledPerHole.prefix(18))
-        self.wolfTeamWonPerHole = Array(wolfTeamWonPerHole.prefix(18))
-        self.umbieWonPerHole    = Array(umbieWonPerHole.prefix(18))
+        self.moneyPerHole       = Array(moneyPerHole.prefix(STANDARD_HOLES))
+        self.proxPerHole        = Array(proxPerHole.prefix(STANDARD_HOLES))
+        self.scorePerHole       = Array(scorePerHole.prefix(STANDARD_HOLES))
+        self.wolfCalledPerHole  = Array(wolfCalledPerHole.prefix(STANDARD_HOLES))
+        self.wolfTeamWonPerHole = Array(wolfTeamWonPerHole.prefix(STANDARD_HOLES))
+        self.umbieWonPerHole    = Array(umbieWonPerHole.prefix(STANDARD_HOLES))
 
-        self.gameTypePerHole = gameTypePerHole.map { Array($0.prefix(18)) }
-        self.fairwayHitPerHole = Array(fairwayHitPerHole.prefix(18))
-        self.girPerHole = Array(girPerHole.prefix(18))
-        self.puttsPerHole = Array(puttsPerHole.prefix(18))
+        self.gameTypePerHole = gameTypePerHole.map { Array($0.prefix(STANDARD_HOLES)) }
+        self.fairwayHitPerHole = Array(fairwayHitPerHole.prefix(STANDARD_HOLES))
+        self.girPerHole = Array(girPerHole.prefix(STANDARD_HOLES))
+        self.puttsPerHole = Array(puttsPerHole.prefix(STANDARD_HOLES))
     }
 }
 
@@ -345,7 +345,7 @@ extension RoundStore {
         guard !who.isEmpty else { return nil }
 
         // ---------- Find ACTIVE seat that matches name ----------
-        let seatsRange = 0..<min(5, min(g.playerNames.count, g.playerActivated.count))
+        let seatsRange = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
         guard let seat = seatsRange.first(where: { i in
             g.playerActivated[i] &&
             g.playerNames[i]
@@ -367,53 +367,53 @@ extension RoundStore {
         // ---------- MONEY (18 ints) ----------
         let moneyRowD: [Double] = (seat < g.playerMoney.count) ? g.playerMoney[seat] : []
         let moneyPerHoleIntRaw: [Int] = moneyRowD.map { Int($0.rounded()) }
-        let moneyPerHoleInt: [Int] = pad(moneyPerHoleIntRaw, to: 18, with: 0)
+        let moneyPerHoleInt: [Int] = pad(moneyPerHoleIntRaw, to: STANDARD_HOLES, with: 0)
         let totalMoney: Int = moneyPerHoleInt.reduce(0, +)
 
         // ---------- PROX (18 bools) ----------
         let winners: [Int] = g.proxWinnerPerHole.map { $0 ?? -1 }
         let proxFlagsRaw: [Bool] = winners.map { $0 == seat }
-        let proxFlags: [Bool] = pad(proxFlagsRaw, to: 18, with: false)
+        let proxFlags: [Bool] = pad(proxFlagsRaw, to: STANDARD_HOLES, with: false)
         let totalProx: Int = proxFlags.filter { $0 }.count
 
         // ---------- WOLF / UMBIE (18 bools) ----------
-        let wolfCalled: [Bool]  = pad(Array(g.wolfCalledPerHole),   to: 18, with: false)
-        let wolfTeamWon: [Bool] = pad(Array(g.wolfTeamWonPerHole),  to: 18, with: false)
-        let umbieWon: [Bool]    = pad(Array(g.umbieWonPerHole),     to: 18, with: false)
+        let wolfCalled: [Bool]  = pad(Array(g.wolfCalledPerHole),   to: STANDARD_HOLES, with: false)
+        let wolfTeamWon: [Bool] = pad(Array(g.wolfTeamWonPerHole),  to: STANDARD_HOLES, with: false)
+        let umbieWon: [Bool]    = pad(Array(g.umbieWonPerHole),     to: STANDARD_HOLES, with: false)
         // ---------- GAME TYPE / FIR / GIR / PUTTS ----------
         let gameTypes: [GameType]? = {
             guard !g.gameTypePerHole.isEmpty else { return nil }
-            return Array(g.gameTypePerHole.prefix(18))
+            return Array(g.gameTypePerHole.prefix(STANDARD_HOLES))
         }()
 
         let firForSeat: [Bool?] = {
-            guard seat < g.fairwayHit.count else { return Array(repeating: nil, count: 18) }
-            return pad(g.fairwayHit[seat], to: 18, with: nil)
+            guard seat < g.fairwayHit.count else { return Array(repeating: nil, count: STANDARD_HOLES) }
+            return pad(g.fairwayHit[seat], to: STANDARD_HOLES, with: nil)
         }()
 
         let girForSeat: [Bool?] = {
-            guard seat < g.girHit.count else { return Array(repeating: nil, count: 18) }
-            return pad(g.girHit[seat], to: 18, with: nil)
+            guard seat < g.girHit.count else { return Array(repeating: nil, count: STANDARD_HOLES) }
+            return pad(g.girHit[seat], to: STANDARD_HOLES, with: nil)
         }()
 
         let puttsForSeat: [Int?] = {
-            guard seat < g.puttsPerHole.count else { return Array(repeating: nil, count: 18) }
-            return pad(g.puttsPerHole[seat], to: 18, with: nil)
+            guard seat < g.puttsPerHole.count else { return Array(repeating: nil, count: STANDARD_HOLES) }
+            return pad(g.puttsPerHole[seat], to: STANDARD_HOLES, with: nil)
         }()
 
         // ---------- SCORES (18 optional ints) ----------
-        var scoresForSeat = [Int?](repeating: nil, count: 18)
+        var scoresForSeat = [Int?](repeating: nil, count: STANDARD_HOLES)
 
         if seat < g.scores.count,
            let first = g.scores.first,
-           first.count == 18 {
+           first.count == STANDARD_HOLES {
             // [player][hole]
-            for h in 0..<min(18, g.scores[seat].count) {
+            for h in 0..<min(STANDARD_HOLES, g.scores[seat].count) {
                 scoresForSeat[h] = g.scores[seat][h]
             }
-        } else if g.scores.count == 18 {
+        } else if g.scores.count == STANDARD_HOLES {
             // [hole][player]
-            for h in 0..<18 {
+            for h in 0..<STANDARD_HOLES {
                 let row = g.scores[h]
                 if seat < row.count {
                     scoresForSeat[h] = row[seat]
@@ -424,7 +424,7 @@ extension RoundStore {
         // ---------- HOLES PLAYED ----------
         // Last hole index that has any evidence it was played.
         var holesPlayed = 0
-        for h in 0..<18 {
+        for h in 0..<STANDARD_HOLES {
             let hasScore = (scoresForSeat[h] != nil)
             let hasMoney = (moneyPerHoleInt[h] != 0)
             let hasProx  = proxFlags[h]
@@ -438,7 +438,7 @@ extension RoundStore {
         // ---------- TOTAL SCORE ----------
         var sum = 0
         var haveAnyScore = false
-        for h in 0..<18 {
+        for h in 0..<STANDARD_HOLES {
             if let v = scoresForSeat[h] {
                 sum += v
                 haveAnyScore = true
@@ -463,10 +463,10 @@ extension RoundStore {
                 let homeCourse = CourseLibrary.shared.get(id: homeUUID)
             else { return "" }
 
-            let currentPars = Array(g.course.pars.prefix(18))
-            let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
-            let homePars    = Array(homeCourse.pars.prefix(18))
-            let homeHCs     = Array(homeCourse.hcs.prefix(18))
+            let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+            let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
+            let homePars    = Array(homeCourse.pars.prefix(STANDARD_HOLES))
+            let homeHCs     = Array(homeCourse.hcs.prefix(STANDARD_HOLES))
 
             return (currentPars == homePars && currentHCs == homeHCs)
                 ? homeCourse.id.uuidString
@@ -527,11 +527,11 @@ extension RoundStore {
         }
 
         let moneyPer18: Double = totalHoles > 0
-            ? Double(totalMoney) / Double(totalHoles) * 18.0
+            ? Double(totalMoney) / Double(totalHoles) * Double(STANDARD_HOLES)
             : 0
 
         let proxPer18: Double = totalHoles > 0
-            ? Double(totalProx) / Double(totalHoles) * 18.0
+            ? Double(totalProx) / Double(totalHoles) * Double(STANDARD_HOLES)
             : 0
 
         // ✅ NEW STATS
@@ -545,7 +545,7 @@ extension RoundStore {
         var holesWithPutts = 0
 
         for r in rowsForPlayer {
-            for h in 0..<min(18, r.holesPlayed) {
+            for h in 0..<min(STANDARD_HOLES, r.holesPlayed) {
 
                 // FIR (count only when value exists)
                 if let fw = r.fairwayHitPerHole[h] {
@@ -594,7 +594,7 @@ extension RoundStore {
         let sharedGameID = UUID()
         let now = Date()
 
-        let seats = 0..<min(5, min(g.playerNames.count, g.playerActivated.count))
+        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
 
         for seat in seats where g.playerActivated[seat] {
             let name = g.playerNames[seat]
@@ -678,7 +678,7 @@ extension RoundStore {
 
         var results: [HoleAverage] = []
 
-        for h in 0..<18 {
+        for h in 0..<STANDARD_HOLES {
             var fwHit = 0
             var fwTotal = 0
             var girHit = 0
@@ -687,7 +687,7 @@ extension RoundStore {
             var puttTotal = 0
 
             for r in rows {
-                guard h < min(18, r.holesPlayed) else { continue }
+                guard h < min(STANDARD_HOLES, r.holesPlayed) else { continue }
 
                 if h < r.fairwayHitPerHole.count, let fw = r.fairwayHitPerHole[h] {
                     fwTotal += 1

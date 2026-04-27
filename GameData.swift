@@ -5,13 +5,13 @@ struct GameData: Codable {
     var scorePerHole: [[Int?]] = []
     var umbrellaMode: Bool = false
     var baseGameStake: Int = 2
-    var holeCommitted: [Bool] = Array(repeating: false, count: 18)
+    var holeCommitted: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
 
     var nassauState: NassauState?
     var skinsState: SkinsState?
 
     // NEW (optional so old saves decode safely)
-    var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: 18)
+    var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: STANDARD_HOLES)
 
     var gameType: GameType?
     var hammerCountPerHole: [Int]?
@@ -22,9 +22,9 @@ struct GameData: Codable {
     var resolvedGameType: GameType { gameType ?? .sixPointScotch }
 
     // MARK: - Wolf stats per hole
-    var umbieWonPerHole: [Bool] = Array(repeating: false, count: 18)
-    var wolfCalledPerHole: [Bool] = Array(repeating: false, count: 18)
-    var wolfTeamWonPerHole: [Bool] = Array(repeating: false, count: 18)
+    var umbieWonPerHole: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+    var wolfCalledPerHole: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+    var wolfTeamWonPerHole: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
 
     // MARK: - Core game state
     var startHole: Int? = nil
@@ -32,46 +32,46 @@ struct GameData: Codable {
     var gameName: String = "New Game"
     var popsTable: [[Int]] = []
 
-    var pressedPushedToggleArray: [Bool] = Array(repeating: false, count: 18)
-    var previousPressedPushedToggleArray: [Bool] = Array(repeating: false, count: 18)
-    var gameHoleDollarsArray: [Double] = Array(repeating: 2.0, count: 18)
+    var pressedPushedToggleArray: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+    var previousPressedPushedToggleArray: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+    var gameHoleDollarsArray: [Double] = Array(repeating: 2.0, count: STANDARD_HOLES)
 
     // 5 players × 18 holes; nil = no score entered yet
     var scores: [[Int?]] = Array(
-        repeating: Array(repeating: nil, count: 18),
-        count: 5
+        repeating: Array(repeating: nil, count: STANDARD_HOLES),
+        count: MAX_PLAYERS
     )
 
     // Per-player payout per hole
     var playerMoney: [[Double]] = Array(
-        repeating: Array(repeating: 0, count: 18),
-        count: 5
+        repeating: Array(repeating: 0, count: STANDARD_HOLES),
+        count: MAX_PLAYERS
     )
 
     var rosterNames: [String] = []
-    var proxWinnerPerHole: [Int?] = Array(repeating: nil, count: 18)
+    var proxWinnerPerHole: [Int?] = Array(repeating: nil, count: STANDARD_HOLES)
 
-    var pressMask: [Bool] = Array(repeating: false, count: 18)
-    var pressBaseDollars: [Double] = Array(repeating: 0.0, count: 18)
-    var pressBaseAmount: [Double] = Array(repeating: 0.0, count: 18)
+    var pressMask: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+    var pressBaseDollars: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
+    var pressBaseAmount: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
 
-    var rollBaseAmount: [Double] = Array(repeating: 0.0, count: 18)
-    var rollApplied: [Bool] = Array(repeating: false, count: 18)
+    var rollBaseAmount: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
+    var rollApplied: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
 
-    var rerollApplied: [Bool] = Array(repeating: false, count: 18)
-    var rerollBaseAmount: [Double] = Array(repeating: 0.0, count: 18)
+    var rerollApplied: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+    var rerollBaseAmount: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
 
-    var aloneApplied: [Bool] = Array(repeating: false, count: 18)
-    var aloneBaseAmount: [Double] = Array(repeating: 0.0, count: 18)
+    var aloneApplied: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+    var aloneBaseAmount: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
 
     var wolfButtonStatus: [[Bool]] = Array(
-        repeating: Array(repeating: false, count: 18),
+        repeating: Array(repeating: false, count: STANDARD_HOLES),
         count: 9
     )
 
-    var playerNames: [String] = Array(repeating: "", count: 5)
-    var hcPlayers: [Int] = Array(repeating: 0, count: 5)
-    var playerActivated: [Bool] = Array(repeating: false, count: 5)
+    var playerNames: [String] = Array(repeating: "", count: MAX_PLAYERS)
+    var hcPlayers: [Int] = Array(repeating: 0, count: MAX_PLAYERS)
+    var playerActivated: [Bool] = Array(repeating: false, count: MAX_PLAYERS)
 
     var hole: Int = 0
 
@@ -82,38 +82,38 @@ struct GameData: Codable {
     var isAlone: Bool = false
 
     var fairwayHit: [[Bool?]] = Array(
-        repeating: Array(repeating: nil, count: 18),
-        count: 5
+        repeating: Array(repeating: nil, count: STANDARD_HOLES),
+        count: MAX_PLAYERS
     )
 
     var girHit: [[Bool?]] = Array(
-        repeating: Array(repeating: nil, count: 18),
-        count: 5
+        repeating: Array(repeating: nil, count: STANDARD_HOLES),
+        count: MAX_PLAYERS
     )
 
     var puttsPerHole: [[Int?]] = Array(
-        repeating: Array(repeating: nil, count: 18),
-        count: 5
+        repeating: Array(repeating: nil, count: STANDARD_HOLES),
+        count: MAX_PLAYERS
     )
 
     // MARK: - Course passthrough
     var courseParToPass: [Int] {
         get { course.pars }
-        set { course.pars = Array(newValue.prefix(18)) }
+        set { course.pars = Array(newValue.prefix(STANDARD_HOLES)) }
     }
 
     var courseHCToPass: [Int] {
         get { course.holeHandicaps }
         set {
-            let fixed = newValue.prefix(18).map { v in
-                let x = (v == 0 ? 18 : v)
-                return max(1, min(18, x))
+            let fixed = newValue.prefix(STANDARD_HOLES).map { v in
+                let x = (v == 0 ? STANDARD_HOLES : v)
+                return max(1, min(STANDARD_HOLES, x))
             }
             course.holeHandicaps = Array(fixed)
         }
     }
 
-    mutating func normalize(holes: Int = 18) {
+    mutating func normalize(holes: Int = STANDARD_HOLES) {
         if gameType == nil { gameType = .sixPointScotch }
         if hammerCountPerHole == nil { hammerCountPerHole = Array(repeating: 0, count: holes) }
         if wolfPlayerPerHole == nil { wolfPlayerPerHole = Array(repeating: nil, count: holes) }

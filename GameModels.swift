@@ -19,8 +19,8 @@ public struct CourseData: Codable, Equatable {
 
     public static let `default` = CourseData(
         name: "Default",
-        pars: Array(repeating: 4, count: 18),
-        holeHandicaps: Array(1...18)
+        pars: Array(repeating: 4, count: STANDARD_HOLES),
+        holeHandicaps: Array(1...STANDARD_HOLES)
     )
 }
 

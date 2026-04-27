@@ -9,25 +9,25 @@ import Foundation
 enum SharedRoundBuilder {
 
     static func make(from g: GameData, playerIndex: Int) -> SharedRound {
-        let scores: [Int?] = (0..<18).map { hole in
+        let scores: [Int?] = (0..<STANDARD_HOLES).map { hole in
             guard playerIndex < g.scores.count,
                   hole < g.scores[playerIndex].count else { return nil }
             return g.scores[playerIndex][hole]
         }
 
-        let fairways: [Bool?] = (0..<18).map { hole in
+        let fairways: [Bool?] = (0..<STANDARD_HOLES).map { hole in
             guard playerIndex < g.fairwayHit.count,
                   hole < g.fairwayHit[playerIndex].count else { return nil }
             return g.fairwayHit[playerIndex][hole]
         }
 
-        let girs: [Bool?] = (0..<18).map { hole in
+        let girs: [Bool?] = (0..<STANDARD_HOLES).map { hole in
             guard playerIndex < g.girHit.count,
                   hole < g.girHit[playerIndex].count else { return nil }
             return g.girHit[playerIndex][hole]
         }
 
-        let putts: [Int?] = (0..<18).map { hole in
+        let putts: [Int?] = (0..<STANDARD_HOLES).map { hole in
             guard playerIndex < g.puttsPerHole.count,
                   hole < g.puttsPerHole[playerIndex].count else { return nil }
             return g.puttsPerHole[playerIndex][hole]
@@ -36,8 +36,8 @@ enum SharedRoundBuilder {
         return SharedRound(
             playerName: playerIndex < g.playerNames.count ? g.playerNames[playerIndex] : "Player",
             courseName: g.course.name,
-            pars: Array(g.course.pars.prefix(18)),
-            hcs: Array(g.course.holeHandicaps.prefix(18)),
+            pars: Array(g.course.pars.prefix(STANDARD_HOLES)),
+            hcs: Array(g.course.holeHandicaps.prefix(STANDARD_HOLES)),
             scores: scores as! [Int],
             fairways: fairways,
             girs: girs,

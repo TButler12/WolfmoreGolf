@@ -170,12 +170,12 @@ final class RosterAndTrackingViewController: UIViewController,
             return
         }
 
-        let currentPars = Array(g.course.pars.prefix(18))
-        let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
+        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
 
         let match = CourseLibrary.shared.courses.first { c in
-            Array(c.pars.prefix(18)) == currentPars &&
-            Array(c.hcs.prefix(18))  == currentHCs
+            Array(c.pars.prefix(STANDARD_HOLES)) == currentPars &&
+            Array(c.hcs.prefix(STANDARD_HOLES))  == currentHCs
         }
 
         if let course = match {
@@ -407,14 +407,14 @@ final class RosterAndTrackingViewController: UIViewController,
 
         // Pack actives into seats 0...4 (simple + predictable)
         GameManager.shared.update { g in
-            g.normalize(holes: 18)
+            g.normalize(holes: STANDARD_HOLES)
 
             // Ensure sizes (adjust if your capacity differs)
-            if g.playerNames.count != 5 { g.playerNames = Array(g.playerNames.prefix(5)) + Array(repeating: "", count: max(0, 5 - g.playerNames.count)) }
-            if g.hcPlayers.count != 5 { g.hcPlayers = Array(g.hcPlayers.prefix(5)) + Array(repeating: 0, count: max(0, 5 - g.hcPlayers.count)) }
-            if g.playerActivated.count != 5 { g.playerActivated = Array(g.playerActivated.prefix(5)) + Array(repeating: false, count: max(0, 5 - g.playerActivated.count)) }
+            if g.playerNames.count != MAX_PLAYERS { g.playerNames = Array(g.playerNames.prefix(MAX_PLAYERS)) + Array(repeating: "", count: max(0, 5 - g.playerNames.count)) }
+            if g.hcPlayers.count != MAX_PLAYERS { g.hcPlayers = Array(g.hcPlayers.prefix(MAX_PLAYERS)) + Array(repeating: 0, count: max(0, 5 - g.hcPlayers.count)) }
+            if g.playerActivated.count != MAX_PLAYERS { g.playerActivated = Array(g.playerActivated.prefix(MAX_PLAYERS)) + Array(repeating: false, count: max(0, 5 - g.playerActivated.count)) }
 
-            for seat in 0..<5 {
+            for seat in 0..<MAX_PLAYERS {
                 if seat < activeRows.count {
                     g.playerNames[seat] = activeRows[seat].friend.name
                     g.hcPlayers[seat] = activeRows[seat].hc
@@ -427,7 +427,7 @@ final class RosterAndTrackingViewController: UIViewController,
             }
         }
         GameManager.shared.update { g in
-            g.gameHoleDollarsArray = Array(repeating: Double(g.baseGameStake), count: 18)
+            g.gameHoleDollarsArray = Array(repeating: Double(g.baseGameStake), count: STANDARD_HOLES)
         }
         performSegue(withIdentifier: "showGame", sender: self)
     }

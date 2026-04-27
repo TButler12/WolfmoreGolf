@@ -11,7 +11,7 @@ enum SkinsEngine {
     static func makeDefaultState() -> SkinsState {
         var state = SkinsState()
         state.settings.scoringMode = .net
-        state.playerIncluded = Array(repeating: true, count: 5)
+        state.playerIncluded = Array(repeating: true, count: MAX_PLAYERS)
         return state
     }
 
@@ -25,7 +25,7 @@ enum SkinsEngine {
 
         let activeIndexes = activePlayerIndexes(from: gameData, state: state)
 
-        state.resultsByHole = (0..<18).map {
+        state.resultsByHole = (0..<STANDARD_HOLES).map {
             SkinsHoleResult(
                 holeIndex: $0,
                 potValue: 1,
@@ -35,14 +35,14 @@ enum SkinsEngine {
                 note: nil
             )
         }
-        state.skinsWonByPlayer = Array(repeating: 0, count: 5)
-        state.moneyWonByPlayer = Array(repeating: 0.0, count: 5)
+        state.skinsWonByPlayer = Array(repeating: 0, count: MAX_PLAYERS)
+        state.moneyWonByPlayer = Array(repeating: 0.0, count: MAX_PLAYERS)
 
         guard activeIndexes.count >= 2 else { return }
 
         var currentPot = 1
 
-        for hole in 0..<18 {
+        for hole in 0..<STANDARD_HOLES {
             var result = SkinsHoleResult(
                 holeIndex: hole,
                 potValue: currentPot,
@@ -224,7 +224,7 @@ enum SkinsEngine {
     ) -> [Int] {
         let activated = gameData.playerActivated
         let included = state.playerIncluded
-        let count = min(5, min(activated.count, included.count))
+        let count = min(MAX_PLAYERS, min(activated.count, included.count))
 
         return (0..<count).compactMap { idx in
             (activated[idx] && included[idx]) ? idx : nil
@@ -253,15 +253,15 @@ enum SkinsEngine {
         let delta = max(0, playerCap - lowCap)
 
         let siRaw = gameData.courseHCToPass[hole]
-        let si = max(1, min(18, siRaw == 0 ? 18 : siRaw))
+        let si = max(1, min(STANDARD_HOLES, siRaw == 0 ? STANDARD_HOLES : siRaw))
 
         return pops(for: delta, strokeIndex: si)
     }
 
     private static func pops(for delta: Int, strokeIndex si: Int) -> Int {
         let d = max(0, delta)
-        if d <= 18 { return si <= d ? 1 : 0 }
-        return 1 + (si <= (d - 18) ? 1 : 0)
+        if d <= STANDARD_HOLES { return si <= d ? 1 : 0 }
+        return 1 + (si <= (d - STANDARD_HOLES) ? 1 : 0)
     }
 
     private static func applyMoney(
@@ -272,12 +272,12 @@ enum SkinsEngine {
         let activeCount = activeIndexes.count
 
         guard activeCount >= 2 else {
-            state.moneyWonByPlayer = Array(repeating: 0.0, count: 5)
+            state.moneyWonByPlayer = Array(repeating: 0.0, count: MAX_PLAYERS)
             return
         }
 
         let skinValue = state.settings.skinValue
-        state.moneyWonByPlayer = Array(repeating: 0.0, count: 5)
+        state.moneyWonByPlayer = Array(repeating: 0.0, count: MAX_PLAYERS)
 
         for winner in activeIndexes {
             let won = state.skinsWonByPlayer[winner]
@@ -327,7 +327,7 @@ enum SkinsEngine {
         lines.append("")
         lines.append("BY HOLE")
 
-        for hole in 0..<18 {
+        for hole in 0..<STANDARD_HOLES {
             let result = state.resultsByHole[hole]
             let holeNumber = hole + 1
 
@@ -350,47 +350,47 @@ enum SkinsEngine {
         _ state: inout SkinsState,
         gameData: GameData
     ) {
-        if state.playerIncluded.count < 5 {
-            state.playerIncluded += Array(repeating: true, count: 5 - state.playerIncluded.count)
+        if state.playerIncluded.count < MAX_PLAYERS {
+            state.playerIncluded += Array(repeating: true, count: MAX_PLAYERS - state.playerIncluded.count)
         }
-        if state.playerIncluded.count > 5 {
-            state.playerIncluded = Array(state.playerIncluded.prefix(5))
+        if state.playerIncluded.count > MAX_PLAYERS {
+            state.playerIncluded = Array(state.playerIncluded.prefix(MAX_PLAYERS))
         }
 
-        if state.manualOverridesByHole.count < 18 {
+        if state.manualOverridesByHole.count < STANDARD_HOLES {
             state.manualOverridesByHole += Array(
                 repeating: nil,
-                count: 18 - state.manualOverridesByHole.count
+                count: STANDARD_HOLES - state.manualOverridesByHole.count
             )
         }
-        if state.manualOverridesByHole.count > 18 {
-            state.manualOverridesByHole = Array(state.manualOverridesByHole.prefix(18))
+        if state.manualOverridesByHole.count > STANDARD_HOLES {
+            state.manualOverridesByHole = Array(state.manualOverridesByHole.prefix(STANDARD_HOLES))
         }
 
-        if state.resultsByHole.count < 18 {
-            state.resultsByHole += (state.resultsByHole.count..<18).map {
+        if state.resultsByHole.count < STANDARD_HOLES {
+            state.resultsByHole += (state.resultsByHole.count..<STANDARD_HOLES).map {
                 SkinsHoleResult(holeIndex: $0)
             }
         }
-        if state.resultsByHole.count > 18 {
-            state.resultsByHole = Array(state.resultsByHole.prefix(18))
+        if state.resultsByHole.count > STANDARD_HOLES {
+            state.resultsByHole = Array(state.resultsByHole.prefix(STANDARD_HOLES))
         }
 
-        if state.skinsWonByPlayer.count < 5 {
-            state.skinsWonByPlayer += Array(repeating: 0, count: 5 - state.skinsWonByPlayer.count)
+        if state.skinsWonByPlayer.count < MAX_PLAYERS {
+            state.skinsWonByPlayer += Array(repeating: 0, count: MAX_PLAYERS - state.skinsWonByPlayer.count)
         }
-        if state.skinsWonByPlayer.count > 5 {
-            state.skinsWonByPlayer = Array(state.skinsWonByPlayer.prefix(5))
-        }
-
-        if state.moneyWonByPlayer.count < 5 {
-            state.moneyWonByPlayer += Array(repeating: 0.0, count: 5 - state.moneyWonByPlayer.count)
-        }
-        if state.moneyWonByPlayer.count > 5 {
-            state.moneyWonByPlayer = Array(state.moneyWonByPlayer.prefix(5))
+        if state.skinsWonByPlayer.count > MAX_PLAYERS {
+            state.skinsWonByPlayer = Array(state.skinsWonByPlayer.prefix(MAX_PLAYERS))
         }
 
-        let activeCount = min(5, gameData.playerActivated.count)
+        if state.moneyWonByPlayer.count < MAX_PLAYERS {
+            state.moneyWonByPlayer += Array(repeating: 0.0, count: MAX_PLAYERS - state.moneyWonByPlayer.count)
+        }
+        if state.moneyWonByPlayer.count > MAX_PLAYERS {
+            state.moneyWonByPlayer = Array(state.moneyWonByPlayer.prefix(MAX_PLAYERS))
+        }
+
+        let activeCount = min(MAX_PLAYERS, gameData.playerActivated.count)
         if state.playerIncluded.allSatisfy({ $0 }) && activeCount > 0 {
             for i in 0..<activeCount where !gameData.playerActivated[i] {
                 state.playerIncluded[i] = false

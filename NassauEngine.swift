@@ -233,11 +233,11 @@ enum NassauEngine {
     static func pops(for delta: Int, strokeIndex si: Int) -> Int {
         let d = max(0, delta)
 
-        if d <= 18 {
+        if d <= STANDARD_HOLES {
             return (si <= d) ? 1 : 0
         }
 
-        return 1 + ((si <= (d - 18)) ? 1 : 0)
+        return 1 + ((si <= (d - STANDARD_HOLES)) ? 1 : 0)
     }
    
     // MARK: - State Builders
@@ -482,8 +482,8 @@ enum NassauEngine {
         let segmentEnd: Int
         switch segment {
         case .front: segmentEnd = 9
-        case .back: segmentEnd = 18
-        case .overall: segmentEnd = 18
+        case .back: segmentEnd = STANDARD_HOLES
+        case .overall: segmentEnd = STANDARD_HOLES
         }
 
         let proposedStart: Int
@@ -526,9 +526,9 @@ enum NassauEngine {
         case .front:
             endHole = 9
         case .back:
-            endHole = 18
+            endHole = STANDARD_HOLES
         case .overall:
-            endHole = 18
+            endHole = STANDARD_HOLES
         }
 
         guard startHole <= endHole else { return }
@@ -572,7 +572,7 @@ enum NassauEngine {
     }
 
     static func isOverallComplete(gameData: GameData) -> Bool {
-        committedHoleCount(gameData: gameData, in: 0...17) == 18
+        committedHoleCount(gameData: gameData, in: 0...(STANDARD_HOLES-1)) == STANDARD_HOLES
     }
 
     static func lastCommittedHoleNumber(gameData: GameData) -> Int? {
@@ -738,8 +738,8 @@ enum NassauEngine {
         holeIndex: Int,
         match: NassauMatch
     ) -> Int {
-        let rawSI = gameData.course.holeHandicaps[safe: holeIndex] ?? 18
-        let si = max(1, min(18, rawSI == 0 ? 18 : rawSI))
+        let rawSI = gameData.course.holeHandicaps[safe: holeIndex] ?? STANDARD_HOLES
+        let si = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
 
         let participants = Array(Set(match.team1PlayerIndexes + match.team2PlayerIndexes))
             .filter { idx in
@@ -878,9 +878,9 @@ enum NassauEngine {
             case .front:
                 endHole = 9
             case .back:
-                endHole = 18
+                endHole = STANDARD_HOLES
             case .overall:
-                endHole = 18
+                endHole = STANDARD_HOLES
             }
 
             if startHole <= endHole {
@@ -927,9 +927,9 @@ enum NassauEngine {
                 case .front:
                     endHole = 9
                 case .back:
-                    endHole = 18
+                    endHole = STANDARD_HOLES
                 case .overall:
-                    endHole = 18
+                    endHole = STANDARD_HOLES
                 }
 
                 if startHole <= endHole {

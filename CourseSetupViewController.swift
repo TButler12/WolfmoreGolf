@@ -5,8 +5,8 @@ final class CourseSetupViewController: UIViewController {
     // MARK: - Outlets
 
     @IBOutlet private weak var courseLabel: UILabel!
-    @IBOutlet private var parFields: [UITextField]!   // tags 0...17
-    @IBOutlet private var hcFields:  [UITextField]!   // tags 0...17
+    @IBOutlet private var parFields: [UITextField]!   // tags 0...(STANDARD_HOLES-1)
+    @IBOutlet private var hcFields:  [UITextField]!   // tags 0...(STANDARD_HOLES-1)
     @IBOutlet private weak var instructionLabel: UILabel!
 
     // MARK: - Inputs
@@ -84,12 +84,12 @@ final class CourseSetupViewController: UIViewController {
 
     private func matchCourseToCurrentGame() -> CourseProfile? {
         guard let g = GameManager.shared.currentGame else { return nil }
-        let curPars = Array(g.course.pars.prefix(18))
-        let curHCs  = Array(g.course.holeHandicaps.prefix(18))
+        let curPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+        let curHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
 
         return CourseLibrary.shared.courses.first(where: {
-            Array($0.pars.prefix(18)) == curPars &&
-            Array($0.hcs.prefix(18))  == curHCs
+            Array($0.pars.prefix(STANDARD_HOLES)) == curPars &&
+            Array($0.hcs.prefix(STANDARD_HOLES))  == curHCs
         })
     }
 
@@ -207,14 +207,14 @@ final class CourseSetupViewController: UIViewController {
     // MARK: - Read / Write UI <-> Model
 
     private func applyToUIAndModel(pars: [Int], hcs: [Int]) {
-        let p = Array(pars.prefix(18))
-        let h = Array(hcs.prefix(18))
+        let p = Array(pars.prefix(STANDARD_HOLES))
+        let h = Array(hcs.prefix(STANDARD_HOLES))
 
         let parSorted = parFields.sorted { $0.tag < $1.tag }
         let hcSorted  = hcFields.sorted  { $0.tag < $1.tag }
 
-        for i in 0..<min(18, parSorted.count) { parSorted[i].text = "\(p[i])" }
-        for i in 0..<min(18, hcSorted.count)  { hcSorted[i].text  = "\(h[i])" }
+        for i in 0..<min(STANDARD_HOLES, parSorted.count) { parSorted[i].text = "\(p[i])" }
+        for i in 0..<min(STANDARD_HOLES, hcSorted.count)  { hcSorted[i].text  = "\(h[i])" }
 
         GameManager.shared.update { g in
             g.course.pars = p
@@ -224,11 +224,11 @@ final class CourseSetupViewController: UIViewController {
     }
 
     private func readFields() -> (pars: [Int], hcs: [Int]) {
-        let parSorted = parFields.sorted { $0.tag < $1.tag }.prefix(18)
-        let hcSorted  = hcFields.sorted  { $0.tag < $1.tag }.prefix(18)
+        let parSorted = parFields.sorted { $0.tag < $1.tag }.prefix(STANDARD_HOLES)
+        let hcSorted  = hcFields.sorted  { $0.tag < $1.tag }.prefix(STANDARD_HOLES)
 
         let pars = parSorted.map { max(3, min(6, Int($0.text ?? "") ?? 4)) }
-        let hcs  = hcSorted.map  { max(1, min(18, Int($0.text ?? "") ?? 1)) }
+        let hcs  = hcSorted.map  { max(1, min(STANDARD_HOLES, Int($0.text ?? "") ?? 1)) }
 
         return (pars, hcs)
     }

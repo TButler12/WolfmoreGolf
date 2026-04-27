@@ -16,7 +16,7 @@ struct Course: Codable {
 
     static let `default` = Course(
         name: "WolfMore",
-        pars: Array(repeating: 4, count: 18),
-        holeHandicaps: Array(1...18)
+        pars: Array(repeating: 4, count: STANDARD_HOLES),
+        holeHandicaps: Array(1...STANDARD_HOLES)
     )
 }

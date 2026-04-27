@@ -46,12 +46,12 @@ enum RemoteNassauScorer {
         let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)
         let bStrokesToApply = max(0, playerB.courseHandicap - lowerCH)
 
-        for i in 0..<18 {
+        for i in 0..<STANDARD_HOLES {
             let grossA: Int? = i < playerA.scores.count ? playerA.scores[i] : nil
             let grossB: Int? = i < playerB.scores.count ? playerB.scores[i] : nil
 
-            let holeHCA = playerA.hcs[safe: i] ?? 18
-            let holeHCB = playerB.hcs[safe: i] ?? 18
+            let holeHCA = playerA.hcs[safe: i] ?? STANDARD_HOLES
+            let holeHCB = playerB.hcs[safe: i] ?? STANDARD_HOLES
 
             let aPops = strokesReceived(strokesToApply: aStrokesToApply, holeHandicap: holeHCA)
             let bPops = strokesReceived(strokesToApply: bStrokesToApply, holeHandicap: holeHCB)
@@ -111,16 +111,16 @@ enum RemoteNassauScorer {
         let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)
         let bStrokesToApply = max(0, playerB.courseHandicap - lowerCH)
 
-        let aOrder = (0..<18).sorted {
-            let hc0 = playerA.hcs[safe: $0] ?? 18
-            let hc1 = playerA.hcs[safe: $1] ?? 18
+        let aOrder = (0..<STANDARD_HOLES).sorted {
+            let hc0 = playerA.hcs[safe: $0] ?? STANDARD_HOLES
+            let hc1 = playerA.hcs[safe: $1] ?? STANDARD_HOLES
             if hc0 == hc1 { return $0 < $1 }
             return hc0 < hc1
         }
 
-        let bOrder = (0..<18).sorted {
-            let hc0 = playerB.hcs[safe: $0] ?? 18
-            let hc1 = playerB.hcs[safe: $1] ?? 18
+        let bOrder = (0..<STANDARD_HOLES).sorted {
+            let hc0 = playerB.hcs[safe: $0] ?? STANDARD_HOLES
+            let hc1 = playerB.hcs[safe: $1] ?? STANDARD_HOLES
             if hc0 == hc1 { return $0 < $1 }
             return hc0 < hc1
         }
@@ -172,14 +172,14 @@ enum RemoteNassauScorer {
         let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)
         let bStrokesToApply = max(0, playerB.courseHandicap - lowerCH)
 
-        let aBack = (9..<18).sorted {
+        let aBack = (9..<STANDARD_HOLES).sorted {
             let hc0 = playerA.hcs[safe: $0] ?? 9
             let hc1 = playerA.hcs[safe: $1] ?? 9
             if hc0 == hc1 { return $0 < $1 }
             return hc0 < hc1
         }
 
-        let bBack = (9..<18).sorted {
+        let bBack = (9..<STANDARD_HOLES).sorted {
             let hc0 = playerB.hcs[safe: $0] ?? 9
             let hc1 = playerB.hcs[safe: $1] ?? 9
             if hc0 == hc1 { return $0 < $1 }
@@ -209,8 +209,8 @@ enum RemoteNassauScorer {
         let grossA = aIndex < playerA.scores.count ? playerA.scores[aIndex] : nil
         let grossB = bIndex < playerB.scores.count ? playerB.scores[bIndex] : nil
 
-        let holeHCA = playerA.hcs[safe: aIndex] ?? 18
-        let holeHCB = playerB.hcs[safe: bIndex] ?? 18
+        let holeHCA = playerA.hcs[safe: aIndex] ?? STANDARD_HOLES
+        let holeHCB = playerB.hcs[safe: bIndex] ?? STANDARD_HOLES
 
         let aPops = strokesReceived(strokesToApply: aStrokesToApply, holeHandicap: holeHCA)
         let bPops = strokesReceived(strokesToApply: bStrokesToApply, holeHandicap: holeHCB)
@@ -249,8 +249,8 @@ enum RemoteNassauScorer {
     private static func strokesReceived(strokesToApply: Int, holeHandicap: Int) -> Int {
         guard strokesToApply > 0 else { return 0 }
 
-        let fullRounds = strokesToApply / 18
-        let remainder = strokesToApply % 18
+        let fullRounds = strokesToApply / STANDARD_HOLES
+        let remainder = strokesToApply % STANDARD_HOLES
 
         return fullRounds + (holeHandicap <= remainder ? 1 : 0)
     }

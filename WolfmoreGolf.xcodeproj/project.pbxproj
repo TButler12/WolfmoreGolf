@@ -88,6 +88,7 @@
 		F6E008232F8E62C600763694 /* RoundHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008222F8E62C600763694 /* RoundHistoryStore.swift */; };
 		F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */; };
 		F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */; };
+		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -178,6 +179,7 @@
 		F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchesViewController.swift; sourceTree = "<group>"; };
 		F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauSettingsViewController.swift; sourceTree = "<group>"; };
 		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
+		9402F93CD28E4C029E042DFC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -202,6 +204,7 @@
 		F64DE77F2EB0396000F8D625 = {
 			isa = PBXGroup;
 			children = (
+				9402F93CD28E4C029E042DFC /* Constants.swift */,
 				F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */,
 				F6E008222F8E62C600763694 /* RoundHistoryStore.swift */,
 				F6E0081D2F8DBF2A00763694 /* ImportRemoteRoundViewController.swift */,
@@ -489,6 +492,7 @@
 				F681886C2F62898D004162EE /* PlayerSetupViewController.swift in Sources */,
 				F6E0081E2F8DBF2A00763694 /* ImportRemoteRoundViewController.swift in Sources */,
 				F6590F052EFA225B0085D088 /* GameType.swift in Sources */,
+				D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -83,10 +83,10 @@ extension RemoteMatchesViewController: UITableViewDataSource {
 
         let myCompleted = match.myRound.scores.filter { $0 != nil }.count
         let oppCompleted = match.opponentRound?.scores.filter { $0 != nil }.count ?? 0
-        let myHoleText = myCompleted >= 18 ? "F" : "H\(myCompleted + 1)"
+        let myHoleText = myCompleted >= STANDARD_HOLES ? "F" : "H\(myCompleted + 1)"
         let oppHoleText = match.opponentRound == nil
             ? "Waiting..."
-            : (oppCompleted >= 18 ? "F" : "H\(oppCompleted + 1)")
+            : (oppCompleted >= STANDARD_HOLES ? "F" : "H\(oppCompleted + 1)")
         content.text = "\(match.opponentName)"
 
         content.secondaryText =

@@ -95,12 +95,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         var newCount = 0
 
         GameManager.shared.update { g in
-            g.normalize(holes: 18)
+            g.normalize(holes: STANDARD_HOLES)
 
             let h = max(0, min(17, g.hole))
 
-            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != 18 {
-                g.hammerCountPerHole = Array(repeating: 0, count: 18)
+            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != STANDARD_HOLES {
+                g.hammerCountPerHole = Array(repeating: 0, count: STANDARD_HOLES)
             }
 
             g.hammerCountPerHole![h] += 1
@@ -120,12 +120,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         var newCount = 0
 
         GameManager.shared.update { g in
-            g.normalize(holes: 18)
+            g.normalize(holes: STANDARD_HOLES)
 
             let h = max(0, min(17, g.hole))
 
-            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != 18 {
-                g.hammerCountPerHole = Array(repeating: 0, count: 18)
+            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != STANDARD_HOLES {
+                g.hammerCountPerHole = Array(repeating: 0, count: STANDARD_HOLES)
             }
 
             g.hammerCountPerHole![h] = max(0, g.hammerCountPerHole![h] - 1)
@@ -433,16 +433,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         func holesFrom(_ start: Int, to end: Int) -> [Int] {
             return (start <= end) ? Array(start...end)
-                                  : Array(start..<18) + Array(0...end)
+                                  : Array(start..<STANDARD_HOLES) + Array(0...end)
         }
         let holesToSum = holesFrom(start, to: current)
 
         // Seat × hole matrix padded to 18
         let money: [[Double]] = g.playerMoney.isEmpty
-            ? Array(repeating: Array(repeating: 0.0, count: 18), count: 5)
+            ? Array(repeating: Array(repeating: 0.0, count: STANDARD_HOLES), count: MAX_PLAYERS)
             : g.playerMoney.map { row in
-                row.count >= 18 ? Array(row.prefix(18))
-                                : row + Array(repeating: 0.0, count: 18 - row.count)
+                row.count >= STANDARD_HOLES ? Array(row.prefix(STANDARD_HOLES))
+                                : row + Array(repeating: 0.0, count: STANDARD_HOLES - row.count)
             }
 
         let totals: [Double] = money.map { row in
@@ -540,12 +540,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func stepDollars(by delta: Double) {
         GameManager.shared.update { g in
             // ✅ Always safe / consistent
-            g.normalize(holes: 18)
-            if g.gameHoleDollarsArray.count != 18 {
-                g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18)
+            g.normalize(holes: STANDARD_HOLES)
+            if g.gameHoleDollarsArray.count != STANDARD_HOLES {
+                g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES)
             }
 
-            // ✅ Use the model hole (0...17)
+            // ✅ Use the model hole (0...(STANDARD_HOLES-1))
             let h = max(0, min(17, g.hole))
             self.currentHole = h   // keep your VC’s currentHole in sync (prevents “sometimes”)
 
@@ -595,9 +595,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         for b in wolfButtons {
             let i = b.tag
-            guard (0..<5).contains(i),
-                  g.wolfButtonStatus.count == 5,
-                  g.wolfButtonStatus[i].count == 18 else { continue }
+            guard (0..<MAX_PLAYERS).contains(i),
+                  g.wolfButtonStatus.count == MAX_PLAYERS,
+                  g.wolfButtonStatus[i].count == STANDARD_HOLES else { continue }
 
             let isOn = g.wolfButtonStatus[i][hole]
             applyWolfStyleDirect(b, isOn: isOn)
@@ -708,8 +708,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let hole = max(0, min(17, g.hole))
 
         // SI from new course arrays, clamped to 1…18 (treat 0 as 18)
-        let rawSI = g.course.holeHandicaps[safe: hole] ?? 18
-        let si    = max(1, min(18, rawSI == 0 ? 18 : rawSI))
+        let rawSI = g.course.holeHandicaps[safe: hole] ?? STANDARD_HOLES
+        let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
 
         // Seats we can actually show
         let seats = min(9, g.playerNames.count, g.hcPlayers.count, g.playerActivated.count)
@@ -744,20 +744,20 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // print("POPS H\(hole+1) SI=\(si) baseHC=\(baseHC)")
     }
     // Single source-of-truth pop formula (standard):
-    // +floor(S/18) on every hole, plus +1 on SI 1…(S % 18).
+    // +floor(S/18) on every hole, plus +1 on SI 1…(S % STANDARD_HOLES).
    
     private func pops(for delta: Int, strokeIndex: Int) -> Int {
-        let si = max(1, min(18, strokeIndex == 0 ? 18 : strokeIndex))  // clamp SI to 1…18; 0 → 18
+        let si = max(1, min(STANDARD_HOLES, strokeIndex == 0 ? STANDARD_HOLES : strokeIndex))  // clamp SI to 1…18; 0 → 18
         let d  = max(0, delta)
-        let full = d / 18
-        let rem  = d % 18
+        let full = d / STANDARD_HOLES
+        let rem  = d % STANDARD_HOLES
         return full + ((rem > 0 && si <= rem) ? 1 : 0)
     }
    
     private func siAt(_ hole: Int, in course: Course) -> Int {
-        let raw = course.holeHandicaps.indices.contains(hole) ? course.holeHandicaps[hole] : 18
+        let raw = course.holeHandicaps.indices.contains(hole) ? course.holeHandicaps[hole] : STANDARD_HOLES
         // clamp 0→18, then into 1…18
-        return max(1, min(18, raw == 0 ? 18 : raw))
+        return max(1, min(STANDARD_HOLES, raw == 0 ? STANDARD_HOLES : raw))
     }
     private func parAt(_ hole: Int, in course: Course) -> Int {
         return course.pars.indices.contains(hole) ? course.pars[hole] : 4
@@ -871,11 +871,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
 
         // 2) Compare current game layout to the home course layout
-        let currentPars = Array(g.course.pars.prefix(18))
-        let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
+        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
 
-        let homePars = Array(homeCourse.pars.prefix(18))
-        let homeHCs  = Array(homeCourse.hcs.prefix(18))
+        let homePars = Array(homeCourse.pars.prefix(STANDARD_HOLES))
+        let homeHCs  = Array(homeCourse.hcs.prefix(STANDARD_HOLES))
 
         let isHomeCourse = (currentPars == homePars && currentHCs == homeHCs)
 
@@ -908,15 +908,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBAction func pressedPush2(_ sender: UIButton) {
         GameManager.shared.update { g in
             // Ensure arrays exist (old save safety)
-            if g.pressMask.count != 18        { g.pressMask        = Array(repeating: false, count: 18) }
-            if g.pressBaseDollars.count != 18 { g.pressBaseDollars = Array(repeating: 0.0,  count: 18) }
-            if g.gameHoleDollarsArray.count != 18 { g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18) }
+            if g.pressMask.count != STANDARD_HOLES        { g.pressMask        = Array(repeating: false, count: STANDARD_HOLES) }
+            if g.pressBaseDollars.count != STANDARD_HOLES { g.pressBaseDollars = Array(repeating: 0.0,  count: STANDARD_HOLES) }
+            if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
 
             func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
 
             // Restore any currently pressed holes back to their remembered base
             func restorePressedRange() {
-                let limit = min(18, g.gameHoleDollarsArray.count)
+                let limit = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
                 for i in 0..<limit where g.pressMask[i] {
                     let base = (g.pressBaseDollars[i] == 0 ? g.gameHoleDollarsArray[i] : g.pressBaseDollars[i])
                     g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, base))
@@ -925,7 +925,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 }
             }
 
-            let count = min(18, g.gameHoleDollarsArray.count)
+            let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
             let idx   = max(0, min(g.hole, max(0, count - 1)))
             let isPressedHere = (g.pressMask.indices.contains(idx) ? g.pressMask[idx] : false)
 
@@ -964,9 +964,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBAction private func rerollPushedTapped(_ sender: UIButton) {
         GameManager.shared.update { g in
             // (Ideally migrate/sanitize sizes once at load, but keeping your guards)
-            if g.rerollApplied.count != 18     { g.rerollApplied     = Array(repeating: false, count: 18) }
-            if g.rerollBaseAmount.count != 18  { g.rerollBaseAmount  = Array(repeating: 0.0,  count: 18) }
-            if g.gameHoleDollarsArray.count != 18 { g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18) }
+            if g.rerollApplied.count != STANDARD_HOLES     { g.rerollApplied     = Array(repeating: false, count: STANDARD_HOLES) }
+            if g.rerollBaseAmount.count != STANDARD_HOLES  { g.rerollBaseAmount  = Array(repeating: 0.0,  count: STANDARD_HOLES) }
+            if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
 
             let h = max(0, min(g.hole, 17))
 
@@ -1010,11 +1010,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         GameManager.shared.update { g in
             // Safety for old saves
-            if g.rollApplied.count != 18 { g.rollApplied = Array(repeating: false, count: 18) }
-            if g.rollBaseAmount.count != 18 { g.rollBaseAmount = Array(repeating: 0.0, count: 18) }
-            if g.rerollApplied.count != 18 { g.rerollApplied = Array(repeating: false, count: 18) }
-            if g.rerollBaseAmount.count != 18 { g.rerollBaseAmount = Array(repeating: 0.0, count: 18) }
-            if g.gameHoleDollarsArray.count != 18 { g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18) }
+            if g.rollApplied.count != STANDARD_HOLES { g.rollApplied = Array(repeating: false, count: STANDARD_HOLES) }
+            if g.rollBaseAmount.count != STANDARD_HOLES { g.rollBaseAmount = Array(repeating: 0.0, count: STANDARD_HOLES) }
+            if g.rerollApplied.count != STANDARD_HOLES { g.rerollApplied = Array(repeating: false, count: STANDARD_HOLES) }
+            if g.rerollBaseAmount.count != STANDARD_HOLES { g.rerollBaseAmount = Array(repeating: 0.0, count: STANDARD_HOLES) }
+            if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
 
             let hole = max(0, min(g.hole, 17))
 
@@ -1061,10 +1061,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let val  = Int(tf.text ?? "")  // Int? (nil if blank)
 
         GameManager.shared.update { m in
-            if m.scores.count != 5 || m.scores.first?.count != 18 {
-                m.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+            if m.scores.count != MAX_PLAYERS || m.scores.first?.count != STANDARD_HOLES {
+                m.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
             }
-            if (0..<5).contains(seat), (0..<18).contains(hole) {
+            if (0..<MAX_PLAYERS).contains(seat), (0..<STANDARD_HOLES).contains(hole) {
                 m.scores[seat][hole] = val
             }
         }
@@ -1178,12 +1178,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
 
         GameManager.shared.update { g in
-            if g.playerMoney.count < 5 {
-                g.playerMoney = Array(repeating: Array(repeating: 0.0, count: 18), count: 5)
+            if g.playerMoney.count < MAX_PLAYERS {
+                g.playerMoney = Array(repeating: Array(repeating: 0.0, count: STANDARD_HOLES), count: MAX_PLAYERS)
             }
             for s in 0..<payouts.count {
-                if g.playerMoney[s].count < 18 {
-                    g.playerMoney[s] = Array(repeating: 0.0, count: 18)
+                if g.playerMoney[s].count < STANDARD_HOLES {
+                    g.playerMoney[s] = Array(repeating: 0.0, count: STANDARD_HOLES)
                 }
                 g.playerMoney[s][hole] = payouts[s]
             }
@@ -1226,7 +1226,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             if amount == 0 { amount = 2.0 }             // default if somehow unset
             amount = max(1.0, amount)                   // minimum 1.0
             amount = (amount * 2.0).rounded() / 2.0     // snap to 0.50
-            g.gameHoleDollarsArray = Array(repeating: amount, count: 18)
+            g.gameHoleDollarsArray = Array(repeating: amount, count: STANDARD_HOLES)
         }
         
         // repaint label
@@ -1257,7 +1257,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     
     @IBAction func previousHoleTapped(_ sender: UIButton) {
-        currentHole = (currentHole - 1 + 18) % 18
+        currentHole = (currentHole - 1 + STANDARD_HOLES) % STANDARD_HOLES
         GameManager.shared.update { $0.hole = currentHole }
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
@@ -1269,7 +1269,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
     
     @IBAction func nextHoleTapped(_ sender: UIButton) {
-        currentHole = (currentHole + 1) % 18
+        currentHole = (currentHole + 1) % STANDARD_HOLES
         GameManager.shared.update { $0.hole = currentHole }   // ← sync to model
         refreshForCurrentHole()
         
@@ -1364,9 +1364,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         GameManager.shared.update { g in
             // Ensure arrays are correct length (handles old saves)
-            if g.aloneApplied.count != 18     { g.aloneApplied     = Array(repeating: false, count: 18) }
-            if g.aloneBaseAmount.count != 18  { g.aloneBaseAmount  = Array(repeating: 0.0,  count: 18) }
-            if g.gameHoleDollarsArray.count != 18 { g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18) }
+            if g.aloneApplied.count != STANDARD_HOLES     { g.aloneApplied     = Array(repeating: false, count: STANDARD_HOLES) }
+            if g.aloneBaseAmount.count != STANDARD_HOLES  { g.aloneBaseAmount  = Array(repeating: 0.0,  count: STANDARD_HOLES) }
+            if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
 
             let hole = max(0, min(g.hole, 17))
 
@@ -1420,12 +1420,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     
     @IBAction private func wolfButtonTapped(_ sender: UIButton) {
         let player = sender.tag
-        guard (0..<5).contains(player) else { return }
+        guard (0..<MAX_PLAYERS).contains(player) else { return }
 
         GameManager.shared.update { g in
             let hole = max(0, min(17, g.hole))
-            if g.wolfButtonStatus.count != 5 || g.wolfButtonStatus.first?.count != 18 {
-                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: 18), count: 5)
+            if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != STANDARD_HOLES {
+                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
             }
             g.wolfButtonStatus[player][hole].toggle()
         }
@@ -1465,10 +1465,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard g.resolvedGameType == .sixPointScotch else { return } // ✅ block in Wolf
 
         let player = sender.tag
-        guard (0..<5).contains(player) else { return }
+        guard (0..<MAX_PLAYERS).contains(player) else { return }
 
         GameManager.shared.update { g in
-            if g.proxWinnerPerHole.count != 18 { g.proxWinnerPerHole = Array(repeating: nil, count: 18) }
+            if g.proxWinnerPerHole.count != STANDARD_HOLES { g.proxWinnerPerHole = Array(repeating: nil, count: STANDARD_HOLES) }
             let hole = max(0, min(17, g.hole))
             g.proxWinnerPerHole[hole] = (g.proxWinnerPerHole[hole] == player) ? nil : player
         }
@@ -1781,16 +1781,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     
                     let scores = scoreString.compactMap { Int(String($0)) }
                     
-                    if scores.count == 18 {
+                    if scores.count == STANDARD_HOLES {
                         let round = SharedRound(
                             playerName: name,
                             courseName: "WolfMore",
-                            pars: Array(repeating: 4, count: 18),
-                            hcs: Array(1...18),
+                            pars: Array(repeating: 4, count: STANDARD_HOLES),
+                            hcs: Array(1...STANDARD_HOLES),
                             scores: scores,
-                            fairways: Array(repeating: nil, count: 18),
-                            girs: Array(repeating: nil, count: 18),
-                            putts: Array(repeating: nil, count: 18),
+                            fairways: Array(repeating: nil, count: STANDARD_HOLES),
+                            girs: Array(repeating: nil, count: STANDARD_HOLES),
+                            putts: Array(repeating: nil, count: STANDARD_HOLES),
                             courseHandicap: 0
                         )
 
@@ -1878,7 +1878,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // 0) get current game / hole
         guard let snap = GameManager.shared.currentGame else { return }
         let hole = snap.hole
-        guard (0..<18).contains(hole) else { return }
+        guard (0..<STANDARD_HOLES).contains(hole) else { return }
 
         // ✅ use global flag (true = mute double everywhere)
         let umbrellaMuted = (snap.resolvedGameType == .sixPointScotch) ? snap.isUmbrella : false
@@ -1890,15 +1890,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         // 1) save scores from UI + mark hole committed
         GameManager.shared.update { g in
-            if g.scores.count != 5 || g.scores.contains(where: { $0.count != 18 }) {
-                g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+            if g.scores.count != MAX_PLAYERS || g.scores.contains(where: { $0.count != STANDARD_HOLES }) {
+                g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
             }
 
-            if g.holeCommitted.count != 18 {
-                g.holeCommitted = Array(repeating: false, count: 18)
+            if g.holeCommitted.count != STANDARD_HOLES {
+                g.holeCommitted = Array(repeating: false, count: STANDARD_HOLES)
             }
 
-            let seats = min(5, scoreFields.count, g.scores.count)
+            let seats = min(MAX_PLAYERS, scoreFields.count, g.scores.count)
             for s in 0..<seats {
                 g.scores[s][hole] = Int(scoreFields[s].text ?? "")
             }
@@ -1926,7 +1926,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 guard hole < g.gameHoleDollarsArray.count,
                       hole < g.pressedPushedToggleArray.count else { return }
 
-                let end = (hole < 9) ? 9 : 18
+                let end = (hole < 9) ? 9 : STANDARD_HOLES
                 let base = g.gameHoleDollarsArray[hole]
 
                 for idx in hole..<min(end, g.gameHoleDollarsArray.count) {
@@ -1946,18 +1946,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         // 5) save payouts
         GameManager.shared.update { g in
-            if g.playerMoney.count != 5 || g.playerMoney.contains(where: { $0.count != 18 }) {
-                g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 5)
+            if g.playerMoney.count != MAX_PLAYERS || g.playerMoney.contains(where: { $0.count != STANDARD_HOLES }) {
+                g.playerMoney = Array(repeating: Array(repeating: 0, count: STANDARD_HOLES), count: MAX_PLAYERS)
             }
 
-            let seats = min(5, playerMoneyFields.count, g.playerMoney.count, payouts.count)
+            let seats = min(MAX_PLAYERS, playerMoneyFields.count, g.playerMoney.count, payouts.count)
             for s in 0..<seats {
                 g.playerMoney[s][hole] = payouts[s]
             }
         }
 
         // 6) paint
-        let seatsToPaint = min(5, playerMoneyFields.count, payouts.count)
+        let seatsToPaint = min(MAX_PLAYERS, playerMoneyFields.count, payouts.count)
         for s in 0..<seatsToPaint {
             setMoneyField(playerMoneyFields[s], to: payouts[s])
         }
@@ -1967,7 +1967,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         // 7) debug
         if let g = GameManager.shared.currentGame {
-            let seats = min(5, g.scores.count, g.playerNames.count)
+            let seats = min(MAX_PLAYERS, g.scores.count, g.playerNames.count)
 
             let scorePart = (0..<seats).map { s -> String in
                 let name = g.playerNames[s].isEmpty ? "P\(s + 1)" : g.playerNames[s]
@@ -2059,22 +2059,22 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         vc.onSave = { fairwayHit, girHit, putts, score in
             GameManager.shared.update { g in
-                g.normalize(holes: 18)
+                g.normalize(holes: STANDARD_HOLES)
 
-                if g.fairwayHit.count != 5 || g.fairwayHit.contains(where: { $0.count != 18 }) {
-                    g.fairwayHit = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+                if g.fairwayHit.count != MAX_PLAYERS || g.fairwayHit.contains(where: { $0.count != STANDARD_HOLES }) {
+                    g.fairwayHit = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
                 }
 
-                if g.girHit.count != 5 || g.girHit.contains(where: { $0.count != 18 }) {
-                    g.girHit = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+                if g.girHit.count != MAX_PLAYERS || g.girHit.contains(where: { $0.count != STANDARD_HOLES }) {
+                    g.girHit = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
                 }
 
-                if g.puttsPerHole.count != 5 || g.puttsPerHole.contains(where: { $0.count != 18 }) {
-                    g.puttsPerHole = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+                if g.puttsPerHole.count != MAX_PLAYERS || g.puttsPerHole.contains(where: { $0.count != STANDARD_HOLES }) {
+                    g.puttsPerHole = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
                 }
 
-                if g.scores.count != 5 || g.scores.contains(where: { $0.count != 18 }) {
-                    g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+                if g.scores.count != MAX_PLAYERS || g.scores.contains(where: { $0.count != STANDARD_HOLES }) {
+                    g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
                 }
 
                 g.fairwayHit[playerIndex][hole] = fairwayHit
@@ -2161,10 +2161,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
     private func updateHoleUI() {
         guard let game = GameManager.shared.currentGame else { return }
-        guard (0..<18).contains(currentHole) else { return }
+        guard (0..<STANDARD_HOLES).contains(currentHole) else { return }
 
         let fields = scoreFields.sorted { $0.tag < $1.tag }
-        let seats = min(5, fields.count, game.scores.count)
+        let seats = min(MAX_PLAYERS, fields.count, game.scores.count)
 
         for player in 0..<seats {
             let val = game.scores[player][currentHole]
@@ -2218,11 +2218,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // MARK: - POPS (handicap strokes per hole)
 
     // 0, 1, 2 (3+ if delta ≥ 36...), standard allocation:
-    // pops = floor(delta/18) + ((delta % 18) >= strokeIndex ? 1 : 0)
+    // pops = floor(delta/18) + ((delta % STANDARD_HOLES) >= strokeIndex ? 1 : 0)
    
     
     func indexFor(hole: Int, player: Int) -> Int {
-        return hole * 5 + player   // 9 players per hole
+        return hole * MAX_PLAYERS + player   // 9 players per hole
     }
 
     

@@ -159,21 +159,21 @@ final class GameManager {
         
         // Round-only reset
         g.hole = 0
-        g.scores               = Array(repeating: Array(repeating: nil, count: 18), count: 5)
-        g.playerMoney          = Array(repeating: Array(repeating: 0.0, count: 18), count: 5)
-        g.rollApplied          = Array(repeating: false, count: 18)
-        g.rerollApplied        = Array(repeating: false, count: 18)
-        g.rerollBaseAmount     = Array(repeating: 0.0, count: 18)
-        g.aloneApplied         = Array(repeating: false, count: 18)
-        g.pressMask            = Array(repeating: false, count: 18)
-        g.proxWinnerPerHole    = Array(repeating: nil, count: 18)
-        g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: 18), count: 5)
-        g.gameHoleDollarsArray = Array(repeating: defaultBet, count: 18)
+        g.scores               = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        g.playerMoney          = Array(repeating: Array(repeating: 0.0, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        g.rollApplied          = Array(repeating: false, count: STANDARD_HOLES)
+        g.rerollApplied        = Array(repeating: false, count: STANDARD_HOLES)
+        g.rerollBaseAmount     = Array(repeating: 0.0, count: STANDARD_HOLES)
+        g.aloneApplied         = Array(repeating: false, count: STANDARD_HOLES)
+        g.pressMask            = Array(repeating: false, count: STANDARD_HOLES)
+        g.proxWinnerPerHole    = Array(repeating: nil, count: STANDARD_HOLES)
+        g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        g.gameHoleDollarsArray = Array(repeating: defaultBet, count: STANDARD_HOLES)
         
         // ✅ NEW: Wolf/Hammer state reset (safe defaults)
-        g.hammerCountPerHole   = Array(repeating: 0, count: 18)
-        g.wolfPlayerPerHole    = Array(repeating: nil, count: 18)
-        g.wolfWentAlonePerHole = Array(repeating: false, count: 18)
+        g.hammerCountPerHole   = Array(repeating: 0, count: STANDARD_HOLES)
+        g.wolfPlayerPerHole    = Array(repeating: nil, count: STANDARD_HOLES)
+        g.wolfWentAlonePerHole = Array(repeating: false, count: STANDARD_HOLES)
         
         if keepCourse {
             g.course          = savedCourse
@@ -197,36 +197,36 @@ final class GameManager {
         g.gameType = .sixPointScotch
         
         // Hammer/Wolf storage
-        g.hammerCountPerHole   = Array(repeating: 0,   count: 18)
-        g.wolfPlayerPerHole    = Array(repeating: nil, count: 18)
-        g.wolfWentAlonePerHole = Array(repeating: false, count: 18)
+        g.hammerCountPerHole   = Array(repeating: 0,   count: STANDARD_HOLES)
+        g.wolfPlayerPerHole    = Array(repeating: nil, count: STANDARD_HOLES)
+        g.wolfWentAlonePerHole = Array(repeating: false, count: STANDARD_HOLES)
         
         g.gameName = name
         g.hole = 0
         
         // Seats (9)
-        g.playerNames     = Array(repeating: "",    count: 5)
-        g.hcPlayers       = Array(repeating: 0,     count: 5)   // S-column deltas
-        g.playerActivated = Array(repeating: false, count: 5)
+        g.playerNames     = Array(repeating: "",    count: MAX_PLAYERS)
+        g.hcPlayers       = Array(repeating: 0,     count: MAX_PLAYERS)   // S-column deltas
+        g.playerActivated = Array(repeating: false, count: MAX_PLAYERS)
         
         // Course (18)
-        // g.courseParToPass = Array(repeating: 4, count: 18)
-        // g.courseHCToPass  = Array(1...18)
+        // g.courseParToPass = Array(repeating: 4, count: STANDARD_HOLES)
+        // g.courseHCToPass  = Array(1...STANDARD_HOLES)
         
         // Stakes per hole
-        g.gameHoleDollarsArray = Array(repeating: 2.0, count: 18)
+        g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES)
         
         // Wolves (5×18) & Prox (seat 0…4 or nil)
-        g.wolfButtonStatus  = Array(repeating: Array(repeating: false, count: 18), count: 5)
-        g.proxWinnerPerHole = Array(repeating: nil, count: 18)
+        g.wolfButtonStatus  = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        g.proxWinnerPerHole = Array(repeating: nil, count: STANDARD_HOLES)
         
         // Scores & per-player payouts (9×18)
-        g.scores      = Array(repeating: Array(repeating: nil, count: 18), count: 5)
-        g.playerMoney = Array(repeating: Array(repeating: 0,   count: 18), count: 5)
+        g.scores      = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        g.playerMoney = Array(repeating: Array(repeating: 0,   count: STANDARD_HOLES), count: MAX_PLAYERS)
         
         // Press / previous press flags
-        g.pressedPushedToggleArray         = Array(repeating: false, count: 18)
-        g.previousPressedPushedToggleArray = Array(repeating: false, count: 18)
+        g.pressedPushedToggleArray         = Array(repeating: false, count: STANDARD_HOLES)
+        g.previousPressedPushedToggleArray = Array(repeating: false, count: STANDARD_HOLES)
         
         // Roster picker list
         g.rosterNames = []
@@ -245,41 +245,41 @@ final class GameManager {
         g.normalize()   // ✅ handles gameType + hammer/wolf arrays
         
         // Seats
-        if g.playerNames.count != 5     { g.playerNames     = pad(g.playerNames,     to: 5,  fill: "") }
-        if g.hcPlayers.count != 5       { g.hcPlayers       = pad(g.hcPlayers,       to: 5,  fill: 0) }
-        if g.playerActivated.count != 5 { g.playerActivated = pad(g.playerActivated, to: 5,  fill: false) }
+        if g.playerNames.count != MAX_PLAYERS     { g.playerNames     = pad(g.playerNames,     to: MAX_PLAYERS,  fill: "") }
+        if g.hcPlayers.count != MAX_PLAYERS       { g.hcPlayers       = pad(g.hcPlayers,       to: MAX_PLAYERS,  fill: 0) }
+        if g.playerActivated.count != MAX_PLAYERS { g.playerActivated = pad(g.playerActivated, to: MAX_PLAYERS,  fill: false) }
         
         // Course
-        if g.courseParToPass.count != 18 { g.courseParToPass = pad(g.courseParToPass, to: 18, fill: 4) }
-        if g.courseHCToPass.count  != 18 { g.courseHCToPass  = pad(g.courseHCToPass,  to: 18, fill: 1) }
+        if g.courseParToPass.count != STANDARD_HOLES { g.courseParToPass = pad(g.courseParToPass, to: STANDARD_HOLES, fill: 4) }
+        if g.courseHCToPass.count  != STANDARD_HOLES { g.courseHCToPass  = pad(g.courseHCToPass,  to: STANDARD_HOLES, fill: 1) }
         
         // Stakes
-        if g.gameHoleDollarsArray.count != 18 {
-            g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: 18, fill: 2.0)
+        if g.gameHoleDollarsArray.count != STANDARD_HOLES {
+            g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: STANDARD_HOLES, fill: 2.0)
         }
         
         // Wolves & Prox
-        if g.wolfButtonStatus.count != 5 || g.wolfButtonStatus.first?.count != 18 {
-            g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: 18), count: 5)
+        if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != STANDARD_HOLES {
+            g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
         }
-        if g.proxWinnerPerHole.count != 18 {
-            g.proxWinnerPerHole = Array(repeating: nil, count: 18)
+        if g.proxWinnerPerHole.count != STANDARD_HOLES {
+            g.proxWinnerPerHole = Array(repeating: nil, count: STANDARD_HOLES)
         }
         
         // Scores & Money
-        if g.scores.count != 5 || g.scores.first?.count != 18 {
-            g.scores = Array(repeating: Array(repeating: nil, count: 18), count: 5)
+        if g.scores.count != MAX_PLAYERS || g.scores.first?.count != STANDARD_HOLES {
+            g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
         }
-        if g.playerMoney.count != 5 || g.playerMoney.first?.count != 18 {
-            g.playerMoney = Array(repeating: Array(repeating: 0, count: 18), count: 5)
+        if g.playerMoney.count != MAX_PLAYERS || g.playerMoney.first?.count != STANDARD_HOLES {
+            g.playerMoney = Array(repeating: Array(repeating: 0, count: STANDARD_HOLES), count: MAX_PLAYERS)
         }
         
         // Press
-        if g.pressedPushedToggleArray.count != 18 {
-            g.pressedPushedToggleArray = Array(repeating: false, count: 18)
+        if g.pressedPushedToggleArray.count != STANDARD_HOLES {
+            g.pressedPushedToggleArray = Array(repeating: false, count: STANDARD_HOLES)
         }
-        if g.previousPressedPushedToggleArray.count != 18 {
-            g.previousPressedPushedToggleArray = Array(repeating: false, count: 18)
+        if g.previousPressedPushedToggleArray.count != STANDARD_HOLES {
+            g.previousPressedPushedToggleArray = Array(repeating: false, count: STANDARD_HOLES)
         }
         
         // Roster list ok even if empty
@@ -308,22 +308,22 @@ final class GameManager {
         } ?? 0
         
         let scores: [Int?] = myIndex < g.scores.count
-        ? Array(g.scores[myIndex].prefix(18))
-        : Array(repeating: nil, count: 18)
+        ? Array(g.scores[myIndex].prefix(STANDARD_HOLES))
+        : Array(repeating: nil, count: STANDARD_HOLES)
         
-        let pars = Array(g.course.pars.prefix(18))
+        let pars = Array(g.course.pars.prefix(STANDARD_HOLES))
         
         let fairways: [Bool?] = myIndex < g.fairwayHit.count
-        ? Array(g.fairwayHit[myIndex].prefix(18))
-        : Array(repeating: nil, count: 18)
+        ? Array(g.fairwayHit[myIndex].prefix(STANDARD_HOLES))
+        : Array(repeating: nil, count: STANDARD_HOLES)
         
         let girs: [Bool?] = myIndex < g.girHit.count
-        ? Array(g.girHit[myIndex].prefix(18))
-        : Array(repeating: nil, count: 18)
+        ? Array(g.girHit[myIndex].prefix(STANDARD_HOLES))
+        : Array(repeating: nil, count: STANDARD_HOLES)
         
         let putts: [Int?] = myIndex < g.puttsPerHole.count
-        ? Array(g.puttsPerHole[myIndex].prefix(18))
-        : Array(repeating: nil, count: 18)
+        ? Array(g.puttsPerHole[myIndex].prefix(STANDARD_HOLES))
+        : Array(repeating: nil, count: STANDARD_HOLES)
         
         let totalScore = scores.compactMap { $0 }.reduce(0, +)
         let totalPutts = putts.compactMap { $0 }.reduce(0, +)
@@ -360,11 +360,11 @@ extension GameManager {
         guard var game = self.currentGame else { return }
 
         // How many holes? usually 18, but respect the course data
-        let holeCount = min(18, game.courseParToPass.count)
+        let holeCount = min(STANDARD_HOLES, game.courseParToPass.count)
         guard holeCount > 0 else { return }
 
         // Seats visible on the Game screen
-        let seatsRange = 0 ..< min(5,
+        let seatsRange = 0 ..< min(MAX_PLAYERS,
                                    min(game.playerNames.count,
                                        game.playerActivated.count))
 

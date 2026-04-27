@@ -329,8 +329,8 @@ final class ViewController: UIViewController {
 
             if let c = CourseLibrary.shared.get(id: id) {
                 GameManager.shared.update { g in
-                    g.course.pars = Array(c.pars.prefix(18))
-                    g.course.holeHandicaps = Array(c.hcs.prefix(18))
+                    g.course.pars = Array(c.pars.prefix(STANDARD_HOLES))
+                    g.course.holeHandicaps = Array(c.hcs.prefix(STANDARD_HOLES))
                 }
             }
 
@@ -427,12 +427,12 @@ final class ViewController: UIViewController {
         return SharedRound(
             playerName: g.playerNames[playerIndex],
             courseName: g.course.name,
-            pars: Array(g.course.pars.prefix(18)),
-            hcs: Array(g.course.holeHandicaps.prefix(18)),
-            scores: Array(g.scores[playerIndex].prefix(18)).map { $0 ?? 0 },
-            fairways: Array(g.fairwayHit[playerIndex].prefix(18)),
-            girs: Array(g.girHit[playerIndex].prefix(18)),
-            putts: Array(g.puttsPerHole[playerIndex].prefix(18)),
+            pars: Array(g.course.pars.prefix(STANDARD_HOLES)),
+            hcs: Array(g.course.holeHandicaps.prefix(STANDARD_HOLES)),
+            scores: Array(g.scores[playerIndex].prefix(STANDARD_HOLES)).map { $0 ?? 0 },
+            fairways: Array(g.fairwayHit[playerIndex].prefix(STANDARD_HOLES)),
+            girs: Array(g.girHit[playerIndex].prefix(STANDARD_HOLES)),
+            putts: Array(g.puttsPerHole[playerIndex].prefix(STANDARD_HOLES)),
             courseHandicap: playerIndex < g.hcPlayers.count ? g.hcPlayers[playerIndex] : 0
         )
     }

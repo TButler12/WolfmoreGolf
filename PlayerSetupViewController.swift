@@ -278,12 +278,12 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             return
         }
 
-        let currentPars = Array(g.course.pars.prefix(18))
-        let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
+        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
 
         let match = CourseLibrary.shared.courses.first { c in
-            Array(c.pars.prefix(18)) == currentPars &&
-            Array(c.hcs.prefix(18))  == currentHCs
+            Array(c.pars.prefix(STANDARD_HOLES)) == currentPars &&
+            Array(c.hcs.prefix(STANDARD_HOLES))  == currentHCs
         }
 
         if let course = match {

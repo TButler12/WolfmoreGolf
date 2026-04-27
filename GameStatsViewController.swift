@@ -307,7 +307,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             .map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        let seats = 0..<min(5, min(g.playerNames.count, g.playerActivated.count))
+        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
         for i in seats where g.playerActivated[i] {
             let seatName = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
             if trackedFriendNames.contains(where: { $0.caseInsensitiveCompare(seatName) == .orderedSame }) {
@@ -361,16 +361,16 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     private func totalScoreForSeat(_ seat: Int, in g: GameData) -> Int? {
         var sum = 0, haveAny = false
 
-        if seat < g.scores.count, let first = g.scores.first, first.count == 18 {
-            let holes = 0..<min(18, g.scores[seat].count)
+        if seat < g.scores.count, let first = g.scores.first, first.count == STANDARD_HOLES {
+            let holes = 0..<min(STANDARD_HOLES, g.scores[seat].count)
             for h in holes {
                 if let v = g.scores[seat][h] { sum += v; haveAny = true }
             }
             return haveAny ? sum : nil
         }
 
-        if g.scores.count == 18 {
-            for h in 0..<18 {
+        if g.scores.count == STANDARD_HOLES {
+            for h in 0..<STANDARD_HOLES {
                 let row = g.scores[h]
                 if seat < row.count, let v = row[seat] { sum += v; haveAny = true }
             }
@@ -382,7 +382,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     private func front9ScoreForSeat(_ seat: Int, in g: GameData) -> Int? {
         var sum = 0, haveAny = false
 
-        if seat < g.scores.count, let first = g.scores.first, first.count == 18 {
+        if seat < g.scores.count, let first = g.scores.first, first.count == STANDARD_HOLES {
             let holes = 0..<min(9, g.scores[seat].count)
             for h in holes {
                 if let v = g.scores[seat][h] { sum += v; haveAny = true }
@@ -390,7 +390,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             return haveAny ? sum : nil
         }
 
-        if g.scores.count == 18 {
+        if g.scores.count == STANDARD_HOLES {
             let maxHole = min(9, g.scores.count)
             for h in 0..<maxHole {
                 let row = g.scores[h]
@@ -405,12 +405,12 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         guard !g.playerMoney.isEmpty else { return 0 }
         guard seat < g.playerMoney.count else { return 0 }
         let holes = g.playerMoney[seat]
-        return holes.prefix(min(18, holes.count)).reduce(0, +)
+        return holes.prefix(min(STANDARD_HOLES, holes.count)).reduce(0, +)
     }
 
     private func proxWinsForSeat(_ seat: Int, in g: GameData) -> Int {
         let winners = g.proxWinnerPerHole.map { $0 ?? -1 }
-        let upto18 = min(18, winners.count)
+        let upto18 = min(STANDARD_HOLES, winners.count)
         var c = 0
         for h in 0..<upto18 where winners[h] == seat { c += 1 }
         return c

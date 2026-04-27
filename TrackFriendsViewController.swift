@@ -91,10 +91,10 @@ final class TrackFriendsViewController: UITableViewController, UISearchResultsUp
             return true
         }
 
-        let currentPars = Array(g.course.pars.prefix(18))
-        let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
-        let homePars    = Array(homeCourse.pars.prefix(18))
-        let homeHCs     = Array(homeCourse.hcs.prefix(18))
+        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
+        let homePars    = Array(homeCourse.pars.prefix(STANDARD_HOLES))
+        let homeHCs     = Array(homeCourse.hcs.prefix(STANDARD_HOLES))
 
         let isSame = (currentPars == homePars && currentHCs == homeHCs)
 

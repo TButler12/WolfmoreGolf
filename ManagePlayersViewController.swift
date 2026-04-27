@@ -370,7 +370,7 @@ final class ManagePlayersViewController: UIViewController,
             return
         }
 
-        let active = Array(selected.prefix(5))
+        let active = Array(selected.prefix(MAX_PLAYERS))
 
         if hasInProgressRound() {
             let ac = UIAlertController(
@@ -408,14 +408,14 @@ final class ManagePlayersViewController: UIViewController,
         }
 
         GameManager.shared.update { g in
-            if g.playerNames.count != 5     { g.playerNames     = Array(repeating: "",    count: 5) }
-            if g.hcPlayers.count != 5       { g.hcPlayers       = Array(repeating: 0,     count: 5) }
-            if g.playerActivated.count != 5 { g.playerActivated = Array(repeating: false, count: 5) }
+            if g.playerNames.count != MAX_PLAYERS     { g.playerNames     = Array(repeating: "",    count: MAX_PLAYERS) }
+            if g.hcPlayers.count != MAX_PLAYERS       { g.hcPlayers       = Array(repeating: 0,     count: MAX_PLAYERS) }
+            if g.playerActivated.count != MAX_PLAYERS { g.playerActivated = Array(repeating: false, count: MAX_PLAYERS) }
 
             // clear old seats first
-            g.playerNames = Array(repeating: "", count: 5)
-            g.hcPlayers = Array(repeating: 0, count: 5)
-            g.playerActivated = Array(repeating: false, count: 5)
+            g.playerNames = Array(repeating: "", count: MAX_PLAYERS)
+            g.hcPlayers = Array(repeating: 0, count: MAX_PLAYERS)
+            g.playerActivated = Array(repeating: false, count: MAX_PLAYERS)
 
             for (seat, friend) in active.enumerated() {
                 g.playerNames[seat]     = friend.name
@@ -435,8 +435,8 @@ final class ManagePlayersViewController: UIViewController,
             }
         
 
-            if active.count < 5 {
-                for seat in active.count..<5 {
+            if active.count < MAX_PLAYERS {
+                for seat in active.count..<MAX_PLAYERS {
                     g.playerNames[seat]     = ""
                     g.hcPlayers[seat]       = 0
                     g.playerActivated[seat] = false

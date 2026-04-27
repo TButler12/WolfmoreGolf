@@ -192,7 +192,7 @@ final class MyStatsViewController: UIViewController {
             string: "Hole\tScore\tFW\tGIR\tPutts\n",
             attributes: rowAttrs(font: bodyFont, color: .secondaryLabel)
         ))
-        for h in 0..<18 {
+        for h in 0..<STANDARD_HOLES {
             let fwValue: Bool? = h < r.fairwayHitPerHole.count ? r.fairwayHitPerHole[h] : nil
             let girValue: Bool? = h < r.girPerHole.count ? r.girPerHole[h] : nil
 
@@ -412,7 +412,7 @@ final class MyStatsViewController: UIViewController {
         let holeAverages = RoundStore.shared.averagesByHole(forPlayer: myName)
         guard !holeAverages.isEmpty else { return "" }
 
-        let pars = Array(g.course.pars.prefix(18))
+        let pars = Array(g.course.pars.prefix(STANDARD_HOLES))
 
         func line(for par: Int) -> String {
             let holes = holeAverages.filter { avg in
@@ -485,7 +485,7 @@ final class MyStatsViewController: UIViewController {
     private func attributedLastRoundTotals(_ r: RoundSummary) -> NSAttributedString {
         let result = NSMutableAttributedString()
         
-        let holes = min(18, max(r.holesPlayed, 0))
+        let holes = min(STANDARD_HOLES, max(r.holesPlayed, 0))
         
         var fwHit = 0
         var fwTotal = 0
@@ -602,7 +602,7 @@ final class MyStatsViewController: UIViewController {
     
     // MARK: - Formatting
     private func formatLastRoundTotals(_ r: RoundSummary) -> String {
-        let holes = min(18, max(r.holesPlayed, 0))
+        let holes = min(STANDARD_HOLES, max(r.holesPlayed, 0))
         
         var fwHit = 0
         var fwTotal = 0
@@ -683,7 +683,7 @@ final class MyStatsViewController: UIViewController {
             col("Putts", width: 5)
         )
         
-        for h in 0..<18 {
+        for h in 0..<STANDARD_HOLES {
             let fw: String = {
                 guard h < r.fairwayHitPerHole.count else { return "-" }
                 guard let value = r.fairwayHitPerHole[h] else { return "-" }

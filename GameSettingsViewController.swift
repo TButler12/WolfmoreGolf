@@ -105,10 +105,10 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             g.baseGameStake = Int(stake)
             g.isUmbrella = umbrellaMuted
 
-            if g.gameHoleDollarsArray.count != 18 {
-                g.gameHoleDollarsArray = Array(repeating: stake, count: 18)
+            if g.gameHoleDollarsArray.count != STANDARD_HOLES {
+                g.gameHoleDollarsArray = Array(repeating: stake, count: STANDARD_HOLES)
             } else {
-                for i in 0..<18 {
+                for i in 0..<STANDARD_HOLES {
                     g.gameHoleDollarsArray[i] = stake
                 }
             }
@@ -123,12 +123,12 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             return
         }
 
-        let currentPars = Array(g.course.pars.prefix(18))
-        let currentHCs  = Array(g.course.holeHandicaps.prefix(18))
+        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
 
         let match = CourseLibrary.shared.courses.first {
-            Array($0.pars.prefix(18)) == currentPars &&
-            Array($0.hcs.prefix(18)) == currentHCs
+            Array($0.pars.prefix(STANDARD_HOLES)) == currentPars &&
+            Array($0.hcs.prefix(STANDARD_HOLES)) == currentHCs
         }
 
         courseNameLabel.text = match?.name ?? "Custom Course"

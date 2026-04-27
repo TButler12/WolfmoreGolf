@@ -51,18 +51,18 @@ struct SkinsState: Codable {
     var settings: SkinsSettings = SkinsSettings()
 
     /// One result per hole
-    var resultsByHole: [SkinsHoleResult] = (0..<18).map {
+    var resultsByHole: [SkinsHoleResult] = (0..<STANDARD_HOLES).map {
         SkinsHoleResult(holeIndex: $0)
     }
 
     /// Used only when skins mode is manual
-    var manualOverridesByHole: [ManualSkinsHoleDecision?] = Array(repeating: nil, count: 18)
+    var manualOverridesByHole: [ManualSkinsHoleDecision?] = Array(repeating: nil, count: STANDARD_HOLES)
 
     /// Totals by player seat index
-    var skinsWonByPlayer: [Int] = Array(repeating: 0, count: 5)
-    var moneyWonByPlayer: [Double] = Array(repeating: 0.0, count: 5)
+    var skinsWonByPlayer: [Int] = Array(repeating: 0, count: MAX_PLAYERS)
+    var moneyWonByPlayer: [Double] = Array(repeating: 0.0, count: MAX_PLAYERS)
 
     /// Separate from gameData.playerActivated.
     /// A player can be active in the round but excluded from skins.
-    var playerIncluded: [Bool] = Array(repeating: true, count: 5)
+    var playerIncluded: [Bool] = Array(repeating: true, count: MAX_PLAYERS)
 }

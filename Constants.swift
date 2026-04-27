@@ -1,0 +1,2 @@
+let STANDARD_HOLES = 18
+let MAX_PLAYERS    = 5

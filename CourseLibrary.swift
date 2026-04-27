@@ -93,8 +93,8 @@ struct CourseProfile: Codable, Equatable {
 // MARK: - Built-in raw data (pars / hcs / optional tees)
 // =======================================================
 private let WJ_ARBORETUM_ID = UUID(uuidString: "A1D4E7C2-8F61-4D4A-9B2C-1234567890A1")!
-private let EMPTY_PARS = Array(repeating: 4, count: 18)
-private let EMPTY_HCS = Array(1...18)
+private let EMPTY_PARS = Array(repeating: 4, count: STANDARD_HOLES)
+private let EMPTY_HCS = Array(1...STANDARD_HOLES)
 // MARK: WolfMore (Default)
 private let WOLFMORE_CC_ID = UUID(uuidString: "11111111-1111-1111-1111-111111111111")!
 let WOLFMORE_PARS: [Int] = [4,4,4,4,3,5,3,4,4,4,4,3,4,4,5,3,4,5]
