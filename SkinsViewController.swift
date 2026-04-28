@@ -110,18 +110,21 @@ final class SkinsViewController: UIViewController {
             if line.contains("SKINS") || line.contains("TOTALS") || line.contains("BY HOLE") {
                 attr = [
                     .font: sectionFont,
+                    .foregroundColor: UIColor.label,
                     .paragraphStyle: paragraph
                 ]
             }
             else if line.contains(":") {
                 attr = [
                     .font: boldFont,
+                    .foregroundColor: UIColor.label,
                     .paragraphStyle: paragraph
                 ]
             }
             else {
                 attr = [
                     .font: baseFont,
+                    .foregroundColor: UIColor.label,
                     .paragraphStyle: paragraph
                 ]
             }

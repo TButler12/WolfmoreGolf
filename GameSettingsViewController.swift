@@ -198,24 +198,24 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             var cfg = umbrellaButton.configuration ?? UIButton.Configuration.filled()
             cfg.title = title
             cfg.baseBackgroundColor = bg
-            cfg.baseForegroundColor = .black
+            cfg.baseForegroundColor = .label
 
             cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                 var outgoing = incoming
                 outgoing.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-                outgoing.foregroundColor = UIColor.black
+                outgoing.foregroundColor = UIColor.label
                 return outgoing
             }
 
             umbrellaButton.configuration = cfg
-            umbrellaButton.setTitleColor(.black, for: .normal)
-            umbrellaButton.setTitleColor(.black, for: .highlighted)
-            umbrellaButton.setTitleColor(.black, for: .selected)
-            umbrellaButton.setTitleColor(.black, for: .disabled)
+            umbrellaButton.setTitleColor(.label, for: .normal)
+            umbrellaButton.setTitleColor(.label, for: .highlighted)
+            umbrellaButton.setTitleColor(.label, for: .selected)
+            umbrellaButton.setTitleColor(.label, for: .disabled)
         } else {
             umbrellaButton.setTitle(title, for: .normal)
             umbrellaButton.backgroundColor = bg
-            umbrellaButton.setTitleColor(.black, for: .normal)
+            umbrellaButton.setTitleColor(.label, for: .normal)
             umbrellaButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
             umbrellaButton.alpha = 1.0
         }

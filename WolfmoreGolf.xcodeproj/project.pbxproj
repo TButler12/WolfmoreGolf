@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
 		F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1702F3691E6009EEB12 /* ServiceContact.swift */; };
 		F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1722F369228009EEB12 /* ServiceContactStore.swift */; };
 		F63960632F60D62500EC0C30 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960472F60D62500EC0C30 /* AppNotifications.swift */; };
@@ -70,10 +71,10 @@
 		F6E007F32F8017AC00763694 /* SkinsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F22F8017AC00763694 /* SkinsModel.swift */; };
 		F6E007F52F8017F300763694 /* SkinsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F42F8017F300763694 /* SkinsEngine.swift */; };
 		F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F62F80182400763694 /* SkinsViewController.swift */; };
-		F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */; };
-		F6E007FE2F80182400763694 /* ReviewPrompter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FF2F80182400763694 /* ReviewPrompter.swift */; };
 		F6E007F92F80D19B00763694 /* HoleStatsEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */; };
 		F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FA2F81913500763694 /* StatsContainerViewController.swift */; };
+		F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */; };
+		F6E007FE2F80182400763694 /* ReviewPrompter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FF2F80182400763694 /* ReviewPrompter.swift */; };
 		F6E008032F884A6500763694 /* SharedRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008022F884A6500763694 /* SharedRound.swift */; };
 		F6E008052F884A9D00763694 /* RemoteRoundCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */; };
 		F6E008072F89403800763694 /* SharedRoundBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008062F89403800763694 /* SharedRoundBuilder.swift */; };
@@ -87,10 +88,10 @@
 		F6E008232F8E62C600763694 /* RoundHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008222F8E62C600763694 /* RoundHistoryStore.swift */; };
 		F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */; };
 		F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */; };
-		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9402F93CD28E4C029E042DFC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
 		F63960472F60D62500EC0C30 /* AppNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotifications.swift; sourceTree = "<group>"; };
@@ -159,10 +160,10 @@
 		F6E007F22F8017AC00763694 /* SkinsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsModel.swift; sourceTree = "<group>"; };
 		F6E007F42F8017F300763694 /* SkinsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsEngine.swift; sourceTree = "<group>"; };
 		F6E007F62F80182400763694 /* SkinsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsViewController.swift; sourceTree = "<group>"; };
-		F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsSettingsViewController.swift; sourceTree = "<group>"; };
-		F6E007FF2F80182400763694 /* ReviewPrompter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPrompter.swift; sourceTree = "<group>"; };
 		F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsEntryViewController.swift; sourceTree = "<group>"; };
 		F6E007FA2F81913500763694 /* StatsContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsContainerViewController.swift; sourceTree = "<group>"; };
+		F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsSettingsViewController.swift; sourceTree = "<group>"; };
+		F6E007FF2F80182400763694 /* ReviewPrompter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPrompter.swift; sourceTree = "<group>"; };
 		F6E008022F884A6500763694 /* SharedRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRound.swift; sourceTree = "<group>"; };
 		F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteRoundCodec.swift; sourceTree = "<group>"; };
 		F6E008062F89403800763694 /* SharedRoundBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRoundBuilder.swift; sourceTree = "<group>"; };
@@ -177,7 +178,6 @@
 		F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchesViewController.swift; sourceTree = "<group>"; };
 		F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauSettingsViewController.swift; sourceTree = "<group>"; };
 		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
-		9402F93CD28E4C029E042DFC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -522,7 +522,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -537,7 +537,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.6;
+				MARKETING_VERSION = 2.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -563,7 +563,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 19;
+				CURRENT_PROJECT_VERSION = 20;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -578,7 +578,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.6;
+				MARKETING_VERSION = 2.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

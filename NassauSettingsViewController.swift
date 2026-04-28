@@ -73,7 +73,7 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
         var cfg = UIButton.Configuration.filled()
         cfg.title = "Remote Nassau"
         cfg.baseBackgroundColor = UIColor(red: 0.967, green: 0.941, blue: 0.690, alpha: 1)
-        cfg.baseForegroundColor = .black
+        cfg.baseForegroundColor = .label
         cfg.cornerStyle = .large
         cfg.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
         btn.configuration = cfg

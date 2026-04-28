@@ -244,10 +244,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshTotalMoneyLabels()
         
         // --- Toggle button styling (these may be hidden depending on mode) ---
-        setupToggleButton(rollPushed,     onColor: .black, offColor: .systemOrange, onTitle: "Roll",    offTitle: "Roll")
-        setupToggleButton(rerollPushed,   onColor: .black, offColor: .systemOrange, onTitle: "Re-Roll", offTitle: "Re-Roll")
-        setupToggleButton(alonePushed,    onColor: .black, offColor: .systemOrange, onTitle: "Double",   offTitle: "Alone")
-        setupToggleButton(pressedPushed2, onColor: .black, offColor: .systemOrange, onTitle: "Press On",   offTitle: "Press")
+        setupToggleButton(rollPushed,     onColor: .label, offColor: .systemOrange, onTitle: "Roll",    offTitle: "Roll")
+        setupToggleButton(rerollPushed,   onColor: .label, offColor: .systemOrange, onTitle: "Re-Roll", offTitle: "Re-Roll")
+        setupToggleButton(alonePushed,    onColor: .label, offColor: .systemOrange, onTitle: "Double",   offTitle: "Alone")
+        setupToggleButton(pressedPushed2, onColor: .label, offColor: .systemOrange, onTitle: "Press On",   offTitle: "Press")
         
         // --- Score fields ---
         for (i, f) in scoreFields.enumerated() {
@@ -679,13 +679,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func applyWolfStyle(_ button: UIButton, isOn: Bool) {
         if #available(iOS 15.0, *) {
             var c = button.configuration ?? .filled()
-            c.baseForegroundColor = .white
-            c.baseBackgroundColor = isOn ? .black : .systemGreen
+            c.baseForegroundColor = isOn ? .systemBackground : .white
+            c.baseBackgroundColor = isOn ? .label : .systemGreen
             c.cornerStyle = .large
             button.configuration = c
         } else {
-            button.setTitleColor(.white, for: .normal)
-            button.backgroundColor = isOn ? .black : .systemGreen
+            button.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
+            button.backgroundColor = isOn ? .label : .systemGreen
             button.layer.cornerRadius = 10
             button.layer.masksToBounds = true
         }
@@ -799,7 +799,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let on = (hole < g.aloneApplied.count) ? g.aloneApplied[hole] : false
         alonePushed.isSelected = on
-        alonePushed.backgroundColor = on ? .black : .systemOrange
+        alonePushed.backgroundColor = on ? .label : .systemOrange
+        alonePushed.setTitleColor(on ? .systemBackground : .white, for: .normal)
         alonePushed.setTitle(on ? "Alone On" : "Alone", for: .normal)
     }
     // Paint all 5 buttons from the saved model (multiple Wolves allowed)
@@ -821,8 +822,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     // Simple, reliable painting
     private func applyWolfStyleDirect(_ button: UIButton, isOn: Bool) {
-        button.backgroundColor = isOn ? .black : .systemGreen
-        button.setTitleColor(.white, for: .normal)
+        button.backgroundColor = isOn ? .label : .systemGreen
+        button.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
         button.layer.cornerRadius = 10
         button.layer.masksToBounds = true
         button.setNeedsLayout()
@@ -899,7 +900,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             b.tag = seat
             let isWolf = (wolfSeat == seat)
             b.isSelected = isWolf
-            b.backgroundColor = isWolf ? .black : .systemGreen
+            b.backgroundColor = isWolf ? .label : .systemGreen
+            b.setTitleColor(isWolf ? .systemBackground : .white, for: .normal)
         }
 
         // Prox
@@ -1232,10 +1234,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
         // Button look
         if sender.isSelected {
-            sender.backgroundColor = .black
+            sender.backgroundColor = .label
+            sender.setTitleColor(.systemBackground, for: .normal)
             sender.setTitle("Roll On", for: .normal)
         } else {
             sender.backgroundColor = .systemOrange
+            sender.setTitleColor(.white, for: .normal)
             sender.setTitle("Roll", for: .normal)
         }
 
@@ -1406,7 +1410,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBAction private func updateDollarsTapped(_ sender: UIButton) {
         // quick flash
         let oldColor = sender.backgroundColor
-        sender.backgroundColor = .black
+        sender.backgroundColor = .systemGray
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
             sender.backgroundColor = oldColor ?? .systemGreen
         }
@@ -1496,28 +1500,27 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             cfg.title = title
             cfg.baseBackgroundColor = bg
 
-            // ✅ force black text (prevents auto white)
-            cfg.baseForegroundColor = .black
+            cfg.baseForegroundColor = .label
 
             // ✅ slightly smaller font
             cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                 var outgoing = incoming
                 outgoing.font = UIFont.systemFont(ofSize: 13, weight: .semibold) // tweak
-                outgoing.foregroundColor = UIColor.black
+                outgoing.foregroundColor = UIColor.label
                 return outgoing
             }
 
             button.configuration = cfg
 
             // extra safety for state changes
-            button.setTitleColor(.black, for: .normal)
-            button.setTitleColor(.black, for: .highlighted)
-            button.setTitleColor(.black, for: .selected)
-            button.setTitleColor(.black, for: .disabled)
+            button.setTitleColor(.label, for: .normal)
+            button.setTitleColor(.label, for: .highlighted)
+            button.setTitleColor(.label, for: .selected)
+            button.setTitleColor(.label, for: .disabled)
         } else {
             button.setTitle(title, for: .normal)
             button.backgroundColor = bg
-            button.setTitleColor(.black, for: .normal)
+            button.setTitleColor(.label, for: .normal)
             button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
             button.alpha = 1.0
         }
@@ -1571,12 +1574,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
-        // Button visuals: orange (off) ↔︎ brown (on)
+        // Button visuals: orange (off) ↔︎ label (on)
         if sender.isSelected {
-            sender.backgroundColor = .black
+            sender.backgroundColor = .label
+            sender.setTitleColor(.systemBackground, for: .normal)
             sender.setTitle("Alone On", for: .normal)
         } else {
             sender.backgroundColor = .systemOrange
+            sender.setTitleColor(.white, for: .normal)
             sender.setTitle("Alone", for: .normal)
         }
 
@@ -1676,7 +1681,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         case 2:  return .init(color: .systemOrange, title: "HAMMER (4x)")
         case 3:  return .init(color: .systemRed, title: "HAMMER (8x)")
         case 4:  return .init(color: .systemPurple, title: "HAMMER (16x)")
-        default: return .init(color: .black, title: "HAMMER (\(hammerMultiplier(for: count))x)")
+        default: return .init(color: .systemGray, title: "HAMMER (\(hammerMultiplier(for: count))x)")
         }
     }
     
@@ -1689,28 +1694,27 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             cfg.title = style.title
             cfg.baseBackgroundColor = style.color
 
-            // ✅ Force BLACK text (prevents iOS from flipping to white)
-            cfg.baseForegroundColor = .black
+            cfg.baseForegroundColor = .label
 
             // ✅ Slightly smaller font
             cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                 var outgoing = incoming
                 outgoing.font = UIFont.systemFont(ofSize: 13, weight: .semibold) // tweak 12–14
-                outgoing.foregroundColor = UIColor.black
+                outgoing.foregroundColor = UIColor.label
                 return outgoing
             }
 
             button.configuration = cfg
 
             // Extra safety for highlighted/selected states
-            button.setTitleColor(.black, for: .normal)
-            button.setTitleColor(.black, for: .highlighted)
-            button.setTitleColor(.black, for: .selected)
-            button.setTitleColor(.black, for: .disabled)
+            button.setTitleColor(.label, for: .normal)
+            button.setTitleColor(.label, for: .highlighted)
+            button.setTitleColor(.label, for: .selected)
+            button.setTitleColor(.label, for: .disabled)
         } else {
             button.backgroundColor = style.color
             button.setTitle(style.title, for: .normal)
-            button.setTitleColor(.black, for: .normal)
+            button.setTitleColor(.label, for: .normal)
             button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
             button.layer.cornerRadius = 8
             button.clipsToBounds = true
@@ -2399,7 +2403,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     enabled: rollOn,
                     onTitle: "Re-Roll On",
                     offTitle: "Re-Roll",
-                    onColor: .black,
+                    onColor: .label,
                     offColor: .systemOrange)
     }
     private func styleButton(_ b: UIButton,
@@ -2412,16 +2416,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         if var cfg = b.configuration {
             cfg.baseBackgroundColor = isOn ? onColor : offColor
-            cfg.baseForegroundColor = .white
-            cfg.title = isOn ? onTitle : offTitle          // ✅ use title (or use attributedTitle as shown above)
+            cfg.baseForegroundColor = isOn ? .systemBackground : .white
+            cfg.title = isOn ? onTitle : offTitle
             b.configuration = cfg
         } else {
             b.backgroundColor = isOn ? onColor : offColor
             b.setTitle(isOn ? onTitle : offTitle, for: .normal)
             b.setTitleColor(.white, for: .normal)
-            b.setTitleColor(.white, for: .selected)
+            b.setTitleColor(.systemBackground, for: .selected)
         }
-        b.tintColor = .white
+        b.tintColor = isOn ? .systemBackground : .white
     }
 
     // MARK: - POPS (handicap strokes per hole)
@@ -2546,7 +2550,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         b.setTitle(onTitle,  for: .selected)
         b.setTitle(offTitle, for: .normal)
         b.setTitleColor(.white, for: .normal)
-        b.setTitleColor(.white, for: .selected)
+        b.setTitleColor(.systemBackground, for: .selected)
         b.layer.cornerRadius = 10
         b.clipsToBounds = true
     }
@@ -2561,8 +2565,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let seat = order[safe: slot] ?? slot
             b.tag = seat
             let isOn = (winner == seat)
-            b.backgroundColor = isOn ? .black : .systemGreen
-            b.setTitleColor(.white, for: .normal)
+            b.backgroundColor = isOn ? .label : .systemGreen
+            b.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
             b.layer.cornerRadius = 10
             b.layer.masksToBounds = true
         }

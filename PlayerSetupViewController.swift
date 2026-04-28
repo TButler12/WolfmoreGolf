@@ -115,7 +115,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
         let resetBtn = makeFilledButton(
             title: "Reset for New Game",
-            bg: UIColor(white: 0.18, alpha: 1),
+            bg: .systemGray,
             fg: .white)
         resetBtn.addTarget(self, action: #selector(resetGameTapped(_:)), for: .touchUpInside)
 

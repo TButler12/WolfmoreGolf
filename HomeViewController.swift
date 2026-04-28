@@ -679,7 +679,7 @@ final class ViewController: UIViewController {
         var config = UIButton.Configuration.filled()
 
         config.baseBackgroundColor = .systemYellow
-        config.baseForegroundColor = .black
+        config.baseForegroundColor = .label
         config.cornerStyle = .capsule
         config.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 16, bottom: 10, trailing: 16)
 
@@ -777,7 +777,7 @@ final class ViewController: UIViewController {
 
         case .secondaryChevron:
             config.baseBackgroundColor = wolfGold
-            config.baseForegroundColor = .black
+            config.baseForegroundColor = .label
             config.contentInsets = NSDirectionalEdgeInsets(top: 14, leading: 18, bottom: 14, trailing: 28)
             setTitle(title, size: 16, weight: .semibold)
             config.image = UIImage(systemName: "chevron.down")
