@@ -82,7 +82,9 @@ final class StatsContainerViewController: UIViewController {
         case 1:
             nassauVC.presentSettingsFromContainer()
         case 2:
-            skinsVC.presentSettingsFromContainer()
+            let vc = SkinsSettingsViewController()
+            vc.gameData = GameManager.shared.currentGame
+            navigationController?.pushViewController(vc, animated: true)
         default:
             break
         }

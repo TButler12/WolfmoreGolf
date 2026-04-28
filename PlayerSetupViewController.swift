@@ -362,9 +362,19 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func openSkinsSettings() {
-        let vc = SkinsViewController()
-        let nav = UINavigationController(rootViewController: vc)
-        present(nav, animated: true)
+        guard GameManager.shared.currentGame != nil else { return }
+
+        GameManager.shared.update { g in
+            if g.skinsState == nil {
+                g.skinsState = SkinsEngine.makeDefaultState()
+            }
+        }
+
+        guard let updatedGame = GameManager.shared.currentGame else { return }
+
+        let vc = SkinsSettingsViewController()
+        vc.gameData = updatedGame
+        navigationController?.pushViewController(vc, animated: true)
     }
     @objc private func baseStakeChanged() {
         guard let g = GameManager.shared.currentGame else { return }

@@ -57,6 +57,14 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
         view.addGestureRecognizer(tap)
 
         installRemoteNassauButton()
+        applySaveButtonStyle()
+    }
+
+    private func applySaveButtonStyle() {
+        if let btn = view.subviews.compactMap({ $0 as? UIButton })
+            .first(where: { $0.configuration?.title == "Save" }) {
+            btn.configuration = wmStyledButton(title: "Save", style: .primary)
+        }
     }
 
     private func installRemoteNassauButton() {

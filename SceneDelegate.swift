@@ -22,7 +22,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         // If you're using storyboards, keep this guard and you're done
-        guard let _ = (scene as? UIWindowScene) else { return }
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            ReviewPrompter.maybeRequest(in: windowScene)
+        }
 
         // If you create the window manually, do it here instead of the guard:
         // let windowScene = scene as! UIWindowScene

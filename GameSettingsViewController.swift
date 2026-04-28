@@ -48,6 +48,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         refreshCourseLabel()
         refreshUmbrellaButtonUI()
         installWolfScoringSegment()
+        saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
     }
 
     // MARK: - Wolf Scoring segment

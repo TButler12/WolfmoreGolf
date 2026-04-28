@@ -8,6 +8,7 @@
 
 import UIKit
 import MessageUI
+import StoreKit
 
 final class GameStatsViewController: UIViewController, MFMessageComposeViewControllerDelegate {
 
@@ -192,6 +193,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             guard let self else { return }
 
             self.recordMeAndTrackedFriendsFromCurrentGame()
+            self.maybeRequestReview()
 
             self.hasSavedThisOpen = true
             UINotificationFeedbackGenerator().notificationOccurred(.success)
@@ -324,6 +326,12 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
                 gameID: sharedGameID,
                 date: sharedDate
             )
+        }
+    }
+
+    private func maybeRequestReview() {
+        if let scene = view.window?.windowScene {
+            ReviewPrompter.maybeRequest(in: scene)
         }
     }
 

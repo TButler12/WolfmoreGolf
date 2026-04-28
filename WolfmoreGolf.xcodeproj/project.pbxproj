@@ -70,6 +70,8 @@
 		F6E007F32F8017AC00763694 /* SkinsModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F22F8017AC00763694 /* SkinsModel.swift */; };
 		F6E007F52F8017F300763694 /* SkinsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F42F8017F300763694 /* SkinsEngine.swift */; };
 		F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F62F80182400763694 /* SkinsViewController.swift */; };
+		F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */; };
+		F6E007FE2F80182400763694 /* ReviewPrompter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FF2F80182400763694 /* ReviewPrompter.swift */; };
 		F6E007F92F80D19B00763694 /* HoleStatsEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */; };
 		F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FA2F81913500763694 /* StatsContainerViewController.swift */; };
 		F6E008032F884A6500763694 /* SharedRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008022F884A6500763694 /* SharedRound.swift */; };
@@ -157,6 +159,8 @@
 		F6E007F22F8017AC00763694 /* SkinsModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsModel.swift; sourceTree = "<group>"; };
 		F6E007F42F8017F300763694 /* SkinsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsEngine.swift; sourceTree = "<group>"; };
 		F6E007F62F80182400763694 /* SkinsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsViewController.swift; sourceTree = "<group>"; };
+		F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsSettingsViewController.swift; sourceTree = "<group>"; };
+		F6E007FF2F80182400763694 /* ReviewPrompter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPrompter.swift; sourceTree = "<group>"; };
 		F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsEntryViewController.swift; sourceTree = "<group>"; };
 		F6E007FA2F81913500763694 /* StatsContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsContainerViewController.swift; sourceTree = "<group>"; };
 		F6E008022F884A6500763694 /* SharedRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRound.swift; sourceTree = "<group>"; };
@@ -214,6 +218,8 @@
 				F6E007FA2F81913500763694 /* StatsContainerViewController.swift */,
 				F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */,
 				F6E007F62F80182400763694 /* SkinsViewController.swift */,
+				F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */,
+				F6E007FF2F80182400763694 /* ReviewPrompter.swift */,
 				F6E007F42F8017F300763694 /* SkinsEngine.swift */,
 				F6E007F22F8017AC00763694 /* SkinsModel.swift */,
 				F6750CFF2F785E24001828D2 /* GameSettingsViewController.swift */,
@@ -475,6 +481,8 @@
 				F6D5417A2F7498150020588F /* TextGroup.swift in Sources */,
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
 				F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */,
+				F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */,
+				F6E007FE2F80182400763694 /* ReviewPrompter.swift in Sources */,
 				F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,
 				F681886C2F62898D004162EE /* PlayerSetupViewController.swift in Sources */,
