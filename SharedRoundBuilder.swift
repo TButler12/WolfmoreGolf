@@ -8,6 +8,19 @@ import Foundation
 
 enum SharedRoundBuilder {
 
+    private static func resolvedCourseName(from g: GameData) -> String {
+        let pars = Array(g.course.pars.prefix(STANDARD_HOLES))
+        let hcs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
+        if let match = CourseLibrary.shared.courses.first(where: {
+            Array($0.pars.prefix(STANDARD_HOLES)) == pars &&
+            Array($0.hcs.prefix(STANDARD_HOLES)) == hcs
+        }) {
+            return match.name
+        }
+        let stored = g.course.name
+        return (stored.isEmpty || stored == "WolfMore") ? "Custom Course" : stored
+    }
+
     static func make(from g: GameData, playerIndex: Int) -> SharedRound {
         let scores: [Int?] = (0..<STANDARD_HOLES).map { hole in
             guard playerIndex < g.scores.count,
@@ -35,7 +48,7 @@ enum SharedRoundBuilder {
 
         return SharedRound(
             playerName: playerIndex < g.playerNames.count ? g.playerNames[playerIndex] : "Player",
-            courseName: g.course.name,
+            courseName: resolvedCourseName(from: g),
             pars: Array(g.course.pars.prefix(STANDARD_HOLES)),
             hcs: Array(g.course.holeHandicaps.prefix(STANDARD_HOLES)),
             scores: scores as! [Int],

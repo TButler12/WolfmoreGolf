@@ -12,7 +12,9 @@ final class RemoteMatchStore {
     private let key = "remote_matches_v1"
     private(set) var matches: [RemoteMatch] = []
 
-    private init() {}
+    private init() {
+        load()
+    }
 
     func load() {
         guard

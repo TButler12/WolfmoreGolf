@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F60E62802F610B2A0062F321 /* ProGateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F60E627F2F610B2A0062F321 /* ProGateViewController.swift */; };
 		F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1702F3691E6009EEB12 /* ServiceContact.swift */; };
 		F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1722F369228009EEB12 /* ServiceContactStore.swift */; };
 		F63960632F60D62500EC0C30 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960472F60D62500EC0C30 /* AppNotifications.swift */; };
@@ -62,8 +61,6 @@
 		F6D5417D2F749C1E0020588F /* CustomGroupsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960862F60D62500EC0C30 /* CustomGroupsViewController.swift */; };
 		F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66A7E2F26971300367C08 /* Entitlements.swift */; };
 		F6D66A812F26994400367C08 /* Notifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66A802F26994400367C08 /* Notifications.swift */; };
-		F6D66A832F2BCD4900367C08 /* ProViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66A822F2BCD4900367C08 /* ProViewController.swift */; };
-		F6D66AC32F327A2B00367C08 /* ProStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66AC22F327A2B00367C08 /* ProStore.swift */; };
 		F6D66AC62F327AC500367C08 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = F6D66AC52F327AC400367C08 /* StoreKit.framework */; };
 		F6D66AD12F356B7E00367C08 /* TextViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D66AD02F356B7D00367C08 /* TextViewController.swift */; };
 		F6D6A49A2EC786BC0000F576 /* Friend.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D6A4992EC786BC0000F576 /* Friend.swift */; };
@@ -92,7 +89,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		F60E627F2F610B2A0062F321 /* ProGateViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProGateViewController.swift; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
 		F63960472F60D62500EC0C30 /* AppNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppNotifications.swift; sourceTree = "<group>"; };
@@ -152,8 +148,6 @@
 		F6D5417B2F7498740020588F /* TextGroupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextGroupStore.swift; sourceTree = "<group>"; };
 		F6D66A7E2F26971300367C08 /* Entitlements.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Entitlements.swift; sourceTree = "<group>"; };
 		F6D66A802F26994400367C08 /* Notifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notifications.swift; sourceTree = "<group>"; };
-		F6D66A822F2BCD4900367C08 /* ProViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProViewController.swift; sourceTree = "<group>"; };
-		F6D66AC22F327A2B00367C08 /* ProStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProStore.swift; sourceTree = "<group>"; };
 		F6D66AC52F327AC400367C08 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
 		F6D66AD02F356B7D00367C08 /* TextViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextViewController.swift; sourceTree = "<group>"; };
 		F6D6A4992EC786BC0000F576 /* Friend.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Friend.swift; sourceTree = "<group>"; };
@@ -230,15 +224,12 @@
 				F6D541692F646D880020588F /* NassauModel.swift */,
 				F6D041822F611C3200CABD08 /* Main.storyboard */,
 				F6D541672F63B3C40020588F /* NassauViewController.swift */,
-				F60E627F2F610B2A0062F321 /* ProGateViewController.swift */,
 				F688C7802F3906C400A4B094 /* SummaryFormatter.swift */,
 				F66006BB2F60C56F00148767 /* AppDelegate.swift */,
 				F688C7402F37F9E800A4B094 /* ContactsViewController.swift */,
 				F618A1722F369228009EEB12 /* ServiceContactStore.swift */,
 				F618A1702F3691E6009EEB12 /* ServiceContact.swift */,
 				F6D66AD02F356B7D00367C08 /* TextViewController.swift */,
-				F6D66AC22F327A2B00367C08 /* ProStore.swift */,
-				F6D66A822F2BCD4900367C08 /* ProViewController.swift */,
 				F6D66A802F26994400367C08 /* Notifications.swift */,
 				F6D66A7E2F26971300367C08 /* Entitlements.swift */,
 				F66006BF2F60C56F00148767 /* ButtonStyles.swift */,
@@ -418,7 +409,6 @@
 				F688C7412F37F9E800A4B094 /* ContactsViewController.swift in Sources */,
 				F63D08052EDFA66800F165CA /* CourseSummaryViewController.swift in Sources */,
 				F6D541682F63B3C40020588F /* NassauViewController.swift in Sources */,
-				F6D66AC32F327A2B00367C08 /* ProStore.swift in Sources */,
 				F6D66A812F26994400367C08 /* Notifications.swift in Sources */,
 				F6E008072F89403800763694 /* SharedRoundBuilder.swift in Sources */,
 				F6D66AD12F356B7E00367C08 /* TextViewController.swift in Sources */,
@@ -433,7 +423,6 @@
 				F63D07142ED922D400F165CA /* ManagePlayerCell.swift in Sources */,
 				F6D6A49E2EC786FF0000F576 /* FriendTrackStore.swift in Sources */,
 				F6E008172F8D273200763694 /* RemoteMatchInvite.swift in Sources */,
-				F6D66A832F2BCD4900367C08 /* ProViewController.swift in Sources */,
 				F6D66A7F2F26971300367C08 /* Entitlements.swift in Sources */,
 				F6D6A49C2EC786D10000F576 /* FriendStore.swift in Sources */,
 				F64CDA962ECD0AA900019EE0 /* HoleStatsViewController.swift in Sources */,
@@ -484,7 +473,6 @@
 				F6E008092F89408500763694 /* RemoteNassauScorer.swift in Sources */,
 				F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */,
 				F6D5417A2F7498150020588F /* TextGroup.swift in Sources */,
-				F60E62802F610B2A0062F321 /* ProGateViewController.swift in Sources */,
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
 				F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */,
 				F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */,

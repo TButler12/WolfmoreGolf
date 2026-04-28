@@ -6,8 +6,9 @@
 //
 
 import UIKit
+import MessageUI
 
-final class RemoteNassauViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+final class RemoteNassauViewController: UIViewController, UITableViewDataSource, UITableViewDelegate, MFMessageComposeViewControllerDelegate {
 
     var myRound: SharedRound!
     var opponentRound: SharedRound!
@@ -40,6 +41,13 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
 
         setupUI()
         populateUI()
+
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Send to \(opponentRound.playerName)",
+            style: .plain,
+            target: self,
+            action: #selector(sendResultsTapped)
+        )
     }
 
     private func setupUI() {
@@ -268,5 +276,81 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
         print("ProfileStore.name =", ProfileStore.name ?? "nil")
         print("Round players =", g.playerNames)
         print("Resolved myPlayerIndex =", myPlayerIndex(in: g) as Any)
+    }
+
+    // MARK: - Send Results
+
+    @objc private func sendResultsTapped() {
+        let message = buildResultsSummary()
+
+        if MFMessageComposeViewController.canSendText() {
+            let composer = MFMessageComposeViewController()
+            composer.messageComposeDelegate = self
+            composer.body = message
+            present(composer, animated: true)
+        } else {
+            UIPasteboard.general.string = message
+            let ac = UIAlertController(
+                title: "Results Copied",
+                message: "Messages isn't available on this device. The results summary was copied to the clipboard.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+        }
+    }
+
+    private func buildResultsSummary() -> String {
+        let holes = displayedHoles
+        let front = Array(holes.prefix(9))
+        let back  = Array(holes.suffix(9))
+
+        let frontScore   = scoreSlice(front)
+        let backScore    = scoreSlice(back)
+        let overallScore = scoreSlice(holes)
+        let totalOutcome = frontScore + backScore + overallScore
+        let dollars      = totalOutcome * result.stakePerBet
+
+        let me   = myRound.playerName
+        let them = opponentRound.playerName
+
+        func segmentLine(_ label: String, _ score: Int) -> String {
+            if score > 0 { return "\(label): \(me) wins" }
+            if score < 0 { return "\(label): \(them) wins" }
+            return "\(label): Tied"
+        }
+
+        let moneyLine: String
+        if dollars > 0 {
+            moneyLine = "\(them) owes \(me): $\(dollars)"
+        } else if dollars < 0 {
+            moneyLine = "\(me) owes \(them): $\(abs(dollars))"
+        } else {
+            moneyLine = "All square — no money owed"
+        }
+
+        let modeLabel: String
+        switch compareMode {
+        case .holeByHole:    modeLabel = "Hole by Hole"
+        case .frontBackByHC: modeLabel = "Front/Back 9 by HC"
+        case .all18ByHC:     modeLabel = "18 Holes by HC"
+        }
+
+        return """
+        WolfMore Nassau Results
+        \(me) vs \(them)
+        Mode: \(modeLabel)
+        \(me) @ \(myRound.courseName)
+        \(them) @ \(opponentRound.courseName)
+        \(segmentLine("Front", frontScore))
+        \(segmentLine("Back", backScore))
+        \(segmentLine("Overall", overallScore))
+        \(moneyLine)
+        """
+    }
+
+    func messageComposeViewController(_ controller: MFMessageComposeViewController,
+                                      didFinishWith result: MessageComposeResult) {
+        controller.dismiss(animated: true)
     }
 }

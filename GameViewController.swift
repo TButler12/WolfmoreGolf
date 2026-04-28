@@ -141,7 +141,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var proxButtons: [UIButton] { [p0, p1, p2, p3, p4] }
 
     private var currentHole: Int = 0
-   
+
+    // Programmatic header labels replacing the fixed "Hole / Par" storyboard labels
+    private weak var holeInfoLabel: UILabel?
+    private weak var courseHeaderLabel: UILabel?
+
     var hole = (0)
  
     var playersFallback: [Player]?
@@ -178,8 +182,35 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         present(nav, animated: true)
     }
     @IBOutlet private weak var gameModeSegment: UISegmentedControl!
-    @IBOutlet weak var nassauButton: UIButton!
-    
+    @IBOutlet weak var nassauButton: UIButton?
+
+    // MARK: - Player Sort
+    private var isSortedByDollarGame = false
+    private weak var sortButton: UIButton?
+    private var sortButtonInstalled = false
+
+    private var displayOrder: [Int] {
+        let all = Array(0..<MAX_PLAYERS)
+        guard isSortedByDollarGame,
+              let g = GameManager.shared.currentGame else { return all }
+        let active = all.filter { i in
+            (g.playerActivated[safe: i] ?? false) &&
+            !(g.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        let inactive = all.filter { !active.contains($0) }
+        let current = max(0, min(17, g.hole))
+        let start   = max(0, min(17, g.startHole ?? current))
+        let holes: [Int] = start <= current
+            ? Array(start...current)
+            : Array(start..<STANDARD_HOLES) + Array(0...current)
+        let sorted = active.sorted { a, b in
+            let ta = holes.reduce(0.0) { acc, h in acc + (g.playerMoney[safe: a]?[safe: h] ?? 0) }
+            let tb = holes.reduce(0.0) { acc, h in acc + (g.playerMoney[safe: b]?[safe: h] ?? 0) }
+            return ta < tb
+        }
+        return sorted + inactive
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -263,10 +294,153 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         navigationItem.backButtonTitle = "Players"
         holeStatsSwitch.isOn = !AppSettings.holeStatsPromptMuted
         holeStatsSwitch.addTarget(self, action: #selector(holeStatsSwitchChanged), for: .valueChanged)
+
+        // S column replaced by inline stroke indicators on name labels
+        playerStrokesFields.forEach { $0.isHidden = true }
+
+        // Elements moved to Stats/Settings screen
+        gameModeSegment.isHidden = true
+
+        NotificationCenter.default.addObserver(self, selector: #selector(handleReloadUI), name: .reloadUI, object: nil)
     }
+
+    @objc private func handleReloadUI() {
+        applyGameTypeUI()
+        paintEverythingForCurrentHole()
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        // Sync local currentHole from the model every time the screen appears
+        // so returning to an active game always shows the correct hole.
+        if let g = GameManager.shared.currentGame {
+            currentHole = g.hole
+        }
+        refreshForCurrentHole()
+        paintEverythingForCurrentHole()
+        refreshTotalMoneyLabels()
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         showGameOnboardingIfNeeded()
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        installSortButtonIfNeeded()
+        installHoleInfoHeaderIfNeeded()
+    }
+
+    // MARK: - Combined hole/par/HC header
+
+    private var holeInfoHeaderInstalled = false
+
+    private func installHoleInfoHeaderIfNeeded() {
+        guard !holeInfoHeaderInstalled else { return }
+        holeInfoHeaderInstalled = true
+
+        // Hide the storyboard number labels; the static "Hole" / "Par" text
+        // labels are already hidden via storyboard hidden="YES"
+        holePlaying.isHidden = true
+        parOfHole.isHidden = true
+
+        let infoLabel = UILabel()
+        infoLabel.textAlignment = .center
+        infoLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        infoLabel.adjustsFontSizeToFitWidth = true
+        infoLabel.minimumScaleFactor = 0.6
+        infoLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let courseLabel = UILabel()
+        courseLabel.textAlignment = .center
+        courseLabel.font = UIFont.systemFont(ofSize: 11, weight: .regular)
+        courseLabel.textColor = .secondaryLabel
+        courseLabel.adjustsFontSizeToFitWidth = true
+        courseLabel.minimumScaleFactor = 0.7
+        courseLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        view.addSubview(infoLabel)
+        view.addSubview(courseLabel)
+
+        NSLayoutConstraint.activate([
+            infoLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            infoLabel.centerYAnchor.constraint(equalTo: holePlaying.centerYAnchor),
+            infoLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 108),
+            infoLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -108),
+
+            courseLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            courseLabel.topAnchor.constraint(equalTo: infoLabel.bottomAnchor, constant: 3),
+            courseLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 108),
+            courseLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -108),
+        ])
+
+        holeInfoLabel = infoLabel
+        courseHeaderLabel = courseLabel
+
+        refreshHoleInfoHeader()
+    }
+
+    private func refreshHoleInfoHeader() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let h = max(0, min(17, g.hole))
+        let par = g.courseParToPass[safe: h] ?? 4
+        let rawSI = g.course.holeHandicaps[safe: h] ?? (h + 1)
+        let si = max(1, min(STANDARD_HOLES, rawSI == 0 ? (h + 1) : rawSI))
+
+        holeInfoLabel?.text = "Hole \(h + 1)  ·  Par \(par)  ·  HC \(si)"
+
+        let courseName: String
+        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
+        if let match = CourseLibrary.shared.courses.first(where: {
+            Array($0.pars.prefix(STANDARD_HOLES)) == currentPars &&
+            Array($0.hcs.prefix(STANDARD_HOLES)) == currentHCs
+        }) {
+            courseName = match.name
+        } else {
+            courseName = "Custom Course"
+        }
+        courseHeaderLabel?.text = courseName
+    }
+
+    private func installSortButtonIfNeeded() {
+        guard !sortButtonInstalled,
+              let firstLabel = playerNameLabels.sorted(by: { $0.tag < $1.tag }).first,
+              let superview = firstLabel.superview else { return }
+        sortButtonInstalled = true
+
+        let btn = UIButton(type: .custom)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        btn.setTitleColor(.label, for: .normal)
+        btn.backgroundColor = UIColor.systemGray6
+        btn.layer.cornerRadius = 12
+        btn.layer.borderWidth = 1
+        btn.layer.borderColor = UIColor.systemGray3.cgColor
+        btn.layer.masksToBounds = true
+        btn.contentEdgeInsets = UIEdgeInsets(top: 5, left: 12, bottom: 5, right: 12)
+        btn.addTarget(self, action: #selector(sortButtonTapped), for: .touchUpInside)
+        superview.addSubview(btn)
+
+        NSLayoutConstraint.activate([
+            btn.centerYAnchor.constraint(equalTo: firstLabel.topAnchor, constant: -19),
+            btn.leadingAnchor.constraint(equalTo: firstLabel.leadingAnchor),
+            btn.heightAnchor.constraint(equalToConstant: 28)
+        ])
+
+        sortButton = btn
+        updateSortButtonTitle()
+    }
+
+    @objc private func sortButtonTapped() {
+        isSortedByDollarGame.toggle()
+        updateSortButtonTitle()
+        paintEverythingForCurrentHole()
+        refreshTotalMoneyLabels()
+    }
+
+    private func updateSortButtonTitle() {
+        sortButton?.setTitle(isSortedByDollarGame ? "Sort: $ Game ▲" : "Sort: Order", for: .normal)
     }
 
     deinit {
@@ -449,9 +623,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             holesToSum.reduce(0.0) { $0 + row[$1] }
         }
         
+        let order = displayOrder
         let seatsToPaint = min(totalMoneyLabels.count, totals.count)
         for i in 0..<seatsToPaint {
-            setTotalMoneyLabel(totalMoneyLabels[i], totals[i])
+            let seat = order[safe: i] ?? i
+            setTotalMoneyLabel(totalMoneyLabels[i], seat < totals.count ? totals[seat] : 0)
         }
     }
 
@@ -473,14 +649,22 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         return nf
     }()
 
+    private func moneyBgColor(for value: Double) -> UIColor {
+        if value > 0 { return UIColor.systemYellow.withAlphaComponent(0.18) }
+        if value < 0 { return UIColor.systemRed.withAlphaComponent(0.10) }
+        return .clear
+    }
+
     private func setTotalMoneyLabel(_ label: UILabel, _ value: Double) {
-        // Round to nearest whole dollar
         let rounded = value.rounded(.toNearestOrAwayFromZero)
         let isNegative = rounded < 0
         let display = abs(rounded)
 
         label.text = integer0.string(from: NSNumber(value: display)) ?? String(format: "%.0f", display)
         label.textColor = isNegative ? .systemRed : .label
+        label.backgroundColor = moneyBgColor(for: rounded)
+        label.layer.cornerRadius = 4
+        label.clipsToBounds = true
     }
 
     @inline(__always)
@@ -569,14 +753,44 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func refreshPlayerNameLabels() {
         guard let g = GameManager.shared.currentGame else { return }
+        let order = displayOrder
+        let hole  = max(0, min(17, g.hole))
+
+        let rawSI = g.course.holeHandicaps[safe: hole] ?? STANDARD_HOLES
+        let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
+        let capacity = min(g.playerNames.count, g.hcPlayers.count, g.playerActivated.count)
+        let activeSeats = (0..<capacity).filter {
+            g.playerActivated[$0] &&
+            !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        let baseHC = activeSeats.map { g.hcPlayers[$0] }.min() ?? 0
+
         for (i, label) in playerNameLabels.sorted(by: { $0.tag < $1.tag }).enumerated() {
-            let name = (i < g.playerNames.count) ? g.playerNames[i] : ""
-            label.text = name
-            // Nice-to-haves for small phones:
-            label.adjustsFontSizeToFitWidth = true
-            label.minimumScaleFactor = 0.7
-            label.lineBreakMode = .byTruncatingTail
+            let seat = order[safe: i] ?? i
+            let name = (seat < g.playerNames.count) ? g.playerNames[seat] : ""
+
+            var displayText = name
+            let isActive = activeSeats.isEmpty
+                ? !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                : (seat < g.playerActivated.count && g.playerActivated[seat] &&
+                   !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            var hasStroke = false
+            if isActive {
+                let delta = max(0, (seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0) - baseHC)
+                let p = pops(for: delta, strokeIndex: si)
+                if p > 0 {
+                    displayText += " •\(p)"
+                    hasStroke = true
+                }
+            }
+
+            label.text = displayText
+            label.lineBreakMode = .byTruncatingMiddle
             label.numberOfLines = 1
+            label.font = hasStroke
+                ? UIFont.boldSystemFont(ofSize: label.font.pointSize)
+                : UIFont.systemFont(ofSize: label.font.pointSize, weight: .regular)
+            label.textColor = hasStroke ? .systemGreen : .label
         }
     }
 
@@ -592,14 +806,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func refreshWolfButtons() {
         guard let g = GameManager.shared.currentGame else { return }
         let hole = max(0, min(17, g.hole))
+        let order = displayOrder
 
-        for b in wolfButtons {
-            let i = b.tag
-            guard (0..<MAX_PLAYERS).contains(i),
+        for (slot, b) in wolfButtons.enumerated() {
+            let seat = order[safe: slot] ?? slot
+            b.tag = seat
+            guard (0..<MAX_PLAYERS).contains(seat),
                   g.wolfButtonStatus.count == MAX_PLAYERS,
-                  g.wolfButtonStatus[i].count == STANDARD_HOLES else { continue }
-
-            let isOn = g.wolfButtonStatus[i][hole]
+                  g.wolfButtonStatus[seat].count == STANDARD_HOLES else { continue }
+            let isOn = g.wolfButtonStatus[seat][hole]
             applyWolfStyleDirect(b, isOn: isOn)
         }
     }
@@ -655,44 +870,57 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let h = max(0, min(17, g.hole))
 
         // Money fields
-        for (seat, tf) in playerMoneyFields.enumerated() {
+        let order = displayOrder
+        for (slot, tf) in playerMoneyFields.enumerated() {
+            let seat = order[safe: slot] ?? slot
             let amt = g.moneyFor(hole: h, player: seat)
             tf.text = amt == 0 ? "" : String(format: "%.2f", amt)
-            tf.isEnabled = (g.playerActivated[safe: seat] ?? true)
-            tf.alpha = tf.isEnabled ? 1.0 : 0.4
+            tf.backgroundColor = amt == 0 ? .clear : moneyBgColor(for: amt)
+            let isActive = g.playerActivated[safe: seat] ?? true
+            tf.isEnabled = isActive
+            tf.alpha = isActive ? 1.0 : 0.4
+            tf.tag = seat
         }
 
         paintReRoll(g, hole: h)
         paintBetButtons(g, hole: h)
 
-        // Header
+        // Header (hidden storyboard labels kept in sync; new combined label updated below)
         holePlaying.text = "\(h + 1)"
         parOfHole.text   = "\(g.courseParToPass[safe: h] ?? 4)"
+        refreshHoleInfoHeader()
 
         // ❌ DO NOT set gameDollarsField from base dollars here
 
         // Wolf
         let wolfSeat = g.wolfIndexPerHole[safe: h] ?? nil
-        for (i, b) in wolfButtons.enumerated() {
-            let isWolf = (wolfSeat == i)
+        for (slot, b) in wolfButtons.enumerated() {
+            let seat = order[safe: slot] ?? slot
+            b.tag = seat
+            let isWolf = (wolfSeat == seat)
             b.isSelected = isWolf
             b.backgroundColor = isWolf ? .black : .systemGreen
         }
 
         // Prox
         let proxSeat = g.proxWinnerPerHole[safe: h] ?? nil
-        for (i, b) in proxButtons.enumerated() {
-            let on = (proxSeat == i)
+        for (slot, b) in proxButtons.enumerated() {
+            let seat = order[safe: slot] ?? slot
+            b.tag = seat
+            let on = (proxSeat == seat)
             b.isSelected = on
             b.backgroundColor = on ? .systemGreen : .systemGray
         }
 
         // Scores
-        let holeScores = g.scoresByHole[safe: h] ?? []
-        for (i, tf) in scoreFields.enumerated() {
-            tf.text = (holeScores[safe: i] ?? nil).map(String.init) ?? ""
-            tf.isEnabled = (g.playerActivated[safe: i] ?? true)
-            tf.alpha = tf.isEnabled ? 1.0 : 0.4
+        for (slot, tf) in scoreFields.enumerated() {
+            let seat = order[safe: slot] ?? slot
+            let v = g.scores[safe: seat]?[safe: h] ?? nil
+            tf.text = v.map(String.init) ?? ""
+            let isActive = g.playerActivated[safe: seat] ?? true
+            tf.isEnabled = isActive
+            tf.alpha = isActive ? 1.0 : 0.4
+            tf.tag = seat
         }
 
         paintHolePops(blankZeros: false)
@@ -701,47 +929,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         paintHammerUIForCurrentHole()
     }
 
-    // Paint per-hole POPS into playerStrokesFields
     private func paintHolePops(blankZeros: Bool = false) {
-        guard let g = GameManager.shared.currentGame else { return }
-
-        let hole = max(0, min(17, g.hole))
-
-        // SI from new course arrays, clamped to 1…18 (treat 0 as 18)
-        let rawSI = g.course.holeHandicaps[safe: hole] ?? STANDARD_HOLES
-        let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
-
-        // Seats we can actually show
-        let seats = min(9, g.playerNames.count, g.hcPlayers.count, g.playerActivated.count)
-
-        // Baseline = lowest HC among ACTIVE, named seats (fallback to all named if none active)
-        let activeSeats = (0..<seats).filter {
-            g.playerActivated[$0] &&
-            !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        }
-        let baselineSeats = activeSeats.isEmpty
-            ? (0..<seats).filter { !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            : activeSeats
-        //let baseHC = baselineSeats.map { g.hcPlayers[$0] }.min() ?? 0
-        let baseHC = activeSeats.map { g.hcPlayers[$0] }.min() ?? 0
-
-        // Paint pops to the stroke fields
-        let limit = min(playerStrokesFields.count, seats)
-        for seat in 0..<limit {
-            let hasName  = !g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            let showRow  = activeSeats.isEmpty ? hasName : (hasName && g.playerActivated[seat])
-
-            if showRow {
-                let delta = max(0, g.hcPlayers[seat] - baseHC)      // S column value for this seat
-                let p = pops(for: delta, strokeIndex: si)           // uses your single pop formula
-                playerStrokesFields[seat].text = (blankZeros && p == 0) ? "" : String(p)
-            } else {
-                playerStrokesFields[seat].text = ""
-            }
-        }
-
-        // Optional debug
-        // print("POPS H\(hole+1) SI=\(si) baseHC=\(baseHC)")
+        refreshPlayerNameLabels()
     }
     // Single source-of-truth pop formula (standard):
     // +floor(S/18) on every hole, plus +1 on SI 1…(S % STANDARD_HOLES).
@@ -1203,10 +1392,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func refreshScoreFieldsForCurrentHole() {
         guard let g = GameManager.shared.currentGame else { return }
         let h = g.hole
-        let seats = min(scoreFields.count, g.scores.count)
-        for s in 0..<seats {
-            let v = (h < g.scores[s].count) ? g.scores[s][h] : nil
+        let order = displayOrder
+        let slots = min(scoreFields.count, MAX_PLAYERS)
+        for s in 0..<slots {
+            let seat = order[safe: s] ?? s
+            let v = (seat < g.scores.count && h < g.scores[seat].count) ? g.scores[seat][h] : nil
             scoreFields[s].text = v.map(String.init) ?? ""
+            scoreFields[s].tag = seat
         }
     }
 
@@ -1336,26 +1528,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func refreshHeaderForCurrentHole() {
         DispatchQueue.main.async {
             guard let game = GameManager.shared.currentGame else { return }
-            let h = self.currentHole
+            // Use the model's hole, not self.currentHole, so returning to an
+            // active game always shows the correct hole immediately.
+            let h = max(0, min(17, game.hole))
             let holeNo = h + 1
 
-            let pars = game.course.pars
-            let hcs  = game.course.holeHandicaps
-            let par  = pars.indices.contains(h) ? pars[h] : 4
-            let si   = hcs.indices.contains(h)  ? hcs[h]  : holeNo
+            let par = game.course.pars.indices.contains(h) ? game.course.pars[h] : 4
 
-            let dollarsArray = game.gameHoleDollarsArray
-            let dollars = dollarsArray.indices.contains(h) ? dollarsArray[h] : 0.0
-
-            // ✅ Numbers only (no "Hole"/"Par" prefixes)
             self.holePlaying.text = "\(holeNo)"
             self.parOfHole.text   = "\(par)"
-
-            // (If you want numbers only for these too, uncomment:)
-            // self.strokeIndexLabel?.text = "\(si)"
-            // self.dollarsPerHoleLabel?.text = String(format: "%.2f", dollars)
-
-            print("Header -> hole \(holeNo), par \(par), si \(si), $\(dollars)")
+            self.refreshHoleInfoHeader()
         }
     }
  
@@ -1577,21 +1759,49 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             present(ac, animated: true)
         }
     }
+    private var onMessageComposeDismissed: (() -> Void)?
+
     func messageComposeViewController(_ controller: MFMessageComposeViewController,
                                       didFinishWith result: MessageComposeResult) {
-        controller.dismiss(animated: true)
-
-        switch result {
-        case .sent:
-            print("✅ Remote invite message sent")
-        case .cancelled:
-            print("ℹ️ Remote invite message cancelled")
-        case .failed:
-            print("❌ Remote invite message failed")
-            showRemoteImportError(message: "Message failed to send.")
-        @unknown default:
-            break
+        let failed = result == .failed
+        controller.dismiss(animated: true) { [weak self] in
+            if failed { self?.showRemoteImportError(message: "Message failed to send.") }
+            self?.onMessageComposeDismissed?()
+            self?.onMessageComposeDismissed = nil
         }
+    }
+
+    private func sendAcceptanceAndOpen(_ match: RemoteMatch, mode: RemoteCompareMode) {
+        let body = buildAcceptanceMessage(match: match, mode: mode)
+        if MFMessageComposeViewController.canSendText() {
+            onMessageComposeDismissed = { [weak self] in
+                self?.openRemoteMatch(match, mode: mode)
+            }
+            let composer = MFMessageComposeViewController()
+            composer.messageComposeDelegate = self
+            composer.body = body
+            present(composer, animated: true)
+        } else {
+            openRemoteMatch(match, mode: mode)
+        }
+    }
+
+    private func buildAcceptanceMessage(match: RemoteMatch, mode: RemoteCompareMode) -> String {
+        let modeLabel: String
+        switch mode {
+        case .holeByHole:    modeLabel = "Hole by Hole"
+        case .frontBackByHC: modeLabel = "Front/Back 9 by HC"
+        case .all18ByHC:     modeLabel = "18 Holes by HC"
+        }
+        let opponentCourse = match.opponentRound?.courseName ?? "their course"
+        return """
+        WolfMore Remote Nassau — Challenge Accepted!
+        \(match.myRound.playerName) @ \(match.myRound.courseName)
+        vs \(match.opponentName) @ \(opponentCourse)
+        Mode: \(modeLabel)
+        Stake: $\(match.stakePerBet) per bet
+        Game on!
+        """
     }
     @IBAction func startRemoteNassauTapped(_ sender: UIButton) {
         guard let g = GameManager.shared.currentGame else { return }
@@ -1631,15 +1841,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 let ac = UIAlertController(title: "Compare Mode", message: nil, preferredStyle: .actionSheet)
 
                 ac.addAction(UIAlertAction(title: "Hole by Hole", style: .default) { [weak self] _ in
-                    self?.openRemoteMatch(savedMatch, mode: .holeByHole)
+                    self?.sendAcceptanceAndOpen(savedMatch, mode: .holeByHole)
                 })
 
                 ac.addAction(UIAlertAction(title: "Front / Back 9 by HC", style: .default) { [weak self] _ in
-                    self?.openRemoteMatch(savedMatch, mode: .frontBackByHC)
+                    self?.sendAcceptanceAndOpen(savedMatch, mode: .frontBackByHC)
                 })
 
                 ac.addAction(UIAlertAction(title: "18 Holes by HC", style: .default) { [weak self] _ in
-                    self?.openRemoteMatch(savedMatch, mode: .all18ByHC)
+                    self?.sendAcceptanceAndOpen(savedMatch, mode: .all18ByHC)
                 })
 
                 ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -1898,9 +2108,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 g.holeCommitted = Array(repeating: false, count: STANDARD_HOLES)
             }
 
-            let seats = min(MAX_PLAYERS, scoreFields.count, g.scores.count)
-            for s in 0..<seats {
-                g.scores[s][hole] = Int(scoreFields[s].text ?? "")
+            let slots = min(MAX_PLAYERS, scoreFields.count)
+            for s in 0..<slots {
+                let seat = scoreFields[s].tag
+                guard (0..<MAX_PLAYERS).contains(seat) else { continue }
+                g.scores[seat][hole] = Int(scoreFields[s].text ?? "")
             }
 
             g.holeCommitted[hole] = true
@@ -2121,11 +2333,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBAction func statsTapped(_ sender: UIButton) {
         let vc = StatsContainerViewController()
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet // or .fullScreen
-        
+        nav.modalPresentationStyle = .pageSheet
         present(nav, animated: true)
-        
-        
     }
     private func maybePromptForHoleStats() {
         guard let game = GameManager.shared.currentGame,
@@ -2228,28 +2437,31 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     
     private func paintEverythingForCurrentHole() {
         refreshHeaderForCurrentHole()          // ← paints Hole/Par/SI/$
-        refreshPlayerNameLabels ()
+        refreshPlayerNameLabels()
         refreshWolfButtons()
         refreshProxButtons()
         refreshScoreFieldsForCurrentHole()
         refreshMoneyFieldsForCurrentHole()
-       
     }
     
     private func setMoneyField(_ field: UITextField, to value: Int) {
-        field.text = "\(abs(value))"            // show whole number, no minus sign
+        field.text = "\(abs(value))"
         field.textColor = value < 0 ? .systemRed : .label
+        field.backgroundColor = moneyBgColor(for: Double(value))
     }
 
 
     private func refreshMoneyFieldsForCurrentHole() {
         guard let g = GameManager.shared.currentGame else { return }
         let h = g.hole
-        let seats = min(playerMoneyFields.count, g.playerMoney.count)
-        for s in 0..<seats {
-            let raw: Double = (h < g.playerMoney[s].count) ? g.playerMoney[s][h] : 0.0
-            let whole = Int(raw.rounded()) // round to nearest dollar
+        let order = displayOrder
+        let slots = min(playerMoneyFields.count, MAX_PLAYERS)
+        for s in 0..<slots {
+            let seat = order[safe: s] ?? s
+            let raw: Double = (seat < g.playerMoney.count && h < g.playerMoney[seat].count) ? g.playerMoney[seat][h] : 0.0
+            let whole = Int(raw.rounded())
             setMoneyField(playerMoneyFields[s], to: whole)
+            playerMoneyFields[s].tag = seat
         }
     }
 
@@ -2343,9 +2555,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let hole = max(0, min(17, g.hole))
         let winner = (0..<g.proxWinnerPerHole.count).contains(hole) ? g.proxWinnerPerHole[hole] : nil
+        let order = displayOrder
 
-        for b in proxButtons {
-            let isOn = (winner == b.tag)
+        for (slot, b) in proxButtons.enumerated() {
+            let seat = order[safe: slot] ?? slot
+            b.tag = seat
+            let isOn = (winner == seat)
             b.backgroundColor = isOn ? .black : .systemGreen
             b.setTitleColor(.white, for: .normal)
             b.layer.cornerRadius = 10

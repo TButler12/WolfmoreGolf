@@ -3,7 +3,7 @@ import UIKit
 final class StatsContainerViewController: UIViewController {
 
     // MARK: - UI
-    private let segmentedControl = UISegmentedControl(items: ["Game", "Nassau", "Skins"])
+    private let statsSegment = UISegmentedControl(items: ["Wolf", "Nassau", "Skins"])
     private let containerView = UIView()
 
     // MARK: - Child VCs
@@ -17,7 +17,7 @@ final class StatsContainerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        title = "Stats"
+        title = "Results and Game Settings"
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "gearshape"),
@@ -25,7 +25,6 @@ final class StatsContainerViewController: UIViewController {
             target: self,
             action: #selector(settingsTapped)
         )
-
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .done,
             target: self,
@@ -35,35 +34,29 @@ final class StatsContainerViewController: UIViewController {
         setupUI()
         setupChildren()
         switchTo(index: 0)
-        updateSettingsButton()
     }
 
     @objc private func close() {
         dismiss(animated: true)
     }
 
-    private func updateSettingsButton() {
-        navigationItem.leftBarButtonItem?.isEnabled = true
-        navigationItem.leftBarButtonItem?.tintColor = .systemBlue
-    }
-
     // MARK: - Setup
     private func setupUI() {
-        segmentedControl.selectedSegmentIndex = 0
-        segmentedControl.addTarget(self, action: #selector(segChanged), for: .valueChanged)
+        statsSegment.selectedSegmentIndex = 0
+        statsSegment.addTarget(self, action: #selector(segChanged), for: .valueChanged)
+        statsSegment.translatesAutoresizingMaskIntoConstraints = false
 
-        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
         containerView.translatesAutoresizingMaskIntoConstraints = false
 
-        view.addSubview(segmentedControl)
+        view.addSubview(statsSegment)
         view.addSubview(containerView)
 
         NSLayoutConstraint.activate([
-            segmentedControl.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
-            segmentedControl.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            segmentedControl.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            statsSegment.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            statsSegment.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            statsSegment.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
 
-            containerView.topAnchor.constraint(equalTo: segmentedControl.bottomAnchor, constant: 12),
+            containerView.topAnchor.constraint(equalTo: statsSegment.bottomAnchor, constant: 12),
             containerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             containerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -75,26 +68,21 @@ final class StatsContainerViewController: UIViewController {
         skinsVC.gameData = GameManager.shared.currentGame
     }
 
-    // MARK: - Switching
+    // MARK: - Stats tab switching
     @objc private func segChanged() {
-        switchTo(index: segmentedControl.selectedSegmentIndex)
-        updateSettingsButton()
+        switchTo(index: statsSegment.selectedSegmentIndex)
     }
 
     @objc private func settingsTapped() {
         let sb = UIStoryboard(name: "Main", bundle: nil)
-
-        switch segmentedControl.selectedSegmentIndex {
+        switch statsSegment.selectedSegmentIndex {
         case 0:
             let vc = sb.instantiateViewController(withIdentifier: "GameSettingsViewController") as! GameSettingsViewController
             navigationController?.pushViewController(vc, animated: true)
-
         case 1:
             nassauVC.presentSettingsFromContainer()
-
         case 2:
             skinsVC.presentSettingsFromContainer()
-
         default:
             break
         }
@@ -102,14 +90,12 @@ final class StatsContainerViewController: UIViewController {
 
     private func switchTo(index: Int) {
         let newVC: UIViewController
-
         switch index {
         case 0: newVC = gameVC
         case 1: newVC = nassauVC
         case 2: newVC = skinsVC
         default: return
         }
-
         transition(to: newVC)
     }
 
@@ -119,13 +105,11 @@ final class StatsContainerViewController: UIViewController {
             currentVC.view.removeFromSuperview()
             currentVC.removeFromParent()
         }
-
         addChild(newVC)
         newVC.view.frame = containerView.bounds
         newVC.view.autoresizingMask = [.flexibleWidth, .flexibleHeight]
         containerView.addSubview(newVC.view)
         newVC.didMove(toParent: self)
-
         currentVC = newVC
     }
 }

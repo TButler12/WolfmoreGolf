@@ -83,8 +83,7 @@ final class HoleStatsViewController: UITableViewController {
         super.viewWillAppear(animated)
 
         Task { @MainActor in
-            await ProStore.shared.refreshEntitlement()
-            buildRows()
+                        buildRows()
             updateEmptyBackgroundIfNeeded()
             tableView.reloadData()
         }
@@ -107,7 +106,7 @@ final class HoleStatsViewController: UITableViewController {
         buildOverview(for: trackedFriends, courseID: courseID)
 
         // ✅ Use entitlement-filtered rows (Free = newest 10 games, Pro = all)
-        let visible = RoundStore.shared.visibleRows(isPro: ProStore.shared.isPro)
+        let visible = RoundStore.shared.visibleRows(isPro: true)
 
         var built: [Row] = []
 
@@ -151,7 +150,7 @@ final class HoleStatsViewController: UITableViewController {
     /// Returns "games" (each game = array of RoundSummary rows) for a course.
     /// Prefers real gameID grouping, but falls back if your stored gameIDs are wrong (all singletons).
     private func gamesForCourse(_ courseID: String) -> [[RoundSummary]] {
-        let isPro = ProStore.shared.isPro
+        let isPro = true
         let rows = RoundStore.shared
             .visibleRows(isPro: isPro)
             .filter { $0.courseID == courseID }
@@ -177,7 +176,7 @@ final class HoleStatsViewController: UITableViewController {
 
     private func buildOverview(for trackedFriends: [Friend], courseID: String) {
 
-        let isPro = ProStore.shared.isPro
+        let isPro = true
 
         // Only allow newest 10 games for Free users
         let allowedGames = RoundStore.shared.visibleGameIDs(isPro: isPro)

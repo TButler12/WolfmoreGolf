@@ -53,6 +53,7 @@ final class SkinsViewController: UIViewController {
         ])
     }
     func presentSettingsFromContainer() {
+        loadGame()
         settingsTapped()
     }
     private func loadGame() {

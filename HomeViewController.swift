@@ -65,7 +65,7 @@ final class ViewController: UIViewController {
 
         NotificationCenter.default.addObserver(
             self,
-            selector: #selector(showProPaywall),
+            selector: #selector(noop),
             name: .roundSaveBlockedNeedsPro,
             object: nil
         )
@@ -437,24 +437,12 @@ final class ViewController: UIViewController {
         )
     }
 
-    // MARK: - Paywall
+    // MARK: - Paywall (removed — all features free)
 
-    @IBAction private func joinProTapped(_ sender: UIButton) {
-        showProPaywall()
-    }
+    @IBAction private func joinProTapped(_ sender: UIButton) {}
 
-    @objc private func showProPaywall() {
-        let vc = ProGateViewController()
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet
-
-        if let sheet = nav.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]
-            sheet.prefersGrabberVisible = true
-        }
-
-        present(nav, animated: true)
-    }
+    @objc private func showProPaywall() {}
+    @objc private func noop() {}
 
     // MARK: - Contacts
 
@@ -502,10 +490,6 @@ final class ViewController: UIViewController {
     @IBAction func friendStatsTapped(_ sender: UIButton) { handleFriendStatsTapped(sender) }
 
     private func handleFriendStatsTapped(_ sender: UIButton) {
-        if !Entitlements.shared.isPro {
-            showStatsUpgradeBubble(anchor: sender)
-            return
-        }
         openFriendStatsScreen()
     }
 
@@ -536,10 +520,6 @@ final class ViewController: UIViewController {
     }
 
     private func openPlayerStats(anchor: UIView) {
-        if !Entitlements.shared.isPro {
-            showStatsUpgradeBubble(anchor: anchor)
-            return
-        }
         openFriendStatsScreen()
     }
 
@@ -561,29 +541,7 @@ final class ViewController: UIViewController {
     }
 
     private func showStatsUpgradeBubble(anchor: UIView) {
-        let ac = UIAlertController(
-            title: "WolfMore Pro Annual",
-            message: "Unlock full stats and unlimited history.",
-            preferredStyle: .actionSheet
-        )
-
-        ac.addAction(UIAlertAction(title: "Open Friend Stats (Limited)", style: .default) { [weak self] _ in
-            self?.openFriendStatsScreen()
-        })
-
-        ac.addAction(UIAlertAction(title: "Upgrade to Pro", style: .default) { [weak self] _ in
-            self?.showProPaywall()
-        })
-
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        if let pop = ac.popoverPresentationController {
-            pop.sourceView = anchor
-            pop.sourceRect = anchor.bounds
-            pop.permittedArrowDirections = [.up, .down]
-        }
-
-        present(ac, animated: true)
+        openFriendStatsScreen()
     }
 
     // MARK: - More
@@ -593,10 +551,6 @@ final class ViewController: UIViewController {
 
         ac.addAction(UIAlertAction(title: "Explore the Rules", style: .default) { [weak self] _ in
             self?.openRules()
-        })
-
-        ac.addAction(UIAlertAction(title: "Join Pro-Stat Access", style: .default) { [weak self] _ in
-            self?.showProPaywall()
         })
 
         ac.addAction(UIAlertAction(title: "Delete History", style: .destructive) { [weak self] _ in

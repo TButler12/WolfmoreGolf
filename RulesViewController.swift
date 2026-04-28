@@ -162,10 +162,12 @@ private extension RulesViewController {
         header("WOLFMORE — HOW TO PLAY")
         body("""
         Scoring and bet tracking made easy!
+        
+        Play multiple games at the same time, including Remote Nassau. 
+        
+        Remote Nassau allows play between players at different courses! 
 
         Hover or long press over most buttons for a description of that button.
-
-        WolfMore Pro unlocks premium stat tracking including full history, friend comparisons, home course summaries, and by-hole summaries.
 
         Play up to 5 players. Yes, 5 players — and 3 vs 2 Wolf can be the most fun.
 
@@ -302,27 +304,39 @@ private extension RulesViewController {
         • Can be toggled on or off
         """)
 
+        header("REMOTE NASSAU")
+        body("""
+        Challenge a friend to Nassau even when you're at different courses.
+        Remote Nassau runs independently from but alongside your regular round.
+        Results include both players' course names, compare mode, and hole-by-hole breakdown"
+
+        How it works:
+        - Tap Remote Nassau from the scoring screen
+        - Tap "Send Invite" — this generates an invite code and opens Messages
+        - Send the code to your opponent via text
+        - Your opponent opens WolfMore, taps Remote Nassau → Import Invite, and pastes the code
+        - Each player plays their own round normally
+        - When finished, tap Remote Nassau → View Matches to see results
+        - Tap "Send Results" to text the outcome back to your opponent
+
+        Three ways to compare holes across different courses:
+        - Hole by Hole — Hole 1 vs Hole 1, Hole 2 vs Hole 2
+        - Front/Back 9 by HC — matches holes by handicap rating within each 9
+        - 18 Holes by HC — matches all 18 holes by handicap rating across the full round
+
+        - Results show Front 9, Back 9, Overall, and total dollar amount owed
+        - Matches are saved until you delete them
+        """)
+
         header("TRACKING")
         body("""
         Your personal stat tracking.
 
         • View stats by player, course, and hole
+        • Full history — all rounds saved with no limits
         • Access tracking from the player activation screen
         • Home Course tracking helps compare performance for you and your friends over time
-        """)
-
-        header("WOLFMORE PRO — PREMIUM STATS")
-        body("""
-        Join WolfMore Pro to unlock premium stat tracking:
-
-        • Full history (no limits)
-        • Friend tracking and comparisons
-        • Home Course summaries
-        • By-hole summaries and trends over time
-
-        Pro is an optional subscription. You can cancel anytime in your Apple ID subscriptions.
-
-        If you already joined Pro on this device, tap "Restore Purchases" to re-enable access.
+        • Friend comparisons and home course summaries available from the home screen
         """)
         return text
     }

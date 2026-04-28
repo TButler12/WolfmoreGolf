@@ -61,11 +61,6 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
     }
 
     @IBAction private func favoritesTapped(_ sender: UIButton) {
-        guard ProStore.shared.isPro else {
-            showProUpsell(source: sender)
-            return
-        }
-
         let phones = FriendStore.shared.friends
             .filter { $0.isFavorite }
             .map { normalizePhone($0.phone) }
@@ -95,11 +90,6 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
     }
 
     @IBAction private func trackedFriendsTapped(_ sender: UIButton) {
-        guard ProStore.shared.isPro else {
-            showProUpsell(source: sender)
-            return
-        }
-
         let courseID = ProfileStore.homeCourseID.isEmpty ? "HOME-COURSE" : ProfileStore.homeCourseID
 
         let phones = FriendStore.shared.friends
@@ -117,11 +107,6 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
 
 
     @IBAction private func allFriendsTapped(_ sender: UIButton) {
-        guard ProStore.shared.isPro else {
-            showProUpsell(source: sender)
-            return
-        }
-
         let phones = FriendStore.shared.friends
             .map { normalizePhone($0.phone) }
             .filter { !$0.isEmpty }
@@ -477,38 +462,10 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
     }
     
     private func requirePro(orUpsellFrom source: UIView? = nil, _ action: () -> Void) {
-        if ProStore.shared.isPro {
-            action()
-        } else {
-            showProUpsell(source: source)
-        }
+        action()
     }
-    private func showProUpsell(source: UIView? = nil) {
-        let ac = UIAlertController(
-            title: "WolfMore Pro",
-            message: "Unlock Friend Groups + Tracked Players texting.",
-            preferredStyle: .actionSheet
-        )
-
-        ac.addAction(UIAlertAction(title: "Upgrade", style: .default) { _ in
-            self.presentProPaywall()
-        })
-        ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
-
-        if let pop = ac.popoverPresentationController, let source {
-            pop.sourceView = source
-            pop.sourceRect = source.bounds
-        }
-
-        present(ac, animated: true)
-    }
-
-    private func presentProPaywall() {
-        let vc = ProViewController()
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet
-        present(nav, animated: true)
-    }
+    private func showProUpsell(source: UIView? = nil) {}
+    private func presentProPaywall() {}
 
 }
 

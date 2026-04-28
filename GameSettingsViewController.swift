@@ -14,8 +14,9 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var umbrellaButton: UIButton!
     @IBOutlet weak var courseNameLabel: UILabel!
     @IBOutlet weak var changeCourseButton: UIButton!
-    
+
     private var umbrellaMuted = false   // true = OFF
+    private weak var wolfScoringSegment: UISegmentedControl?
 
     var gameData: GameData?
 
@@ -43,9 +44,64 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             baseStakeField.text = "2"
             umbrellaMuted = false
         }
-      
+
         refreshCourseLabel()
         refreshUmbrellaButtonUI()
+        installWolfScoringSegment()
+    }
+
+    // MARK: - Wolf Scoring segment
+
+    private func installWolfScoringSegment() {
+        let header = UILabel()
+        header.text = "Wolf Scoring Options"
+        header.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        header.textColor = .secondaryLabel
+        header.translatesAutoresizingMaskIntoConstraints = false
+
+        let segment = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "Wolf LowBall"])
+        segment.translatesAutoresizingMaskIntoConstraints = false
+        segment.addTarget(self, action: #selector(wolfScoringChanged(_:)), for: .valueChanged)
+
+        if let g = GameManager.shared.currentGame {
+            switch g.resolvedGameType {
+            case .sixPointScotch: segment.selectedSegmentIndex = 0
+            case .wolf:           segment.selectedSegmentIndex = 1
+            case .wolfLowBall:    segment.selectedSegmentIndex = 2
+            case .hammer:         segment.selectedSegmentIndex = 0
+            }
+        }
+
+        view.addSubview(header)
+        view.addSubview(segment)
+
+        NSLayoutConstraint.activate([
+            header.topAnchor.constraint(equalTo: umbrellaButton.bottomAnchor, constant: 24),
+            header.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+
+            segment.topAnchor.constraint(equalTo: header.bottomAnchor, constant: 8),
+            segment.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
+            segment.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+        ])
+
+        wolfScoringSegment = segment
+    }
+
+    @objc private func wolfScoringChanged(_ sender: UISegmentedControl) {
+        let newType: GameType
+        switch sender.selectedSegmentIndex {
+        case 0: newType = .sixPointScotch
+        case 1: newType = .wolf
+        default: newType = .wolfLowBall
+        }
+        GameManager.shared.update { g in
+            g.gameType = newType
+            g.normalize()
+            if newType != .sixPointScotch { g.isUmbrella = false }
+        }
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+        // Umbrella is only meaningful for 6-Point
+        umbrellaButton.alpha = (sender.selectedSegmentIndex == 0) ? 1.0 : 0.4
     }
 
     @objc private func doneTapped() {

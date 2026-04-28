@@ -31,66 +31,266 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
  
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        // Ensure we have a game first
-        if GameManager.shared.currentGame == nil {
-            if !GameManager.shared.loadLastOpened() {
-                GameManager.shared.startNewGame()
-            }
-        }
 
-        // Ensure model arrays are 5-wide
-        GameManager.shared.update { g in
-            self.ensureModelHasCapacity(&g)
+        if GameManager.shared.currentGame == nil {
+            if !GameManager.shared.loadLastOpened() { GameManager.shared.startNewGame() }
         }
-      
+        GameManager.shared.update { g in self.ensureModelHasCapacity(&g) }
         CourseLibrary.shared.seedIfNeeded()
 
-        // Sort/retag UI rows 0..4
+        // Configure settings button before layout (buildDynamicUI inserts it)
+        settingsButton.setImage(UIImage(systemName: "gearshape.fill"), for: .normal)
+        settingsButton.tintColor = UIColor(red: 0.10, green: 0.35, blue: 0.20, alpha: 1.0)
+        settingsButton.setTitle("  $take and Game Settings", for: .normal)
+        settingsButton.backgroundColor = .clear
+        settingsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .callout)
+        settingsButton.titleLabel?.adjustsFontForContentSizeCategory = true
+        settingsButton.addTarget(self, action: #selector(settingsTapped), for: .touchUpInside)
+
+        // Replace fixed-frame storyboard layout with Dynamic Type–aware layout
+        buildDynamicUI()
+
         normalizeAndTagRows()
         hideExtraRowsBeyondCapacity()
-
-        // Wiring
         wireNameFields()
         wireHCFields()
         wireActiveSwitches()
 
         NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(reloadFromModel),
-            name: .reloadUI,
-            object: nil
-        )
+            self, selector: #selector(reloadFromModel), name: .reloadUI, object: nil)
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Edit Player Tracking",
-            style: .plain,
-            target: self,
-            action: #selector(trackFriendsTapped)
-        )
-        configureGoToGameButton()
-        
-        // Initial paint
+            title: "Edit Player Tracking", style: .plain,
+            target: self, action: #selector(trackFriendsTapped))
+
         updateCourseLabel()
         populateFromModel()
         recalcStrokesFromModel()
         enforceActivationCap()
         updateGoButtonEnabled()
         refreshRandomizeEnabled()
-        settingsButton.setTitle("$ettings", for: .normal)
-        settingsButton.setImage(UIImage(systemName: "gearshape.fill"), for: .normal)
-        settingsButton.tintColor = UIColor(red: 0.10, green: 0.35, blue: 0.20, alpha: 1.0)
-        settingsButton.setTitle("  $take and Game Settings", for: .normal)
-        settingsButton.backgroundColor = .clear
-         settingsButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .medium)
-         settingsButton.addTarget(self, action: #selector(settingsTapped), for: .touchUpInside)
-        view.addSubview(settingsButton)
-        settingsButton.translatesAutoresizingMaskIntoConstraints = false
+    }
 
+    // MARK: - Dynamic Layout
+
+    private func buildDynamicUI() {
+        // Hide every storyboard-placed subview; we take over completely
+        view.subviews.forEach { $0.isHidden = true }
+
+        // ── Create new outlet-backed views ────────────────────────────
+        var nfs = [UITextField](), hfs = [UITextField]()
+        var sws = [UISwitch](),    sls = [UILabel]()
+
+        for i in 0..<capacity {
+            let nf = makeEntryField(tag: i)
+            nf.returnKeyType = .done
+            nf.autocapitalizationType = .words
+            nfs.append(nf)
+
+            let hf = makeEntryField(tag: i)
+            hf.keyboardType = .numberPad
+            hf.textAlignment = .center
+            hfs.append(hf)
+
+            let sw = UISwitch(); sw.tag = i; sws.append(sw)
+
+            let sl = UILabel()
+            sl.tag = i
+            sl.font = UIFont.preferredFont(forTextStyle: .body)
+            sl.adjustsFontForContentSizeCategory = true
+            sl.textAlignment = .right
+            sl.setContentHuggingPriority(.required, for: .horizontal)
+            sl.setContentCompressionResistancePriority(.required, for: .horizontal)
+            sls.append(sl)
+        }
+
+        nameFields     = nfs
+        handicapFields = hfs
+        activeSwitches = sws
+        strokeLabels   = sls
+
+        let goBtn = makeFilledButton(title: "Go To Game", bg: .wolfMoreGreen, fg: .white)
+        goBtn.addTarget(self, action: #selector(goToGameTapped(_:)), for: .touchUpInside)
+        goToGameButton = goBtn
+
+        let resetBtn = makeFilledButton(
+            title: "Reset for New Game",
+            bg: UIColor(white: 0.18, alpha: 1),
+            fg: .white)
+        resetBtn.addTarget(self, action: #selector(resetGameTapped(_:)), for: .touchUpInside)
+
+        let randBtn = makeFilledButton(title: "Randomize", bg: .systemBrown, fg: .white)
+        randBtn.addTarget(self, action: #selector(randomizePlayersTapped(_:)), for: .touchUpInside)
+        randomizeButton = randBtn
+
+        let newCourseLabel = UILabel()
+        newCourseLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        newCourseLabel.adjustsFontForContentSizeCategory = true
+        newCourseLabel.numberOfLines = 0
+        newCourseLabel.textColor = .secondaryLabel
+        courseLabel = newCourseLabel
+
+        // ── Scroll + content stack ─────────────────────────────────────
+        let scroll = UIScrollView()
+        scroll.alwaysBounceVertical = true
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scroll)
         NSLayoutConstraint.activate([
-            settingsButton.topAnchor.constraint(equalTo: randomizeButton.bottomAnchor, constant: 20),
-            settingsButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60)
+            scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scroll.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scroll.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+
+        let content = UIView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        scroll.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
+            content.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
+            content.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
+            content.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor),
+        ])
+
+        let main = UIStackView()
+        main.axis = .vertical
+        main.spacing = 14
+        main.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(main)
+        NSLayoutConstraint.activate([
+            main.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
+            main.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
+            main.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -16),
+            main.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -30),
+        ])
+
+        // Fixed column widths — wide enough for content, narrow enough to give name room
+        let switchColW: CGFloat = 60
+        let hcColW: CGFloat     = 50
+        let strokeColW: CGFloat = 34
+
+        // Header row
+        let hdrRow = hRow()
+        hdrRow.addArrangedSubview(fixedSpacer(switchColW))
+        hdrRow.addArrangedSubview(hdrLabel("Player"))
+        let hcH = hdrLabel("HC"); hcH.textAlignment = .center
+        hcH.widthAnchor.constraint(equalToConstant: hcColW).isActive = true
+        hdrRow.addArrangedSubview(hcH)
+        let sH = hdrLabel("S"); sH.textAlignment = .right
+        sH.widthAnchor.constraint(equalToConstant: strokeColW).isActive = true
+        hdrRow.addArrangedSubview(sH)
+        main.addArrangedSubview(hdrRow)
+        main.addArrangedSubview(hairline())
+
+        // Player rows
+        for i in 0..<capacity {
+            let row = hRow()
+
+            // Switch in fixed-width container so column width never shifts
+            let swWrap = UIView()
+            swWrap.translatesAutoresizingMaskIntoConstraints = false
+            swWrap.widthAnchor.constraint(equalToConstant: switchColW).isActive = true
+            let sw = sws[i]
+            sw.translatesAutoresizingMaskIntoConstraints = false
+            swWrap.addSubview(sw)
+            NSLayoutConstraint.activate([
+                sw.centerXAnchor.constraint(equalTo: swWrap.centerXAnchor),
+                sw.centerYAnchor.constraint(equalTo: swWrap.centerYAnchor),
+                swWrap.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
+            ])
+
+            nfs[i].translatesAutoresizingMaskIntoConstraints = false
+
+            hfs[i].translatesAutoresizingMaskIntoConstraints = false
+            hfs[i].widthAnchor.constraint(equalToConstant: hcColW).isActive = true
+
+            sls[i].translatesAutoresizingMaskIntoConstraints = false
+            sls[i].widthAnchor.constraint(equalToConstant: strokeColW).isActive = true
+
+            [swWrap, nfs[i], hfs[i], sls[i]].forEach { row.addArrangedSubview($0) }
+            main.addArrangedSubview(row)
+        }
+
+        main.addArrangedSubview(hairline())
+        main.addArrangedSubview(newCourseLabel)
+        main.setCustomSpacing(20, after: newCourseLabel)
+        main.addArrangedSubview(goBtn)
+        main.setCustomSpacing(10, after: goBtn)
+        main.addArrangedSubview(resetBtn)
+        main.setCustomSpacing(10, after: resetBtn)
+        main.addArrangedSubview(randBtn)
+        main.setCustomSpacing(24, after: randBtn)
+        settingsButton.translatesAutoresizingMaskIntoConstraints = false
+        settingsButton.contentHorizontalAlignment = .leading
+        main.addArrangedSubview(settingsButton)
+    }
+
+    // MARK: - Layout helpers
+
+    private func makeEntryField(tag: Int) -> UITextField {
+        let tf = UITextField()
+        tf.tag = tag
+        tf.font = UIFont.preferredFont(forTextStyle: .body)
+        tf.adjustsFontForContentSizeCategory = true
+        tf.backgroundColor = .systemBackground
+        tf.borderStyle = .none
+        tf.layer.borderColor = UIColor.systemGray4.cgColor
+        tf.layer.borderWidth = 1
+        tf.layer.cornerRadius = 7
+        tf.layer.masksToBounds = true
+        return tf
+    }
+
+    private func makeFilledButton(title: String, bg: UIColor, fg: UIColor) -> UIButton {
+        let btn = UIButton(type: .custom)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        var cfg = UIButton.Configuration.filled()
+        cfg.title = title
+        cfg.baseBackgroundColor = bg
+        cfg.baseForegroundColor = fg
+        cfg.cornerStyle = .large
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs
+            a.font = UIFont.preferredFont(forTextStyle: .callout)
+            return a
+        }
+        btn.configuration = cfg
+        return btn
+    }
+
+    private func hRow() -> UIStackView {
+        let s = UIStackView()
+        s.axis = .horizontal
+        s.spacing = 8
+        s.alignment = .center
+        s.distribution = .fill
+        return s
+    }
+
+    private func hdrLabel(_ text: String) -> UILabel {
+        let l = UILabel()
+        l.text = text
+        l.font = UIFont.preferredFont(forTextStyle: .caption1)
+        l.adjustsFontForContentSizeCategory = true
+        l.textColor = .secondaryLabel
+        return l
+    }
+
+    private func hairline() -> UIView {
+        let v = UIView()
+        v.backgroundColor = .separator
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        return v
+    }
+
+    private func fixedSpacer(_ width: CGFloat) -> UIView {
+        let v = UIView()
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.widthAnchor.constraint(equalToConstant: width).isActive = true
+        return v
     }
     
     @IBAction func gameSettingsTapped(_ sender: UIButton) {
@@ -409,9 +609,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             }
         }
     }
-    private func configureGoToGameButton() {
-        goToGameButton.configuration = wmStyledButton(title: "Go To Game", style: .primary)
-    }
     // MARK: - Cap + buttons
     private func enforceActivationCap() {
         let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
@@ -434,7 +631,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
         let canRand = GameManager.shared.canRandomizeTeams && activeCount >= 2
         randomizeButton.isEnabled = canRand
-        randomizeButton.alpha = canRand ? 1.0 : 0.5
+        randomizeButton.alpha = 1.0
     }
 
     // MARK: - UITextFieldDelegate

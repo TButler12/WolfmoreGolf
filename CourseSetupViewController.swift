@@ -1,6 +1,7 @@
 import UIKit
+import MessageUI
 
-final class CourseSetupViewController: UIViewController {
+final class CourseSetupViewController: UIViewController, MFMailComposeViewControllerDelegate {
 
     // MARK: - Outlets
 
@@ -177,9 +178,108 @@ final class CourseSetupViewController: UIViewController {
             self.updateCourseLabel()
 
             UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+            self.promptShareCourse(newCourse)
         })
 
         present(ac, animated: true)
+    }
+
+    // MARK: - Course sharing
+
+    private func promptShareCourse(_ course: CourseProfile) {
+        let ac = UIAlertController(
+            title: "Join the WolfMore Community! 🏌️",
+            message: "Help fellow golfers by sharing \(course.name) with the WolfMore community. We'll add it to the app so everyone can play it!",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Maybe later", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Yes, I want to help!", style: .default) { [weak self] _ in
+            self?.promptShareDetails(course)
+        })
+        present(ac, animated: true)
+    }
+
+    private func promptShareDetails(_ course: CourseProfile) {
+        let form = UIAlertController(
+            title: "You're a WolfMore Legend! 🏆",
+            message: "We'll notify you when \(course.name) goes live for all users.",
+            preferredStyle: .alert
+        )
+        form.addTextField { tf in
+            tf.placeholder = "Name (optional)"
+            tf.autocapitalizationType = .words
+        }
+        form.addTextField { tf in
+            tf.placeholder = "Email — so we can notify you when your course goes live"
+            tf.keyboardType = .emailAddress
+            tf.autocapitalizationType = .none
+        }
+        form.addTextField { tf in
+            tf.placeholder = "Notes — private club? recent changes? let us know"
+        }
+        form.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        form.addAction(UIAlertAction(title: "Submit to WolfMore", style: .default) { [weak self] _ in
+            guard let self else { return }
+            let tfs = form.textFields ?? []
+            let submitterName  = tfs[safe: 0]?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let submitterEmail = tfs[safe: 1]?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let notes          = tfs[safe: 2]?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            self.sendCourseEmail(course, submitterName: submitterName,
+                                 submitterEmail: submitterEmail, notes: notes)
+        })
+        present(form, animated: true)
+    }
+
+    private func sendCourseEmail(_ course: CourseProfile,
+                                 submitterName: String,
+                                 submitterEmail: String,
+                                 notes: String) {
+        guard MFMailComposeViewController.canSendMail() else {
+            let ac = UIAlertController(
+                title: "Mail Unavailable",
+                message: "Please email course details to coursemanagement@wolfmore.com",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+            return
+        }
+
+        let pars = course.pars.prefix(18).enumerated()
+            .map { "H\($0.offset + 1): \($0.element)" }.joined(separator: "  ")
+        let hcs = course.hcs.prefix(18).enumerated()
+            .map { "H\($0.offset + 1): \($0.element)" }.joined(separator: "  ")
+
+        var body = """
+        Course Name: \(course.name)
+        Country: \(course.country ?? "USA")
+        State / Region: \(course.state ?? "")
+        Type: \(course.type ?? "")
+        Address: \(course.address ?? "")
+
+        Pars (holes 1–18):
+        \(pars)
+
+        Handicap Ratings (holes 1–18):
+        \(hcs)
+        """
+
+        if !submitterName.isEmpty   { body += "\n\nSubmitted by: \(submitterName)" }
+        if !submitterEmail.isEmpty  { body += "\nEmail: \(submitterEmail)" }
+        if !notes.isEmpty           { body += "\n\nNotes: \(notes)" }
+
+        let composer = MFMailComposeViewController()
+        composer.mailComposeDelegate = self
+        composer.setToRecipients(["coursemanagement@wolfmore.com"])
+        composer.setSubject("New Course Submission: \(course.name)")
+        composer.setMessageBody(body, isHTML: false)
+        present(composer, animated: true)
+    }
+
+    func mailComposeController(_ controller: MFMailComposeViewController,
+                               didFinishWith result: MFMailComposeResult, error: Error?) {
+        controller.dismiss(animated: true)
     }
 
     // MARK: - Label

@@ -174,7 +174,7 @@ final class CourseSummaryViewController: UITableViewController {
         let homeID = (ProfileStore.homeCourseID ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let isPro = ProStore.shared.isPro
+        let isPro = true
 
         // ✅ entitlement filtered rows (Free = newest 10 games, Pro = all)
         let visible = RoundStore.shared.visibleRows(isPro: isPro)

@@ -230,7 +230,7 @@ final class RoundStore {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        let rows = visibleRows(isPro: ProStore.shared.isPro)
+        let rows = visibleRows(isPro: true)
             .filter { $0.playerName.caseInsensitiveCompare(trimmed) == .orderedSame }
 
         return rows.sorted { $0.date > $1.date }.first
@@ -283,9 +283,7 @@ final class RoundStore {
         Set(rounds.map(\.gameID)).count
     }
 
-    private var canSaveAnotherRound: Bool {
-        ProStore.shared.isPro || savedRoundCount < freeRoundLimit
-    }
+    private var canSaveAnotherRound: Bool { true }
 
     /// GameIDs sorted newest -> oldest (based on the newest row date in each game).
     private var gameIDsNewestFirst: [UUID] {
@@ -301,20 +299,12 @@ final class RoundStore {
             .map { $0.0 }
     }
 
-    /// For non-pro, these are the ONLY gameIDs they can access (most recent 10 games).
     func visibleGameIDs(isPro: Bool) -> Set<UUID> {
-        if isPro { return Set(rounds.map(\.gameID)) }
-        return Set(gameIDsNewestFirst.prefix(freeRoundLimit))
+        Set(rounds.map(\.gameID))
     }
 
-    /// Rows to show in History for the current user.
-    func visibleRows(isPro: Bool) -> [RoundSummary] {
-        if isPro { return rounds }
-        let allowed = visibleGameIDs(isPro: false)
-        return rounds.filter { allowed.contains($0.gameID) }
-    }
+    func visibleRows(isPro: Bool) -> [RoundSummary] { rounds }
 
-    /// How many whole rounds (games) are locked behind Pro.
     func lockedRoundCount(isPro: Bool) -> Int {
         if isPro { return 0 }
         let totalGames = Set(rounds.map(\.gameID)).count
@@ -509,7 +499,7 @@ extension RoundStore {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return nil }
 
-        let isPro = ProStore.shared.isPro
+        let isPro = true
         let visible = visibleRows(isPro: isPro)
 
         let rowsForPlayer = visible.filter {
@@ -616,7 +606,7 @@ extension RoundStore {
 extension RoundStore {
 
     func visibleRowsForCourse(_ courseID: String) -> [RoundSummary] {
-        visibleRows(isPro: ProStore.shared.isPro).filter { $0.courseID == courseID }
+        visibleRows(isPro: true).filter { $0.courseID == courseID }
     }
 
     func visibleGameIDsForCourse(_ courseID: String) -> Set<UUID> {
@@ -671,7 +661,7 @@ extension RoundStore {
         let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return [] }
 
-        let rows = visibleRows(isPro: ProStore.shared.isPro)
+        let rows = visibleRows(isPro: true)
             .filter { $0.playerName.caseInsensitiveCompare(trimmed) == .orderedSame }
 
         guard !rows.isEmpty else { return [] }
