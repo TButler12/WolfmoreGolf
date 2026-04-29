@@ -5740,6 +5740,120 @@ private let BETHPAGE_BLACK_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",   yardage: 6223, rating: 71.2, slope: 137),
     TeeInfo(teeName: "Red (L)", yardage: 6223, rating: 77.8, slope: 150)
 ]
+// MARK: - South Carolina Private Courses
+
+private let OLD_BARNWELL_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000001")!
+private let YEAMANS_HALL_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000002")!
+private let TREE_FARM_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000003")!
+private let CONGAREE_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000004")!
+private let PALMETTO_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000005")!
+private let SAGE_VALLEY_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000006")!
+private let QUIXOTE_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000007")!
+
+let OLD_BARNWELL_PARS = [
+    5,4,4,3,4,4,4,4,4,
+    4,3,5,4,4,5,5,3,4
+]
+
+let OLD_BARNWELL_HCS = [
+    13,17,5,11,7,1,3,9,15,
+    4,8,14,2,16,10,12,18,6
+]
+
+let OLD_BARNWELL_TEES = [
+    TeeInfo(teeName: "Red", yardage: 7091, rating: 74.9, slope: 136)
+]
+
+
+let YEAMANS_HALL_PARS = [
+    4,4,3,4,4,3,4,4,5,
+    4,4,4,3,4,4,3,4,5
+]
+
+let YEAMANS_HALL_HCS = [
+    5,15,17,3,7,13,1,11,9,
+    12,6,16,18,4,2,10,8,14
+]
+
+let YEAMANS_HALL_TEES = [
+    TeeInfo(teeName: "Rust", yardage: 6778, rating: 72.6, slope: 137)
+]
+
+
+let TREE_FARM_PARS = [
+    3,4,4,3,4,4,4,4,5,
+    4,4,4,5,4,3,5,3,4
+]
+
+let TREE_FARM_HCS = [
+    13,15,3,5,17,7,11,1,9,
+    12,6,4,2,10,14,8,16,18
+]
+
+let TREE_FARM_TEES = [
+    TeeInfo(teeName: "Tree Monster", yardage: 7293, rating: 75.1, slope: 138)
+]
+
+
+let CONGAREE_PARS = [
+    4,5,4,5,3,4,3,5,4,
+    3,4,5,4,3,4,4,4,4
+]
+
+let CONGAREE_HCS = [
+    9,11,15,5,17,3,13,7,1,
+    18,6,16,4,14,8,10,2,12
+]
+
+let CONGAREE_TEES = [
+    TeeInfo(teeName: "Championship", yardage: 7790, rating: 79.4, slope: 155)
+]
+
+
+let PALMETTO_PARS = [
+    4,4,4,4,4,5,3,4,3,
+    5,3,4,4,5,4,3,4,4
+]
+
+let PALMETTO_HCS = [
+    15,11,1,9,3,17,13,5,7,
+    10,16,4,2,12,18,8,6,14
+]
+
+let PALMETTO_TEES = [
+    TeeInfo(teeName: "Tournament", yardage: 6631, rating: 73.8, slope: 145)
+]
+
+
+let SAGE_VALLEY_PARS = [
+    4,3,4,5,4,4,3,5,4,
+    5,4,3,4,4,5,3,4,4
+]
+
+let SAGE_VALLEY_HCS = [
+    11,15,1,9,7,17,13,5,3,
+    10,4,18,16,8,14,12,2,6
+]
+
+let SAGE_VALLEY_TEES = [
+    TeeInfo(teeName: "Black", yardage: 7325, rating: nil, slope: nil)
+]
+
+
+let QUIXOTE_PARS = [
+    4,4,4,3,4,4,5,3,4,
+    4,4,3,5,4,4,4,3,4
+]
+
+let QUIXOTE_HCS = [
+    3,7,15,13,11,5,9,17,1,
+    12,4,18,14,6,10,16,8,2
+]
+
+let QUIXOTE_TEES = [
+    TeeInfo(teeName: "Back", yardage: 6772, rating: 73.3, slope: 138)
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -9701,7 +9815,126 @@ private enum BuiltIns {
         website: "https://www.bethpagegolfcourse.com",
         address: "99 Quaker Meeting House Rd, Farmingdale, NY",
         isWolfApproved: true
-        )
+        ),
+        // MARK: - Built-In Course Entries
+
+        // MARK: - Built-In Course Entries
+
+        c(
+            OLD_BARNWELL_ID,
+            "Old Barnwell",
+            OLD_BARNWELL_PARS,
+            OLD_BARNWELL_HCS,
+            OLD_BARNWELL_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Aiken",
+            type: "Private",
+            phone: "(803) 761-9040",
+            website: "https://oldbarnwell.com",
+            address: "6200 Gilroy Lane, Aiken, SC 29803",
+            isWolfApproved: true
+        ),
+
+        c(
+            YEAMANS_HALL_ID,
+            "Yeamans Hall Club",
+            YEAMANS_HALL_PARS,
+            YEAMANS_HALL_HCS,
+            YEAMANS_HALL_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Charleston",
+            architect: "Seth Raynor/Charles Banks",
+            type: "Private",
+            phone: "(843) 744-3351",
+            website: "https://www.yeamanshallclub.com",
+            address: "900 Yeamans Hall Road, Charleston, SC 29410",
+            isWolfApproved: true
+        ),
+
+        c(
+            TREE_FARM_ID,
+            "The Tree Farm",
+            TREE_FARM_PARS,
+            TREE_FARM_HCS,
+            TREE_FARM_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Batesburg",
+            architect: "Tom Doak/Kye Goalby",
+            type: "Private",
+            phone: "(507) 993-6292",
+            website: "https://thetreefarm.golf",
+            address: "4456 Tree Farm Trail, Batesburg, SC 29006",
+            isWolfApproved: true
+        ),
+
+        c(
+            CONGAREE_ID,
+            "Congaree Golf Club",
+            CONGAREE_PARS,
+            CONGAREE_HCS,
+            CONGAREE_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Ridgeland",
+            type: "Private",
+            phone: "(843) 717-3400",
+            website: "https://www.congareegc.com",
+            address: "384 Davant Drive, Ridgeland, SC 29936",
+            isWolfApproved: true
+        ),
+
+        c(
+            PALMETTO_ID,
+            "Palmetto Golf Club",
+            PALMETTO_PARS,
+            PALMETTO_HCS,
+            PALMETTO_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Aiken",
+            architect: "Alister MacKenzie",
+            type: "Private",
+            phone: "(803) 649-2951",
+            website: "https://palmettogolfclub.net",
+            address: "275 Berrie Road SW, Aiken, SC 29801",
+            isWolfApproved: true
+        ),
+
+        c(
+            SAGE_VALLEY_ID,
+            "Sage Valley Golf Club",
+            SAGE_VALLEY_PARS,
+            SAGE_VALLEY_HCS,
+            SAGE_VALLEY_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Graniteville",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(803) 663-0900",
+            website: "https://sagevalleygolf.com",
+            address: "2240 Sage Valley Drive, Graniteville, SC 29829",
+            isWolfApproved: true
+        ),
+
+        c(
+            QUIXOTE_ID,
+            "Quixote Club",
+            QUIXOTE_PARS,
+            QUIXOTE_HCS,
+            QUIXOTE_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Sumter",
+            type: "Private",
+            phone: "(803) 775-5541",
+            website: "https://www.quixoteclub.com",
+            address: "875 Pinewood Road, Sumter, SC 29154",
+            isWolfApproved: true
+        ),
         ]
     
     

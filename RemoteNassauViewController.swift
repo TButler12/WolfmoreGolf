@@ -21,6 +21,7 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     private let overallLabel = UILabel()
     private let totalLabel = UILabel()
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private let sendResultsButton = UIButton(type: .system)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -41,13 +42,6 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
 
         setupUI()
         populateUI()
-
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Send to \(opponentRound.playerName)",
-            style: .plain,
-            target: self,
-            action: #selector(sendResultsTapped)
-        )
     }
 
     private func setupUI() {
@@ -64,13 +58,22 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
         summaryStack.axis = .vertical
         summaryStack.spacing = 12
 
+        var btnCfg = UIButton.Configuration.filled()
+        btnCfg.title = "Send Results"
+        btnCfg.cornerStyle = .large
+        btnCfg.contentInsets = NSDirectionalEdgeInsets(top: 14, leading: 32, bottom: 14, trailing: 32)
+        sendResultsButton.configuration = btnCfg
+        sendResultsButton.addTarget(self, action: #selector(sendResultsTapped), for: .touchUpInside)
+
         matchupLabel.translatesAutoresizingMaskIntoConstraints = false
         summaryStack.translatesAutoresizingMaskIntoConstraints = false
         tableView.translatesAutoresizingMaskIntoConstraints = false
+        sendResultsButton.translatesAutoresizingMaskIntoConstraints = false
 
         view.addSubview(matchupLabel)
         view.addSubview(summaryStack)
         view.addSubview(tableView)
+        view.addSubview(sendResultsButton)
 
         tableView.dataSource = self
         tableView.delegate = self
@@ -90,7 +93,12 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
             tableView.topAnchor.constraint(equalTo: summaryStack.bottomAnchor, constant: 20),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            tableView.bottomAnchor.constraint(equalTo: sendResultsButton.topAnchor, constant: -16),
+
+            sendResultsButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
+            sendResultsButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            sendResultsButton.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 40),
+            sendResultsButton.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -40),
         ])
     }
 

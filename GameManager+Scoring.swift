@@ -222,18 +222,34 @@ extension GameManager {
         // Split total across Wolves (whole dollars)
         let basePerWolf = totalDollars / numWolf
         let remainder   = totalDollars % numWolf
-        let primaryWolf = wolfTeam.min()
+
+        // Determine who receives the odd dollar (when remainder > 0 and wolf team has 2+ players).
+        // Alternates fairly across holes: the player who did NOT receive it last time gets it next.
+        // Uses lastOddDollarHole to avoid re-advancing the tracker on repeated calls for the same hole.
+        let sortedWolfTeam = wolfTeam.sorted()
+        let oddRecipient: Int? = {
+            guard remainder > 0, sortedWolfTeam.count > 1 else { return sortedWolfTeam.first }
+            let recipient: Int
+            if let last = lastOddDollarRecipient, sortedWolfTeam.contains(last) {
+                recipient = sortedWolfTeam.first(where: { $0 != last }) ?? sortedWolfTeam[0]
+            } else {
+                recipient = sortedWolfTeam[0]
+            }
+            if hole != lastOddDollarHole {
+                lastOddDollarRecipient = recipient
+                lastOddDollarHole = hole
+            }
+            return recipient
+        }()
 
         if wolfTeamScore > nonTeamScore {
-            // Wolves win
             for s in nonWolfTeam { payouts[s] = Double(-perNonDollar) }
             for s in wolfTeam    { payouts[s] = Double(basePerWolf) }
-            if let p = primaryWolf { payouts[p] += Double(remainder) }
+            if let p = oddRecipient { payouts[p] += Double(remainder) }
         } else {
-            // Wolves lose
             for s in nonWolfTeam { payouts[s] = Double(+perNonDollar) }
             for s in wolfTeam    { payouts[s] = Double(-basePerWolf) }
-            if let p = primaryWolf { payouts[p] -= Double(remainder) }
+            if let p = oddRecipient { payouts[p] -= Double(remainder) }
         }
 
         return payouts

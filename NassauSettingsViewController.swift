@@ -150,39 +150,34 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
 
     private func importRemoteInvite() {
         guard let g = GameManager.shared.currentGame else { return }
-        guard let myIndex = myPlayerIndex(in: g) else { return }
+        guard let myIndex = myPlayerIndex(in: g) else {
+            showRemoteError("Set your name in Profile before importing a challenge.")
+            return
+        }
 
-        let myRound = SharedRoundBuilder.make(from: g, playerIndex: myIndex)
-
+        // Preserve the original working order: stake first, then round import,
+        // then mode selector inline inside the formSheet dismissal callback.
         promptForRemoteStake { [weak self] stake in
             guard let self else { return }
             self.promptForRemoteRound { [weak self] opponentRound in
                 guard let self else { return }
+
+                let myRound = SharedRoundBuilder.makeIdentity(from: g, playerIndex: myIndex)
 
                 guard !self.isSamePlayer(myRound.playerName, opponentRound.playerName) else {
                     self.showRemoteError("You pasted your own remote round code. Paste your opponent's code instead.")
                     return
                 }
 
-                let savedMatch = RemoteMatch(
-                    myRound: myRound,
-                    opponentName: opponentRound.playerName,
-                    stakePerBet: stake,
-                    inviteCode: nil,
-                    isAccepted: true,
-                    opponentRound: opponentRound
-                )
-                RemoteMatchStore.shared.add(savedMatch)
-
                 let ac = UIAlertController(title: "Compare Mode", message: nil, preferredStyle: .actionSheet)
                 ac.addAction(UIAlertAction(title: "Hole by Hole", style: .default) { [weak self] _ in
-                    self?.sendAcceptanceAndOpen(savedMatch, mode: .holeByHole)
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .holeByHole)
                 })
                 ac.addAction(UIAlertAction(title: "Front / Back 9 by HC", style: .default) { [weak self] _ in
-                    self?.sendAcceptanceAndOpen(savedMatch, mode: .frontBackByHC)
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .frontBackByHC)
                 })
                 ac.addAction(UIAlertAction(title: "18 Holes by HC", style: .default) { [weak self] _ in
-                    self?.sendAcceptanceAndOpen(savedMatch, mode: .all18ByHC)
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .all18ByHC)
                 })
                 ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
                 self.present(ac, animated: true)
@@ -190,17 +185,44 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
         }
     }
 
-    private func openRemoteMatch(_ match: RemoteMatch, mode: RemoteCompareMode) {
-        guard let opponentRound = match.opponentRound, let result = match.result else {
-            showRemoteError("Could not calculate Remote Nassau result.")
-            return
+    private func acceptChallenge(myRound: SharedRound, opponentRound: SharedRound, stake: Int, mode: RemoteCompareMode) {
+        let match = RemoteMatch(
+            myRound: myRound,
+            opponentName: opponentRound.playerName,
+            stakePerBet: stake,
+            inviteCode: nil,
+            isAccepted: true,
+            opponentRound: opponentRound,
+            compareMode: mode,
+            roundApplied: false
+        )
+        RemoteMatchStore.shared.add(match)
+        sendAcceptanceMessage(match: match)
+    }
+
+    private func sendAcceptanceMessage(match: RemoteMatch) {
+        let body = buildAcceptanceMessage(match: match)
+        if MFMessageComposeViewController.canSendText() {
+            onMessageComposeDismissed = { [weak self] in
+                self?.showAcceptanceConfirmation()
+            }
+            let composer = MFMessageComposeViewController()
+            composer.messageComposeDelegate = self
+            composer.body = body
+            present(composer, animated: true)
+        } else {
+            showAcceptanceConfirmation()
         }
-        let vc = RemoteNassauViewController()
-        vc.myRound = match.myRound
-        vc.opponentRound = opponentRound
-        vc.result = result
-        vc.compareMode = mode
-        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func showAcceptanceConfirmation() {
+        let ac = UIAlertController(
+            title: "Challenge Accepted! 🏌️",
+            message: "Play your round, then open Remote Nassau → View Matches and tap \"Apply Round & Calculate Results\".",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Let's Play!", style: .default))
+        present(ac, animated: true)
     }
 
     private func promptForRemoteStake(completion: @escaping (Int) -> Void) {
@@ -280,36 +302,19 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
         }
     }
 
-    private func sendAcceptanceAndOpen(_ match: RemoteMatch, mode: RemoteCompareMode) {
-        let body = buildAcceptanceMessage(match: match, mode: mode)
-        if MFMessageComposeViewController.canSendText() {
-            onMessageComposeDismissed = { [weak self] in
-                self?.openRemoteMatch(match, mode: mode)
-            }
-            let composer = MFMessageComposeViewController()
-            composer.messageComposeDelegate = self
-            composer.body = body
-            present(composer, animated: true)
-        } else {
-            openRemoteMatch(match, mode: mode)
-        }
-    }
-
-    private func buildAcceptanceMessage(match: RemoteMatch, mode: RemoteCompareMode) -> String {
+    private func buildAcceptanceMessage(match: RemoteMatch) -> String {
         let modeLabel: String
-        switch mode {
+        switch match.compareMode {
         case .holeByHole:    modeLabel = "Hole by Hole"
         case .frontBackByHC: modeLabel = "Front/Back 9 by HC"
         case .all18ByHC:     modeLabel = "18 Holes by HC"
         }
-        let opponentCourse = match.opponentRound?.courseName ?? "their course"
         return """
-        WolfMore Remote Nassau — Challenge Accepted!
+        WolfMore Nassau — Challenge Accepted! 🏌️
         \(match.myRound.playerName) @ \(match.myRound.courseName)
-        vs \(match.opponentName) @ \(opponentCourse)
         Mode: \(modeLabel)
         Stake: $\(match.stakePerBet) per bet
-        Game on!
+        Results coming after my round!
         """
     }
 

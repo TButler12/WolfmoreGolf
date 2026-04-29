@@ -14,8 +14,12 @@ final class GameManager {
     // ...
     var canRandomizeTeams = false   // Only true right after a Reset
     var randomizeUnlocked: Bool = false   // locked by default
-    
-    
+
+    // Tracks which wolf team player last received an odd dollar, for fair alternation.
+    // Reset each new game; updated by computeHolePayout when a remainder occurs.
+    var lastOddDollarRecipient: Int? = nil
+    var lastOddDollarHole: Int = -1
+
     private init() {}
     
     // Single save slot (no external store, no ids)
@@ -31,6 +35,8 @@ final class GameManager {
     
     /// Create a brand-new game with defaults, save, and notify once.
     func startNewGame(name: String = "New Game") {
+        lastOddDollarRecipient = nil
+        lastOddDollarHole = -1
         let g = baselineNewGame(named: name)
         currentGame = g
         saveCurrent()

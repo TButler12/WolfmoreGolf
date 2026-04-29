@@ -51,12 +51,27 @@ enum SharedRoundBuilder {
             courseName: resolvedCourseName(from: g),
             pars: Array(g.course.pars.prefix(STANDARD_HOLES)),
             hcs: Array(g.course.holeHandicaps.prefix(STANDARD_HOLES)),
-            scores: scores as! [Int],
+            scores: scores,
             fairways: fairways,
             girs: girs,
             putts: putts,
             courseHandicap: playerIndex < g.hcPlayers.count ? g.hcPlayers[playerIndex] : 0
+        )
+    }
 
+    // Identity-only round: preserves name/course/HC but no scores.
+    // Used when accepting a challenge before playing your round.
+    static func makeIdentity(from g: GameData, playerIndex: Int) -> SharedRound {
+        SharedRound(
+            playerName: playerIndex < g.playerNames.count ? g.playerNames[playerIndex] : "Player",
+            courseName: resolvedCourseName(from: g),
+            pars: Array(g.course.pars.prefix(STANDARD_HOLES)),
+            hcs: Array(g.course.holeHandicaps.prefix(STANDARD_HOLES)),
+            scores: [],
+            fairways: [],
+            girs: [],
+            putts: [],
+            courseHandicap: playerIndex < g.hcPlayers.count ? g.hcPlayers[playerIndex] : 0
         )
     }
 }

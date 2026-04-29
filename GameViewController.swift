@@ -241,6 +241,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         
         // --- Totals labels ---
         totalMoneyLabels = totalMoneyLabels.sorted { $0.tag < $1.tag }
+        for label in totalMoneyLabels {
+            label.adjustsFontSizeToFitWidth = true
+            label.minimumScaleFactor = 0.6
+        }
         refreshTotalMoneyLabels()
         
         // --- Toggle button styling (these may be hidden depending on mode) ---
@@ -263,6 +267,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             tf.isUserInteractionEnabled = true
             tf.textAlignment = .right
             tf.keyboardType = .decimalPad
+            tf.adjustsFontSizeToFitWidth = true
+            tf.minimumFontSize = 9
             tf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
         }
         
@@ -639,13 +645,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         return f
     }()
 
-    // Plain integer formatter (with thousands separators, no decimals)
+    // Plain integer formatter (no decimals, no comma separators for compact display)
     private let integer0: NumberFormatter = {
         let nf = NumberFormatter()
         nf.numberStyle = .decimal
         nf.minimumFractionDigits = 0
         nf.maximumFractionDigits = 0
-        nf.usesGroupingSeparator = true
+        nf.usesGroupingSeparator = false
         return nf
     }()
 
@@ -659,7 +665,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let rounded = value.rounded(.toNearestOrAwayFromZero)
         let isNegative = rounded < 0
         let display = abs(rounded)
-
         label.text = integer0.string(from: NSNumber(value: display)) ?? String(format: "%.0f", display)
         label.textColor = isNegative ? .systemRed : .label
         label.backgroundColor = moneyBgColor(for: rounded)
@@ -769,28 +774,38 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let seat = order[safe: i] ?? i
             let name = (seat < g.playerNames.count) ? g.playerNames[seat] : ""
 
-            var displayText = name
             let isActive = activeSeats.isEmpty
                 ? !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 : (seat < g.playerActivated.count && g.playerActivated[seat] &&
                    !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            var hasStroke = false
+            var strokePops = 0
             if isActive {
                 let delta = max(0, (seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0) - baseHC)
-                let p = pops(for: delta, strokeIndex: si)
-                if p > 0 {
-                    displayText += " •\(p)"
-                    hasStroke = true
-                }
+                strokePops = pops(for: delta, strokeIndex: si)
             }
 
-            label.text = displayText
             label.lineBreakMode = .byTruncatingMiddle
             label.numberOfLines = 1
-            label.font = hasStroke
-                ? UIFont.boldSystemFont(ofSize: label.font.pointSize)
-                : UIFont.systemFont(ofSize: label.font.pointSize, weight: .regular)
-            label.textColor = hasStroke ? .systemGreen : .label
+            let fontSize = label.font.pointSize
+            if strokePops > 0 {
+                let boldFont = UIFont.boldSystemFont(ofSize: fontSize)
+                let nameAttr = NSAttributedString(string: name, attributes: [
+                    .font: boldFont,
+                    .foregroundColor: UIColor.systemGreen
+                ])
+                let badgeAttr = NSAttributedString(string: " " + String(repeating: "•", count: strokePops), attributes: [
+                    .font: UIFont.systemFont(ofSize: fontSize + 6),
+                    .foregroundColor: UIColor.systemRed
+                ])
+                let combined = NSMutableAttributedString(attributedString: nameAttr)
+                combined.append(badgeAttr)
+                label.attributedText = combined
+            } else {
+                label.attributedText = nil
+                label.text = name
+                label.font = UIFont.systemFont(ofSize: fontSize, weight: .regular)
+                label.textColor = .label
+            }
         }
     }
 
@@ -1775,53 +1790,76 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
     }
 
-    private func sendAcceptanceAndOpen(_ match: RemoteMatch, mode: RemoteCompareMode) {
-        let body = buildAcceptanceMessage(match: match, mode: mode)
+    private func acceptChallenge(myRound: SharedRound, opponentRound: SharedRound, stake: Int, mode: RemoteCompareMode) {
+        let match = RemoteMatch(
+            myRound: myRound,
+            opponentName: opponentRound.playerName,
+            stakePerBet: stake,
+            inviteCode: nil,
+            isAccepted: true,
+            opponentRound: opponentRound,
+            compareMode: mode,
+            roundApplied: false
+        )
+        RemoteMatchStore.shared.add(match)
+        sendAcceptanceMessage(match: match)
+    }
+
+    private func sendAcceptanceMessage(match: RemoteMatch) {
+        let body = buildAcceptanceMessage(match: match)
         if MFMessageComposeViewController.canSendText() {
             onMessageComposeDismissed = { [weak self] in
-                self?.openRemoteMatch(match, mode: mode)
+                self?.showAcceptanceConfirmation()
             }
             let composer = MFMessageComposeViewController()
             composer.messageComposeDelegate = self
             composer.body = body
             present(composer, animated: true)
         } else {
-            openRemoteMatch(match, mode: mode)
+            showAcceptanceConfirmation()
         }
     }
 
-    private func buildAcceptanceMessage(match: RemoteMatch, mode: RemoteCompareMode) -> String {
+    private func showAcceptanceConfirmation() {
+        let ac = UIAlertController(
+            title: "Challenge Accepted! 🏌️",
+            message: "Play your round, then open Remote Nassau → View Matches and tap \"Apply Round & Calculate Results\".",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Let's Play!", style: .default))
+        present(ac, animated: true)
+    }
+
+    private func buildAcceptanceMessage(match: RemoteMatch) -> String {
         let modeLabel: String
-        switch mode {
+        switch match.compareMode {
         case .holeByHole:    modeLabel = "Hole by Hole"
         case .frontBackByHC: modeLabel = "Front/Back 9 by HC"
         case .all18ByHC:     modeLabel = "18 Holes by HC"
         }
-        let opponentCourse = match.opponentRound?.courseName ?? "their course"
         return """
-        WolfMore Remote Nassau — Challenge Accepted!
+        WolfMore Nassau — Challenge Accepted! 🏌️
         \(match.myRound.playerName) @ \(match.myRound.courseName)
-        vs \(match.opponentName) @ \(opponentCourse)
         Mode: \(modeLabel)
         Stake: $\(match.stakePerBet) per bet
-        Game on!
+        Results coming after my round!
         """
     }
     @IBAction func startRemoteNassauTapped(_ sender: UIButton) {
         guard let g = GameManager.shared.currentGame else { return }
 
         guard let myIndex = myPlayerIndex(in: g) else {
-            print("❌ Could not find local player")
+            showRemoteImportError(message: "Set your name in Profile before importing a challenge.")
             return
         }
-
-        let myRound = SharedRoundBuilder.make(from: g, playerIndex: myIndex)
 
         promptForRemoteStake { [weak self] stake in
             guard let self else { return }
 
             self.promptForRemoteRound { [weak self] opponentRound in
                 guard let self else { return }
+
+                let myRound = SharedRoundBuilder.makeIdentity(from: g, playerIndex: myIndex)
 
                 if self.isSamePlayer(myRound.playerName, opponentRound.playerName) {
                     self.showRemoteImportError(
@@ -1830,30 +1868,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     return
                 }
 
-                let savedMatch = RemoteMatch(
-                    myRound: myRound,
-                    opponentName: opponentRound.playerName,
-                    stakePerBet: stake,
-                    inviteCode: nil,
-                    isAccepted: true,
-                    opponentRound: opponentRound
-                )
-
-                RemoteMatchStore.shared.add(savedMatch)
-                print("💾 Saved Remote Match vs \(opponentRound.playerName)")
-
                 let ac = UIAlertController(title: "Compare Mode", message: nil, preferredStyle: .actionSheet)
 
                 ac.addAction(UIAlertAction(title: "Hole by Hole", style: .default) { [weak self] _ in
-                    self?.sendAcceptanceAndOpen(savedMatch, mode: .holeByHole)
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .holeByHole)
                 })
 
                 ac.addAction(UIAlertAction(title: "Front / Back 9 by HC", style: .default) { [weak self] _ in
-                    self?.sendAcceptanceAndOpen(savedMatch, mode: .frontBackByHC)
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .frontBackByHC)
                 })
 
                 ac.addAction(UIAlertAction(title: "18 Holes by HC", style: .default) { [weak self] _ in
-                    self?.sendAcceptanceAndOpen(savedMatch, mode: .all18ByHC)
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .all18ByHC)
                 })
 
                 ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -2534,8 +2560,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func setMoneyField(_ field: UITextField?, to value: Double) {
         guard let f = field else { return }
-        let shown = abs(value)                    // ← no minus sign
-        f.text = String(format: "%.1f", shown)
+        let whole = Int(abs(value).rounded())
+        f.text = integer0.string(from: NSNumber(value: whole)) ?? "\(whole)"
         f.textColor = value < 0 ? .systemRed : .label
     }
     private func setupToggleButton(_ b: UIButton?,
