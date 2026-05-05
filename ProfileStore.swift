@@ -23,6 +23,19 @@ enum ProfileStore {
         }
     }
 
+    // MARK: - My HC / Preselect
+    private static let myHCKey = "profile.myHC"
+    static var myHC: Int {
+        get { UserDefaults.standard.integer(forKey: myHCKey) }
+        set { UserDefaults.standard.set(newValue, forKey: myHCKey) }
+    }
+
+    private static let myPreselectKey = "profile.myPreselect"
+    static var myPreselectForRound: Bool {
+        get { UserDefaults.standard.bool(forKey: myPreselectKey) }
+        set { UserDefaults.standard.set(newValue, forKey: myPreselectKey) }
+    }
+
     // MARK: - Home Course
     private static let homeCourseKey = "profile.homeCourseID"
 

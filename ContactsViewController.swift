@@ -106,12 +106,30 @@ final class ContactsViewController: UITableViewController {
     }
 
     // MARK: - Table
+
+    override func numberOfSections(in tableView: UITableView) -> Int {
+        isBuildingGroup ? 1 : 2
+    }
+
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        friends.count
+        if !isBuildingGroup && section == 0 { return 1 }
+        return friends.count
+    }
+
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        if !isBuildingGroup && section == 0 { return "You" }
+        return nil
     }
 
     override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+
+        if !isBuildingGroup && indexPath.section == 0 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "YouCell")
+                ?? UITableViewCell(style: .subtitle, reuseIdentifier: "YouCell")
+            configureYouCell(cell)
+            return cell
+        }
 
         let cell = tableView.dequeueReusableCell(withIdentifier: Const.cellID)
             ?? UITableViewCell(style: .subtitle, reuseIdentifier: Const.cellID)
@@ -119,6 +137,17 @@ final class ContactsViewController: UITableViewController {
         let friend = friends[indexPath.row]
         configure(cell, with: friend)
         return cell
+    }
+
+    private func configureYouCell(_ cell: UITableViewCell) {
+        let name = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        cell.textLabel?.text = (name.isEmpty || name == "Player 1") ? "Set your scoring name" : name
+        cell.detailTextLabel?.text = "Your scoring name — tap to edit"
+        cell.textLabel?.textColor = .label
+        cell.detailTextLabel?.textColor = .secondaryLabel
+        cell.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.25)
+        cell.accessoryType = .disclosureIndicator
+        cell.selectionStyle = .default
     }
     @objc private func deleteEditingGroupTapped() {
         guard let group = editingGroup else { return }
@@ -168,6 +197,11 @@ final class ContactsViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
+        if !isBuildingGroup && indexPath.section == 0 {
+            presentEditScoringName()
+            return
+        }
+
         let friend = friends[indexPath.row]
 
         if isBuildingGroup {
@@ -187,6 +221,7 @@ final class ContactsViewController: UITableViewController {
                             trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
         if isBuildingGroup { return nil }
+        guard indexPath.section == 1 else { return nil }
         let friend = friends[indexPath.row]
         let isTracked = FriendTrackStore.shared.isTracked(friend.id, on: courseID)
 
@@ -285,6 +320,7 @@ final class ContactsViewController: UITableViewController {
             )
             FriendStore.shared.upsert(friend)
         }
+        tableView.reloadData()
     }
     // MARK: - Favorites
     private func makeFavoriteButton(isFavorite: Bool, friendID: UUID) -> UIButton {
@@ -546,6 +582,35 @@ final class ContactsViewController: UITableViewController {
             } else {
                 self.showTrackLimitAlert()
             }
+        })
+
+        present(ac, animated: true)
+    }
+
+    private func presentEditScoringName() {
+        let ac = UIAlertController(
+            title: "Your Scoring Name",
+            message: "This name appears on every scorecard you play.",
+            preferredStyle: .alert
+        )
+
+        ac.addTextField { tf in
+            let stored = ProfileStore.name ?? ""
+            tf.text = (stored == "Player 1" || stored.isEmpty) ? "" : stored
+            tf.placeholder = "e.g. McTommy, Bucky"
+            tf.autocapitalizationType = .words
+            tf.clearButtonMode = .whileEditing
+            tf.returnKeyType = .done
+        }
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            let raw = (ac.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !raw.isEmpty else { return }
+            ProfileStore.name = raw
+            self?.tableView.reloadData()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
         })
 
         present(ac, animated: true)

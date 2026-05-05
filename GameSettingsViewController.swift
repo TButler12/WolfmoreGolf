@@ -64,6 +64,19 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         segment.translatesAutoresizingMaskIntoConstraints = false
         segment.addTarget(self, action: #selector(wolfScoringChanged(_:)), for: .valueChanged)
 
+        segment.backgroundColor = .systemGray6
+        segment.selectedSegmentTintColor = .wolfMoreGreen
+        segment.setTitleTextAttributes([
+            .foregroundColor: UIColor.secondaryLabel,
+            .font: UIFont.systemFont(ofSize: 14, weight: .regular)
+        ], for: .normal)
+        segment.setTitleTextAttributes([
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 14, weight: .semibold)
+        ], for: .selected)
+        segment.layer.borderColor = UIColor.systemGray4.cgColor
+        segment.layer.borderWidth = 1
+
         if let g = GameManager.shared.currentGame {
             switch g.resolvedGameType {
             case .sixPointScotch: segment.selectedSegmentIndex = 0

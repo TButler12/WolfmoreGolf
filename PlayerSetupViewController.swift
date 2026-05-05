@@ -27,6 +27,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private let capacity = 5
     private var maxActive: Int { capacity }
     private let settingsButton = UIButton(type: .system)
+    private weak var gameInfoLabel: UILabel?
+    private weak var stakeInfoLabel: UILabel?
    
  
     override func viewDidLoad() {
@@ -39,12 +41,19 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         CourseLibrary.shared.seedIfNeeded()
 
         // Configure settings button before layout (buildDynamicUI inserts it)
-        settingsButton.setImage(UIImage(systemName: "gearshape.fill"), for: .normal)
-        settingsButton.tintColor = UIColor(red: 0.10, green: 0.35, blue: 0.20, alpha: 1.0)
-        settingsButton.setTitle("  $take and Game Settings", for: .normal)
-        settingsButton.backgroundColor = .clear
-        settingsButton.titleLabel?.font = UIFont.preferredFont(forTextStyle: .callout)
-        settingsButton.titleLabel?.adjustsFontForContentSizeCategory = true
+        var settingsCfg = UIButton.Configuration.filled()
+        settingsCfg.title = "Edit Game Settings"
+        settingsCfg.image = UIImage(systemName: "gearshape.fill")
+        settingsCfg.imagePlacement = .leading
+        settingsCfg.imagePadding = 8
+        settingsCfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.35, blue: 0.20, alpha: 1.0)
+        settingsCfg.baseForegroundColor = .white
+        settingsCfg.cornerStyle = .large
+        settingsCfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        settingsCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .callout); return a
+        }
+        settingsButton.configuration = settingsCfg
         settingsButton.addTarget(self, action: #selector(settingsTapped), for: .touchUpInside)
 
         // Replace fixed-frame storyboard layout with Dynamic Type–aware layout
@@ -59,9 +68,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         NotificationCenter.default.addObserver(
             self, selector: #selector(reloadFromModel), name: .reloadUI, object: nil)
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Edit Player Tracking", style: .plain,
-            target: self, action: #selector(trackFriendsTapped))
+        navigationItem.rightBarButtonItem = nil
 
         updateCourseLabel()
         populateFromModel()
@@ -212,9 +219,27 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             main.addArrangedSubview(row)
         }
 
+        let newGameLabel = UILabel()
+        newGameLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        newGameLabel.adjustsFontForContentSizeCategory = true
+        newGameLabel.numberOfLines = 0
+        newGameLabel.textColor = .secondaryLabel
+        gameInfoLabel = newGameLabel
+
+        let newStakeLabel = UILabel()
+        newStakeLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        newStakeLabel.adjustsFontForContentSizeCategory = true
+        newStakeLabel.numberOfLines = 0
+        newStakeLabel.textColor = .secondaryLabel
+        stakeInfoLabel = newStakeLabel
+
         main.addArrangedSubview(hairline())
         main.addArrangedSubview(newCourseLabel)
-        main.setCustomSpacing(20, after: newCourseLabel)
+        main.setCustomSpacing(2, after: newCourseLabel)
+        main.addArrangedSubview(newGameLabel)
+        main.setCustomSpacing(2, after: newGameLabel)
+        main.addArrangedSubview(newStakeLabel)
+        main.setCustomSpacing(20, after: newStakeLabel)
         main.addArrangedSubview(goBtn)
         main.setCustomSpacing(10, after: goBtn)
         main.addArrangedSubview(resetBtn)
@@ -222,7 +247,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         main.addArrangedSubview(randBtn)
         main.setCustomSpacing(24, after: randBtn)
         settingsButton.translatesAutoresizingMaskIntoConstraints = false
-        settingsButton.contentHorizontalAlignment = .leading
         main.addArrangedSubview(settingsButton)
     }
 
@@ -502,6 +526,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         } else {
             courseLabel.text = "Course: Custom"
         }
+
+        gameInfoLabel?.text  = "Game:   \(g.gameType?.displayName ?? "Casual")"
+        stakeInfoLabel?.text = "Stake:  $\(g.baseGameStake)"
     }
 
     // MARK: - Wiring

@@ -17,5 +17,14 @@ enum GameType: String, Codable {
 extension GameType {
     var isWolf: Bool { self == .wolf || self == .wolfLowBall }
     var isScotch: Bool { self == .sixPointScotch }
+
+    var displayName: String {
+        switch self {
+        case .wolf:           return "Wolf 2-Point"
+        case .wolfLowBall:    return "Wolf LowBall"
+        case .sixPointScotch: return "6-Point Scotch"
+        case .hammer:         return "Hammer"
+        }
+    }
 }
 

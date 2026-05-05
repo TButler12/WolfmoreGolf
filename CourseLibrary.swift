@@ -5853,6 +5853,640 @@ let QUIXOTE_HCS = [
 let QUIXOTE_TEES = [
     TeeInfo(teeName: "Back", yardage: 6772, rating: 73.3, slope: 138)
 ]
+private let MAY_RIVER_ID = UUID(uuidString: "F3A9D1C2-7E44-4B9A-AE8C-2D6F9B8A1C01")!
+private let SECESSION_ID = UUID(uuidString: "8B7E2F90-3C1D-4A6E-BF55-91C2D7E4A2B3")!
+private let BULLS_BAY_ID = UUID(uuidString: "C1D4A8E7-5B92-4F3C-9A6D-0E7F2B3C9D44")!
+let MAY_RIVER_PARS: [Int] = [
+    4,3,4,5,4,3,4,5,4,
+    5,3,4,4,3,5,4,3,5
+]
+
+let MAY_RIVER_HCS: [Int] = [
+    13,15,9,7,3,17,11,5,1,
+    2,18,10,8,16,12,6,14,4
+]
+
+let MAY_RIVER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Oak", yardage: 7171, rating: 75.6, slope: 141),
+    TeeInfo(teeName: "Cedar", yardage: 6513, rating: 72.8, slope: 137),
+    TeeInfo(teeName: "Hickory", yardage: 6065, rating: 70.7, slope: 133),
+    TeeInfo(teeName: "Magnolia", yardage: 5168, rating: 70.3, slope: 124)
+]
+
+// MARK: - Secession Golf Club
+
+let SECESSION_PARS: [Int] = [
+    4,3,4,4,5,4,4,3,5,
+    5,4,3,5,3,4,4,3,4
+]
+
+let SECESSION_HCS: [Int] = [
+    13,17,1,11,9,15,3,7,5,
+    12,8,6,2,10,16,18,14,4
+]
+
+let SECESSION_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Devlin", yardage: 7016, rating: 74.1, slope: 145)
+]
+
+// MARK: - Bulls Bay Golf Club
+
+let BULLS_BAY_PARS: [Int] = [
+    4,5,3,5,4,5,3,4,4,
+    5,4,3,5,3,4,4,3,4
+]
+
+let BULLS_BAY_HCS: [Int] = [
+    5,1,15,3,7,11,9,17,13,
+    4,16,12,2,14,6,10,18,8
+]
+
+let BULLS_BAY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Maverick", yardage: 7220, rating: 75.2, slope: 138),
+    TeeInfo(teeName: "Skull", yardage: 6692, rating: 72.6, slope: 136),
+    TeeInfo(teeName: "Club", yardage: 6345, rating: 71.0, slope: 132),
+    TeeInfo(teeName: "Bull", yardage: 6104, rating: 69.7, slope: 130),
+    TeeInfo(teeName: "Bay", yardage: 5335, rating: 72.2, slope: 123)
+]
+private let WARREN_GC_ID = UUID(uuidString: "7F2A9C14-3B6E-4D91-8E2F-5A1C7D9B4E22")!
+
+let WARREN_GC_PARS: [Int] = [
+    4,5,4,3,4,4,3,5,4,
+    4,3,4,5,3,5,3,4,4
+]
+
+let WARREN_GC_HCS: [Int] = [
+    5,7,1,11,15,17,9,13,3,
+    16,14,8,2,12,6,18,10,4
+]
+
+let WARREN_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: nil, rating: nil, slope: nil)
+]
+// MARK: - Singapore Courses
+
+private let LAGUNA_NATIONAL_ID = UUID(uuidString: "3C9E5A71-6B28-4F4D-9E2A-8B7D1C3F9026")!
+private let SENTOSA_TANJONG_ID = UUID(uuidString: "D8F2A6B4-91C7-4E3A-A52F-6C8B0E9D7413")!
+
+// MARK: - Laguna National Golf Resort Club
+
+let LAGUNA_NATIONAL_PARS: [Int] = [
+    4,5,3,4,4,5,4,3,4,
+    4,5,4,4,3,4,5,3,4
+]
+
+let LAGUNA_NATIONAL_HCS: [Int] = [
+    16,2,18,12,10,8,4,14,6,
+    15,1,9,13,17,3,5,11,7
+]
+
+let LAGUNA_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Masters", yardage: 7118, rating: nil, slope: nil),
+    TeeInfo(teeName: "Blue", yardage: 6624, rating: nil, slope: nil),
+    TeeInfo(teeName: "White", yardage: 6101, rating: nil, slope: nil)
+]
+
+// MARK: - Sentosa Golf Club - The Tanjong
+
+let SENTOSA_TANJONG_PARS: [Int] = [
+    4,3,4,5,4,4,5,3,4,
+    4,4,5,4,3,4,4,3,5
+]
+
+let SENTOSA_TANJONG_HCS: [Int] = [
+    9,17,1,3,5,13,11,15,7,
+    16,12,18,2,8,4,6,14,10
+]
+
+let SENTOSA_TANJONG_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6675, rating: 75.2, slope: 137),
+    TeeInfo(teeName: "Blue", yardage: 6227, rating: 73.6, slope: 133),
+    TeeInfo(teeName: "White", yardage: 5845, rating: 71.7, slope: 133),
+    TeeInfo(teeName: "Ladies", yardage: 5286, rating: 74.3, slope: 132)
+]
+private let TANAH_MERAH_TAMPINES_ID = UUID(uuidString: "A91C4F2D-5E7B-4C88-9F12-3D6A8B9E0F21")!
+
+let TANAH_MERAH_TAMPINES_PARS: [Int] = [
+    4,4,4,3,5,3,4,5,4,
+    5,4,4,4,3,4,3,4,5
+]
+
+let TANAH_MERAH_TAMPINES_HCS: [Int] = [
+    13,3,7,11,1,15,5,9,17,
+    4,12,14,8,16,2,18,10,6
+]
+
+let TANAH_MERAH_TAMPINES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6687, rating: 76.6, slope: 141),
+    TeeInfo(teeName: "Blue", yardage: 6423, rating: 74.0, slope: 136),
+    TeeInfo(teeName: "White", yardage: 6008, rating: 72.0, slope: 133),
+    TeeInfo(teeName: "Gold", yardage: 5353, rating: 68.8, slope: 123),
+    TeeInfo(teeName: "Red", yardage: 5353, rating: 68.8, slope: 122)
+]
+private let SENTOSA_NEW_TANJONG_ID = UUID(uuidString: "E4B72D93-6C18-4D6A-9A35-80F3B2174C9F")!
+
+let SENTOSA_NEW_TANJONG_PARS: [Int] = [
+    4,3,5,4,3,5,4,4,4,
+    5,4,5,3,4,4,3,4,4
+]
+
+let SENTOSA_NEW_TANJONG_HCS: [Int] = [
+    7,15,13,5,17,9,3,11,1,
+    8,2,4,18,10,12,16,14,6
+]
+
+let SENTOSA_NEW_TANJONG_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6218, rating: 72.2, slope: 138)
+]
+// MARK: - Keppel Club
+
+private let KEPPEL_CLUB_ID = UUID(uuidString: "6F2B9C1D-4A73-4F88-B6E1-9C7D3A5E2B14")!
+
+let KEPPEL_CLUB_PARS: [Int] = [
+    4,5,3,4,4,4,3,4,5,
+    4,3,4,3,5,4,5,4,4
+]
+
+let KEPPEL_CLUB_HCS: [Int] = [
+    1,9,15,11,5,17,13,7,3,
+    10,12,8,18,2,14,4,6,16
+]
+
+let KEPPEL_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6488, rating: 72.5, slope: 143)
+]
+// MARK: - River Oaks Country Club
+
+private let RIVER_OAKS_CC_ID = UUID(uuidString: "B84F2A9C-6D13-4E8B-9F41-2C7A5E90D331")!
+
+let RIVER_OAKS_CC_PARS: [Int] = [
+    4,4,3,5,4,3,4,5,4,
+    5,4,4,4,3,5,4,3,4
+]
+
+let RIVER_OAKS_CC_HCS: [Int] = [
+    13,3,7,11,1,15,5,17,9,
+    12,4,10,18,16,6,2,14,8
+]
+
+let RIVER_OAKS_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tips", yardage: 7125, rating: 74.9, slope: 137)
+]
+
+// MARK: - Champions Golf Club
+
+private let CHAMPIONS_GC_ID = UUID(uuidString: "D7C9A1E4-42B8-4F61-9C3E-8A5B2D7E1044")!
+
+let CHAMPIONS_GC_PARS: [Int] = [
+    4,3,4,4,3,4,5,4,4,
+    3,4,4,4,4,5,4,3,4
+]
+
+let CHAMPIONS_GC_HCS: [Int] = [
+    11,15,5,9,17,1,13,7,3,
+    12,2,18,4,10,16,14,6,8
+]
+
+let CHAMPIONS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6536, rating: 71.6, slope: 128)
+]
+
+// MARK: - Memorial Park Golf Course
+
+private let MEMORIAL_PARK_GC_ID = UUID(uuidString: "9F3B6C2D-1A84-4C9E-B5F2-7D6A8E41C205")!
+
+let MEMORIAL_PARK_GC_PARS: [Int] = [
+    5,3,5,4,4,4,3,5,3,
+    4,3,4,4,5,3,5,4,4
+]
+
+let MEMORIAL_PARK_GC_HCS: [Int] = [
+    15,13,5,1,11,9,7,3,17,
+    8,10,2,14,18,16,4,12,6
+]
+
+let MEMORIAL_PARK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 7292, rating: 74.2, slope: 128)
+]
+
+// MARK: - Sharpstown Park Golf Course
+
+private let SHARPSTOWN_PARK_GC_ID = UUID(uuidString: "4A6E9D31-8B72-4F5C-A0E3-6C1D92B7F884")!
+
+let SHARPSTOWN_PARK_GC_PARS: [Int] = [
+    5,3,4,4,3,4,3,4,5,
+    4,4,4,4,3,4,3,4,5
+]
+
+let SHARPSTOWN_PARK_GC_HCS: [Int] = [
+    3,13,1,9,11,7,17,5,15,
+    4,12,2,8,6,10,16,14,18
+]
+
+let SHARPSTOWN_PARK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6602, rating: 71.4, slope: 119)
+]
+
+// MARK: - Cypresswood Golf Club - Cypress Course
+
+private let CYPRESSWOOD_CYPRESS_ID = UUID(uuidString: "C1A9F2D4-6E5B-4C9A-9A73-2D4E8F6B1A21")!
+
+let CYPRESSWOOD_CYPRESS_PARS: [Int] = [
+    5,4,4,4,3,4,3,5,4,
+    4,4,4,4,3,5,3,5,4
+]
+
+let CYPRESSWOOD_CYPRESS_HCS: [Int] = [
+    3,13,11,7,15,9,17,1,5,
+    6,10,12,14,18,2,16,4,8
+]
+
+let CYPRESSWOOD_CYPRESS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6906, rating: 72.8, slope: 127),
+    TeeInfo(teeName: "Forest", yardage: 6168, rating: 70.3, slope: 120),
+    TeeInfo(teeName: "Silver", yardage: 5624, rating: 68.1, slope: 116),
+    TeeInfo(teeName: "Copper", yardage: 4744, rating: 67.3, slope: 114)
+]
+
+// MARK: - Gus Wortham Park Golf Course
+
+private let GUS_WORTHAM_PARK_GC_ID = UUID(uuidString: "7C8A2F91-4D33-48E9-B62A-19F5D3A70C44")!
+
+let GUS_WORTHAM_PARK_GC_PARS: [Int] = [
+    4,5,5,4,3,4,4,3,4,
+    3,4,4,4,4,4,3,5,4
+]
+
+let GUS_WORTHAM_PARK_GC_HCS: [Int] = [
+    15,3,1,7,13,5,9,17,11,
+    18,4,16,12,6,10,14,2,8
+]
+
+let GUS_WORTHAM_PARK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back", yardage: 6388, rating: 71.2, slope: 126)
+]
+
+// MARK: - Golf Club of Houston - Tournament Course
+
+private let GOLF_CLUB_OF_HOUSTON_TOURNAMENT_ID = UUID(uuidString: "E9A41D6B-2C75-4F80-91B2-7D3F64C8A205")!
+
+let GOLF_CLUB_OF_HOUSTON_TOURNAMENT_PARS: [Int] = [
+    4,4,4,5,4,4,3,5,3,
+    4,4,4,5,3,5,3,4,4
+]
+
+let GOLF_CLUB_OF_HOUSTON_TOURNAMENT_HCS: [Int] = [
+    17,11,9,7,1,3,15,5,13,
+    16,10,18,8,14,6,12,2,4
+]
+
+let GOLF_CLUB_OF_HOUSTON_TOURNAMENT_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 7425, rating: 76.4, slope: 148)
+]
+
+// MARK: - Wildcat Golf Club - Highlands Course
+
+private let WILDCAT_HIGHLANDS_ID = UUID(uuidString: "3A7F61D9-58B4-4C2E-8E94-B1F5A0D72E33")!
+
+let WILDCAT_HIGHLANDS_PARS: [Int] = [
+    4,5,3,4,4,4,4,3,5,
+    3,4,5,4,4,5,3,4,4
+]
+
+let WILDCAT_HIGHLANDS_HCS: [Int] = [
+    15,5,7,11,17,13,1,9,3,
+    18,12,4,8,10,2,16,6,14
+]
+
+let WILDCAT_HIGHLANDS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6954, rating: 73.3, slope: 134)
+]
+
+// MARK: - Wildcat Golf Club - Lakes Course
+
+private let WILDCAT_LAKES_ID = UUID(uuidString: "B2E8C3F4-9A61-4F58-BD27-6F4A1E92C735")!
+
+let WILDCAT_LAKES_PARS: [Int] = [
+    4,4,5,3,4,4,4,3,5,
+    4,5,4,3,4,4,5,3,4
+]
+
+let WILDCAT_LAKES_HCS: [Int] = [
+    6,4,2,18,10,14,12,16,8,
+    9,3,11,17,7,13,1,15,5
+]
+
+let WILDCAT_LAKES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7016, rating: 73.2, slope: 135),
+    TeeInfo(teeName: "Gold",  yardage: 6535, rating: 71.2, slope: 131),
+    TeeInfo(teeName: "Blue",  yardage: 6045, rating: 68.9, slope: 114),
+    TeeInfo(teeName: "White", yardage: 5482, rating: 66.3, slope: 103),
+    TeeInfo(teeName: "Green", yardage: 4906, rating: 63.2, slope: 98)
+]
+
+// MARK: - BlackHorse Golf Club - South Course
+
+private let BLACKHORSE_SOUTH_ID = UUID(uuidString: "91D6A8E5-43B7-4C1A-8F2D-0E5B9C73F416")!
+
+let BLACKHORSE_SOUTH_PARS: [Int] = [
+    4,4,4,3,5,3,4,4,5,
+    4,4,4,3,4,5,4,3,5
+]
+
+let BLACKHORSE_SOUTH_HCS: [Int] = [
+    9,5,3,11,7,17,15,1,13,
+    18,14,6,10,4,2,16,8,12
+]
+
+let BLACKHORSE_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Big Jake", yardage: 7191, rating: 75.7, slope: 138)
+]
+
+// MARK: - BlackHorse Golf Club - North Course
+
+private let BLACKHORSE_NORTH_ID = UUID(uuidString: "5C0F92A7-6B38-4E1D-96A5-3E7D84B1F209")!
+
+let BLACKHORSE_NORTH_PARS: [Int] = [
+    4,3,5,4,4,3,4,5,4,
+    4,5,4,4,3,4,3,4,5
+]
+
+let BLACKHORSE_NORTH_HCS: [Int] = [
+    9,13,15,1,3,11,7,17,5,
+    4,6,8,16,18,2,12,10,14
+]
+
+let BLACKHORSE_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Big Jake", yardage: 7301, rating: 75.0, slope: 135),
+    TeeInfo(teeName: "Black",    yardage: 7057, rating: 74.0, slope: 131),
+    TeeInfo(teeName: "White",    yardage: 6199, rating: 69.8, slope: 121)
+]
+
+// MARK: - Ohio Course Batch
+
+private let FOWLERS_MILL_ID       = UUID(uuidString: "81AE6238-D377-424E-BB47-C65AD7709C7F")!
+private let STONELICK_HILLS_ID    = UUID(uuidString: "3783A331-0B72-4C47-8FC6-0973CD882FD9")!
+private let MANAKIKI_ID           = UUID(uuidString: "C9B76CD9-A891-44CA-A14E-1E6725CCCD4B")!
+private let BOULDER_CREEK_ID      = UUID(uuidString: "48E13F5D-03C9-4ADD-97F4-137C3432A651")!
+private let QUARRY_GC_ID          = UUID(uuidString: "E79AF837-4B81-4618-B4F2-0B3242094D12")!
+private let DEER_RIDGE_ID         = UUID(uuidString: "98A887F0-70B3-4F86-95C3-26DE2514969F")!
+private let VALLEY_EAGLES_ID      = UUID(uuidString: "5DFE99D6-56AC-4C17-919A-5ED3E2D634E6")!
+
+let FOWLERS_MILL_PARS: [Int] = [
+    4,4,3,4,5,4,3,5,4,
+    4,4,3,5,4,4,3,5,4
+]
+let FOWLERS_MILL_HCS: [Int] = [
+    5,15,7,1,13,3,17,9,11,
+    8,12,10,14,6,4,18,16,2
+]
+
+let STONELICK_HILLS_PARS: [Int] = [
+    4,4,3,5,4,3,4,4,5,
+    5,4,3,5,3,4,4,3,5
+]
+let STONELICK_HILLS_HCS: [Int] = [
+    17,3,7,15,1,11,13,5,9,
+    6,8,14,16,12,2,18,4,10
+]
+
+let MANAKIKI_PARS: [Int] = [
+    4,4,5,4,3,5,3,4,4,
+    4,3,5,5,4,3,4,4,4
+]
+let MANAKIKI_HCS: [Int] = [
+    5,7,9,13,17,3,15,1,11,
+    2,12,18,16,10,8,14,4,6
+]
+
+let BOULDER_CREEK_PARS: [Int] = [
+    5,4,4,3,4,5,3,4,4,
+    5,4,3,4,4,4,4,3,5
+]
+let BOULDER_CREEK_HCS: [Int] = [
+    5,13,3,17,7,9,15,11,1,
+    8,14,18,2,10,6,12,16,4
+]
+
+let QUARRY_GC_PARS: [Int] = [
+    5,4,4,4,4,3,5,4,3,
+    4,5,3,4,4,5,4,3,4
+]
+let QUARRY_GC_HCS: [Int] = [
+    9,7,5,13,1,15,11,3,17,
+    10,4,18,2,12,16,6,14,8
+]
+
+let DEER_RIDGE_PARS: [Int] = [
+    4,4,3,5,4,5,3,4,4,
+    4,3,5,4,4,4,5,3,4
+]
+let DEER_RIDGE_HCS: [Int] = [
+    1,17,15,7,5,11,3,9,13,
+    12,16,8,2,14,4,6,18,10
+]
+
+let VALLEY_EAGLES_PARS: [Int] = [
+    4,5,4,5,3,4,3,4,4,
+    3,5,4,4,4,3,4,5,4
+]
+let VALLEY_EAGLES_HCS: [Int] = [
+    4,18,14,12,10,2,8,16,6,
+    17,13,15,9,5,3,11,7,1
+]
+
+// MARK: - Pennsylvania Courses
+
+private let HERSHEY_EAST_ID          = UUID(uuidString: "896F511F-49D8-4F1A-96F6-09D50101F57B")!
+private let HERSHEY_WEST_ID          = UUID(uuidString: "BA216331-F3BD-48C4-BC18-EF4B598E6ADF")!
+private let BEDFORD_SPRINGS_ID       = UUID(uuidString: "93AE33DB-DDDD-498A-9120-BDF78CA262A8")!
+private let NEMACOLIN_MYSTIC_ROCK_ID = UUID(uuidString: "C3A468EE-6528-4995-B1EC-7421BF0D11ED")!
+private let OLDE_STONEWALL_ID        = UUID(uuidString: "88039DFB-82BA-4F66-A5D9-530FBA568217")!
+private let GLEN_MILLS_ID            = UUID(uuidString: "8F00DFC5-FC6D-473E-8962-F6949D3DF818")!
+private let FOX_CHAPEL_ID            = UUID(uuidString: "2D8FAEDF-641C-4C45-80A8-40BAC985517E")!
+
+let HERSHEY_EAST_PARS: [Int] = [
+    5,3,4,4,4,5,4,3,4,
+    4,4,4,3,5,4,3,4,4
+]
+let HERSHEY_EAST_HCS: [Int] = [
+    13,17,1,9,15,11,5,7,3,
+    12,6,10,18,8,2,14,16,4
+]
+let HERSHEY_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7130, rating: 74.3, slope: 132)
+]
+
+let HERSHEY_WEST_PARS: [Int] = [
+    4,5,4,4,3,4,5,3,4,
+    4,4,3,5,4,5,3,4,4
+]
+let HERSHEY_WEST_HCS: [Int] = [
+    1,5,13,15,17,11,7,9,3,
+    6,12,16,2,14,8,10,18,4
+]
+let HERSHEY_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6830, rating: 72.7, slope: 139)
+]
+
+let BEDFORD_SPRINGS_PARS: [Int] = [
+    4,3,5,3,5,4,4,4,5,
+    3,4,4,5,3,4,5,3,4
+]
+let BEDFORD_SPRINGS_HCS: [Int] = [
+    17,11,7,1,5,9,3,13,15,
+    18,2,10,4,16,14,8,6,12
+]
+let BEDFORD_SPRINGS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Medal", yardage: 6785, rating: 73.7, slope: 140)
+]
+
+let NEMACOLIN_MYSTIC_ROCK_PARS: [Int] = [
+    4,4,3,4,5,4,3,5,4,
+    4,5,3,4,4,5,3,4,4
+]
+let NEMACOLIN_MYSTIC_ROCK_HCS: [Int] = [
+    13,3,15,9,5,11,17,7,1,
+    10,4,8,18,12,14,6,16,2
+]
+let NEMACOLIN_MYSTIC_ROCK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7526, rating: 76.8, slope: 146)
+]
+
+let OLDE_STONEWALL_PARS: [Int] = [
+    5,4,4,4,3,4,3,4,5,
+    4,4,4,4,3,3,4,4,4
+]
+let OLDE_STONEWALL_HCS: [Int] = [
+    10,14,6,4,16,2,18,8,12,
+    1,3,9,15,13,11,5,17,7
+]
+let OLDE_STONEWALL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Grey", yardage: 7103, rating: 74.2, slope: 149)
+]
+
+let GLEN_MILLS_PARS: [Int] = [
+    4,4,4,5,3,5,3,4,4,
+    3,4,4,4,3,5,3,5,4
+]
+let GLEN_MILLS_HCS: [Int] = [
+    14,2,16,4,18,6,8,12,10,
+    9,1,13,3,15,5,17,11,7
+]
+let GLEN_MILLS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Scratch / Black",    yardage: 6646, rating: 71.1, slope: 140),
+    TeeInfo(teeName: "Director / Blue",    yardage: 6314, rating: 69.1, slope: 135),
+    TeeInfo(teeName: "Middle / White",     yardage: 6011, rating: 66.2, slope: 125),
+    TeeInfo(teeName: "Preferred / Green",  yardage: 5430, rating: 63.7, slope: 126),
+    TeeInfo(teeName: "Forward / Red",      yardage: 4703, rating: 66.1, slope: 120)
+]
+
+let FOX_CHAPEL_PARS: [Int] = [
+    4,5,4,4,3,4,5,3,4,
+    4,4,3,5,4,5,5,3,4
+]
+let FOX_CHAPEL_HCS: [Int] = [
+    1,5,13,15,17,11,7,9,3,
+    6,12,16,2,14,8,10,18,4
+]
+let FOX_CHAPEL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back",            yardage: 6860, rating: 72.9, slope: 135),
+    TeeInfo(teeName: "Back / Middle",   yardage: 6632, rating: 72.0, slope: 135),
+    TeeInfo(teeName: "Middle",          yardage: 6480, rating: 71.4, slope: 133),
+    TeeInfo(teeName: "Middle / Forward",yardage: 5503, rating: 66.9, slope: 119),
+    TeeInfo(teeName: "Forward",         yardage: 5276, rating: 70.4, slope: 120)
+]
+
+// MARK: - Firestone Country Club - South Course
+
+private let FIRESTONE_SOUTH_ID = UUID(uuidString: "A8C93F41-6D72-4B5E-9F31-2C8A7D6E1045")!
+
+let FIRESTONE_SOUTH_PARS: [Int] = [
+    4,5,4,4,3,4,3,4,4,
+    4,4,3,4,4,3,5,4,4
+]
+
+let FIRESTONE_SOUTH_HCS: [Int] = [
+    9,13,15,7,11,1,17,5,3,
+    6,16,10,2,14,18,12,8,4
+]
+
+let FIRESTONE_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 7400, rating: 77.0, slope: 148)
+]
+
+// MARK: - Firestone Country Club - North Course
+
+private let FIRESTONE_NORTH_ID = UUID(uuidString: "D1E47A92-5C83-4A6F-9B20-7E3C1F8A6621")!
+
+let FIRESTONE_NORTH_PARS: [Int] = [
+    4,4,4,4,5,3,5,3,4,
+    4,3,4,4,4,4,5,3,5
+]
+
+let FIRESTONE_NORTH_HCS: [Int] = [
+    5,11,3,7,13,9,17,15,1,
+    16,10,2,6,4,18,8,12,14
+]
+
+let FIRESTONE_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7125, rating: 74.2, slope: 139)
+]
+
+// MARK: - Firestone Country Club - Fazio Course
+
+private let FIRESTONE_FAZIO_ID = UUID(uuidString: "F4B9C6E2-8A17-42D3-B9F6-3D1A7E8C9042")!
+
+let FIRESTONE_FAZIO_PARS: [Int] = [
+    4,4,3,4,4,4,3,4,5,
+    4,4,3,5,3,4,3,5,4
+]
+
+let FIRESTONE_FAZIO_HCS: [Int] = [
+    5,9,13,15,11,1,17,3,7,
+    4,8,16,10,18,6,14,12,2
+]
+
+let FIRESTONE_FAZIO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6904, rating: 73.1, slope: 132)
+]
+
+// MARK: - The Virtues Golf Club
+
+private let VIRTUES_GOLF_CLUB_ID = UUID(uuidString: "9C72A5E1-3F84-4D9B-A621-8E7F1C4B203D")!
+
+let VIRTUES_GOLF_CLUB_PARS: [Int] = [
+    4,4,4,5,3,4,5,4,3,
+    5,4,3,4,3,4,5,4,4
+]
+
+let VIRTUES_GOLF_CLUB_HCS: [Int] = [
+    9,7,13,1,15,11,5,3,17,
+    8,14,16,2,18,10,6,12,4
+]
+
+let VIRTUES_GOLF_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7243, rating: 74.8, slope: 142),
+    TeeInfo(teeName: "Blue",  yardage: 6856, rating: 73.0, slope: 138)
+]
+
+// MARK: - Sleepy Hollow Golf Course
+
+private let SLEEPY_HOLLOW_GC_ID = UUID(uuidString: "E6F31B8A-52D4-47C9-AF13-9B2E7D604581")!
+
+let SLEEPY_HOLLOW_GC_PARS: [Int] = [
+    5,3,4,5,4,3,4,3,4,
+    4,4,3,4,5,4,4,4,4
+]
+
+let SLEEPY_HOLLOW_GC_HCS: [Int] = [
+    17,3,1,7,5,15,9,13,11,
+    2,4,16,12,8,14,6,18,10
+]
+
+let SLEEPY_HOLLOW_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6648, rating: 73.4, slope: 145)
+]
 
 // =======================================================
 // MARK: - Built-in Registry
@@ -5966,6 +6600,7 @@ private enum BuiltIns {
             country: "USA",
             state: "IL",
             region: "Indoor",
+            architect: "Dick Nugent",
             type: "Indoor Golf",
             phone: "(224) 676-0692",
             website: "https://www.wj.golf/location",
@@ -6045,6 +6680,7 @@ private enum BuiltIns {
         c(KEMPER_LAKES_GREEN_ID, "Kemper Lakes", KEMPER_LAKES_GREEN_PARS, KEMPER_LAKES_GREEN_HCS,
           country: "USA",
           state: "IL",
+          architect: "Ken Killian & Dick Nugent",
           type: "Private",
           phone: "(847) 320-3450",
           website: "https://www.kemperlakesgolf.com",
@@ -6053,6 +6689,7 @@ private enum BuiltIns {
         c(RICH_HARVEST_SILVER_ID, "Rich Harvest Farms", RICH_HARVEST_SILVER_PARS, RICH_HARVEST_SILVER_HCS,
           country: "USA",
           state: "IL",
+          architect: "Jerry Rich / Greg Martin",
           type: "Private",
           phone: "(630) 466-7610",
           website: "https://www.richharvestfarms.com",
@@ -6062,6 +6699,7 @@ private enum BuiltIns {
         c(BUTLER_NATIONAL_BUTLER_TEE_ID, "Butler National (7,550-yard)", BUTLER_NATIONAL_BUTLER_TEE_PARS, BUTLER_NATIONAL_BUTLER_TEE_HCS, BUTLER_NATIONAL_BUTLER_TEE_TEES,
           country: "USA",
           state: "IL",
+          architect: "George Fazio & Tom Fazio",
           type: "Private",
           phone: "(630) 990-3333",
           website: "https://www.butlernational.org",
@@ -6076,7 +6714,7 @@ private enum BuiltIns {
             country: "USA",
             state: "IL",
             region: nil,
-            architect: nil,
+            architect: "Tom Bendelow",
             type: "Private",
             phone: "(630) 773-1700",
             website: "https://www.medinahcc.org",
@@ -6127,6 +6765,7 @@ private enum BuiltIns {
         c(MAKRAY_MEMORIAL_BLACK_ID, "Makray Memorial (Black)", MAKRAY_MEMORIAL_BLACK_PARS, MAKRAY_MEMORIAL_BLACK_HCS, MAKRAY_MEMORIAL_BLACK_TEES,
           country: "USA",
           state: "IL",
+          architect: "Harry Vignocchi",
           type: "Daily-Fee",
           phone: "(847) 381-6500",
           website: "https://www.makraygolf.com",
@@ -6135,6 +6774,7 @@ private enum BuiltIns {
         c(LAKE_BARRINGTON_SHORES_BLACK_ID, "Lake Barrington Shores (Black)", LAKE_BARRINGTON_SHORES_BLACK_PARS, LAKE_BARRINGTON_SHORES_BLACK_HCS, LAKE_BARRINGTON_SHORES_BLACK_TEES,
           country: "USA",
           state: "IL",
+          architect: "Larry Packard",
           type: "Private",
           phone: "(847) 382-4240",
           website: "https://www.golflakebarrington.com",
@@ -6143,6 +6783,7 @@ private enum BuiltIns {
         c(FOXFORD_HILLS_BLACK_ID, "Foxford Hills (Black)", FOXFORD_HILLS_BLACK_PARS, FOXFORD_HILLS_BLACK_HCS, FOXFORD_HILLS_BLACK_TEES,
           country: "USA",
           state: "IL",
+          architect: "Dick Nugent",
           type: "Daily-Fee",
           phone: "(847) 639-0400",
           website: "https://www.foxfordhillsgolfclub.com",
@@ -6151,6 +6792,7 @@ private enum BuiltIns {
         c(CARY_CC_BLUE_ID, "Cary CC (Blue)", CARY_CC_BLUE_PARS, CARY_CC_BLUE_HCS, CARY_CC_BLUE_TEES,
           country: "USA",
           state: "IL",
+          architect: "H. H. King",
           type: "Private",
           phone: "(847) 639-3161",
           website: "https://www.carycountryclub.com",
@@ -6159,6 +6801,7 @@ private enum BuiltIns {
         c(CHALET_HILLS_BLACK_ID, "Chalet Hills (Black)", CHALET_HILLS_BLACK_PARS, CHALET_HILLS_BLACK_HCS, CHALET_HILLS_BLACK_TEES,
           country: "USA",
           state: "IL",
+          architect: "Ken Killian",
           type: "Daily-Fee",
           phone: "(847) 639-0666",
           website: "https://www.chalethillsgolfclub.com",
@@ -6351,6 +6994,7 @@ private enum BuiltIns {
         
         c(CALUSA_PINES_ID, "Calusa Pines (Gold)", CALUSA_PINES_GOLD_PARS, CALUSA_PINES_GOLD_HCS,
           country: "USA", state: "FL",
+          architect: "Ron Garl",
           phone: "(239) 352-2200",
           website: "https://www.calusapinesgolfclub.com",
           address: "2000 Calusa Pines Drive, Naples, FL 34120"),
@@ -6494,6 +7138,7 @@ private enum BuiltIns {
             TROON_NORTH_MONUMENT_HCS,
             country: "USA",
             state: "AZ",
+            architect: "Tom Weiskopf & Jay Morrish",
             type: "Daily-Fee",
             phone: "(480) 585-7700",
             address: "10320 E Dynamite Blvd, Scottsdale, AZ 85262"
@@ -6505,6 +7150,7 @@ private enum BuiltIns {
             TROON_NORTH_PINNACLE_HCS,
             country: "USA",
             state: "AZ",
+            architect: "Tom Weiskopf & Jay Morrish",
             type: "Daily-Fee",
             phone: "(480) 585-7700",
             address: "10320 E Dynamite Blvd, Scottsdale, AZ 85262"
@@ -6517,6 +7163,7 @@ private enum BuiltIns {
             WHISPER_ROCK_UPPER_ROCK_TEES,
             country: "USA",
             state: "AZ",
+            architect: "Tom Fazio",
             type: "Private",
             phone: "(480) 575-8700",
             address: "32000 N Old Bridge Rd, Scottsdale, AZ 85266"
@@ -6529,6 +7176,7 @@ private enum BuiltIns {
             SILVERLEAF_GC_SILVER_TEES,
             country: "USA",
             state: "AZ",
+            architect: "Tom Weiskopf",
             type: "Private",
             phone: "(480) 515-3200",
             address: "18701 N Silverleaf Dr, Scottsdale, AZ 85255"
@@ -6564,6 +7212,7 @@ private enum BuiltIns {
             FOREST_HIGHLANDS_MEADOW_MENS_HCS,
             country: "USA",
             state: "AZ",
+            architect: "Tom Weiskopf & Jay Morrish",
             type: "Private",
             phone: "(928) 525-5200",
             address: "2425 William Palmer, Flagstaff, AZ 86005"
@@ -6581,6 +7230,7 @@ private enum BuiltIns {
             BANDON_DUNES_HCS,
             country: "USA",
             state: "OR",
+            architect: "David Kidd",
             type: "Resort",
             phone: "(541) 347-5888",
             website: "https://www.bandondunesgolf.com/golf/golf-courses/bandon-dunes",
@@ -6593,6 +7243,7 @@ private enum BuiltIns {
             PACIFIC_DUNES_HCS,
             country: "USA",
             state: "OR",
+            architect: "Tom Doak",
             type: "Resort",
             phone: "(541) 347-5831",
             website: "https://www.bandondunesgolf.com/golf/golf-courses/pacific-dunes",
@@ -6605,6 +7256,7 @@ private enum BuiltIns {
             BANDON_TRAILS_HCS,
             country: "USA",
             state: "OR",
+            architect: "Bill Coore & Ben Crenshaw",
             type: "Resort",
             phone: "(541) 347-5958",
             website: "https://www.bandondunesgolf.com/golf/golf-courses/bandon-trails",
@@ -6617,6 +7269,7 @@ private enum BuiltIns {
             OLD_MACDONALD_HCS,
             country: "USA",
             state: "OR",
+            architect: "Tom Doak & Jim Urbina",
             type: "Resort",
             phone: "(541) 347-5935",
             website: "https://www.bandondunesgolf.com/golf/golf-courses/old-macdonald",
@@ -6629,6 +7282,7 @@ private enum BuiltIns {
             SHEEP_RANCH_HCS,
             country: "USA",
             state: "OR",
+            architect: "Bill Coore & Ben Crenshaw",
             type: "Resort",
             phone: "(541) 347-5985",
             website: "https://www.bandondunesgolf.com/golf/golf-courses/sheep-ranch",
@@ -6645,6 +7299,7 @@ private enum BuiltIns {
             country: "USA",
             state: "CA",
             region: "NorCal",
+            architect: "Jack Neville & Douglas Grant",
             type: "Resort",
             phone: "(800) 877-0597",
             website: "https://www.pebblebeach.com/golf/pebble-beach-golf-links/",
@@ -6757,6 +7412,7 @@ private enum BuiltIns {
             ROYAL_OAKS_SCHEFFLER_HCS,
             country: "USA",
             state: "TX",
+            architect: "Robert Trent Jones",
             type: "Private",
             phone: "(214) 691-6091",
             website: "https://www.roccdallas.com/",
@@ -6770,6 +7426,7 @@ private enum BuiltIns {
             BROOK_HOLLOW_TILLINGHAST_TEES,
             country: "USA",
             state: "TX",
+            architect: "A.W. Tillinghast",
             type: "Private",
             phone: "(214) 637-1900",
             website: "https://www.brookhollowgc.org/",
@@ -6782,6 +7439,7 @@ private enum BuiltIns {
             SUMMIT_CLUB_MORIKAWA_HCS,
             country: "USA",
             state: "NV",
+            architect: "Tom Fazio",
             type: "Private",
             phone: "(702) 970-2207",
             website: "https://summitclubnv.com/",
@@ -6846,6 +7504,7 @@ private enum BuiltIns {
             ROCK_CREEK_CATTLE_COMPANY_TEES,
             country: "USA",
             state: "MT",
+            architect: "Tom Doak",
             type: "Private",
             phone: "(406) 846-4020",
             website: "https://www.rockcreekcattlecompany.com/",
@@ -7285,6 +7944,7 @@ private enum BuiltIns {
         c(CONWAY_FARMS_ID, "Conway Farms", CONWAY_FARMS_PARS, CONWAY_FARMS_HCS, CONWAY_FARMS_TEES,
           country: "USA",
           state: "IL",
+          architect: "Tom Fazio",
           type: "Private",
           phone: "847-234-7160",
           website: "https://www.conwayfarmsgolfclub.org",
@@ -7809,6 +8469,7 @@ private enum BuiltIns {
             country: "USA",
             state: "CA",
             region: "Palm Springs",
+            architect: "Michael Hurdzan & Dana Fry",
             type: "Resort",
             phone: "(760) 346-7060",
             website: "https://www.desertwillow.com/firecliffcourse/",
@@ -8768,6 +9429,7 @@ private enum BuiltIns {
             REVERE_LEXINGTON_TEES,
             country: "USA",
             state: "NV",
+            architect: "Billy Casper & Greg Nash",
             type: "Daily-Fee",
             phone: "(877) 273-8373",
             website: "https://reveregolf.com",
@@ -8974,7 +9636,7 @@ private enum BuiltIns {
             TRUMP_NATIONAL_HUDSON_VALLEY_TEES,
             country: "USA",
             state: "NY",
-            architect: nil,
+            architect: "Jim Fazio",
             type: "Private",
             phone: "(703) 444-4801",
             website: "https://www.trump.com",
@@ -9795,6 +10457,7 @@ private enum BuiltIns {
             country: "USA",
             state: "IL",
             region: "Chicago North Suburbs",
+            architect: "Dick Nugent",
             type: "Public",
             phone: "(847) 680-6100",
             website: "https://www.whitedeergolf.com",
@@ -9810,6 +10473,7 @@ private enum BuiltIns {
         country: "USA",
         state: "NY",
         region: "Long Island",
+        architect: "A.W. Tillinghast",
         type: "Public",
         phone: "(516) 249-0700",
         website: "https://www.bethpagegolfcourse.com",
@@ -9933,6 +10597,620 @@ private enum BuiltIns {
             phone: "(803) 775-5541",
             website: "https://www.quixoteclub.com",
             address: "875 Pinewood Road, Sumter, SC 29154",
+            isWolfApproved: true
+        ),
+        c(
+            MAY_RIVER_ID,
+            "May River Golf Club",
+            MAY_RIVER_PARS,
+            MAY_RIVER_HCS,
+            MAY_RIVER_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Bluffton",
+            architect: "Jack Nicklaus",
+            type: "Private / Resort",
+            phone: "(843) 706-6580",
+            website: "https://www.palmettobluff.com/experience/golf/",
+            address: "477 Mount Pelia Road, Bluffton, SC 29910",
+            isWolfApproved: true
+        ),
+
+        c(
+            SECESSION_ID,
+            "Secession Golf Club",
+            SECESSION_PARS,
+            SECESSION_HCS,
+            SECESSION_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Beaufort",
+            architect: "Bruce Devlin",
+            type: "Private",
+            phone: "(843) 522-4600",
+            website: "https://www.secessiongolf.club",
+            address: "100 Islands Causeway, Beaufort, SC 29907",
+            isWolfApproved: true
+        ),
+
+        c(
+            BULLS_BAY_ID,
+            "Bulls Bay Golf Club",
+            BULLS_BAY_PARS,
+            BULLS_BAY_HCS,
+            BULLS_BAY_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Awendaw / Charleston",
+            architect: "Mike Strantz",
+            type: "Private",
+            phone: "(843) 881-2223",
+            website: "https://www.bullsbaygolf.com",
+            address: "995 Bulls Bay Drive, Awendaw, SC 29429",
+            isWolfApproved: true
+        ),
+        c(
+            WARREN_GC_ID,
+            "Warren Golf & Country Club",
+            WARREN_GC_PARS,
+            WARREN_GC_HCS,
+            WARREN_GC_TEES,
+            country: "Singapore",
+            state: nil,
+            region: "Singapore",
+            type: "Private",
+            phone: "+65 6586 1245",
+            website: "https://www.warrengolf.com",
+            address: "81 Choa Chu Kang Way, Singapore 688263",
+            isWolfApproved: false
+        ),
+        c(
+            LAGUNA_NATIONAL_ID,
+            "Laguna National Golf Resort Club",
+            LAGUNA_NATIONAL_PARS,
+            LAGUNA_NATIONAL_HCS,
+            LAGUNA_NATIONAL_TEES,
+            country: "Singapore",
+            state: nil,
+            region: "Singapore",
+            architect: "Andy Dye",
+            type: "Private / Resort",
+            phone: nil,
+            website: "https://www.lagunanational.com",
+            address: "11 Laguna Golf Green, Singapore 488047",
+            isWolfApproved: false
+        ),
+
+        c(
+            SENTOSA_TANJONG_ID,
+            "Sentosa Golf Club - The Tanjong",
+            SENTOSA_TANJONG_PARS,
+            SENTOSA_TANJONG_HCS,
+            SENTOSA_TANJONG_TEES,
+            country: "Singapore",
+            state: nil,
+            region: "Sentosa",
+            architect: "Ron Fream/R-Gene Bates",
+            type: "Parkland",
+            phone: "+65 6275 0022",
+            website: "https://www.sentosagolf.com",
+            address: "27 Bukit Manis Road, Singapore 099892",
+            isWolfApproved: false
+        ),
+        c(
+            TANAH_MERAH_TAMPINES_ID,
+            "Tanah Merah Country Club – Tampines Course",
+            TANAH_MERAH_TAMPINES_PARS,
+            TANAH_MERAH_TAMPINES_HCS,
+            TANAH_MERAH_TAMPINES_TEES,
+            country: "Singapore",
+            state: nil,
+            region: "Singapore",
+            architect: nil,
+            type: "Private",
+            phone: "+65 6513 7818",
+            website: "https://www.tmcc.org.sg",
+            address: "151 Xilin Avenue, Singapore 486798",
+            isWolfApproved: false
+        ),
+        c(
+            SENTOSA_NEW_TANJONG_ID,
+            "Sentosa Golf Club - New Tanjong Course",
+            SENTOSA_NEW_TANJONG_PARS,
+            SENTOSA_NEW_TANJONG_HCS,
+            SENTOSA_NEW_TANJONG_TEES,
+            country: "Singapore",
+            state: nil,
+            region: "Sentosa",
+            architect: "Ronald Fream",
+            type: "Private",
+            phone: "+65 6275 0022",
+            website: "https://www.sentosagolf.com",
+            address: "27 Bukit Manis Road, Singapore 099892",
+            isWolfApproved: false
+        ),
+        c(
+            KEPPEL_CLUB_ID,
+            "Keppel Club",
+            KEPPEL_CLUB_PARS,
+            KEPPEL_CLUB_HCS,
+            KEPPEL_CLUB_TEES,
+            country: "Singapore",
+            state: nil,
+            region: "Singapore",
+            architect: "Phil Jacobs",
+            type: "Private",
+            phone: nil,
+            website: nil,
+            address: "239 Sime Road, Singapore 289685",
+            isWolfApproved: false
+        ),
+        c(
+            RIVER_OAKS_CC_ID,
+            "River Oaks Country Club",
+            RIVER_OAKS_CC_PARS,
+            RIVER_OAKS_CC_HCS,
+            RIVER_OAKS_CC_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            architect: nil,
+            type: "Private",
+            phone: "(713) 529-4321",
+            website: "https://www.riveroakscc.net",
+            address: "1600 River Oaks Boulevard, Houston, TX 77019",
+            isWolfApproved: true
+        ),
+        c(
+            CHAMPIONS_GC_ID,
+            "Champions Golf Club",
+            CHAMPIONS_GC_PARS,
+            CHAMPIONS_GC_HCS,
+            CHAMPIONS_GC_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            architect: "Robert Trent Jones",
+            type: "Private",
+            phone: "(281) 444-6262",
+            website: "https://www.championsgolfclub.com",
+            address: "13722 Champions Drive, Houston, TX 77069",
+            isWolfApproved: true
+        ),
+        c(
+            MEMORIAL_PARK_GC_ID,
+            "Memorial Park Golf Course",
+            MEMORIAL_PARK_GC_PARS,
+            MEMORIAL_PARK_GC_HCS,
+            MEMORIAL_PARK_GC_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            architect: "John Bredemus",
+            type: "Municipal",
+            phone: "(832) 968-7486",
+            website: "https://www.memorialparkgolf.com",
+            address: "1001 E Memorial Loop Drive, Houston, TX 77007",
+            isWolfApproved: true
+        ),
+        c(
+            SHARPSTOWN_PARK_GC_ID,
+            "Sharpstown Park Golf Course",
+            SHARPSTOWN_PARK_GC_PARS,
+            SHARPSTOWN_PARK_GC_HCS,
+            SHARPSTOWN_PARK_GC_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            architect: "Jay Riviere",
+            type: "Municipal",
+            phone: "(713) 988-2099",
+            website: "https://www.memorialparkgolf.com/sharpstown-park-golf-course",
+            address: "6600 Harbor Town Drive, Houston, TX 77036",
+            isWolfApproved: true
+        ),
+        c(
+            CYPRESSWOOD_CYPRESS_ID,
+            "Cypresswood Golf Club - Cypress Course",
+            CYPRESSWOOD_CYPRESS_PARS,
+            CYPRESSWOOD_CYPRESS_HCS,
+            CYPRESSWOOD_CYPRESS_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Spring (Houston)",
+            architect: "Rick Forester",
+            type: "Public",
+            phone: "(281) 821-6300",
+            website: "https://www.cypresswood.com",
+            address: "21602 Cypresswood Drive, Spring, TX 77373",
+            isWolfApproved: true
+        ),
+        c(
+            GUS_WORTHAM_PARK_GC_ID,
+            "Gus Wortham Park Golf Course",
+            GUS_WORTHAM_PARK_GC_PARS,
+            GUS_WORTHAM_PARK_GC_HCS,
+            GUS_WORTHAM_PARK_GC_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            architect: "A.W. Pollard",
+            type: "Municipal",
+            phone: "(713) 928-4260",
+            website: "https://www.houstongolfassociation.org",
+            address: "7000 Capitol Street, Houston, TX 77011",
+            isWolfApproved: true
+        ),
+        c(
+            GOLF_CLUB_OF_HOUSTON_TOURNAMENT_ID,
+            "Golf Club of Houston - Tournament Course",
+            GOLF_CLUB_OF_HOUSTON_TOURNAMENT_PARS,
+            GOLF_CLUB_OF_HOUSTON_TOURNAMENT_HCS,
+            GOLF_CLUB_OF_HOUSTON_TOURNAMENT_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            architect: "Rees Jones/David Toms",
+            type: "Private",
+            phone: "(281) 459-7820",
+            website: "https://www.golfclubofhouston.com",
+            address: "5860 Wilson Road, Humble, TX 77396",
+            isWolfApproved: true
+        ),
+        c(
+            WILDCAT_HIGHLANDS_ID,
+            "Wildcat Golf Club - Highlands Course",
+            WILDCAT_HIGHLANDS_PARS,
+            WILDCAT_HIGHLANDS_HCS,
+            WILDCAT_HIGHLANDS_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            architect: "Michael Hurdzan & Dana Fry",
+            type: "Daily-Fee",
+            phone: "(713) 413-3400",
+            website: "https://www.wildcatgolfclub.com",
+            address: "12000 Almeda Road, Houston, TX 77045",
+            isWolfApproved: true
+        ),
+        c(
+            WILDCAT_LAKES_ID,
+            "Wildcat Golf Club - Lakes Course",
+            WILDCAT_LAKES_PARS,
+            WILDCAT_LAKES_HCS,
+            WILDCAT_LAKES_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            type: "Daily-Fee",
+            phone: "(713) 413-3400",
+            website: "https://www.wildcatgolfclub.com",
+            address: "12000 Almeda Road, Houston, TX 77045",
+            isWolfApproved: true
+        ),
+        c(
+            BLACKHORSE_SOUTH_ID,
+            "BlackHorse Golf Club - South Course",
+            BLACKHORSE_SOUTH_PARS,
+            BLACKHORSE_SOUTH_HCS,
+            BLACKHORSE_SOUTH_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Cypress",
+            architect: "Peter Jacobsen/Jim Hardy",
+            type: "Private",
+            phone: "(281) 304-1747",
+            website: "https://www.blackhorsegolfclub.com",
+            address: "12205 Fry Road, Cypress, TX 77433",
+            isWolfApproved: true
+        ),
+        c(
+            BLACKHORSE_NORTH_ID,
+            "BlackHorse Golf Club - North Course",
+            BLACKHORSE_NORTH_PARS,
+            BLACKHORSE_NORTH_HCS,
+            BLACKHORSE_NORTH_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Cypress",
+            architect: "Peter Jacobsen & Jim Hardy",
+            type: "Private",
+            phone: "(281) 304-1747",
+            website: "https://www.blackhorsegolfclub.com",
+            address: "12205 Fry Road, Cypress, TX 77433",
+            isWolfApproved: true
+        ),
+        c(
+            HERSHEY_EAST_ID,
+            "Hershey Country Club - East Course",
+            HERSHEY_EAST_PARS,
+            HERSHEY_EAST_HCS,
+            HERSHEY_EAST_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Hershey",
+            architect: "Maurice McCarthy",
+            type: "Semi-Private",
+            phone: "(717) 533-2360",
+            website: "https://www.hersheycountryclub.com",
+            address: "1000 East Derry Road, Hershey, PA 17033",
+            isWolfApproved: true
+        ),
+        c(
+            HERSHEY_WEST_ID,
+            "Hershey Country Club - West Course",
+            HERSHEY_WEST_PARS,
+            HERSHEY_WEST_HCS,
+            HERSHEY_WEST_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Hershey",
+            architect: "Maurice McCarthy",
+            type: "Semi-Private",
+            phone: "(717) 533-2360",
+            website: "https://www.hersheycountryclub.com",
+            address: "1000 East Derry Road, Hershey, PA 17033",
+            isWolfApproved: true
+        ),
+        c(
+            BEDFORD_SPRINGS_ID,
+            "Bedford Springs Resort",
+            BEDFORD_SPRINGS_PARS,
+            BEDFORD_SPRINGS_HCS,
+            BEDFORD_SPRINGS_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Bedford",
+            architect: "William Flynn",
+            type: "Resort",
+            website: "https://www.omnihotels.com/hotels/bedford-springs/golf",
+            address: "Bedford, PA",
+            isWolfApproved: true
+        ),
+        c(
+            NEMACOLIN_MYSTIC_ROCK_ID,
+            "Nemacolin Woodlands Resort - Mystic Rock",
+            NEMACOLIN_MYSTIC_ROCK_PARS,
+            NEMACOLIN_MYSTIC_ROCK_HCS,
+            NEMACOLIN_MYSTIC_ROCK_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Farmington",
+            architect: "Pete Dye",
+            type: "Resort",
+            website: "https://www.nemacolin.com/golf",
+            address: "Farmington, PA",
+            isWolfApproved: true
+        ),
+        c(
+            OLDE_STONEWALL_ID,
+            "Olde Stonewall Golf Club",
+            OLDE_STONEWALL_PARS,
+            OLDE_STONEWALL_HCS,
+            OLDE_STONEWALL_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Ellwood City",
+            architect: "Michael Hurdzan",
+            type: "Daily Fee",
+            phone: "(724) 752-4653",
+            website: "https://www.oldestonewall.com",
+            address: "1495 Mercer Road, Ellwood City, PA 16117",
+            isWolfApproved: true
+        ),
+        c(
+            GLEN_MILLS_ID,
+            "The Golf Course at Glen Mills",
+            GLEN_MILLS_PARS,
+            GLEN_MILLS_HCS,
+            GLEN_MILLS_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Glen Mills",
+            architect: "Bobby Weed",
+            type: "Public",
+            phone: "(610) 558-2142",
+            website: "https://www.glenmillsgolf.com",
+            address: "221 Glen Mills Road, Glen Mills, PA 19342",
+            isWolfApproved: true
+        ),
+        c(
+            FOX_CHAPEL_ID,
+            "Fox Chapel Golf Club",
+            FOX_CHAPEL_PARS,
+            FOX_CHAPEL_HCS,
+            FOX_CHAPEL_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Pittsburgh",
+            architect: "Seth Raynor",
+            type: "Private",
+            website: "https://www.foxchapelgolfclub.org",
+            address: "Pittsburgh, PA",
+            isWolfApproved: true
+        ),
+        c(
+            FOWLERS_MILL_ID,
+            "Fowler's Mill Golf Course",
+            FOWLERS_MILL_PARS,
+            FOWLERS_MILL_HCS,
+            country: "USA",
+            state: "OH",
+            region: "Cleveland East",
+            architect: "Pete Dye",
+            type: "Public",
+            phone: "(440) 729-7569",
+            website: "https://www.fowlersmillgc.com",
+            address: "13095 Rockhaven Rd, Chesterland, OH",
+            isWolfApproved: true
+        ),
+        c(
+            STONELICK_HILLS_ID,
+            "Stonelick Hills Golf Club",
+            STONELICK_HILLS_PARS,
+            STONELICK_HILLS_HCS,
+            country: "USA",
+            state: "OH",
+            region: "Cincinnati",
+            architect: "Jeff Osterfeld",
+            type: "Public",
+            phone: "(513) 735-4653",
+            website: "https://www.stonelickhills.com",
+            address: "3155 Sherilyn Ln, Batavia, OH",
+            isWolfApproved: true
+        ),
+        c(
+            MANAKIKI_ID,
+            "Manakiki Golf Course",
+            MANAKIKI_PARS,
+            MANAKIKI_HCS,
+            country: "USA",
+            state: "OH",
+            region: "Cleveland East",
+            architect: "Donald Ross",
+            type: "Municipal",
+            phone: "(440) 942-2500",
+            website: "https://www.clevelandmetroparks.com",
+            address: "35501 Eddy Rd, Willoughby Hills, OH",
+            isWolfApproved: true
+        ),
+        c(
+            BOULDER_CREEK_ID,
+            "Boulder Creek Golf Club",
+            BOULDER_CREEK_PARS,
+            BOULDER_CREEK_HCS,
+            country: "USA",
+            state: "OH",
+            region: "Cleveland South",
+            architect: "Joe Salemi",
+            type: "Semi-Private",
+            phone: "(330) 626-2680",
+            website: "https://www.bouldercreekoh.com",
+            address: "9700 Page Rd, Streetsboro, OH",
+            isWolfApproved: true
+        ),
+        c(
+            QUARRY_GC_ID,
+            "The Quarry Golf Club",
+            QUARRY_GC_PARS,
+            QUARRY_GC_HCS,
+            country: "USA",
+            state: "OH",
+            region: "Canton",
+            architect: "Brian Huntley",
+            type: "Private",
+            phone: "(330) 488-3178",
+            website: "https://www.thequarrygolfclub.com",
+            address: "5650 Quarry Lake Dr, East Canton, OH",
+            isWolfApproved: true
+        ),
+        c(
+            DEER_RIDGE_ID,
+            "Deer Ridge Golf Club",
+            DEER_RIDGE_PARS,
+            DEER_RIDGE_HCS,
+            country: "USA",
+            state: "OH",
+            region: "Central Ohio",
+            architect: "Brian Huntley",
+            type: "Public",
+            phone: "(419) 886-7090",
+            website: "https://www.deerridgegolfclub.com",
+            address: "900 Comfort Plaza Dr, Bellville, OH",
+            isWolfApproved: true
+        ),
+        c(
+            VALLEY_EAGLES_ID,
+            "Valley of the Eagles",
+            VALLEY_EAGLES_PARS,
+            VALLEY_EAGLES_HCS,
+            country: "USA",
+            state: "OH",
+            region: "Cleveland West",
+            type: "Public",
+            phone: "(440) 365-1411",
+            website: "https://www.valleyeagles.com",
+            address: "1100 Gulf Rd, Elyria, OH",
+            isWolfApproved: true
+        ),
+        c(
+            FIRESTONE_SOUTH_ID,
+            "Firestone Country Club - South Course",
+            FIRESTONE_SOUTH_PARS,
+            FIRESTONE_SOUTH_HCS,
+            FIRESTONE_SOUTH_TEES,
+            country: "USA",
+            state: "OH",
+            region: "Akron",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(330) 644-8441",
+            website: "https://www.firestonecountryclub.com",
+            address: "452 E Warner Road, Akron, OH 44319",
+            isWolfApproved: true
+        ),
+        c(
+            FIRESTONE_NORTH_ID,
+            "Firestone Country Club - North Course",
+            FIRESTONE_NORTH_PARS,
+            FIRESTONE_NORTH_HCS,
+            FIRESTONE_NORTH_TEES,
+            country: "USA",
+            state: "OH",
+            region: "Akron",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(330) 644-8441",
+            website: "https://www.firestonecountryclub.com",
+            address: "452 E Warner Road, Akron, OH 44319",
+            isWolfApproved: true
+        ),
+        c(
+            FIRESTONE_FAZIO_ID,
+            "Firestone Country Club - Fazio Course",
+            FIRESTONE_FAZIO_PARS,
+            FIRESTONE_FAZIO_HCS,
+            FIRESTONE_FAZIO_TEES,
+            country: "USA",
+            state: "OH",
+            region: "Akron",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(330) 644-8441",
+            website: "https://www.firestonecountryclub.com",
+            address: "452 E Warner Road, Akron, OH 44319",
+            isWolfApproved: true
+        ),
+        c(
+            VIRTUES_GOLF_CLUB_ID,
+            "The Virtues Golf Club",
+            VIRTUES_GOLF_CLUB_PARS,
+            VIRTUES_GOLF_CLUB_HCS,
+            VIRTUES_GOLF_CLUB_TEES,
+            country: "USA",
+            state: "OH",
+            region: "Nashport",
+            architect: "Arthur Hills",
+            type: "Public",
+            phone: "(740) 763-1100",
+            website: "https://www.thevirtuesgolfclub.com",
+            address: "One Long Drive, Nashport, OH 43830",
+            isWolfApproved: true
+        ),
+        c(
+            SLEEPY_HOLLOW_GC_ID,
+            "Sleepy Hollow Golf Course",
+            SLEEPY_HOLLOW_GC_PARS,
+            SLEEPY_HOLLOW_GC_HCS,
+            SLEEPY_HOLLOW_GC_TEES,
+            country: "USA",
+            state: "OH",
+            region: "Brecksville",
+            architect: "Stanley Thompson",
+            type: "Municipal",
+            phone: "(216) 635-3200",
+            website: "https://www.clevelandmetroparks.com/golf/courses/sleepy-hollow-golf-course",
+            address: "9445 Brecksville Road, Brecksville, OH 44141",
             isWolfApproved: true
         ),
         ]

@@ -23,6 +23,8 @@ final class ManagePlayersViewController: UIViewController,
 
     // MARK: - UI refs
     private weak var addUIButton: UIButton?
+    private weak var startRoundButton: UIButton?
+    private weak var editSettingsButton: UIButton?
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -30,28 +32,110 @@ final class ManagePlayersViewController: UIViewController,
         configureNavBar()
         configureTable()
         configureKeyboardDismissTap()
+
+        if let btn = button(forAction: #selector(startRoundTapped)) {
+            startRoundButton = btn
+            styleStartButton(btn)
+            installEditSettingsButton(below: btn)
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        print("✅ ManagePlayersVC count =", FriendStore.shared.friends.count)
-        for f in FriendStore.shared.friends {
-            print("   manage sees:", f.name, "hc:", f.defaultHC, "phone:", f.phone)
-        }
+        buildNavTitle()
+        buildTableHeader()
         tableView.reloadData()
+        refreshStartButton()
     }
 
     // MARK: - Setup
     private func configureNavBar() {
-        navigationItem.title = "Add Players  ===>"
-        navigationItem.prompt = nil
-
         let addButton = makeGlowingAddButton()
         addUIButton = addButton
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
-
         navigationItem.hidesBackButton = true
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    }
+
+    private func buildNavTitle() {
+        let titleFont  = UIFont.preferredFont(forTextStyle: .headline)
+        let courseFont = UIFont.preferredFont(forTextStyle: .caption1)
+        let infoFont   = UIFont.preferredFont(forTextStyle: .caption2)
+
+        let titleLabel = UILabel()
+        titleLabel.text = "Players"
+        titleLabel.font = titleFont
+        titleLabel.textColor = .label
+        titleLabel.textAlignment = .center
+
+        let courseName = CourseLibrary.shared.selectedCourseName ?? "No Course"
+        let courseLabel = UILabel()
+        courseLabel.text = courseName
+        courseLabel.font = courseFont
+        courseLabel.textColor = .label
+        courseLabel.textAlignment = .center
+        courseLabel.numberOfLines = 1
+        courseLabel.lineBreakMode = .byTruncatingTail
+
+        let g = GameManager.shared.currentGame
+        let gameTypeName = g?.gameType?.displayName ?? "Casual"
+        let stake = g.map { "$\($0.baseGameStake)" } ?? ""
+        let gameLabel = UILabel()
+        gameLabel.text = stake.isEmpty ? gameTypeName : "\(gameTypeName)  ·  \(stake)/pt"
+        gameLabel.font = infoFont
+        gameLabel.textColor = .secondaryLabel
+        gameLabel.textAlignment = .center
+        gameLabel.numberOfLines = 1
+
+        let spacing: CGFloat = 1
+        let totalHeight = ceil(titleFont.lineHeight)
+                        + spacing + ceil(courseFont.lineHeight)
+                        + spacing + ceil(infoFont.lineHeight)
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel, courseLabel, gameLabel])
+        stack.axis = .vertical
+        stack.alignment = .center
+        stack.spacing = spacing
+        stack.frame = CGRect(x: 0, y: 0, width: 220, height: totalHeight)
+
+        navigationItem.titleView = stack
+    }
+
+    private func buildTableHeader() {
+        tableView.tableHeaderView = nil
+
+        let container = UIView()
+        container.backgroundColor = .clear
+
+        let playerLabel = makeColHeaderLabel("Player")
+        let hcLabel = makeColHeaderLabel("HC")
+        hcLabel.textAlignment = .center
+
+        container.addSubview(playerLabel)
+        container.addSubview(hcLabel)
+
+        // Mirror exact storyboard cell positions: nameLabel x=46, hcField x=233 width=50
+        NSLayoutConstraint.activate([
+            playerLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 46),
+            playerLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+
+            hcLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 233),
+            hcLabel.widthAnchor.constraint(equalToConstant: 50),
+            hcLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+        ])
+
+        let width = tableView.bounds.width > 0 ? tableView.bounds.width : UIScreen.main.bounds.width
+        container.frame = CGRect(x: 0, y: 0, width: width, height: 28)
+        tableView.tableHeaderView = container
+    }
+
+    private func makeColHeaderLabel(_ text: String) -> UILabel {
+        let l = UILabel()
+        l.text = text
+        l.font = UIFont.preferredFont(forTextStyle: .caption1)
+        l.textColor = .secondaryLabel
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
     }
 
     private func configureTable() {
@@ -288,8 +372,11 @@ final class ManagePlayersViewController: UIViewController,
     }
 
     // MARK: - TableView Data Source
+
+    func numberOfSections(in tableView: UITableView) -> Int { 1 }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        friends.count
+        1 + friends.count
     }
 
     func tableView(_ tableView: UITableView,
@@ -302,33 +389,54 @@ final class ManagePlayersViewController: UIViewController,
             return UITableViewCell()
         }
 
-        let friend = friends[indexPath.row]
+        cell.activeSwitch.isHidden = true
+        cell.selectionStyle = .none
+
+        if indexPath.row == 0 {
+            let name = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            let displayName = (name.isEmpty || name == "Player 1") ? "Set your scoring name" : name
+            cell.nameLabel.text = "\(displayName) (You)"
+            cell.hcField.text = ProfileStore.myHC == 0 ? "" : String(ProfileStore.myHC)
+            cell.backgroundColor = ProfileStore.myPreselectForRound
+                ? UIColor.systemYellow.withAlphaComponent(0.25)
+                : .systemBackground
+            cell.hcChanged = { newHC in ProfileStore.myHC = newHC }
+            cell.activeChanged = nil
+            return cell
+        }
+
+        let friend = friends[indexPath.row - 1]
         let friendID = friend.id
 
         cell.nameLabel.text = friend.name
         cell.hcField.text = friend.defaultHC == 0 ? "" : String(friend.defaultHC)
-        cell.activeSwitch.isOn = friend.preselectForRound
-
-        cell.hcChanged = { newHC in
-            FriendStore.shared.update(friendID: friendID, defaultHC: newHC)
-        }
-
-        cell.activeChanged = { [weak self, weak cell] isOn in
-            guard let self else { return }
-
-            if isOn {
-                let currentActive = FriendStore.shared.preselectedCount
-                if currentActive >= self.maxActivePlayers {
-                    cell?.activeSwitch.setOn(false, animated: true)
-                    self.showActiveLimitAlert()
-                    return
-                }
-            }
-
-            FriendStore.shared.update(friendID: friendID, preselectForRound: isOn)
-        }
+        cell.backgroundColor = friend.preselectForRound
+            ? UIColor.systemYellow.withAlphaComponent(0.25)
+            : .systemBackground
+        cell.hcChanged = { newHC in FriendStore.shared.update(friendID: friendID, defaultHC: newHC) }
+        cell.activeChanged = nil
 
         return cell
+    }
+
+    // MARK: - Tap to select
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        if indexPath.row == 0 {
+            let nowOn = !ProfileStore.myPreselectForRound
+            if nowOn && selectedCount >= maxActivePlayers {
+                showActiveLimitAlert(); return
+            }
+            ProfileStore.myPreselectForRound = nowOn
+        } else {
+            let friend = friends[indexPath.row - 1]
+            let nowOn = !friend.preselectForRound
+            if nowOn && selectedCount >= maxActivePlayers {
+                showActiveLimitAlert(); return
+            }
+            FriendStore.shared.update(friendID: friend.id, preselectForRound: nowOn)
+        }
+        tableView.reloadRows(at: [indexPath], with: .automatic)
+        refreshStartButton()
     }
 
     // MARK: - Delete (swipe to delete)
@@ -336,11 +444,12 @@ final class ManagePlayersViewController: UIViewController,
                    commit editingStyle: UITableViewCell.EditingStyle,
                    forRowAt indexPath: IndexPath) {
 
-        guard editingStyle == .delete else { return }
+        guard editingStyle == .delete, indexPath.row > 0 else { return }
 
-        let friend = friends[indexPath.row]
+        let friend = friends[indexPath.row - 1]
         FriendStore.shared.remove(friendID: friend.id)
         tableView.deleteRows(at: [indexPath], with: .automatic)
+        refreshStartButton()
     }
 
     // MARK: - Close
@@ -358,11 +467,18 @@ final class ManagePlayersViewController: UIViewController,
 
     // MARK: - Start Round (unchanged)
     @IBAction func startRoundTapped(_ sender: Any) {
-        let selected = FriendStore.shared.friends.filter { $0.preselectForRound }
+        var selected = FriendStore.shared.friends.filter { $0.preselectForRound }
+        if ProfileStore.myPreselectForRound,
+           let myName = ProfileStore.name,
+           !myName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+           myName != "Player 1" {
+            let me = Friend(name: myName, defaultHC: ProfileStore.myHC)
+            selected.insert(me, at: 0)
+        }
         guard !selected.isEmpty else {
             let ac = UIAlertController(
                 title: "No Players Selected",
-                message: "Turn on at least one Activate switch, then try again.",
+                message: "Tap at least one player row to add them to the round.",
                 preferredStyle: .alert
             )
             ac.addAction(UIAlertAction(title: "OK", style: .default))
@@ -400,6 +516,81 @@ final class ManagePlayersViewController: UIViewController,
             return true
         }
         return false
+    }
+
+    // MARK: - Start button helpers
+
+    private var selectedCount: Int {
+        FriendStore.shared.preselectedCount + (ProfileStore.myPreselectForRound ? 1 : 0)
+    }
+
+    private func styleStartButton(_ btn: UIButton) {
+        var cfg = UIButton.Configuration.filled()
+        cfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        cfg.baseForegroundColor = .white
+        cfg.cornerStyle = .capsule
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 14, leading: 20, bottom: 14, trailing: 20)
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 17, weight: .semibold); return a
+        }
+        btn.configuration = cfg
+    }
+
+    private func installEditSettingsButton(below anchor: UIButton) {
+        let btn = UIButton(type: .system)
+        var cfg = UIButton.Configuration.filled()
+        cfg.title = "Edit Game Settings"
+        cfg.image = UIImage(systemName: "gearshape")
+        cfg.imagePlacement = .leading
+        cfg.imagePadding = 8
+        cfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        cfg.baseForegroundColor = .white
+        cfg.cornerStyle = .capsule
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .footnote); return a
+        }
+        btn.configuration = cfg
+        btn.addTarget(self, action: #selector(editSettingsTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(btn)
+        NSLayoutConstraint.activate([
+            btn.topAnchor.constraint(equalTo: anchor.bottomAnchor, constant: 10),
+            btn.centerXAnchor.constraint(equalTo: anchor.centerXAnchor),
+            btn.widthAnchor.constraint(equalTo: anchor.widthAnchor),
+        ])
+        editSettingsButton = btn
+    }
+
+    @objc private func editSettingsTapped() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let vc = sb.instantiateViewController(withIdentifier: "GameSettingsViewController")
+                as? GameSettingsViewController else { return }
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func refreshStartButton() {
+        guard let btn = startRoundButton else { return }
+        let count = selectedCount
+        var cfg = btn.configuration ?? UIButton.Configuration.filled()
+        cfg.title = count < 2 ? "Select at least 2 players" : "Start Round (\(count) players)"
+        btn.configuration = cfg
+        btn.isEnabled = count >= 2
+    }
+
+    private func button(forAction action: Selector) -> UIButton? {
+        let name = NSStringFromSelector(action)
+        func search(_ v: UIView) -> UIButton? {
+            for sub in v.subviews {
+                if let btn = sub as? UIButton,
+                   btn.actions(forTarget: self, forControlEvent: .touchUpInside)?.contains(name) == true {
+                    return btn
+                }
+                if let found = search(sub) { return found }
+            }
+            return nil
+        }
+        return search(view)
     }
 
     private func configureGameRosterAndPresentRoundNav(with active: [Friend]) {

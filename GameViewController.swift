@@ -794,7 +794,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     .foregroundColor: UIColor.systemGreen
                 ])
                 let badgeAttr = NSAttributedString(string: " " + String(repeating: "•", count: strokePops), attributes: [
-                    .font: UIFont.systemFont(ofSize: fontSize + 6),
+                    .font: UIFont.systemFont(ofSize: fontSize + 12),
                     .foregroundColor: UIColor.systemRed
                 ])
                 let combined = NSMutableAttributedString(attributedString: nameAttr)
@@ -1325,9 +1325,38 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     Note: Alone Team Total calculation uses a ghost partner score: (player score + bogey) ÷ 2.
     """)
 
-        // Umbie (if you have an umbrella button outlet, attach help there too)
-        // If your Umbie button is called something else, just wire it below.
+        addHelp(
+            to: button(forAction: #selector(remoteNassauTapped(_:))),
+            title: "Remote Nassau",
+            message: """
+            1v1 Nassau against a player in another group — played simultaneously while you score your Wolf match here.
+
+            How it works:
+            1. Before you tee off, one player sends an invite via text.
+            2. The other player imports it (also before teeing off).
+            3. Both groups play their rounds as normal — no extra steps mid-round.
+            4. After the round, open Remote Nassau → View Matches and tap "Apply Round & Calculate Results" to compare scores and settle up.
+
+            Note: Teams are not supported — always one player vs. one player.
+            """
+        )
     }
+
+    private func button(forAction action: Selector) -> UIButton? {
+        let name = NSStringFromSelector(action)
+        func search(_ v: UIView) -> UIButton? {
+            for sub in v.subviews {
+                if let btn = sub as? UIButton,
+                   btn.actions(forTarget: self, forControlEvent: .touchUpInside)?.contains(name) == true {
+                    return btn
+                }
+                if let found = search(sub) { return found }
+            }
+            return nil
+        }
+        return search(view)
+    }
+
     private func addHelp(to view: UIView?, title: String, message: String) {
         guard let view else { return }
         view.isUserInteractionEnabled = true

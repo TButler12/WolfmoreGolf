@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
+		EB1C7A593448F2323213FB7F /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D7D681FBEA3C05DBD4C6D7E /* UpdateChecker.swift */; };
 		F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1702F3691E6009EEB12 /* ServiceContact.swift */; };
 		F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1722F369228009EEB12 /* ServiceContactStore.swift */; };
 		F63960632F60D62500EC0C30 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960472F60D62500EC0C30 /* AppNotifications.swift */; };
@@ -91,6 +92,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1D7D681FBEA3C05DBD4C6D7E /* UpdateChecker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UpdateChecker.swift; sourceTree = "<group>"; };
 		9402F93CD28E4C029E042DFC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
@@ -220,6 +222,7 @@
 				F6E007F62F80182400763694 /* SkinsViewController.swift */,
 				F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */,
 				F6E007FF2F80182400763694 /* ReviewPrompter.swift */,
+				1D7D681FBEA3C05DBD4C6D7E /* UpdateChecker.swift */,
 				F6E007F42F8017F300763694 /* SkinsEngine.swift */,
 				F6E007F22F8017AC00763694 /* SkinsModel.swift */,
 				F6750CFF2F785E24001828D2 /* GameSettingsViewController.swift */,
@@ -483,6 +486,7 @@
 				F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */,
 				F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */,
 				F6E007FE2F80182400763694 /* ReviewPrompter.swift in Sources */,
+				EB1C7A593448F2323213FB7F /* UpdateChecker.swift in Sources */,
 				F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */,
 				F64DE8152EB2850000F8D625 /* AppDelegate.swift in Sources */,
 				F681886C2F62898D004162EE /* PlayerSetupViewController.swift in Sources */,
@@ -522,7 +526,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -537,7 +541,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.7;
+				MARKETING_VERSION = 2.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -563,7 +567,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 20;
+				CURRENT_PROJECT_VERSION = 22;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -578,7 +582,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.0.7;
+				MARKETING_VERSION = 2.0.9;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

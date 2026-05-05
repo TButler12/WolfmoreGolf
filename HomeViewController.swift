@@ -57,6 +57,9 @@ final class ViewController: UIViewController {
         seedProfileNameIfNeeded()
         updateWelcome()
 
+        let tap = UITapGestureRecognizer(target: self, action: #selector(welcomeLabelTapped))
+        welcomeLabel.addGestureRecognizer(tap)
+
         refreshCourseButtonTitle()
         refreshPlayArea()
         refreshBottomButtons()
@@ -83,6 +86,7 @@ final class ViewController: UIViewController {
         super.viewDidAppear(animated)
         runFirstLaunchPromptsIfNeeded()
         refreshPlayArea()
+        UpdateChecker.shared.check(from: self)
     }
 
     // MARK: - Migration
@@ -134,7 +138,6 @@ final class ViewController: UIViewController {
 
     private func seedProfileNameIfNeeded() {
         if ProfileStore.name == nil {
-            ProfileStore.name = "Player 1"
             shouldPromptForName = true
         }
     }
@@ -142,10 +145,15 @@ final class ViewController: UIViewController {
     // MARK: - Welcome
 
     private func updateWelcome() {
-        let name = (ProfileStore.name ?? "Player 1")
+        let name = (ProfileStore.name ?? "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        welcomeLabel.text = "       Welcome, \(name)"
+        if name.isEmpty || name == "Player 1" {
+            welcomeLabel.text = "       Tap to set your scoring name"
+        } else {
+            welcomeLabel.text = "       Welcome, \(name)"
+        }
+        welcomeLabel.isUserInteractionEnabled = true
         welcomeLabel.textAlignment = .center
         welcomeLabel.adjustsFontForContentSizeCategory = true
         welcomeLabel.adjustsFontSizeToFitWidth = true
@@ -157,7 +165,8 @@ final class ViewController: UIViewController {
     private func runFirstLaunchPromptsIfNeeded() {
         guard presentedViewController == nil else { return }
 
-        if shouldPromptForName || (ProfileStore.name == "Player 1") {
+        let storedName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if shouldPromptForName || storedName.isEmpty || storedName == "Player 1" {
             shouldPromptForName = false
             promptForName { [weak self] in
                 self?.runPostNamePrompts()
@@ -212,31 +221,60 @@ final class ViewController: UIViewController {
 
     private func promptForName(completion: @escaping () -> Void) {
         let ac = UIAlertController(
-            title: "    Welcome!",
-            message: "What should we call you?",
+            title: "Choose Your Scoring Name",
+            message: "This name appears on every scorecard you play and in your friends' matches. Use the nickname your golf group already knows you by — not your full legal name.",
             preferredStyle: .alert
         )
 
         ac.addTextField { tf in
-            tf.placeholder = "Your name"
-            tf.text = (ProfileStore.name == "Player 1") ? "" : ProfileStore.name
+            tf.placeholder = "e.g. McTommy, Bucky, Hollandaise"
+            let stored = ProfileStore.name ?? ""
+            tf.text = (stored == "Player 1" || stored.isEmpty) ? "" : stored
             tf.autocapitalizationType = .words
             tf.clearButtonMode = .whileEditing
+            tf.returnKeyType = .done
         }
 
-        ac.addAction(UIAlertAction(title: "Skip", style: .cancel) { _ in
+        ac.addAction(UIAlertAction(title: "Skip for now", style: .cancel) { _ in
             completion()
         })
 
-        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
-            let name = (ac.textFields?.first?.text ?? "")
+        ac.addAction(UIAlertAction(title: "Use This Name", style: .default) { [weak self] _ in
+            guard let self = self else { completion(); return }
+            let raw = (ac.textFields?.first?.text ?? "")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
 
-            if !name.isEmpty {
-                ProfileStore.name = name
-                self?.updateWelcome()
+            if raw.contains(" ") && raw.split(separator: " ").count >= 2 {
+                self.confirmFullNameUsage(typedName: raw, completion: completion)
+                return
+            }
+
+            if !raw.isEmpty {
+                ProfileStore.name = raw
+                self.updateWelcome()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
+            completion()
+        })
+
+        present(ac, animated: true)
+    }
+
+    private func confirmFullNameUsage(typedName: String, completion: @escaping () -> Void) {
+        let ac = UIAlertController(
+            title: "Use \"\(typedName)\" on every scorecard?",
+            message: "Most golfers prefer a shorter nickname here so it fits cleanly in the scorecard row.",
+            preferredStyle: .alert
+        )
+
+        ac.addAction(UIAlertAction(title: "Pick a Nickname Instead", style: .cancel) { [weak self] _ in
+            self?.promptForName(completion: completion)
+        })
+
+        ac.addAction(UIAlertAction(title: "Use \"\(typedName)\"", style: .default) { [weak self] _ in
+            ProfileStore.name = typedName
+            self?.updateWelcome()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
             completion()
         })
 
@@ -441,6 +479,10 @@ final class ViewController: UIViewController {
 
     @IBAction private func joinProTapped(_ sender: UIButton) {}
 
+    @objc private func welcomeLabelTapped() {
+        promptForName(completion: {})
+    }
+
     @objc private func showProPaywall() {}
     @objc private func noop() {}
 
@@ -556,6 +598,11 @@ final class ViewController: UIViewController {
         ac.addAction(UIAlertAction(title: "Delete History", style: .destructive) { [weak self] _ in
             guard let self = self else { return }
             self.deleteHistoryTapped(sender)
+        })
+
+        ac.addAction(UIAlertAction(title: "Check for Updates", style: .default) { [weak self] _ in
+            guard let self else { return }
+            UpdateChecker.shared.checkManually(from: self)
         })
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
