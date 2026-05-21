@@ -210,6 +210,11 @@ final class RoundStore {
         save()
     }
 
+    func deleteGame(gameID: UUID) {
+        rounds.removeAll { $0.gameID == gameID }
+        save()
+    }
+
     func clearAll() {
         rounds.removeAll()
         save()

@@ -1817,6 +1817,30 @@ let FRENCH_LICK_DONALD_ROSS_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold Medal", yardage: 7030, rating: 75.7, slope: 149)
 ]
 
+// MARK: - Victoria National Golf Club — Newburgh, IN
+private let VICTORIA_NATIONAL_ID = UUID(uuidString: "F4A3B2C1-D5E6-4F7A-B8C9-D0E1F2A3B4C5")!
+let VICTORIA_NATIONAL_PARS: [Int] = [4,4,5,4,3,4,3,4,5, 5,3,4,4,4,5,3,4,4]
+let VICTORIA_NATIONAL_HCS: [Int]  = [13,7,3,9,15,1,17,11,5, 12,14,16,18,2,8,10,4,6]
+let VICTORIA_NATIONAL_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 7242, rating: 77.7, slope: 152)]
+
+// MARK: - Brickyard Crossing Golf Course — Indianapolis, IN
+private let BRICKYARD_CROSSING_ID = UUID(uuidString: "E3B2A1C0-D4E5-4E6F-A7B8-C9D0E1F2A3B4")!
+let BRICKYARD_CROSSING_PARS: [Int] = [4,5,4,3,4,5,3,4,4, 4,4,5,3,4,5,4,3,4]
+let BRICKYARD_CROSSING_HCS: [Int]  = [17,5,13,9,3,15,7,1,11, 16,6,10,14,18,4,8,12,2]
+let BRICKYARD_CROSSING_TEES: [TeeInfo] = [TeeInfo(teeName: "Gold", yardage: 7180, rating: 74.6, slope: 141)]
+
+// MARK: - Pfau Course at Indiana University — Bloomington, IN
+private let PFAU_COURSE_IU_ID = UUID(uuidString: "D2A1B0C9-E3F4-4D5E-B6C7-D8E9F0A1B2C3")!
+let PFAU_COURSE_IU_PARS: [Int] = [5,4,3,4,4,4,3,4,5, 4,4,4,5,4,3,4,3,4]
+let PFAU_COURSE_IU_HCS: [Int]  = [5,1,17,11,15,9,13,7,3, 16,12,2,6,10,14,8,18,4]
+let PFAU_COURSE_IU_TEES: [TeeInfo] = [TeeInfo(teeName: "Championship", yardage: 7241, rating: 76.0, slope: 143)]
+
+// MARK: - Warren Golf Course at Notre Dame — Notre Dame, IN
+private let WARREN_GC_ND_ID = UUID(uuidString: "C1B0A9E8-F2D3-4C4B-A5D6-E7F8A9B0C1D2")!
+let WARREN_GC_ND_PARS: [Int] = [4,4,4,3,5,4,4,4,3, 5,3,4,4,3,4,4,5,4]
+let WARREN_GC_ND_HCS: [Int]  = [11,3,9,17,1,5,13,7,15, 4,14,6,10,18,16,12,2,8]
+let WARREN_GC_ND_TEES: [TeeInfo] = [TeeInfo(teeName: "Championship", yardage: 7020, rating: 74.6, slope: 135)]
+
 // =======================================================
 // MARK: - Built-in: Silvies Valley Resort & Links – Craddock
 // Seneca, OR • Resort
@@ -2160,6 +2184,7 @@ let LAKE_OF_ISLES_NORTH_TEES: [TeeInfo] = [
 ]
 
 // South Course (Turtle)
+private let LAKE_OF_ISLES_SOUTH_ID = UUID(uuidString: "B8C9D0E2-3F4A-5B6C-9D7E-8F0A1B2C3D73")!
 let LAKE_OF_ISLES_SOUTH_PARS: [Int] = [4,4,4,3,5,3,4,5,4, 4,3,4,4,5,4,3,5,4]
 let LAKE_OF_ISLES_SOUTH_HCS:  [Int] = [9,1,15,11,17,13,7,5,3, 2,18,6,16,4,12,8,10,14]
 
@@ -3828,6 +3853,747 @@ let ARROWHEAD_WEST_EAST_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Combo", yardage: 6711, rating: 67.4, slope: 121),
     TeeInfo(teeName: "Red",   yardage: 6119, rating: 68.7, slope: 119)
 ]
+// MARK: - Red Hawk Ridge Golf Course — Castle Rock, CO
+private let RED_HAWK_RIDGE_ID = UUID(uuidString: "A2C91D43-7E85-4F6B-BC34-2E8A5D7F1C09")!
+
+let RED_HAWK_RIDGE_PARS: [Int] = [
+    5,4,3,4,4,3,5,4,4,
+    4,3,4,5,3,4,5,3,5
+]
+
+let RED_HAWK_RIDGE_HCS: [Int] = [
+    17,11,5,1,15,9,3,7,13,
+    4,14,10,12,8,2,6,16,18
+]
+
+// MARK: - CommonGround Golf Course — Aurora, CO
+private let COMMONGROUND_GC_ID = UUID(uuidString: "B3D02E54-8F96-4A7C-CD45-3F9B6E8A2D10")!
+
+let COMMONGROUND_GC_PARS: [Int] = [
+    4,3,5,4,4,3,5,4,4,
+    4,5,3,4,3,4,4,3,5
+]
+
+let COMMONGROUND_GC_HCS: [Int] = [
+    7,17,1,9,5,13,3,15,11,
+    12,10,18,4,16,2,6,14,8
+]
+
+// MARK: - Green Valley Ranch Golf Club — Denver, CO
+private let GREEN_VALLEY_RANCH_GC_ID = UUID(uuidString: "C4E13F65-9A07-4B8D-DE56-4A0C7F9B3E21")!
+
+let GREEN_VALLEY_RANCH_GC_PARS: [Int] = [
+    4,5,4,4,3,4,4,3,5,
+    4,4,5,3,4,4,4,3,5
+]
+
+let GREEN_VALLEY_RANCH_GC_HCS: [Int] = [
+    9,3,7,17,13,1,15,11,5,
+    10,4,8,16,18,2,14,12,6
+]
+
+// MARK: - TPC Colorado — Berthoud, CO
+private let TPC_COLORADO_ID = UUID(uuidString: "D5F24A76-0B18-4C9E-EF67-5B1D8A0C4F32")!
+
+let TPC_COLORADO_PARS: [Int] = [
+    5,3,4,4,5,4,4,3,4,
+    4,4,4,5,3,5,3,4,4
+]
+
+let TPC_COLORADO_HCS: [Int] = [
+    4,6,14,2,16,18,12,10,8,
+    17,13,9,1,5,11,15,7,3
+]
+
+// MARK: - Pole Creek Golf Club — Tabernash, CO (27-hole)
+// Meadow + Ranch
+private let POLE_CREEK_MEADOW_RANCH_ID = UUID(uuidString: "E6A35B87-1C29-4DAF-F078-6C2E9B1D5A43")!
+
+let POLE_CREEK_MEADOW_RANCH_PARS: [Int] = [
+    4,5,4,3,4,3,5,4,4,
+    5,3,4,4,4,4,3,4,5
+]
+
+let POLE_CREEK_MEADOW_RANCH_HCS: [Int] = [
+    17,9,7,15,5,13,3,1,11,
+    2,18,4,6,12,8,10,16,14
+]
+
+// Meadow + Ridge
+private let POLE_CREEK_MEADOW_RIDGE_ID = UUID(uuidString: "F7B46C98-2D3A-4EB0-A189-7D3FAC2E6B54")!
+
+let POLE_CREEK_MEADOW_RIDGE_PARS: [Int] = [
+    4,5,4,3,4,3,5,4,4,
+    4,3,4,4,4,3,5,4,4
+]
+
+let POLE_CREEK_MEADOW_RIDGE_HCS: [Int] = [
+    17,9,7,15,5,13,3,1,11,
+    2,18,14,4,16,6,12,8,10
+]
+
+// Ranch + Ridge
+private let POLE_CREEK_RANCH_RIDGE_ID = UUID(uuidString: "A8C57DA9-3E4B-4FC1-B29A-8E4ABD3F7C65")!
+
+let POLE_CREEK_RANCH_RIDGE_PARS: [Int] = [
+    5,3,4,4,4,4,3,4,5,
+    4,3,4,4,4,3,5,4,4
+]
+
+let POLE_CREEK_RANCH_RIDGE_HCS: [Int] = [
+    1,17,3,5,11,7,9,15,13,
+    2,18,14,4,16,6,12,8,10
+]
+
+// MARK: - Riverdale Golf Club — Brighton, CO
+// Dunes Course
+private let RIVERDALE_DUNES_ID = UUID(uuidString: "B9D68EBA-4F5C-4AD2-C3AB-9F5BCE4A8D76")!
+
+let RIVERDALE_DUNES_PARS: [Int] = [
+    4,4,5,3,4,4,4,3,5,
+    4,5,3,4,4,4,5,3,4
+]
+
+let RIVERDALE_DUNES_HCS: [Int] = [
+    11,15,9,7,1,3,5,13,17,
+    10,4,14,2,12,6,18,8,16
+]
+
+// Knolls Course
+private let RIVERDALE_KNOLLS_ID = UUID(uuidString: "CAE79FCB-5A6D-4BE3-D4BC-AF6CDF5B9E87")!
+
+let RIVERDALE_KNOLLS_PARS: [Int] = [
+    4,5,4,4,3,4,5,3,4,
+    4,5,5,3,4,4,3,4,4
+]
+
+let RIVERDALE_KNOLLS_HCS: [Int] = [
+    3,5,13,1,11,7,17,9,15,
+    16,2,10,4,12,8,14,18,6
+]
+
+// MARK: - Golf Club at Fox Acres — Red Feather Lakes, CO
+private let FOX_ACRES_GC_ID = UUID(uuidString: "DBF8A0DC-6B7E-4CF4-E5CD-BA7DE06CAF98")!
+
+let FOX_ACRES_GC_PARS: [Int] = [
+    4,3,4,4,4,3,5,4,3,
+    4,4,4,5,4,4,4,5,3
+]
+
+let FOX_ACRES_GC_HCS: [Int] = [
+    10,4,14,2,6,16,8,12,18,
+    11,15,3,9,1,17,7,13,5
+]
+
+// MARK: - Cherry Hills Country Club — Cherry Hills Village, CO
+private let CHERRY_HILLS_CC_ID = UUID(uuidString: "EC897B1D-7C8F-4D05-A6DE-CB8EF17DB0A9")!
+
+let CHERRY_HILLS_CC_PARS: [Int] = [
+    4,4,4,4,5,3,4,3,4,
+    4,5,3,4,4,3,4,5,5
+]
+
+let CHERRY_HILLS_CC_HCS: [Int] = [
+    12,6,14,8,2,18,10,16,4,
+    7,13,15,9,1,17,5,3,11
+]
+
+// MARK: - Sanctuary Golf Course — Sedalia, CO
+private let SANCTUARY_GC_ID = UUID(uuidString: "FD9A8C2E-8D90-4E16-B7EF-DC9FA28EC1BA")!
+
+let SANCTUARY_GC_PARS: [Int] = [
+    5,4,4,5,3,3,4,4,4,
+    3,5,4,4,3,5,4,4,4
+]
+
+let SANCTUARY_GC_HCS: [Int] = [
+    1,5,9,3,13,17,15,7,11,
+    14,4,6,10,12,8,16,18,2
+]
+
+// MARK: - The Broadmoor East Course — Colorado Springs, CO
+private let BROADMOOR_EAST_ID = UUID(uuidString: "AE0B9D3F-9EA1-4F27-C8FA-ED0AB39FD2CB")!
+
+let BROADMOOR_EAST_PARS: [Int] = [
+    4,4,4,3,5,4,3,4,4,
+    4,5,4,3,4,4,5,3,4
+]
+
+let BROADMOOR_EAST_HCS: [Int] = [
+    9,5,13,17,1,7,15,11,3,
+    10,2,8,18,12,6,4,16,14
+]
+
+// MARK: - The Broadmoor West Course — Colorado Springs, CO
+private let BROADMOOR_WEST_ID = UUID(uuidString: "BF3CE1A4-AB4C-4D49-E0DC-AB3EF1B2CD4F")!
+
+let BROADMOOR_WEST_PARS: [Int] = [
+    4,4,4,4,3,4,4,5,3,
+    5,3,4,4,4,4,3,4,5
+]
+
+let BROADMOOR_WEST_HCS: [Int] = [
+    11,5,7,15,17,1,9,3,13,
+    2,16,6,10,4,14,18,12,8
+]
+
+// MARK: - RainDance National Golf Course — Windsor, CO
+private let RAINDANCE_NATIONAL_ID = UUID(uuidString: "EC1ADF84-FA2B-4E7C-C0DF-BC2EF1A3BE5F")!
+
+let RAINDANCE_NATIONAL_PARS: [Int] = [
+    4,5,4,4,4,3,5,3,4,
+    4,4,3,5,3,4,5,3,5
+]
+
+let RAINDANCE_NATIONAL_HCS: [Int] = [
+    13,11,15,3,1,17,5,9,7,
+    6,12,10,4,18,8,14,16,2
+]
+
+let RAINDANCE_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black/Tour", yardage: 8463, rating: 79.9, slope: 155)
+]
+
+// MARK: - Breckenridge Golf Club — Breckenridge, CO
+private let BRECKENRIDGE_GC_ID = UUID(uuidString: "FD2BE095-AB3C-4F8D-D1E0-CD3FA2B4CF60")!
+
+let BRECKENRIDGE_GC_PARS: [Int] = [
+    4,5,3,4,4,4,4,5,3,
+    4,5,4,3,4,4,5,4,4
+]
+
+let BRECKENRIDGE_GC_HCS: [Int] = [
+    4,6,9,5,3,8,2,1,7,
+    9,3,8,5,7,6,1,2,4
+]
+
+let BRECKENRIDGE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Beaver/Bear", yardage: 7339, rating: 73.9, slope: 151)
+]
+
+// MARK: - Keystone Ranch Golf Course — Keystone, CO
+private let KEYSTONE_RANCH_ID = UUID(uuidString: "AE3CF1A6-BC4D-4A9E-E2F1-DE4AB3C5DA71")!
+
+let KEYSTONE_RANCH_PARS: [Int] = [
+    5,4,4,4,3,5,3,4,4,
+    4,4,3,5,3,4,4,4,5
+]
+
+let KEYSTONE_RANCH_HCS: [Int] = [
+    16,8,4,12,2,10,14,6,18,
+    1,11,17,13,15,7,5,3,9
+]
+
+let KEYSTONE_RANCH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6317, rating: 72.2, slope: 142)
+]
+
+// MARK: - River Course at Keystone — Keystone, CO
+private let KEYSTONE_RIVER_ID = UUID(uuidString: "BF4DA2B7-CD5E-4BAF-F3A2-EF5BC4D6EB82")!
+
+let KEYSTONE_RIVER_PARS: [Int] = [
+    5,4,3,4,5,4,3,4,3,
+    4,4,3,5,4,3,4,4,5
+]
+
+let KEYSTONE_RIVER_HCS: [Int] = [
+    15,17,1,11,3,5,9,7,13,
+    8,6,12,14,4,10,2,16,18
+]
+
+let KEYSTONE_RIVER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6886, rating: 71.1, slope: 137)
+]
+
+// MARK: - Murphy Creek Golf Course — Aurora, CO
+private let MURPHY_CREEK_GC_ID = UUID(uuidString: "CA5EB3C8-DE6F-4CB0-A4B3-FA6CD5E7FC93")!
+
+let MURPHY_CREEK_GC_PARS: [Int] = [
+    4,4,5,4,3,5,4,3,4,
+    4,3,4,5,4,5,4,3,4
+]
+
+let MURPHY_CREEK_GC_HCS: [Int] = [
+    17,1,7,3,13,9,5,11,15,
+    16,14,2,18,10,12,4,8,6
+]
+
+let MURPHY_CREEK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6909, rating: 72.0, slope: 132)
+]
+
+// MARK: - Walnut Creek Golf Preserve — Westminster, CO
+private let WALNUT_CREEK_GC_ID = UUID(uuidString: "DB6FC4D9-EF70-4DC1-B5C4-AB7DE6F8AD04")!
+
+let WALNUT_CREEK_GC_PARS: [Int] = [
+    4,4,5,3,4,5,3,4,4,
+    4,4,4,5,3,4,4,3,5
+]
+
+let WALNUT_CREEK_GC_HCS: [Int] = [
+    11,7,1,5,3,9,17,13,15,
+    12,16,8,2,18,6,10,14,4
+]
+
+let WALNUT_CREEK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7563, rating: 75.2, slope: 137)
+]
+
+// MARK: - The Club at Hokuli'a — Kealakekua, HI
+private let HOKUL_IA_CLUB_ID = UUID(uuidString: "EC2BE095-AB4C-4F9E-D2F1-BC3EF2A4CF71")!
+
+let HOKUL_IA_CLUB_PARS: [Int] = [
+    4,4,3,4,5,4,4,3,5,
+    4,3,4,3,5,4,5,4,4
+]
+
+let HOKUL_IA_CLUB_HCS: [Int] = [
+    7,3,17,11,5,1,13,15,9,
+    4,16,18,10,8,6,2,12,14
+]
+
+let HOKUL_IA_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Green", yardage: 7335, rating: 76.1, slope: 147)
+]
+
+// MARK: - Shorehaven Golf Club — East Norwalk, CT
+private let SHOREHAVEN_GC_ID = UUID(uuidString: "FD3CF1A6-BC5D-4AAF-E3A2-CD4FA3B5DA82")!
+
+let SHOREHAVEN_GC_PARS: [Int] = [
+    5,3,4,4,3,4,4,4,4,
+    4,5,5,3,4,3,5,3,4
+]
+
+let SHOREHAVEN_GC_HCS: [Int] = [
+    11,15,7,3,13,17,5,1,9,
+    4,6,12,14,10,18,2,16,8
+]
+
+let SHOREHAVEN_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6548, rating: 72.5, slope: 136)
+]
+
+// MARK: - Cordillera Valley Course — Edwards, CO
+private let CORDILLERA_VALLEY_ID = UUID(uuidString: "AE4DA2B7-CD6E-4BB0-F4B3-DE5AB4C6EB93")!
+
+let CORDILLERA_VALLEY_PARS: [Int] = [
+    5,4,5,3,4,4,4,3,4,
+    3,4,4,5,3,4,4,4,4
+]
+
+let CORDILLERA_VALLEY_HCS: [Int] = [
+    15,5,13,9,1,3,11,7,17,
+    18,10,2,8,6,14,16,4,12
+]
+
+let CORDILLERA_VALLEY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7046, rating: 72.8, slope: 144)
+]
+
+// MARK: - Cordillera Mountain Course — Edwards, CO
+private let CORDILLERA_MOUNTAIN_ID = UUID(uuidString: "BF5EB3C8-DE7F-4CC1-A5C4-EF6BC5D7FC04")!
+
+let CORDILLERA_MOUNTAIN_PARS: [Int] = [
+    4,3,4,5,3,4,4,5,4,
+    4,4,5,4,4,3,5,3,4
+]
+
+let CORDILLERA_MOUNTAIN_HCS: [Int] = [
+    9,15,3,11,13,1,17,5,7,
+    2,6,12,8,14,10,18,16,4
+]
+
+let CORDILLERA_MOUNTAIN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7450, rating: 74.6, slope: 148)
+]
+
+// MARK: - Cordillera Summit Course — Edwards, CO
+private let CORDILLERA_SUMMIT_ID = UUID(uuidString: "CA6FC4D9-EF80-4DD2-B6D5-FA7CD6E8AD15")!
+
+let CORDILLERA_SUMMIT_PARS: [Int] = [
+    4,4,3,4,5,4,3,5,4,
+    4,3,4,5,4,4,3,5,4
+]
+
+let CORDILLERA_SUMMIT_HCS: [Int] = [
+    9,3,17,1,15,7,13,11,5,
+    12,6,4,2,10,16,14,18,8
+]
+
+let CORDILLERA_SUMMIT_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7518, rating: 74.7, slope: 149)
+]
+
+// MARK: - Frost Creek — Eagle, CO
+private let FROST_CREEK_GC_ID = UUID(uuidString: "DB7AD5EA-FA91-4EE3-C7E6-AB8DE7F9BE26")!
+
+let FROST_CREEK_GC_PARS: [Int] = [
+    4,4,5,4,3,4,4,3,5,
+    4,4,3,4,5,4,3,5,4
+]
+
+let FROST_CREEK_GC_HCS: [Int] = [
+    5,13,3,17,9,1,15,7,11,
+    6,12,8,18,16,2,10,14,4
+]
+
+let FROST_CREEK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Copper", yardage: 7142, rating: 73.7, slope: 140)
+]
+
+// MARK: - Raven Golf Club at Three Peaks — Silverthorne, CO
+private let RAVEN_THREE_PEAKS_ID = UUID(uuidString: "EC8BE6FB-AB02-4FF4-D8F7-BC9EF8A0CF37")!
+
+let RAVEN_THREE_PEAKS_PARS: [Int] = [
+    4,5,4,3,4,5,4,3,4,
+    4,5,3,4,3,4,5,4,4
+]
+
+let RAVEN_THREE_PEAKS_HCS: [Int] = [
+    11,3,5,17,13,7,9,15,1,
+    14,2,6,12,10,18,8,4,16
+]
+
+let RAVEN_THREE_PEAKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Raven", yardage: 7273, rating: 74.3, slope: 144)
+]
+
+// MARK: - Roaring Fork Club — Basalt, CO
+private let ROARING_FORK_CLUB_ID = UUID(uuidString: "FD9CF7AC-BC13-4A05-E9A8-CD0FA9B1DA48")!
+
+let ROARING_FORK_CLUB_PARS: [Int] = [
+    4,5,4,3,4,4,4,3,5,
+    4,4,3,4,5,5,3,4,4
+]
+
+let ROARING_FORK_CLUB_HCS: [Int] = [
+    7,11,17,5,3,13,1,15,9,
+    14,6,12,18,16,2,10,4,8
+]
+
+let ROARING_FORK_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6991, rating: 72.8, slope: 141)
+]
+
+// MARK: - Nevada Courses
+
+// MARK: - Rio Secco Golf Club — Henderson, NV
+private let RIO_SECCO_GC_ID = UUID(uuidString: "AE5EB4C9-EF91-4DE3-D8F7-BC0EF9A1CF48")!
+
+let RIO_SECCO_GC_PARS: [Int] = [
+    4,4,3,4,4,3,4,5,5,
+    4,4,3,4,5,4,3,5,4
+]
+
+let RIO_SECCO_GC_HCS: [Int] = [
+    15,1,13,17,11,5,7,9,3,
+    16,2,14,10,4,12,6,18,8
+]
+
+let RIO_SECCO_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6921, rating: 75.0, slope: 153)
+]
+
+// MARK: - Las Vegas Paiute Golf Resort - Snow Mountain — Las Vegas, NV
+private let PAIUTE_SNOW_MOUNTAIN_ID = UUID(uuidString: "BF6FC5DA-FA02-4EF4-E9A8-CD1FA0B2DA59")!
+
+let PAIUTE_SNOW_MOUNTAIN_PARS: [Int] = [
+    4,4,5,3,4,5,4,3,4,
+    4,5,4,4,3,4,3,5,4
+]
+
+let PAIUTE_SNOW_MOUNTAIN_HCS: [Int] = [
+    11,9,3,13,1,5,15,17,7,
+    8,4,12,16,18,6,14,10,2
+]
+
+let PAIUTE_SNOW_MOUNTAIN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7068, rating: 73.1, slope: 130)
+]
+
+// MARK: - Las Vegas Paiute Golf Resort - Sun Mountain — Las Vegas, NV
+private let PAIUTE_SUN_MOUNTAIN_ID = UUID(uuidString: "CA7AD6EB-AB13-4FA5-FAB9-DE2AB1C3EB6A")!
+
+let PAIUTE_SUN_MOUNTAIN_PARS: [Int] = [
+    4,4,5,3,4,4,5,3,4,
+    4,5,4,4,3,4,5,3,4
+]
+
+let PAIUTE_SUN_MOUNTAIN_HCS: [Int] = [
+    5,15,7,11,13,1,9,17,3,
+    14,8,4,2,16,12,10,18,6
+]
+
+let PAIUTE_SUN_MOUNTAIN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6967, rating: 73.0, slope: 135)
+]
+
+// MARK: - Chimera Golf Club — Henderson, NV
+private let CHIMERA_GC_ID = UUID(uuidString: "DB8BE7FC-BC24-4AB6-ABD0-EF3BC2D4FC7B")!
+
+let CHIMERA_GC_PARS: [Int] = [
+    4,5,4,3,4,3,4,5,4,
+    4,5,3,4,4,5,4,3,4
+]
+
+let CHIMERA_GC_HCS: [Int] = [
+    5,15,7,13,3,11,17,9,1,
+    10,8,16,6,14,12,2,18,4
+]
+
+let CHIMERA_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Pegasus Red", yardage: 6697, rating: 72.3, slope: 128)
+]
+
+// MARK: - Arroyo Golf Club — Las Vegas, NV
+private let ARROYO_RED_ROCK_ID = UUID(uuidString: "AE6FC5DA-FA13-4FF5-E0B9-CD2FA1C4EB7A")!
+
+let ARROYO_RED_ROCK_PARS: [Int] = [
+    5,4,3,4,5,4,3,4,4,
+    4,5,3,4,3,4,5,4,4
+]
+
+let ARROYO_RED_ROCK_HCS: [Int] = [
+    7,3,15,1,11,5,17,9,13,
+    8,12,6,10,18,16,2,14,4
+]
+
+let ARROYO_RED_ROCK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6879, rating: 72.6, slope: 134)
+]
+
+// MARK: - Boulder Creek Golf Club — Boulder City, NV
+private let BOULDER_CREEK_GC_ID = UUID(uuidString: "BF7AD6EB-AB24-4AA6-F1CA-DE3AB2D5FC8B")!
+
+let BOULDER_CREEK_GC_PARS: [Int] = [
+    4,5,4,3,5,4,4,3,4,
+    4,4,3,5,4,4,5,3,4
+]
+
+let BOULDER_CREEK_GC_HCS: [Int] = [
+    5,9,15,11,13,7,1,17,3,
+    12,8,14,10,6,16,2,18,4
+]
+
+let BOULDER_CREEK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7472, rating: 75.3, slope: 136)
+]
+
+// MARK: - Angel Park Golf Club (Mountain) — Las Vegas, NV
+private let ANGEL_PARK_MOUNTAIN_ID = UUID(uuidString: "CA8BE7FC-BC35-4BB7-A2DB-EF4BC3E6AD9C")!
+
+let ANGEL_PARK_MOUNTAIN_PARS: [Int] = [
+    4,5,4,3,4,3,4,4,4,
+    4,3,4,5,4,3,4,5,4
+]
+
+let ANGEL_PARK_MOUNTAIN_HCS: [Int] = [
+    5,1,13,17,9,15,11,3,7,
+    4,18,12,6,10,16,14,2,8
+]
+
+let ANGEL_PARK_MOUNTAIN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Professional", yardage: 6596, rating: 71.4, slope: 134)
+]
+
+// MARK: - SouthShore Country Club — Henderson, NV
+private let SOUTHSHORE_CC_ID = UUID(uuidString: "A1B2C3D4-E5F6-4A1B-B2C3-D4E5F6A1B2C3")!
+let SOUTHSHORE_CC_PARS: [Int] = [5,4,4,3,4,5,4,3,4, 3,5,4,5,3,4,3,4,4]
+let SOUTHSHORE_CC_HCS: [Int]  = [15,7,3,17,1,11,9,13,5, 12,18,4,8,16,2,14,10,6]
+let SOUTHSHORE_CC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6887, rating: 74.7, slope: 150)]
+
+// MARK: - Desert Springs Golf Course (Palms) — Palm Desert, CA
+private let DESERT_SPRINGS_PALMS_ID = UUID(uuidString: "B2C3D4E5-F6A1-4B2C-C3D4-E5F6A1B2C3D4")!
+let DESERT_SPRINGS_PALMS_PARS: [Int] = [5,4,3,4,4,4,5,3,4, 5,4,3,5,4,4,4,3,4]
+let DESERT_SPRINGS_PALMS_HCS: [Int]  = [13,7,15,17,1,9,3,5,11, 8,16,6,10,18,12,4,14,2]
+let DESERT_SPRINGS_PALMS_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6761, rating: 72.7, slope: 132)]
+
+// MARK: - Rhodes Ranch Golf Club — Las Vegas, NV
+private let RHODES_RANCH_GC_ID = UUID(uuidString: "C3D4E5F6-A1B2-4C3D-D4E5-F6A1B2C3D4E5")!
+let RHODES_RANCH_GC_PARS: [Int] = [4,4,3,4,4,4,3,4,5, 4,4,5,4,3,5,3,4,4]
+let RHODES_RANCH_GC_HCS: [Int]  = [11,3,9,13,5,17,1,15,7, 8,18,2,14,6,16,12,10,4]
+let RHODES_RANCH_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6582, rating: 70.6, slope: 128)]
+
+// MARK: - Desert Pines Golf Club — Las Vegas, NV
+private let DESERT_PINES_GC_ID = UUID(uuidString: "D4E5F6A1-B2C3-4D4E-E5F6-A1B2C3D4E5F6")!
+let DESERT_PINES_GC_PARS: [Int] = [4,4,3,5,4,4,3,5,4, 4,4,3,5,4,4,3,5,3]
+let DESERT_PINES_GC_HCS: [Int]  = [9,5,15,1,11,7,17,3,13, 10,6,16,2,12,8,18,4,14]
+let DESERT_PINES_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Championship", yardage: 6222, rating: 70.5, slope: 129)]
+
+// MARK: - Coyote Springs Golf Club — Coyote Springs, NV
+private let COYOTE_SPRINGS_GC_ID = UUID(uuidString: "E5F6A1B2-C3D4-4E5F-F6A1-B2C3D4E5F6A1")!
+let COYOTE_SPRINGS_GC_PARS: [Int] = [4,5,3,4,5,4,4,3,4, 4,5,3,4,4,4,5,3,4]
+let COYOTE_SPRINGS_GC_HCS: [Int]  = [9,13,7,1,11,17,3,15,5, 12,6,14,8,2,10,4,18,16]
+let COYOTE_SPRINGS_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 7471, rating: 76.8, slope: 149)]
+
+// MARK: - Wolf Creek Golf Club — Mesquite, NV
+private let WOLF_CREEK_GC_ID = UUID(uuidString: "F6A1B2C3-D4E5-4F6A-A1B2-C3D4E5F6A1B2")!
+let WOLF_CREEK_GC_PARS: [Int] = [5,4,3,4,5,4,4,3,4, 4,3,5,4,4,3,4,5,4]
+let WOLF_CREEK_GC_HCS: [Int]  = [9,1,7,15,3,11,13,5,17, 2,16,8,14,4,18,10,6,12]
+let WOLF_CREEK_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Challenger Black", yardage: 6785, rating: 74.4, slope: 147)]
+
+// MARK: - Sand Hollow Resort (Championship) — Hurricane, UT
+private let SAND_HOLLOW_CHAMPIONSHIP_ID = UUID(uuidString: "A2B3C4D5-E6F1-4A2B-B3C4-D5E6F1A2B3C4")!
+let SAND_HOLLOW_CHAMPIONSHIP_PARS: [Int] = [4,5,3,4,4,4,5,3,4, 5,3,4,4,4,3,4,5,4]
+let SAND_HOLLOW_CHAMPIONSHIP_HCS: [Int]  = [15,7,17,5,13,1,3,11,9, 10,16,2,14,4,8,18,12,6]
+let SAND_HOLLOW_CHAMPIONSHIP_TEES: [TeeInfo] = [TeeInfo(teeName: "Tournament", yardage: 7315, rating: 74.0, slope: 137)]
+
+// MARK: - Conestoga Golf Club — Mesquite, NV
+private let CONESTOGA_GC_ID = UUID(uuidString: "B3C4D5E6-F1A2-4B3C-C4D5-E6F1A2B3C4D5")!
+let CONESTOGA_GC_PARS: [Int] = [4,3,4,4,3,5,4,4,5, 3,4,5,4,3,4,5,4,4]
+let CONESTOGA_GC_HCS: [Int]  = [5,15,9,1,13,3,17,7,11, 14,2,16,10,18,8,12,6,4]
+let CONESTOGA_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 7232, rating: 74.9, slope: 137)]
+
+// MARK: - Falcon Ridge Golf Course — Mesquite, NV
+private let FALCON_RIDGE_GC_ID = UUID(uuidString: "C4D5E6F1-A2B3-4C4D-D5E6-F1A2B3C4D5E6")!
+let FALCON_RIDGE_GC_PARS: [Int] = [5,3,4,4,3,4,5,3,4, 5,4,5,4,3,4,5,3,4]
+let FALCON_RIDGE_GC_HCS: [Int]  = [16,6,12,8,14,2,18,4,10, 15,5,13,1,11,9,17,7,3]
+let FALCON_RIDGE_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6569, rating: 70.9, slope: 135)]
+
+// MARK: - Summit Club — Las Vegas, NV
+private let SUMMIT_CLUB_ID = UUID(uuidString: "D5E6F1A2-B3C4-4D5E-E6F1-A2B3C4D5E6F1")!
+let SUMMIT_CLUB_PARS: [Int] = [4,3,5,4,4,5,3,4,4, 4,3,4,4,5,4,3,4,5]
+let SUMMIT_CLUB_HCS: [Int]  = [15,13,5,1,11,9,17,3,7, 4,10,18,2,14,8,16,6,12]
+let SUMMIT_CLUB_TEES: [TeeInfo] = [TeeInfo(teeName: "Crown", yardage: 7519, rating: 76.9, slope: 147)]
+
+// MARK: - Reynolds Lake Oconee — Greensboro, GA
+private let REYNOLDS_PRESERVE_ID = UUID(uuidString: "A3B4C5D6-E1F2-4A3B-C4D5-E6F1A2B3C4D5")!
+let REYNOLDS_PRESERVE_PARS: [Int] = [4,4,3,4,5,4,5,3,5, 4,3,4,4,4,3,5,3,5]
+let REYNOLDS_PRESERVE_HCS: [Int]  = [1,9,17,3,11,5,13,15,7, 4,8,6,16,2,10,18,12,14]
+let REYNOLDS_PRESERVE_TEES: [TeeInfo] = [TeeInfo(teeName: "One", yardage: 6674, rating: 72.2, slope: 133)]
+
+private let REYNOLDS_GREAT_WATERS_ID = UUID(uuidString: "B4C5D6E1-F2A3-4B4C-D5E6-F1A2B3C4D5E6")!
+let REYNOLDS_GREAT_WATERS_PARS: [Int] = [4,5,4,3,4,5,4,3,4, 4,4,5,4,3,4,4,3,5]
+let REYNOLDS_GREAT_WATERS_HCS: [Int]  = [11,17,3,13,1,9,7,15,5, 4,16,10,6,18,8,2,14,12]
+let REYNOLDS_GREAT_WATERS_TEES: [TeeInfo] = [TeeInfo(teeName: "Bear", yardage: 7358, rating: 76.1, slope: 147)]
+
+private let REYNOLDS_NATIONAL_ID = UUID(uuidString: "C5D6E1F2-A3B4-4C5D-E6F1-A2B3C4D5E6F1")!
+let REYNOLDS_NATIONAL_PARS: [Int] = [4,4,3,4,3,5,4,5,4, 4,4,5,3,4,5,3,4,4]
+let REYNOLDS_NATIONAL_HCS: [Int]  = [9,13,17,3,7,5,11,15,1, 16,6,14,18,12,10,8,2,4]
+let REYNOLDS_NATIONAL_TEES: [TeeInfo] = [TeeInfo(teeName: "One", yardage: 6955, rating: 74.2, slope: 143)]
+
+private let REYNOLDS_OCONEE_ID = UUID(uuidString: "D6E1F2A3-B4C5-4D6E-F1A2-B3C4D5E6F1A2")!
+let REYNOLDS_OCONEE_PARS: [Int] = [5,4,4,4,3,4,5,3,4, 5,4,4,3,4,3,4,5,4]
+let REYNOLDS_OCONEE_HCS: [Int]  = [9,11,1,17,15,7,5,13,3, 14,8,10,12,6,18,2,16,4]
+let REYNOLDS_OCONEE_TEES: [TeeInfo] = [TeeInfo(teeName: "Zero", yardage: 7393, rating: 75.2, slope: 141)]
+
+private let REYNOLDS_CREEK_CLUB_ID = UUID(uuidString: "E1F2A3B4-C5D6-4E1F-A2B3-C4D5E6F1A2B3")!
+let REYNOLDS_CREEK_CLUB_PARS: [Int] = [5,4,4,3,4,4,3,5,4, 4,3,5,3,5,4,4,3,5]
+let REYNOLDS_CREEK_CLUB_HCS: [Int]  = [11,17,3,5,1,13,7,15,9, 2,6,4,16,8,18,10,14,12]
+let REYNOLDS_CREEK_CLUB_TEES: [TeeInfo] = [TeeInfo(teeName: "One", yardage: 6951, rating: 72.3, slope: 132)]
+
+private let REYNOLDS_LANDING_ID = UUID(uuidString: "F2A3B4C5-D6E1-4F2A-B3C4-D5E6F1A2B3C4")!
+let REYNOLDS_LANDING_PARS: [Int] = [4,5,3,4,4,5,3,4,4, 4,3,4,4,5,4,5,3,4]
+let REYNOLDS_LANDING_HCS: [Int]  = [3,13,15,1,11,9,17,5,7, 6,8,2,10,12,4,14,18,16]
+let REYNOLDS_LANDING_TEES: [TeeInfo] = [TeeInfo(teeName: "One", yardage: 6991, rating: 74.5, slope: 138)]
+
+// MARK: - Stone Mountain Golf Club — Stone Mountain, GA
+private let STONE_MOUNTAIN_STONEMONT_ID = UUID(uuidString: "A4B5C6D7-E2F3-4A4B-C5D6-E7F2A3B4C5D6")!
+let STONE_MOUNTAIN_STONEMONT_PARS: [Int] = [4,4,5,4,4,3,4,3,4, 3,4,4,4,4,4,3,4,5]
+let STONE_MOUNTAIN_STONEMONT_HCS: [Int]  = [1,17,11,3,9,13,5,15,7, 18,2,16,6,10,8,14,4,12]
+let STONE_MOUNTAIN_STONEMONT_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6870, rating: 73.3, slope: 131)]
+
+private let STONE_MOUNTAIN_LAKEMONT_ID = UUID(uuidString: "B5C6D7E2-F3A4-4B5C-D6E7-F2A3B4C5D6E7")!
+let STONE_MOUNTAIN_LAKEMONT_PARS: [Int] = [5,3,4,4,4,3,4,3,5, 4,4,5,3,4,4,3,4,5]
+let STONE_MOUNTAIN_LAKEMONT_HCS: [Int]  = [1,11,7,13,15,5,9,17,3, 14,6,2,10,8,12,16,18,4]
+let STONE_MOUNTAIN_LAKEMONT_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6403, rating: 71.9, slope: 134)]
+
+// MARK: - The Frog Golf Club — Villa Rica, GA
+private let THE_FROG_GC_ID = UUID(uuidString: "C6D7E2F3-A4B5-4C6D-E7F2-A3B4C5D6E7F2")!
+let THE_FROG_GC_PARS: [Int] = [4,5,4,3,4,5,4,3,4, 4,4,5,4,3,4,4,3,5]
+let THE_FROG_GC_HCS: [Int]  = [9,17,5,15,1,13,3,11,7, 4,16,10,6,18,14,2,12,8]
+let THE_FROG_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 7073, rating: 72.3, slope: 132)]
+
+// MARK: - Brasstown Valley Resort — Young Harris, GA
+private let BRASSTOWN_VALLEY_ID = UUID(uuidString: "D7E2F3A4-B5C6-4D7E-F2A3-B4C5D6E7F2A3")!
+let BRASSTOWN_VALLEY_PARS: [Int] = [4,4,4,5,3,4,4,4,5, 3,5,4,4,3,5,4,3,4]
+let BRASSTOWN_VALLEY_HCS: [Int]  = [11,3,15,1,13,5,9,17,7, 18,6,8,16,14,12,4,10,2]
+let BRASSTOWN_VALLEY_TEES: [TeeInfo] = [TeeInfo(teeName: "Gold", yardage: 6993, rating: 74.7, slope: 140)]
+
+// MARK: - Currahee Club — Toccoa, GA
+private let CURRAHEE_CLUB_ID = UUID(uuidString: "E2F3A4B5-C6D7-4E2F-A3B4-C5D6E7F2A3B4")!
+let CURRAHEE_CLUB_PARS: [Int] = [5,3,4,3,5,4,4,4,4, 5,4,3,4,4,4,5,3,4]
+let CURRAHEE_CLUB_HCS: [Int]  = [3,13,15,17,7,9,1,5,11, 4,2,18,6,12,14,10,16,8]
+let CURRAHEE_CLUB_TEES: [TeeInfo] = [TeeInfo(teeName: "5's", yardage: 7408, rating: 76.2, slope: 151)]
+
+// MARK: - Castle Pines Golf Club — Castle Rock, CO
+private let CASTLE_PINES_GC_ID = UUID(uuidString: "BF1CAE40-AB2B-4A38-D9CB-FE1BC4A0EB1C")!
+
+let CASTLE_PINES_GC_PARS: [Int] = [
+    5,4,4,3,4,4,3,5,4,
+    4,3,4,4,5,4,3,5,4
+]
+
+let CASTLE_PINES_GC_HCS: [Int] = [
+    16,10,8,12,14,2,18,6,4,
+    1,15,3,7,13,9,11,17,5
+]
+
+// MARK: - Lakota Canyon Ranch Golf Club — New Castle, CO
+private let LAKOTA_CANYON_GC_ID = UUID(uuidString: "CA2DBF51-BC3C-4B49-EADC-AF2CD5B1FC2D")!
+
+let LAKOTA_CANYON_GC_PARS: [Int] = [
+    5,4,3,5,5,4,3,4,3,
+    4,5,4,4,4,3,4,3,5
+]
+
+let LAKOTA_CANYON_GC_HCS: [Int] = [
+    6,10,18,2,4,14,16,8,12,
+    11,5,7,9,13,15,3,17,1
+]
+
+// MARK: - Redlands Mesa Golf Club — Grand Junction, CO
+private let REDLANDS_MESA_GC_ID = UUID(uuidString: "DB3EC062-CD4D-4C5A-FBED-BA3DE6C2AD3E")!
+
+let REDLANDS_MESA_GC_PARS: [Int] = [
+    4,4,3,4,5,4,4,3,4,
+    5,4,3,5,4,5,4,3,4
+]
+
+let REDLANDS_MESA_GC_HCS: [Int] = [
+    5,11,15,17,3,9,1,13,7,
+    10,2,18,16,12,6,4,14,8
+]
+
+// MARK: - Ballyneal Golf Club — Holyoke, CO
+private let BALLYNEAL_GC_ID = UUID(uuidString: "EC0FDB73-DE5E-4D6B-A0CE-CB0CF5B1AD4F")!
+
+let BALLYNEAL_GC_PARS: [Int] = [
+    4,4,3,5,3,4,4,5,4,
+    4,3,4,4,4,3,5,4,4
+]
+
+let BALLYNEAL_GC_HCS: [Int] = [
+    9,3,17,5,13,1,15,7,11,
+    2,18,12,4,16,14,6,8,10
+]
+
+// MARK: - Red Sky Golf Club – Fazio Course — Wolcott, CO
+private let RED_SKY_FAZIO_ID = UUID(uuidString: "FD1AEC84-EF6F-4E7C-B1DF-DC1DA6C2BE50")!
+
+let RED_SKY_FAZIO_PARS: [Int] = [
+    4,5,4,4,5,4,3,4,3,
+    3,4,4,4,4,5,4,3,5
+]
+
+let RED_SKY_FAZIO_HCS: [Int] = [
+    11,9,15,3,1,13,7,5,17,
+    4,2,16,10,8,14,6,18,12
+]
+
+// MARK: - Red Sky Golf Club – Norman Course — Wolcott, CO
+private let RED_SKY_NORMAN_ID = UUID(uuidString: "AE2BFD95-F070-4F8D-C2E0-ED2EB7D3CF61")!
+
+let RED_SKY_NORMAN_PARS: [Int] = [
+    4,3,4,5,3,4,4,5,4,
+    3,4,5,4,4,4,3,4,5
+]
+
+let RED_SKY_NORMAN_HCS: [Int] = [
+    7,15,1,13,11,17,9,5,3,
+    18,12,4,14,6,16,10,2,8
+]
+
 // MARK: - Pinehurst No. 2
 private let PINEHURST_NO2_ID = UUID(uuidString: "D1E89F01-2345-4ABC-9DEF-1234567890AB")!
 
@@ -5315,6 +6081,98 @@ let POLO_FIELDS_ANN_ARBOR_TEES: [TeeInfo] = [
         slope: 146
     )
 ]
+
+// MARK: - Bay Harbor Golf Club — Bay Harbor, MI
+private let BAY_HARBOR_LQ_ID = UUID(uuidString: "FA1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C4D")!
+let BAY_HARBOR_LQ_PARS: [Int] = [4,4,4,3,4,4,5,3,5, 4,3,5,4,5,4,4,3,4]
+let BAY_HARBOR_LQ_HCS: [Int]  = [6,10,8,18,12,2,14,16,4, 13,17,5,9,1,11,3,15,7]
+let BAY_HARBOR_LQ_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6845)]
+
+private let BAY_HARBOR_LP_ID = UUID(uuidString: "EA1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C4E")!
+let BAY_HARBOR_LP_PARS: [Int] = [4,3,4,4,3,5,4,3,5, 4,3,4,5,4,3,4,5,4]
+let BAY_HARBOR_LP_HCS: [Int]  = [7,11,3,1,13,9,5,15,17, 8,14,2,6,12,16,10,18,4]
+let BAY_HARBOR_LP_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6217)]
+
+private let BAY_HARBOR_QP_ID = UUID(uuidString: "8A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C44")!
+let BAY_HARBOR_QP_PARS: [Int] = [4,4,4,4,4,3,4,5,4, 4,3,4,5,4,3,4,5,4]
+let BAY_HARBOR_QP_HCS: [Int]  = [11,17,15,1,13,9,5,7,3, 8,14,2,6,12,16,10,18,4]
+let BAY_HARBOR_QP_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 5954)]
+
+// MARK: - Boyne Highlands — Harbor Springs, MI
+private let THE_HEATHER_ID = UUID(uuidString: "DA1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C4F")!
+let THE_HEATHER_PARS: [Int] = [4,4,4,3,5,3,4,4,5, 4,5,3,4,4,5,3,4,4]
+let THE_HEATHER_HCS: [Int]  = [15,5,13,11,1,17,7,3,9, 6,18,16,8,10,2,14,12,4]
+let THE_HEATHER_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 7123)]
+
+private let ARTHUR_HILLS_BH_ID = UUID(uuidString: "CA1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C40")!
+let ARTHUR_HILLS_BH_PARS: [Int] = [4,4,5,4,4,5,3,4,3, 4,5,4,5,3,4,3,4,5]
+let ARTHUR_HILLS_BH_HCS: [Int]  = [9,17,5,7,1,13,15,3,11, 18,4,8,14,12,2,16,6,10]
+let ARTHUR_HILLS_BH_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 7312)]
+
+private let THE_MOOR_ID = UUID(uuidString: "7A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C45")!
+let THE_MOOR_PARS: [Int] = [4,4,5,3,4,3,4,5,4, 4,3,4,4,5,4,3,5,4]
+let THE_MOOR_HCS: [Int]  = [5,15,17,9,1,7,11,13,3, 4,14,10,8,18,2,6,16,12]
+let THE_MOOR_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6787)]
+
+private let CROOKED_TREE_GC_ID = UUID(uuidString: "6A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C46")!
+let CROOKED_TREE_GC_PARS: [Int] = [4,4,4,5,3,5,4,4,3, 4,4,4,3,4,4,5,3,5]
+let CROOKED_TREE_GC_HCS: [Int]  = [12,14,4,8,10,2,16,18,6, 5,9,7,17,11,1,13,15,3]
+let CROOKED_TREE_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6640, rating: 73.2, slope: 137)]
+
+// MARK: - Crooked Tree Golf Course — Browns Summit, NC
+private let NC_CROOKED_TREE_ID = UUID(uuidString: "5A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C47")!
+let NC_CROOKED_TREE_PARS: [Int] = [4,4,4,4,4,4,3,4,5, 4,3,4,3,5,4,4,5,4]
+let NC_CROOKED_TREE_HCS: [Int]  = [9,1,7,3,11,13,5,17,15, 10,8,6,14,18,4,2,12,16]
+let NC_CROOKED_TREE_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6468, rating: 71.5, slope: 133)]
+
+// MARK: - True North Golf Club — Harbor Springs, MI
+private let TRUE_NORTH_GC_ID = UUID(uuidString: "BA1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C41")!
+let TRUE_NORTH_GC_PARS: [Int] = [5,4,3,4,3,4,5,5,4, 3,4,5,3,4,4,3,4,5]
+let TRUE_NORTH_GC_HCS: [Int]  = [7,3,13,9,17,11,15,1,5, 14,10,8,18,2,12,16,4,6]
+let TRUE_NORTH_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 7009)]
+
+// MARK: - Tullymore Golf Club — Stanwood, MI
+private let TULLYMORE_GC_ID = UUID(uuidString: "AA1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C42")!
+let TULLYMORE_GC_PARS: [Int] = [5,4,4,3,3,4,3,5,4, 4,4,3,5,4,3,5,4,5]
+let TULLYMORE_GC_HCS: [Int]  = [5,1,9,13,17,11,15,3,7, 4,14,16,8,6,18,2,12,10]
+let TULLYMORE_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6550)]
+
+// MARK: - Pilgrim's Run Golf Club — Pierson, MI
+private let PILGRIMS_RUN_GC_ID = UUID(uuidString: "9A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C43")!
+let PILGRIMS_RUN_GC_PARS: [Int] = [5,4,4,3,4,5,3,4,4, 4,5,4,5,4,3,4,4,4]
+let PILGRIMS_RUN_GC_HCS: [Int]  = [1,9,13,17,11,15,3,7,5, 4,14,8,6,18,2,10,12,16]
+let PILGRIMS_RUN_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 7093)]
+
+// MARK: - Eagle Eye Golf Club — Bath Township, MI
+private let EAGLE_EYE_GC_ID = UUID(uuidString: "4A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C48")!
+let EAGLE_EYE_GC_PARS: [Int] = [4,3,4,5,3,4,4,4,5, 4,4,3,4,5,4,4,3,5]
+let EAGLE_EYE_GC_HCS: [Int]  = [3,17,11,1,5,15,13,7,9, 16,12,8,2,18,14,4,10,6]
+let EAGLE_EYE_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Gold", yardage: 6412, rating: 71.4, slope: 136)]
+
+// MARK: - Greywalls Golf Course — Marquette, MI
+private let GREYWALLS_GC_ID = UUID(uuidString: "3A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C49")!
+let GREYWALLS_GC_PARS: [Int] = [5,4,3,4,4,3,4,4,4, 4,4,4,5,4,3,4,3,5]
+let GREYWALLS_GC_HCS: [Int]  = [7,3,17,6,13,10,2,14,9, 16,11,1,5,4,8,12,18,15]
+let GREYWALLS_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6828, rating: 73.0, slope: 144)]
+
+// MARK: - Harbor Shores Resort — Benton Harbor, MI
+private let HARBOR_SHORES_GC_ID = UUID(uuidString: "2A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C4A")!
+let HARBOR_SHORES_GC_PARS: [Int] = [4,3,4,3,5,4,4,4,5, 5,3,4,3,4,5,4,3,4]
+let HARBOR_SHORES_GC_HCS: [Int]  = [11,17,15,5,7,1,3,9,13, 12,18,10,16,2,8,4,14,6]
+let HARBOR_SHORES_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Black", yardage: 6734, rating: 73.6, slope: 146)]
+
+// MARK: - Stoatin Brae Golf Club — Augusta, MI
+private let STOATIN_BRAE_GC_ID = UUID(uuidString: "1A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C4B")!
+let STOATIN_BRAE_GC_PARS: [Int] = [4,3,4,4,4,5,3,4,5, 4,3,4,4,3,4,5,3,5]
+let STOATIN_BRAE_GC_HCS: [Int]  = [17,11,3,1,7,13,9,15,5, 12,10,4,2,16,8,14,18,6]
+let STOATIN_BRAE_GC_TEES: [TeeInfo] = [TeeInfo(teeName: "Gold", yardage: 6722, rating: 71.7, slope: 123)]
+
+// MARK: - Gull Lake View East — Augusta, MI
+private let GULL_LAKE_VIEW_EAST_ID = UUID(uuidString: "0A1B2C3D-4E5F-4A6B-7C8D-9E0F1A2B3C4C")!
+let GULL_LAKE_VIEW_EAST_PARS: [Int] = [4,3,4,4,4,3,4,4,5, 5,3,4,4,4,3,4,4,4]
+let GULL_LAKE_VIEW_EAST_HCS: [Int]  = [13,9,5,1,15,11,3,7,17, 14,12,6,8,10,16,18,4,2]
+let GULL_LAKE_VIEW_EAST_TEES: [TeeInfo] = [TeeInfo(teeName: "Green", yardage: 6032)]
+
 private let LAWSONIA_LINKS_ID = UUID(uuidString: "F71D9A22-4E83-4F9A-8D21-5C1E9A8B4004")!
 
 let LAWSONIA_LINKS_PARS: [Int] = [
@@ -6182,6 +7040,34 @@ let WILDCAT_LAKES_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue",  yardage: 6045, rating: 68.9, slope: 114),
     TeeInfo(teeName: "White", yardage: 5482, rating: 66.3, slope: 103),
     TeeInfo(teeName: "Green", yardage: 4906, rating: 63.2, slope: 98)
+]
+
+// MARK: - Golfcrest Country Club — Pearland, TX
+
+private let GOLFCREST_OLD_ID = UUID(uuidString: "4F3A7C21-9E56-4B8D-A102-8D6F3E51C947")!
+private let GOLFCREST_NEW_ID = UUID(uuidString: "5C4B8D32-AF67-4C9E-B213-9E7A4F62D058")!
+
+let GOLFCREST_CC_PARS: [Int] = [
+    5,4,5,4,3,4,4,3,4,
+    5,4,3,4,5,4,3,4,4
+]
+
+let GOLFCREST_OLD_HCS: [Int] = [
+    13,1,7,11,17,3,5,15,9,
+    12,8,18,4,10,2,16,14,6
+]
+
+let GOLFCREST_NEW_HCS: [Int] = [
+    17,3,9,7,15,1,5,11,13,
+    14,4,18,2,16,8,12,6,10
+]
+
+let GOLFCREST_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7254, rating: 74.6, slope: 140),
+    TeeInfo(teeName: "Blue",  yardage: 6765, rating: 73.1, slope: 133),
+    TeeInfo(teeName: "White", yardage: 6215, rating: 70.9, slope: 128),
+    TeeInfo(teeName: "Gold",  yardage: 5720, rating: 68.8, slope: 123),
+    TeeInfo(teeName: "Red",   yardage: 5138, rating: 71.8, slope: 124)
 ]
 
 // MARK: - BlackHorse Golf Club - South Course
@@ -7989,6 +8875,69 @@ private enum BuiltIns {
             address: "8670 West State Road 56, French Lick, IN 47432"
         ),
         c(
+            VICTORIA_NATIONAL_ID,
+            "Victoria National Golf Club",
+            VICTORIA_NATIONAL_PARS,
+            VICTORIA_NATIONAL_HCS,
+            VICTORIA_NATIONAL_TEES,
+            country: "USA",
+            state: "IN",
+            region: "Newburgh",
+            architect: "Tom Fazio",
+            type: "Private",
+            website: "https://www.victorianational.com",
+            isWolfApproved: true,
+            resortBrand: "Dormie Network"
+        ),
+        c(
+            BRICKYARD_CROSSING_ID,
+            "Brickyard Crossing Golf Course",
+            BRICKYARD_CROSSING_PARS,
+            BRICKYARD_CROSSING_HCS,
+            BRICKYARD_CROSSING_TEES,
+            country: "USA",
+            state: "IN",
+            region: "Indianapolis",
+            architect: "Pete Dye",
+            type: "Public",
+            phone: "(317) 492-6417",
+            website: "https://www.brickyardcrossing.com",
+            address: "4400 W 16th St, Indianapolis, IN 46222",
+            isWolfApproved: true
+        ),
+        c(
+            PFAU_COURSE_IU_ID,
+            "Pfau Course at Indiana University",
+            PFAU_COURSE_IU_PARS,
+            PFAU_COURSE_IU_HCS,
+            PFAU_COURSE_IU_TEES,
+            country: "USA",
+            state: "IN",
+            region: "Bloomington",
+            architect: "Steve Smyers",
+            type: "Public",
+            phone: "(812) 855-7543",
+            website: "https://www.iugolfcourse.com",
+            address: "1492 Indiana 45 46 Bypass, Bloomington, IN 47408",
+            isWolfApproved: true
+        ),
+        c(
+            WARREN_GC_ND_ID,
+            "Warren Golf Course at Notre Dame",
+            WARREN_GC_ND_PARS,
+            WARREN_GC_ND_HCS,
+            WARREN_GC_ND_TEES,
+            country: "USA",
+            state: "IN",
+            region: "South Bend",
+            architect: "Coore & Crenshaw",
+            type: "Public",
+            phone: "(574) 631-4653",
+            website: "https://www.nd.edu/golf",
+            address: "Notre Dame, IN 46556",
+            isWolfApproved: true
+        ),
+        c(
             SILVIES_CRADDOCK_ID,
             "Silvies Valley Resort & Links – Craddock",
             SILVIES_CRADDOCK_PARS,
@@ -8271,7 +9220,7 @@ private enum BuiltIns {
         ),
 
         c(
-            UUID(uuidString: "B8C9D0E2-3F4A-5B6C-9D7E-8F0A1B2C3D73")!,
+            LAKE_OF_ISLES_SOUTH_ID,
             "Lake of Isles (South Course)",
             LAKE_OF_ISLES_SOUTH_PARS,
             LAKE_OF_ISLES_SOUTH_HCS,
@@ -8952,7 +9901,7 @@ private enum BuiltIns {
             address: "17230 Dogwood Grove, Loxley, AL 36551"
         ),
         c(
-            UUID(uuidString: "A1F0E3C2-1234-4F8B-9A11-ABCDEF123456")!,
+            PGA_FRISCO_EAST_ID,
             "Omni PGA Frisco (Fields Ranch East)",
             PGA_FRISCO_EAST_PARS,
             PGA_FRISCO_EAST_HCS,
@@ -9189,6 +10138,962 @@ private enum BuiltIns {
             isWolfApproved: true,
             resortBrand: nil,
             promo: nil
+        ),
+        c(
+            RED_HAWK_RIDGE_ID,
+            "Red Hawk Ridge Golf Course",
+            RED_HAWK_RIDGE_PARS,
+            RED_HAWK_RIDGE_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Jim Engh",
+            type: "Public",
+            phone: "(720) 733-3500",
+            website: "https://www.redhawkridge.com",
+            address: "2156 Red Hawk Ridge Dr, Castle Rock, CO 80109",
+            isWolfApproved: true
+        ),
+        c(
+            COMMONGROUND_GC_ID,
+            "CommonGround Golf Course",
+            COMMONGROUND_GC_PARS,
+            COMMONGROUND_GC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Tom Doak / Robert Trent Jones Jr.",
+            type: "Public",
+            phone: "(303) 340-1520",
+            website: "https://www.commongroundgolf.com",
+            address: "10300 E Golfers Way, Aurora, CO 80010",
+            isWolfApproved: true
+        ),
+        c(
+            GREEN_VALLEY_RANCH_GC_ID,
+            "Green Valley Ranch Golf Club",
+            GREEN_VALLEY_RANCH_GC_PARS,
+            GREEN_VALLEY_RANCH_GC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Pete Dye",
+            type: "Public",
+            phone: "(303) 371-3131",
+            website: "https://www.greenvalleyranchgolf.com",
+            address: "4900 Himalaya Rd, Denver, CO 80249",
+            isWolfApproved: true
+        ),
+        c(
+            TPC_COLORADO_ID,
+            "TPC Colorado",
+            TPC_COLORADO_PARS,
+            TPC_COLORADO_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Arthur Schaupeter",
+            type: "Public",
+            website: "https://www.tpc.com/tpccolorado",
+            address: "2375 TPC Parkway, Berthoud, CO 80513",
+            isWolfApproved: true
+        ),
+        c(
+            POLE_CREEK_MEADOW_RANCH_ID,
+            "Pole Creek GC (Meadow/Ranch)",
+            POLE_CREEK_MEADOW_RANCH_PARS,
+            POLE_CREEK_MEADOW_RANCH_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Denis Griffiths",
+            type: "Public",
+            phone: "(970) 887-9195",
+            website: "https://www.polecreekgolf.com",
+            address: "6827 County Road 51, Tabernash, CO 80478",
+            isWolfApproved: true
+        ),
+        c(
+            POLE_CREEK_MEADOW_RIDGE_ID,
+            "Pole Creek GC (Meadow/Ridge)",
+            POLE_CREEK_MEADOW_RIDGE_PARS,
+            POLE_CREEK_MEADOW_RIDGE_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Denis Griffiths",
+            type: "Public",
+            phone: "(970) 887-9195",
+            website: "https://www.polecreekgolf.com",
+            address: "6827 County Road 51, Tabernash, CO 80478",
+            isWolfApproved: true
+        ),
+        c(
+            POLE_CREEK_RANCH_RIDGE_ID,
+            "Pole Creek GC (Ranch/Ridge)",
+            POLE_CREEK_RANCH_RIDGE_PARS,
+            POLE_CREEK_RANCH_RIDGE_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Denis Griffiths",
+            type: "Public",
+            phone: "(970) 887-9195",
+            website: "https://www.polecreekgolf.com",
+            address: "6827 County Road 51, Tabernash, CO 80478",
+            isWolfApproved: true
+        ),
+        c(
+            RIVERDALE_DUNES_ID,
+            "Riverdale Golf Club (Dunes)",
+            RIVERDALE_DUNES_PARS,
+            RIVERDALE_DUNES_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            type: "Public",
+            phone: "(303) 659-4700",
+            website: "https://www.riverdalegolf.com",
+            address: "13300 Riverdale Rd, Brighton, CO 80602",
+            isWolfApproved: true
+        ),
+        c(
+            RIVERDALE_KNOLLS_ID,
+            "Riverdale Golf Club (Knolls)",
+            RIVERDALE_KNOLLS_PARS,
+            RIVERDALE_KNOLLS_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            type: "Public",
+            phone: "(303) 659-4700",
+            website: "https://www.riverdalegolf.com",
+            address: "13300 Riverdale Rd, Brighton, CO 80602",
+            isWolfApproved: true
+        ),
+        c(
+            FOX_ACRES_GC_ID,
+            "Golf Club at Fox Acres",
+            FOX_ACRES_GC_PARS,
+            FOX_ACRES_GC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "John Cochran",
+            type: "Private",
+            phone: "(970) 881-2574",
+            website: "https://www.foxacres.com",
+            address: "3350 Fox Acres Drive East, Red Feather Lakes, CO 80545",
+            isWolfApproved: true
+        ),
+        c(
+            CHERRY_HILLS_CC_ID,
+            "Cherry Hills Country Club",
+            CHERRY_HILLS_CC_PARS,
+            CHERRY_HILLS_CC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "William Flynn / Tom Doak",
+            type: "Private",
+            phone: "(303) 350-5200",
+            website: "https://www.cherryhillscc.com",
+            address: "4125 S University Blvd, Cherry Hills Village, CO 80113",
+            isWolfApproved: true
+        ),
+        c(
+            SANCTUARY_GC_ID,
+            "Sanctuary Golf Course",
+            SANCTUARY_GC_PARS,
+            SANCTUARY_GC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Jim Engh",
+            type: "Private",
+            phone: "(303) 224-2860",
+            website: "https://www.sanctuarygolfcourse.com",
+            address: "7549 N Daniels Park Rd, Sedalia, CO 80135",
+            isWolfApproved: true
+        ),
+        c(
+            BROADMOOR_EAST_ID,
+            "The Broadmoor (East Course)",
+            BROADMOOR_EAST_PARS,
+            BROADMOOR_EAST_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Colorado Springs",
+            architect: "Donald Ross / Robert Trent Jones Sr.",
+            type: "Resort",
+            phone: "(855) 634-7711",
+            website: "https://www.broadmoor.com/golf",
+            address: "1 Lake Ave, Colorado Springs, CO 80906",
+            isWolfApproved: true
+        ),
+        c(
+            BROADMOOR_WEST_ID,
+            "The Broadmoor (West Course)",
+            BROADMOOR_WEST_PARS,
+            BROADMOOR_WEST_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Colorado Springs",
+            architect: "Donald Ross / Robert Trent Jones Sr.",
+            type: "Resort",
+            phone: "(855) 634-7711",
+            website: "https://www.broadmoor.com/golf",
+            address: "1 Lake Ave, Colorado Springs, CO 80906",
+            isWolfApproved: true
+        ),
+        c(
+            RAINDANCE_NATIONAL_ID,
+            "RainDance National Golf Course",
+            RAINDANCE_NATIONAL_PARS,
+            RAINDANCE_NATIONAL_HCS,
+            RAINDANCE_NATIONAL_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Todd Eckenrode",
+            type: "Public",
+            phone: "(970) 833-1720",
+            website: "https://www.raindancenational.com",
+            address: "1775 RainDance National Dr, Windsor, CO 80550",
+            isWolfApproved: true
+        ),
+        c(
+            BRECKENRIDGE_GC_ID,
+            "Breckenridge Golf Club",
+            BRECKENRIDGE_GC_PARS,
+            BRECKENRIDGE_GC_HCS,
+            BRECKENRIDGE_GC_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Jack Nicklaus",
+            type: "Public",
+            phone: "(970) 453-9104",
+            website: "https://www.breckenridgegolfclub.com",
+            address: "200 Clubhouse Drive, Breckenridge, CO 80424",
+            isWolfApproved: true
+        ),
+        c(
+            KEYSTONE_RANCH_ID,
+            "Keystone Ranch Golf Course",
+            KEYSTONE_RANCH_PARS,
+            KEYSTONE_RANCH_HCS,
+            KEYSTONE_RANCH_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Robert Trent Jones Jr.",
+            type: "Resort",
+            phone: "(970) 496-4250",
+            website: "https://www.keystoneresort.com/golf",
+            address: "1239 Keystone Ranch Rd, Keystone, CO 80435",
+            isWolfApproved: true
+        ),
+        c(
+            KEYSTONE_RIVER_ID,
+            "River Course at Keystone",
+            KEYSTONE_RIVER_PARS,
+            KEYSTONE_RIVER_HCS,
+            KEYSTONE_RIVER_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Hurdzan/Fry",
+            type: "Resort",
+            phone: "(970) 496-1520",
+            website: "https://www.keystoneresort.com/golf",
+            address: "155 River Course Dr, Keystone, CO 80435",
+            isWolfApproved: true
+        ),
+        c(
+            MURPHY_CREEK_GC_ID,
+            "Murphy Creek Golf Course",
+            MURPHY_CREEK_GC_PARS,
+            MURPHY_CREEK_GC_HCS,
+            MURPHY_CREEK_GC_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Ken Kavanaugh",
+            type: "Public",
+            phone: "(303) 739-1560",
+            website: "https://www.murphycreekgolf.com",
+            address: "1700 S Old Tom Morris Rd, Aurora, CO 80018",
+            isWolfApproved: true
+        ),
+        c(
+            WALNUT_CREEK_GC_ID,
+            "Walnut Creek Golf Preserve",
+            WALNUT_CREEK_GC_PARS,
+            WALNUT_CREEK_GC_HCS,
+            WALNUT_CREEK_GC_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Michael Hurdzan",
+            type: "Public",
+            website: "https://www.walnutcreekgolf.com",
+            address: "10555 Westmoor Dr, Westminster, CO 80021",
+            isWolfApproved: true
+        ),
+        c(
+            HOKUL_IA_CLUB_ID,
+            "The Club at Hokuli'a",
+            HOKUL_IA_CLUB_PARS,
+            HOKUL_IA_CLUB_HCS,
+            HOKUL_IA_CLUB_TEES,
+            country: "USA",
+            state: "HI",
+            region: "Big Island",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(808) 324-1500",
+            website: "https://www.hokulia.com",
+            address: "81-6636 Pu'u Ohau Place, Kealakekua, HI 96750",
+            isWolfApproved: true
+        ),
+        c(
+            SHOREHAVEN_GC_ID,
+            "Shorehaven Golf Club",
+            SHOREHAVEN_GC_PARS,
+            SHOREHAVEN_GC_HCS,
+            SHOREHAVEN_GC_TEES,
+            country: "USA",
+            state: "CT",
+            architect: "Willie Park Jr. & Robert White",
+            type: "Private",
+            phone: "(203) 866-5528",
+            website: "https://www.shorehaven.com",
+            address: "East Norwalk, CT",
+            isWolfApproved: true
+        ),
+        c(
+            CORDILLERA_VALLEY_ID,
+            "Cordillera Valley Course",
+            CORDILLERA_VALLEY_PARS,
+            CORDILLERA_VALLEY_HCS,
+            CORDILLERA_VALLEY_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(970) 926-5950",
+            website: "https://www.cordillera-vail.com",
+            address: "655 Clubhouse Drive, Edwards, CO 81632",
+            isWolfApproved: true
+        ),
+        c(
+            CORDILLERA_MOUNTAIN_ID,
+            "Cordillera Mountain Course",
+            CORDILLERA_MOUNTAIN_PARS,
+            CORDILLERA_MOUNTAIN_HCS,
+            CORDILLERA_MOUNTAIN_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(970) 926-5100",
+            website: "https://www.cordillera-vail.com",
+            address: "Edwards, CO 81632",
+            isWolfApproved: true
+        ),
+        c(
+            CORDILLERA_SUMMIT_ID,
+            "Cordillera Summit Course",
+            CORDILLERA_SUMMIT_PARS,
+            CORDILLERA_SUMMIT_HCS,
+            CORDILLERA_SUMMIT_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(970) 926-5300",
+            website: "https://www.cordillera-vail.com",
+            address: "Edwards, CO 81632",
+            isWolfApproved: true
+        ),
+        c(
+            FROST_CREEK_GC_ID,
+            "Frost Creek",
+            FROST_CREEK_GC_PARS,
+            FROST_CREEK_GC_HCS,
+            FROST_CREEK_GC_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Tom Weiskopf",
+            type: "Private",
+            phone: "(970) 328-2326",
+            website: "https://www.frostcreek.com",
+            address: "1094 Frost Creek Drive, Eagle, CO 81631",
+            isWolfApproved: true
+        ),
+        c(
+            RAVEN_THREE_PEAKS_ID,
+            "Raven Golf Club at Three Peaks",
+            RAVEN_THREE_PEAKS_PARS,
+            RAVEN_THREE_PEAKS_HCS,
+            RAVEN_THREE_PEAKS_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Hurdzan/Fry & Tom Lehman",
+            type: "Semi-Private",
+            phone: "(970) 262-3636",
+            website: "https://www.raventhreepeaks.com",
+            address: "2929 N Golden Eagle Rd, Silverthorne, CO 80498",
+            isWolfApproved: true
+        ),
+        c(
+            ROARING_FORK_CLUB_ID,
+            "Roaring Fork Club",
+            ROARING_FORK_CLUB_PARS,
+            ROARING_FORK_CLUB_HCS,
+            ROARING_FORK_CLUB_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(970) 927-9000",
+            website: "https://www.roaringforkclub.com",
+            address: "100 Arbaney Ranch Rd, Basalt, CO 81621",
+            isWolfApproved: true
+        ),
+        c(
+            RIO_SECCO_GC_ID,
+            "Rio Secco Golf Club",
+            RIO_SECCO_GC_PARS,
+            RIO_SECCO_GC_HCS,
+            RIO_SECCO_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Rees Jones",
+            type: "Daily-Fee",
+            phone: "(702) 777-2400",
+            website: "https://www.riosecco.com",
+            address: "2851 Grand Hills Dr, Henderson, NV 89052",
+            isWolfApproved: true
+        ),
+        c(
+            PAIUTE_SNOW_MOUNTAIN_ID,
+            "Las Vegas Paiute Golf Resort (Snow Mountain)",
+            PAIUTE_SNOW_MOUNTAIN_PARS,
+            PAIUTE_SNOW_MOUNTAIN_HCS,
+            PAIUTE_SNOW_MOUNTAIN_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Pete Dye",
+            type: "Resort",
+            phone: "(702) 658-1400",
+            website: "https://www.lvpaiutegolf.com",
+            address: "10325 Nu-Wav Kaiv Blvd, Las Vegas, NV 89124",
+            isWolfApproved: true
+        ),
+        c(
+            PAIUTE_SUN_MOUNTAIN_ID,
+            "Las Vegas Paiute Golf Resort (Sun Mountain)",
+            PAIUTE_SUN_MOUNTAIN_PARS,
+            PAIUTE_SUN_MOUNTAIN_HCS,
+            PAIUTE_SUN_MOUNTAIN_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Pete Dye",
+            type: "Resort",
+            phone: "(702) 658-1400",
+            website: "https://www.lvpaiutegolf.com",
+            address: "10325 Nu-Wav Kaiv Blvd, Las Vegas, NV 89124",
+            isWolfApproved: true
+        ),
+        c(
+            CHIMERA_GC_ID,
+            "Chimera Golf Club",
+            CHIMERA_GC_PARS,
+            CHIMERA_GC_HCS,
+            CHIMERA_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Ted Robinson Jr.",
+            type: "Daily-Fee",
+            phone: "(702) 951-1500",
+            website: "https://www.chimeragolfclub.com",
+            address: "901 Olivia Pkwy, Henderson, NV 89011",
+            isWolfApproved: true
+        ),
+        c(
+            ARROYO_RED_ROCK_ID,
+            "Arroyo Golf Club",
+            ARROYO_RED_ROCK_PARS,
+            ARROYO_RED_ROCK_HCS,
+            ARROYO_RED_ROCK_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Arnold Palmer",
+            type: "Daily-Fee",
+            phone: "(702) 258-2300",
+            website: "https://www.redrockcanyonlv.org/golf/arroyo-golf-club",
+            address: "2250 Red Springs Dr, Las Vegas, NV 89135",
+            isWolfApproved: true
+        ),
+        c(
+            BOULDER_CREEK_GC_ID,
+            "Boulder Creek Golf Club",
+            BOULDER_CREEK_GC_PARS,
+            BOULDER_CREEK_GC_HCS,
+            BOULDER_CREEK_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Mark Rathert",
+            type: "Daily-Fee",
+            phone: "(702) 294-6534",
+            website: "https://www.golfbouldercity.com",
+            address: "1501 Veterans Memorial Dr, Boulder City, NV 89005",
+            isWolfApproved: true
+        ),
+        c(
+            ANGEL_PARK_MOUNTAIN_ID,
+            "Angel Park Golf Club (Mountain)",
+            ANGEL_PARK_MOUNTAIN_PARS,
+            ANGEL_PARK_MOUNTAIN_HCS,
+            ANGEL_PARK_MOUNTAIN_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Arnold Palmer / Ed Seay",
+            type: "Daily-Fee",
+            phone: "(702) 254-4653",
+            website: "https://www.angelpark.com",
+            address: "100 S Rampart Blvd, Las Vegas, NV 89145",
+            isWolfApproved: true
+        ),
+        c(
+            SOUTHSHORE_CC_ID,
+            "SouthShore Country Club",
+            SOUTHSHORE_CC_PARS,
+            SOUTHSHORE_CC_HCS,
+            SOUTHSHORE_CC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(702) 558-0021",
+            website: "https://www.southshorecountryclub.com",
+            address: "1 SouthShore Dr, Henderson, NV 89052",
+            isWolfApproved: true
+        ),
+        c(
+            DESERT_SPRINGS_PALMS_ID,
+            "Desert Springs Golf Course (Palms)",
+            DESERT_SPRINGS_PALMS_PARS,
+            DESERT_SPRINGS_PALMS_HCS,
+            DESERT_SPRINGS_PALMS_TEES,
+            country: "USA",
+            state: "CA",
+            region: "Palm Desert",
+            architect: "Ted Robinson Sr.",
+            type: "Resort",
+            phone: "(760) 341-1756",
+            website: "https://www.marriott.com",
+            address: "74855 Country Club Dr, Palm Desert, CA 92260",
+            isWolfApproved: true
+        ),
+        c(
+            RHODES_RANCH_GC_ID,
+            "Rhodes Ranch Golf Club",
+            RHODES_RANCH_GC_PARS,
+            RHODES_RANCH_GC_HCS,
+            RHODES_RANCH_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Ted Robinson Sr.",
+            type: "Daily-Fee",
+            phone: "(702) 740-4114",
+            website: "https://www.rhodesranch.com",
+            address: "20 Rhodes Ranch Pkwy, Las Vegas, NV 89148",
+            isWolfApproved: true
+        ),
+        c(
+            DESERT_PINES_GC_ID,
+            "Desert Pines Golf Club",
+            DESERT_PINES_GC_PARS,
+            DESERT_PINES_GC_HCS,
+            DESERT_PINES_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Dye Designs International",
+            type: "Daily-Fee",
+            phone: "(702) 450-8000",
+            website: "https://www.desertpinesgolfclub.com",
+            address: "3415 E Bonanza Rd, Las Vegas, NV 89101",
+            isWolfApproved: true
+        ),
+        c(
+            COYOTE_SPRINGS_GC_ID,
+            "Coyote Springs Golf Club",
+            COYOTE_SPRINGS_GC_PARS,
+            COYOTE_SPRINGS_GC_HCS,
+            COYOTE_SPRINGS_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            phone: "(877) 634-8438",
+            website: "https://www.coyotesprings.com",
+            address: "3100 State Route 168, Coyote Springs, NV 89037",
+            isWolfApproved: true
+        ),
+        c(
+            WOLF_CREEK_GC_ID,
+            "Wolf Creek Golf Club",
+            WOLF_CREEK_GC_PARS,
+            WOLF_CREEK_GC_HCS,
+            WOLF_CREEK_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Mesquite",
+            architect: "Dennis Rider",
+            type: "Resort",
+            phone: "(702) 346-1670",
+            website: "https://www.golfwolfcreek.com",
+            address: "403 Paradise Pkwy, Mesquite, NV 89027",
+            isWolfApproved: true
+        ),
+        c(
+            SAND_HOLLOW_CHAMPIONSHIP_ID,
+            "Sand Hollow Resort (Championship)",
+            SAND_HOLLOW_CHAMPIONSHIP_PARS,
+            SAND_HOLLOW_CHAMPIONSHIP_HCS,
+            SAND_HOLLOW_CHAMPIONSHIP_TEES,
+            country: "USA",
+            state: "UT",
+            region: "St. George",
+            architect: "John Fought",
+            type: "Resort",
+            phone: "(435) 656-4653",
+            website: "https://www.sandhollowresort.com",
+            address: "5662 W Clubhouse Dr, Hurricane, UT 84737",
+            isWolfApproved: true
+        ),
+        c(
+            CONESTOGA_GC_ID,
+            "Conestoga Golf Club",
+            CONESTOGA_GC_PARS,
+            CONESTOGA_GC_HCS,
+            CONESTOGA_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Mesquite",
+            architect: "Gary Panks",
+            type: "Resort",
+            phone: "(702) 346-4292",
+            website: "https://www.conestogagolf.com",
+            address: "1499 Falcon Ridge Pkwy, Mesquite, NV 89034",
+            isWolfApproved: true
+        ),
+        c(
+            FALCON_RIDGE_GC_ID,
+            "Falcon Ridge Golf Course",
+            FALCON_RIDGE_GC_PARS,
+            FALCON_RIDGE_GC_HCS,
+            FALCON_RIDGE_GC_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Mesquite",
+            architect: "Kelby Hughes",
+            type: "Daily-Fee",
+            phone: "(702) 346-6363",
+            website: "https://www.golffalcon.com",
+            address: "1024 Normandy Ln, Mesquite, NV 89027",
+            isWolfApproved: true
+        ),
+        c(
+            SUMMIT_CLUB_ID,
+            "Summit Club",
+            SUMMIT_CLUB_PARS,
+            SUMMIT_CLUB_HCS,
+            SUMMIT_CLUB_TEES,
+            country: "USA",
+            state: "NV",
+            region: "Las Vegas",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(702) 970-2150",
+            website: "https://www.thesummitclub.com",
+            address: "11660 Summit Club Dr, Las Vegas, NV 89135",
+            isWolfApproved: true
+        ),
+        c(
+            REYNOLDS_PRESERVE_ID,
+            "The Preserve at Reynolds Lake Oconee",
+            REYNOLDS_PRESERVE_PARS,
+            REYNOLDS_PRESERVE_HCS,
+            REYNOLDS_PRESERVE_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Lake Oconee",
+            architect: "Bob Cupp",
+            type: "Private",
+            phone: "(706) 467-1111",
+            website: "https://www.reynoldslakeoconee.com",
+            address: "100 Linger Longer Rd, Greensboro, GA 30642",
+            isWolfApproved: true
+        ),
+        c(
+            REYNOLDS_GREAT_WATERS_ID,
+            "Reynolds Lake Oconee - Great Waters",
+            REYNOLDS_GREAT_WATERS_PARS,
+            REYNOLDS_GREAT_WATERS_HCS,
+            REYNOLDS_GREAT_WATERS_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Lake Oconee",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(706) 467-1111",
+            website: "https://www.reynoldslakeoconee.com",
+            address: "100 Linger Longer Rd, Greensboro, GA 30642",
+            isWolfApproved: true
+        ),
+        c(
+            REYNOLDS_NATIONAL_ID,
+            "The National at Reynolds Lake Oconee - Ridge/Bluff",
+            REYNOLDS_NATIONAL_PARS,
+            REYNOLDS_NATIONAL_HCS,
+            REYNOLDS_NATIONAL_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Lake Oconee",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(706) 467-1111",
+            website: "https://www.reynoldslakeoconee.com",
+            address: "100 Linger Longer Rd, Greensboro, GA 30642",
+            isWolfApproved: true
+        ),
+        c(
+            REYNOLDS_OCONEE_ID,
+            "The Oconee at Reynolds",
+            REYNOLDS_OCONEE_PARS,
+            REYNOLDS_OCONEE_HCS,
+            REYNOLDS_OCONEE_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Lake Oconee",
+            architect: "Rees Jones",
+            type: "Private",
+            phone: "(706) 467-1111",
+            website: "https://www.reynoldslakeoconee.com",
+            address: "100 Linger Longer Rd, Greensboro, GA 30642",
+            isWolfApproved: true
+        ),
+        c(
+            REYNOLDS_CREEK_CLUB_ID,
+            "The Creek Club at Reynolds Lake Oconee",
+            REYNOLDS_CREEK_CLUB_PARS,
+            REYNOLDS_CREEK_CLUB_HCS,
+            REYNOLDS_CREEK_CLUB_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Lake Oconee",
+            architect: "Jim Engh",
+            type: "Private",
+            phone: "(706) 467-1111",
+            website: "https://www.reynoldslakeoconee.com",
+            address: "100 Linger Longer Rd, Greensboro, GA 30642",
+            isWolfApproved: true
+        ),
+        c(
+            REYNOLDS_LANDING_ID,
+            "The Landing at Reynolds Lake Oconee",
+            REYNOLDS_LANDING_PARS,
+            REYNOLDS_LANDING_HCS,
+            REYNOLDS_LANDING_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Lake Oconee",
+            architect: "Bob Cupp",
+            type: "Semi-Private",
+            phone: "(706) 467-1111",
+            website: "https://www.reynoldslakeoconee.com",
+            address: "100 Linger Longer Rd, Greensboro, GA 30642",
+            isWolfApproved: true
+        ),
+        c(
+            STONE_MOUNTAIN_STONEMONT_ID,
+            "Stone Mountain Golf Club (Stonemont)",
+            STONE_MOUNTAIN_STONEMONT_PARS,
+            STONE_MOUNTAIN_STONEMONT_HCS,
+            STONE_MOUNTAIN_STONEMONT_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Stone Mountain",
+            architect: "Robert Trent Jones Sr.",
+            type: "Private",
+            isWolfApproved: true
+        ),
+        c(
+            STONE_MOUNTAIN_LAKEMONT_ID,
+            "Stone Mountain Golf Club (Lakemont)",
+            STONE_MOUNTAIN_LAKEMONT_PARS,
+            STONE_MOUNTAIN_LAKEMONT_HCS,
+            STONE_MOUNTAIN_LAKEMONT_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Stone Mountain",
+            architect: "John LaFoy",
+            type: "Private",
+            isWolfApproved: true
+        ),
+        c(
+            THE_FROG_GC_ID,
+            "The Frog Golf Club",
+            THE_FROG_GC_PARS,
+            THE_FROG_GC_HCS,
+            THE_FROG_GC_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Villa Rica",
+            architect: "Tom Fazio",
+            type: "Public",
+            phone: "(770) 459-4400",
+            website: "https://thefroggolfclub.com",
+            isWolfApproved: true
+        ),
+        c(
+            BRASSTOWN_VALLEY_ID,
+            "Brasstown Valley Resort",
+            BRASSTOWN_VALLEY_PARS,
+            BRASSTOWN_VALLEY_HCS,
+            BRASSTOWN_VALLEY_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Young Harris",
+            architect: "Denis Griffiths",
+            type: "Resort",
+            phone: "(706) 379-9900",
+            website: "https://brasstownvalley.com",
+            isWolfApproved: true
+        ),
+        c(
+            CURRAHEE_CLUB_ID,
+            "Currahee Club",
+            CURRAHEE_CLUB_PARS,
+            CURRAHEE_CLUB_HCS,
+            CURRAHEE_CLUB_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Toccoa",
+            architect: "Tom Fazio",
+            type: "Private",
+            isWolfApproved: true
+        ),
+        c(
+            CASTLE_PINES_GC_ID,
+            "Castle Pines Golf Club",
+            CASTLE_PINES_GC_PARS,
+            CASTLE_PINES_GC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(303) 688-6000",
+            website: "https://www.castlepinesgc.com",
+            address: "1000 Hummingbird Dr, Castle Rock, CO 80108",
+            isWolfApproved: true
+        ),
+        c(
+            LAKOTA_CANYON_GC_ID,
+            "Lakota Canyon Ranch Golf Club",
+            LAKOTA_CANYON_GC_PARS,
+            LAKOTA_CANYON_GC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "James Engh",
+            type: "Public",
+            phone: "(970) 984-9700",
+            website: "https://www.lakotacanyonranch.com",
+            address: "151 Clubhouse Dr, New Castle, CO 81647",
+            isWolfApproved: true
+        ),
+        c(
+            REDLANDS_MESA_GC_ID,
+            "Redlands Mesa Golf Club",
+            REDLANDS_MESA_GC_PARS,
+            REDLANDS_MESA_GC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Jim Engh",
+            type: "Public",
+            phone: "(970) 263-9270",
+            website: "https://www.redlandsmesa.com",
+            address: "2325 W Ridges Blvd, Grand Junction, CO 81503",
+            isWolfApproved: true
+        ),
+        c(
+            BALLYNEAL_GC_ID,
+            "Ballyneal Golf Club",
+            BALLYNEAL_GC_PARS,
+            BALLYNEAL_GC_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Tom Doak",
+            type: "Private",
+            phone: "(970) 854-5900",
+            website: "https://www.ballyneal.com",
+            address: "Holyoke, CO 80734",
+            isWolfApproved: true
+        ),
+        c(
+            RED_SKY_FAZIO_ID,
+            "Red Sky Golf Club (Fazio Course)",
+            RED_SKY_FAZIO_PARS,
+            RED_SKY_FAZIO_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(970) 754-8400",
+            website: "https://www.redskygolfclub.com",
+            address: "376 Red Sky Rd, Wolcott, CO 81655",
+            isWolfApproved: true
+        ),
+        c(
+            RED_SKY_NORMAN_ID,
+            "Red Sky Golf Club (Norman Course)",
+            RED_SKY_NORMAN_PARS,
+            RED_SKY_NORMAN_HCS,
+            country: "USA",
+            state: "CO",
+            region: "Vail",
+            architect: "Greg Norman",
+            type: "Private",
+            phone: "(970) 754-8400",
+            website: "https://www.redskygolfclub.com",
+            address: "376 Red Sky Rd, Wolcott, CO 81655",
+            isWolfApproved: true
         ),
         c(
             PINEHURST_NO2_ID,
@@ -9681,6 +11586,22 @@ private enum BuiltIns {
             resortBrand: "Trump",
             promo: nil
         ),
+        c(
+            NC_CROOKED_TREE_ID,
+            "Crooked Tree Golf Course",
+            NC_CROOKED_TREE_PARS,
+            NC_CROOKED_TREE_HCS,
+            NC_CROOKED_TREE_TEES,
+            country: "USA",
+            state: "NC",
+            region: "Greensboro",
+            architect: nil,
+            type: "Daily-Fee",
+            phone: "(336) 656-3211",
+            website: "https://www.crookedtreegolfcourse.com",
+            address: "7665 Caber Rd, Browns Summit, NC 27214",
+            isWolfApproved: true
+        ),
 
         c(
             TRUMP_NATIONAL_WASHINGTON_DC_CHAMPIONSHIP_ID,
@@ -10086,6 +12007,247 @@ private enum BuiltIns {
             isWolfApproved: true,
             resortBrand: nil,
             promo: nil
+        ),
+        c(
+            BAY_HARBOR_LQ_ID,
+            "Bay Harbor Golf Club (Links / Quarry)",
+            BAY_HARBOR_LQ_PARS,
+            BAY_HARBOR_LQ_HCS,
+            BAY_HARBOR_LQ_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Northern Michigan",
+            architect: "Arthur Hills",
+            type: "Resort",
+            website: "https://www.bayharborgolf.com",
+            address: "4096 Main St, Bay Harbor, MI 49770",
+            isWolfApproved: true,
+            resortBrand: "Boyne Golf"
+        ),
+        c(
+            BAY_HARBOR_LP_ID,
+            "Bay Harbor Golf Club (Links / Preserve)",
+            BAY_HARBOR_LP_PARS,
+            BAY_HARBOR_LP_HCS,
+            BAY_HARBOR_LP_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Northern Michigan",
+            architect: "Arthur Hills",
+            type: "Resort",
+            website: "https://www.bayharborgolf.com",
+            address: "4096 Main St, Bay Harbor, MI 49770",
+            isWolfApproved: true,
+            resortBrand: "Boyne Golf"
+        ),
+        c(
+            BAY_HARBOR_QP_ID,
+            "Bay Harbor Golf Club (Quarry / Preserve)",
+            BAY_HARBOR_QP_PARS,
+            BAY_HARBOR_QP_HCS,
+            BAY_HARBOR_QP_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Northern Michigan",
+            architect: "Arthur Hills",
+            type: "Resort",
+            website: "https://www.bayharborgolf.com",
+            address: "4096 Main St, Bay Harbor, MI 49770",
+            isWolfApproved: true,
+            resortBrand: "Boyne Golf"
+        ),
+        c(
+            THE_HEATHER_ID,
+            "The Heather at Boyne Highlands",
+            THE_HEATHER_PARS,
+            THE_HEATHER_HCS,
+            THE_HEATHER_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Northern Michigan",
+            architect: "Robert Trent Jones Sr.",
+            type: "Resort",
+            phone: "(231) 526-3029",
+            website: "https://www.boynehighlands.com",
+            address: "250 Heather Drive, Harbor Springs, MI 49740",
+            isWolfApproved: true,
+            resortBrand: "Boyne Highlands"
+        ),
+        c(
+            ARTHUR_HILLS_BH_ID,
+            "Arthur Hills at Boyne Highlands",
+            ARTHUR_HILLS_BH_PARS,
+            ARTHUR_HILLS_BH_HCS,
+            ARTHUR_HILLS_BH_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Northern Michigan",
+            architect: "Arthur Hills",
+            type: "Resort",
+            website: "https://www.boynehighlands.com",
+            address: "250 Heather Drive, Harbor Springs, MI 49740",
+            isWolfApproved: true,
+            resortBrand: "Boyne Highlands"
+        ),
+        c(
+            THE_MOOR_ID,
+            "The Moor at Boyne Highlands",
+            THE_MOOR_PARS,
+            THE_MOOR_HCS,
+            THE_MOOR_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Northern Michigan",
+            architect: "Arthur Hills",
+            type: "Resort",
+            website: "https://www.boynehighlands.com",
+            address: "250 Heather Drive, Harbor Springs, MI 49740",
+            isWolfApproved: true,
+            resortBrand: "Boyne Highlands"
+        ),
+        c(
+            CROOKED_TREE_GC_ID,
+            "Crooked Tree Golf Club",
+            CROOKED_TREE_GC_PARS,
+            CROOKED_TREE_GC_HCS,
+            CROOKED_TREE_GC_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Northern Michigan",
+            architect: "Harry Bowers / Arthur Hills",
+            type: "Resort",
+            phone: "(231) 439-4030",
+            website: "https://www.crookedtreegolfclub.com",
+            address: "600 Crooked Tree Dr, Petoskey, MI 49770",
+            isWolfApproved: true,
+            resortBrand: "Boyne Golf"
+        ),
+        c(
+            TRUE_NORTH_GC_ID,
+            "True North Golf Club",
+            TRUE_NORTH_GC_PARS,
+            TRUE_NORTH_GC_HCS,
+            TRUE_NORTH_GC_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Northern Michigan",
+            architect: "Jim Engh",
+            type: "Private",
+            website: "https://www.truenorthgolfclub.com",
+            address: "2500 True North Dr, Harbor Springs, MI 49740",
+            isWolfApproved: true
+        ),
+        c(
+            TULLYMORE_GC_ID,
+            "Tullymore Golf Club",
+            TULLYMORE_GC_PARS,
+            TULLYMORE_GC_HCS,
+            TULLYMORE_GC_TEES,
+            country: "USA",
+            state: "MI",
+            region: "West Michigan",
+            architect: "Jim Engh",
+            type: "Resort",
+            website: "https://www.tullymore.com",
+            address: "11969 Tullymore Dr, Stanwood, MI 49346",
+            isWolfApproved: true
+        ),
+        c(
+            PILGRIMS_RUN_GC_ID,
+            "Pilgrim's Run Golf Club",
+            PILGRIMS_RUN_GC_PARS,
+            PILGRIMS_RUN_GC_HCS,
+            PILGRIMS_RUN_GC_TEES,
+            country: "USA",
+            state: "MI",
+            region: "West Michigan",
+            architect: "Mike DeVries & Kris Shumacker",
+            type: "Public",
+            website: "https://www.pilgrimsrun.com",
+            isWolfApproved: true
+        ),
+        c(
+            EAGLE_EYE_GC_ID,
+            "Eagle Eye Golf Club",
+            EAGLE_EYE_GC_PARS,
+            EAGLE_EYE_GC_HCS,
+            EAGLE_EYE_GC_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Mid-Michigan",
+            architect: "Chris Lutzke",
+            type: "Daily-Fee",
+            phone: "(517) 903-8064",
+            website: "https://www.eagleeyegolf.com",
+            address: "15500 Chandler Rd, Bath Township, MI 48808",
+            isWolfApproved: true
+        ),
+        c(
+            GREYWALLS_GC_ID,
+            "Greywalls Golf Course",
+            GREYWALLS_GC_PARS,
+            GREYWALLS_GC_HCS,
+            GREYWALLS_GC_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Upper Peninsula",
+            architect: "Mike DeVries",
+            type: "Public",
+            phone: "(906) 225-0721",
+            website: "https://www.greywallsgolf.com",
+            address: "1075 Grove St, Marquette, MI 49855",
+            isWolfApproved: true,
+            resortBrand: "Marquette Golf Club"
+        ),
+        c(
+            HARBOR_SHORES_GC_ID,
+            "Harbor Shores Resort",
+            HARBOR_SHORES_GC_PARS,
+            HARBOR_SHORES_GC_HCS,
+            HARBOR_SHORES_GC_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Southwest Michigan",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            phone: "(269) 927-4653",
+            website: "https://www.harborshoresresort.com",
+            address: "201 Graham Ave, Benton Harbor, MI 49022",
+            isWolfApproved: true
+        ),
+        c(
+            STOATIN_BRAE_GC_ID,
+            "Stoatin Brae Golf Club",
+            STOATIN_BRAE_GC_PARS,
+            STOATIN_BRAE_GC_HCS,
+            STOATIN_BRAE_GC_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Southwest Michigan",
+            architect: "Tom Doak",
+            type: "Public",
+            phone: "(269) 220-3976",
+            website: "https://www.stoatinbrae.com",
+            address: "15579 E Augusta Dr, Augusta, MI 49012",
+            isWolfApproved: true,
+            resortBrand: "Gull Lake View Resort"
+        ),
+        c(
+            GULL_LAKE_VIEW_EAST_ID,
+            "Gull Lake View East Course",
+            GULL_LAKE_VIEW_EAST_PARS,
+            GULL_LAKE_VIEW_EAST_HCS,
+            GULL_LAKE_VIEW_EAST_TEES,
+            country: "USA",
+            state: "MI",
+            region: "Southwest Michigan",
+            architect: "Jerry Matthews",
+            type: "Resort",
+            phone: "(269) 731-4149",
+            website: "https://www.gulllakeview.com",
+            address: "7417 N 38th St, Augusta, MI 49012",
+            isWolfApproved: true,
+            resortBrand: "Gull Lake View Resort"
         ),
         c(
             LAWSONIA_LINKS_ID,
@@ -10886,6 +13048,36 @@ private enum BuiltIns {
             phone: "(713) 413-3400",
             website: "https://www.wildcatgolfclub.com",
             address: "12000 Almeda Road, Houston, TX 77045",
+            isWolfApproved: true
+        ),
+        c(
+            GOLFCREST_OLD_ID,
+            "Golfcrest CC (Old Course)",
+            GOLFCREST_CC_PARS,
+            GOLFCREST_OLD_HCS,
+            GOLFCREST_CC_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            type: "Private",
+            phone: "(281) 485-4323",
+            website: "https://www.golfcrestcountryclub.com",
+            address: "2509 Country Club Drive, Pearland, TX 77581",
+            isWolfApproved: true
+        ),
+        c(
+            GOLFCREST_NEW_ID,
+            "Golfcrest CC (New Course)",
+            GOLFCREST_CC_PARS,
+            GOLFCREST_NEW_HCS,
+            GOLFCREST_CC_TEES,
+            country: "USA",
+            state: "TX",
+            region: "Houston",
+            type: "Private",
+            phone: "(281) 485-4323",
+            website: "https://www.golfcrestcountryclub.com",
+            address: "2509 Country Club Drive, Pearland, TX 77581",
             isWolfApproved: true
         ),
         c(

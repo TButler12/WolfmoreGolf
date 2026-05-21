@@ -11,10 +11,15 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
     var gameData: GameData!
 
     @IBOutlet private weak var baseStakeField: UITextField!
-    
     @IBOutlet private weak var pressModeSegmentedControl: UISegmentedControl!
     @IBOutlet private weak var triggerField: UITextField!
     @IBOutlet private weak var triggerLabel: UILabel!
+
+    private var scrollView: UIScrollView!
+    private var contentStack: UIStackView!
+    private weak var saveButton: UIButton?
+    private weak var triggerSection: UIStackView?
+    private weak var editPlayersButton: UIButton?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -30,25 +35,12 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             )
         }
 
-        let settings = gameData.nassauState!.settings
+        buildScrollLayout()
 
+        let settings = gameData.nassauState!.settings
         baseStakeField.text = String(format: "%.2f", settings.baseStake)
         triggerField.text = String(settings.autoPressTriggerDown)
-
-        // 0 = Auto, 1 = Manual
         pressModeSegmentedControl.selectedSegmentIndex = (settings.pressMode == .auto) ? 0 : 1
-
-        baseStakeField.keyboardType = .decimalPad
-        triggerField.keyboardType = .numberPad
-
-        baseStakeField.borderStyle = .roundedRect
-        triggerField.borderStyle = .roundedRect
-
-        baseStakeField.placeholder = "Base stake"
-        triggerField.placeholder = "Trigger"
-
-        baseStakeField.delegate = self
-        triggerField.delegate = self
 
         updateTriggerVisibility()
 
@@ -56,35 +48,186 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
 
-        installRemoteNassauButton()
-        applySaveButtonStyle()
+        saveButton?.configuration = wmStyledButton(title: "Save", style: .primary)
+        addKeyboardObservers()
     }
 
-    private func applySaveButtonStyle() {
-        if let btn = view.subviews.compactMap({ $0 as? UIButton })
-            .first(where: { $0.configuration?.title == "Save" }) {
-            btn.configuration = wmStyledButton(title: "Save", style: .primary)
-        }
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        removeKeyboardObservers()
     }
 
-    private func installRemoteNassauButton() {
-        let btn = UIButton(type: .custom)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        var cfg = UIButton.Configuration.filled()
-        cfg.title = "Remote Nassau"
-        cfg.baseBackgroundColor = UIColor(red: 0.967, green: 0.941, blue: 0.690, alpha: 1)
-        cfg.baseForegroundColor = .label
-        cfg.cornerStyle = .large
-        cfg.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
-        btn.configuration = cfg
-        btn.addTarget(self, action: #selector(remoteNassauTapped(_:)), for: .touchUpInside)
-        view.addSubview(btn)
+    // MARK: - Scroll Layout
+
+    private func buildScrollLayout() {
+        view.subviews.forEach { $0.isHidden = true }
+
+        let scroll = UIScrollView()
+        scroll.alwaysBounceVertical = true
+        scroll.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scroll)
         NSLayoutConstraint.activate([
-            btn.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
-            btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 40),
-            btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -40),
+            scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scroll.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scroll.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scroll.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+        scrollView = scroll
+
+        let content = UIView()
+        content.translatesAutoresizingMaskIntoConstraints = false
+        scroll.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: scroll.contentLayoutGuide.topAnchor),
+            content.leadingAnchor.constraint(equalTo: scroll.contentLayoutGuide.leadingAnchor),
+            content.trailingAnchor.constraint(equalTo: scroll.contentLayoutGuide.trailingAnchor),
+            content.bottomAnchor.constraint(equalTo: scroll.contentLayoutGuide.bottomAnchor),
+            content.widthAnchor.constraint(equalTo: scroll.frameLayoutGuide.widthAnchor),
+        ])
+
+        let main = UIStackView()
+        main.axis = .vertical
+        main.spacing = 20
+        main.translatesAutoresizingMaskIntoConstraints = false
+        content.addSubview(main)
+        NSLayoutConstraint.activate([
+            main.topAnchor.constraint(equalTo: content.topAnchor, constant: 24),
+            main.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 20),
+            main.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -20),
+            main.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -30),
+        ])
+        contentStack = main
+
+        // Base Stake section
+        let stakeField = UITextField()
+        stakeField.keyboardType = .decimalPad
+        stakeField.borderStyle = .roundedRect
+        stakeField.placeholder = "Base stake"
+        stakeField.font = UIFont.preferredFont(forTextStyle: .body)
+        stakeField.adjustsFontForContentSizeCategory = true
+        stakeField.delegate = self
+        stakeField.translatesAutoresizingMaskIntoConstraints = false
+        stakeField.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        baseStakeField = stakeField
+        main.addArrangedSubview(vSection("Base Stake ($)", body: stakeField))
+
+        // Press Mode section
+        let segment = UISegmentedControl(items: ["Auto", "Off"])
+        segment.addTarget(self, action: #selector(pressModeChanged(_:)), for: .valueChanged)
+        pressModeSegmentedControl = segment
+        main.addArrangedSubview(vSection("Press Mode", body: segment))
+
+        // Trigger section (shown only in Auto mode)
+        let trigLbl = UILabel()
+        trigLbl.text = "Auto-press when down by:"
+        trigLbl.font = UIFont.preferredFont(forTextStyle: .body)
+        trigLbl.adjustsFontForContentSizeCategory = true
+        triggerLabel = trigLbl
+
+        let trigField = UITextField()
+        trigField.keyboardType = .numberPad
+        trigField.borderStyle = .roundedRect
+        trigField.placeholder = "Trigger"
+        trigField.font = UIFont.preferredFont(forTextStyle: .body)
+        trigField.adjustsFontForContentSizeCategory = true
+        trigField.delegate = self
+        trigField.translatesAutoresizingMaskIntoConstraints = false
+        trigField.widthAnchor.constraint(equalToConstant: 80).isActive = true
+        triggerField = trigField
+
+        let trigRow = UIStackView(arrangedSubviews: [trigLbl, trigField])
+        trigRow.axis = .horizontal
+        trigRow.spacing = 12
+        trigRow.alignment = .center
+        trigLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        trigField.setContentHuggingPriority(.required, for: .horizontal)
+
+        let trigSect = vSection("Auto Press Trigger", body: trigRow)
+        main.addArrangedSubview(trigSect)
+        triggerSection = trigSect
+
+        // Edit Players In button
+        let editBtn = UIButton(type: .system)
+        editBtn.configuration = {
+            var cfg = UIButton.Configuration.filled()
+            cfg.title = "Edit Players In"
+            cfg.baseBackgroundColor = .systemGray5
+            cfg.baseForegroundColor = .label
+            cfg.cornerStyle = .capsule
+            cfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 24, bottom: 12, trailing: 24)
+            return cfg
+        }()
+        editBtn.addTarget(self, action: #selector(editPlayersTapped), for: .touchUpInside)
+        editPlayersButton = editBtn
+        main.addArrangedSubview(editBtn)
+
+        // Remote Nassau button
+        let remoteBtn = UIButton(type: .custom)
+        remoteBtn.translatesAutoresizingMaskIntoConstraints = false
+        remoteBtn.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        var remoteCfg = UIButton.Configuration.filled()
+        remoteCfg.title = "Remote Nassau"
+        remoteCfg.baseBackgroundColor = UIColor(red: 0.967, green: 0.941, blue: 0.690, alpha: 1)
+        remoteCfg.baseForegroundColor = .label
+        remoteCfg.cornerStyle = .large
+        remoteCfg.contentInsets = NSDirectionalEdgeInsets(top: 10, leading: 20, bottom: 10, trailing: 20)
+        remoteBtn.configuration = remoteCfg
+        remoteBtn.addTarget(self, action: #selector(remoteNassauTapped(_:)), for: .touchUpInside)
+        main.addArrangedSubview(remoteBtn)
+
+        // Save button
+        let save = UIButton(type: .system)
+        save.translatesAutoresizingMaskIntoConstraints = false
+        save.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        save.addTarget(self, action: #selector(saveTapped(_:)), for: .touchUpInside)
+        saveButton = save
+        main.addArrangedSubview(save)
+    }
+
+    private func sectionHeader(_ text: String) -> UILabel {
+        let l = UILabel()
+        l.text = text
+        l.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        l.adjustsFontForContentSizeCategory = true
+        l.textColor = .secondaryLabel
+        return l
+    }
+
+    private func vSection(_ title: String, body: UIView) -> UIStackView {
+        let s = UIStackView(arrangedSubviews: [sectionHeader(title), body])
+        s.axis = .vertical
+        s.spacing = 8
+        return s
+    }
+
+    // MARK: - Keyboard
+
+    private func addKeyboardObservers() {
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(keyboardWillShow(_:)),
+            name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(keyboardWillHide(_:)),
+            name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+
+    private func removeKeyboardObservers() {
+        NotificationCenter.default.removeObserver(
+            self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(
+            self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+
+    @objc private func keyboardWillShow(_ n: Notification) {
+        guard let frame = n.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
+        let inset = frame.height - view.safeAreaInsets.bottom
+        scrollView.contentInset.bottom = inset
+        scrollView.verticalScrollIndicatorInsets.bottom = inset
+    }
+
+    @objc private func keyboardWillHide(_ n: Notification) {
+        scrollView.contentInset.bottom = 0
+        scrollView.verticalScrollIndicatorInsets.bottom = 0
     }
 
     // MARK: - Remote Nassau
@@ -155,8 +298,6 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             return
         }
 
-        // Preserve the original working order: stake first, then round import,
-        // then mode selector inline inside the formSheet dismissal callback.
         promptForRemoteStake { [weak self] stake in
             guard let self else { return }
             self.promptForRemoteRound { [weak self] opponentRound in
@@ -318,15 +459,59 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
         """
     }
 
+    // MARK: - Players In
+
+    @objc private func editPlayersTapped() {
+        guard let nassau = gameData.nassauState else { return }
+        showPlayersInPicker(data: gameData, nassau: nassau)
+    }
+
+    private func showPlayersInPicker(data: GameData, nassau: NassauState) {
+        let activeIndexes = data.playerActivated.enumerated().compactMap { $0.element ? $0.offset : nil }
+
+        let ac = UIAlertController(title: "Players In", message: "Tap to add or remove players", preferredStyle: .actionSheet)
+
+        for idx in activeIndexes {
+            let name = nassauPlayerName(for: idx, in: data)
+            let included = idx < nassau.playerIncluded.count && nassau.playerIncluded[idx]
+            let title = "\(included ? "✓ " : "")\(name)"
+            ac.addAction(UIAlertAction(title: title, style: .default) { [weak self] _ in
+                guard let self else { return }
+                var d = self.gameData!
+                guard var s = d.nassauState else { return }
+                if idx < s.playerIncluded.count {
+                    s.playerIncluded[idx].toggle()
+                }
+                d.nassauState = s
+                self.gameData = d
+                GameManager.shared.currentGame = d
+                GameManager.shared.saveCurrent()
+                DispatchQueue.main.async { self.showPlayersInPicker(data: d, nassau: s) }
+            })
+        }
+
+        ac.addAction(UIAlertAction(title: "Done", style: .cancel))
+
+        if let pop = ac.popoverPresentationController, let btn = editPlayersButton {
+            pop.sourceView = btn
+            pop.sourceRect = btn.bounds
+        }
+        present(ac, animated: true)
+    }
+
+    private func nassauPlayerName(for index: Int, in data: GameData) -> String {
+        guard index < data.playerNames.count else { return "Player \(index + 1)" }
+        let name = data.playerNames[index].trimmingCharacters(in: .whitespacesAndNewlines)
+        return name.isEmpty ? "Player \(index + 1)" : name
+    }
+
     @IBAction private func pressModeChanged(_ sender: UISegmentedControl) {
         updateTriggerVisibility()
     }
 
     private func updateTriggerVisibility() {
         let isAuto = (pressModeSegmentedControl.selectedSegmentIndex == 0)
-        triggerField.isHidden = !isAuto
-        triggerLabel.isHidden = !isAuto
-        
+        triggerSection?.isHidden = !isAuto
     }
 
     @objc private func dismissKeyboard() {
@@ -342,7 +527,7 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
         let trigger = Int(triggerField.text ?? "") ?? 2
 
         state.settings.baseStake = max(0, baseStake)
-        state.settings.pressMode = (pressModeSegmentedControl.selectedSegmentIndex == 0) ? .auto : .manual
+        state.settings.pressMode = (pressModeSegmentedControl.selectedSegmentIndex == 0) ? .auto : .off
         state.settings.autoPressTriggerDown = max(1, trigger)
 
         gameData.nassauState = state

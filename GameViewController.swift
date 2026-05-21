@@ -429,7 +429,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         superview.addSubview(btn)
 
         NSLayoutConstraint.activate([
-            btn.centerYAnchor.constraint(equalTo: firstLabel.topAnchor, constant: -19),
+            btn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
             btn.leadingAnchor.constraint(equalTo: firstLabel.leadingAnchor),
             btn.heightAnchor.constraint(equalToConstant: 28)
         ])
@@ -2393,6 +2393,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let vc = StatsContainerViewController()
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.selectedDetentIdentifier = .large
+            sheet.prefersGrabberVisible = true
+        }
         present(nav, animated: true)
     }
     private func maybePromptForHoleStats() {
@@ -2422,10 +2427,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         present(ac, animated: true)
     }
     @IBAction func statsButtonTapped(_ sender: UIButton) {
-        let vc = GameStatsViewController()
-        vc.modalPresentationStyle = .overCurrentContext
-        vc.modalTransitionStyle = .crossDissolve
-        present(vc, animated: true)
+        let vc = StatsContainerViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.selectedDetentIdentifier = .large
+            sheet.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
     }
     private func updateHoleUI() {
         guard let game = GameManager.shared.currentGame else { return }

@@ -30,8 +30,6 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let header = HeaderView()
 
-    private let panel = UIView()
-    private let closeBtn = UIButton(type: .system)
     private let sendBtn = UIButton(type: .system)
     private let historyBtn = UIButton(type: .system)
     private let lastRoundLabel = UILabel()
@@ -58,10 +56,9 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        view.backgroundColor = UIColor.black.withAlphaComponent(0.25)
+        view.backgroundColor = .systemBackground
         setupPanel()
         setupHeader()
-        setupDismissTap()
         setupObservers()
 
         reloadFromModel()
@@ -74,23 +71,6 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     // MARK: - Setup
 
     private func setupPanel() {
-        panel.backgroundColor = .systemBackground
-        panel.layer.cornerRadius = 16
-        panel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(panel)
-
-        NSLayoutConstraint.activate([
-            panel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            panel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            panel.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.9),
-            panel.heightAnchor.constraint(equalTo: view.heightAnchor, multiplier: 0.6),
-        ])
-
-        closeBtn.setTitle("Close", for: .normal)
-        closeBtn.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
-        closeBtn.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(closeBtn)
-
         sendBtn.setTitle("Send Round Summary", for: .normal)
         sendBtn.setTitleColor(.white, for: .normal)
         sendBtn.backgroundColor = .systemGreen
@@ -98,7 +78,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         sendBtn.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
         sendBtn.addTarget(self, action: #selector(sendSummaryTapped(_:)), for: .touchUpInside)
         sendBtn.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(sendBtn)
+        view.addSubview(sendBtn)
 
         historyBtn.setTitle("Save to History", for: .normal)
         historyBtn.setTitleColor(.white, for: .normal)
@@ -107,7 +87,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         historyBtn.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
         historyBtn.addTarget(self, action: #selector(saveToHistoryTapped(_:)), for: .touchUpInside)
         historyBtn.translatesAutoresizingMaskIntoConstraints = false
-        panel.addSubview(historyBtn)
+        view.addSubview(historyBtn)
 
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
@@ -115,25 +95,23 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         tableView.rowHeight = 52
         tableView.separatorInset = .zero
         tableView.register(StatsCell.self, forCellReuseIdentifier: StatsCell.reuseID)
-        panel.addSubview(tableView)
+        view.addSubview(tableView)
 
+        let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            closeBtn.topAnchor.constraint(equalTo: panel.topAnchor, constant: 8),
-            closeBtn.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -8),
-
-            historyBtn.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 16),
-            historyBtn.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -16),
-            historyBtn.bottomAnchor.constraint(equalTo: panel.bottomAnchor, constant: -14),
+            historyBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            historyBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            historyBtn.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -14),
             historyBtn.heightAnchor.constraint(equalToConstant: 52),
 
-            sendBtn.leadingAnchor.constraint(equalTo: panel.leadingAnchor, constant: 16),
-            sendBtn.trailingAnchor.constraint(equalTo: panel.trailingAnchor, constant: -16),
+            sendBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            sendBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             sendBtn.bottomAnchor.constraint(equalTo: historyBtn.topAnchor, constant: -10),
             sendBtn.heightAnchor.constraint(equalToConstant: 52),
 
-            tableView.topAnchor.constraint(equalTo: closeBtn.bottomAnchor, constant: 12),
-            tableView.leadingAnchor.constraint(equalTo: panel.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: panel.trailingAnchor),
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: sendBtn.topAnchor, constant: -10),
         ])
     }
@@ -148,12 +126,6 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         header.onTapProx  = { [weak self] in self?.setSort(.prox)  }
     }
 
-    private func setupDismissTap() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(bgTapped))
-        tap.cancelsTouchesInView = false
-        view.addGestureRecognizer(tap)
-    }
-
     private func setupObservers() {
         NotificationCenter.default.addObserver(
             self,
@@ -164,17 +136,6 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     }
 
     // MARK: - Actions
-
-    @objc private func closeTapped() {
-        dismiss(animated: true)
-    }
-
-    @objc private func bgTapped(_ gr: UITapGestureRecognizer) {
-        let loc = gr.location(in: view)
-        if !panel.frame.contains(loc) {
-            dismiss(animated: true)
-        }
-    }
 
     @objc private func saveToHistoryTapped(_ sender: UIButton) {
         guard !hasSavedThisOpen else {

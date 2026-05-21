@@ -894,6 +894,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             self.ensureModelHasCapacity(&g)
 
             let existingSettings = g.nassauState?.settings ?? NassauSettings()
+            let existingIncluded = g.nassauState?.playerIncluded ?? Array(repeating: true, count: MAX_PLAYERS)
 
             var newState = NassauEngine.makeDefaultState(
                 playerNames: g.playerNames,
@@ -904,12 +905,14 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             newState.oneVsOneMatches = NassauEngine.makeAllOneVsOneMatches(
                 playerNames: g.playerNames,
                 activeFlags: g.playerActivated,
+                includedFlags: existingIncluded,
                 scoringMode: .net,
                 stake: existingSettings.baseStake
             )
             newState.twoVsTwoMatches = NassauEngine.makeDefaultTwoVsTwoMatches(
                 playerNames: g.playerNames,
                 activeFlags: g.playerActivated,
+                includedFlags: existingIncluded,
                 scoringMode: .net,
                 stake: existingSettings.baseStake
             )

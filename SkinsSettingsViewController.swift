@@ -9,8 +9,6 @@ final class SkinsSettingsViewController: UIViewController {
 
     var gameData: GameData?
 
-    private let modeLabel = UILabel()
-    private let modeSegment = UISegmentedControl(items: ["Automatic", "Manual"])
     private let skinValueLabel = UILabel()
     private let skinValueField = UITextField()
     private let carryoversLabel = UILabel()
@@ -49,7 +47,6 @@ final class SkinsSettingsViewController: UIViewController {
     }
 
     private func setupUI() {
-        configureLabel(modeLabel, text: "Mode")
         configureLabel(skinValueLabel, text: "Skin Value")
         configureLabel(carryoversLabel, text: "Carryovers")
 
@@ -79,7 +76,7 @@ final class SkinsSettingsViewController: UIViewController {
         saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
         saveButton.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)
 
-        let views: [UIView] = [modeLabel, modeSegment, skinValueLabel, skinValueField,
+        let views: [UIView] = [skinValueLabel, skinValueField,
                                carryoversLabel, carryoversSegment, editPlayersButton, saveButton]
         views.forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -89,14 +86,7 @@ final class SkinsSettingsViewController: UIViewController {
         let guide = view.safeAreaLayoutGuide
 
         NSLayoutConstraint.activate([
-            modeLabel.topAnchor.constraint(equalTo: guide.topAnchor, constant: 32),
-            modeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            modeSegment.topAnchor.constraint(equalTo: modeLabel.bottomAnchor, constant: 8),
-            modeSegment.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 40),
-            modeSegment.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -40),
-
-            skinValueLabel.topAnchor.constraint(equalTo: modeSegment.bottomAnchor, constant: 28),
+            skinValueLabel.topAnchor.constraint(equalTo: guide.topAnchor, constant: 32),
             skinValueLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
             skinValueField.topAnchor.constraint(equalTo: skinValueLabel.bottomAnchor, constant: 8),
@@ -130,7 +120,6 @@ final class SkinsSettingsViewController: UIViewController {
 
     private func loadSettings() {
         guard let skins = gameData?.skinsState else { return }
-        modeSegment.selectedSegmentIndex = (skins.settings.mode == .automatic) ? 0 : 1
         skinValueField.text = String(format: "%.2f", skins.settings.skinValue)
         carryoversSegment.selectedSegmentIndex = skins.settings.carryoversEnabled ? 0 : 1
     }
@@ -139,7 +128,7 @@ final class SkinsSettingsViewController: UIViewController {
         dismissKeyboard()
         guard var data = gameData, var skins = data.skinsState else { return }
 
-        skins.settings.mode = (modeSegment.selectedSegmentIndex == 0) ? .automatic : .manual
+        skins.settings.mode = .automatic
         if let text = skinValueField.text, let value = Double(text) {
             skins.settings.skinValue = max(0, value)
         }

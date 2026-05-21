@@ -433,7 +433,7 @@ final class ViewController: UIViewController {
         })
 
         ac.addAction(UIAlertAction(title: "Start New Game", style: .default) { [weak self] _ in
-            self?.presentManagePlayers()
+            self?.confirmStartNewGame()
         })
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -447,7 +447,21 @@ final class ViewController: UIViewController {
     }
 
     @IBAction private func playNewGameTapped(_ sender: UIButton) {
-        presentManagePlayers()
+        confirmStartNewGame()
+    }
+
+    private func confirmStartNewGame() {
+        let ac = UIAlertController(
+            title: "Start New Game?",
+            message: "This will delete your previous game data.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
+            GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
+            self?.presentManagePlayers()
+        })
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(ac, animated: true)
     }
 
     @IBAction private func continueGameTapped(_ sender: UIButton) {
@@ -591,6 +605,10 @@ final class ViewController: UIViewController {
     @IBAction func moreTapped(_ sender: UIButton) {
         let ac = UIAlertController(title: "More", message: nil, preferredStyle: .actionSheet)
 
+        ac.addAction(UIAlertAction(title: "Past Games", style: .default) { [weak self] _ in
+            self?.openPastGames()
+        })
+
         ac.addAction(UIAlertAction(title: "Explore the Rules", style: .default) { [weak self] _ in
             self?.openRules()
         })
@@ -605,6 +623,12 @@ final class ViewController: UIViewController {
             UpdateChecker.shared.checkManually(from: self)
         })
 
+        ac.addAction(UIAlertAction(title: "Rate WolfMore ★", style: .default) { _ in
+            if let url = URL(string: "itms-apps://itunes.apple.com/app/id6755116882?action=write-review") {
+                UIApplication.shared.open(url)
+            }
+        })
+
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
         if let pop = ac.popoverPresentationController {
@@ -614,6 +638,12 @@ final class ViewController: UIViewController {
         }
 
         present(ac, animated: true)
+    }
+
+    private func openPastGames() {
+        let vc = PastGamesViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        present(nav, animated: true)
     }
 
     private func openRules() {

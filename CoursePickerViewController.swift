@@ -51,6 +51,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     private var sortMode: SortMode = .groupedLocation
     private var activeFilter: CourseFilter = .all
     private var locationGrouping: LocationGrouping = .state
+    private var collapsedSections: Set<Int> = []
 
     private let searchController = UISearchController(searchResultsController: nil)
 
@@ -310,9 +311,11 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
             sections = [("All Courses", sorted)]
+            collapsedSections = []
 
         case .groupedLocation:
             buildSections(from: working)
+            collapsedSections = Set(sections.indices)
         }
 
         tableView.reloadData()
@@ -487,12 +490,75 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         sections.count
     }
 
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        sections[section].title
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? { nil }
+
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard sortMode == .groupedLocation else {
+            let label = UILabel()
+            label.text = sections[section].title
+            label.font = .preferredFont(forTextStyle: .footnote)
+            label.textColor = .secondaryLabel
+            return label
+        }
+        let header = UIView()
+        header.backgroundColor = .clear
+
+        let chevron = UIImageView(image: UIImage(systemName: collapsedSections.contains(section) ? "chevron.right" : "chevron.down"))
+        chevron.tintColor = .secondaryLabel
+        chevron.translatesAutoresizingMaskIntoConstraints = false
+        chevron.contentMode = .scaleAspectFit
+
+        let label = UILabel()
+        label.text = sections[section].title
+        label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = .secondaryLabel
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        let count = UILabel()
+        count.text = "\(sections[section].items.count)"
+        count.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        count.textColor = .tertiaryLabel
+        count.translatesAutoresizingMaskIntoConstraints = false
+
+        header.addSubview(chevron)
+        header.addSubview(label)
+        header.addSubview(count)
+
+        NSLayoutConstraint.activate([
+            chevron.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            chevron.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+            chevron.widthAnchor.constraint(equalToConstant: 12),
+            chevron.heightAnchor.constraint(equalToConstant: 12),
+
+            label.leadingAnchor.constraint(equalTo: chevron.trailingAnchor, constant: 6),
+            label.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+
+            count.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 6),
+            count.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+        ])
+
+        let tap = SectionTapGesture(target: self, action: #selector(sectionHeaderTapped(_:)))
+        tap.section = section
+        header.addGestureRecognizer(tap)
+        header.isUserInteractionEnabled = true
+
+        return header
+    }
+
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { 32 }
+
+    @objc private func sectionHeaderTapped(_ gesture: SectionTapGesture) {
+        let section = gesture.section
+        if collapsedSections.contains(section) {
+            collapsedSections.remove(section)
+        } else {
+            collapsedSections.insert(section)
+        }
+        tableView.reloadSections(IndexSet(integer: section), with: .automatic)
     }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        sections[section].items.count
+        collapsedSections.contains(section) ? 0 : sections[section].items.count
     }
 
     override func tableView(_ tableView: UITableView,
@@ -772,4 +838,8 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     func updateSearchResults(for searchController: UISearchController) {
         applySearchSortAndFilter()
     }
+}
+
+private final class SectionTapGesture: UITapGestureRecognizer {
+    var section: Int = 0
 }

@@ -24,7 +24,6 @@ final class ManagePlayersViewController: UIViewController,
     // MARK: - UI refs
     private weak var addUIButton: UIButton?
     private weak var startRoundButton: UIButton?
-    private weak var editSettingsButton: UIButton?
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -36,7 +35,6 @@ final class ManagePlayersViewController: UIViewController,
         if let btn = button(forAction: #selector(startRoundTapped)) {
             startRoundButton = btn
             styleStartButton(btn)
-            installEditSettingsButton(below: btn)
         }
     }
 
@@ -534,39 +532,6 @@ final class ManagePlayersViewController: UIViewController,
             var a = attrs; a.font = UIFont.systemFont(ofSize: 17, weight: .semibold); return a
         }
         btn.configuration = cfg
-    }
-
-    private func installEditSettingsButton(below anchor: UIButton) {
-        let btn = UIButton(type: .system)
-        var cfg = UIButton.Configuration.filled()
-        cfg.title = "Edit Game Settings"
-        cfg.image = UIImage(systemName: "gearshape")
-        cfg.imagePlacement = .leading
-        cfg.imagePadding = 8
-        cfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
-        cfg.baseForegroundColor = .white
-        cfg.cornerStyle = .capsule
-        cfg.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16)
-        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
-            var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .footnote); return a
-        }
-        btn.configuration = cfg
-        btn.addTarget(self, action: #selector(editSettingsTapped), for: .touchUpInside)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(btn)
-        NSLayoutConstraint.activate([
-            btn.topAnchor.constraint(equalTo: anchor.bottomAnchor, constant: 10),
-            btn.centerXAnchor.constraint(equalTo: anchor.centerXAnchor),
-            btn.widthAnchor.constraint(equalTo: anchor.widthAnchor),
-        ])
-        editSettingsButton = btn
-    }
-
-    @objc private func editSettingsTapped() {
-        let sb = UIStoryboard(name: "Main", bundle: nil)
-        guard let vc = sb.instantiateViewController(withIdentifier: "GameSettingsViewController")
-                as? GameSettingsViewController else { return }
-        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func refreshStartButton() {

@@ -136,6 +136,30 @@ struct NassauState: Codable, Equatable {
     var settings: NassauSettings = NassauSettings()
     var oneVsOneMatches: [NassauMatch] = []
     var twoVsTwoMatches: [NassauMatch] = []
+    var playerIncluded: [Bool] = Array(repeating: true, count: MAX_PLAYERS)
+
+    private enum CodingKeys: String, CodingKey {
+        case settings, oneVsOneMatches, twoVsTwoMatches, playerIncluded
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        settings = try c.decode(NassauSettings.self, forKey: .settings)
+        oneVsOneMatches = try c.decode([NassauMatch].self, forKey: .oneVsOneMatches)
+        twoVsTwoMatches = try c.decode([NassauMatch].self, forKey: .twoVsTwoMatches)
+        playerIncluded = try c.decodeIfPresent([Bool].self, forKey: .playerIncluded)
+            ?? Array(repeating: true, count: MAX_PLAYERS)
+    }
+
+    init(settings: NassauSettings = NassauSettings(),
+         oneVsOneMatches: [NassauMatch] = [],
+         twoVsTwoMatches: [NassauMatch] = [],
+         playerIncluded: [Bool] = Array(repeating: true, count: MAX_PLAYERS)) {
+        self.settings = settings
+        self.oneVsOneMatches = oneVsOneMatches
+        self.twoVsTwoMatches = twoVsTwoMatches
+        self.playerIncluded = playerIncluded
+    }
 
     var isEnabled: Bool {
         get { settings.isEnabled }

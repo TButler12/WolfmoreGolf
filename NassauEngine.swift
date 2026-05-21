@@ -303,6 +303,7 @@ enum NassauEngine {
     static func makeAllOneVsOneMatches(
         playerNames: [String],
         activeFlags: [Bool],
+        includedFlags: [Bool] = Array(repeating: true, count: MAX_PLAYERS),
         scoringMode: NassauScoringMode = .net,
         stake: Double = 1.0
     ) -> [NassauMatch] {
@@ -311,6 +312,7 @@ enum NassauEngine {
 
         let activePlayers = (0..<seats).filter { idx in
             activeFlags[idx] &&
+            (idx < includedFlags.count && includedFlags[idx]) &&
             !playerNames[idx].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
 
@@ -342,6 +344,7 @@ enum NassauEngine {
     static func makeDefaultTwoVsTwoMatches(
         playerNames: [String],
         activeFlags: [Bool],
+        includedFlags: [Bool] = Array(repeating: true, count: MAX_PLAYERS),
         scoringMode: NassauScoringMode = .net,
         stake: Double = 1.0
     ) -> [NassauMatch] {
@@ -349,49 +352,39 @@ enum NassauEngine {
 
         let activePlayers = (0..<seats).filter { idx in
             activeFlags[idx] &&
+            (idx < includedFlags.count && includedFlags[idx]) &&
             !playerNames[idx].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
 
         guard activePlayers.count >= 4 else { return [] }
 
-        let firstFour = Array(activePlayers.prefix(4))
-
-        let a = firstFour[0]
-        let b = firstFour[1]
-        let c = firstFour[2]
-        let d = firstFour[3]
-
-        let aName = playerNames[a].isEmpty ? "P\(a + 1)" : playerNames[a]
-        let bName = playerNames[b].isEmpty ? "P\(b + 1)" : playerNames[b]
-        let cName = playerNames[c].isEmpty ? "P\(c + 1)" : playerNames[c]
-        let dName = playerNames[d].isEmpty ? "P\(d + 1)" : playerNames[d]
-
-        return [
-            NassauMatch(
-                title: "\(aName) & \(bName) vs \(cName) & \(dName)",
-                format: .twoVsTwo,
-                team1PlayerIndexes: [a, b],
-                team2PlayerIndexes: [c, d],
-                scoringMode: scoringMode,
-                stake: stake
-            ),
-            NassauMatch(
-                title: "\(aName) & \(cName) vs \(bName) & \(dName)",
-                format: .twoVsTwo,
-                team1PlayerIndexes: [a, c],
-                team2PlayerIndexes: [b, d],
-                scoringMode: scoringMode,
-                stake: stake
-            ),
-            NassauMatch(
-                title: "\(aName) & \(dName) vs \(bName) & \(cName)",
-                format: .twoVsTwo,
-                team1PlayerIndexes: [a, d],
-                team2PlayerIndexes: [b, c],
-                scoringMode: scoringMode,
-                stake: stake
-            )
-        ]
+        var matches: [NassauMatch] = []
+        let n = activePlayers.count
+        for i in 0..<n {
+            for j in (i + 1)..<n {
+                for k in (i + 1)..<n {
+                    guard k != j else { continue }
+                    for l in (k + 1)..<n {
+                        guard l != i && l != j else { continue }
+                        let a = activePlayers[i]; let b = activePlayers[j]
+                        let c = activePlayers[k]; let d = activePlayers[l]
+                        let aName = playerNames[a].isEmpty ? "P\(a + 1)" : playerNames[a]
+                        let bName = playerNames[b].isEmpty ? "P\(b + 1)" : playerNames[b]
+                        let cName = playerNames[c].isEmpty ? "P\(c + 1)" : playerNames[c]
+                        let dName = playerNames[d].isEmpty ? "P\(d + 1)" : playerNames[d]
+                        matches.append(NassauMatch(
+                            title: "\(aName) & \(bName) vs \(cName) & \(dName)",
+                            format: .twoVsTwo,
+                            team1PlayerIndexes: [a, b],
+                            team2PlayerIndexes: [c, d],
+                            scoringMode: scoringMode,
+                            stake: stake
+                        ))
+                    }
+                }
+            }
+        }
+        return matches
     }
 
     // MARK: - Recalculate State

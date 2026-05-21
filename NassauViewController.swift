@@ -53,6 +53,7 @@ final class NassauViewController: UIViewController {
     }
 
     private func renderSummary() {
+        print("DEBUG renderSummary - playerIncluded: \(GameManager.shared.currentGame?.nassauState?.playerIncluded ?? [])")
         guard var workingGame = gameData ?? GameManager.shared.currentGame else {
             textView.text = "No game data available."
             return
@@ -73,16 +74,55 @@ final class NassauViewController: UIViewController {
             ) {
 
             GameManager.shared.update { g in
-                g.nassauState = NassauEngine.makeDefaultState(
+                let savedIncluded = g.nassauState?.playerIncluded
+                print("DEBUG savedIncluded: \(savedIncluded ?? [])")
+                var newState = NassauEngine.makeDefaultState(
                     playerNames: g.playerNames,
                     activeFlags: g.playerActivated
                 )
+                if let saved = savedIncluded {
+                    newState.playerIncluded = saved
+                    print("DEBUG newState.playerIncluded after restore: \(newState.playerIncluded)")
+                    newState.oneVsOneMatches = NassauEngine.makeAllOneVsOneMatches(
+                        playerNames: g.playerNames,
+                        activeFlags: g.playerActivated,
+                        includedFlags: saved,
+                        scoringMode: .net,
+                        stake: newState.settings.baseStake
+                    )
+                    newState.twoVsTwoMatches = NassauEngine.makeDefaultTwoVsTwoMatches(
+                        playerNames: g.playerNames,
+                        activeFlags: g.playerActivated,
+                        includedFlags: saved,
+                        scoringMode: .net,
+                        stake: newState.settings.baseStake
+                    )
+                }
+                g.nassauState = newState
                 g.recalculateNassauIfNeeded()
+                print("DEBUG final playerIncluded: \(g.nassauState?.playerIncluded ?? [])")
+                print("DEBUG 1v1 count: \(g.nassauState?.oneVsOneMatches.count ?? -1)")
+                print("DEBUG 2v2 count: \(g.nassauState?.twoVsTwoMatches.count ?? -1)")
             }
 
             workingGame = GameManager.shared.currentGame ?? workingGame
         } else {
             if var state = workingGame.nassauState {
+                let included = state.playerIncluded
+                state.oneVsOneMatches = NassauEngine.makeAllOneVsOneMatches(
+                    playerNames: workingGame.playerNames,
+                    activeFlags: workingGame.playerActivated,
+                    includedFlags: included,
+                    scoringMode: .net,
+                    stake: state.settings.baseStake
+                )
+                state.twoVsTwoMatches = NassauEngine.makeDefaultTwoVsTwoMatches(
+                    playerNames: workingGame.playerNames,
+                    activeFlags: workingGame.playerActivated,
+                    includedFlags: included,
+                    scoringMode: .net,
+                    stake: state.settings.baseStake
+                )
                 NassauEngine.recalculate(state: &state, gameData: workingGame)
                 workingGame.nassauState = state
             }
@@ -168,21 +208,7 @@ final class NassauViewController: UIViewController {
             action: #selector(editMatchesTapped)
         )
 
-        guard let state = gameData?.nassauState else {
-            navigationItem.rightBarButtonItem = nil
-            return
-        }
-
-        if state.settings.pressMode == .manual {
-            navigationItem.rightBarButtonItem = UIBarButtonItem(
-                title: "Add Press",
-                style: .plain,
-                target: self,
-                action: #selector(addPressTapped)
-            )
-        } else {
-            navigationItem.rightBarButtonItem = nil
-        }
+        navigationItem.rightBarButtonItem = nil
     }
 
     @objc private func editMatchesTapped() {
@@ -229,6 +255,7 @@ final class NassauViewController: UIViewController {
         let allMatches = NassauEngine.makeAllOneVsOneMatches(
             playerNames: game.playerNames,
             activeFlags: game.playerActivated,
+            includedFlags: state.playerIncluded,
             scoringMode: .net,
             stake: state.settings.baseStake
         )
@@ -289,6 +316,7 @@ final class NassauViewController: UIViewController {
         let allMatches = NassauEngine.makeDefaultTwoVsTwoMatches(
             playerNames: game.playerNames,
             activeFlags: game.playerActivated,
+            includedFlags: state.playerIncluded,
             scoringMode: .net,
             stake: state.settings.baseStake
         )
@@ -342,37 +370,6 @@ final class NassauViewController: UIViewController {
         present(ac, animated: true)
     }
     
-    @objc private func addPressTapped() {
-        guard let game = gameData,
-              let state = game.nassauState,
-              state.settings.pressMode == .manual else { return }
-
-        let ac = UIAlertController(
-            title: "Add Press",
-            message: "Choose a match",
-            preferredStyle: .actionSheet
-        )
-
-        for (index, match) in state.oneVsOneMatches.enumerated() {
-            ac.addAction(UIAlertAction(title: match.title, style: .default) { [weak self] _ in
-                self?.showSegmentPicker(matchIndex: index, isTwoVsTwo: false)
-            })
-        }
-
-        for (index, match) in state.twoVsTwoMatches.enumerated() {
-            ac.addAction(UIAlertAction(title: match.title, style: .default) { [weak self] _ in
-                self?.showSegmentPicker(matchIndex: index, isTwoVsTwo: true)
-            })
-        }
-
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        if let pop = ac.popoverPresentationController {
-            pop.barButtonItem = navigationItem.rightBarButtonItem
-        }
-
-        present(ac, animated: true)
-    }
     func presentSettingsFromContainer() {
         guard let game = GameManager.shared.currentGame,
               let state = game.nassauState else { return }
@@ -400,12 +397,6 @@ final class NassauViewController: UIViewController {
         ac.addAction(UIAlertAction(title: pressModeTitle, style: .default) { [weak self] _ in
             self?.showPressModePicker()
         })
-
-        if state.settings.pressMode == .manual {
-            ac.addAction(UIAlertAction(title: "Add Manual Press", style: .default) { [weak self] _ in
-                self?.addPressTapped()
-            })
-        }
 
         if state.settings.pressMode == .auto {
             ac.addAction(UIAlertAction(title: "Set Trigger (\(state.settings.autoPressTriggerDown) down)", style: .default) { [weak self] _ in
@@ -495,10 +486,6 @@ final class NassauViewController: UIViewController {
 
         ac.addAction(UIAlertAction(title: "Auto\(state.settings.pressMode == .auto ? " ✓" : "")", style: .default) { [weak self] _ in
             self?.setPressMode(.auto)
-        })
-
-        ac.addAction(UIAlertAction(title: "Manual\(state.settings.pressMode == .manual ? " ✓" : "")", style: .default) { [weak self] _ in
-            self?.setPressMode(.manual)
         })
 
         ac.addAction(UIAlertAction(title: "Off\(state.settings.pressMode == .off ? " ✓" : "")", style: .default) { [weak self] _ in

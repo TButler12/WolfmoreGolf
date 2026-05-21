@@ -19,12 +19,6 @@ final class StatsContainerViewController: UIViewController {
         view.backgroundColor = .systemBackground
         title = "Results and Game Settings"
 
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "gearshape"),
-            style: .plain,
-            target: self,
-            action: #selector(settingsTapped)
-        )
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .done,
             target: self,
@@ -43,6 +37,8 @@ final class StatsContainerViewController: UIViewController {
     // MARK: - Setup
     private func setupUI() {
         statsSegment.selectedSegmentIndex = 0
+        statsSegment.selectedSegmentTintColor = UIColor(red: 0.10, green: 0.35, blue: 0.20, alpha: 1.0)
+        statsSegment.setTitleTextAttributes([.foregroundColor: UIColor.white], for: .selected)
         statsSegment.addTarget(self, action: #selector(segChanged), for: .valueChanged)
         statsSegment.translatesAutoresizingMaskIntoConstraints = false
 
@@ -71,23 +67,6 @@ final class StatsContainerViewController: UIViewController {
     // MARK: - Stats tab switching
     @objc private func segChanged() {
         switchTo(index: statsSegment.selectedSegmentIndex)
-    }
-
-    @objc private func settingsTapped() {
-        let sb = UIStoryboard(name: "Main", bundle: nil)
-        switch statsSegment.selectedSegmentIndex {
-        case 0:
-            let vc = sb.instantiateViewController(withIdentifier: "GameSettingsViewController") as! GameSettingsViewController
-            navigationController?.pushViewController(vc, animated: true)
-        case 1:
-            nassauVC.presentSettingsFromContainer()
-        case 2:
-            let vc = SkinsSettingsViewController()
-            vc.gameData = GameManager.shared.currentGame
-            navigationController?.pushViewController(vc, animated: true)
-        default:
-            break
-        }
     }
 
     private func switchTo(index: Int) {

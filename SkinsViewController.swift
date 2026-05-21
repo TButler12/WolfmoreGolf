@@ -30,7 +30,6 @@ final class SkinsViewController: UIViewController {
 
     private func setupUI() {
         navigationItem.rightBarButtonItems = [
-           // UIBarButtonItem(title: "Manual", style: .plain, target: self, action: #selector(manualTapped)),
             UIBarButtonItem(title: "Settings", style: .plain, target: self, action: #selector(settingsTapped))
         ]
 
@@ -140,15 +139,6 @@ final class SkinsViewController: UIViewController {
 
         let ac = UIAlertController(title: "Skins Settings", message: nil, preferredStyle: .actionSheet)
 
-        // MODE
-        ac.addAction(UIAlertAction(
-            title: "Mode: \(skins.settings.mode == .automatic ? "Automatic" : "Manual")",
-            style: .default
-        ) { _ in
-            skins.settings.mode = (skins.settings.mode == .automatic) ? .manual : .automatic
-            self.saveUpdatedState(skins, into: data)
-        })
-
         // SKIN VALUE 💰
         ac.addAction(UIAlertAction(title: "Set Skin Value ($\(skins.settings.skinValue))", style: .default) { _ in
             let prompt = UIAlertController(title: "Skin Value", message: "Enter amount per skin", preferredStyle: .alert)
@@ -239,63 +229,6 @@ final class SkinsViewController: UIViewController {
 
         present(ac, animated: true)
     }
-    @objc private func manualTapped() {
-        guard var data = gameData,
-              var skins = data.skinsState else { return }
-
-        let hole = max(0, min(17, data.hole))
-        let activeIndexes = data.playerActivated.enumerated().compactMap { $0.element ? $0.offset : nil }
-
-        let ac = UIAlertController(
-            title: "Manual Skins Result",
-            message: "Hole \(hole + 1)",
-            preferredStyle: .actionSheet
-        )
-
-        for idx in activeIndexes {
-            let name = displayName(for: idx, data: data)
-            ac.addAction(UIAlertAction(title: "\(name) wins", style: .default) { _ in
-                skins.manualOverridesByHole[hole] = ManualSkinsHoleDecision(
-                    winnerIndexes: [idx],
-                    shouldCarryOver: false,
-                    awardedSkinCount: nil
-                )
-                self.saveUpdatedState(skins, into: data)
-            })
-        }
-
-        ac.addAction(UIAlertAction(title: "Carryover", style: .default) { _ in
-            skins.manualOverridesByHole[hole] = ManualSkinsHoleDecision(
-                winnerIndexes: [],
-                shouldCarryOver: true,
-                awardedSkinCount: nil
-            )
-            self.saveUpdatedState(skins, into: data)
-        })
-
-        ac.addAction(UIAlertAction(title: "No Skin", style: .default) { _ in
-            skins.manualOverridesByHole[hole] = ManualSkinsHoleDecision(
-                winnerIndexes: [],
-                shouldCarryOver: false,
-                awardedSkinCount: 0
-            )
-            self.saveUpdatedState(skins, into: data)
-        })
-
-        ac.addAction(UIAlertAction(title: "Clear Manual Override", style: .destructive) { _ in
-            skins.manualOverridesByHole[hole] = nil
-            self.saveUpdatedState(skins, into: data)
-        })
-
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        if let pop = ac.popoverPresentationController {
-            pop.barButtonItem = navigationItem.rightBarButtonItems?.first
-        }
-
-        present(ac, animated: true)
-    }
-
     private func saveUpdatedState(_ state: SkinsState, into data: GameData) {
         var updated = data
         updated.skinsState = state
