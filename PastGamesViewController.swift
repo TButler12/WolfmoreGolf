@@ -8,6 +8,8 @@ private struct GameSummary {
     let courseID: String
     let playerCount: Int
     let userMoney: Int
+    let gameType: GameType?
+    let winnerPoints: Int?  // populated for .tournament rounds only
 }
 
 // MARK: - Cell
@@ -61,7 +63,15 @@ private final class PastGameCell: UITableViewCell {
         dateLabel.text = Self.relativeDate(summary.date)
 
         let players = "\(summary.playerCount) player\(summary.playerCount == 1 ? "" : "s")"
-        if summary.userMoney > 0 {
+
+        if summary.gameType == .tournament {
+            if let pts = summary.winnerPoints {
+                detailLabel.text = "Tournament · \(players) · \(pts) pts"
+            } else {
+                detailLabel.text = "Tournament · \(players)"
+            }
+            detailLabel.textColor = .systemOrange
+        } else if summary.userMoney > 0 {
             detailLabel.text      = "\(players) · You: $\(summary.userMoney)"
             detailLabel.textColor = .systemGreen
         } else if summary.userMoney < 0 {
@@ -181,16 +191,27 @@ final class PastGamesViewController: UIViewController {
 
         games = grouped.compactMap { _, playerRows in
             guard let first = playerRows.first else { return nil }
+            let gameType = first.gameTypePerHole?.first
+
             let userRow = userName.isEmpty ? nil : playerRows.first {
                 $0.playerName.trimmingCharacters(in: .whitespacesAndNewlines)
                     .caseInsensitiveCompare(userName) == .orderedSame
             }
+
+            // For tournament rounds, totalMoney stores Stableford points (set by recordTournamentGame).
+            // winnerPoints = highest totalMoney across all player rows.
+            let winnerPoints: Int? = gameType == .tournament
+                ? playerRows.map(\.totalMoney).max()
+                : nil
+
             return GameSummary(
-                gameID:      first.gameID,
-                date:        first.date,
-                courseID:    first.courseID,
-                playerCount: playerRows.count,
-                userMoney:   userRow?.totalMoney ?? 0
+                gameID:       first.gameID,
+                date:         first.date,
+                courseID:     first.courseID,
+                playerCount:  playerRows.count,
+                userMoney:    gameType == .tournament ? 0 : (userRow?.totalMoney ?? 0),
+                gameType:     gameType,
+                winnerPoints: winnerPoints
             )
         }
         .sorted { $0.date > $1.date }

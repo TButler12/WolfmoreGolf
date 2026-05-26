@@ -224,6 +224,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             case .wolf:           segment.selectedSegmentIndex = 1
             case .wolfLowBall:    segment.selectedSegmentIndex = 2
             case .hammer:         segment.selectedSegmentIndex = 0
+            case .tournament:     break  // TODO: tournament — segment hidden in this mode
             }
         }
 

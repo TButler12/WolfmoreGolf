@@ -24,6 +24,7 @@ final class ManagePlayersViewController: UIViewController,
     // MARK: - UI refs
     private weak var addUIButton: UIButton?
     private weak var startRoundButton: UIButton?
+    private weak var quickStartButton: UIButton?
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -36,6 +37,8 @@ final class ManagePlayersViewController: UIViewController,
             startRoundButton = btn
             styleStartButton(btn)
         }
+
+        buildQuickStartFooter()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -556,6 +559,55 @@ final class ManagePlayersViewController: UIViewController,
             return nil
         }
         return search(view)
+    }
+
+    // MARK: - Quick Start
+
+    private func buildQuickStartFooter() {
+        var cfg = UIButton.Configuration.tinted()
+        cfg.title = "⚡ Quick Start"
+        cfg.subtitle = "Skip contacts · type player names on next screen"
+        cfg.baseBackgroundColor = .systemOrange
+        cfg.baseForegroundColor = .systemOrange
+        cfg.cornerStyle = .large
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 15, weight: .semibold); return a
+        }
+        cfg.subtitleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 12, weight: .regular); return a
+        }
+
+        let btn = UIButton(configuration: cfg)
+        btn.addTarget(self, action: #selector(quickStartTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        quickStartButton = btn
+
+        view.addSubview(btn)
+
+        // Anchor between the Start Round button and the Home/Close button.
+        // The storyboard Start Round button sits at y≈630 and the Home button at y≈762,
+        // so this centreX + midpoint placement lands in that gap on all device sizes.
+        guard let startBtn = startRoundButton else { return }
+        let closeBtn = button(forAction: #selector(closeTapped(_:)))
+
+        var constraints: [NSLayoutConstraint] = [
+            btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            btn.topAnchor.constraint(equalTo: startBtn.bottomAnchor, constant: 14),
+            btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+            btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
+        ]
+        if let closeBtn {
+            constraints.append(btn.bottomAnchor.constraint(lessThanOrEqualTo: closeBtn.topAnchor, constant: -12))
+        }
+        NSLayoutConstraint.activate(constraints)
+    }
+
+    @objc private func quickStartTapped() {
+        let rawName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = (rawName.isEmpty || rawName == "Player 1") ? "Player 1" : rawName
+        let me = Friend(name: name, defaultHC: ProfileStore.myHC)
+        configureGameRosterAndPresentRoundNav(with: [me])
     }
 
     private func configureGameRosterAndPresentRoundNav(with active: [Friend]) {

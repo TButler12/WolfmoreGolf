@@ -224,8 +224,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
         GameManager.shared.normalizeCurrentIfNeeded()
         
-        // Seed any missing scores with pars (only affects nils)
-        GameManager.shared.seedScoresWithParsForActivePlayers()
+        // Tournament mode uses nil scores to distinguish unplayed holes (for Stableford).
+        // Seeding with par would cause unplayed holes to count as 1 pt each.
+        if GameManager.shared.currentGame?.resolvedGameType != .tournament {
+            GameManager.shared.seedScoresWithParsForActivePlayers()
+        }
         
         // ✅ Apply mode-based visibility (Wolf vs 6-point)
         applyGameTypeUI()
@@ -605,6 +608,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func refreshTotalMoneyLabels() {
         guard let g = GameManager.shared.currentGame else { return }
+        if g.resolvedGameType == .tournament {
+            refreshTournamentTotalPoints(g: g)
+            return
+        }
      
 
         let current = max(0, min(17, g.hole))
@@ -768,9 +775,22 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             g.playerActivated[$0] &&
             !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
-        let baseHC = activeSeats.map { g.hcPlayers[$0] }.min() ?? 0
+        let isTournament = g.resolvedGameType == .tournament
+        // Tournament uses absolute HC (0 baseline) so every player's dots reflect their own HC.
+        // Wolf/Scotch uses relative HC (min-player baseline) so only strokes vs. the field show.
+        let baseHC = isTournament ? 0 : (activeSeats.map { g.hcPlayers[$0] }.min() ?? 0)
+        let sortedNameLabels = playerNameLabels.sorted(by: { $0.tag < $1.tag })
 
-        for (i, label) in playerNameLabels.sorted(by: { $0.tag < $1.tag }).enumerated() {
+        for (i, label) in sortedNameLabels.enumerated() {
+            // Slot 4 in tournament mode = Team row
+            if isTournament && i == 4 {
+                label.attributedText = nil
+                label.text = "Team"
+                label.font = UIFont.boldSystemFont(ofSize: label.font.pointSize)
+                label.textColor = .systemBlue
+                continue
+            }
+
             let seat = order[safe: i] ?? i
             let name = (seat < g.playerNames.count) ? g.playerNames[seat] : ""
 
@@ -823,8 +843,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let hole = max(0, min(17, g.hole))
         let order = displayOrder
+        let isTournament = g.resolvedGameType == .tournament
 
         for (slot, b) in wolfButtons.enumerated() {
+            if isTournament && slot == 4 {
+                b.isHidden = true
+                continue
+            }
+            b.isHidden = false
             let seat = order[safe: slot] ?? slot
             b.tag = seat
             guard (0..<MAX_PLAYERS).contains(seat),
@@ -1025,8 +1051,26 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         case .sixPointScotch: gameModeSegment.selectedSegmentIndex = 0
         case .wolf:           gameModeSegment.selectedSegmentIndex = 1
         case .wolfLowBall:    gameModeSegment.selectedSegmentIndex = 2
-        case .hammer:         gameModeSegment.selectedSegmentIndex = 0   // since we treat as scotch
+        case .hammer:         gameModeSegment.selectedSegmentIndex = 0
+        case .tournament:     break
         }
+
+        // Tournament-only: scorecard shortcut in the nav bar
+        if t == .tournament {
+            navigationItem.rightBarButtonItem = UIBarButtonItem(
+                title: "Scorecard", style: .plain,
+                target: self, action: #selector(scorecardTapped)
+            )
+        } else {
+            navigationItem.rightBarButtonItem = nil
+        }
+    }
+
+    @objc private func scorecardTapped() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let vc = TournamentScorecardViewController(game: g)
+        let nav = UINavigationController(rootViewController: vc)
+        present(nav, animated: true)
     }
     
     private func roundToHalf(_ x: Double) -> Double {
@@ -1441,8 +1485,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let h = g.hole
         let order = displayOrder
+        let isTournament = g.resolvedGameType == .tournament
         let slots = min(scoreFields.count, MAX_PLAYERS)
         for s in 0..<slots {
+            if isTournament && s == 4 {
+                scoreFields[s].text = ""
+                scoreFields[s].isEnabled = false
+                scoreFields[s].backgroundColor = UIColor.systemGray6
+                continue
+            }
             let seat = order[safe: s] ?? s
             let v = (seat < g.scores.count && h < g.scores[seat].count) ? g.scores[seat][h] : nil
             scoreFields[s].text = v.map(String.init) ?? ""
@@ -2264,10 +2315,26 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
             guard let game = GameManager.shared.currentGame else { return }
+            if game.resolvedGameType == .tournament {
+                // End of round when the last hole of the 18-hole loop is scored.
+                // For front-nine start: endHole = 17. Back-nine start: endHole = 8.
+                let endHole = (game.tournamentStartHole + 17) % STANDARD_HOLES
+                if hole == endHole {
+                    self.presentTournamentSummary()
+                }
+                return  // suppress stats prompt for all tournament holes
+            }
             guard !game.holeStatsPromptMuted else { return }
-
             self.presentStatsPrompt()
         }
+    }
+
+    private func presentTournamentSummary() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let vc = TournamentSummaryViewController(game: g)
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
     }
  
     private func presentStatsPrompt() {
@@ -2523,6 +2590,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func refreshMoneyFieldsForCurrentHole() {
         guard let g = GameManager.shared.currentGame else { return }
         let h = g.hole
+        if g.resolvedGameType == .tournament {
+            refreshTournamentHolePoints(g: g, hole: h)
+            return
+        }
         let order = displayOrder
         let slots = min(playerMoneyFields.count, MAX_PLAYERS)
         for s in 0..<slots {
@@ -2531,6 +2602,44 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let whole = Int(raw.rounded())
             setMoneyField(playerMoneyFields[s], to: whole)
             playerMoneyFields[s].tag = seat
+        }
+    }
+
+    private func refreshTournamentHolePoints(g: GameData, hole: Int) {
+        let order = displayOrder
+        let playerSlots = min(4, playerMoneyFields.count, MAX_PLAYERS)
+        for s in 0..<playerSlots {
+            let seat = order[safe: s] ?? s
+            let hc   = g.hcPlayers[safe: seat] ?? 0
+            let par  = g.courseParToPass[safe: hole] ?? 4
+            let si   = g.courseHCToPass[safe: hole] ?? (hole + 1)
+            let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
+            let pts = GameManager.shared.stablefordPoints(
+                grossScore: gross, par: par, playerHC: hc, strokeIndex: si
+            ) ?? 0
+            setMoneyField(playerMoneyFields[s], to: pts)
+            playerMoneyFields[s].tag = seat
+        }
+        // Slot 4 = Team row: top-3 Stableford sum for this hole
+        if playerMoneyFields.count > 4 {
+            let teamPts = GameManager.shared.teamHoleScore(hole: hole, game: g)
+            setMoneyField(playerMoneyFields[4], to: teamPts)
+            playerMoneyFields[4].isUserInteractionEnabled = false
+        }
+    }
+
+    private func refreshTournamentTotalPoints(g: GameData) {
+        let order = displayOrder
+        let playerSlots = min(4, totalMoneyLabels.count, MAX_PLAYERS)
+        for i in 0..<playerSlots {
+            let seat = order[safe: i] ?? i
+            let pts = GameManager.shared.totalStablefordPoints(playerIndex: seat, game: g)
+            setTotalMoneyLabel(totalMoneyLabels[i], Double(pts))
+        }
+        // Slot 4 = Team row: running team total
+        if totalMoneyLabels.count > 4 {
+            let teamTotal = GameManager.shared.runningTeamStablefordTotal(game: g)
+            setTotalMoneyLabel(totalMoneyLabels[4], Double(teamTotal))
         }
     }
 
@@ -2625,8 +2734,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let hole = max(0, min(17, g.hole))
         let winner = (0..<g.proxWinnerPerHole.count).contains(hole) ? g.proxWinnerPerHole[hole] : nil
         let order = displayOrder
+        let isTournament = g.resolvedGameType == .tournament
 
         for (slot, b) in proxButtons.enumerated() {
+            if isTournament && slot == 4 {
+                b.isHidden = true
+                continue
+            }
+            b.isHidden = false
             let seat = order[safe: slot] ?? slot
             b.tag = seat
             let isOn = (winner == seat)

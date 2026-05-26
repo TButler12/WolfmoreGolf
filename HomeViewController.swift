@@ -23,6 +23,7 @@ final class ViewController: UIViewController {
 
     // MARK: - State
     private var shouldPromptForName = false
+    private weak var tournamentButton: UIButton?
 
     // MARK: - Keys
     private let didPromptHomeCourseKey = "profile.didPromptHomeCourse_v1"
@@ -65,6 +66,7 @@ final class ViewController: UIViewController {
         refreshBottomButtons()
 
         fixIconButton(editCourseButton)
+        buildTournamentButton()
 
         NotificationCenter.default.addObserver(
             self,
@@ -451,11 +453,12 @@ final class ViewController: UIViewController {
     }
 
     private func confirmStartNewGame() {
-        let ac = UIAlertController(
-            title: "Start New Game?",
-            message: "This will delete your previous game data.",
-            preferredStyle: .alert
-        )
+        let isTournamentActive = (GameManager.shared.currentGame?.resolvedGameType == .tournament)
+            && (GameManager.shared.currentGame?.holeCommitted.contains(true) ?? false)
+        let message = isTournamentActive
+            ? "This will delete your current Stableford round."
+            : "This will delete your previous game data."
+        let ac = UIAlertController(title: "Start New Game?", message: message, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
             GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
             self?.presentManagePlayers()
@@ -699,6 +702,95 @@ final class ViewController: UIViewController {
         })
 
         present(ac, animated: true)
+    }
+
+    // MARK: - Tournament entry point
+
+    private func buildTournamentButton() {
+        let btn = UIButton(type: .system)
+        var cfg = styledButton(title: "Stableford", style: .primary)
+        cfg.baseBackgroundColor = UIColor(red: 0.22, green: 0.62, blue: 0.34, alpha: 1.0)
+        btn.configuration = cfg
+        btn.addTarget(self, action: #selector(tournamentTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        tournamentButton = btn
+        view.addSubview(btn)
+        // Anchor below courseButton (y≈542), which sits in the 148-pt gap before the chip row.
+        // Anchoring below playGameButton (y≈461) would overlap courseButton at y=482.
+        NSLayoutConstraint.activate([
+            btn.centerXAnchor.constraint(equalTo: courseButton.centerXAnchor),
+            btn.topAnchor.constraint(equalTo: courseButton.bottomAnchor, constant: 10),
+            btn.widthAnchor.constraint(equalTo: courseButton.widthAnchor),
+        ])
+    }
+
+    @objc private func tournamentTapped() {
+        // Ensure the saved game is loaded into memory so we can inspect its type.
+        if GameManager.shared.currentGame == nil {
+            _ = GameManager.shared.loadLastOpened(notify: false)
+        }
+        let current = GameManager.shared.currentGame
+
+        if current?.resolvedGameType == .tournament {
+            let hasHolesPlayed = current?.holeCommitted.contains(true) ?? false
+            if hasHolesPlayed {
+                // Active tournament — offer continue or new
+                let ac = UIAlertController(title: "Tournament in Progress",
+                                           message: nil, preferredStyle: .actionSheet)
+                ac.addAction(UIAlertAction(title: "Continue Tournament", style: .default) { [weak self] _ in
+                    self?.performSegue(withIdentifier: "showPlayerSetup", sender: self)
+                })
+                ac.addAction(UIAlertAction(title: "New Tournament", style: .destructive) { [weak self] _ in
+                    self?.confirmNewTournament()
+                })
+                ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                if let pop = ac.popoverPresentationController {
+                    pop.sourceView = tournamentButton ?? view
+                    pop.sourceRect = tournamentButton?.bounds ?? view.bounds
+                }
+                present(ac, animated: true)
+            } else {
+                // Tournament set up but no holes played yet — go straight to player setup
+                performSegue(withIdentifier: "showPlayerSetup", sender: self)
+            }
+        } else if GameManager.shared.hasSavedGame {
+            // Different game type in progress — warn before wiping
+            let ac = UIAlertController(
+                title: "Start Stableford?",
+                message: "This will delete your previous game data.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Start Stableford", style: .destructive) { [weak self] _ in
+                self?.launchTournament()
+            })
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            present(ac, animated: true)
+        } else {
+            launchTournament()
+        }
+    }
+
+    private func confirmNewTournament() {
+        let ac = UIAlertController(
+            title: "Start New Tournament?",
+            message: "This will delete your current tournament data.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Start New", style: .destructive) { [weak self] _ in
+            self?.launchTournament()
+        })
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(ac, animated: true)
+    }
+
+    private func launchTournament() {
+        if GameManager.shared.currentGame == nil {
+            GameManager.shared.startNewGame()
+        } else {
+            GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
+        }
+        GameManager.shared.update { g in g.gameType = .tournament }
+        presentManagePlayers()
     }
 
     // MARK: - Helpers

@@ -74,6 +74,7 @@ struct GameData: Codable {
     var playerActivated: [Bool] = Array(repeating: false, count: MAX_PLAYERS)
 
     var hole: Int = 0
+    var tournamentStartHole: Int = 0  // 0 = front nine (hole 1), 9 = back nine (hole 10)
 
     var isUmbrella: Bool = false
     var isPressOn: Bool = false

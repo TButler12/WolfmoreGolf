@@ -46,7 +46,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         settingsCfg.image = UIImage(systemName: "gearshape.fill")
         settingsCfg.imagePlacement = .leading
         settingsCfg.imagePadding = 8
-        settingsCfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.35, blue: 0.20, alpha: 1.0)
+        settingsCfg.baseBackgroundColor = UIColor.systemOrange
         settingsCfg.baseForegroundColor = .white
         settingsCfg.cornerStyle = .large
         settingsCfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
@@ -832,6 +832,48 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             return
         }
 
+        if GameManager.shared.currentGame?.resolvedGameType == .tournament {
+            let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
+            if activeCount != 4 {
+                let ac = UIAlertController(
+                    title: "Tournament Requires 4 Players",
+                    message: "Please activate exactly 4 players to start a tournament round.",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                present(ac, animated: true)
+                return
+            }
+            // Resuming a round that already has committed holes — go straight to game
+            let hasStarted = GameManager.shared.currentGame?.holeCommitted.contains(true) ?? false
+            if hasStarted {
+                pushGameVC()
+                return
+            }
+
+            // Ask which nine to start on
+            let ac = UIAlertController(title: "Starting Hole", message: nil, preferredStyle: .actionSheet)
+            ac.addAction(UIAlertAction(title: "Start on Hole 1 (Front Nine)", style: .default) { [weak self] _ in
+                GameManager.shared.update { g in g.hole = 0; g.tournamentStartHole = 0 }
+                self?.pushGameVC()
+            })
+            ac.addAction(UIAlertAction(title: "Start on Hole 10 (Back Nine)", style: .default) { [weak self] _ in
+                GameManager.shared.update { g in g.hole = 9; g.tournamentStartHole = 9 }
+                self?.pushGameVC()
+            })
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            if let pop = ac.popoverPresentationController {
+                pop.sourceView = view
+                pop.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.maxY, width: 0, height: 0)
+            }
+            present(ac, animated: true)
+            return
+        }
+
+        pushGameVC()
+    }
+
+    private func pushGameVC() {
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let game = sb.instantiateViewController(withIdentifier: "GameViewController")
         navigationController?.pushViewController(game, animated: true)

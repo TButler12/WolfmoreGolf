@@ -79,6 +79,7 @@ extension GameManager {
             case .wolf:           return 1
             case .wolfLowBall:    return 0   // low ball only
             case .hammer:         return 2   // treat like scotch scoring
+            case .tournament:     return 0   // TODO: tournament — no wolf payouts
             }
         }()
 
@@ -183,6 +184,12 @@ extension GameManager {
             // ✅ Wolf Low Ball only: 1 point max
             wolfTeamScore = wolfLowBall
             nonTeamScore  = nonLowBall
+
+        case .tournament:
+            // TODO: tournament — Stableford points are per-player, not team-based.
+            // computeHolePayout is irrelevant for tournament mode; return zeros.
+            wolfTeamScore = 0
+            nonTeamScore  = 0
         }
 
         // ---------------------------------------------------------
