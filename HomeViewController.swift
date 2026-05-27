@@ -76,6 +76,12 @@ final class ViewController: UIViewController {
         )
     }
 
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let tb = tournamentButton else { return }
+        courseButton.frame.origin.y = tb.frame.maxY + 16
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         updateWelcome()
@@ -718,9 +724,9 @@ final class ViewController: UIViewController {
         // Anchor below courseButton (y≈542), which sits in the 148-pt gap before the chip row.
         // Anchoring below playGameButton (y≈461) would overlap courseButton at y=482.
         NSLayoutConstraint.activate([
-            btn.centerXAnchor.constraint(equalTo: courseButton.centerXAnchor),
-            btn.topAnchor.constraint(equalTo: courseButton.bottomAnchor, constant: 10),
-            btn.widthAnchor.constraint(equalTo: courseButton.widthAnchor),
+            btn.centerXAnchor.constraint(equalTo: playGameButton.centerXAnchor),
+            btn.topAnchor.constraint(equalTo: playGameButton.bottomAnchor, constant: 16),
+            btn.widthAnchor.constraint(equalTo: playGameButton.widthAnchor),
         ])
     }
 

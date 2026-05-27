@@ -145,7 +145,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
 
         let ac = UIAlertController(
             title: "Save Round to History?",
-            message: "This will save stats for you and any tracked friends on this card.",
+            message: "This will save stats for all players on this card.",
             preferredStyle: .alert
         )
         ac.addAction(UIAlertAction(title: "No", style: .cancel))
@@ -153,7 +153,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         ac.addAction(UIAlertAction(title: "Yes, Save", style: .default) { [weak self] _ in
             guard let self else { return }
 
-            self.recordMeAndTrackedFriendsFromCurrentGame()
+            RoundStore.shared.recordAllPlayersFromCurrentGame()
             self.maybeRequestReview()
 
             self.hasSavedThisOpen = true

@@ -29,7 +29,8 @@ private struct PlayerRow {
     let totalScore: Int?
     let totalMoney: Int
     let totalProx:  Int
-    let scores:     [Int?]   // 18 elements
+    let scores:     [Int?]   // 18 gross scores
+    let points:     [Int?]   // 18 Stableford pts (nil for non-tournament holes)
     let isMe:       Bool
     let fairways:   [Bool?]  // 18 elements
     let girs:       [Bool?]  // 18 elements
@@ -139,23 +140,33 @@ private final class LeaderboardCell: UITableViewCell {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    func configure(with row: PlayerRow) {
+    func configure(with row: PlayerRow, isTournament: Bool = false) {
         rankLabel.text  = "#\(row.rank)"
         nameLabel.text  = row.isMe ? "\(row.name) (You)" : row.name
-        scoreLabel.text = row.totalScore.map { "\($0)" } ?? "—"
 
-        let m = row.totalMoney
-        if m > 0 {
-            moneyLabel.text      = "$\(m)"
-            moneyLabel.textColor = .systemGreen
-        } else if m < 0 {
-            moneyLabel.text      = "$\(abs(m))"
-            moneyLabel.textColor = .systemRed
+        if isTournament {
+            scoreLabel.text      = row.totalScore.map { "\($0)" } ?? "—"
+            scoreLabel.textColor = .secondaryLabel
+            let pts = row.totalMoney
+            moneyLabel.text      = "\(pts) pts"
+            moneyLabel.textColor = pts > 0 ? .systemGreen : .secondaryLabel
+            proxLabel.text       = ""
         } else {
-            moneyLabel.text      = "$0"
-            moneyLabel.textColor = .secondaryLabel
+            scoreLabel.text = row.totalScore.map { "\($0)" } ?? "—"
+            scoreLabel.textColor = .label
+            let m = row.totalMoney
+            if m > 0 {
+                moneyLabel.text      = "$\(m)"
+                moneyLabel.textColor = .systemGreen
+            } else if m < 0 {
+                moneyLabel.text      = "$\(abs(m))"
+                moneyLabel.textColor = .systemRed
+            } else {
+                moneyLabel.text      = "$0"
+                moneyLabel.textColor = .secondaryLabel
+            }
+            proxLabel.text = "\(row.totalProx)"
         }
-        proxLabel.text = "\(row.totalProx)"
 
         contentView.backgroundColor = row.isMe
             ? UIColor.systemYellow.withAlphaComponent(0.15)
@@ -194,14 +205,17 @@ private final class ScorecardCell: UITableViewCell {
         outerStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
     }
 
-    func configure(players: [PlayerRow], pars: [Int]?) {
+    func configure(players: [PlayerRow], pars: [Int]?,
+                   isTournament: Bool = false, teamPts: [Int?] = []) {
         outerStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-        outerStack.addArrangedSubview(makeHalf("Front 9", 0..<9,  "Out", players, pars))
+        outerStack.addArrangedSubview(makeHalf("Front 9", 0..<9,  "Out", players, pars,
+                                               isTournament: isTournament, teamPts: teamPts))
         let div = UIView()
         div.backgroundColor = .separator
         div.heightAnchor.constraint(equalToConstant: 1).isActive = true
         outerStack.addArrangedSubview(div)
-        outerStack.addArrangedSubview(makeHalf("Back 9",  9..<18, "In",  players, pars))
+        outerStack.addArrangedSubview(makeHalf("Back 9",  9..<18, "In",  players, pars,
+                                               isTournament: isTournament, teamPts: teamPts))
     }
 
     // MARK: Grid builders
@@ -210,7 +224,9 @@ private final class ScorecardCell: UITableViewCell {
                           _ range: Range<Int>,
                           _ totalLabel: String,
                           _ players: [PlayerRow],
-                          _ pars: [Int]?) -> UIView {
+                          _ pars: [Int]?,
+                          isTournament: Bool = false,
+                          teamPts: [Int?] = []) -> UIView {
         let vStack = UIStackView()
         vStack.axis    = .vertical
         vStack.spacing = 1
@@ -224,9 +240,10 @@ private final class ScorecardCell: UITableViewCell {
         vStack.addArrangedSubview(titleLbl)
         vStack.setCustomSpacing(4, after: titleLbl)
 
-        // Hole number header row
+        // Hole number header row — "Pts" label for tournament
         let holeNums = Array(range).map { "\($0 + 1)" } + [totalLabel]
-        vStack.addArrangedSubview(makeRow("", holeNums, color: .secondaryLabel, bold: false))
+        let headerName = isTournament ? "Pts" : ""
+        vStack.addArrangedSubview(makeRow(headerName, holeNums, color: .secondaryLabel, bold: false))
 
         // Par row
         let parVals: [String]
@@ -247,15 +264,38 @@ private final class ScorecardCell: UITableViewCell {
 
         // One row per player
         for player in players {
-            guard player.scores.count == 18 else { continue }
-            let slice   = Array(player.scores[range])
-            let vals    = slice.map { s -> String in s.map { "\($0)" } ?? "—" }
+            if isTournament {
+                guard player.points.count == STANDARD_HOLES else { continue }
+                let slice    = Array(player.points[range])
+                let vals     = slice.map { p -> String in p.map { "\($0)" } ?? "·" }
+                let subtotal = slice.compactMap { $0 }.reduce(0, +)
+                let totStr   = slice.contains(where: { $0 != nil }) ? "\(subtotal)" : "·"
+                vStack.addArrangedSubview(
+                    makeRow(player.name, vals + [totStr], color: .label, bold: player.isMe)
+                )
+            } else {
+                guard player.scores.count == STANDARD_HOLES else { continue }
+                let slice    = Array(player.scores[range])
+                let vals     = slice.map { s -> String in s.map { "\($0)" } ?? "—" }
+                let subtotal = slice.compactMap { $0 }.reduce(0, +)
+                let totStr   = slice.contains(where: { $0 != nil }) ? "\(subtotal)" : "—"
+                vStack.addArrangedSubview(
+                    makeRow(player.name, vals + [totStr], color: .label, bold: player.isMe)
+                )
+            }
+        }
+
+        // Team row (tournament only)
+        if isTournament && teamPts.count == STANDARD_HOLES {
+            let slice    = Array(teamPts[range])
+            let vals     = slice.map { p -> String in p.map { "\($0)" } ?? "·" }
             let subtotal = slice.compactMap { $0 }.reduce(0, +)
-            let totStr  = slice.contains(where: { $0 != nil }) ? "\(subtotal)" : "—"
+            let totStr   = slice.contains(where: { $0 != nil }) ? "\(subtotal)" : "·"
             vStack.addArrangedSubview(
-                makeRow(player.name, vals + [totStr], color: .label, bold: player.isMe)
+                makeRow("Team", vals + [totStr], color: .systemBlue, bold: true)
             )
         }
+
         return vStack
     }
 
@@ -349,12 +389,14 @@ final class PastGameDetailViewController: UIViewController {
     private let allRows:  [RoundSummary]
     private let courseID: String
 
-    private var playerRows:  [PlayerRow] = []
-    private var pars:        [Int]?
-    private var courseName:  String = "Unknown Course"
-    private var roundDate:   Date   = Date()
-    private var holesPlayed: Int    = 0
-    private var hasStats:    Bool   = false
+    private var playerRows:   [PlayerRow] = []
+    private var pars:         [Int]?
+    private var courseName:   String  = "Unknown Course"
+    private var roundDate:    Date    = Date()
+    private var holesPlayed:  Int     = 0
+    private var hasStats:     Bool    = false
+    private var isTournament: Bool    = false
+    private var teamPts:      [Int?]  = []
 
     private let tableView = UITableView(frame: .zero, style: .grouped)
 
@@ -418,8 +460,9 @@ final class PastGameDetailViewController: UIViewController {
 
     private func buildData() {
         guard let first = allRows.first else { return }
-        roundDate   = first.date
-        holesPlayed = allRows.map { $0.holesPlayed }.max() ?? 0
+        roundDate    = first.date
+        holesPlayed  = allRows.map { $0.holesPlayed }.max() ?? 0
+        isTournament = first.gameTypePerHole?.first == .tournament
 
         if let uid = UUID(uuidString: courseID),
            let profile = CourseLibrary.shared.get(id: uid) {
@@ -434,20 +477,46 @@ final class PastGameDetailViewController: UIViewController {
             let isMe = !me.isEmpty &&
                 r.playerName.trimmingCharacters(in: .whitespacesAndNewlines)
                     .caseInsensitiveCompare(me) == .orderedSame
+
+            let pts: [Int?] = isTournament
+                ? (0..<STANDARD_HOLES).map { h in
+                    guard h < r.scorePerHole.count, r.scorePerHole[h] != nil,
+                          h < r.moneyPerHole.count else { return nil }
+                    return r.moneyPerHole[h]
+                }
+                : Array(repeating: nil, count: STANDARD_HOLES)
+
+            func pad<T>(_ arr: [T], with fill: T) -> [T] {
+                arr.count >= STANDARD_HOLES ? Array(arr.prefix(STANDARD_HOLES))
+                    : arr + Array(repeating: fill, count: STANDARD_HOLES - arr.count)
+            }
+
             return PlayerRow(
                 rank:       idx + 1,
                 name:       r.playerName,
                 totalScore: r.totalScore,
                 totalMoney: r.totalMoney,
                 totalProx:  r.totalProx,
-                scores:     r.scorePerHole,
+                scores:     pad(r.scorePerHole,       with: nil),
+                points:     pts,
                 isMe:       isMe,
-                fairways:   r.fairwayHitPerHole,
-                girs:       r.girPerHole,
-                putts:      r.puttsPerHole
+                fairways:   pad(r.fairwayHitPerHole,  with: nil),
+                girs:       pad(r.girPerHole,          with: nil),
+                putts:      pad(r.puttsPerHole,        with: nil)
             )
         }
-        hasStats = playerRows.contains { $0.hasStats }
+
+        if isTournament {
+            teamPts = (0..<STANDARD_HOLES).map { h in
+                let holePts: [Int] = playerRows.compactMap { row in
+                    guard h < row.points.count else { return nil }
+                    return row.points[h]
+                }
+                return holePts.isEmpty ? nil : holePts.sorted(by: >).prefix(3).reduce(0, +)
+            }
+        }
+
+        hasStats = !isTournament && playerRows.contains { $0.hasStats }
     }
 
     // MARK: - Table setup
@@ -493,7 +562,7 @@ extension PastGameDetailViewController: UITableViewDataSource, UITableViewDelega
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         switch section {
         case 1: return "Leaderboard"
-        case 2: return "Scorecard"
+        case 2: return isTournament ? "Stableford" : "Scorecard"
         case 3: return "Stats"
         default: return nil
         }
@@ -511,12 +580,12 @@ extension PastGameDetailViewController: UITableViewDataSource, UITableViewDelega
         case 1:
             let c = tableView.dequeueReusableCell(
                 withIdentifier: CellID.leaderboard, for: indexPath) as! LeaderboardCell
-            c.configure(with: playerRows[indexPath.row])
+            c.configure(with: playerRows[indexPath.row], isTournament: isTournament)
             return c
         case 2:
             let c = tableView.dequeueReusableCell(
                 withIdentifier: CellID.scorecard, for: indexPath) as! ScorecardCell
-            c.configure(players: playerRows, pars: pars)
+            c.configure(players: playerRows, pars: pars, isTournament: isTournament, teamPts: teamPts)
             return c
         case 3:
             let statsRows = playerRows.filter { $0.hasStats }

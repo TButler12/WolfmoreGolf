@@ -138,6 +138,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
     private let holeStatsSwitch = UISwitch()
     private var hasPromptedForThisHole = false
+    private var hasPromptedFront9Submit = false
     private var proxButtons: [UIButton] { [p0, p1, p2, p3, p4] }
 
     private var currentHole: Int = 0
@@ -2316,11 +2317,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             guard let self = self else { return }
             guard let game = GameManager.shared.currentGame else { return }
             if game.resolvedGameType == .tournament {
-                // End of round when the last hole of the 18-hole loop is scored.
-                // For front-nine start: endHole = 17. Back-nine start: endHole = 8.
-                let endHole = (game.tournamentStartHole + 17) % STANDARD_HOLES
+                let endHole  = (game.tournamentStartHole + 17) % STANDARD_HOLES
+                let halfHole = (game.tournamentStartHole + 8)  % STANDARD_HOLES
                 if hole == endHole {
                     self.presentTournamentSummary()
+                } else if hole == halfHole && !self.hasPromptedFront9Submit {
+                    self.hasPromptedFront9Submit = true
+                    self.presentFront9Submit(game: game)
                 }
                 return  // suppress stats prompt for all tournament holes
             }
@@ -2335,6 +2338,30 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
+    }
+
+    private func presentFront9Submit(game: GameData) {
+        let filledHoles = game.tournamentStartHole..<(game.tournamentStartHole + 9)
+        let ac = UIAlertController(
+            title: "Front 9 Complete",
+            message: "Submit scorecard to the pro shop?",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Submit", style: .default) { [weak self] _ in
+            self?.shareTournamentScorecard(game: game, filledHoles: filledHoles)
+        })
+        present(ac, animated: true)
+    }
+
+    private func shareTournamentScorecard(game: GameData, filledHoles: Range<Int>) {
+        let image = TournamentScorecardRenderer(game: game, filledHoles: filledHoles).render()
+        let av = UIActivityViewController(activityItems: [image], applicationActivities: nil)
+        if let pop = av.popoverPresentationController {
+            pop.sourceView = view
+            pop.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+        }
+        present(av, animated: true)
     }
  
     private func presentStatsPrompt() {

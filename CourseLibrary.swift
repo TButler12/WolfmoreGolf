@@ -131,6 +131,28 @@ private let CRANES_LANDING_BLUE_ID = UUID(uuidString: "44444444-4444-4444-4444-4
 let CRANES_LANDING_BLUE_PARS: [Int] = [4,4,4,4,4,3,5,4,3, 4,4,3,4,4,4,3,5,4]
 let CRANES_LANDING_BLUE_HCS:  [Int] = [13,11,5,16,12,18,6,4,15, 1,7,14,3,10,17,8,9,2]
 
+// MARK: Twin Orchard CC — Long Grove, IL
+private let TWIN_ORCHARD_RED_ID   = UUID(uuidString: "ACC00001-0001-0001-0001-000000000001")!
+private let TWIN_ORCHARD_WHITE_ID = UUID(uuidString: "ACC00002-0002-0002-0002-000000000002")!
+
+// Red Course — Par 72 | Member 72.0/136
+let TWIN_ORCHARD_RED_PARS: [Int]  = [5,4,4,3,5,3,4,5,4, 4,3,5,3,4,4,4,4,4]
+let TWIN_ORCHARD_RED_HCS:  [Int]  = [5,7,13,15,3,17,9,1,11, 10,18,4,16,14,6,2,12,8]
+let TWIN_ORCHARD_RED_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tips",          yardage: 6811, rating: 73.5, slope: 140),
+    TeeInfo(teeName: "Championship",  yardage: 6716, rating: 73.1, slope: 139),
+    TeeInfo(teeName: "Member",        yardage: 6460, rating: 72.0, slope: 136),
+]
+
+// White Course — Par 70 | Member 69.7/126
+let TWIN_ORCHARD_WHITE_PARS: [Int] = [4,3,5,4,3,4,5,3,4, 4,5,4,4,3,3,5,3,4]
+let TWIN_ORCHARD_WHITE_HCS:  [Int] = [9,13,3,1,17,15,5,11,7, 2,10,12,6,14,16,8,18,4]
+let TWIN_ORCHARD_WHITE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship",  yardage: 5698, rating: 72.8, slope: 133),
+    TeeInfo(teeName: "Member",        yardage: 6018, rating: 69.7, slope: 126),
+    TeeInfo(teeName: "Forward",       yardage: 5086, rating: 65.4, slope: 116),
+]
+
 // MARK: ChampionsGate CC (Blended Black)
 private let CHAMPIONGATE_BLENDED_BLACK_ID = UUID(uuidString: "55555555-5555-5555-5555-555555555555")!
 let CHAMPIONGATE_BLENDED_BLACK_PARS: [Int] = [4,3,4,5,4,3,4,4,5, 5,3,4,4,3,4,4,4,5]
@@ -7571,6 +7593,28 @@ private enum BuiltIns {
           phone: "(847) 320-3450",
           website: "https://www.kemperlakesgolf.com",
           address: "24000 N. Old McHenry Road, Kildeer, IL 60047"),
+
+        c(TWIN_ORCHARD_RED_ID, "Twin Orchard CC (Red)",
+          TWIN_ORCHARD_RED_PARS, TWIN_ORCHARD_RED_HCS,
+          TWIN_ORCHARD_RED_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(847) 634-3800",
+          website: "https://www.twinorchardcc.org",
+          address: "22353 Old McHenry Road, Long Grove, IL 60047",
+          isWolfApproved: true),
+
+        c(TWIN_ORCHARD_WHITE_ID, "Twin Orchard CC (White)",
+          TWIN_ORCHARD_WHITE_PARS, TWIN_ORCHARD_WHITE_HCS,
+          TWIN_ORCHARD_WHITE_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Private",
+          phone: "(847) 634-3800",
+          website: "https://www.twinorchardcc.org",
+          address: "22353 Old McHenry Road, Long Grove, IL 60047",
+          isWolfApproved: true),
 
         c(RICH_HARVEST_SILVER_ID, "Rich Harvest Farms", RICH_HARVEST_SILVER_PARS, RICH_HARVEST_SILVER_HCS,
           country: "USA",

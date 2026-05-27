@@ -81,8 +81,8 @@ private final class TournamentResultCell: UITableViewCell {
                 )
                 str.append(divider)
             }
-            let val = pts[i]
-            let ch = val.map(String.init) ?? "·"
+            let val = pts[i] ?? -1
+            let ch = val >= 0 ? String(val) : "·"
             let color: UIColor
             switch val {
             case 3...: color = UIColor.systemGreen
@@ -177,7 +177,7 @@ final class TournamentSummaryViewController: UIViewController {
 
         // Button bar
         let saveBtn      = makeButton(title: "Save to History", tint: .systemGreen,  action: #selector(saveTapped))
-        let shareBtn     = makeButton(title: "Share",            tint: .systemBlue,   action: #selector(shareTapped))
+        let shareBtn     = makeButton(title: "Submit Score",      tint: .systemBlue,   action: #selector(shareTapped))
         let scorecardBtn = makeButton(title: "Scorecard",        tint: .systemIndigo, action: #selector(scorecardTapped))
         let btnRow = UIStackView(arrangedSubviews: [saveBtn, shareBtn, scorecardBtn])
         btnRow.axis = .horizontal
@@ -309,7 +309,9 @@ final class TournamentSummaryViewController: UIViewController {
             present(ac, animated: true)
             return
         }
-        RoundStore.shared.recordTournamentGame()
+        print("DEBUG Save tapped — activePlayers: \(GameManager.shared.currentGame?.playerActivated.filter { $0 }.count ?? -1)")
+        print("DEBUG Save tapped — playerNames: \(GameManager.shared.currentGame?.playerNames ?? [])")
+        RoundStore.shared.recordTournamentGame(game: game)
         didSave = true
         let ac = UIAlertController(title: "Saved ✓", message: "Round saved to history.", preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "OK", style: .default))
@@ -317,8 +319,8 @@ final class TournamentSummaryViewController: UIViewController {
     }
 
     @objc private func shareTapped() {
-        let text = buildShareText()
-        let av = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        let image = TournamentScorecardRenderer(game: game, filledHoles: 0..<18).render()
+        let av = UIActivityViewController(activityItems: [image], applicationActivities: nil)
         if let pop = av.popoverPresentationController {
             pop.sourceView = view
             pop.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
@@ -336,20 +338,7 @@ final class TournamentSummaryViewController: UIViewController {
         dismiss(animated: true)
     }
 
-    private func buildShareText() -> String {
-        let fmt = DateFormatter(); fmt.dateStyle = .medium; fmt.timeStyle = .none
-        let teamTotal = GameManager.shared.runningTeamStablefordTotal(game: game)
-        var lines = [
-            "🏆 Wolfmore Tournament — \(game.course.name)  \(fmt.string(from: Date()))",
-            "Team Score: \(teamTotal) pts (top 3 per hole)",
-            ""
-        ]
-        for (i, r) in results.enumerated() {
-            let rank = rankString(for: i)
-            lines.append("\(rank) \(r.name)  \(r.totalPoints) pts")
-        }
-        return lines.joined(separator: "\n")
-    }
+
 }
 
 // MARK: - UITableViewDataSource
@@ -380,31 +369,50 @@ extension RoundStore {
 
     /// Saves each active player's Stableford points in moneyPerHole / totalMoney
     /// so Past Games can display "Tournament · N players · X pts".
-    func recordTournamentGame() {
-        guard let g = GameManager.shared.currentGame else { return }
+    func recordTournamentGame(game g: GameData) {
+        print("DEBUG recordTournamentGame called")
+        print("DEBUG activePlayers: \(g.playerActivated.filter { $0 }.count)")
+        print("DEBUG playerNames: \(g.playerNames)")
+        print("DEBUG playerActivated: \(g.playerActivated)")
+        print("DEBUG scores[0]: \(g.scores.count > 0 ? String(describing: g.scores[0]) : "MISSING")")
+        print("DEBUG scores[1]: \(g.scores.count > 1 ? String(describing: g.scores[1]) : "MISSING")")
+        print("DEBUG scores[2]: \(g.scores.count > 2 ? String(describing: g.scores[2]) : "MISSING")")
+        print("DEBUG scores[3]: \(g.scores.count > 3 ? String(describing: g.scores[3]) : "MISSING")")
 
         let sharedGameID = UUID()
         let now = Date()
         let gm  = GameManager.shared
 
-        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
+        let capacity = min(g.playerNames.count, g.playerActivated.count)
+        let activeSeats = (0..<capacity).filter {
+            g.playerActivated[$0] &&
+            !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
 
-        for seat in seats where g.playerActivated[seat] {
+        // Compute courseID the same way Wolf mode does
+        let courseIDForRound: String = {
+            guard let homeUUID = UUID(uuidString: ProfileStore.homeCourseID),
+                  let homeCourse = CourseLibrary.shared.get(id: homeUUID)
+            else { return "" }
+            let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+            let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
+            let homePars    = Array(homeCourse.pars.prefix(STANDARD_HOLES))
+            let homeHCs     = Array(homeCourse.hcs.prefix(STANDARD_HOLES))
+            return (currentPars == homePars && currentHCs == homeHCs)
+                ? homeCourse.id.uuidString : ""
+        }()
+
+        for seat in activeSeats {
             let name = g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !name.isEmpty else { continue }
+            let hc   = g.hcPlayers[safe: seat] ?? 0
 
-            let hc = g.hcPlayers[safe: seat] ?? 0
-
-            // Compute per-hole Stableford points (used as moneyPerHole)
             var ptsPerHole = [Int](repeating: 0, count: STANDARD_HOLES)
             var total = 0
             for hole in 0..<STANDARD_HOLES {
                 let par   = g.courseParToPass[safe: hole] ?? 4
                 let si    = g.courseHCToPass[safe: hole] ?? (hole + 1)
                 let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
-                let pts   = gm.stablefordPoints(
-                    grossScore: gross, par: par, playerHC: hc, strokeIndex: si
-                ) ?? 0
+                let pts   = gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si) ?? 0
                 ptsPerHole[hole] = pts
                 total += pts
             }
@@ -413,18 +421,19 @@ extension RoundStore {
                 ? Array(g.scores[seat].prefix(STANDARD_HOLES))
                 : Array(repeating: nil, count: STANDARD_HOLES)
 
-            let totalScore = scores.compactMap { $0 }.reduce(0, +)
+            let playedScores = scores.compactMap { $0 }
+            let totalScore: Int? = playedScores.isEmpty ? nil : playedScores.reduce(0, +)
 
             let summary = RoundSummary(
                 gameID: sharedGameID,
                 date: now,
-                courseID: ProfileStore.homeCourseID,
+                courseID: courseIDForRound,
                 playerName: name,
-                totalMoney: total,             // ← Stableford total stored here
+                totalMoney: total,
                 totalProx: 0,
                 totalScore: totalScore,
-                holesPlayed: scores.compactMap { $0 }.count,
-                moneyPerHole: ptsPerHole,      // ← per-hole points stored here
+                holesPlayed: playedScores.count,
+                moneyPerHole: ptsPerHole,
                 proxPerHole: Array(repeating: false, count: STANDARD_HOLES),
                 scorePerHole: scores,
                 wolfCalledPerHole: Array(repeating: false, count: STANDARD_HOLES),
