@@ -1263,6 +1263,50 @@ let OAK_TREE_NATIONAL_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
+// MARK: - Built-in: Oak Tree Country Club — East
+// Edmond, OK • Private • Pete & Alice Dye
+// Gold: Par 70 | 7,116 yds | 76.3 / 137
+// =======================================================
+
+private let OAK_TREE_CC_EAST_ID = UUID(uuidString: "0A57EE01-0001-4B5E-A2F0-000000000006")!
+
+let OAK_TREE_CC_EAST_PARS: [Int] = [
+    4,4,4,5,4,3,4,3,4,
+    4,4,5,4,3,4,4,3,4
+]
+
+let OAK_TREE_CC_EAST_HCS: [Int] = [
+    5,1,15,7,9,13,11,17,3,
+    18,10,16,8,2,12,4,14,6
+]
+
+let OAK_TREE_CC_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7116, rating: 76.3, slope: 137),
+]
+
+// =======================================================
+// MARK: - Built-in: Oak Tree Country Club — West
+// Edmond, OK • Private • Pete & Alice Dye
+// Gold: Par 70 | 6,752 yds | 74.6 / 140
+// =======================================================
+
+private let OAK_TREE_CC_WEST_ID = UUID(uuidString: "0A57EE02-0002-4B5E-A2F0-000000000007")!
+
+let OAK_TREE_CC_WEST_PARS: [Int] = [
+    4,3,4,4,4,3,5,4,4,
+    3,4,4,4,3,4,5,4,4
+]
+
+let OAK_TREE_CC_WEST_HCS: [Int] = [
+    11,3,1,17,9,13,7,5,15,
+    16,4,8,12,6,2,14,18,10
+]
+
+let OAK_TREE_CC_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6752, rating: 74.6, slope: 140),
+]
+
+// =======================================================
 // MARK: - Built-in: Karsten Creek Golf Club
 // Stillwater, OK • Private • Tom Fazio / Dennis Wise • 1994
 // Orange: Par 72 | 7,407 yds | 77.2 / 152
@@ -8630,6 +8674,36 @@ private enum BuiltIns {
             phone: "(918) 272-1260",
             website: "https://www.patriotgolfclub.com/",
             address: "5790 N. Patriot Dr., Owasso, OK 74055"
+        ),
+        c(
+            OAK_TREE_CC_EAST_ID,
+            "Oak Tree CC (East)",
+            OAK_TREE_CC_EAST_PARS,
+            OAK_TREE_CC_EAST_HCS,
+            OAK_TREE_CC_EAST_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Pete & Alice Dye",
+            type: "Private",
+            phone: "(405) 340-1010",
+            website: "https://www.oaktreecountryclub.com/",
+            address: "700 Country Club Dr, Edmond, OK 73025",
+            isWolfApproved: true
+        ),
+        c(
+            OAK_TREE_CC_WEST_ID,
+            "Oak Tree CC (West)",
+            OAK_TREE_CC_WEST_PARS,
+            OAK_TREE_CC_WEST_HCS,
+            OAK_TREE_CC_WEST_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Pete & Alice Dye",
+            type: "Private",
+            phone: "(405) 340-1010",
+            website: "https://www.oaktreecountryclub.com/",
+            address: "700 Country Club Dr, Edmond, OK 73025",
+            isWolfApproved: true
         ),
         c(
             OAK_TREE_NATIONAL_ID,
