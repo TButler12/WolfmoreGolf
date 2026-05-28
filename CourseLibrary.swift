@@ -1263,6 +1263,74 @@ let OAK_TREE_NATIONAL_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
+// MARK: - Built-in: Shangri-La Resort — Heritage + Legends
+// Monkey Island, OK • Resort • Tom Clark (renovation)
+// 27-hole complex; Heritage, Legends, Champions nines
+// #1: Par 72 | 7,210 yds | 76.0 / 146
+// =======================================================
+
+private let SHANGRI_LA_HL_ID = UUID(uuidString: "5A6EE011-0001-4B5E-A2F0-000000000009")!
+
+let SHANGRI_LA_HL_PARS: [Int] = [
+    4,4,4,5,3,4,4,3,5,
+    5,3,4,3,4,4,5,3,5
+]
+
+let SHANGRI_LA_HL_HCS: [Int] = [
+    11,15,5,7,17,3,9,13,1,
+    10,8,4,18,16,6,14,12,2
+]
+
+let SHANGRI_LA_HL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "#1", yardage: 7210, rating: 76.0, slope: 146),
+]
+
+// =======================================================
+// MARK: - Built-in: Shangri-La Resort — Legends + Champions
+// Monkey Island, OK • Resort • Tom Clark (renovation)
+// #1: Par 72 | 6,905 yds | 73.8 / 134
+// =======================================================
+
+private let SHANGRI_LA_LC_ID = UUID(uuidString: "5A6EE012-0002-4B5E-A2F0-00000000000A")!
+
+let SHANGRI_LA_LC_PARS: [Int] = [
+    5,3,4,3,4,4,5,3,5,
+    5,3,4,4,4,3,5,4,4
+]
+
+let SHANGRI_LA_LC_HCS: [Int] = [
+    10,8,4,18,16,6,14,12,2,
+    9,17,13,5,11,15,3,1,7
+]
+
+let SHANGRI_LA_LC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "#1", yardage: 6905, rating: 73.8, slope: 134),
+]
+
+// =======================================================
+// MARK: - Built-in: Shangri-La Resort — Champions + Heritage
+// Monkey Island, OK • Resort • Tom Clark (renovation)
+// #1: Par 72 | 7,074 yds | 74.5 / 140
+// NOTE: Both nines share odd HCPs 1–17 (27-hole facility)
+// =======================================================
+
+private let SHANGRI_LA_CH_ID = UUID(uuidString: "5A6EE013-0003-4B5E-A2F0-00000000000B")!
+
+let SHANGRI_LA_CH_PARS: [Int] = [
+    5,3,4,4,4,3,5,4,4,
+    4,4,4,5,3,4,4,3,5
+]
+
+let SHANGRI_LA_CH_HCS: [Int] = [
+    9,17,13,5,11,15,3,1,7,
+    11,15,5,7,17,3,9,13,1
+]
+
+let SHANGRI_LA_CH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "#1", yardage: 7074, rating: 74.5, slope: 140),
+]
+
+// =======================================================
 // MARK: - Built-in: Dornick Hills Golf & Country Club
 // Ardmore, OK • Private • Perry Maxwell
 // Black: Par 70 | 6,621 yds | 73.7 / 131
@@ -8696,6 +8764,51 @@ private enum BuiltIns {
             phone: "(918) 272-1260",
             website: "https://www.patriotgolfclub.com/",
             address: "5790 N. Patriot Dr., Owasso, OK 74055"
+        ),
+        c(
+            SHANGRI_LA_HL_ID,
+            "Shangri-La (Heritage+Legends)",
+            SHANGRI_LA_HL_PARS,
+            SHANGRI_LA_HL_HCS,
+            SHANGRI_LA_HL_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Tom Clark (renovation)",
+            type: "Resort",
+            phone: "(918) 257-4204",
+            website: "https://www.shangrilaok.com/",
+            address: "57301 E. Highway 125, Monkey Island, OK 74331",
+            isWolfApproved: true
+        ),
+        c(
+            SHANGRI_LA_LC_ID,
+            "Shangri-La (Legends+Champions)",
+            SHANGRI_LA_LC_PARS,
+            SHANGRI_LA_LC_HCS,
+            SHANGRI_LA_LC_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Tom Clark (renovation)",
+            type: "Resort",
+            phone: "(918) 257-4204",
+            website: "https://www.shangrilaok.com/",
+            address: "57301 E. Highway 125, Monkey Island, OK 74331",
+            isWolfApproved: true
+        ),
+        c(
+            SHANGRI_LA_CH_ID,
+            "Shangri-La (Champions+Heritage)",
+            SHANGRI_LA_CH_PARS,
+            SHANGRI_LA_CH_HCS,
+            SHANGRI_LA_CH_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Tom Clark (renovation)",
+            type: "Resort",
+            phone: "(918) 257-4204",
+            website: "https://www.shangrilaok.com/",
+            address: "57301 E. Highway 125, Monkey Island, OK 74331",
+            isWolfApproved: true
         ),
         c(
             DORNICK_HILLS_ID,
