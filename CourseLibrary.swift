@@ -1907,6 +1907,180 @@ let ARBORLINKS_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 7222, rating: 75.4, slope: 141)
 ]
 // =======================================================
+// MARK: - Built-in: Dismal River Club — Red Course
+// Mullen, NE • Private • Tom Doak / Renaissance Golf Design
+// Blue: Par 71 | 6,994 yds
+// =======================================================
+
+private let DISMAL_RIVER_RED_ID = UUID(uuidString: "D15A1001-0001-4B5E-A2F0-8E1C9D7B4036")!
+
+let DISMAL_RIVER_RED_PARS: [Int] = [
+    5,4,3,4,3,4,4,5,4,
+    5,3,4,4,4,4,3,4,4
+]
+
+// Front HCs are all even (2,4,6,8,10,12,14,16,18); back are all odd (1,3,5,7,9,11,13,15,17)
+let DISMAL_RIVER_RED_HCS: [Int] = [
+    14,2,8,10,6,16,4,18,12,
+    9,11,13,1,7,17,15,5,3
+]
+
+let DISMAL_RIVER_RED_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6994),
+    TeeInfo(teeName: "White", yardage: 6252),
+    TeeInfo(teeName: "Red",   yardage: 4838),
+]
+
+// =======================================================
+// MARK: - Built-in: Dismal River Club — White Course
+// Mullen, NE • Private • Jack Nicklaus
+// Back: Par 72 | 7,398 yds
+// =======================================================
+
+private let DISMAL_RIVER_WHITE_ID = UUID(uuidString: "D15A1002-0002-4B5E-A2F0-8E1C9D7B4037")!
+
+let DISMAL_RIVER_WHITE_PARS: [Int] = [
+    4,4,3,5,3,4,4,4,5,
+    3,4,5,4,4,3,4,4,5
+]
+
+let DISMAL_RIVER_WHITE_HCS: [Int] = [
+    7,1,17,9,11,13,3,15,5,
+    14,8,4,12,2,18,16,10,6
+]
+
+let DISMAL_RIVER_WHITE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back",    yardage: 7398),
+    TeeInfo(teeName: "Middle",  yardage: 6530),
+    TeeInfo(teeName: "Forward", yardage: 5058),
+]
+
+// =======================================================
+// MARK: - Built-in: CapRock Ranch
+// Valentine, NE • Private • Gil Hanse / Jim Wagner
+// Tee I: Par 71 | 6,998 yds
+// =======================================================
+
+private let CAPROCK_RANCH_ID = UUID(uuidString: "F7A3C912-6D84-4B5E-A2F0-8E1C9D7B4036")!
+
+let CAPROCK_RANCH_PARS: [Int] = [
+    4,5,3,5,4,3,4,4,3,
+    5,4,5,4,4,4,3,4,3
+]
+
+let CAPROCK_RANCH_HCS: [Int] = [
+    5,7,13,9,11,17,3,1,15,
+    14,8,12,6,10,2,18,16,4
+]
+
+let CAPROCK_RANCH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "I",   yardage: 6998),
+    TeeInfo(teeName: "II",  yardage: 6676),
+    TeeInfo(teeName: "III", yardage: 6289),
+    TeeInfo(teeName: "IV",  yardage: 5642),
+    TeeInfo(teeName: "V",   yardage: 4876),
+]
+
+// =======================================================
+// MARK: - Built-in: Landmand Golf Club
+// Homer, NE • Private • King-Collins Golf Course Design
+// Red (longest): Par 73 | 7,200 yds | 74.7 / 135
+// =======================================================
+
+private let LANDMAND_GC_ID = UUID(uuidString: "C4D7F231-8A59-4E6B-B1F3-5A9C2E8D7041")!
+
+let LANDMAND_GC_PARS: [Int] = [
+    5,4,4,4,3,5,4,3,4,
+    4,5,3,4,3,5,4,4,5
+]
+
+let LANDMAND_GC_HCS: [Int] = [
+    17,15,7,3,13,1,11,9,5,
+    18,2,14,4,10,12,8,16,6
+]
+
+let LANDMAND_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Red",    yardage: 7200, rating: 74.7, slope: 135),
+    TeeInfo(teeName: "White",  yardage: 6775, rating: 72.8, slope: 132),
+    TeeInfo(teeName: "Green",  yardage: 6440, rating: 71.3, slope: 130),
+    TeeInfo(teeName: "Yellow", yardage: 6000, rating: 68.4, slope: 126),
+    TeeInfo(teeName: "Black",  yardage: 5420, rating: 68.8, slope: 113),
+]
+
+// =======================================================
+// MARK: - Built-in: Sand Hills Golf Club
+// Mullen, NE • Private • Coore & Crenshaw • 1995
+// Back: Par 71 | 7,089 yds | 76.0 / 130
+// =======================================================
+
+private let SAND_HILLS_GC_ID = UUID(uuidString: "E9C3F847-2B16-4D8A-95F0-7C4B1E6D3A28")!
+
+let SAND_HILLS_GC_PARS: [Int] = [
+    5,4,3,4,4,3,4,4,4,
+    4,4,4,3,5,4,5,3,4
+]
+
+let SAND_HILLS_GC_HCS: [Int] = [
+    7,3,11,1,9,17,15,5,13,
+    4,14,10,16,2,6,8,18,12
+]
+
+let SAND_HILLS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back",   yardage: 7089, rating: 76.0, slope: 130),
+    TeeInfo(teeName: "Middle", yardage: 6432, rating: 73.0, slope: 126),
+    TeeInfo(teeName: "Front",  yardage: 5040, rating: 67.5, slope: 117),
+]
+
+// =======================================================
+// MARK: - Built-in: Wild Horse Golf Club
+// Gothenburg, NE • Daily-Fee • Dave Axland & Dan Proctor
+// Tips: Par 72 | 7,030 yds | 73.9 / 140
+// =======================================================
+
+private let WILD_HORSE_GC_ID = UUID(uuidString: "B31DC0DE-0001-4B5E-A2F0-000000000001")!
+
+let WILD_HORSE_GC_PARS: [Int] = [
+    4,4,5,3,4,5,4,4,3,
+    4,3,4,3,5,4,4,5,4
+]
+
+let WILD_HORSE_GC_HCS: [Int] = [
+    11,3,15,9,13,5,7,1,17,
+    10,18,4,6,16,12,2,14,8
+]
+
+let WILD_HORSE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tips",         yardage: 7030, rating: 73.9, slope: 140),
+    TeeInfo(teeName: "Gold",         yardage: 6848, rating: 73.1, slope: 138),
+    TeeInfo(teeName: "Black",        yardage: 6353, rating: 70.7, slope: 133),
+    TeeInfo(teeName: "Black/Silver", yardage: 5874, rating: 68.3, slope: 125),
+    TeeInfo(teeName: "Silver",       yardage: 5456, rating: 66.4, slope: 113),
+    TeeInfo(teeName: "Green",        yardage: 4688, rating: 63.0, slope: 106),
+]
+
+// =======================================================
+// MARK: - Built-in: GrayBull
+// Nebraska Sandhills • Private (Dormie Network) • David McLay Kidd • 2024
+// Bulls: Par 72 | 7,181 yds | 74.2 / 128
+// =======================================================
+
+private let GRAYBULL_ID = UUID(uuidString: "6BA4B011-0001-4B5E-A2F0-000000000002")!
+
+let GRAYBULL_PARS: [Int] = [
+    4,5,4,3,4,4,3,5,4,
+    4,5,3,4,5,4,4,3,4
+]
+
+let GRAYBULL_HCS: [Int] = [
+    5,9,11,7,13,1,17,15,3,
+    2,10,8,14,18,4,16,12,6
+]
+
+let GRAYBULL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Bulls", yardage: 7181, rating: 74.2, slope: 128),
+]
+
+// =======================================================
 // MARK: - Built-in: Mid Pines
 // Southern Pines, NC • Resort • Donald Ross
 // Medal: Par 72 | 6,710 yds | 73.5 / 142
@@ -9009,6 +9183,86 @@ private enum BuiltIns {
             website: "https://arborlinks.com/",
             address: "6038 H Road, Nebraska City, NE 68410-6198"
         ),
+        c(DISMAL_RIVER_RED_ID, "Dismal River (Red)",
+          DISMAL_RIVER_RED_PARS, DISMAL_RIVER_RED_HCS,
+          DISMAL_RIVER_RED_TEES,
+          country: "USA",
+          state: "NE",
+          architect: "Tom Doak / Renaissance Golf Design",
+          type: "Resort",
+          website: "https://www.dismalriver.com",
+          address: "83040 Dismal River Trail, Mullen, NE 69152",
+          isWolfApproved: true),
+
+        c(DISMAL_RIVER_WHITE_ID, "Dismal River (White)",
+          DISMAL_RIVER_WHITE_PARS, DISMAL_RIVER_WHITE_HCS,
+          DISMAL_RIVER_WHITE_TEES,
+          country: "USA",
+          state: "NE",
+          architect: "Jack Nicklaus",
+          type: "Resort",
+          website: "https://www.dismalriver.com",
+          address: "83040 Dismal River Trail, Mullen, NE 69152",
+          isWolfApproved: true),
+
+        c(CAPROCK_RANCH_ID, "CapRock Ranch",
+          CAPROCK_RANCH_PARS, CAPROCK_RANCH_HCS,
+          CAPROCK_RANCH_TEES,
+          country: "USA",
+          state: "NE",
+          architect: "Gil Hanse / Jim Wagner",
+          type: "Private",
+          phone: "(402) 470-8088",
+          website: "https://www.caprockranch.com",
+          address: "38248 Caprock Ln, Valentine, NE 69201",
+          isWolfApproved: true),
+
+        c(LANDMAND_GC_ID, "Landmand Golf Club",
+          LANDMAND_GC_PARS, LANDMAND_GC_HCS,
+          LANDMAND_GC_TEES,
+          country: "USA",
+          state: "NE",
+          architect: "King-Collins Golf Course Design",
+          type: "Private",
+          phone: "(402) 508-2238",
+          website: "https://www.landmandgc.com",
+          address: "2073 S. Bluff Rd., Homer, NE 68030",
+          isWolfApproved: true),
+
+        c(SAND_HILLS_GC_ID, "Sand Hills Golf Club",
+          SAND_HILLS_GC_PARS, SAND_HILLS_GC_HCS,
+          SAND_HILLS_GC_TEES,
+          country: "USA",
+          state: "NE",
+          architect: "Bill Coore & Ben Crenshaw",
+          type: "Private",
+          website: "https://www.sandhillsgolfclub.com",
+          address: "Mullen, NE 68103",
+          isWolfApproved: true),
+
+        c(WILD_HORSE_GC_ID, "Wild Horse Golf Club",
+          WILD_HORSE_GC_PARS, WILD_HORSE_GC_HCS,
+          WILD_HORSE_GC_TEES,
+          country: "USA",
+          state: "NE",
+          architect: "Dave Axland & Dan Proctor",
+          type: "Daily-Fee",
+          phone: "(308) 537-7700",
+          website: "https://www.playwildhorse.com",
+          address: "40950 Road 768, Gothenburg, NE 69138",
+          isWolfApproved: true),
+
+        c(GRAYBULL_ID, "GrayBull",
+          GRAYBULL_PARS, GRAYBULL_HCS,
+          GRAYBULL_TEES,
+          country: "USA",
+          state: "NE",
+          architect: "David McLay Kidd",
+          type: "Private",
+          website: "https://www.dormienetwork.com/clubs/graybull/",
+          address: "Nebraska Sandhills, NE",
+          isWolfApproved: true),
+
         c(
             MID_PINES_ID,
             "Mid Pines",
