@@ -10,6 +10,9 @@ struct GameData: Codable {
     var nassauState: NassauState?
     var skinsState: SkinsState?
 
+    // Supabase live match identifier (nil = local/text-based flow)
+    var remoteMatchId: String? = nil
+
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: STANDARD_HOLES)
 
