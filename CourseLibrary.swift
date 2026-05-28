@@ -1240,6 +1240,29 @@ let SOUTHERN_HILLS_CC_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
+// MARK: - Built-in: Oak Tree National
+// Edmond, OK • Private • Pete Dye • 1976
+// Black: Par 71 | 7,412 yds | 79.3 / 155
+// Host: 1988 PGA Championship, 2027 US Senior Open
+// =======================================================
+
+private let OAK_TREE_NATIONAL_ID = UUID(uuidString: "0A5B00DE-0001-4B5E-A2F0-000000000005")!
+
+let OAK_TREE_NATIONAL_PARS: [Int] = [
+    4,4,5,3,5,4,4,3,4,
+    4,4,4,3,4,4,5,3,4
+]
+
+let OAK_TREE_NATIONAL_HCS: [Int] = [
+    3,13,1,11,7,17,5,15,9,
+    12,2,6,18,8,4,16,14,10
+]
+
+let OAK_TREE_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7412, rating: 79.3, slope: 155),
+]
+
+// =======================================================
 // MARK: - Built-in: Karsten Creek Golf Club
 // Stillwater, OK • Private • Tom Fazio / Dennis Wise • 1994
 // Orange: Par 72 | 7,407 yds | 77.2 / 152
@@ -8607,6 +8630,21 @@ private enum BuiltIns {
             phone: "(918) 272-1260",
             website: "https://www.patriotgolfclub.com/",
             address: "5790 N. Patriot Dr., Owasso, OK 74055"
+        ),
+        c(
+            OAK_TREE_NATIONAL_ID,
+            "Oak Tree National",
+            OAK_TREE_NATIONAL_PARS,
+            OAK_TREE_NATIONAL_HCS,
+            OAK_TREE_NATIONAL_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Pete Dye",
+            type: "Private",
+            phone: "(405) 348-2004",
+            website: "https://www.oaktreenational.com/",
+            address: "1515 Oak Tree Drive, Edmond, OK 73025",
+            isWolfApproved: true
         ),
         c(
             SOUTHERN_HILLS_CC_ID,
