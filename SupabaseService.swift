@@ -15,7 +15,8 @@ final class SupabaseService {
     }
 
     // MARK: - Match creation
-    // Returns MatchRecord so caller has both the 6-char code and the UUID.
+    // Chain .select().single() after .insert() and annotate the response
+    // type so the compiler picks execute<T: Decodable> over execute<Void>.
     func createMatch(
         courseA: String,
         courseB: String,
@@ -23,25 +24,31 @@ final class SupabaseService {
         games: [String]
     ) async throws -> MatchRecord {
         let code = generateCode()
-        try await client.from("matches").insert([
-            "code":     code,
-            "course_a": courseA,
-            "course_b": courseB,
-            "stake":    String(stake),
-            "games":    games.joined(separator: ","),
-            "status":   "active"
-        ]).execute()
-        return try await joinMatch(code: code)
+        let response: PostgrestResponse<MatchRecord> = try await client
+            .from("matches")
+            .insert([
+                "code":     code,
+                "course_a": courseA,
+                "course_b": courseB,
+                "stake":    String(stake),
+                "games":    games.joined(separator: ","),
+                "status":   "active"
+            ])
+            .select()
+            .single()
+            .execute()
+        return response.value
     }
 
     // MARK: - Join match
     func joinMatch(code: String) async throws -> MatchRecord {
-        let response = try await client.from("matches")
+        let response: PostgrestResponse<MatchRecord> = try await client
+            .from("matches")
             .select()
             .eq("code", value: code.uppercased())
             .single()
             .execute()
-        return try response.value
+        return response.value
     }
 
     // MARK: - Add player to match
@@ -76,29 +83,42 @@ final class SupabaseService {
 
     // MARK: - Fetch resolved hole results
     func fetchResults(matchId: String) async throws -> [HoleResultRecord] {
-        let response = try await client.from("hole_results")
+        let response: PostgrestResponse<[HoleResultRecord]> = try await client
+            .from("hole_results")
             .select()
             .eq("match_id", value: matchId)
             .execute()
-        return try response.value
+        return response.value
     }
 
     // MARK: - Subscribe to hole results (live updates)
+    // onPostgresChange is synchronous and returns RealtimeSubscription.
+    // Only subscribe() is async — wrap it in Task {}.
+    // decodeRecord requires an explicit decoder argument.
+    @discardableResult
     func subscribeToResults(
         matchId: String,
         onResult: @escaping (HoleResultRecord) -> Void
-    ) {
-        let channel = client.realtimeV2.channel("match-\(matchId)")
-        channel.on(
-            .insert,
+    ) -> RealtimeSubscription {
+        let channel = client.channel("match-\(matchId)")
+
+        let subscription = channel.onPostgresChange(
+            InsertAction.self,
+            schema: "public",
             table: "hole_results",
             filter: "match_id=eq.\(matchId)"
-        ) { message in
-            if let record = try? message.decodeRecord(as: HoleResultRecord.self) {
+        ) { action in
+            if let record = try? action.decodeRecord(
+                as: HoleResultRecord.self,
+                decoder: JSONDecoder()
+            ) {
                 DispatchQueue.main.async { onResult(record) }
             }
         }
-        channel.subscribe()
+
+        Task { await channel.subscribe() }
+
+        return subscription
     }
 
     // MARK: - Helpers
