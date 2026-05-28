@@ -8,7 +8,7 @@ final class TournamentScorecardViewController: UIViewController {
 
     // Layout constants
     private let cellH:    CGFloat = 28
-    private let strkCellH: CGFloat = 14   // strokes/pops row
+    private let strkCellH: CGFloat = 22   // strokes/pops row
     private let nameW:    CGFloat = 92
     private let holeW:    CGFloat = 26
     private let summW:    CGFloat = 34
@@ -125,7 +125,7 @@ final class TournamentScorecardViewController: UIViewController {
             lbl.textColor = (text == "·" || text == "—") ? .tertiaryLabel : .secondaryLabel
 
         case .playerStrokes:
-            lbl.font = .systemFont(ofSize: 10, weight: .regular)
+            lbl.font = .systemFont(ofSize: 20, weight: .regular)
             lbl.textColor = UIColor(red: 0.20, green: 0.45, blue: 0.80, alpha: 0.85)
 
         case .team:
@@ -257,14 +257,13 @@ final class TournamentScorecardViewController: UIViewController {
         nameCol.spacing = 1
         nameCol.translatesAutoresizingMaskIntoConstraints = false
 
-        func addNameLabel(_ text: String, kind: RowKind, altRow: Bool = false, height: CGFloat? = nil) {
+        func addNameLabel(_ text: String, kind: RowKind, altRow: Bool = false,
+                          height: CGFloat? = nil, subtitle: String? = nil) {
             let h = height ?? cellH
             let lbl = UILabel()
-            lbl.text = text
             lbl.adjustsFontSizeToFitWidth = true
             lbl.minimumScaleFactor = 0.7
             lbl.lineBreakMode = .byTruncatingTail
-            lbl.numberOfLines = 1
             lbl.backgroundColor = rowBackground(kind, altRow: altRow)
             lbl.translatesAutoresizingMaskIntoConstraints = false
             lbl.widthAnchor.constraint(equalToConstant: nameW).isActive = true
@@ -279,9 +278,26 @@ final class TournamentScorecardViewController: UIViewController {
             case .playerGross:
                 lbl.font = .systemFont(ofSize: 10, weight: .regular); lbl.textColor = .tertiaryLabel
             case .playerStrokes:
-                lbl.font = .systemFont(ofSize: 9, weight: .regular); lbl.textColor = .tertiaryLabel
+                lbl.font = .systemFont(ofSize: 9, weight: .regular); lbl.textColor = UIColor(red: 0.20, green: 0.45, blue: 0.80, alpha: 0.85)
             case .team:
                 lbl.font = .systemFont(ofSize: 11, weight: .bold); lbl.textColor = .systemBlue
+            }
+            if let sub = subtitle {
+                lbl.numberOfLines = 2
+                let mainFont = lbl.font!
+                let subFont  = UIFont.systemFont(ofSize: 8, weight: .regular)
+                let para = NSMutableParagraphStyle(); para.lineSpacing = 0
+                let attr = NSMutableAttributedString(
+                    string: text + "\n",
+                    attributes: [.font: mainFont, .foregroundColor: lbl.textColor as Any,
+                                 .paragraphStyle: para])
+                attr.append(NSAttributedString(
+                    string: sub,
+                    attributes: [.font: subFont, .foregroundColor: UIColor.tertiaryLabel]))
+                lbl.attributedText = attr
+            } else {
+                lbl.numberOfLines = 1
+                lbl.text = text
             }
             nameCol.addArrangedSubview(lbl)
         }
@@ -290,9 +306,9 @@ final class TournamentScorecardViewController: UIViewController {
         addNameLabel("Par", kind: .par)
         for (pi, p) in players.enumerated() {
             let alt = pi % 2 == 0
-            addNameLabel(p.name,       kind: .player,        altRow: alt)
-            addNameLabel("HC=\(p.hc)", kind: .playerGross,   altRow: alt)
-            addNameLabel("",           kind: .playerStrokes, altRow: alt, height: strkCellH)
+            addNameLabel(p.name,         kind: .player,        altRow: alt, subtitle: "Points")
+            addNameLabel("HC=\(p.hc)",   kind: .playerGross,   altRow: alt)
+            addNameLabel("Strokes",      kind: .playerStrokes, altRow: alt, height: strkCellH)
         }
         addNameLabel("Team", kind: .team)
 

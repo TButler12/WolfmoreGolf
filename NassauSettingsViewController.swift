@@ -235,10 +235,16 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
     @objc private func remoteNassauTapped(_ sender: UIButton) {
         let ac = UIAlertController(title: "Remote Nassau", message: nil, preferredStyle: .actionSheet)
 
-        ac.addAction(UIAlertAction(title: "Send Invite", style: .default) { [weak self] _ in
+        ac.addAction(UIAlertAction(title: "▶ Start Live Match", style: .default) { [weak self] _ in
+            self?.startLiveMatchTapped()
+        })
+        ac.addAction(UIAlertAction(title: "↩ Join Live Match", style: .default) { [weak self] _ in
+            self?.joinLiveMatchTapped()
+        })
+        ac.addAction(UIAlertAction(title: "Send Invite (Text)", style: .default) { [weak self] _ in
             self?.sendRemoteInvite()
         })
-        ac.addAction(UIAlertAction(title: "Import Invite", style: .default) { [weak self] _ in
+        ac.addAction(UIAlertAction(title: "Import Invite (Text)", style: .default) { [weak self] _ in
             self?.importRemoteInvite()
         })
         ac.addAction(UIAlertAction(title: "View Matches", style: .default) { [weak self] _ in
@@ -252,6 +258,89 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             pop.sourceRect = sender.bounds
         }
         present(ac, animated: true)
+    }
+
+    private func startLiveMatchTapped() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let courseName = g.course.name
+        let stake      = Double(g.baseGameStake)
+
+        Task {
+            do {
+                let match = try await SupabaseService.shared.createMatch(
+                    courseA: courseName,
+                    courseB: "",
+                    stake: stake,
+                    games: ["nassau"]
+                )
+                GameManager.shared.update { $0.remoteMatchId = match.id }
+                await MainActor.run {
+                    let alert = UIAlertController(
+                        title: "Live Match Created",
+                        message: "Share this code with your opponent:\n\n\(match.code)",
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
+                        UIPasteboard.general.string = match.code
+                    })
+                    alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                    self.present(alert, animated: true)
+                }
+            } catch {
+                await MainActor.run { self.showLiveMatchError(error) }
+            }
+        }
+    }
+
+    private func joinLiveMatchTapped() {
+        let prompt = UIAlertController(
+            title: "Join Live Match",
+            message: "Enter the 6-character match code",
+            preferredStyle: .alert
+        )
+        prompt.addTextField { tf in
+            tf.placeholder            = "WOLF42"
+            tf.autocapitalizationType = .allCharacters
+        }
+        prompt.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        prompt.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
+            guard let self,
+                  let code = prompt.textFields?.first?.text?
+                      .trimmingCharacters(in: .whitespacesAndNewlines),
+                  !code.isEmpty else { return }
+            Task {
+                do {
+                    let match = try await SupabaseService.shared.joinMatch(code: code)
+                    GameManager.shared.update { $0.remoteMatchId = match.id }
+                    SupabaseService.shared.subscribeToResults(matchId: match.id) { [weak self] result in
+                        self?.handleLiveResult(result)
+                    }
+                    await MainActor.run {
+                        let alert = UIAlertController(
+                            title: "Joined Match",
+                            message: "Connected to live match \(match.code). Scores will sync as they come in.",
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                        self.present(alert, animated: true)
+                    }
+                } catch {
+                    await MainActor.run { self.showLiveMatchError(error, code: code) }
+                }
+            }
+        })
+        present(prompt, animated: true)
+    }
+
+    private func handleLiveResult(_ result: HoleResultRecord) {
+        // Placeholder: no live scoring UI in this VC yet.
+    }
+
+    private func showLiveMatchError(_ error: Error, code: String? = nil) {
+        let msg = code.map { "Could not find match with code \($0)." } ?? error.localizedDescription
+        let alert = UIAlertController(title: "Live Match Error", message: msg, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        present(alert, animated: true)
     }
 
     private func sendRemoteInvite() {

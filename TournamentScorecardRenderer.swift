@@ -253,9 +253,16 @@ final class TournamentScorecardRenderer {
                 let semiBFont  = UIFont.systemFont(ofSize: 13, weight: .semibold)
                 switch ci {
                 case 0:
+                    // Name on top portion, "Points" sub-label on bottom
+                    let nameH = ptsH * 0.62
+                    let subH  = ptsH - nameH
                     cell(player.name,
-                         x: colXs[ci], y: ry, w: colW(ci), h: ptsH,
+                         x: colXs[ci], y: ry, w: colW(ci), h: nameH,
                          font: semiBFont, color: .black, leftAlign: true)
+                    cell("Points",
+                         x: colXs[ci], y: ry + nameH, w: colW(ci), h: subH,
+                         font: .systemFont(ofSize: 8, weight: .regular),
+                         color: UIColor(white: 0.60, alpha: 1), leftAlign: true)
                 case 10:
                     let text = hasFront ? "\(frontSum)" : "·"
                     cell(text, x: colXs[ci], y: ry, w: colW(ci), h: ptsH,
@@ -337,13 +344,21 @@ final class TournamentScorecardRenderer {
             for ci in 0..<22 {
                 fill(x: colXs[ci], y: ry, w: colW(ci), h: strkH,
                      color: isSumm(ci) ? summBg : rowBg)
-                if let h = hIdx(ci) {
-                    let s = player.strokes[h]
-                    if s > 0 {
-                        cell(String(repeating: "•", count: s),
-                             x: colXs[ci], y: ry, w: colW(ci), h: strkH,
-                             font: .systemFont(ofSize: 9, weight: .regular),
-                             color: strkBlue)
+                switch ci {
+                case 0:
+                    cell("Strokes",
+                         x: colXs[ci], y: ry, w: colW(ci), h: strkH,
+                         font: .systemFont(ofSize: 8, weight: .regular),
+                         color: UIColor(white: 0.55, alpha: 1), leftAlign: true)
+                default:
+                    if let h = hIdx(ci) {
+                        let s = player.strokes[h]
+                        if s > 0 {
+                            cell(String(repeating: "•", count: s),
+                                 x: colXs[ci], y: ry, w: colW(ci), h: strkH,
+                                 font: .systemFont(ofSize: 11, weight: .regular),
+                                 color: strkBlue)
+                        }
                     }
                 }
             }

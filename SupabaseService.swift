@@ -24,29 +24,66 @@ final class SupabaseService {
         games: [String]
     ) async throws -> MatchRecord {
         let code = generateCode()
+        let nassau = GameManager.shared.currentGame?.nassauState
+        let pressMode      = nassau?.settings.pressMode.rawValue ?? NassauPressMode.auto.rawValue
+        let trigger        = nassau?.settings.autoPressTriggerDown ?? 2
+        let playerIncluded = nassau?.playerIncluded ?? Array(repeating: true, count: MAX_PLAYERS)
+
         let response: PostgrestResponse<MatchRecord> = try await client
             .from("matches")
             .insert([
-                "code":     code,
-                "course_a": courseA,
-                "course_b": courseB,
-                "stake":    String(stake),
-                "games":    games.joined(separator: ","),
-                "status":   "active"
-            ])
+                "code":             AnyJSON.string(code),
+                "course_a":         AnyJSON.string(courseA),
+                "course_b":         AnyJSON.string(courseB),
+                "stake":            AnyJSON.double(stake),
+                "games":            AnyJSON.array(games.map { .string($0) }),
+                "status":           AnyJSON.string("active"),
+                "press_mode":       AnyJSON.string(pressMode),
+                "trigger":          AnyJSON.integer(trigger),
+                "player_included":  AnyJSON.array(playerIncluded.map { .bool($0) })
+            ] as [String: AnyJSON])
             .select()
             .single()
             .execute()
         return response.value
     }
 
-    // MARK: - Join match
+    // MARK: - Join match (applies host's Nassau settings to local state)
     func joinMatch(code: String) async throws -> MatchRecord {
         let response: PostgrestResponse<MatchRecord> = try await client
             .from("matches")
             .select()
             .eq("code", value: code.uppercased())
             .single()
+            .execute()
+        let match = response.value
+
+        GameManager.shared.update { g in
+            var state = g.nassauState ?? NassauState()
+            if let stake = match.stake {
+                state.settings.baseStake = stake
+            }
+            if let pm = match.pressMode, let mode = NassauPressMode(rawValue: pm) {
+                state.settings.pressMode = mode
+            }
+            if let trigger = match.trigger {
+                state.settings.autoPressTriggerDown = trigger
+            }
+            if let included = match.playerIncluded {
+                state.playerIncluded = included
+            }
+            g.nassauState = state
+        }
+
+        return match
+    }
+
+    // MARK: - Fetch active matches
+    func fetchActiveMatches() async throws -> [MatchRecord] {
+        let response: PostgrestResponse<[MatchRecord]> = try await client
+            .from("matches")
+            .select()
+            .eq("status", value: "active")
             .execute()
         return response.value
     }

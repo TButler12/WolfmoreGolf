@@ -7,13 +7,18 @@ struct MatchRecord: Codable {
     let courseA: String?
     let courseB: String?
     let stake: Double?
-    let games: String?
+    let games: [String]?
     let status: String
+    let pressMode: String?
+    let trigger: Int?
+    let playerIncluded: [Bool]?
 
     enum CodingKeys: String, CodingKey {
-        case id, code, stake, games, status
-        case courseA = "course_a"
-        case courseB = "course_b"
+        case id, code, stake, games, status, trigger
+        case courseA        = "course_a"
+        case courseB        = "course_b"
+        case pressMode      = "press_mode"
+        case playerIncluded = "player_included"
     }
 }
 
