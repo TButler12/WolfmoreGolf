@@ -1263,6 +1263,28 @@ let OAK_TREE_NATIONAL_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
+// MARK: - Built-in: Dornick Hills Golf & Country Club
+// Ardmore, OK • Private • Perry Maxwell
+// Black: Par 70 | 6,621 yds | 73.7 / 131
+// =======================================================
+
+private let DORNICK_HILLS_ID = UUID(uuidString: "D0EE1C11-0001-4B5E-A2F0-000000000008")!
+
+let DORNICK_HILLS_PARS: [Int] = [
+    4,3,4,3,4,5,4,3,4,
+    4,4,4,4,4,4,5,3,4
+]
+
+let DORNICK_HILLS_HCS: [Int] = [
+    15,13,7,5,17,11,9,3,1,
+    10,8,16,2,18,4,6,14,12
+]
+
+let DORNICK_HILLS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6621, rating: 73.7, slope: 131),
+]
+
+// =======================================================
 // MARK: - Built-in: Oak Tree Country Club — East
 // Edmond, OK • Private • Pete & Alice Dye
 // Gold: Par 70 | 7,116 yds | 76.3 / 137
@@ -8674,6 +8696,21 @@ private enum BuiltIns {
             phone: "(918) 272-1260",
             website: "https://www.patriotgolfclub.com/",
             address: "5790 N. Patriot Dr., Owasso, OK 74055"
+        ),
+        c(
+            DORNICK_HILLS_ID,
+            "Dornick Hills CC",
+            DORNICK_HILLS_PARS,
+            DORNICK_HILLS_HCS,
+            DORNICK_HILLS_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Perry Maxwell",
+            type: "Private",
+            phone: "(580) 223-4071",
+            website: "https://www.dornickhills.com/",
+            address: "519 Country Club Rd, Ardmore, OK 73401",
+            isWolfApproved: true
         ),
         c(
             OAK_TREE_CC_EAST_ID,
