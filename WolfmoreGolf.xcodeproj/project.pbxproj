@@ -10,6 +10,8 @@
 		44DDAAF7AA504F088F946EB1 /* PastGamesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DA27DBD514F44729ADCBC19 /* PastGamesViewController.swift */; };
 		4D843132DAAB4D78B8688A94 /* GameManager+Tournament.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* TournamentScorecardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */; };
+		7B4E1A3D0EBE4811A681DE64 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7298A503BD3F427C807DB30C /* SupabaseService.swift */; };
+		249133D5DF2043B8BC34834D /* SupabaseModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5EC0551DDE495DBC914610 /* SupabaseModels.swift */; };
 		B66C2E5033A842F5A84999BE /* PastGameDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */; };
 		D64B14586458493690DECE2E /* TournamentSummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132A36A89650472DA654B343 /* TournamentSummaryViewController.swift */; };
 		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
@@ -104,6 +106,8 @@
 		79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastGameDetailViewController.swift; sourceTree = "<group>"; };
 		9402F93CD28E4C029E042DFC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardRenderer.swift; sourceTree = "<group>"; };
+		7298A503BD3F427C807DB30C /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
+		2E5EC0551DDE495DBC914610 /* SupabaseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseModels.swift; sourceTree = "<group>"; };
 		EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameManager+Tournament.swift"; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
@@ -282,6 +286,8 @@
 				132A36A89650472DA654B343 /* TournamentSummaryViewController.swift */,
 				F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */,
 				B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */,
+				7298A503BD3F427C807DB30C /* SupabaseService.swift */,
+				2E5EC0551DDE495DBC914610 /* SupabaseModels.swift */,
 				F63960512F60D62500EC0C30 /* GameModels.swift */,
 				F63960522F60D62500EC0C30 /* GameStatsViewController.swift */,
 				F63960532F60D62500EC0C30 /* GameViewController.swift */,
@@ -391,6 +397,9 @@
 			);
 			mainGroup = F64DE77F2EB0396000F8D625;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				F6DF411D2FC89DB400F8322F /* XCRemoteSwiftPackageReference "supabase-swift" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F64DE7892EB0396000F8D625 /* Products */;
 			projectDirPath = "";
@@ -475,6 +484,8 @@
 				D64B14586458493690DECE2E /* TournamentSummaryViewController.swift in Sources */,
 				E8C1A3F72B9D4E6A8F5C2D71 /* TournamentScorecardViewController.swift in Sources */,
 				A1B2C3D4E5F60718293A4B5C /* TournamentScorecardRenderer.swift in Sources */,
+				7B4E1A3D0EBE4811A681DE64 /* SupabaseService.swift in Sources */,
+				249133D5DF2043B8BC34834D /* SupabaseModels.swift in Sources */,
 				F6D5417C2F7498740020588F /* TextGroupStore.swift in Sources */,
 				F639606D2F60D62500EC0C30 /* GameModels.swift in Sources */,
 				F639606E2F60D62500EC0C30 /* GameStatsViewController.swift in Sources */,
@@ -768,6 +779,17 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		F6DF411D2FC89DB400F8322F /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
 	};
 	rootObject = F64DE7802EB0396000F8D625 /* Project object */;
 }
