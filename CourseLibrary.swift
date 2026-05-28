@@ -1216,6 +1216,53 @@ let PATRIOT_GC_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
+// MARK: - Built-in: Southern Hills Country Club
+// Tulsa, OK • Private • Perry Maxwell • 1936
+// Blue: Par 71 | 7,196 yds | 76.0 / 144  (pre-2022 renovation)
+// =======================================================
+
+private let SOUTHERN_HILLS_CC_ID = UUID(uuidString: "507EB111-0001-4B5E-A2F0-000000000003")!
+
+let SOUTHERN_HILLS_CC_PARS: [Int] = [
+    4,4,4,5,5,3,4,3,4,
+    4,3,4,5,3,4,5,3,4
+]
+
+let SOUTHERN_HILLS_CC_HCS: [Int] = [
+    3,1,7,13,5,17,15,11,9,
+    12,16,4,10,14,2,18,6,8
+]
+
+let SOUTHERN_HILLS_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 7196, rating: 76.0, slope: 144),
+    TeeInfo(teeName: "White", yardage: 6850, rating: 74.7, slope: 144),
+    TeeInfo(teeName: "Gold",  yardage: 6179, rating: 73.0, slope: 138),
+]
+
+// =======================================================
+// MARK: - Built-in: Karsten Creek Golf Club
+// Stillwater, OK • Private • Tom Fazio / Dennis Wise • 1994
+// Orange: Par 72 | 7,407 yds | 77.2 / 152
+// Home course of Oklahoma State University golf teams
+// =======================================================
+
+private let KARSTEN_CREEK_ID = UUID(uuidString: "CA5E0001-0001-4B5E-A2F0-000000000004")!
+
+let KARSTEN_CREEK_PARS: [Int] = [
+    5,4,3,4,4,4,3,4,5,
+    4,3,4,4,5,3,4,4,5
+]
+
+let KARSTEN_CREEK_HCS: [Int] = [
+    15,1,7,11,5,9,13,3,17,
+    6,10,18,4,12,16,8,2,14
+]
+
+let KARSTEN_CREEK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Orange", yardage: 7407, rating: 77.2, slope: 152),
+]
+
+// =======================================================
 // MARK: - Built-in: Augusta National (Masters)
 // Augusta, GA  •  Par 72  •  7485 yds  •  76.2 / 148
 // =======================================================
@@ -8560,6 +8607,36 @@ private enum BuiltIns {
             phone: "(918) 272-1260",
             website: "https://www.patriotgolfclub.com/",
             address: "5790 N. Patriot Dr., Owasso, OK 74055"
+        ),
+        c(
+            SOUTHERN_HILLS_CC_ID,
+            "Southern Hills CC",
+            SOUTHERN_HILLS_CC_PARS,
+            SOUTHERN_HILLS_CC_HCS,
+            SOUTHERN_HILLS_CC_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Perry Maxwell",
+            type: "Private",
+            phone: "(918) 492-3351",
+            website: "https://www.southernhillscc.com/",
+            address: "2636 East 61st Street, Tulsa, OK 74136",
+            isWolfApproved: true
+        ),
+        c(
+            KARSTEN_CREEK_ID,
+            "Karsten Creek GC",
+            KARSTEN_CREEK_PARS,
+            KARSTEN_CREEK_HCS,
+            KARSTEN_CREEK_TEES,
+            country: "USA",
+            state: "OK",
+            architect: "Tom Fazio / Dennis Wise",
+            type: "Private",
+            phone: "(405) 743-1658",
+            website: "https://www.karstencreek.com/",
+            address: "1800 S. Memorial Drive, Stillwater, OK 74074",
+            isWolfApproved: true
         ),
         c(
             COLORADO_GOLF_CLUB_ID,
