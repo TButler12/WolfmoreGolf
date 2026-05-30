@@ -136,13 +136,13 @@ final class SupabaseService {
     ) async throws {
         let name = playerName ?? ProfileStore.name ?? ""
         print("DEBUG submitHoleScore: matchId=\(matchId) hole=\(hole) score=\(grossScore) playerName=\(name)")
-        try await client.from("hole_scores").insert([
+        try await client.from("hole_scores").upsert([
             "match_id":    matchId,
             "player_slot": String(playerSlot),
             "hole":        String(hole),
             "gross_score": String(grossScore),
             "player_name": name
-        ]).execute()
+        ], onConflict: "match_id,player_slot,hole").execute()
     }
 
     // MARK: - Fetch raw hole scores

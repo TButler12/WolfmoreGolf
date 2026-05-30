@@ -492,6 +492,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         Task {
             do {
                 let match = try await SupabaseService.shared.fetchMatch(id: matchId)
+                print("DEBUG liveNassauTapped - match fetched: \(match.id) hostName: \(match.hostName ?? "nil")")
                 await MainActor.run {
                     let vc = LiveNassauViewController()
                     vc.match = match
@@ -2308,17 +2309,23 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         if let matchId = GameManager.shared.currentGame?.remoteMatchId,
            let g = GameManager.shared.currentGame {
             let ownerSlot = myPlayerIndex(in: g) ?? 0
-            guard ownerSlot < g.scores.count,
-                  ownerSlot < g.holeCommitted.count,
-                  let gross = g.scores[ownerSlot][hole] else { return }
-            let ownerName = g.playerNames[ownerSlot]
-            Task { try? await SupabaseService.shared.submitHoleScore(
-                matchId: matchId,
-                playerSlot: ownerSlot,
-                hole: hole,
-                grossScore: gross,
-                playerName: ownerName
-            )}
+            if ownerSlot < g.scores.count, let gross = g.scores[ownerSlot][hole] {
+                let ownerName = g.playerNames[ownerSlot]
+                Task {
+                    do {
+                        try await SupabaseService.shared.submitHoleScore(
+                            matchId: matchId,
+                            playerSlot: ownerSlot,
+                            hole: hole,
+                            grossScore: gross,
+                            playerName: ownerName
+                        )
+                        print("DEBUG submitHoleScore success: hole=\(hole + 1) name=\(ownerName) score=\(gross)")
+                    } catch {
+                        print("ERROR submitHoleScore failed: \(error)")
+                    }
+                }
+            }
         }
 
         // 6) paint

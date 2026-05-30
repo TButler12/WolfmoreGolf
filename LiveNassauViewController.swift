@@ -30,6 +30,7 @@ final class LiveNassauViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("DEBUG LiveNassau viewDidLoad - match: \(match?.id ?? "nil")")
         view.backgroundColor = .systemBackground
         title = match.map { "Live · \($0.code)" } ?? "Live Match"
         setupUI()
@@ -93,6 +94,7 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - Data loading
 
     private func fetchPriorScores() {
+        print("DEBUG fetchPriorScores starting - matchId: \(match?.id ?? "nil")")
         guard let matchId = match?.id else {
             rebuildStandings()
             return
@@ -101,6 +103,7 @@ final class LiveNassauViewController: UIViewController {
             do {
                 let prior = try await SupabaseService.shared.fetchHoleScores(matchId: matchId)
                 await MainActor.run {
+                    print("DEBUG fetchPriorScores: loaded \(prior.count) records")
                     self.receivedScores = prior
                     self.rebuildStandings()
                     self.setStatus(live: true)
@@ -118,6 +121,7 @@ final class LiveNassauViewController: UIViewController {
         guard let matchId = match?.id else { return }
         SupabaseService.shared.subscribeToHoleScores(matchId: matchId) { [weak self] record in
             guard let self else { return }
+            print("DEBUG score received: hole=\(record.hole) player=\(record.playerName ?? "nil")")
             // Deduplicate: keep latest score per (player, hole); prefer name match, fall back to slot
             self.receivedScores.removeAll {
                 if let rn = record.playerName, !rn.isEmpty,
@@ -208,6 +212,7 @@ final class LiveNassauViewController: UIViewController {
     }
 
     private func rebuildStandings() {
+        print("DEBUG rebuildStandings called: \(receivedScores.count) scores")
         guard var g = buildSyntheticRemoteGame() else {
             rows = []
             tableView.reloadData()
@@ -285,7 +290,7 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - Final result
 
     @objc private func finalResultTapped() {
-        guard var g = buildSyntheticRemoteGame(),
+        guard let g = buildSyntheticRemoteGame(),
               var state = g.nassauState else { return }
 
         NassauEngine.recalculate(state: &state, gameData: g)
