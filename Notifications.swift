@@ -9,5 +9,6 @@ import Foundation
 
 extension Notification.Name {
     static let roundSaveBlockedNeedsPro = Notification.Name("roundSaveBlockedNeedsPro")
+    static let remoteMatchDidStart      = Notification.Name("RemoteMatchDidStart")
 }
 

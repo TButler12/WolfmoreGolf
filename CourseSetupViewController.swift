@@ -49,12 +49,6 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     // MARK: - Initial Load
 
     private func loadInitialCourse() {
-        // Priority:
-        // 1) explicit loadCourseID (editing)
-        // 2) selectedCourseID (from Home picker)
-        // 3) match current game pars/hcs to a saved course
-        // 4) WolfMore defaults
-
         if let id = loadCourseID, let c = CourseLibrary.shared.get(id: id) {
             setActiveCourse(c)
             return
@@ -66,14 +60,13 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
             return
         }
 
-        if let match = matchCourseToCurrentGame() {
-            setActiveCourse(match)
-            return
+        // No prior pick — default to WolfMore
+        if let wm = CourseLibrary.shared.wolfMore() {
+            setActiveCourse(wm)
+        } else {
+            applyToUIAndModel(pars: WOLFMORE_PARS, hcs: WOLFMORE_HCS)
+            activeCourseID = nil
         }
-
-        // fallback
-        applyToUIAndModel(pars: WOLFMORE_PARS, hcs: WOLFMORE_HCS)
-        activeCourseID = CourseLibrary.shared.wolfMore()?.id
     }
 
     private func setActiveCourse(_ c: CourseProfile) {

@@ -190,6 +190,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private weak var sortButton: UIButton?
     private var sortButtonInstalled = false
 
+    private weak var liveNassauButton: UIButton?
+    private var liveNassauInstalled = false
+
     private var displayOrder: [Int] {
         let all = Array(0..<MAX_PLAYERS)
         guard isSortedByDollarGame,
@@ -312,6 +315,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         gameModeSegment.isHidden = true
 
         NotificationCenter.default.addObserver(self, selector: #selector(handleReloadUI), name: .reloadUI, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRemoteMatchDidStart), name: .remoteMatchDidStart, object: nil)
+    }
+
+    @objc private func handleRemoteMatchDidStart() {
+        print("DEBUG RemoteMatchDidStart received")
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.installLiveNassauButtonIfNeeded()
+            self.liveNassauButton?.isHidden = false
+        }
     }
 
     @objc private func handleReloadUI() {
@@ -328,6 +341,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
+        if GameManager.shared.currentGame?.remoteMatchId != nil {
+            installLiveNassauButtonIfNeeded()
+            liveNassauButton?.isHidden = false
+        } else {
+            liveNassauButton?.isHidden = true
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -339,6 +358,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         super.viewDidLayoutSubviews()
         installSortButtonIfNeeded()
         installHoleInfoHeaderIfNeeded()
+        installLiveNassauButtonIfNeeded()
     }
 
     // MARK: - Combined hole/par/HC header
@@ -440,6 +460,51 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         sortButton = btn
         updateSortButtonTitle()
+    }
+
+    private func installLiveNassauButtonIfNeeded() {
+        guard !liveNassauInstalled else { return }
+        liveNassauInstalled = true
+
+        var cfg = UIButton.Configuration.tinted()
+        cfg.title = "Live Nassau"
+        cfg.image = UIImage(systemName: "dot.radiowaves.left.and.right")
+        cfg.imagePlacement = .leading
+        cfg.imagePadding = 6
+        cfg.cornerStyle = .capsule
+        let btn = UIButton(configuration: cfg)
+        btn.addTarget(self, action: #selector(liveNassauTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.isHidden = GameManager.shared.currentGame?.remoteMatchId == nil
+        view.addSubview(btn)
+
+        // Bottom-right of safe area, level with the "Text" / "Game Results" row
+        NSLayoutConstraint.activate([
+            btn.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
+            btn.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+        ])
+
+        liveNassauButton = btn
+    }
+
+    @objc private func liveNassauTapped() {
+        guard let matchId = GameManager.shared.currentGame?.remoteMatchId else { return }
+        Task {
+            do {
+                let match = try await SupabaseService.shared.fetchMatch(id: matchId)
+                await MainActor.run {
+                    let vc = LiveNassauViewController()
+                    vc.match = match
+                    self.navigationController?.pushViewController(vc, animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    let ac = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+                    ac.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(ac, animated: true)
+                }
+            }
+        }
     }
 
     @objc private func sortButtonTapped() {
@@ -2144,6 +2209,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         navigationController?.pushViewController(vc, animated: true)
     }
     @IBAction func updateScorePushed(_ sender: UIButton) {
+        print("DEBUG updateHoleScores tapped - remoteMatchId: \(GameManager.shared.currentGame?.remoteMatchId ?? "nil")")
         sender.isEnabled = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             sender.isEnabled = true
@@ -2236,6 +2302,23 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             for s in 0..<seats {
                 g.playerMoney[s][hole] = payouts[s]
             }
+        }
+
+        // 5b) Live Nassau score sync — submit owner's score only
+        if let matchId = GameManager.shared.currentGame?.remoteMatchId,
+           let g = GameManager.shared.currentGame {
+            let ownerSlot = myPlayerIndex(in: g) ?? 0
+            guard ownerSlot < g.scores.count,
+                  ownerSlot < g.holeCommitted.count,
+                  let gross = g.scores[ownerSlot][hole] else { return }
+            let ownerName = g.playerNames[ownerSlot]
+            Task { try? await SupabaseService.shared.submitHoleScore(
+                matchId: matchId,
+                playerSlot: ownerSlot,
+                hole: hole,
+                grossScore: gross,
+                playerName: ownerName
+            )}
         }
 
         // 6) paint
@@ -2411,6 +2494,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             self.refreshForCurrentHole()
 
             // Live Supabase submission (no-op when not in a live match)
+            print("DEBUG score saved - gross: \(score ?? -1) remoteMatchId: \(GameManager.shared.currentGame?.remoteMatchId ?? "nil")")
+            print("DEBUG remoteMatchId in game: \(GameManager.shared.currentGame?.remoteMatchId ?? "nil")")
             if let matchId = GameManager.shared.currentGame?.remoteMatchId,
                let gross = score {
                 Task { try? await SupabaseService.shared.submitHoleScore(

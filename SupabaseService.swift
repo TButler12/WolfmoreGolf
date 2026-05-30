@@ -6,6 +6,7 @@ final class SupabaseService {
     static let shared = SupabaseService()
 
     let client: SupabaseClient
+    private var holeScoreChannels: [String: RealtimeChannelV2] = [:]
 
     private init() {
         client = SupabaseClient(
@@ -40,7 +41,8 @@ final class SupabaseService {
                 "status":           AnyJSON.string("active"),
                 "press_mode":       AnyJSON.string(pressMode),
                 "trigger":          AnyJSON.integer(trigger),
-                "player_included":  AnyJSON.array(playerIncluded.map { .bool($0) })
+                "player_included":  AnyJSON.array(playerIncluded.map { .bool($0) }),
+                "host_name":        AnyJSON.string(ProfileStore.name ?? "")
             ] as [String: AnyJSON])
             .select()
             .single()
@@ -57,6 +59,13 @@ final class SupabaseService {
             .single()
             .execute()
         let match = response.value
+
+        // Record the joiner's name on the match row
+        try await client
+            .from("matches")
+            .update(["opponent_name": ProfileStore.name ?? ""])
+            .eq("id", value: match.id)
+            .execute()
 
         GameManager.shared.update { g in
             var state = g.nassauState ?? NassauState()
@@ -78,12 +87,25 @@ final class SupabaseService {
         return match
     }
 
-    // MARK: - Fetch active matches
+    // MARK: - Fetch single match by UUID
+    func fetchMatch(id: String) async throws -> MatchRecord {
+        let response: PostgrestResponse<MatchRecord> = try await client
+            .from("matches")
+            .select()
+            .eq("id", value: id)
+            .single()
+            .execute()
+        return response.value
+    }
+
+    // MARK: - Fetch active matches (last 24 hours only)
     func fetchActiveMatches() async throws -> [MatchRecord] {
+        let cutoff = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-86400))
         let response: PostgrestResponse<[MatchRecord]> = try await client
             .from("matches")
             .select()
             .eq("status", value: "active")
+            .gte("created_at", value: cutoff)
             .execute()
         return response.value
     }
@@ -104,18 +126,68 @@ final class SupabaseService {
     }
 
     // MARK: - Submit hole score
+    // playerName defaults to the device owner; pass an explicit name when submitting other players' scores.
     func submitHoleScore(
         matchId: String,
         playerSlot: Int,
         hole: Int,
-        grossScore: Int
+        grossScore: Int,
+        playerName: String? = nil
     ) async throws {
+        let name = playerName ?? ProfileStore.name ?? ""
+        print("DEBUG submitHoleScore: matchId=\(matchId) hole=\(hole) score=\(grossScore) playerName=\(name)")
         try await client.from("hole_scores").insert([
             "match_id":    matchId,
             "player_slot": String(playerSlot),
             "hole":        String(hole),
-            "gross_score": String(grossScore)
+            "gross_score": String(grossScore),
+            "player_name": name
         ]).execute()
+    }
+
+    // MARK: - Fetch raw hole scores
+    func fetchHoleScores(matchId: String) async throws -> [HoleScoreRecord] {
+        let response: PostgrestResponse<[HoleScoreRecord]> = try await client
+            .from("hole_scores")
+            .select()
+            .eq("match_id", value: matchId)
+            .execute()
+        return response.value
+    }
+
+    // MARK: - Subscribe to hole scores (live opponent updates)
+    // Channel stored internally so the VC can call unsubscribeFromHoleScores on dismiss.
+    func subscribeToHoleScores(
+        matchId: String,
+        onScore: @escaping (HoleScoreRecord) -> Void
+    ) {
+        let channel = client.channel("scores-\(matchId)")
+        holeScoreChannels[matchId] = channel
+
+        channel.onPostgresChange(
+            InsertAction.self,
+            schema: "public",
+            table: "hole_scores",
+            filter: "match_id=eq.\(matchId)"
+        ) { action in
+            if let record = try? action.decodeRecord(
+                as: HoleScoreRecord.self,
+                decoder: JSONDecoder()
+            ) {
+                print("DEBUG incomingScore: \(record)")
+                DispatchQueue.main.async { onScore(record) }
+            }
+        }
+
+        Task {
+            await channel.subscribe()
+            print("DEBUG subscribeToHoleScores: subscribed to matchId=\(matchId)")
+        }
+    }
+
+    func unsubscribeFromHoleScores(matchId: String) {
+        guard let channel = holeScoreChannels.removeValue(forKey: matchId) else { return }
+        Task { await channel.unsubscribe() }
     }
 
     // MARK: - Fetch resolved hole results

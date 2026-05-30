@@ -262,34 +262,79 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
 
     private func startLiveMatchTapped() {
         guard let g = GameManager.shared.currentGame else { return }
+        let nassau     = g.nassauState
+        let stake      = nassau?.settings.baseStake ?? Double(g.baseGameStake)
         let courseName = g.course.name
-        let stake      = Double(g.baseGameStake)
 
-        Task {
-            do {
-                let match = try await SupabaseService.shared.createMatch(
-                    courseA: courseName,
-                    courseB: "",
-                    stake: stake,
-                    games: ["nassau"]
-                )
-                GameManager.shared.update { $0.remoteMatchId = match.id }
-                await MainActor.run {
-                    let alert = UIAlertController(
-                        title: "Live Match Created",
-                        message: "Share this code with your opponent:\n\n\(match.code)",
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
-                        UIPasteboard.general.string = match.code
-                    })
-                    alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                    self.present(alert, animated: true)
-                }
-            } catch {
-                await MainActor.run { self.showLiveMatchError(error) }
-            }
+        // Build confirmation message from current nassauState
+        let stakeText: String = stake == floor(stake)
+            ? "$\(Int(stake))"
+            : String(format: "$%.2f", stake)
+
+        let pressModeText: String
+        switch nassau?.settings.pressMode ?? .auto {
+        case .auto:   pressModeText = "Auto"
+        case .manual: pressModeText = "Manual"
+        case .off:    pressModeText = "Off"
         }
+
+        let trigger = nassau?.settings.autoPressTriggerDown ?? 2
+
+        let included: [String] = (0..<MAX_PLAYERS).compactMap { idx in
+            guard idx < g.playerActivated.count, g.playerActivated[idx],
+                  idx < g.playerNames.count else { return nil }
+            let name = g.playerNames[idx].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { return nil }
+            let isIncluded = nassau.map { idx < $0.playerIncluded.count && $0.playerIncluded[idx] } ?? true
+            return isIncluded ? name : nil
+        }
+
+        let playersText = included.isEmpty ? "None" : included.joined(separator: ", ")
+
+        let message = """
+            Stake: \(stakeText)
+            Press Mode: \(pressModeText)
+            Trigger: \(trigger) down
+            Players: \(playersText)
+            """
+
+        let confirm = UIAlertController(
+            title: "Start Live Match",
+            message: message,
+            preferredStyle: .alert
+        )
+        confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        confirm.addAction(UIAlertAction(title: "Confirm", style: .default) { [weak self] _ in
+            guard let self else { return }
+            Task {
+                do {
+                    let match = try await SupabaseService.shared.createMatch(
+                        courseA: courseName,
+                        courseB: "",
+                        stake: stake,
+                        games: ["nassau"]
+                    )
+                    GameManager.shared.update { $0.remoteMatchId = match.id }
+                    print("DEBUG remoteMatchId set to: \(match.id)")
+                    NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
+                    await MainActor.run {
+                        let alert = UIAlertController(
+                            title: "Live Match Created",
+                            message: "Share this code with your opponent:\n\n\(match.code)",
+                            preferredStyle: .alert
+                        )
+                        alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
+                            UIPasteboard.general.string = match.code
+                        })
+                        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                        self.present(alert, animated: true)
+                    }
+                } catch {
+                    await MainActor.run { self.showLiveMatchError(error) }
+                }
+            }
+        })
+        present(confirm, animated: true)
     }
 
     private func joinLiveMatchTapped() {
@@ -312,6 +357,8 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                 do {
                     let match = try await SupabaseService.shared.joinMatch(code: code)
                     GameManager.shared.update { $0.remoteMatchId = match.id }
+                    print("DEBUG remoteMatchId set to: \(match.id)")
+                    NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
                     SupabaseService.shared.subscribeToResults(matchId: match.id) { [weak self] result in
                         self?.handleLiveResult(result)
                     }

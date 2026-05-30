@@ -15,11 +15,11 @@ final class RemoteMatchesViewController: UIViewController {
         title = "Remote Matches"
         view.backgroundColor = .systemBackground
         setupTableView()
-        loadMatches()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        isLoading = false   // reset so viewWillAppear always triggers a fresh fetch
         loadMatches()
     }
 
