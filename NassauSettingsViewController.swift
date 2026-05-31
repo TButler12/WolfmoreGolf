@@ -245,6 +245,13 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             let vc = RemoteMatchesViewController()
             self?.navigationController?.pushViewController(vc, animated: true)
         })
+        let hasMatch = GameManager.shared.currentGame?.remoteMatchId != nil
+        let shareTitle = hasMatch ? "Share Match Code" : "Share Match Code (no active match)"
+        let shareAction = UIAlertAction(title: shareTitle, style: .default) { [weak self] _ in
+            self?.shareMatchCode()
+        }
+        shareAction.isEnabled = hasMatch
+        ac.addAction(shareAction)
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
         if let pop = ac.popoverPresentationController {
@@ -323,6 +330,17 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                         alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
                             UIPasteboard.general.string = match.code
                         })
+                        alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak self] _ in
+                            guard let self else { return }
+                            let text = "Join my Nassau game on WolfMore! Match code: \(match.code)"
+                            let avc = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+                            if let pop = avc.popoverPresentationController {
+                                pop.sourceView = self.view
+                                pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+                                pop.permittedArrowDirections = []
+                            }
+                            self.present(avc, animated: true)
+                        })
                         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
                         self.present(alert, animated: true)
                     }
@@ -377,6 +395,31 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             }
         })
         present(prompt, animated: true)
+    }
+
+    private func shareMatchCode() {
+        guard let matchId = GameManager.shared.currentGame?.remoteMatchId else { return }
+        Task {
+            do {
+                let match = try await SupabaseService.shared.fetchMatch(id: matchId)
+                await MainActor.run {
+                    let text = "Join my Nassau game on WolfMore! Match code: \(match.code)"
+                    let avc = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+                    if let pop = avc.popoverPresentationController {
+                        pop.sourceView = self.view
+                        pop.sourceRect = CGRect(x: self.view.bounds.midX, y: self.view.bounds.midY, width: 0, height: 0)
+                        pop.permittedArrowDirections = []
+                    }
+                    self.present(avc, animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    let alert = UIAlertController(title: "Error", message: error.localizedDescription, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                    self.present(alert, animated: true)
+                }
+            }
+        }
     }
 
     private func handleLiveResult(_ result: HoleResultRecord) {
