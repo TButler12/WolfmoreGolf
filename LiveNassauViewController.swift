@@ -21,6 +21,8 @@ final class LiveNassauViewController: UIViewController {
         let title: String
         let rows: [SegmentRow]
         let isOverallComplete: Bool
+        let ownerName: String
+        let opponentName: String
     }
 
     private var pairings: [PairingSection] = []
@@ -257,7 +259,8 @@ final class LiveNassauViewController: UIViewController {
         }
 
         return PairingSection(title: "\(t1) vs \(t2)", rows: rows,
-                              isOverallComplete: NassauEngine.isOverallComplete(gameData: g))
+                              isOverallComplete: NassauEngine.isOverallComplete(gameData: g),
+                              ownerName: ownerName, opponentName: opponentName)
     }
 
     private func rebuildStandings() {
@@ -303,6 +306,48 @@ final class LiveNassauViewController: UIViewController {
         }
 
         return SegmentRow(title: title, statusLine: statusLine, moneyLine: moneyLine, isComplete: complete)
+    }
+
+    // MARK: - Scorecard detail
+
+    // Builds HC-paired hole data for Front 9 (front=true) or Back 9 (front=false).
+    // Each HC rank that either player has submitted appears as one PairedHole row.
+    func buildPairedHoles(ownerName: String, opponentName: String, front: Bool) -> [PairedHole] {
+        let ownerLower    = ownerName.lowercased()
+        let opponentLower = opponentName.lowercased()
+        func hcRank(_ s: HoleScoreRecord) -> Int { s.holeHc ?? (s.hole + 1) }
+
+        var ownerByHC: [Int: HoleScoreRecord] = [:]
+        var oppByHC:   [Int: HoleScoreRecord] = [:]
+
+        for s in receivedScores {
+            guard s.hole >= 0, s.hole < STANDARD_HOLES,
+                  let pn = s.playerName, !pn.isEmpty else { continue }
+            let inRange = front ? (s.hole <= 8) : (s.hole >= 9)
+            guard inRange else { continue }
+            let pnLower = pn.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let rank    = hcRank(s)
+            if      pnLower == ownerLower    { ownerByHC[rank] = s }
+            else if pnLower == opponentLower { oppByHC[rank]   = s }
+        }
+
+        let allRanks = Set(ownerByHC.keys).union(oppByHC.keys).sorted()
+        return allRanks.map { rank in
+            let o = ownerByHC[rank]
+            let p = oppByHC[rank]
+            let net: Int = {
+                guard let os = o?.grossScore, let ps = p?.grossScore else { return 0 }
+                return ps - os   // positive = owner winning (lower score wins in golf)
+            }()
+            return PairedHole(
+                hcRank: rank,
+                hostPhysicalHole: (o?.hole ?? 0) + 1,
+                hostScore: o?.grossScore,
+                opponentPhysicalHole: (p?.hole ?? 0) + 1,
+                opponentScore: p?.grossScore,
+                netResult: net
+            )
+        }
     }
 
     // MARK: - Final result
@@ -403,5 +448,17 @@ extension LiveNassauViewController: UITableViewDataSource {
 extension LiveNassauViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        // Rows 0 (Front 9) and 1 (Back 9) drill into the HC-paired scorecard
+        guard indexPath.section < pairings.count,
+              indexPath.row == 0 || indexPath.row == 1 else { return }
+        let section = pairings[indexPath.section]
+        let front   = indexPath.row == 0
+        let pairs   = buildPairedHoles(ownerName: section.ownerName, opponentName: section.opponentName, front: front)
+        let vc      = NassauScorecardViewController()
+        vc.segmentTitle = front ? "Front 9" : "Back 9"
+        vc.ownerName    = section.ownerName.isEmpty    ? "Player 1" : section.ownerName
+        vc.opponentName = section.opponentName.isEmpty ? "Player 2" : section.opponentName
+        vc.pairedHoles  = pairs
+        navigationController?.pushViewController(vc, animated: true)
     }
 }

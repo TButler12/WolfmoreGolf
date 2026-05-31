@@ -241,12 +241,6 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
         ac.addAction(UIAlertAction(title: "↩ Join Live Match", style: .default) { [weak self] _ in
             self?.joinLiveMatchTapped()
         })
-        ac.addAction(UIAlertAction(title: "Send Invite (Text)", style: .default) { [weak self] _ in
-            self?.sendRemoteInvite()
-        })
-        ac.addAction(UIAlertAction(title: "Import Invite (Text)", style: .default) { [weak self] _ in
-            self?.importRemoteInvite()
-        })
         ac.addAction(UIAlertAction(title: "View Matches", style: .default) { [weak self] _ in
             let vc = RemoteMatchesViewController()
             self?.navigationController?.pushViewController(vc, animated: true)
