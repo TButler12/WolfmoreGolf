@@ -2305,24 +2305,34 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
-        // 5b) Live Nassau score sync — submit owner's score only
-        if let matchId = GameManager.shared.currentGame?.remoteMatchId,
-           let g = GameManager.shared.currentGame {
-            let ownerSlot = myPlayerIndex(in: g) ?? 0
-            if ownerSlot < g.scores.count, let gross = g.scores[ownerSlot][hole] {
-                let ownerName = g.playerNames[ownerSlot]
-                Task {
-                    do {
-                        try await SupabaseService.shared.submitHoleScore(
-                            matchId: matchId,
-                            playerSlot: ownerSlot,
-                            hole: hole,
-                            grossScore: gross,
-                            playerName: ownerName
-                        )
-                        print("DEBUG submitHoleScore success: hole=\(hole + 1) name=\(ownerName) score=\(gross)")
-                    } catch {
-                        print("ERROR submitHoleScore failed: \(error)")
+        // 5b) Live Nassau score sync — submit owner's score to all active remote matches
+        if let g = GameManager.shared.currentGame {
+            let matchIds: [String] = {
+                let ids = g.remoteMatchIds
+                if !ids.isEmpty { return ids }
+                return g.remoteMatchId.map { [$0] } ?? []
+            }()
+            if !matchIds.isEmpty {
+                let ownerSlot = myPlayerIndex(in: g) ?? 0
+                if ownerSlot < g.scores.count, let gross = g.scores[ownerSlot][hole] {
+                    let ownerName = g.playerNames[ownerSlot]
+                    let hc = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
+                    Task {
+                        for matchId in matchIds {
+                            do {
+                                try await SupabaseService.shared.submitHoleScore(
+                                    matchId: matchId,
+                                    playerSlot: ownerSlot,
+                                    hole: hole,
+                                    grossScore: gross,
+                                    playerName: ownerName,
+                                    holeHc: hc
+                                )
+                                print("DEBUG submitHoleScore success: hole=\(hole + 1) name=\(ownerName) score=\(gross) hc=\(hc)")
+                            } catch {
+                                print("ERROR submitHoleScore failed: \(error)")
+                            }
+                        }
                     }
                 }
             }

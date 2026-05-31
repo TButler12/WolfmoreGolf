@@ -314,7 +314,10 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                         stake: stake,
                         games: ["nassau"]
                     )
-                    GameManager.shared.update { $0.remoteMatchId = match.id }
+                    GameManager.shared.update { g in
+                        g.remoteMatchId = match.id
+                        if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
+                    }
                     print("DEBUG remoteMatchId set to: \(match.id)")
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
                     await MainActor.run {
@@ -356,7 +359,10 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             Task {
                 do {
                     let match = try await SupabaseService.shared.joinMatch(code: code)
-                    GameManager.shared.update { $0.remoteMatchId = match.id }
+                    GameManager.shared.update { g in
+                        g.remoteMatchId = match.id
+                        if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
+                    }
                     print("DEBUG remoteMatchId set to: \(match.id)")
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
                     SupabaseService.shared.subscribeToResults(matchId: match.id) { [weak self] result in

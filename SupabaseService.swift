@@ -60,27 +60,33 @@ final class SupabaseService {
             .execute()
         let match = response.value
 
-        // Record the joiner's name on the match row
+        let currentOpponents = match.opponentNames ?? []
+        if currentOpponents.count >= 5 {
+            throw NSError(domain: "WolfmoreGolf", code: 400,
+                          userInfo: [NSLocalizedDescriptionKey: "Match is full (maximum 5 opponents)"])
+        }
+
+        let myName = ProfileStore.name ?? ""
+        let playerSlot = currentOpponents.count + 1   // host=0, first joiner=1, etc.
+        let newOpponents = currentOpponents + [myName]
+        print("DEBUG joinMatch: assigning playerSlot=\(playerSlot) name=\(myName)")
+
+        // Append joiner to opponent_names; keep legacy opponent_name for old clients
         try await client
             .from("matches")
-            .update(["opponent_name": ProfileStore.name ?? ""])
+            .update([
+                "opponent_name":  AnyJSON.string(myName),
+                "opponent_names": AnyJSON.array(newOpponents.map { .string($0) })
+            ] as [String: AnyJSON])
             .eq("id", value: match.id)
             .execute()
 
         GameManager.shared.update { g in
             var state = g.nassauState ?? NassauState()
-            if let stake = match.stake {
-                state.settings.baseStake = stake
-            }
-            if let pm = match.pressMode, let mode = NassauPressMode(rawValue: pm) {
-                state.settings.pressMode = mode
-            }
-            if let trigger = match.trigger {
-                state.settings.autoPressTriggerDown = trigger
-            }
-            if let included = match.playerIncluded {
-                state.playerIncluded = included
-            }
+            if let stake   = match.stake                                         { state.settings.baseStake = stake }
+            if let pm      = match.pressMode, let mode = NassauPressMode(rawValue: pm) { state.settings.pressMode = mode }
+            if let trigger = match.trigger                                        { state.settings.autoPressTriggerDown = trigger }
+            if let included = match.playerIncluded                               { state.playerIncluded = included }
             g.nassauState = state
         }
 
@@ -101,13 +107,31 @@ final class SupabaseService {
     // MARK: - Fetch active matches (last 24 hours only)
     func fetchActiveMatches() async throws -> [MatchRecord] {
         let cutoff = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-86400))
+        print("DEBUG fetchActiveMatches: querying status=active, cutoff=\(cutoff)")
         let response: PostgrestResponse<[MatchRecord]> = try await client
             .from("matches")
             .select()
             .eq("status", value: "active")
             .gte("created_at", value: cutoff)
             .execute()
+        print("DEBUG fetchActiveMatches: \(response.value.count) active matches returned")
         return response.value
+    }
+
+    // MARK: - Archive match (hides it from fetchActiveMatches without hard-deleting)
+    func archiveMatch(id: String) async throws {
+        let response: PostgrestResponse<[MatchRecord]> = try await client
+            .from("matches")
+            .update(["status": "archived"])
+            .eq("id", value: id)
+            .select()
+            .execute()
+        print("DEBUG archiveMatch: \(id) — rows updated: \(response.value.count)")
+        if response.value.isEmpty {
+            print("WARNING archiveMatch: 0 rows updated — RLS policy may be blocking UPDATE on matches table")
+            throw NSError(domain: "WolfmoreGolf", code: 403,
+                          userInfo: [NSLocalizedDescriptionKey: "Could not delete match — check Supabase RLS policy on matches table"])
+        }
     }
 
     // MARK: - Add player to match
@@ -132,17 +156,20 @@ final class SupabaseService {
         playerSlot: Int,
         hole: Int,
         grossScore: Int,
-        playerName: String? = nil
+        playerName: String? = nil,
+        holeHc: Int? = nil
     ) async throws {
         let name = playerName ?? ProfileStore.name ?? ""
-        print("DEBUG submitHoleScore: matchId=\(matchId) hole=\(hole) score=\(grossScore) playerName=\(name)")
-        try await client.from("hole_scores").upsert([
+        print("DEBUG submitHoleScore: matchId=\(matchId) hole=\(hole) score=\(grossScore) playerName=\(name) hc=\(holeHc.map(String.init) ?? "nil")")
+        var payload: [String: String] = [
             "match_id":    matchId,
             "player_slot": String(playerSlot),
             "hole":        String(hole),
             "gross_score": String(grossScore),
             "player_name": name
-        ], onConflict: "match_id,player_slot,hole").execute()
+        ]
+        if let hc = holeHc { payload["hole_hc"] = String(hc) }
+        try await client.from("hole_scores").upsert(payload, onConflict: "match_id,player_slot,hole").execute()
     }
 
     // MARK: - Fetch raw hole scores

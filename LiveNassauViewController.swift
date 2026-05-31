@@ -6,24 +6,29 @@ final class LiveNassauViewController: UIViewController {
 
     // MARK: - State
 
-    // Scores received from Supabase; replayed on each rebuild to stay in sync with local game
     private var receivedScores: [HoleScoreRecord] = []
 
     // MARK: - Table model
 
     private struct SegmentRow {
         let title: String
-        let statusLine: String   // "McTommy 2 up" / "All Square"
-        let moneyLine: String    // "McTommy +$4" / "Halved — Even"
+        let statusLine: String
+        let moneyLine: String
         let isComplete: Bool
     }
-    private var rows: [SegmentRow] = []
-    private var sectionTitle = "Standings"
+
+    private struct PairingSection {
+        let title: String
+        let rows: [SegmentRow]
+        let isOverallComplete: Bool
+    }
+
+    private var pairings: [PairingSection] = []
 
     // MARK: - UI
 
-    private let statusLabel    = UILabel()
-    private let tableView      = UITableView(frame: .zero, style: .insetGrouped)
+    private let statusLabel = UILabel()
+    private let tableView   = UITableView(frame: .zero, style: .insetGrouped)
     private var finalButton: UIButton?
 
     // MARK: - Lifecycle
@@ -48,25 +53,25 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - UI Setup
 
     private func setupUI() {
-        statusLabel.text = "Connecting…"
-        statusLabel.textColor = .systemYellow
-        statusLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        statusLabel.text          = "Connecting…"
+        statusLabel.textColor     = .systemYellow
+        statusLabel.font          = .systemFont(ofSize: 13, weight: .medium)
         statusLabel.textAlignment = .center
         statusLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(statusLabel)
 
-        tableView.dataSource = self
-        tableView.delegate   = self
+        tableView.dataSource          = self
+        tableView.delegate            = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SegCell")
-        tableView.rowHeight = UITableView.automaticDimension
-        tableView.estimatedRowHeight = 72
+        tableView.rowHeight           = UITableView.automaticDimension
+        tableView.estimatedRowHeight  = 72
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
 
         var cfg = UIButton.Configuration.filled()
-        cfg.title = "View Final Result"
-        cfg.cornerStyle = .large
-        cfg.contentInsets = NSDirectionalEdgeInsets(top: 14, leading: 32, bottom: 14, trailing: 32)
+        cfg.title          = "View Final Result"
+        cfg.cornerStyle    = .large
+        cfg.contentInsets  = NSDirectionalEdgeInsets(top: 14, leading: 32, bottom: 14, trailing: 32)
         let btn = UIButton(configuration: cfg)
         btn.addTarget(self, action: #selector(finalResultTapped), for: .touchUpInside)
         btn.isHidden = true
@@ -122,10 +127,10 @@ final class LiveNassauViewController: UIViewController {
         SupabaseService.shared.subscribeToHoleScores(matchId: matchId) { [weak self] record in
             guard let self else { return }
             print("DEBUG score received: hole=\(record.hole) player=\(record.playerName ?? "nil")")
-            // Deduplicate: keep latest score per (player, hole); prefer name match, fall back to slot
+            // Deduplicate: keep latest score per (player, hole)
             self.receivedScores.removeAll {
                 if let rn = record.playerName, !rn.isEmpty,
-                   let en = $0.playerName, !en.isEmpty {
+                   let en = $0.playerName,    !en.isEmpty {
                     return en.lowercased() == rn.lowercased() && $0.hole == record.hole
                 }
                 return $0.playerSlot == record.playerSlot && $0.hole == record.hole
@@ -134,115 +139,109 @@ final class LiveNassauViewController: UIViewController {
             self.rebuildStandings()
             self.setStatus(live: true)
         }
-        // Optimistically mark Live after subscription is sent
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
             guard let self, self.statusLabel.text == "Connecting…" else { return }
             self.setStatus(live: true)
         }
     }
 
+    // MARK: - Identity helpers
+
+    private var myName: String {
+        (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private var amHost: Bool {
+        let hostRaw = match?.hostName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return !hostRaw.isEmpty && hostRaw.lowercased() == myName.lowercased()
+    }
+
+    // All distinct opponent names: opponentNames array → legacy opponentName → received scores.
+    private func collectOpponentNames() -> [String] {
+        let myLower = myName.lowercased()
+        var names: [String] = []
+
+        if let arr = match?.opponentNames {
+            for n in arr {
+                let t = n.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !t.isEmpty && !names.contains(t) { names.append(t) }
+            }
+        }
+        if let single = match?.opponentName?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !single.isEmpty, !names.contains(single) {
+            names.append(single)
+        }
+        for record in receivedScores {
+            guard let pn = record.playerName else { continue }
+            let t = pn.trimmingCharacters(in: .whitespacesAndNewlines)
+            if !t.isEmpty && t.lowercased() != myLower && !names.contains(t) { names.append(t) }
+        }
+        return names
+    }
+
     // MARK: - Standings calculation
 
-    // Build a synthetic 2-player GameData: owner at slot 0, remote opponent at slot 1.
-    // This avoids depending on the local game's player roster, which won't include the remote player.
-    private func buildSyntheticRemoteGame() -> GameData? {
-        guard let localGame = GameManager.shared.currentGame else { return nil }
-
-        let myName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let myNameLower = myName.lowercased()
-
-        // Opponent name: prefer match record, fall back to received score names
-        let opponentName: String = {
-            if let host = match?.hostName?.trimmingCharacters(in: .whitespacesAndNewlines), !host.isEmpty,
-               let opp  = match?.opponentName?.trimmingCharacters(in: .whitespacesAndNewlines), !opp.isEmpty {
-                return host.lowercased() == myNameLower ? opp : host
-            }
-            for record in receivedScores {
-                guard let pn = record.playerName else { continue }
-                let trimmed = pn.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty, trimmed.lowercased() != myNameLower else { continue }
-                return trimmed
-            }
-            return "Opponent"
-        }()
+    // Build a 2-player synthetic GameData for one specific owner/opponent pairing.
+    // Scores from other players in receivedScores are ignored for this pairing.
+    private func buildSyntheticGame(ownerName: String, opponentName: String) -> GameData? {
+        guard !ownerName.isEmpty else { return nil }
+        let ownerLower    = ownerName.lowercased()
+        let opponentLower = opponentName.lowercased()
 
         var g = GameData()
-        g.playerNames[0]     = myName.isEmpty ? "Me" : myName
-        g.playerNames[1]     = opponentName
+        g.playerNames[0]     = ownerName
+        g.playerNames[1]     = opponentName.isEmpty ? "Opponent" : opponentName
         g.playerActivated[0] = true
         g.playerActivated[1] = true
 
-        // Only use scores that have been submitted to Supabase (via Update Scores button).
-        // Owner scores come back through receivedScores just like the opponent's.
+        func hcRank(_ s: HoleScoreRecord) -> Int { s.holeHc ?? (s.hole + 1) }
+
+        var ownerScores: [HoleScoreRecord] = []
+        var oppScores:   [HoleScoreRecord] = []
         for s in receivedScores {
-            guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
-            let isOwner: Bool
-            if let pn = s.playerName, !pn.isEmpty {
-                isOwner = !myNameLower.isEmpty &&
-                          pn.trimmingCharacters(in: .whitespacesAndNewlines)
-                            .lowercased() == myNameLower
-            } else {
-                isOwner = s.playerSlot == (localGame.playerNames.firstIndex {
-                    !myName.isEmpty &&
-                    $0.trimmingCharacters(in: .whitespacesAndNewlines)
-                      .localizedCaseInsensitiveCompare(myName) == .orderedSame
-                } ?? -1)
-            }
-            g.scores[isOwner ? 0 : 1][s.hole] = s.grossScore
+            guard s.hole >= 0, s.hole < STANDARD_HOLES,
+                  let pn = s.playerName, !pn.isEmpty else { continue }
+            let pnLower = pn.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if      pnLower == ownerLower    { ownerScores.append(s) }
+            else if pnLower == opponentLower { oppScores.append(s)   }
         }
 
-        // A hole is committed when both players have a score
-        for h in 0..<STANDARD_HOLES {
-            g.holeCommitted[h] = g.scores[0][h] != nil && g.scores[1][h] != nil
+        let ownerFront = ownerScores.filter { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
+        let ownerBack  = ownerScores.filter { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
+        let oppFront   = oppScores.filter   { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
+        let oppBack    = oppScores.filter   { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
+
+        for (i, (o, p)) in zip(ownerFront, oppFront).enumerated() {
+            g.scores[0][i] = o.grossScore
+            g.scores[1][i] = p.grossScore
+            g.holeCommitted[i] = true
+        }
+        for (i, (o, p)) in zip(ownerBack, oppBack).enumerated() {
+            g.scores[0][i + 9] = o.grossScore
+            g.scores[1][i + 9] = p.grossScore
+            g.holeCommitted[i + 9] = true
         }
 
-        // Nassau state with match settings applied
-        var state = NassauEngine.makeDefaultState(
-            playerNames: g.playerNames,
-            activeFlags: g.playerActivated
-        )
-        if let stake = match?.stake { state.settings.baseStake = stake }
-        if let pm = match?.pressMode, let mode = NassauPressMode(rawValue: pm) {
-            state.settings.pressMode = mode
-        }
-        if let trigger = match?.trigger { state.settings.autoPressTriggerDown = trigger }
-
+        var state = NassauEngine.makeDefaultState(playerNames: g.playerNames, activeFlags: g.playerActivated)
+        if let stake   = match?.stake                                                     { state.settings.baseStake = stake }
+        if let pm      = match?.pressMode, let mode = NassauPressMode(rawValue: pm)       { state.settings.pressMode = mode }
+        if let trigger = match?.trigger                                                    { state.settings.autoPressTriggerDown = trigger }
         g.nassauState = state
         return g
     }
 
-    private func rebuildStandings() {
-        print("DEBUG rebuildStandings called: \(receivedScores.count) scores")
-        guard var g = buildSyntheticRemoteGame() else {
-            rows = []
-            tableView.reloadData()
-            return
-        }
-
-        print("DEBUG rebuildStandings: remoteScores=\(receivedScores.count) committed=\(g.holeCommitted.filter { $0 }.count)")
-
-        guard var state = g.nassauState else {
-            rows = []
-            tableView.reloadData()
-            return
-        }
+    private func buildPairingSection(ownerName: String, opponentName: String) -> PairingSection? {
+        guard let g = buildSyntheticGame(ownerName: ownerName, opponentName: opponentName),
+              var state = g.nassauState else { return nil }
 
         NassauEngine.recalculate(state: &state, gameData: g)
-        g.nassauState = state
-
-        let primaryMatch = state.oneVsOneMatches.first ?? state.twoVsTwoMatches.first
-        guard let m = primaryMatch else {
-            rows = []
-            sectionTitle = "No match configured"
-            tableView.reloadData()
-            return
-        }
 
         let t1 = g.playerNames[0].isEmpty ? "P1" : g.playerNames[0]
         let t2 = g.playerNames[1].isEmpty ? "P2" : g.playerNames[1]
-        sectionTitle = "\(t1) vs \(t2)"
 
-        rows = [
+        guard let m = state.oneVsOneMatches.first ?? state.twoVsTwoMatches.first else { return nil }
+
+        var rows: [SegmentRow] = [
             makeRow("Front 9",  status: m.frontStatusByHole,   t1: t1, t2: t2,
                     complete: NassauEngine.isFrontComplete(gameData: g),   stake: m.stake),
             makeRow("Back 9",   status: m.backStatusByHole,    t1: t1, t2: t2,
@@ -250,7 +249,6 @@ final class LiveNassauViewController: UIViewController {
             makeRow("18 Holes", status: m.overallStatusByHole, t1: t1, t2: t2,
                     complete: NassauEngine.isOverallComplete(gameData: g), stake: m.stake),
         ]
-
         for (i, press) in m.presses.enumerated() {
             let label = "Press \(i + 1) · H\(press.startHole)-\(press.endHole)"
             rows.append(makeRow(label, status: press.runningStatus, t1: t1, t2: t2,
@@ -258,8 +256,28 @@ final class LiveNassauViewController: UIViewController {
                                 stake: press.stake))
         }
 
+        return PairingSection(title: "\(t1) vs \(t2)", rows: rows,
+                              isOverallComplete: NassauEngine.isOverallComplete(gameData: g))
+    }
+
+    private func rebuildStandings() {
+        print("DEBUG rebuildStandings called: \(receivedScores.count) scores")
+        let hostRaw = match?.hostName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+
+        if amHost {
+            // Host: one section per opponent
+            let me        = myName.isEmpty ? hostRaw : myName
+            let opponents = collectOpponentNames()
+            pairings = opponents.compactMap { buildPairingSection(ownerName: me, opponentName: $0) }
+        } else {
+            // Opponent: single 1v1 against the host
+            let me   = myName.isEmpty ? "Me" : myName
+            let host = hostRaw.isEmpty ? "Host" : hostRaw
+            pairings = buildPairingSection(ownerName: me, opponentName: host).map { [$0] } ?? []
+        }
+
         tableView.reloadData()
-        finalButton?.isHidden = !NassauEngine.isOverallComplete(gameData: g)
+        finalButton?.isHidden = pairings.isEmpty || !pairings.allSatisfy { $0.isOverallComplete }
     }
 
     private func makeRow(
@@ -269,15 +287,15 @@ final class LiveNassauViewController: UIViewController {
         complete: Bool,
         stake: Double
     ) -> SegmentRow {
-        let final = status.last ?? 0
+        let last = status.last ?? 0
         let statusLine: String
         let moneyLine: String
 
-        if final > 0 {
-            statusLine = "\(t1) \(final) up"
+        if last > 0 {
+            statusLine = "\(t1) \(last) up"
             moneyLine  = complete ? "\(t1) +\(money(stake))" : "\(t1) leads"
-        } else if final < 0 {
-            statusLine = "\(t2) \(abs(final)) up"
+        } else if last < 0 {
+            statusLine = "\(t2) \(abs(last)) up"
             moneyLine  = complete ? "\(t2) +\(money(stake))" : "\(t2) leads"
         } else {
             statusLine = status.isEmpty ? "Not started" : "All Square"
@@ -290,27 +308,36 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - Final result
 
     @objc private func finalResultTapped() {
-        guard let g = buildSyntheticRemoteGame(),
-              var state = g.nassauState else { return }
+        let hostRaw = match?.hostName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let pairingArgs: [(owner: String, opponent: String)]
 
-        NassauEngine.recalculate(state: &state, gameData: g)
+        if amHost {
+            let me = myName.isEmpty ? hostRaw : myName
+            pairingArgs = collectOpponentNames().map { (owner: me, opponent: $0) }
+        } else {
+            let me   = myName.isEmpty ? "Me" : myName
+            let host = hostRaw.isEmpty ? "Host" : hostRaw
+            pairingArgs = [(owner: me, opponent: host)]
+        }
 
-        let summaries = NassauEngine.finalSummaries(
-            state: state,
-            playerNames: g.playerNames,
-            gameData: g
-        )
+        var bodyParts: [String] = []
+        for pair in pairingArgs {
+            guard let g = buildSyntheticGame(ownerName: pair.owner, opponentName: pair.opponent),
+                  var state = g.nassauState else { continue }
+            NassauEngine.recalculate(state: &state, gameData: g)
+            let summaries = NassauEngine.finalSummaries(state: state, playerNames: g.playerNames, gameData: g)
+            for s in summaries {
+                var lines = [s.matchTitle]
+                if let f = s.front9    { lines.append("  Front 9: \(f.resultText)") }
+                if let b = s.back9     { lines.append("  Back 9:  \(b.resultText)") }
+                if let o = s.overall18 { lines.append("  18 Hole: \(o.resultText)") }
+                for p in s.presses     { lines.append("  \(p.title): \(p.resultText)") }
+                lines.append("  Net: \(s.totalMoneyText)")
+                bodyParts.append(lines.joined(separator: "\n"))
+            }
+        }
 
-        let body = summaries.map { s -> String in
-            var lines = [s.matchTitle]
-            if let f = s.front9    { lines.append("  Front 9: \(f.resultText)") }
-            if let b = s.back9     { lines.append("  Back 9:  \(b.resultText)") }
-            if let o = s.overall18 { lines.append("  18 Hole: \(o.resultText)") }
-            for p in s.presses     { lines.append("  \(p.title): \(p.resultText)") }
-            lines.append("  Net: \(s.totalMoneyText)")
-            return lines.joined(separator: "\n")
-        }.joined(separator: "\n\n")
-
+        let body = bodyParts.joined(separator: "\n\n")
         let ac = UIAlertController(
             title: "Final Result",
             message: body.isEmpty ? "No results available." : body,
@@ -338,18 +365,22 @@ final class LiveNassauViewController: UIViewController {
 
 extension LiveNassauViewController: UITableViewDataSource {
 
-    func numberOfSections(in tableView: UITableView) -> Int { 1 }
+    func numberOfSections(in tableView: UITableView) -> Int {
+        max(pairings.count, 1)
+    }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        rows.count
+        guard section < pairings.count else { return 0 }
+        return pairings[section].rows.count
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        sectionTitle
+        guard section < pairings.count else { return "Standings" }
+        return pairings[section].title
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let row  = rows[indexPath.row]
+        let row  = pairings[indexPath.section].rows[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "SegCell", for: indexPath)
         var content = cell.defaultContentConfiguration()
 
@@ -360,14 +391,9 @@ extension LiveNassauViewController: UITableViewDataSource {
         content.secondaryTextProperties.numberOfLines = 2
         content.secondaryTextProperties.color = row.isComplete ? .label : .secondaryLabel
 
-        if !row.isComplete {
-            cell.accessoryType = .none
-        } else {
-            cell.accessoryType = .checkmark
-        }
-
+        cell.accessoryType      = row.isComplete ? .checkmark : .none
         cell.contentConfiguration = content
-        cell.selectionStyle = .none
+        cell.selectionStyle     = .none
         return cell
     }
 }

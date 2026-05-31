@@ -466,6 +466,9 @@ final class ViewController: UIViewController {
             : "This will delete your previous game data."
         let ac = UIAlertController(title: "Start New Game?", message: message, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
+            // Archive all remote matches from this game session
+            let idsToArchive = GameManager.shared.currentGame?.remoteMatchIds ?? []
+            Task { for id in idsToArchive { try? await SupabaseService.shared.archiveMatch(id: id) } }
             GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
             self?.presentManagePlayers()
         })

@@ -19,7 +19,7 @@ final class RemoteMatchesViewController: UIViewController {
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        isLoading = false   // reset so viewWillAppear always triggers a fresh fetch
+        isLoading = false
         loadMatches()
     }
 
@@ -28,7 +28,7 @@ final class RemoteMatchesViewController: UIViewController {
         view.addSubview(tableView)
         tableView.dataSource = self
         tableView.delegate = self
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "MatchCell")
+        tableView.register(MatchCell.self, forCellReuseIdentifier: MatchCell.reuseID)
         tableView.rowHeight = UITableView.automaticDimension
         tableView.estimatedRowHeight = 64
 
@@ -47,7 +47,12 @@ final class RemoteMatchesViewController: UIViewController {
             do {
                 let fetched = try await SupabaseService.shared.fetchActiveMatches()
                 await MainActor.run {
-                    self.matches = fetched
+                    // Newest first so the most recent match is always at the top
+                    self.matches = fetched.sorted {
+                        let d0 = Self.parseSupabaseDate($0.createdAt ?? "") ?? .distantPast
+                        let d1 = Self.parseSupabaseDate($1.createdAt ?? "") ?? .distantPast
+                        return d0 > d1
+                    }
                     self.isLoading = false
                     self.tableView.reloadData()
                 }
@@ -58,6 +63,53 @@ final class RemoteMatchesViewController: UIViewController {
                 }
             }
         }
+    }
+
+    private func archiveMatch(at indexPath: IndexPath) {
+        let match = matches[indexPath.row]
+        Task {
+            do {
+                try await SupabaseService.shared.archiveMatch(id: match.id)
+                await MainActor.run {
+                    guard indexPath.row < self.matches.count else { return }
+                    self.matches.remove(at: indexPath.row)
+                    self.tableView.deleteRows(at: [indexPath], with: .automatic)
+                }
+            } catch {
+                await MainActor.run {
+                    self.showAlert(title: "Could not delete match", message: error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private func isActiveMatch(_ match: MatchRecord) -> Bool {
+        guard let ids = GameManager.shared.currentGame?.remoteMatchIds, !ids.isEmpty else {
+            guard let activeId = GameManager.shared.currentGame?.remoteMatchId else { return false }
+            return match.id == activeId
+        }
+        return ids.contains(match.id)
+    }
+
+    // Supabase returns timestamps like "2026-05-30T14:22:33.123456+00:00".
+    // Try progressively looser parsers until one succeeds.
+    static func parseSupabaseDate(_ raw: String) -> Date? {
+        let iso = ISO8601DateFormatter()
+        // 1) with fractional seconds + timezone offset (most common Supabase format)
+        iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        if let d = iso.date(from: raw) { return d }
+        // 2) without fractional seconds
+        iso.formatOptions = [.withInternetDateTime]
+        if let d = iso.date(from: raw) { return d }
+        // 3) DateFormatter fallback for "+00:00" offset variants
+        let df = DateFormatter()
+        df.locale = Locale(identifier: "en_US_POSIX")
+        for fmt in ["yyyy-MM-dd'T'HH:mm:ss.SSSSSSZZZZZ",
+                    "yyyy-MM-dd'T'HH:mm:ssZZZZZ"] {
+            df.dateFormat = fmt
+            if let d = df.date(from: raw) { return d }
+        }
+        return nil
     }
 
     private func showAlert(title: String, message: String) {
@@ -82,25 +134,8 @@ extension RemoteMatchesViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let match = matches[indexPath.row]
-        let cell = tableView.dequeueReusableCell(withIdentifier: "MatchCell", for: indexPath)
-        var content = cell.defaultContentConfiguration()
-
-        content.text = "Code: \(match.code)"
-        content.textProperties.font = .systemFont(ofSize: 18, weight: .medium)
-
-        var details: [String] = ["Status: \(match.status.capitalized)"]
-        if let courseA = match.courseA, !courseA.isEmpty {
-            details.append("Host: \(courseA)")
-        }
-        if let courseB = match.courseB, !courseB.isEmpty {
-            details.append("Guest: \(courseB)")
-        }
-        content.secondaryText = details.joined(separator: " · ")
-        content.secondaryTextProperties.color = .secondaryLabel
-
-        cell.accessoryType = .disclosureIndicator
-        cell.contentConfiguration = content
+        let cell = tableView.dequeueReusableCell(withIdentifier: MatchCell.reuseID, for: indexPath) as! MatchCell
+        cell.configure(with: matches[indexPath.row], current: isActiveMatch(matches[indexPath.row]))
         return cell
     }
 }
@@ -116,4 +151,96 @@ extension RemoteMatchesViewController: UITableViewDelegate {
         vc.match = match
         navigationController?.pushViewController(vc, animated: true)
     }
+
+    func tableView(
+        _ tableView: UITableView,
+        trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
+    ) -> UISwipeActionsConfiguration? {
+        let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, done in
+            self?.archiveMatch(at: indexPath)
+            done(true)
+        }
+        action.backgroundColor = .systemRed
+        return UISwipeActionsConfiguration(actions: [action])
+    }
+}
+
+// MARK: - MatchCell
+
+private final class MatchCell: UITableViewCell {
+
+    static let reuseID = "MatchCell"
+
+    private let borderBar  = UIView()
+    private let codeLabel  = UILabel()
+    private let detailLabel = UILabel()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+
+        borderBar.translatesAutoresizingMaskIntoConstraints = false
+        borderBar.layer.cornerRadius = 2
+        contentView.addSubview(borderBar)
+
+        codeLabel.font = .systemFont(ofSize: 18, weight: .medium)
+        codeLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(codeLabel)
+
+        detailLabel.font = .systemFont(ofSize: 13)
+        detailLabel.numberOfLines = 2
+        detailLabel.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(detailLabel)
+
+        NSLayoutConstraint.activate([
+            borderBar.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 12),
+            borderBar.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            borderBar.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
+            borderBar.widthAnchor.constraint(equalToConstant: 4),
+
+            codeLabel.leadingAnchor.constraint(equalTo: borderBar.trailingAnchor, constant: 12),
+            codeLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            codeLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+
+            detailLabel.leadingAnchor.constraint(equalTo: codeLabel.leadingAnchor),
+            detailLabel.trailingAnchor.constraint(equalTo: codeLabel.trailingAnchor),
+            detailLabel.topAnchor.constraint(equalTo: codeLabel.bottomAnchor, constant: 2),
+            detailLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
+        ])
+
+        accessoryType = .disclosureIndicator
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    func configure(with match: MatchRecord, current: Bool) {
+        codeLabel.text = "Code: \(match.code)"
+        codeLabel.textColor = current ? .label : .tertiaryLabel
+
+        let host = match.hostName?.trimmingCharacters(in: .whitespacesAndNewlines)
+                     .nilIfEmpty ?? match.courseA ?? "Unknown"
+        var details: [String] = ["Host: \(host)"]
+        if let opp = match.opponentName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
+            details.append("vs \(opp)")
+        }
+        if let raw = match.createdAt,
+           let date = RemoteMatchesViewController.parseSupabaseDate(raw) {
+            details.append(Self.relativeTime(from: date))
+        }
+        detailLabel.text = details.joined(separator: " · ")
+        detailLabel.textColor = current ? .secondaryLabel : .tertiaryLabel
+
+        borderBar.backgroundColor = current ? .systemGreen : .systemGray3
+    }
+
+    private static func relativeTime(from date: Date) -> String {
+        let secs = Int(Date().timeIntervalSince(date))
+        if secs < 60  { return "just now" }
+        if secs < 3600 { return "\(secs / 60)m ago" }
+        if secs < 86400 { return "\(secs / 3600)h ago" }
+        return "\(secs / 86400)d ago"
+    }
+}
+
+private extension String {
+    var nilIfEmpty: String? { isEmpty ? nil : self }
 }

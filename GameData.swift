@@ -12,6 +12,8 @@ struct GameData: Codable {
 
     // Supabase live match identifier (nil = local/text-based flow)
     var remoteMatchId: String? = nil
+    // All remote match IDs created/joined during this game session
+    var remoteMatchIds: [String] = []
 
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: STANDARD_HOLES)
