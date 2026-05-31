@@ -120,6 +120,7 @@ final class SupabaseService {
 
     // MARK: - Archive match (hides it from fetchActiveMatches without hard-deleting)
     func archiveMatch(id: String) async throws {
+        print("DEBUG archiveMatch query: id=\(id)")
         let response: PostgrestResponse<[MatchRecord]> = try await client
             .from("matches")
             .update(["status": "archived"])

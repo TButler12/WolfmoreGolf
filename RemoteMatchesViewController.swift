@@ -67,6 +67,7 @@ final class RemoteMatchesViewController: UIViewController {
 
     private func archiveMatch(at indexPath: IndexPath) {
         let match = matches[indexPath.row]
+        print("DEBUG deleting match id=\(match.id) code=\(match.code)")
         Task {
             do {
                 try await SupabaseService.shared.archiveMatch(id: match.id)
