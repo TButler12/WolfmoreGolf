@@ -158,10 +158,11 @@ final class SupabaseService {
         hole: Int,
         grossScore: Int,
         playerName: String? = nil,
-        holeHc: Int? = nil
+        holeHc: Int? = nil,
+        playerHc: Int? = nil
     ) async throws {
         let name = playerName ?? ProfileStore.name ?? ""
-        print("DEBUG submitHoleScore: matchId=\(matchId) hole=\(hole) score=\(grossScore) playerName=\(name) hc=\(holeHc.map(String.init) ?? "nil")")
+        print("DEBUG submitHoleScore: matchId=\(matchId) hole=\(hole) score=\(grossScore) playerName=\(name) holeHc=\(holeHc.map(String.init) ?? "nil") playerHc=\(playerHc.map(String.init) ?? "nil")")
         var payload: [String: String] = [
             "match_id":    matchId,
             "player_slot": String(playerSlot),
@@ -169,7 +170,8 @@ final class SupabaseService {
             "gross_score": String(grossScore),
             "player_name": name
         ]
-        if let hc = holeHc { payload["hole_hc"] = String(hc) }
+        if let hc = holeHc   { payload["hole_hc"]   = String(hc) }
+        if let hc = playerHc { payload["player_hc"] = String(hc) }
         try await client.from("hole_scores").upsert(payload, onConflict: "match_id,player_slot,hole").execute()
     }
 

@@ -37,6 +37,7 @@ struct HoleScoreRecord: Codable {
     let grossScore: Int
     let playerName: String?
     let holeHc: Int?        // HC difficulty rank (1=hardest); nil on legacy rows
+    let playerHc: Int?      // submitting player's course handicap; nil on legacy rows
 
     private enum CodingKeys: String, CodingKey {
         case matchId    = "match_id"
@@ -45,6 +46,7 @@ struct HoleScoreRecord: Codable {
         case grossScore = "gross_score"
         case playerName = "player_name"
         case holeHc     = "hole_hc"
+        case playerHc   = "player_hc"
     }
 
     // hole_scores inserts numerics as strings; handle both text and int DB columns
@@ -56,6 +58,7 @@ struct HoleScoreRecord: Codable {
         grossScore  = Self.decodeIntOrString(c, key: .grossScore)
         playerName  = try? c.decode(String.self, forKey: .playerName)
         holeHc      = Self.decodeIntOrStringOptional(c, key: .holeHc)
+        playerHc    = Self.decodeIntOrStringOptional(c, key: .playerHc)
     }
 
     private static func decodeIntOrString(

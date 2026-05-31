@@ -211,7 +211,7 @@ final class PairedHoleCell: UITableViewCell {
                 oppScrLbl.textColor   = .label
             }
         } else {
-            resultLbl.text      = "Waiting"
+            resultLbl.text      = "—"
             resultLbl.textColor = .tertiaryLabel
             ownerScrLbl.textColor = hole.hostScore != nil ? .label : .tertiaryLabel
             oppScrLbl.textColor   = hole.opponentScore != nil ? .label : .tertiaryLabel

@@ -224,6 +224,18 @@ final class LiveNassauViewController: UIViewController {
             g.holeCommitted[i + 9] = true
         }
 
+        // Player handicaps: read from first submitted score record for each player
+        g.hcPlayers[0] = ownerScores.first?.playerHc ?? 0
+        g.hcPlayers[1] = oppScores.first?.playerHc   ?? 0
+
+        // Course HC rankings for synthetic positions: map each HC-sorted position
+        // back to its HC rank so NassauEngine.strokesGiven uses the right stroke index.
+        // Owner's holeHandicaps are used as the reference (slot 0 = host course).
+        var holeHCs = Array(repeating: STANDARD_HOLES, count: STANDARD_HOLES)
+        for (i, s) in ownerFront.enumerated() { holeHCs[i]     = hcRank(s) }
+        for (i, s) in ownerBack.enumerated()  { holeHCs[i + 9] = hcRank(s) }
+        g.course.holeHandicaps = holeHCs
+
         var state = NassauEngine.makeDefaultState(playerNames: g.playerNames, activeFlags: g.playerActivated)
         if let stake   = match?.stake                                                     { state.settings.baseStake = stake }
         if let pm      = match?.pressMode, let mode = NassauPressMode(rawValue: pm)       { state.settings.pressMode = mode }
@@ -311,14 +323,17 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - Scorecard detail
 
     // Builds HC-paired hole data for Front 9 (front=true) or Back 9 (front=false).
-    // Each HC rank that either player has submitted appears as one PairedHole row.
+    // Mirrors buildSyntheticGame: sort each player's scores hardest-first, then zip
+    // positionally so "HC Pos 1" = each player's hardest submitted hole.
+    // Using positional zipping (not a shared HC rank key) handles the case where
+    // players are on different holes or one player is missing holeHc data.
     func buildPairedHoles(ownerName: String, opponentName: String, front: Bool) -> [PairedHole] {
         let ownerLower    = ownerName.lowercased()
         let opponentLower = opponentName.lowercased()
         func hcRank(_ s: HoleScoreRecord) -> Int { s.holeHc ?? (s.hole + 1) }
 
-        var ownerByHC: [Int: HoleScoreRecord] = [:]
-        var oppByHC:   [Int: HoleScoreRecord] = [:]
+        var ownerScores: [HoleScoreRecord] = []
+        var oppScores:   [HoleScoreRecord] = []
 
         for s in receivedScores {
             guard s.hole >= 0, s.hole < STANDARD_HOLES,
@@ -326,21 +341,23 @@ final class LiveNassauViewController: UIViewController {
             let inRange = front ? (s.hole <= 8) : (s.hole >= 9)
             guard inRange else { continue }
             let pnLower = pn.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            let rank    = hcRank(s)
-            if      pnLower == ownerLower    { ownerByHC[rank] = s }
-            else if pnLower == opponentLower { oppByHC[rank]   = s }
+            if      pnLower == ownerLower    { ownerScores.append(s) }
+            else if pnLower == opponentLower { oppScores.append(s)   }
         }
 
-        let allRanks = Set(ownerByHC.keys).union(oppByHC.keys).sorted()
-        return allRanks.map { rank in
-            let o = ownerByHC[rank]
-            let p = oppByHC[rank]
+        let sortedOwner = ownerScores.sorted { hcRank($0) < hcRank($1) }
+        let sortedOpp   = oppScores.sorted   { hcRank($0) < hcRank($1) }
+
+        let count = max(sortedOwner.count, sortedOpp.count)
+        return (0..<count).map { i in
+            let o = sortedOwner[safe: i]
+            let p = sortedOpp[safe: i]
             let net: Int = {
                 guard let os = o?.grossScore, let ps = p?.grossScore else { return 0 }
                 return ps - os   // positive = owner winning (lower score wins in golf)
             }()
             return PairedHole(
-                hcRank: rank,
+                hcRank: i + 1,                          // positional: 1 = hardest submitted
                 hostPhysicalHole: (o?.hole ?? 0) + 1,
                 hostScore: o?.grossScore,
                 opponentPhysicalHole: (p?.hole ?? 0) + 1,

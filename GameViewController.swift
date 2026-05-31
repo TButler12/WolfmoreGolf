@@ -2316,7 +2316,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 let ownerSlot = myPlayerIndex(in: g) ?? 0
                 if ownerSlot < g.scores.count, let gross = g.scores[ownerSlot][hole] {
                     let ownerName = g.playerNames[ownerSlot]
-                    let hc = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
+                    let hc       = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
+                    let playerHc = g.hcPlayers[safe: ownerSlot] ?? 0
                     Task {
                         for matchId in matchIds {
                             do {
@@ -2326,7 +2327,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                     hole: hole,
                                     grossScore: gross,
                                     playerName: ownerName,
-                                    holeHc: hc
+                                    holeHc: hc,
+                                    playerHc: playerHc
                                 )
                                 print("DEBUG submitHoleScore success: hole=\(hole + 1) name=\(ownerName) score=\(gross) hc=\(hc)")
                             } catch {
