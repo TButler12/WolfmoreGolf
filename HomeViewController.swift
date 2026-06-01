@@ -381,17 +381,64 @@ final class ViewController: UIViewController {
         }
 
         picker.onPickCourse = { [weak self] id in
-            CourseLibrary.shared.selectedCourseID = id
-
-            if let c = CourseLibrary.shared.get(id: id) {
-                GameManager.shared.update { g in
-                    g.course.pars = Array(c.pars.prefix(STANDARD_HOLES))
-                    g.course.holeHandicaps = Array(c.hcs.prefix(STANDARD_HOLES))
-                }
+            guard let self else { return }
+            guard let newCourse = CourseLibrary.shared.get(id: id) else {
+                CourseLibrary.shared.selectedCourseID = id
+                self.refreshCourseButtonTitle()
+                self.dismiss(animated: true)
+                return
             }
 
-            self?.refreshCourseButtonTitle()
-            self?.dismiss(animated: true)
+            guard let currentGame = GameManager.shared.currentGame else {
+                // No game in progress — apply directly
+                CourseLibrary.shared.selectedCourseID = id
+                GameManager.shared.update { g in
+                    g.course.pars          = Array(newCourse.pars.prefix(STANDARD_HOLES))
+                    g.course.holeHandicaps = Array(newCourse.hcs.prefix(STANDARD_HOLES))
+                    g.course.name          = newCourse.name
+                    g.course.id            = newCourse.id
+                }
+                self.refreshCourseButtonTitle()
+                self.dismiss(animated: true)
+                return
+            }
+
+            // Resolve the current game's course name via library match
+            let curPars = Array(currentGame.course.pars.prefix(STANDARD_HOLES))
+            let curHCs  = Array(currentGame.course.holeHandicaps.prefix(STANDARD_HOLES))
+            let curName = CourseLibrary.shared.courses.first(where: {
+                Array($0.pars.prefix(STANDARD_HOLES)) == curPars &&
+                Array($0.hcs.prefix(STANDARD_HOLES))  == curHCs
+            })?.name ?? currentGame.course.name
+
+            // Same course — nothing to confirm
+            if curName == newCourse.name {
+                CourseLibrary.shared.selectedCourseID = id
+                self.refreshCourseButtonTitle()
+                self.dismiss(animated: true)
+                return
+            }
+
+            let alert = UIAlertController(
+                title: "Change Course?",
+                message: "Switch from \(curName) to \(newCourse.name)?",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Switch", style: .default) { _ in
+                CourseLibrary.shared.selectedCourseID = id
+                GameManager.shared.update { g in
+                    g.course.pars          = Array(newCourse.pars.prefix(STANDARD_HOLES))
+                    g.course.holeHandicaps = Array(newCourse.hcs.prefix(STANDARD_HOLES))
+                    g.course.name          = newCourse.name
+                    g.course.id            = newCourse.id
+                }
+                GameManager.shared.saveCurrent()
+                self.refreshCourseButtonTitle()
+            })
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            self.dismiss(animated: true) {
+                self.present(alert, animated: true)
+            }
         }
 
         picker.onTapAddCourse = { [weak self] in
