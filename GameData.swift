@@ -14,6 +14,8 @@ struct GameData: Codable {
     var remoteMatchId: String? = nil
     // All remote match IDs created/joined during this game session
     var remoteMatchIds: [String] = []
+    // Wolf Live session ID (nil = not broadcasting)
+    var liveSessionId: String? = nil
 
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: STANDARD_HOLES)

@@ -2336,6 +2336,34 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
+        // 5c) Wolf Live score sync
+        if let g = GameManager.shared.currentGame, let sessionId = g.liveSessionId {
+            let holeScores = (0..<MAX_PLAYERS).map { s -> Int in
+                guard s < g.playerActivated.count, g.playerActivated[s],
+                      s < g.scores.count, hole < g.scores[s].count else { return 0 }
+                return g.scores[s][hole] ?? 0
+            }
+            let wolfPlayer  = g.wolfPlayerPerHole?[safe: hole] ?? nil
+            let wentAlone   = g.wolfWentAlonePerHole.map { $0[safe: hole] == true } ?? false
+            let teamWon     = hole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[hole]
+            let holePayouts = g.playerMoney.map { $0[safe: hole] ?? 0.0 }
+            Task {
+                do {
+                    try await SupabaseService.shared.submitWolfHole(
+                        sessionId: sessionId,
+                        hole: hole + 1,
+                        scores: holeScores,
+                        wolfPlayer: wolfPlayer,
+                        wentAlone: wentAlone,
+                        teamWon: teamWon,
+                        payouts: holePayouts
+                    )
+                } catch {
+                    print("ERROR submitWolfHole failed: \(error)")
+                }
+            }
+        }
+
         // 6) paint
         let seatsToPaint = min(MAX_PLAYERS, playerMoneyFields.count, payouts.count)
         for s in 0..<seatsToPaint {

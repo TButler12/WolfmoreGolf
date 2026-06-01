@@ -11,6 +11,7 @@
 		43718BCECA3E4E7EBF3C92BF /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D556E2E1A2444F9E91213A /* SupabaseConfig.swift */; };
 		C4D5E6F7A8B9C4D5E6F70002 /* LiveNassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70004 /* NassauScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */; };
+		C4D5E6F7A8B9C4D5E6F70006 /* WolfSpectatorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */; };
 		44DDAAF7AA504F088F946EB1 /* PastGamesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DA27DBD514F44729ADCBC19 /* PastGamesViewController.swift */; };
 		4D843132DAAB4D78B8688A94 /* GameManager+Tournament.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */; };
 		7B4E1A3D0EBE4811A681DE64 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7298A503BD3F427C807DB30C /* SupabaseService.swift */; };
@@ -110,6 +111,7 @@
 		30D556E2E1A2444F9E91213A /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNassauViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauScorecardViewController.swift; sourceTree = "<group>"; };
+		C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfSpectatorViewController.swift; sourceTree = "<group>"; };
 		6DA27DBD514F44729ADCBC19 /* PastGamesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastGamesViewController.swift; sourceTree = "<group>"; };
 		7298A503BD3F427C807DB30C /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
 		79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastGameDetailViewController.swift; sourceTree = "<group>"; };
@@ -299,6 +301,7 @@
 				30D556E2E1A2444F9E91213A /* SupabaseConfig.swift */,
 				C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */,
 				C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */,
+				C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */,
 				F63960512F60D62500EC0C30 /* GameModels.swift */,
 				F63960522F60D62500EC0C30 /* GameStatsViewController.swift */,
 				F63960532F60D62500EC0C30 /* GameViewController.swift */,
@@ -501,6 +504,7 @@
 				43718BCECA3E4E7EBF3C92BF /* SupabaseConfig.swift in Sources */,
 				C4D5E6F7A8B9C4D5E6F70002 /* LiveNassauViewController.swift in Sources */,
 				C4D5E6F7A8B9C4D5E6F70004 /* NassauScorecardViewController.swift in Sources */,
+				C4D5E6F7A8B9C4D5E6F70006 /* WolfSpectatorViewController.swift in Sources */,
 				F6D5417C2F7498740020588F /* TextGroupStore.swift in Sources */,
 				F639606D2F60D62500EC0C30 /* GameModels.swift in Sources */,
 				F639606E2F60D62500EC0C30 /* GameStatsViewController.swift in Sources */,

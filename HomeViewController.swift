@@ -110,7 +110,17 @@ final class ViewController: UIViewController {
     // MARK: - UI Refresh
 
     private func refreshCourseButtonTitle() {
-        let name = CourseLibrary.shared.selectedCourseName ?? "Choose Course"
+        let name: String
+        if let g = GameManager.shared.currentGame {
+            let pars = Array(g.course.pars.prefix(STANDARD_HOLES))
+            let hcs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
+            name = CourseLibrary.shared.courses.first(where: {
+                Array($0.pars.prefix(STANDARD_HOLES)) == pars &&
+                Array($0.hcs.prefix(STANDARD_HOLES)) == hcs
+            })?.name ?? CourseLibrary.shared.selectedCourseName ?? "Choose Course"
+        } else {
+            name = CourseLibrary.shared.selectedCourseName ?? "Choose Course"
+        }
         courseButton.configuration = styledButton(title: name, style: .secondaryChevron)
     }
 

@@ -7,6 +7,7 @@ final class SupabaseService {
 
     let client: SupabaseClient
     private var holeScoreChannels: [String: RealtimeChannelV2] = [:]
+    private var wolfSessionChannels: [String: RealtimeChannelV2] = [:]
 
     private init() {
         client = SupabaseClient(
@@ -249,6 +250,148 @@ final class SupabaseService {
         Task { await channel.subscribe() }
 
         return subscription
+    }
+
+    // MARK: - Wolf Live session
+
+    func createWolfSession(playerNames: [String], courseName: String) async throws -> WolfSession {
+        let code = generateCode()
+        let hostName = ProfileStore.name ?? ""
+        let response: PostgrestResponse<WolfSession> = try await client
+            .from("wolf_sessions")
+            .insert([
+                "code":         AnyJSON.string(code),
+                "host_name":    AnyJSON.string(hostName),
+                "player_names": AnyJSON.array(playerNames.map { .string($0) }),
+                "course_name":  AnyJSON.string(courseName),
+                "status":       AnyJSON.string("active")
+            ] as [String: AnyJSON])
+            .select()
+            .single()
+            .execute()
+        return response.value
+    }
+
+    func submitWolfHole(
+        sessionId: String,
+        hole: Int,
+        scores: [Int],
+        wolfPlayer: Int?,
+        wentAlone: Bool,
+        teamWon: Bool,
+        payouts: [Double]
+    ) async throws {
+        var payload: [String: AnyJSON] = [
+            "session_id": .string(sessionId),
+            "hole":        .integer(hole),
+            "scores":      .array(scores.map { .integer($0) }),
+            "went_alone":  .bool(wentAlone),
+            "team_won":    .bool(teamWon),
+            "payouts":     .array(payouts.map { .double($0) })
+        ]
+        if let wp = wolfPlayer { payload["wolf_player"] = .integer(wp) }
+        try await client.from("wolf_hole_results")
+            .upsert(payload, onConflict: "session_id,hole")
+            .execute()
+    }
+
+    func archiveWolfSession(id: String) async throws {
+        try await client
+            .from("wolf_sessions")
+            .update(["status": AnyJSON.string("archived")] as [String: AnyJSON])
+            .eq("id", value: id)
+            .execute()
+    }
+
+    func fetchWolfSession(id: String) async throws -> WolfSession {
+        let response: PostgrestResponse<WolfSession> = try await client
+            .from("wolf_sessions")
+            .select()
+            .eq("id", value: id)
+            .single()
+            .execute()
+        return response.value
+    }
+
+    func fetchWolfSessionByCode(code: String) async throws -> WolfSession {
+        let response: PostgrestResponse<WolfSession> = try await client
+            .from("wolf_sessions")
+            .select()
+            .eq("code", value: code.uppercased())
+            .single()
+            .execute()
+        return response.value
+    }
+
+    func fetchWolfHoleResults(sessionId: String) async throws -> [WolfHoleResult] {
+        let response: PostgrestResponse<[WolfHoleResult]> = try await client
+            .from("wolf_hole_results")
+            .select()
+            .eq("session_id", value: sessionId)
+            .order("hole")
+            .execute()
+        return response.value
+    }
+
+    func subscribeToWolfHoles(
+        sessionId: String,
+        onResult: @escaping (WolfHoleResult) -> Void
+    ) {
+        let channel = client.channel("wolf-holes-\(sessionId)")
+        wolfSessionChannels["holes-\(sessionId)"] = channel
+
+        channel.onPostgresChange(
+            InsertAction.self,
+            schema: "public",
+            table: "wolf_hole_results",
+            filter: "session_id=eq.\(sessionId)"
+        ) { action in
+            if let record = try? action.decodeRecord(as: WolfHoleResult.self, decoder: JSONDecoder()) {
+                DispatchQueue.main.async { onResult(record) }
+            }
+        }
+
+        channel.onPostgresChange(
+            UpdateAction.self,
+            schema: "public",
+            table: "wolf_hole_results",
+            filter: "session_id=eq.\(sessionId)"
+        ) { action in
+            if let record = try? action.decodeRecord(as: WolfHoleResult.self, decoder: JSONDecoder()) {
+                DispatchQueue.main.async { onResult(record) }
+            }
+        }
+
+        Task { await channel.subscribe() }
+    }
+
+    func subscribeToWolfSession(
+        sessionId: String,
+        onUpdate: @escaping (WolfSession) -> Void
+    ) {
+        let channel = client.channel("wolf-session-\(sessionId)")
+        wolfSessionChannels["session-\(sessionId)"] = channel
+
+        channel.onPostgresChange(
+            UpdateAction.self,
+            schema: "public",
+            table: "wolf_sessions",
+            filter: "id=eq.\(sessionId)"
+        ) { action in
+            if let record = try? action.decodeRecord(as: WolfSession.self, decoder: JSONDecoder()) {
+                DispatchQueue.main.async { onUpdate(record) }
+            }
+        }
+
+        Task { await channel.subscribe() }
+    }
+
+    func unsubscribeFromWolfSession(sessionId: String) {
+        for key in ["holes-\(sessionId)", "session-\(sessionId)"] {
+            if let ch = wolfSessionChannels.removeValue(forKey: key) {
+                Task { await ch.unsubscribe() }
+            }
+        }
     }
 
     // MARK: - Helpers

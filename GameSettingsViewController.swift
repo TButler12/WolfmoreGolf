@@ -17,6 +17,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
     private var umbrellaMuted = false
     private weak var wolfScoringSegment: UISegmentedControl?
+    private weak var goLiveButton: UIButton?
     private var scrollView: UIScrollView!
     private var contentStack: UIStackView!
 
@@ -52,6 +53,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         refreshCourseLabel()
         refreshUmbrellaButtonUI()
         installWolfScoringSegment()
+        installGoLiveButton()
         saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
 
         addKeyboardObservers()
@@ -253,6 +255,88 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         umbrellaButton.alpha = (sender.selectedSegmentIndex == 0) ? 1.0 : 0.4
+    }
+
+    // MARK: - Go Live
+
+    private func installGoLiveButton() {
+        let btn = UIButton(type: .system)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.heightAnchor.constraint(equalToConstant: 48).isActive = true
+        btn.addTarget(self, action: #selector(goLiveTapped), for: .touchUpInside)
+        goLiveButton = btn
+
+        let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
+        contentStack.insertArrangedSubview(btn, at: insertIndex)
+
+        refreshGoLiveButton()
+    }
+
+    private func refreshGoLiveButton() {
+        guard let btn = goLiveButton else { return }
+        let isLive = GameManager.shared.currentGame?.liveSessionId != nil
+        let title = isLive ? "Stop Live" : "Go Live"
+        let style: WMButtonStyle = isLive ? .destructive : .secondary
+        btn.configuration = wmStyledButton(title: title, style: style)
+    }
+
+    @objc private func goLiveTapped() {
+        if let sessionId = GameManager.shared.currentGame?.liveSessionId {
+            Task {
+                do {
+                    try await SupabaseService.shared.archiveWolfSession(id: sessionId)
+                } catch {
+                    print("ERROR archiveWolfSession: \(error)")
+                }
+                GameManager.shared.update { g in g.liveSessionId = nil }
+                GameManager.shared.saveCurrent()
+                DispatchQueue.main.async { self.refreshGoLiveButton() }
+            }
+        } else {
+            guard let g = GameManager.shared.currentGame else { return }
+            let names = (0..<MAX_PLAYERS).compactMap { s -> String? in
+                guard g.playerActivated[safe: s] == true else { return nil }
+                return g.playerNames[safe: s] ?? ""
+            }
+            let course = g.course.name.isEmpty ? "Custom Course" : g.course.name
+            Task {
+                do {
+                    let session = try await SupabaseService.shared.createWolfSession(
+                        playerNames: names,
+                        courseName: course
+                    )
+                    GameManager.shared.update { g in g.liveSessionId = session.id }
+                    GameManager.shared.saveCurrent()
+                    DispatchQueue.main.async {
+                        self.refreshGoLiveButton()
+                        self.showGoLiveCreatedAlert(code: session.code)
+                    }
+                } catch {
+                    DispatchQueue.main.async {
+                        self.showAlert(title: "Go Live Failed", message: error.localizedDescription)
+                    }
+                }
+            }
+        }
+    }
+
+    private func showGoLiveCreatedAlert(code: String) {
+        let link = "wolfmore://watch?code=\(code)"
+        let alert = UIAlertController(
+            title: "Live Session Created",
+            message: "Share this link with spectators:\n\(link)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
+            UIPasteboard.general.string = code
+        })
+        alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak self] _ in
+            guard let self else { return }
+            let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
+            self.present(av, animated: true)
+        })
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+        present(alert, animated: true)
     }
 
     @objc private func doneTapped() {

@@ -10,6 +10,7 @@ import UIKit
 enum WMButtonStyle {
     case primary
     case secondary
+    case destructive
 }
 
 func wmStyledButton(title: String, style: WMButtonStyle) -> UIButton.Configuration {
@@ -26,6 +27,9 @@ func wmStyledButton(title: String, style: WMButtonStyle) -> UIButton.Configurati
     case .secondary:
         config.baseBackgroundColor = .systemGray5
         config.baseForegroundColor = .label
+    case .destructive:
+        config.baseBackgroundColor = .systemRed
+        config.baseForegroundColor = .white
     }
 
     return config

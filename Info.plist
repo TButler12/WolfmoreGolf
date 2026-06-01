@@ -37,6 +37,17 @@
 			</array>
 		</dict>
 	</dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>wolfmore</string>
+			</array>
+			<key>CFBundleURLName</key>
+			<string>com.wolfmoregolf.spectator</string>
+		</dict>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UISupportedInterfaceOrientations</key>

@@ -80,6 +80,43 @@ struct HoleScoreRecord: Codable {
     }
 }
 
+struct WolfSession: Codable {
+    let id: String
+    let code: String
+    let hostName: String
+    let playerNames: [String]
+    let courseName: String
+    let status: String
+    let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, code, status
+        case hostName    = "host_name"
+        case playerNames = "player_names"
+        case courseName  = "course_name"
+        case createdAt   = "created_at"
+    }
+}
+
+struct WolfHoleResult: Codable {
+    let id: String
+    let sessionId: String
+    let hole: Int
+    let scores: [Int]
+    let wolfPlayer: Int?
+    let wentAlone: Bool
+    let teamWon: Bool
+    let payouts: [Double]
+
+    enum CodingKeys: String, CodingKey {
+        case id, hole, scores, payouts
+        case sessionId  = "session_id"
+        case wolfPlayer = "wolf_player"
+        case wentAlone  = "went_alone"
+        case teamWon    = "team_won"
+    }
+}
+
 struct HoleResultRecord: Codable {
     let id: String
     let matchId: String

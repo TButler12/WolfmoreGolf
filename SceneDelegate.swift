@@ -36,6 +36,21 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // window.makeKeyAndVisible()
     }
 
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url,
+              url.scheme?.lowercased() == "wolfmore",
+              url.host?.lowercased() == "watch",
+              let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let code = components.queryItems?.first(where: { $0.name == "code" })?.value
+        else { return }
+
+        guard let root = window?.rootViewController else { return }
+        let nav = (root as? UINavigationController) ?? root.navigationController
+        let vc = WolfSpectatorViewController()
+        vc.sessionCode = code
+        nav?.pushViewController(vc, animated: true)
+    }
+
     func sceneWillResignActive(_ scene: UIScene) {
         GameManager.shared.saveCurrent()
     }
