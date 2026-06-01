@@ -69,7 +69,6 @@ final class SupabaseService {
         let myName = ProfileStore.name ?? ""
         let playerSlot = currentOpponents.count + 1   // host=0, first joiner=1, etc.
         let newOpponents = currentOpponents + [myName]
-        print("DEBUG joinMatch: assigning playerSlot=\(playerSlot) name=\(myName)")
 
         // Append joiner to opponent_names; keep legacy opponent_name for old clients
         try await client
@@ -107,29 +106,24 @@ final class SupabaseService {
     // MARK: - Fetch active matches (last 24 hours only)
     func fetchActiveMatches() async throws -> [MatchRecord] {
         let cutoff = ISO8601DateFormatter().string(from: Date().addingTimeInterval(-86400))
-        print("DEBUG fetchActiveMatches: querying status=active, cutoff=\(cutoff)")
         let response: PostgrestResponse<[MatchRecord]> = try await client
             .from("matches")
             .select()
             .eq("status", value: "active")
             .gte("created_at", value: cutoff)
             .execute()
-        print("DEBUG fetchActiveMatches: \(response.value.count) active matches returned")
         return response.value
     }
 
     // MARK: - Archive match (hides it from fetchActiveMatches without hard-deleting)
     func archiveMatch(id: String) async throws {
-        print("DEBUG archiveMatch query: id=\(id)")
         let response: PostgrestResponse<[MatchRecord]> = try await client
             .from("matches")
             .update(["status": "archived"])
             .eq("id", value: id)
             .select()
             .execute()
-        print("DEBUG archiveMatch: \(id) — rows updated: \(response.value.count)")
         if response.value.isEmpty {
-            print("WARNING archiveMatch: 0 rows updated — RLS policy may be blocking UPDATE on matches table")
             throw NSError(domain: "WolfmoreGolf", code: 403,
                           userInfo: [NSLocalizedDescriptionKey: "Could not delete match — check Supabase RLS policy on matches table"])
         }
@@ -162,7 +156,6 @@ final class SupabaseService {
         playerHc: Int? = nil
     ) async throws {
         let name = playerName ?? ProfileStore.name ?? ""
-        print("DEBUG submitHoleScore: matchId=\(matchId) hole=\(hole) score=\(grossScore) playerName=\(name) holeHc=\(holeHc.map(String.init) ?? "nil") playerHc=\(playerHc.map(String.init) ?? "nil")")
         var payload: [String: String] = [
             "match_id":    matchId,
             "player_slot": String(playerSlot),
@@ -204,14 +197,12 @@ final class SupabaseService {
                 as: HoleScoreRecord.self,
                 decoder: JSONDecoder()
             ) {
-                print("DEBUG incomingScore: \(record)")
                 DispatchQueue.main.async { onScore(record) }
             }
         }
 
         Task {
             await channel.subscribe()
-            print("DEBUG subscribeToHoleScores: subscribed to matchId=\(matchId)")
         }
     }
 

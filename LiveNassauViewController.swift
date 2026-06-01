@@ -37,7 +37,6 @@ final class LiveNassauViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("DEBUG LiveNassau viewDidLoad - match: \(match?.id ?? "nil")")
         view.backgroundColor = .systemBackground
         title = match.map { "Live · \($0.code)" } ?? "Live Match"
         setupUI()
@@ -101,7 +100,6 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - Data loading
 
     private func fetchPriorScores() {
-        print("DEBUG fetchPriorScores starting - matchId: \(match?.id ?? "nil")")
         guard let matchId = match?.id else {
             rebuildStandings()
             return
@@ -110,7 +108,6 @@ final class LiveNassauViewController: UIViewController {
             do {
                 let prior = try await SupabaseService.shared.fetchHoleScores(matchId: matchId)
                 await MainActor.run {
-                    print("DEBUG fetchPriorScores: loaded \(prior.count) records")
                     self.receivedScores = prior
                     self.rebuildStandings()
                     self.setStatus(live: true)
@@ -128,7 +125,6 @@ final class LiveNassauViewController: UIViewController {
         guard let matchId = match?.id else { return }
         SupabaseService.shared.subscribeToHoleScores(matchId: matchId) { [weak self] record in
             guard let self else { return }
-            print("DEBUG score received: hole=\(record.hole) player=\(record.playerName ?? "nil")")
             // Deduplicate: keep latest score per (player, hole)
             self.receivedScores.removeAll {
                 if let rn = record.playerName, !rn.isEmpty,
@@ -276,7 +272,6 @@ final class LiveNassauViewController: UIViewController {
     }
 
     private func rebuildStandings() {
-        print("DEBUG rebuildStandings called: \(receivedScores.count) scores")
         let hostRaw = match?.hostName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
 
         if amHost {
@@ -348,20 +343,43 @@ final class LiveNassauViewController: UIViewController {
         let sortedOwner = ownerScores.sorted { hcRank($0) < hcRank($1) }
         let sortedOpp   = oppScores.sorted   { hcRank($0) < hcRank($1) }
 
+        // Handicap deltas — same for every hole, only SI changes per position
+        let hostHc    = ownerScores.first?.playerHc ?? 0
+        let oppHc     = oppScores.first?.playerHc   ?? 0
+        let baseHC    = min(hostHc, oppHc)
+        let hostDelta = max(0, hostHc - baseHC)
+        let oppDelta  = max(0, oppHc  - baseHC)
+
         let count = max(sortedOwner.count, sortedOpp.count)
         return (0..<count).map { i in
             let o = sortedOwner[safe: i]
             let p = sortedOpp[safe: i]
+
+            // Stroke index: owner's holeHc for this position, fallback to opponent's, then position
+            let rawSI = o?.holeHc ?? p?.holeHc ?? (i + 1)
+            let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
+
+            let hostStrokes = NassauEngine.pops(for: hostDelta, strokeIndex: si)
+            let oppStrokes  = NassauEngine.pops(for: oppDelta,  strokeIndex: si)
+
+            let hostNet: Int? = o.map { $0.grossScore - hostStrokes }
+            let oppNet:  Int? = p.map { $0.grossScore - oppStrokes  }
+
             let net: Int = {
-                guard let os = o?.grossScore, let ps = p?.grossScore else { return 0 }
-                return ps - os   // positive = owner winning (lower score wins in golf)
+                guard let hn = hostNet, let on = oppNet else { return 0 }
+                return on - hn   // positive = host winning (lower net score wins)
             }()
+
             return PairedHole(
-                hcRank: i + 1,                          // positional: 1 = hardest submitted
+                hcRank: i + 1,
                 hostPhysicalHole: (o?.hole ?? 0) + 1,
                 hostScore: o?.grossScore,
+                hostNetScore: hostNet,
+                hostStrokes: hostStrokes,
                 opponentPhysicalHole: (p?.hole ?? 0) + 1,
                 opponentScore: p?.grossScore,
+                opponentNetScore: oppNet,
+                opponentStrokes: oppStrokes,
                 netResult: net
             )
         }

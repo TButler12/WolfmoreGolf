@@ -319,7 +319,6 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                         g.remoteMatchId = match.id
                         if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
                     }
-                    print("DEBUG remoteMatchId set to: \(match.id)")
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
                     await MainActor.run {
                         let alert = UIAlertController(
@@ -375,7 +374,6 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                         g.remoteMatchId = match.id
                         if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
                     }
-                    print("DEBUG remoteMatchId set to: \(match.id)")
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
                     SupabaseService.shared.subscribeToResults(matchId: match.id) { [weak self] result in
                         self?.handleLiveResult(result)

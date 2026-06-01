@@ -3,10 +3,14 @@ import UIKit
 struct PairedHole {
     let hcRank: Int
     let hostPhysicalHole: Int    // 1-based for display
-    let hostScore: Int?
+    let hostScore: Int?          // gross
+    let hostNetScore: Int?       // gross minus strokes
+    let hostStrokes: Int         // HC strokes received on this hole
     let opponentPhysicalHole: Int
-    let opponentScore: Int?
-    let netResult: Int           // positive = host winning
+    let opponentScore: Int?      // gross
+    let opponentNetScore: Int?   // gross minus strokes
+    let opponentStrokes: Int
+    let netResult: Int           // positive = host winning (net)
 }
 
 final class NassauScorecardViewController: UIViewController {
@@ -28,6 +32,7 @@ final class NassauScorecardViewController: UIViewController {
         tableView.register(PairedHoleCell.self, forCellReuseIdentifier: PairedHoleCell.reuseID)
         tableView.rowHeight           = UITableView.automaticDimension
         tableView.estimatedRowHeight  = 44
+        tableView.tableHeaderView     = makeLegendView()
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -35,6 +40,24 @@ final class NassauScorecardViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+    }
+
+    private func makeLegendView() -> UIView {
+        let label = UILabel()
+        label.text          = "Scores shown as Gross(Net)"
+        label.font          = .systemFont(ofSize: 12, weight: .regular)
+        label.textColor     = .secondaryLabel
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        let container = UIView(frame: CGRect(x: 0, y: 0, width: 0, height: 32))
+        container.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -16),
+            label.topAnchor.constraint(equalTo: container.topAnchor),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+        ])
+        return container
     }
 }
 
@@ -184,37 +207,48 @@ final class PairedHoleCell: UITableViewCell {
     func configure(with hole: PairedHole, ownerName: String, opponentName: String) {
         nameRow.isHidden = true
 
-        hcLbl.text        = "\(hole.hcRank)"
-        hcLbl.textColor   = .tertiaryLabel
-        ownerHoleLbl.text  = hole.hostScore != nil ? "H\(hole.hostPhysicalHole)" : "—"
+        hcLbl.text             = "\(hole.hcRank)"
+        hcLbl.textColor        = .tertiaryLabel
+        ownerHoleLbl.text      = hole.hostScore != nil ? "H\(hole.hostPhysicalHole)" : "—"
         ownerHoleLbl.textColor = .secondaryLabel
-        ownerScrLbl.text   = hole.hostScore.map(String.init) ?? "—"
-        oppHoleLbl.text    = hole.opponentScore != nil ? "H\(hole.opponentPhysicalHole)" : "—"
-        oppHoleLbl.textColor = .secondaryLabel
-        oppScrLbl.text     = hole.opponentScore.map(String.init) ?? "—"
+        oppHoleLbl.text        = hole.opponentScore != nil ? "H\(hole.opponentPhysicalHole)" : "—"
+        oppHoleLbl.textColor   = .secondaryLabel
 
-        if let hs = hole.hostScore, let os = hole.opponentScore {
-            if hs < os {
-                resultLbl.text      = ownerName
-                resultLbl.textColor = .systemGreen
+        ownerScrLbl.text = scoreText(gross: hole.hostScore,     net: hole.hostNetScore,     strokes: hole.hostStrokes)
+        oppScrLbl.text   = scoreText(gross: hole.opponentScore, net: hole.opponentNetScore, strokes: hole.opponentStrokes)
+
+        // Winner comparison on net scores; fall back to gross if net unavailable
+        let ownerCompare = hole.hostNetScore     ?? hole.hostScore
+        let oppCompare   = hole.opponentNetScore ?? hole.opponentScore
+
+        if let h = ownerCompare, let o = oppCompare {
+            if h < o {
+                resultLbl.text        = ownerName
+                resultLbl.textColor   = .systemGreen
                 ownerScrLbl.textColor = .systemGreen
                 oppScrLbl.textColor   = .label
-            } else if hs > os {
-                resultLbl.text      = opponentName
-                resultLbl.textColor = .systemRed
+            } else if h > o {
+                resultLbl.text        = opponentName
+                resultLbl.textColor   = .systemRed
                 ownerScrLbl.textColor = .label
                 oppScrLbl.textColor   = .systemRed
             } else {
-                resultLbl.text      = "Halved"
-                resultLbl.textColor = .secondaryLabel
+                resultLbl.text        = "Halved"
+                resultLbl.textColor   = .secondaryLabel
                 ownerScrLbl.textColor = .label
                 oppScrLbl.textColor   = .label
             }
         } else {
-            resultLbl.text      = "—"
-            resultLbl.textColor = .tertiaryLabel
-            ownerScrLbl.textColor = hole.hostScore != nil ? .label : .tertiaryLabel
+            resultLbl.text        = "—"
+            resultLbl.textColor   = .tertiaryLabel
+            ownerScrLbl.textColor = hole.hostScore     != nil ? .label : .tertiaryLabel
             oppScrLbl.textColor   = hole.opponentScore != nil ? .label : .tertiaryLabel
         }
+    }
+
+    private func scoreText(gross: Int?, net: Int?, strokes: Int) -> String {
+        guard let g = gross else { return "—" }
+        if strokes > 0, let n = net { return "\(g)(\(n))" }
+        return "\(g)"
     }
 }

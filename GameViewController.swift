@@ -319,7 +319,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     @objc private func handleRemoteMatchDidStart() {
-        print("DEBUG RemoteMatchDidStart received")
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             self.installLiveNassauButtonIfNeeded()
@@ -492,7 +491,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         Task {
             do {
                 let match = try await SupabaseService.shared.fetchMatch(id: matchId)
-                print("DEBUG liveNassauTapped - match fetched: \(match.id) hostName: \(match.hostName ?? "nil")")
                 await MainActor.run {
                     let vc = LiveNassauViewController()
                     vc.match = match
@@ -2210,7 +2208,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         navigationController?.pushViewController(vc, animated: true)
     }
     @IBAction func updateScorePushed(_ sender: UIButton) {
-        print("DEBUG updateHoleScores tapped - remoteMatchId: \(GameManager.shared.currentGame?.remoteMatchId ?? "nil")")
         sender.isEnabled = false
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
             sender.isEnabled = true
@@ -2330,7 +2327,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                     holeHc: hc,
                                     playerHc: playerHc
                                 )
-                                print("DEBUG submitHoleScore success: hole=\(hole + 1) name=\(ownerName) score=\(gross) hc=\(hc)")
                             } catch {
                                 print("ERROR submitHoleScore failed: \(error)")
                             }
@@ -2513,8 +2509,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             self.refreshForCurrentHole()
 
             // Live Supabase submission (no-op when not in a live match)
-            print("DEBUG score saved - gross: \(score ?? -1) remoteMatchId: \(GameManager.shared.currentGame?.remoteMatchId ?? "nil")")
-            print("DEBUG remoteMatchId in game: \(GameManager.shared.currentGame?.remoteMatchId ?? "nil")")
             if let matchId = GameManager.shared.currentGame?.remoteMatchId,
                let gross = score {
                 Task { try? await SupabaseService.shared.submitHoleScore(
