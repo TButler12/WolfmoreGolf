@@ -2,14 +2,32 @@ import UIKit
 
 final class WolfSpectatorViewController: UIViewController {
 
+    // MARK: - External input
     var sessionCode: String = ""
 
-    private var session: WolfSession?
-    private var holeResults: [Int: WolfHoleResult] = [:]   // hole → result
+    // MARK: - Multi-session state
+    private var sessions: [WolfSession] = []
+    private var holeResultsBySessionId: [String: [Int: WolfHoleResult]] = [:]
+    private var currentSessionIndex: Int = 0
 
-    private let statusBanner = UILabel()
-    private let tableView    = UITableView(frame: .zero, style: .insetGrouped)
-    private let loadingView  = UIActivityIndicatorView(style: .large)
+    private var currentSession: WolfSession? {
+        sessions.indices.contains(currentSessionIndex) ? sessions[currentSessionIndex] : nil
+    }
+    private var currentHoleResults: [Int: WolfHoleResult] {
+        guard let id = currentSession?.id else { return [:] }
+        return holeResultsBySessionId[id] ?? [:]
+    }
+
+    // MARK: - UI
+    private let tabScrollView = UIScrollView()
+    private let tabStack      = UIStackView()
+    private var tabButtons: [UIButton] = []
+    private let statusBanner  = UILabel()
+    private let tableView     = UITableView(frame: .zero, style: .insetGrouped)
+    private let loadingView   = UIActivityIndicatorView(style: .large)
+
+    private let savedCodesKey = "watchedWolfSessions"
+    private let maxSessions   = 3
 
     // MARK: - Lifecycle
 
@@ -17,32 +35,59 @@ final class WolfSpectatorViewController: UIViewController {
         super.viewDidLoad()
         title = "Live Match"
         view.backgroundColor = .systemBackground
+        setupTabBar()
         setupStatusBanner()
         setupTableView()
         setupLoadingView()
-        loadSession()
+        loadInitialSessions()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        if let id = session?.id {
-            SupabaseService.shared.unsubscribeFromWolfSession(sessionId: id)
+        for session in sessions {
+            SupabaseService.shared.unsubscribeFromWolfSession(sessionId: session.id)
         }
     }
 
     // MARK: - Setup
 
+    private func setupTabBar() {
+        tabScrollView.translatesAutoresizingMaskIntoConstraints = false
+        tabScrollView.showsHorizontalScrollIndicator = false
+        tabScrollView.alwaysBounceHorizontal = true
+        view.addSubview(tabScrollView)
+        NSLayoutConstraint.activate([
+            tabScrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tabScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tabScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tabScrollView.heightAnchor.constraint(equalToConstant: 44),
+        ])
+
+        tabStack.axis      = .horizontal
+        tabStack.spacing   = 8
+        tabStack.alignment = .center
+        tabStack.translatesAutoresizingMaskIntoConstraints = false
+        tabScrollView.addSubview(tabStack)
+        NSLayoutConstraint.activate([
+            tabStack.topAnchor.constraint(equalTo: tabScrollView.contentLayoutGuide.topAnchor),
+            tabStack.leadingAnchor.constraint(equalTo: tabScrollView.contentLayoutGuide.leadingAnchor, constant: 12),
+            tabStack.trailingAnchor.constraint(equalTo: tabScrollView.contentLayoutGuide.trailingAnchor, constant: -12),
+            tabStack.bottomAnchor.constraint(equalTo: tabScrollView.contentLayoutGuide.bottomAnchor),
+            tabStack.heightAnchor.constraint(equalTo: tabScrollView.frameLayoutGuide.heightAnchor),
+        ])
+    }
+
     private func setupStatusBanner() {
         statusBanner.translatesAutoresizingMaskIntoConstraints = false
-        statusBanner.textAlignment  = .center
-        statusBanner.font           = .systemFont(ofSize: 13, weight: .semibold)
-        statusBanner.textColor      = .white
+        statusBanner.textAlignment   = .center
+        statusBanner.font            = .systemFont(ofSize: 13, weight: .semibold)
+        statusBanner.textColor       = .white
         statusBanner.backgroundColor = .systemGreen
-        statusBanner.text           = "LIVE"
-        statusBanner.isHidden       = true
+        statusBanner.text            = "LIVE"
+        statusBanner.isHidden        = true
         view.addSubview(statusBanner)
         NSLayoutConstraint.activate([
-            statusBanner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            statusBanner.topAnchor.constraint(equalTo: tabScrollView.bottomAnchor),
             statusBanner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             statusBanner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             statusBanner.heightAnchor.constraint(equalToConstant: 28),
@@ -53,11 +98,11 @@ final class WolfSpectatorViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.register(WolfHoleCell.self, forCellReuseIdentifier: WolfHoleCell.reuseID)
-        tableView.rowHeight = UITableView.automaticDimension
+        tableView.rowHeight          = UITableView.automaticDimension
         tableView.estimatedRowHeight = 44
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 28),
+            tableView.topAnchor.constraint(equalTo: statusBanner.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -74,44 +119,273 @@ final class WolfSpectatorViewController: UIViewController {
         loadingView.startAnimating()
     }
 
-    // MARK: - Data loading
+    // MARK: - Tab bar
 
-    private func loadSession() {
+    private func rebuildTabBar() {
+        for v in tabStack.arrangedSubviews {
+            tabStack.removeArrangedSubview(v)
+            v.removeFromSuperview()
+        }
+        tabButtons = []
+
+        for (i, session) in sessions.enumerated() {
+            let btn = makeTabButton(code: session.code, index: i)
+            tabButtons.append(btn)
+            tabStack.addArrangedSubview(btn)
+        }
+
+        if sessions.count < maxSessions {
+            tabStack.addArrangedSubview(makeAddButton())
+        }
+
+        updateTabHighlight()
+    }
+
+    private func makeTabButton(code: String, index: Int) -> UIButton {
+        var cfg = UIButton.Configuration.filled()
+        cfg.title = code
+        cfg.cornerStyle = .capsule
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        cfg.baseBackgroundColor = .systemGray5
+        cfg.baseForegroundColor = .label
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var out = incoming
+            out.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .semibold)
+            return out
+        }
+        let btn = UIButton(configuration: cfg)
+        btn.tag = index
+        btn.addTarget(self, action: #selector(tabButtonTapped(_:)), for: .touchUpInside)
+        let lp = UILongPressGestureRecognizer(target: self, action: #selector(tabLongPressed(_:)))
+        btn.addGestureRecognizer(lp)
+        return btn
+    }
+
+    private func makeAddButton() -> UIButton {
+        var cfg = UIButton.Configuration.plain()
+        cfg.title = "+"
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        cfg.baseForegroundColor = .secondaryLabel
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+            var out = incoming
+            out.font = UIFont.systemFont(ofSize: 20, weight: .medium)
+            return out
+        }
+        let btn = UIButton(configuration: cfg)
+        btn.addTarget(self, action: #selector(addSessionTapped), for: .touchUpInside)
+        return btn
+    }
+
+    private func updateTabHighlight() {
+        for (i, btn) in tabButtons.enumerated() {
+            var cfg = btn.configuration ?? UIButton.Configuration.filled()
+            if i == currentSessionIndex {
+                cfg.baseBackgroundColor = .wolfMoreGreen
+                cfg.baseForegroundColor = .white
+            } else {
+                cfg.baseBackgroundColor = .systemGray5
+                cfg.baseForegroundColor = .label
+            }
+            btn.configuration = cfg
+        }
+    }
+
+    // MARK: - Session loading
+
+    private func loadInitialSessions() {
+        var codesToLoad: [String] = []
+        let upper = sessionCode.uppercased()
+        if !upper.isEmpty { codesToLoad.append(upper) }
+
+        let saved = UserDefaults.standard.stringArray(forKey: savedCodesKey) ?? []
+        for code in saved where !codesToLoad.contains(code) && codesToLoad.count < maxSessions {
+            codesToLoad.append(code)
+        }
+
+        guard !codesToLoad.isEmpty else {
+            loadingView.stopAnimating()
+            loadingView.isHidden = true
+            return
+        }
+
         Task {
-            do {
-                let fetched = try await SupabaseService.shared.fetchWolfSessionByCode(code: sessionCode)
-                let results = try await SupabaseService.shared.fetchWolfHoleResults(sessionId: fetched.id)
-                DispatchQueue.main.async {
-                    self.session = fetched
-                    for r in results { self.holeResults[r.hole] = r }
-                    self.loadingView.stopAnimating()
-                    self.loadingView.isHidden = true
-                    self.applySessionStatus(fetched.status)
-                    self.tableView.reloadData()
-                    self.subscribeToUpdates(sessionId: fetched.id)
+            var loaded: [WolfSession] = []
+            var resultsBySessionId: [String: [Int: WolfHoleResult]] = [:]
+
+            for code in codesToLoad {
+                guard let session = try? await SupabaseService.shared.fetchWolfSessionByCode(code: code) else { continue }
+                loaded.append(session)
+                let results = (try? await SupabaseService.shared.fetchWolfHoleResults(sessionId: session.id)) ?? []
+                var dict: [Int: WolfHoleResult] = [:]
+                for r in results { dict[r.hole] = r }
+                resultsBySessionId[session.id] = dict
+            }
+
+            DispatchQueue.main.async {
+                self.loadingView.stopAnimating()
+                self.loadingView.isHidden = true
+                guard !loaded.isEmpty else {
+                    self.showError(NSError(
+                        domain: "WolfmoreGolf", code: 404,
+                        userInfo: [NSLocalizedDescriptionKey: "Session not found. Check the code and try again."]))
+                    return
                 }
-            } catch {
-                DispatchQueue.main.async {
-                    self.loadingView.stopAnimating()
-                    self.loadingView.isHidden = true
-                    self.showError(error)
+                self.sessions = loaded
+                self.holeResultsBySessionId = resultsBySessionId
+                self.currentSessionIndex = 0
+                self.rebuildTabBar()
+                self.applyCurrentSession()
+                self.saveSessionCodes()
+                for session in loaded { self.subscribeToSession(session) }
+            }
+        }
+    }
+
+    private func applyCurrentSession() {
+        guard let session = currentSession else { return }
+        applySessionStatus(session.status)
+        tableView.reloadData()
+    }
+
+    private func subscribeToSession(_ session: WolfSession) {
+        let sessionId = session.id
+        SupabaseService.shared.subscribeToWolfHoles(sessionId: sessionId) { [weak self] result in
+            guard let self else { return }
+            self.holeResultsBySessionId[sessionId, default: [:]][result.hole] = result
+            if self.currentSession?.id == sessionId {
+                self.tableView.reloadData()
+            }
+        }
+        SupabaseService.shared.subscribeToWolfSession(sessionId: sessionId) { [weak self] updated in
+            guard let self else { return }
+            if let idx = self.sessions.firstIndex(where: { $0.id == updated.id }) {
+                self.sessions[idx] = updated
+                if self.currentSessionIndex == idx {
+                    self.applySessionStatus(updated.status)
                 }
             }
         }
     }
 
-    private func subscribeToUpdates(sessionId: String) {
-        SupabaseService.shared.subscribeToWolfHoles(sessionId: sessionId) { [weak self] result in
-            guard let self else { return }
-            self.holeResults[result.hole] = result
-            self.tableView.reloadData()
+    // MARK: - Tab actions
+
+    @objc private func tabButtonTapped(_ sender: UIButton) {
+        let index = sender.tag
+        guard sessions.indices.contains(index), index != currentSessionIndex else { return }
+        currentSessionIndex = index
+        updateTabHighlight()
+        applyCurrentSession()
+    }
+
+    @objc private func tabLongPressed(_ gr: UILongPressGestureRecognizer) {
+        guard gr.state == .began, let btn = gr.view as? UIButton else { return }
+        let index = btn.tag
+        guard sessions.indices.contains(index) else { return }
+        let code = sessions[index].code
+        let alert = UIAlertController(
+            title: "Remove \"\(code)\"?",
+            message: "Stop watching this live game.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Remove", style: .destructive) { [weak self] _ in
+            self?.removeSession(at: index)
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func removeSession(at index: Int) {
+        guard sessions.indices.contains(index) else { return }
+        let removed = sessions[index]
+        SupabaseService.shared.unsubscribeFromWolfSession(sessionId: removed.id)
+        holeResultsBySessionId.removeValue(forKey: removed.id)
+        sessions.remove(at: index)
+
+        if sessions.isEmpty {
+            saveSessionCodes()
+            navigationController?.popViewController(animated: true)
+            return
         }
-        SupabaseService.shared.subscribeToWolfSession(sessionId: sessionId) { [weak self] updated in
-            guard let self else { return }
-            self.session = updated
-            self.applySessionStatus(updated.status)
+        currentSessionIndex = min(currentSessionIndex, sessions.count - 1)
+        rebuildTabBar()
+        applyCurrentSession()
+        saveSessionCodes()
+    }
+
+    @objc private func addSessionTapped() {
+        guard sessions.count < maxSessions else { return }
+        let alert = UIAlertController(
+            title: "Watch Another Game",
+            message: "Enter the 6-character code",
+            preferredStyle: .alert
+        )
+        alert.addTextField { tf in
+            tf.placeholder = "e.g. ABC123"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType = .no
+            tf.returnKeyType = .go
+            NotificationCenter.default.addObserver(
+                forName: UITextField.textDidChangeNotification,
+                object: tf,
+                queue: .main
+            ) { _ in
+                if let text = tf.text, text.count > 6 { tf.text = String(text.prefix(6)) }
+            }
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Watch", style: .default) { [weak self, weak alert] _ in
+            let code = (alert?.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .uppercased()
+            guard !code.isEmpty else { return }
+            self?.addSession(code: code)
+        })
+        present(alert, animated: true)
+    }
+
+    private func addSession(code: String) {
+        if let existing = sessions.firstIndex(where: { $0.code == code }) {
+            currentSessionIndex = existing
+            updateTabHighlight()
+            applyCurrentSession()
+            return
+        }
+        loadingView.isHidden = false
+        loadingView.startAnimating()
+        Task {
+            do {
+                let session = try await SupabaseService.shared.fetchWolfSessionByCode(code: code)
+                let results = (try? await SupabaseService.shared.fetchWolfHoleResults(sessionId: session.id)) ?? []
+                var dict: [Int: WolfHoleResult] = [:]
+                for r in results { dict[r.hole] = r }
+                DispatchQueue.main.async {
+                    self.sessions.append(session)
+                    self.holeResultsBySessionId[session.id] = dict
+                    self.currentSessionIndex = self.sessions.count - 1
+                    self.loadingView.stopAnimating()
+                    self.loadingView.isHidden = true
+                    self.rebuildTabBar()
+                    self.applyCurrentSession()
+                    self.saveSessionCodes()
+                    self.subscribeToSession(session)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.loadingView.stopAnimating()
+                    self.loadingView.isHidden = true
+                    let alert = UIAlertController(
+                        title: "Code Not Found",
+                        message: "Check the code and try again.",
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
+                }
+            }
         }
     }
+
+    // MARK: - Status banner
 
     private func applySessionStatus(_ status: String) {
         if status == "archived" {
@@ -124,6 +398,14 @@ final class WolfSpectatorViewController: UIViewController {
             statusBanner.isHidden        = false
         }
     }
+
+    // MARK: - Persistence
+
+    private func saveSessionCodes() {
+        UserDefaults.standard.set(sessions.map { $0.code }, forKey: savedCodesKey)
+    }
+
+    // MARK: - Error
 
     private func showError(_ error: Error) {
         let alert = UIAlertController(
@@ -145,23 +427,23 @@ extension WolfSpectatorViewController: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        (session?.playerNames.count ?? 0) > 0 ? 19 : 0   // 1 header + 18 holes
+        (currentSession?.playerNames.count ?? 0) > 0 ? 19 : 0   // 1 header + 18 holes
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: WolfHoleCell.reuseID, for: indexPath) as! WolfHoleCell
-        guard let session else { return cell }
+        guard let session = currentSession else { return cell }
         if indexPath.row == 0 {
             cell.configureAsHeader(playerNames: session.playerNames)
         } else {
             let hole = indexPath.row  // 1-based
-            cell.configure(hole: hole, result: holeResults[hole], playerNames: session.playerNames)
+            cell.configure(hole: hole, result: currentHoleResults[hole], playerNames: session.playerNames)
         }
         return cell
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        guard let s = session else { return nil }
+        guard let s = currentSession else { return nil }
         return "\(s.courseName)  •  Code: \(s.code)"
     }
 }
@@ -219,9 +501,9 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsHeader(playerNames: [String]) {
-        holeLabel.text  = "Hole"
+        holeLabel.text      = "Hole"
         holeLabel.textColor = .secondaryLabel
-        wolfLabel.text  = "W"
+        wolfLabel.text      = "W"
         wolfLabel.textColor = .secondaryLabel
         for (i, col) in scoreCols.enumerated() {
             col.text      = i < playerNames.count ? String(playerNames[i].prefix(4)) : ""
