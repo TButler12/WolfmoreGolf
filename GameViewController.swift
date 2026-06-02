@@ -1765,12 +1765,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // ← This ensures both (or all) Wolves paint black
         refreshWolfButtons()
 
-        #if DEBUG
-        if let g = GameManager.shared.currentGame {
-            let h = max(0, min(17, g.hole))
-            print("🐺 Hole \(h+1) wolves:", g.wolfButtonStatus.map { $0[h] })
-        }
-        #endif
     }
     // Currency with NO cents
     private let currency0: NumberFormatter = {

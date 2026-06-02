@@ -24,6 +24,7 @@ final class ViewController: UIViewController {
     // MARK: - State
     private var shouldPromptForName = false
     private weak var tournamentButton: UIButton?
+    private weak var watchLiveButton: UIButton?
 
     // MARK: - Keys
     private let didPromptHomeCourseKey = "profile.didPromptHomeCourse_v1"
@@ -67,6 +68,7 @@ final class ViewController: UIViewController {
 
         fixIconButton(editCourseButton)
         buildTournamentButton()
+        buildWatchLiveButton()
 
         NotificationCenter.default.addObserver(
             self,
@@ -857,6 +859,76 @@ final class ViewController: UIViewController {
         }
         GameManager.shared.update { g in g.gameType = .tournament }
         presentManagePlayers()
+    }
+
+    // MARK: - Watch Live
+
+    private func buildWatchLiveButton() {
+        let btn = UIButton(type: .system)
+        btn.configuration = styledButton(title: "Watch Live", style: .utilityChip)
+        btn.addTarget(self, action: #selector(watchLiveTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        watchLiveButton = btn
+        view.addSubview(btn)
+        NSLayoutConstraint.activate([
+            btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            btn.topAnchor.constraint(equalTo: moreButton.bottomAnchor, constant: 12),
+        ])
+    }
+
+    @objc private func watchLiveTapped() {
+        let alert = UIAlertController(
+            title: "Watch Live",
+            message: "Enter the 6-character code shared by the scorekeeper",
+            preferredStyle: .alert
+        )
+        alert.addTextField { tf in
+            tf.placeholder = "e.g. ABC123"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType = .no
+            tf.returnKeyType = .go
+            NotificationCenter.default.addObserver(
+                forName: UITextField.textDidChangeNotification,
+                object: tf,
+                queue: .main
+            ) { _ in
+                if let text = tf.text, text.count > 6 {
+                    tf.text = String(text.prefix(6))
+                }
+            }
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Watch", style: .default) { [weak self, weak alert] _ in
+            let code = (alert?.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .uppercased()
+            guard !code.isEmpty else { return }
+            self?.fetchAndOpenSession(code: code)
+        })
+        present(alert, animated: true)
+    }
+
+    private func fetchAndOpenSession(code: String) {
+        Task {
+            do {
+                let session = try await SupabaseService.shared.fetchWolfSessionByCode(code: code)
+                DispatchQueue.main.async {
+                    let vc = WolfSpectatorViewController()
+                    vc.sessionCode = session.code
+                    self.navigationController?.pushViewController(vc, animated: true)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    let alert = UIAlertController(
+                        title: "Code Not Found",
+                        message: "Check the code and try again.",
+                        preferredStyle: .alert
+                    )
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true)
+                }
+            }
+        }
     }
 
     // MARK: - Helpers
