@@ -90,6 +90,7 @@ final class ViewController: UIViewController {
         refreshCourseButtonTitle()
         refreshPlayArea()
         refreshBottomButtons()
+        refreshWatchLiveButton()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -863,9 +864,10 @@ final class ViewController: UIViewController {
 
     // MARK: - Watch Live
 
+    private let watchedSessionsKey = "watchedWolfSessions"
+
     private func buildWatchLiveButton() {
         let btn = UIButton(type: .system)
-        btn.configuration = styledButton(title: "Watch Live", style: .utilityChip)
         btn.addTarget(self, action: #selector(watchLiveTapped), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
         watchLiveButton = btn
@@ -874,9 +876,56 @@ final class ViewController: UIViewController {
             btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             btn.topAnchor.constraint(equalTo: moreButton.bottomAnchor, constant: 12),
         ])
+        refreshWatchLiveButton()
+    }
+
+    private func refreshWatchLiveButton() {
+        guard let btn = watchLiveButton else { return }
+        let saved = UserDefaults.standard.stringArray(forKey: watchedSessionsKey) ?? []
+        let title = saved.isEmpty ? "Watch Live" : "● Watch Live"
+        btn.configuration = styledButton(title: title, style: .utilityChip)
     }
 
     @objc private func watchLiveTapped() {
+        let saved = UserDefaults.standard.stringArray(forKey: watchedSessionsKey) ?? []
+
+        guard !saved.isEmpty else {
+            showWatchLiveAlert()
+            return
+        }
+
+        // Concurrently check which saved sessions are still active
+        Task {
+            var activeCodes: [String] = []
+            await withTaskGroup(of: (String, Bool).self) { group in
+                for code in saved {
+                    group.addTask {
+                        let session = try? await SupabaseService.shared.fetchWolfSessionByCode(code: code)
+                        return (code, session?.status == "active")
+                    }
+                }
+                for await (code, isActive) in group {
+                    if isActive { activeCodes.append(code) }
+                }
+            }
+
+            DispatchQueue.main.async {
+                if !activeCodes.isEmpty {
+                    // Go directly — spectator VC will reload from UserDefaults
+                    let vc = WolfSpectatorViewController()
+                    vc.sessionCode = ""
+                    self.navigationController?.pushViewController(vc, animated: true)
+                } else {
+                    // All saved sessions ended — clear and show alert
+                    UserDefaults.standard.removeObject(forKey: self.watchedSessionsKey)
+                    self.refreshWatchLiveButton()
+                    self.showWatchLiveAlert()
+                }
+            }
+        }
+    }
+
+    private func showWatchLiveAlert() {
         let alert = UIAlertController(
             title: "Watch Live",
             message: "Enter the 6-character code shared by the scorekeeper",
@@ -892,9 +941,7 @@ final class ViewController: UIViewController {
                 object: tf,
                 queue: .main
             ) { _ in
-                if let text = tf.text, text.count > 6 {
-                    tf.text = String(text.prefix(6))
-                }
+                if let text = tf.text, text.count > 6 { tf.text = String(text.prefix(6)) }
             }
         }
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
