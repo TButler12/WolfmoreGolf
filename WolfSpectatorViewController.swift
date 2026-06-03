@@ -40,6 +40,13 @@ final class WolfSpectatorViewController: UIViewController {
         setupTableView()
         setupLoadingView()
         loadInitialSessions()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "trash"),
+            style: .plain,
+            target: self,
+            action: #selector(clearAllTapped)
+        )
+        navigationItem.rightBarButtonItem?.tintColor = .systemRed
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -216,6 +223,7 @@ final class WolfSpectatorViewController: UIViewController {
                 guard let session = try? await SupabaseService.shared.fetchWolfSessionByCode(code: code) else { continue }
                 loaded.append(session)
                 let results = (try? await SupabaseService.shared.fetchWolfHoleResults(sessionId: session.id)) ?? []
+                print("DEBUG wolf fetch loaded: \(results.count) holes for session \(session.id)")
                 var dict: [Int: WolfHoleResult] = [:]
                 for r in results { dict[r.hole] = r }
                 resultsBySessionId[session.id] = dict
@@ -249,13 +257,17 @@ final class WolfSpectatorViewController: UIViewController {
 
     private func subscribeToSession(_ session: WolfSession) {
         let sessionId = session.id
-        SupabaseService.shared.subscribeToWolfHoles(sessionId: sessionId) { [weak self] result in
+        print("DEBUG wolf spectator subscribing to session: \(session.id)")
+        let holeCallback: (WolfHoleResult) -> Void = { [weak self] result in
+            print("DEBUG wolf hole realtime received: hole=\(result.hole)")
             guard let self else { return }
             self.holeResultsBySessionId[sessionId, default: [:]][result.hole] = result
             if self.currentSession?.id == sessionId {
                 self.tableView.reloadData()
             }
         }
+        SupabaseService.shared.subscribeToWolfHoles(sessionId: sessionId, onResult: holeCallback)
+        SupabaseService.shared.subscribeToWolfHoleUpdates(sessionId: sessionId, onResult: holeCallback)
         SupabaseService.shared.subscribeToWolfSession(sessionId: sessionId) { [weak self] updated in
             guard let self else { return }
             if let idx = self.sessions.firstIndex(where: { $0.id == updated.id }) {
@@ -397,6 +409,32 @@ final class WolfSpectatorViewController: UIViewController {
             statusBanner.backgroundColor = .systemGreen
             statusBanner.isHidden        = false
         }
+    }
+
+    // MARK: - Clear all
+
+    @objc private func clearAllTapped() {
+        guard !sessions.isEmpty else { return }
+        let alert = UIAlertController(
+            title: "Clear All Sessions?",
+            message: "Stop watching all \(sessions.count) live game(s).",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Clear All", style: .destructive) { [weak self] _ in
+            self?.clearAllSessions()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func clearAllSessions() {
+        for session in sessions {
+            SupabaseService.shared.unsubscribeFromWolfSession(sessionId: session.id)
+        }
+        sessions.removeAll()
+        holeResultsBySessionId.removeAll()
+        UserDefaults.standard.removeObject(forKey: savedCodesKey)
+        navigationController?.popViewController(animated: true)
     }
 
     // MARK: - Persistence

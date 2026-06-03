@@ -333,6 +333,7 @@ final class SupabaseService {
         return response.value
     }
 
+    // One onPostgresChange registration per channel before subscribe() — SDK requirement.
     func subscribeToWolfHoles(
         sessionId: String,
         onResult: @escaping (WolfHoleResult) -> Void
@@ -350,6 +351,17 @@ final class SupabaseService {
                 DispatchQueue.main.async { onResult(record) }
             }
         }
+
+        Task { await channel.subscribe() }
+    }
+
+    // Score corrections (UPDATE) get their own channel to avoid multi-registration.
+    func subscribeToWolfHoleUpdates(
+        sessionId: String,
+        onResult: @escaping (WolfHoleResult) -> Void
+    ) {
+        let channel = client.channel("wolf-holes-upd-\(sessionId)")
+        wolfSessionChannels["holes-upd-\(sessionId)"] = channel
 
         channel.onPostgresChange(
             UpdateAction.self,
@@ -387,7 +399,7 @@ final class SupabaseService {
     }
 
     func unsubscribeFromWolfSession(sessionId: String) {
-        for key in ["holes-\(sessionId)", "session-\(sessionId)"] {
+        for key in ["holes-\(sessionId)", "holes-upd-\(sessionId)", "session-\(sessionId)"] {
             if let ch = wolfSessionChannels.removeValue(forKey: key) {
                 Task { await ch.unsubscribe() }
             }

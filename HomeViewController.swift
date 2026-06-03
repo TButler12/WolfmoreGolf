@@ -869,6 +869,8 @@ final class ViewController: UIViewController {
     private func buildWatchLiveButton() {
         let btn = UIButton(type: .system)
         btn.addTarget(self, action: #selector(watchLiveTapped), for: .touchUpInside)
+        let lp = UILongPressGestureRecognizer(target: self, action: #selector(watchLiveLongPressed))
+        btn.addGestureRecognizer(lp)
         btn.translatesAutoresizingMaskIntoConstraints = false
         watchLiveButton = btn
         view.addSubview(btn)
@@ -877,6 +879,24 @@ final class ViewController: UIViewController {
             btn.topAnchor.constraint(equalTo: moreButton.bottomAnchor, constant: 12),
         ])
         refreshWatchLiveButton()
+    }
+
+    @objc private func watchLiveLongPressed(_ gr: UILongPressGestureRecognizer) {
+        guard gr.state == .began else { return }
+        let saved = UserDefaults.standard.stringArray(forKey: watchedSessionsKey) ?? []
+        guard !saved.isEmpty else { return }
+        let alert = UIAlertController(
+            title: "Clear Saved Sessions?",
+            message: "Stop watching \(saved.count) saved game(s).",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Clear All", style: .destructive) { [weak self] _ in
+            guard let self else { return }
+            UserDefaults.standard.removeObject(forKey: self.watchedSessionsKey)
+            self.refreshWatchLiveButton()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
     }
 
     private func refreshWatchLiveButton() {

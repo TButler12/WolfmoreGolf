@@ -281,19 +281,27 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func goLiveTapped() {
-        if let sessionId = GameManager.shared.currentGame?.liveSessionId {
-            Task {
-                do {
-                    try await SupabaseService.shared.archiveWolfSession(id: sessionId)
-                } catch {
-                    print("ERROR archiveWolfSession: \(error)")
-                }
-                GameManager.shared.update { g in g.liveSessionId = nil }
-                GameManager.shared.saveCurrent()
-                DispatchQueue.main.async { self.refreshGoLiveButton() }
+        guard let g = GameManager.shared.currentGame else { return }
+
+        if let sessionId = g.liveSessionId {
+            // Already live — offer to reshare or stop
+            let code = g.liveSessionCode ?? ""
+            let alert = UIAlertController(
+                title: "Live Session Active",
+                message: code.isEmpty ? nil : "Code: \(code)",
+                preferredStyle: .alert
+            )
+            if !code.isEmpty {
+                alert.addAction(UIAlertAction(title: "Share Code", style: .default) { [weak self] _ in
+                    self?.showGoLiveCreatedAlert(code: code)
+                })
             }
+            alert.addAction(UIAlertAction(title: "Stop Live", style: .destructive) { [weak self] _ in
+                self?.stopLiveSession(id: sessionId)
+            })
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            present(alert, animated: true)
         } else {
-            guard let g = GameManager.shared.currentGame else { return }
             let names = (0..<MAX_PLAYERS).compactMap { s -> String? in
                 guard g.playerActivated[safe: s] == true else { return nil }
                 return g.playerNames[safe: s] ?? ""
@@ -305,7 +313,10 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                         playerNames: names,
                         courseName: course
                     )
-                    GameManager.shared.update { g in g.liveSessionId = session.id }
+                    GameManager.shared.update { g in
+                        g.liveSessionId = session.id
+                        g.liveSessionCode = session.code
+                    }
                     GameManager.shared.saveCurrent()
                     DispatchQueue.main.async {
                         self.refreshGoLiveButton()
@@ -317,6 +328,22 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                     }
                 }
             }
+        }
+    }
+
+    private func stopLiveSession(id: String) {
+        Task {
+            do {
+                try await SupabaseService.shared.archiveWolfSession(id: id)
+            } catch {
+                print("ERROR archiveWolfSession: \(error)")
+            }
+            GameManager.shared.update { g in
+                g.liveSessionId = nil
+                g.liveSessionCode = nil
+            }
+            GameManager.shared.saveCurrent()
+            DispatchQueue.main.async { self.refreshGoLiveButton() }
         }
     }
 
