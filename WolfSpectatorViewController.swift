@@ -40,19 +40,43 @@ final class WolfSpectatorViewController: UIViewController {
         setupTableView()
         setupLoadingView()
         loadInitialSessions()
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        let trashButton = UIBarButtonItem(
             image: UIImage(systemName: "trash"),
             style: .plain,
             target: self,
             action: #selector(clearAllTapped)
         )
-        navigationItem.rightBarButtonItem?.tintColor = .systemRed
+        trashButton.tintColor = .systemRed
+        let refreshButton = UIBarButtonItem(
+            image: UIImage(systemName: "arrow.clockwise"),
+            style: .plain,
+            target: self,
+            action: #selector(refreshTapped)
+        )
+        navigationItem.rightBarButtonItems = [trashButton, refreshButton]
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc private func appDidBecomeActive() {
+        Task {
+            for session in sessions {
+                await subscribeToSession(session)
+            }
+        }
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
-        for session in sessions {
-            SupabaseService.shared.unsubscribeFromWolfSession(sessionId: session.id)
+        let toUnsub = sessions
+        Task {
+            for session in toUnsub {
+                await SupabaseService.shared.unsubscribeFromWolfSession(sessionId: session.id)
+            }
         }
     }
 
@@ -222,8 +246,17 @@ final class WolfSpectatorViewController: UIViewController {
             for code in codesToLoad {
                 guard let session = try? await SupabaseService.shared.fetchWolfSessionByCode(code: code) else { continue }
                 loaded.append(session)
-                let results = (try? await SupabaseService.shared.fetchWolfHoleResults(sessionId: session.id)) ?? []
+                let results: [WolfHoleResult]
+                do {
+                    results = try await SupabaseService.shared.fetchWolfHoleResults(sessionId: session.id)
+                } catch {
+                    print("ERROR fetchWolfHoleResults for \(session.id): \(error)")
+                    results = []
+                }
                 print("DEBUG wolf fetch loaded: \(results.count) holes for session \(session.id)")
+                for r in results {
+                    print("DEBUG wolfHoleResult hole=\(r.hole) wolfSlot=\(String(describing: r.wolfSlot)) teamWon=\(String(describing: r.teamWon)) moneyDeltas=\(String(describing: r.moneyDeltas))")
+                }
                 var dict: [Int: WolfHoleResult] = [:]
                 for r in results { dict[r.hole] = r }
                 resultsBySessionId[session.id] = dict
@@ -244,7 +277,7 @@ final class WolfSpectatorViewController: UIViewController {
                 self.rebuildTabBar()
                 self.applyCurrentSession()
                 self.saveSessionCodes()
-                for session in loaded { self.subscribeToSession(session) }
+                Task { for session in loaded { await self.subscribeToSession(session) } }
             }
         }
     }
@@ -255,11 +288,44 @@ final class WolfSpectatorViewController: UIViewController {
         tableView.reloadData()
     }
 
-    private func subscribeToSession(_ session: WolfSession) {
+    @objc private func refreshTapped() {
+        guard let session = currentSession else { return }
+        let sessionId = session.id
+        Task {
+            let results: [WolfHoleResult]
+            do {
+                results = try await SupabaseService.shared.fetchWolfHoleResults(sessionId: sessionId)
+            } catch {
+                print("ERROR fetchWolfHoleResults for \(sessionId): \(error)")
+                results = []
+            }
+            print("DEBUG wolf fetch loaded: \(results.count) holes for session \(sessionId)")
+            for r in results {
+                print("DEBUG wolfHoleResult hole=\(r.hole) wolfSlot=\(String(describing: r.wolfSlot)) teamWon=\(String(describing: r.teamWon)) moneyDeltas=\(String(describing: r.moneyDeltas))")
+            }
+            var dict: [Int: WolfHoleResult] = [:]
+            for r in results { dict[r.hole] = r }
+            DispatchQueue.main.async {
+                self.holeResultsBySessionId[sessionId] = dict
+                if self.currentSession?.id == sessionId {
+                    print("DEBUG spectator reloadData fired with \(dict.count) holes in dict")
+                    self.tableView.reloadData()
+                } else {
+                    print("DEBUG spectator skipping reloadData: currentSession=\(String(describing: self.currentSession?.id)) != target=\(sessionId)")
+                }
+            }
+        }
+    }
+
+    private func subscribeToSession(_ session: WolfSession) async {
+        // Tear down any stale channels for this session before re-subscribing.
+        // Scoped to this session only — unsubscribeAll would cancel other sessions' channels.
+        await SupabaseService.shared.unsubscribeFromWolfSession(sessionId: session.id)
+
         let sessionId = session.id
         print("DEBUG wolf spectator subscribing to session: \(session.id)")
         let holeCallback: (WolfHoleResult) -> Void = { [weak self] result in
-            print("DEBUG wolf hole realtime received: hole=\(result.hole)")
+            print("DEBUG wolf hole realtime received: hole=\(result.hole) wolfSlot=\(String(describing: result.wolfSlot)) teamWon=\(String(describing: result.teamWon)) moneyDeltas=\(String(describing: result.moneyDeltas))")
             guard let self else { return }
             self.holeResultsBySessionId[sessionId, default: [:]][result.hole] = result
             if self.currentSession?.id == sessionId {
@@ -267,7 +333,9 @@ final class WolfSpectatorViewController: UIViewController {
             }
         }
         SupabaseService.shared.subscribeToWolfHoles(sessionId: sessionId, onResult: holeCallback)
+        try? await Task.sleep(nanoseconds: 500_000_000)
         SupabaseService.shared.subscribeToWolfHoleUpdates(sessionId: sessionId, onResult: holeCallback)
+        try? await Task.sleep(nanoseconds: 500_000_000)
         SupabaseService.shared.subscribeToWolfSession(sessionId: sessionId) { [weak self] updated in
             guard let self else { return }
             if let idx = self.sessions.firstIndex(where: { $0.id == updated.id }) {
@@ -309,7 +377,7 @@ final class WolfSpectatorViewController: UIViewController {
     private func removeSession(at index: Int) {
         guard sessions.indices.contains(index) else { return }
         let removed = sessions[index]
-        SupabaseService.shared.unsubscribeFromWolfSession(sessionId: removed.id)
+        Task { await SupabaseService.shared.unsubscribeFromWolfSession(sessionId: removed.id) }
         holeResultsBySessionId.removeValue(forKey: removed.id)
         sessions.remove(at: index)
 
@@ -367,7 +435,13 @@ final class WolfSpectatorViewController: UIViewController {
         Task {
             do {
                 let session = try await SupabaseService.shared.fetchWolfSessionByCode(code: code)
-                let results = (try? await SupabaseService.shared.fetchWolfHoleResults(sessionId: session.id)) ?? []
+                let results: [WolfHoleResult]
+                do {
+                    results = try await SupabaseService.shared.fetchWolfHoleResults(sessionId: session.id)
+                } catch {
+                    print("ERROR fetchWolfHoleResults for \(session.id): \(error)")
+                    results = []
+                }
                 var dict: [Int: WolfHoleResult] = [:]
                 for r in results { dict[r.hole] = r }
                 DispatchQueue.main.async {
@@ -379,7 +453,7 @@ final class WolfSpectatorViewController: UIViewController {
                     self.rebuildTabBar()
                     self.applyCurrentSession()
                     self.saveSessionCodes()
-                    self.subscribeToSession(session)
+                    Task { await self.subscribeToSession(session) }
                 }
             } catch {
                 DispatchQueue.main.async {
@@ -428,8 +502,11 @@ final class WolfSpectatorViewController: UIViewController {
     }
 
     private func clearAllSessions() {
-        for session in sessions {
-            SupabaseService.shared.unsubscribeFromWolfSession(sessionId: session.id)
+        let toUnsub = sessions
+        Task {
+            for session in toUnsub {
+                await SupabaseService.shared.unsubscribeFromWolfSession(sessionId: session.id)
+            }
         }
         sessions.removeAll()
         holeResultsBySessionId.removeAll()
@@ -465,14 +542,19 @@ extension WolfSpectatorViewController: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        (currentSession?.playerNames.count ?? 0) > 0 ? 19 : 0   // 1 header + 18 holes
+        (currentSession?.playerNames.count ?? 0) > 0 ? 21 : 0   // 1 header + 18 holes + score totals + money totals
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: WolfHoleCell.reuseID, for: indexPath) as! WolfHoleCell
         guard let session = currentSession else { return cell }
+        let allResults = Array(currentHoleResults.values)
         if indexPath.row == 0 {
             cell.configureAsHeader(playerNames: session.playerNames)
+        } else if indexPath.row == 19 {
+            cell.configureAsScoreTotals(results: allResults, playerCount: session.playerNames.count)
+        } else if indexPath.row == 20 {
+            cell.configureAsTotals(results: allResults, playerCount: session.playerNames.count)
         } else {
             let hole = indexPath.row  // 1-based
             cell.configure(hole: hole, result: currentHoleResults[hole], playerNames: session.playerNames)
@@ -492,40 +574,70 @@ private final class WolfHoleCell: UITableViewCell {
     static let reuseID = "WolfHoleCell"
 
     private let holeLabel  = UILabel()
-    private let wolfLabel  = UILabel()
     private var scoreCols: [UILabel] = []
-    private let stack      = UIStackView()
+    private let scoreRow   = UIStackView()
+
+    private let moneyLabel = UILabel()
+    private var moneyCols: [UILabel] = []
+    private let moneyRow   = UIStackView()
+
+    private let outerStack = UIStackView()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
 
-        stack.axis    = .horizontal
-        stack.spacing = 6
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(stack)
+        outerStack.axis    = .vertical
+        outerStack.spacing = 2
+        outerStack.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(outerStack)
         NSLayoutConstraint.activate([
-            stack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
-            stack.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
-            stack.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
-            stack.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
+            outerStack.leadingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.leadingAnchor),
+            outerStack.trailingAnchor.constraint(equalTo: contentView.layoutMarginsGuide.trailingAnchor),
+            outerStack.topAnchor.constraint(equalTo: contentView.layoutMarginsGuide.topAnchor),
+            outerStack.bottomAnchor.constraint(equalTo: contentView.layoutMarginsGuide.bottomAnchor),
         ])
 
+        // Score row
+        scoreRow.axis    = .horizontal
+        scoreRow.spacing = 6
+        outerStack.addArrangedSubview(scoreRow)
+
         configLabel(holeLabel, size: 13, weight: .regular, width: 28)
-        configLabel(wolfLabel, size: 11, weight: .regular, width: 20)
-        stack.addArrangedSubview(holeLabel)
-        stack.addArrangedSubview(wolfLabel)
+        scoreRow.addArrangedSubview(holeLabel)
 
         for _ in 0..<MAX_PLAYERS {
             let l = UILabel()
             configLabel(l, size: 13, weight: .semibold, width: 34)
             scoreCols.append(l)
-            stack.addArrangedSubview(l)
+            scoreRow.addArrangedSubview(l)
         }
 
-        let spacer = UIView()
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        stack.addArrangedSubview(spacer)
+        let spacer1 = UIView()
+        spacer1.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        scoreRow.addArrangedSubview(spacer1)
+
+        // Money sub-row (hidden until a hole has non-zero money_deltas)
+        moneyRow.axis     = .horizontal
+        moneyRow.spacing  = 6
+        moneyRow.isHidden = true
+        outerStack.addArrangedSubview(moneyRow)
+
+        configLabel(moneyLabel, size: 11, weight: .regular, width: 28)
+        moneyLabel.text      = "$"
+        moneyLabel.textColor = .secondaryLabel
+        moneyRow.addArrangedSubview(moneyLabel)
+
+        for _ in 0..<MAX_PLAYERS {
+            let l = UILabel()
+            configLabel(l, size: 11, weight: .semibold, width: 34)
+            moneyCols.append(l)
+            moneyRow.addArrangedSubview(l)
+        }
+
+        let spacer2 = UIView()
+        spacer2.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        moneyRow.addArrangedSubview(spacer2)
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -541,42 +653,120 @@ private final class WolfHoleCell: UITableViewCell {
     func configureAsHeader(playerNames: [String]) {
         holeLabel.text      = "Hole"
         holeLabel.textColor = .secondaryLabel
-        wolfLabel.text      = "W"
-        wolfLabel.textColor = .secondaryLabel
         for (i, col) in scoreCols.enumerated() {
             col.text      = i < playerNames.count ? String(playerNames[i].prefix(4)) : ""
             col.textColor = .secondaryLabel
             col.font      = .systemFont(ofSize: 11, weight: .regular)
         }
+        moneyRow.isHidden = true
+    }
+
+    func configureAsScoreTotals(results: [WolfHoleResult], playerCount: Int) {
+        holeLabel.text      = "Score"
+        holeLabel.textColor = .secondaryLabel
+        holeLabel.font      = .systemFont(ofSize: 11, weight: .semibold)
+
+        var totals = Array(repeating: 0, count: playerCount)
+        for result in results {
+            guard let scores = result.scores else { continue }
+            for (i, s) in scores.enumerated() where i < playerCount {
+                totals[i] += s
+            }
+        }
+
+        for (i, col) in scoreCols.enumerated() {
+            guard i < playerCount else { col.text = ""; continue }
+            col.font      = .systemFont(ofSize: 13, weight: .bold)
+            col.text      = totals[i] > 0 ? "\(totals[i])" : "—"
+            col.textColor = .label
+        }
+        moneyRow.isHidden = true
+    }
+
+    func configureAsTotals(results: [WolfHoleResult], playerCount: Int) {
+        holeLabel.text      = "Total"
+        holeLabel.textColor = .secondaryLabel
+        holeLabel.font      = .systemFont(ofSize: 11, weight: .semibold)
+
+        var totals = Array(repeating: 0.0, count: playerCount)
+        for result in results {
+            let deltas = result.moneyDeltas ?? result.payouts ?? []
+            for (i, v) in deltas.enumerated() where i < playerCount {
+                totals[i] += v
+            }
+        }
+
+        for (i, col) in scoreCols.enumerated() {
+            guard i < playerCount else { col.text = ""; continue }
+            let v = totals[i]
+            let absV = Swift.abs(v)
+            let formatted = absV.truncatingRemainder(dividingBy: 1) == 0
+                ? String(Int(absV))
+                : String(format: "%.2f", absV)
+            col.font = .systemFont(ofSize: 13, weight: .bold)
+            if v > 0      { col.text = "+\(formatted)"; col.textColor = .systemGreen }
+            else if v < 0 { col.text = "−\(formatted)"; col.textColor = .systemRed }
+            else          { col.text = "0";              col.textColor = .secondaryLabel }
+        }
+        moneyRow.isHidden = true
     }
 
     func configure(hole: Int, result: WolfHoleResult?, playerNames: [String]) {
         holeLabel.text      = "\(hole)"
         holeLabel.textColor = .label
 
-        if let r = result, let wp = r.wolfPlayer, wp < playerNames.count {
-            wolfLabel.text      = String(playerNames[wp].prefix(2))
-            wolfLabel.textColor = r.teamWon ? .systemGreen : .systemRed
-        } else {
-            wolfLabel.text      = "—"
-            wolfLabel.textColor = .tertiaryLabel
-        }
+        let wolfSlot    = result?.wolfSlot
+        let partnerSlot = result?.partnerSlot
+        let deltas      = result?.moneyDeltas ?? result?.payouts
 
-        let lowScore = result.map { r -> Int? in
-            let active = r.scores.filter { $0 > 0 }
-            return active.min()
-        } ?? nil
+        // Wolf team indices for orange coloring (explicit slots preferred)
+        let wolfTeamIndices: Set<Int>
+        if let ws = wolfSlot {
+            var team: Set<Int> = [ws]
+            if let ps = partnerSlot { team.insert(ps) }
+            wolfTeamIndices = team
+        } else {
+            wolfTeamIndices = []
+        }
 
         for (i, col) in scoreCols.enumerated() {
             col.font = .systemFont(ofSize: 13, weight: .semibold)
-            if let r = result, i < r.scores.count, r.scores[i] > 0 {
-                let s = r.scores[i]
-                col.text      = "\(s)"
-                col.textColor = (s == lowScore) ? .systemGreen : .label
+            if let r = result, let scores = r.scores, i < scores.count, scores[i] > 0 {
+                col.text      = "\(scores[i])"
+                col.textColor = wolfTeamIndices.contains(i) ? .systemOrange : .label
             } else {
                 col.text      = "—"
                 col.textColor = .tertiaryLabel
             }
+        }
+
+        // Money sub-row: show only when this hole has non-zero deltas
+        if let deltas = result?.moneyDeltas ?? result?.payouts, deltas.contains(where: { $0 != 0 }) {
+            moneyRow.isHidden = false
+            for (i, col) in moneyCols.enumerated() {
+                if i < deltas.count {
+                    let v = deltas[i]
+                    let absV = Swift.abs(v)
+                    let formatted = absV.truncatingRemainder(dividingBy: 1) == 0
+                        ? String(Int(absV))
+                        : String(format: "%.2f", absV)
+                    if v > 0 {
+                        col.text      = "+\(formatted)"
+                        col.textColor = .systemGreen
+                    } else if v < 0 {
+                        col.text      = "−\(formatted)"
+                        col.textColor = .systemRed
+                    } else {
+                        col.text      = "0"
+                        col.textColor = .secondaryLabel
+                    }
+                } else {
+                    col.text      = ""
+                    col.textColor = .tertiaryLabel
+                }
+            }
+        } else {
+            moneyRow.isHidden = true
         }
     }
 }

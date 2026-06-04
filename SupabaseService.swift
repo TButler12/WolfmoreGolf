@@ -14,6 +14,7 @@ final class SupabaseService {
             supabaseURL: SUPABASE_URL,
             supabaseKey: SUPABASE_ANON_KEY
         )
+        print("DEBUG supabase URL: \(SUPABASE_URL)")
     }
 
     // MARK: - Match creation
@@ -276,20 +277,33 @@ final class SupabaseService {
         sessionId: String,
         hole: Int,
         scores: [Int],
-        wolfPlayer: Int?,
+        wolfSlot: Int?,
+        partnerSlot: Int?,
         wentAlone: Bool,
         teamWon: Bool,
         payouts: [Double]
     ) async throws {
-        var payload: [String: AnyJSON] = [
-            "session_id": .string(sessionId),
-            "hole":        .integer(hole),
-            "scores":      .array(scores.map { .integer($0) }),
-            "went_alone":  .bool(wentAlone),
-            "team_won":    .bool(teamWon),
-            "payouts":     .array(payouts.map { .double($0) })
-        ]
-        if let wp = wolfPlayer { payload["wolf_player"] = .integer(wp) }
+        struct Payload: Encodable {
+            var session_id: String
+            var hole: Int
+            var scores: [Int]
+            var went_alone: Bool
+            var team_won: Bool
+            var money_deltas: [Double]
+            var wolf_slot: Int?
+            var partner_slot: Int?
+        }
+        let payload = Payload(
+            session_id: sessionId,
+            hole: hole,
+            scores: scores,
+            went_alone: wentAlone,
+            team_won: teamWon,
+            money_deltas: payouts,
+            wolf_slot: wolfSlot,
+            partner_slot: partnerSlot
+        )
+        print("DEBUG upsert payload: session=\(sessionId) hole=\(hole) scores=\(scores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(payouts)")
         try await client.from("wolf_hole_results")
             .upsert(payload, onConflict: "session_id,hole")
             .execute()
@@ -338,7 +352,7 @@ final class SupabaseService {
         sessionId: String,
         onResult: @escaping (WolfHoleResult) -> Void
     ) {
-        let channel = client.channel("wolf-holes-\(sessionId)")
+        let channel = client.channel("wolf-holes-\(sessionId)-\(UUID().uuidString)")
         wolfSessionChannels["holes-\(sessionId)"] = channel
 
         channel.onPostgresChange(
@@ -347,12 +361,22 @@ final class SupabaseService {
             table: "wolf_hole_results",
             filter: "session_id=eq.\(sessionId)"
         ) { action in
-            if let record = try? action.decodeRecord(as: WolfHoleResult.self, decoder: JSONDecoder()) {
+            do {
+                let record = try action.decodeRecord(as: WolfHoleResult.self, decoder: JSONDecoder())
                 DispatchQueue.main.async { onResult(record) }
+            } catch {
+                print("ERROR wolf INSERT decodeRecord failed: \(error)")
             }
         }
 
-        Task { await channel.subscribe() }
+        Task {
+            do {
+                try await channel.subscribeWithError()
+                print("DEBUG wolf INSERT channel subscribed for session \(sessionId)")
+            } catch {
+                print("DEBUG wolf INSERT channel error: \(error)")
+            }
+        }
     }
 
     // Score corrections (UPDATE) get their own channel to avoid multi-registration.
@@ -360,7 +384,7 @@ final class SupabaseService {
         sessionId: String,
         onResult: @escaping (WolfHoleResult) -> Void
     ) {
-        let channel = client.channel("wolf-holes-upd-\(sessionId)")
+        let channel = client.channel("wolf-holes-upd-\(sessionId)-\(UUID().uuidString)")
         wolfSessionChannels["holes-upd-\(sessionId)"] = channel
 
         channel.onPostgresChange(
@@ -369,12 +393,23 @@ final class SupabaseService {
             table: "wolf_hole_results",
             filter: "session_id=eq.\(sessionId)"
         ) { action in
-            if let record = try? action.decodeRecord(as: WolfHoleResult.self, decoder: JSONDecoder()) {
+            print("DEBUG wolf UPDATE event received raw")
+            do {
+                let record = try action.decodeRecord(as: WolfHoleResult.self, decoder: JSONDecoder())
                 DispatchQueue.main.async { onResult(record) }
+            } catch {
+                print("ERROR wolf UPDATE decodeRecord failed: \(error)")
             }
         }
 
-        Task { await channel.subscribe() }
+        Task {
+            do {
+                try await channel.subscribeWithError()
+                print("DEBUG wolf UPDATE channel subscribed for session \(sessionId)")
+            } catch {
+                print("DEBUG wolf UPDATE channel error: \(error)")
+            }
+        }
     }
 
     func subscribeToWolfSession(
@@ -398,10 +433,10 @@ final class SupabaseService {
         Task { await channel.subscribe() }
     }
 
-    func unsubscribeFromWolfSession(sessionId: String) {
+    func unsubscribeFromWolfSession(sessionId: String) async {
         for key in ["holes-\(sessionId)", "holes-upd-\(sessionId)", "session-\(sessionId)"] {
             if let ch = wolfSessionChannels.removeValue(forKey: key) {
-                Task { await ch.unsubscribe() }
+                await ch.unsubscribe()
             }
         }
     }

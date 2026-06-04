@@ -102,18 +102,75 @@ struct WolfHoleResult: Codable {
     let id: String
     let sessionId: String
     let hole: Int
-    let scores: [Int]
-    let wolfPlayer: Int?
-    let wentAlone: Bool
-    let teamWon: Bool
-    let payouts: [Double]
+    let createdAt: String?
+    // jsonb arrays — nullable in DB
+    let scores: [Int]?
+    let moneyDeltas: [Double]?
+    let payouts: [Double]?
+    // Booleans — stored inconsistently across rows (native Bool or "true"/"false" string)
+    let teamWon: Bool?
+    let wentAlone: Bool?
+    let wolfPlayer: Bool?
+    let alone: Bool?
+    // Integer fields
+    let wolfSlot: Int?
+    let partnerSlot: Int?
+    let hammerMultiplier: Int?
+    let hammerHolder: Int?
+    // String fields
+    let wolfName: String?
+    let decision: String?
+    let partnerName: String?
+    let proxWinner: String?
 
     enum CodingKeys: String, CodingKey {
-        case id, hole, scores, payouts
-        case sessionId  = "session_id"
-        case wolfPlayer = "wolf_player"
-        case wentAlone  = "went_alone"
-        case teamWon    = "team_won"
+        case id, hole, scores, decision, payouts, alone
+        case sessionId        = "session_id"
+        case createdAt        = "created_at"
+        case moneyDeltas      = "money_deltas"
+        case teamWon          = "team_won"
+        case wentAlone        = "went_alone"
+        case wolfPlayer       = "wolf_player"
+        case wolfSlot         = "wolf_slot"
+        case wolfName         = "wolf_name"
+        case partnerName      = "partner_name"
+        case partnerSlot      = "partner_slot"
+        case hammerMultiplier = "hammer_multiplier"
+        case hammerHolder     = "hammer_holder"
+        case proxWinner       = "prox_winner"
+    }
+
+    // Try Bool first; fall back to string comparison for inconsistently stored rows.
+    private static func flexBool(
+        _ c: KeyedDecodingContainer<CodingKeys>,
+        _ key: CodingKeys
+    ) -> Bool? {
+        if let b = try? c.decodeIfPresent(Bool.self, forKey: key) { return b }
+        if let s = try? c.decodeIfPresent(String.self, forKey: key) { return s.lowercased() == "true" }
+        return nil
+    }
+
+    init(from decoder: Decoder) throws {
+        let c        = try decoder.container(keyedBy: CodingKeys.self)
+        id           = try c.decode(String.self, forKey: .id)
+        sessionId    = try c.decode(String.self, forKey: .sessionId)
+        hole         = try c.decode(Int.self,    forKey: .hole)
+        createdAt    = try c.decodeIfPresent(String.self,   forKey: .createdAt)
+        scores       = try c.decodeIfPresent([Int].self,    forKey: .scores)
+        moneyDeltas  = try c.decodeIfPresent([Double].self, forKey: .moneyDeltas)
+        payouts      = try c.decodeIfPresent([Double].self, forKey: .payouts)
+        wolfSlot     = try c.decodeIfPresent(Int.self, forKey: .wolfSlot)
+        partnerSlot  = try c.decodeIfPresent(Int.self, forKey: .partnerSlot)
+        hammerMultiplier = try c.decodeIfPresent(Int.self, forKey: .hammerMultiplier)
+        hammerHolder = try c.decodeIfPresent(Int.self, forKey: .hammerHolder)
+        wolfName     = try c.decodeIfPresent(String.self, forKey: .wolfName)
+        decision     = try c.decodeIfPresent(String.self, forKey: .decision)
+        partnerName  = try c.decodeIfPresent(String.self, forKey: .partnerName)
+        proxWinner   = try c.decodeIfPresent(String.self, forKey: .proxWinner)
+        teamWon    = Self.flexBool(c, .teamWon)
+        wentAlone  = Self.flexBool(c, .wentAlone)
+        wolfPlayer = Self.flexBool(c, .wolfPlayer)
+        alone      = Self.flexBool(c, .alone)
     }
 }
 

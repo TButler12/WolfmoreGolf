@@ -4,6 +4,7 @@
 
 import UIKit
 import MessageUI
+import Supabase
 
 extension UIImage {
     static func pixel(of color: UIColor) -> UIImage {
@@ -2331,27 +2332,41 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
 
         // 5c) Wolf Live score sync
+        print("DEBUG 5c liveSessionId=\(GameManager.shared.currentGame?.liveSessionId ?? "nil")")
         if let g = GameManager.shared.currentGame, let sessionId = g.liveSessionId {
             let holeScores = (0..<MAX_PLAYERS).map { s -> Int in
                 guard s < g.playerActivated.count, g.playerActivated[s],
                       s < g.scores.count, hole < g.scores[s].count else { return 0 }
                 return g.scores[s][hole] ?? 0
             }
-            let wolfPlayer  = g.wolfPlayerPerHole?[safe: hole] ?? nil
-            let wentAlone   = g.wolfWentAlonePerHole.map { $0[safe: hole] == true } ?? false
-            let teamWon     = hole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[hole]
-            let holePayouts = g.playerMoney.map { $0[safe: hole] ?? 0.0 }
+            // wolfMaskByHole[hole] = [Bool] — all wolf-team members for this hole
+            let wolfMask      = g.wolfMaskByHole[safe: hole] ?? []
+            let wolfTeamSlots = wolfMask.enumerated().compactMap { $0.element ? $0.offset : nil }
+            let wolfSlot      = wolfTeamSlots[safe: 0] ?? nil
+            let partnerSlot   = wolfTeamSlots[safe: 1] ?? nil
+            let wentAlone     = g.aloneApplied[safe: hole] ?? false
+            let teamWon       = hole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[hole]
+            let holePayouts   = g.playerMoney.map { $0[safe: hole] ?? 0.0 }
+            // wolfPlayerPerHole is vestigial (never written); wolf comes from wolfMaskByHole
+            print("DEBUG wolf wolfPlayerPerHole[\(hole)]=\(String(describing: g.wolfPlayerPerHole?[safe: hole] ?? nil)) wolfMask=\(wolfMask) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot))")
             Task {
                 do {
+                    print("DEBUG submitWolfHole hole=\(hole+1) scores=\(holeScores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(holePayouts)")
                     try await SupabaseService.shared.submitWolfHole(
                         sessionId: sessionId,
                         hole: hole + 1,
                         scores: holeScores,
-                        wolfPlayer: wolfPlayer,
+                        wolfSlot: wolfSlot,
+                        partnerSlot: partnerSlot,
                         wentAlone: wentAlone,
                         teamWon: teamWon,
                         payouts: holePayouts
                     )
+                } catch let pgError as PostgrestError {
+                    print("ERROR submitWolfHole Postgrest code=\(pgError.code ?? "nil")")
+                    print("ERROR submitWolfHole Postgrest message=\(pgError.message)")
+                    print("ERROR submitWolfHole Postgrest detail=\(pgError.detail ?? "nil")")
+                    print("ERROR submitWolfHole Postgrest hint=\(pgError.hint ?? "nil")")
                 } catch {
                     print("ERROR submitWolfHole failed: \(error)")
                 }
