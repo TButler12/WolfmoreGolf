@@ -725,8 +725,13 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configure(hole: Int, result: WolfHoleResult?, playerNames: [String]) {
-        holeLabel.text      = "\(hole)"
-        holeLabel.textColor = .label
+        let isPressed = result?.wolfPlayer == true
+        holeLabel.text               = "\(hole)"
+        holeLabel.textColor          = isPressed ? .systemOrange : .label
+        holeLabel.layer.borderWidth  = isPressed ? 1.5 : 0
+        holeLabel.layer.borderColor  = UIColor.systemOrange.cgColor
+        holeLabel.layer.cornerRadius = isPressed ? 4 : 0
+        holeLabel.clipsToBounds      = true
 
         switch result?.decision {
         case "alone":

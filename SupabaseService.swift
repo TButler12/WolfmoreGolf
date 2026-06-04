@@ -321,7 +321,8 @@ final class SupabaseService {
         teamWon: Bool,
         payouts: [Double],
         decision: String? = nil,
-        hammerMultiplier: Int = 1
+        hammerMultiplier: Int = 1,
+        pressed: Bool = false
     ) async throws {
         struct Payload: Encodable {
             var session_id: String
@@ -334,6 +335,7 @@ final class SupabaseService {
             var partner_slot: Int?
             var decision: String?
             var hammer_multiplier: Int
+            var wolf_player: Int  // repurposed: press active (1) / inactive (0); column is integer in DB
         }
         let payload = Payload(
             session_id: sessionId,
@@ -345,7 +347,8 @@ final class SupabaseService {
             wolf_slot: wolfSlot,
             partner_slot: partnerSlot,
             decision: decision,
-            hammer_multiplier: hammerMultiplier
+            hammer_multiplier: hammerMultiplier,
+            wolf_player: pressed ? 1 : 0
         )
         print("DEBUG upsert payload: session=\(sessionId) hole=\(hole) scores=\(scores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(payouts)")
         try await client.from("wolf_hole_results")

@@ -2348,6 +2348,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let wentAlone     = g.aloneApplied[safe: hole] ?? false
             let rerollOn      = g.rerollApplied[safe: hole] ?? false
             let rollOn        = g.rollApplied[safe: hole] ?? false
+            let pressOn       = g.pressMask[safe: hole] ?? false
             let teamWon       = hole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[hole]
             let holePayouts   = g.playerMoney.map { $0[safe: hole] ?? 0.0 }
             let decision: String? = wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
@@ -2356,7 +2357,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             print("DEBUG wolf wolfPlayerPerHole[\(hole)]=\(String(describing: g.wolfPlayerPerHole?[safe: hole] ?? nil)) wolfMask=\(wolfMask) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot))")
             Task {
                 do {
-                    print("DEBUG submitWolfHole hole=\(hole+1) scores=\(holeScores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(holePayouts) hammer=\(holeHammer)")
+                    print("DEBUG submitWolfHole hole=\(hole+1) scores=\(holeScores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(holePayouts) hammer=\(holeHammer) press=\(pressOn)")
                     try await SupabaseService.shared.submitWolfHole(
                         sessionId: sessionId,
                         hole: hole + 1,
@@ -2367,7 +2368,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         teamWon: teamWon,
                         payouts: holePayouts,
                         decision: decision,
-                        hammerMultiplier: holeHammer
+                        hammerMultiplier: holeHammer,
+                        pressed: pressOn
                     )
                 } catch let pgError as PostgrestError {
                     print("ERROR submitWolfHole Postgrest code=\(pgError.code ?? "nil")")

@@ -144,8 +144,9 @@ struct WolfHoleResult: Codable {
         _ c: KeyedDecodingContainer<CodingKeys>,
         _ key: CodingKeys
     ) -> Bool? {
-        if let b = try? c.decodeIfPresent(Bool.self, forKey: key) { return b }
+        if let b = try? c.decodeIfPresent(Bool.self,   forKey: key) { return b }
         if let s = try? c.decodeIfPresent(String.self, forKey: key) { return s.lowercased() == "true" }
+        if let i = try? c.decodeIfPresent(Int.self,    forKey: key) { return i != 0 }
         return nil
     }
 
