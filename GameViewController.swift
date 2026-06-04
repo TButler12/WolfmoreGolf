@@ -58,6 +58,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     
     @IBOutlet weak var pressedPushed2: UIButton!
+    @IBOutlet private weak var gameResultsButton: UIButton!
+    @IBOutlet private weak var textHubButton: UIButton!
+    // Press stepper (replaces pressedPushed2 visually)
+    private var pressStepperContainer: UIView?
+    private var pressLevelLabel: UILabel?
+    private var pressMinusButton: UIButton?
+    private var pressPlusButton: UIButton?
     
     @IBOutlet weak var rerollPushed: UIButton!
     
@@ -88,29 +95,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBOutlet weak var UpdateScores: UIButton!
     
     @IBOutlet weak var hammerButton: UIButton!
-   // @IBOutlet weak var hammerLabel: UILabel!
-
     @IBOutlet weak var rejectHammerButton: UIButton!
+    // Hammer stepper (replaces hammerButton / rejectHammerButton visually)
+    private var hammerStepperContainer: UIView?
+    private var hammerLevelLabel: UILabel?
+    private var hammerMinusButton: UIButton?
+    private var hammerPlusButton: UIButton?
+    private static let hammerGreen = UIColor(displayP3Red: 0.751, green: 0.819, blue: 0.370, alpha: 1)
     
     @IBAction private func hammerTapped(_ sender: UIButton) {
-        var newCount = 0
-
-        GameManager.shared.update { g in
-            g.normalize(holes: STANDARD_HOLES)
-
-            let h = max(0, min(17, g.hole))
-
-            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != STANDARD_HOLES {
-                g.hammerCountPerHole = Array(repeating: 0, count: STANDARD_HOLES)
-            }
-
-            g.hammerCountPerHole![h] += 1
-            newCount = g.hammerCountPerHole![h]
-        }
-
-        updateHammerButton(hammerButton, hammerCount: newCount)
-        refreshDollarsLabel()
-        setRejectHammerEnabled(newCount > 0)
+        // Replaced by hammer stepper — button is hidden; action is a no-op
     }
 
     @IBOutlet private weak var wolfControlsStack: UIStackView!
@@ -118,24 +112,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     
     @IBAction private func rejectHammerTapped(_ sender: UIButton) {
-        var newCount = 0
-
-        GameManager.shared.update { g in
-            g.normalize(holes: STANDARD_HOLES)
-
-            let h = max(0, min(17, g.hole))
-
-            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != STANDARD_HOLES {
-                g.hammerCountPerHole = Array(repeating: 0, count: STANDARD_HOLES)
-            }
-
-            g.hammerCountPerHole![h] = max(0, g.hammerCountPerHole![h] - 1)
-            newCount = g.hammerCountPerHole![h]
-        }
-
-        updateHammerButton(hammerButton, hammerCount: newCount)
-        refreshDollarsLabel()
-        setRejectHammerEnabled(newCount > 0)
+        // Replaced by hammer stepper — button is hidden; action is a no-op
     }
     private let holeStatsSwitch = UISwitch()
     private var hasPromptedForThisHole = false
@@ -259,8 +236,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         setupToggleButton(rollPushed,     onColor: .label, offColor: .systemOrange, onTitle: "Roll",    offTitle: "Roll")
         setupToggleButton(rerollPushed,   onColor: .label, offColor: .systemOrange, onTitle: "Re-Roll", offTitle: "Re-Roll")
         setupToggleButton(alonePushed,    onColor: .label, offColor: .systemOrange, onTitle: "Double",   offTitle: "Alone")
-        setupToggleButton(pressedPushed2, onColor: .label, offColor: .systemOrange, onTitle: "Press On",   offTitle: "Press")
-        
+        setupToggleButton(pressedPushed2, onColor: .label, offColor: .systemOrange, onTitle: "Press",   offTitle: "Press")
+
         // --- Score fields ---
         for (i, f) in scoreFields.enumerated() {
             f.tag = i
@@ -359,6 +336,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         installSortButtonIfNeeded()
         installHoleInfoHeaderIfNeeded()
         installLiveNassauButtonIfNeeded()
+        layoutBottomControls()
     }
 
     // MARK: - Combined hole/par/HC header
@@ -659,10 +637,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         navigationController?.popViewController(animated: true)
     }
 
-    private func setRejectHammerEnabled(_ on: Bool) {
-        rejectHammerButton.isEnabled = on
-        rejectHammerButton.alpha = on ? 1.0 : 0.35
-    }
+    private func setRejectHammerEnabled(_ on: Bool) { /* replaced by hammer stepper */ }
 
     
     @inline(__always)
@@ -965,13 +940,29 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func paintHammerUIForCurrentHole() {
         guard let g = GameManager.shared.currentGame else { return }
         let h = max(0, min(17, g.hole))
-
         let count = hammerCount(for: h, in: g)
-        updateHammerButton(hammerButton, hammerCount: count)
-        setRejectHammerEnabled(count > 0)
-
+        paintHammerStepperView(count: count)
         let shown = effectiveStake(for: h, in: g)
         gameDollarsField.text = String(format: "%.2f", shown)
+    }
+
+    private func paintHammerStepperView(count: Int) {
+        guard let container = hammerStepperContainer,
+              let levelLabel = hammerLevelLabel,
+              let minusBtn   = hammerMinusButton else { return }
+        levelLabel.text    = "\(count)"
+        minusBtn.isEnabled = count > 0
+        if count == 0 {
+            container.backgroundColor  = .systemGray5
+            levelLabel.textColor       = .secondaryLabel
+            minusBtn.tintColor         = .secondaryLabel
+            hammerPlusButton?.tintColor = .secondaryLabel
+        } else {
+            container.backgroundColor  = GameViewController.hammerGreen
+            levelLabel.textColor       = .label
+            minusBtn.tintColor         = .label
+            hammerPlusButton?.tintColor = .label
+        }
     }
     private func refreshForCurrentHole() {
         applyGameTypeUI()
@@ -1223,44 +1214,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
 
     @IBAction func pressedPush2(_ sender: UIButton) {
-        GameManager.shared.update { g in
-            if g.pressLevel.count != STANDARD_HOLES      { g.pressLevel      = Array(repeating: 0,   count: STANDARD_HOLES) }
-            if g.pressBaseDollars.count != STANDARD_HOLES { g.pressBaseDollars = Array(repeating: 0.0, count: STANDARD_HOLES) }
-            if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
-
-            func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
-
-            let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
-            let h     = max(0, min(g.hole, count - 1))
-            let end   = min(h < 9 ? 9 : STANDARD_HOLES, count)
-
-            if g.pressInitiatedHole == h {
-                // Cancel: undo the last press for holes h..<end
-                for i in h..<end {
-                    if g.pressBaseDollars[i] > 0 {
-                        g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, g.pressBaseDollars[i]))
-                        g.pressBaseDollars[i] = 0
-                    }
-                    if g.pressLevel[i] > 0 { g.pressLevel[i] -= 1 }
-                }
-                g.pressInitiatedHole = nil
-            } else {
-                // New press: double stakes for holes h..<end, increment pressLevel
-                for i in h..<end {
-                    let base = g.gameHoleDollarsArray[i] == 0 ? 2.0 : g.gameHoleDollarsArray[i]
-                    g.pressBaseDollars[i] = base
-                    g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, base * 2.0))
-                    g.pressLevel[i] += 1
-                }
-                g.pressInitiatedHole = h
-            }
-        }
-        refreshForCurrentHole()
-        if let g = GameManager.shared.currentGame {
-            let pretty = g.gameHoleDollarsArray.map { String(format: "%.2f", $0) }.joined(separator: ", ")
-            print("Press: hole \(g.hole + 1), level=\(g.pressLevel[g.hole]) dollars=[\(pretty)]")
-        }
-        paintEverythingForCurrentHole()
+        // Replaced by the press stepper — this IBOutlet is hidden; action is a no-op
     }
 
     
@@ -1386,17 +1340,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func installLongPressHelp() {
         // Hammer / Reject
-        addHelp(to: hammerButton, title: "Hammer", message: """
-    Doubles the current hole stake each tap (1× → 2× → 4× → 8×…).
-    Applies only to this hole.
-    Use Reject to undo the most recent hammer.
-    Money updates when you press Update Scores.
-    """)
-
-        addHelp(to: rejectHammerButton, title: "Reject Hammer", message: """
-    Undo the most recent Hammer tap for this hole.
-    (Stake drops one step: 8× → 4× → 2× → 1×.)
-    """)
+        // Hammer help is attached in layoutBottomControls when the stepper is first created
 
         // Roll / Re-Roll / Press / Alone
         addHelp(to: rollPushed, title: "Roll", message: """
@@ -1790,62 +1734,86 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshProxButtons()
     }
 
-    private struct HammerStyle {
-        let color: UIColor
-        let title: String
-    }
-
     private func hammerMultiplier(for count: Int) -> Int {
-        // doubles each hammer: 0→1x, 1→2x, 2→4x, 3→8x...
-        return 1 << max(0, count)
+        1 << max(0, count)
     }
 
-    private func hammerStyle(for count: Int) -> HammerStyle {
-        // tweak colors/titles however you want
-        switch count {
-        case 0:  return .init(color: .systemGray5, title: "HAMMER (1x)")
-        case 1:  return .init(color: .systemYellow, title: "HAMMER (2x)")
-        case 2:  return .init(color: .systemOrange, title: "HAMMER (4x)")
-        case 3:  return .init(color: .systemRed, title: "HAMMER (8x)")
-        case 4:  return .init(color: .systemPurple, title: "HAMMER (16x)")
-        default: return .init(color: .systemGray, title: "HAMMER (\(hammerMultiplier(for: count))x)")
-        }
+    // Creates a stepper view (Press or Hammer) — internal subviews only, no frame/superview.
+    private func makeStepperView(title: String, minusAction: Selector, plusAction: Selector)
+        -> (container: UIView, levelLabel: UILabel, minus: UIButton, plus: UIButton) {
+        let container = UIView()
+        container.layer.cornerRadius = 10
+        container.clipsToBounds = true
+
+        let titleH: CGFloat = 16
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 9, weight: .medium)
+        titleLabel.textAlignment = .center
+        // Frame set in layoutBottomControls when dimensions are known
+
+        let minus = UIButton(type: .system)
+        minus.setTitle("−", for: .normal)
+        minus.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
+        minus.addTarget(self, action: minusAction, for: .touchUpInside)
+
+        let levelLabel = UILabel()
+        levelLabel.text = "0"
+        levelLabel.font = UIFont.systemFont(ofSize: 17, weight: .bold)
+        levelLabel.textAlignment = .center
+
+        let plus = UIButton(type: .system)
+        plus.setTitle("+", for: .normal)
+        plus.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
+        plus.addTarget(self, action: plusAction, for: .touchUpInside)
+
+        container.tag = Int(titleH)  // store titleH for layout
+        [titleLabel, minus, levelLabel, plus].forEach { container.addSubview($0) }
+        return (container, levelLabel, minus, plus)
     }
-    
-    private func updateHammerButton(_ button: UIButton, hammerCount: Int) {
-        let style = hammerStyle(for: hammerCount)
 
-        if #available(iOS 15.0, *) {
-            var cfg = button.configuration ?? UIButton.Configuration.filled()
+    // Applies a frame to a stepper container, repositioning its fixed subviews.
+    private func applyFrame(_ frame: CGRect, to container: UIView) {
+        container.frame = frame
+        let titleH: CGFloat = 16
+        let btnH = frame.height - titleH
+        let btnW = frame.width / 3
+        let subs = container.subviews
+        guard subs.count == 4 else { return }
+        subs[0].frame = CGRect(x: 0, y: 0,         width: frame.width, height: titleH)  // title label
+        subs[1].frame = CGRect(x: 0,       y: titleH, width: btnW, height: btnH)         // minus
+        subs[2].frame = CGRect(x: btnW,    y: titleH, width: btnW, height: btnH)         // level label
+        subs[3].frame = CGRect(x: btnW*2,  y: titleH, width: btnW, height: btnH)         // plus
+    }
 
-            cfg.title = style.title
-            cfg.baseBackgroundColor = style.color
-
-            cfg.baseForegroundColor = .label
-
-            // ✅ Slightly smaller font
-            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-                var outgoing = incoming
-                outgoing.font = UIFont.systemFont(ofSize: 13, weight: .semibold) // tweak 12–14
-                outgoing.foregroundColor = UIColor.label
-                return outgoing
+    @objc private func hammerStepperPlusTapped() {
+        var newCount = 0
+        GameManager.shared.update { g in
+            g.normalize(holes: STANDARD_HOLES)
+            let h = max(0, min(17, g.hole))
+            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != STANDARD_HOLES {
+                g.hammerCountPerHole = Array(repeating: 0, count: STANDARD_HOLES)
             }
-
-            button.configuration = cfg
-
-            // Extra safety for highlighted/selected states
-            button.setTitleColor(.label, for: .normal)
-            button.setTitleColor(.label, for: .highlighted)
-            button.setTitleColor(.label, for: .selected)
-            button.setTitleColor(.label, for: .disabled)
-        } else {
-            button.backgroundColor = style.color
-            button.setTitle(style.title, for: .normal)
-            button.setTitleColor(.label, for: .normal)
-            button.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-            button.layer.cornerRadius = 8
-            button.clipsToBounds = true
+            g.hammerCountPerHole![h] += 1
+            newCount = g.hammerCountPerHole![h]
         }
+        paintHammerStepperView(count: newCount)
+        refreshDollarsLabel()
+    }
+
+    @objc private func hammerStepperMinusTapped() {
+        var newCount = 0
+        GameManager.shared.update { g in
+            g.normalize(holes: STANDARD_HOLES)
+            let h = max(0, min(17, g.hole))
+            if g.hammerCountPerHole == nil || g.hammerCountPerHole?.count != STANDARD_HOLES {
+                g.hammerCountPerHole = Array(repeating: 0, count: STANDARD_HOLES)
+            }
+            g.hammerCountPerHole![h] = max(0, g.hammerCountPerHole![h] - 1)
+            newCount = g.hammerCountPerHole![h]
+        }
+        paintHammerStepperView(count: newCount)
+        refreshDollarsLabel()
     }
 
     @IBAction func sendRemoteInviteTapped(_ sender: UIButton) {
@@ -2790,19 +2758,32 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let aloneOn  = g.aloneApplied[safe: h]  ?? false
         let pressLevel = g.pressLevel[safe: h] ?? 0
 
-        rollPushed.isSelected    = rollOn
-        rerollPushed.isSelected  = rerollOn
-        rerollPushed.isEnabled   = rollOn      // disabled look when Roll is off
-        alonePushed.isSelected   = aloneOn
-        pressedPushed2.isSelected = pressLevel > 0
+        rollPushed.isSelected   = rollOn
+        rerollPushed.isSelected = rerollOn
+        rerollPushed.isEnabled  = rollOn
+        alonePushed.isSelected  = aloneOn
+
+        paintPressStepperView(pressLevel: pressLevel)
+    }
+
+    private func paintPressStepperView(pressLevel: Int) {
+        guard let container = pressStepperContainer,
+              let levelLabel = pressLevelLabel,
+              let minusBtn = pressMinusButton else { return }
+
+        levelLabel.text = "\(pressLevel)"
+        minusBtn.isEnabled = pressLevel > 0
+
         if pressLevel == 0 {
-            pressedPushed2.backgroundColor = .systemOrange
-            pressedPushed2.setTitle("Press", for: .normal)
-            pressedPushed2.setTitleColor(.white, for: .normal)
+            container.backgroundColor = .systemGray5
+            levelLabel.textColor = .secondaryLabel
+            minusBtn.tintColor = .secondaryLabel
+            pressPlusButton?.tintColor = .secondaryLabel
         } else {
-            pressedPushed2.backgroundColor = .label
-            pressedPushed2.setTitle("Press \(pressLevel + 1)", for: .normal)
-            pressedPushed2.setTitleColor(.systemBackground, for: .normal)
+            container.backgroundColor = .systemOrange
+            levelLabel.textColor = .white
+            minusBtn.tintColor = .white
+            pressPlusButton?.tintColor = .white
         }
     }
     private func showGameOnboardingIfNeeded() {
@@ -2864,6 +2845,135 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         b.layer.cornerRadius = 10
         b.clipsToBounds = true
     }
+    // MARK: - Unified bottom-controls layout
+    // Called every viewDidLayoutSubviews pass. Creates steppers on first call, repositions everything every call.
+    private func layoutBottomControls() {
+        guard let sup = pressedPushed2.superview, pressedPushed2.frame != .zero else { return }
+
+        // Geometry anchors from the storyboard's original row position
+        let leading:  CGFloat = 32
+        let totalW:   CGFloat = 346          // x=32 … x=378
+        let stepperH: CGFloat = 46
+        let gap:      CGFloat = 4
+        let rowGap:   CGFloat = 10
+        let row1Y = pressedPushed2.frame.minY   // ≈ 467 from storyboard
+
+        // ── Row 1: [Press stepper] [Alone] [Re-Roll] [Roll] ──────────────────
+        let btnW = (totalW - 3 * gap) / 4   // equal widths ≈ 83.5
+
+        if pressStepperContainer == nil {
+            let (c, lbl, minus, plus) = makeStepperView(
+                title: "Press",
+                minusAction: #selector(pressStepperMinusTapped),
+                plusAction:  #selector(pressStepperPlusTapped)
+            )
+            sup.addSubview(c)
+            pressStepperContainer = c
+            pressLevelLabel  = lbl
+            pressMinusButton = minus
+            pressPlusButton  = plus
+            paintPressStepperView(pressLevel: 0)
+        }
+        applyFrame(CGRect(x: leading,             y: row1Y, width: btnW, height: stepperH), to: pressStepperContainer!)
+        pressedPushed2.isHidden = true
+
+        alonePushed.frame   = CGRect(x: leading + btnW + gap,       y: row1Y, width: btnW, height: stepperH)
+        rerollPushed.frame  = CGRect(x: leading + (btnW + gap) * 2, y: row1Y, width: btnW, height: stepperH)
+        rollPushed.frame    = CGRect(x: leading + (btnW + gap) * 3, y: row1Y, width: btnW, height: stepperH)
+
+        // ── Row 2: [Hammer stepper] [Update Hole Scores] ─────────────────────
+        let row2Y = row1Y + stepperH + rowGap
+
+        if hammerStepperContainer == nil {
+            let (c, lbl, minus, plus) = makeStepperView(
+                title: "Hammer",
+                minusAction: #selector(hammerStepperMinusTapped),
+                plusAction:  #selector(hammerStepperPlusTapped)
+            )
+            sup.addSubview(c)
+            hammerStepperContainer = c
+            hammerLevelLabel  = lbl
+            hammerMinusButton = minus
+            hammerPlusButton  = plus
+            addHelp(to: c, title: "Hammer", message: """
+    Doubles the hole stake each tap (1× → 2× → 4× → 8×…).
+    Tap + to hammer, − to reject the most recent hammer.
+    """)
+            paintHammerStepperView(count: 0)
+        }
+        applyFrame(CGRect(x: leading, y: row2Y, width: btnW, height: stepperH), to: hammerStepperContainer!)
+        hammerButton.isHidden       = true
+        rejectHammerButton.isHidden = true
+
+        let updateX = leading + btnW + gap
+        UpdateScores.frame = CGRect(x: updateX, y: row2Y, width: totalW - btnW - gap, height: stepperH)
+
+        // ── Row 3: [Game Results] [−] [+] [stake label] ──────────────────────
+        let row3Y  = row2Y + stepperH + rowGap
+        let row3H: CGFloat = 40
+        let pmW:   CGFloat = 40
+        let stakeW: CGFloat = 84
+
+        // Right-to-left: stake → + → − → Game Results
+        let stakeX  = leading + totalW - stakeW
+        let plusX   = stakeX - gap - pmW
+        let minusX  = plusX  - gap - pmW
+        let grW     = minusX - gap - leading
+
+        gameResultsButton.frame   = CGRect(x: leading, y: row3Y, width: grW,    height: row3H)
+        minusPointDollars.frame   = CGRect(x: minusX,  y: row3Y, width: pmW,    height: row3H)
+        plusPointDollars.frame    = CGRect(x: plusX,   y: row3Y, width: pmW,    height: row3H)
+        gameDollarsField.frame    = CGRect(x: stakeX,  y: row3Y, width: stakeW, height: row3H)
+
+        // ── Row 4: [Text] ─────────────────────────────────────────────────────
+        let row4Y  = row3Y + row3H + rowGap
+        let row4H: CGFloat = 34
+        textHubButton.frame = CGRect(x: leading, y: row4Y, width: totalW, height: row4H)
+
+        sup.bringSubviewToFront(pressStepperContainer!)
+        sup.bringSubviewToFront(hammerStepperContainer!)
+    }
+
+    @objc private func pressStepperPlusTapped() {
+        GameManager.shared.update { g in
+            if g.pressLevel.count != STANDARD_HOLES       { g.pressLevel       = Array(repeating: 0,   count: STANDARD_HOLES) }
+            if g.pressBaseDollars.count != STANDARD_HOLES { g.pressBaseDollars = Array(repeating: 0.0, count: STANDARD_HOLES) }
+            if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
+            func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
+            let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
+            let h     = max(0, min(g.hole, count - 1))
+            let end   = min(h < 9 ? 9 : STANDARD_HOLES, count)
+            for i in h..<end {
+                let base = g.gameHoleDollarsArray[i] == 0 ? 2.0 : g.gameHoleDollarsArray[i]
+                g.pressBaseDollars[i] = base
+                g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, base * 2.0))
+                g.pressLevel[i] += 1
+            }
+            g.pressInitiatedHole = h
+        }
+        refreshForCurrentHole()
+        paintEverythingForCurrentHole()
+    }
+
+    @objc private func pressStepperMinusTapped() {
+        GameManager.shared.update { g in
+            if g.pressLevel.count != STANDARD_HOLES       { g.pressLevel       = Array(repeating: 0,   count: STANDARD_HOLES) }
+            if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
+            func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
+            let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
+            let h     = max(0, min(g.hole, count - 1))
+            guard (g.pressLevel[safe: h] ?? 0) > 0 else { return }
+            let end = min(h < 9 ? 9 : STANDARD_HOLES, count)
+            for i in h..<end {
+                g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, g.gameHoleDollarsArray[i] / 2.0))
+                if g.pressLevel[i] > 0 { g.pressLevel[i] -= 1 }
+            }
+            g.pressInitiatedHole = nil
+        }
+        refreshForCurrentHole()
+        paintEverythingForCurrentHole()
+    }
+
     // Simple/direct painting (no UIButton.Configuration)
     private func refreshProxButtons() {
         guard let g = GameManager.shared.currentGame else { return }

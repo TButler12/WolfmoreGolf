@@ -1688,7 +1688,7 @@
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </stackView>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="hMb-NB-8an">
-                                <rect key="frame" x="42" y="698" width="349" height="32"/>
+                                <rect key="frame" x="34" y="698" width="357" height="32"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="backgroundColor" red="0.28902696880000001" green="0.66666668650000005" blue="0.32394021760000002" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
                                 <segments>
@@ -1705,20 +1705,6 @@
                                 <rect key="frame" x="136" y="755" width="90" height="92"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                             </stackView>
-
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2fK-jm-bod">
-                                <rect key="frame" x="42" y="742" width="117" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <color key="backgroundColor" red="0.47458964650000002" green="0.33987085685662338" blue="0.11520221292506312" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
-                                <color key="tintColor" systemColor="systemBackgroundColor"/>
-                                <state key="normal" title="Button"/>
-                                <buttonConfiguration key="configuration" style="plain" title="Text">
-                                    <fontDescription key="titleFontDescription" style="UICTFontTextStyleCaption2"/>
-                                </buttonConfiguration>
-                                <connections>
-                                    <action selector="textHubTapped:" destination="xlr-P2-18F" eventType="touchUpInside" id="uYm-42-iCX"/>
-                                </connections>
-                            </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="system" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="bMF-ZV-5kD">
                                 <rect key="frame" x="30" y="528" width="170" height="35"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
@@ -1890,6 +1876,19 @@
                                     <action selector="statsTapped:" destination="xlr-P2-18F" eventType="touchUpInside" id="Zvb-Te-fwl"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2fK-jm-bod">
+                                <rect key="frame" x="35" y="729" width="112" height="30"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <color key="backgroundColor" red="0.47458964650000002" green="0.33987085685662338" blue="0.11520221292506312" alpha="1" colorSpace="custom" customColorSpace="displayP3"/>
+                                <color key="tintColor" systemColor="systemBackgroundColor"/>
+                                <state key="normal" title="Button"/>
+                                <buttonConfiguration key="configuration" style="plain" title="Text">
+                                    <fontDescription key="titleFontDescription" style="UICTFontTextStyleCaption2"/>
+                                </buttonConfiguration>
+                                <connections>
+                                    <action selector="textHubTapped:" destination="xlr-P2-18F" eventType="touchUpInside" id="uYm-42-iCX"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="C43-bU-TwC"/>
                         <color key="backgroundColor" systemColor="systemBackgroundColor"/>
@@ -1897,6 +1896,8 @@
                     <connections>
                         <outlet property="UpdateScores" destination="BJu-t5-Xrk" id="V7Q-hT-lve"/>
                         <outlet property="alonePushed" destination="0BX-ck-ZM0" id="0mq-qI-YqE"/>
+                        <outlet property="gameResultsButton" destination="FKa-rX-8t3" id="gRB-Zp-W1k"/>
+                        <outlet property="textHubButton" destination="2fK-jm-bod" id="tHB-Zp-W2k"/>
                         <outlet property="gameDollarsField" destination="fvh-zu-QLv" id="jFN-2a-3RP"/>
                         <outlet property="gameModeSegment" destination="hMb-NB-8an" id="nBG-a7-IyQ"/>
                         <outlet property="hammerButton" destination="bMF-ZV-5kD" id="kUL-Nq-c78"/>

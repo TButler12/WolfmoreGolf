@@ -19,12 +19,14 @@ final class WolfSpectatorViewController: UIViewController {
     }
 
     // MARK: - UI
-    private let tabScrollView = UIScrollView()
-    private let tabStack      = UIStackView()
+    private let tabScrollView    = UIScrollView()
+    private let tabStack         = UIStackView()
     private var tabButtons: [UIButton] = []
-    private let statusBanner  = UILabel()
-    private let tableView     = UITableView(frame: .zero, style: .insetGrouped)
-    private let loadingView   = UIActivityIndicatorView(style: .large)
+    private let statusBanner     = UILabel()
+    private let namesHeaderView  = UIView()
+    private let cachedHeaderCell = WolfHoleCell(style: .default, reuseIdentifier: nil)
+    private let tableView        = UITableView(frame: .zero, style: .insetGrouped)
+    private let loadingView      = UIActivityIndicatorView(style: .large)
 
     private let savedCodesKey = "watchedWolfSessions"
     private let maxSessions   = 3
@@ -37,6 +39,7 @@ final class WolfSpectatorViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupTabBar()
         setupStatusBanner()
+        setupNamesHeader()
         setupTableView()
         setupLoadingView()
         loadInitialSessions()
@@ -125,15 +128,39 @@ final class WolfSpectatorViewController: UIViewController {
         ])
     }
 
+    private func setupNamesHeader() {
+        namesHeaderView.translatesAutoresizingMaskIntoConstraints = false
+        namesHeaderView.backgroundColor = .systemGroupedBackground
+        namesHeaderView.isHidden = true
+        view.addSubview(namesHeaderView)
+        NSLayoutConstraint.activate([
+            namesHeaderView.topAnchor.constraint(equalTo: statusBanner.bottomAnchor),
+            namesHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 36),
+            namesHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -36),
+            namesHeaderView.heightAnchor.constraint(equalToConstant: 44),
+        ])
+
+        cachedHeaderCell.translatesAutoresizingMaskIntoConstraints = false
+        cachedHeaderCell.backgroundColor = .systemGroupedBackground
+        namesHeaderView.addSubview(cachedHeaderCell)
+        NSLayoutConstraint.activate([
+            cachedHeaderCell.topAnchor.constraint(equalTo: namesHeaderView.topAnchor),
+            cachedHeaderCell.leadingAnchor.constraint(equalTo: namesHeaderView.leadingAnchor),
+            cachedHeaderCell.trailingAnchor.constraint(equalTo: namesHeaderView.trailingAnchor),
+            cachedHeaderCell.bottomAnchor.constraint(equalTo: namesHeaderView.bottomAnchor),
+        ])
+    }
+
     private func setupTableView() {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
+        tableView.delegate   = self
         tableView.register(WolfHoleCell.self, forCellReuseIdentifier: WolfHoleCell.reuseID)
         tableView.rowHeight          = UITableView.automaticDimension
         tableView.estimatedRowHeight = 44
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: statusBanner.bottomAnchor),
+            tableView.topAnchor.constraint(equalTo: namesHeaderView.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -285,6 +312,8 @@ final class WolfSpectatorViewController: UIViewController {
     private func applyCurrentSession() {
         guard let session = currentSession else { return }
         applySessionStatus(session.status)
+        cachedHeaderCell.configureAsHeader(playerNames: session.playerNames)
+        namesHeaderView.isHidden = false
         tableView.reloadData()
     }
 
@@ -542,30 +571,35 @@ extension WolfSpectatorViewController: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        (currentSession?.playerNames.count ?? 0) > 0 ? 21 : 0   // 1 header + 18 holes + score totals + money totals
+        (currentSession?.playerNames.count ?? 0) > 0 ? 20 : 0   // 18 holes + score totals + money totals
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: WolfHoleCell.reuseID, for: indexPath) as! WolfHoleCell
         guard let session = currentSession else { return cell }
         let allResults = Array(currentHoleResults.values)
-        if indexPath.row == 0 {
-            cell.configureAsHeader(playerNames: session.playerNames)
-        } else if indexPath.row == 19 {
+        // row 0-17 = holes 1-18, row 18 = score totals, row 19 = money totals
+        if indexPath.row == 18 {
             cell.configureAsScoreTotals(results: allResults, playerCount: session.playerNames.count)
-        } else if indexPath.row == 20 {
+        } else if indexPath.row == 19 {
             cell.configureAsTotals(results: allResults, playerCount: session.playerNames.count)
         } else {
-            let hole = indexPath.row  // 1-based
-            cell.configure(hole: hole, result: currentHoleResults[hole], playerNames: session.playerNames)
+            let hole = indexPath.row + 1  // 1-based
+            let playerCount = session.playerNames.count
+            var cumulative = Array(repeating: 0.0, count: playerCount)
+            for h in 1...hole {
+                guard let r = currentHoleResults[h] else { continue }
+                let deltas = r.moneyDeltas ?? r.payouts ?? []
+                for (i, v) in deltas.enumerated() where i < playerCount { cumulative[i] += v }
+            }
+            let hasCumulative = currentHoleResults[hole] != nil
+            cell.configure(hole: hole, result: currentHoleResults[hole], playerNames: session.playerNames,
+                           cumulativeTotals: hasCumulative ? cumulative : [])
         }
         return cell
     }
 
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        guard let s = currentSession else { return nil }
-        return "\(s.courseName)  •  Code: \(s.code)"
-    }
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? { nil }
 }
 
 // MARK: - WolfHoleCell
@@ -581,6 +615,10 @@ private final class WolfHoleCell: UITableViewCell {
     private let moneyLabel = UILabel()
     private var moneyCols: [UILabel] = []
     private let moneyRow   = UIStackView()
+
+    private let gameLabel  = UILabel()
+    private var gameCols: [UILabel] = []
+    private let gameRow    = UIStackView()
 
     private let outerStack = UIStackView()
 
@@ -671,6 +709,32 @@ private final class WolfHoleCell: UITableViewCell {
         let spacer2 = UIView()
         spacer2.setContentHuggingPriority(.defaultLow, for: .horizontal)
         moneyRow.addArrangedSubview(spacer2)
+
+        // Game dollars sub-row (running cumulative total through this hole)
+        gameRow.axis     = .horizontal
+        gameRow.spacing  = 6
+        gameRow.isHidden = true
+        outerStack.addArrangedSubview(gameRow)
+
+        configLabel(gameLabel, size: 13, weight: .regular, width: 32)
+        gameLabel.text      = "G$"
+        gameLabel.textColor = .secondaryLabel
+        gameRow.addArrangedSubview(gameLabel)
+
+        let gameDecisionSpacer = UIView()
+        gameDecisionSpacer.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        gameRow.addArrangedSubview(gameDecisionSpacer)
+
+        for _ in 0..<MAX_PLAYERS {
+            let l = UILabel()
+            configLabel(l, size: 13, weight: .semibold, width: 40)
+            gameCols.append(l)
+            gameRow.addArrangedSubview(l)
+        }
+
+        let spacer3 = UIView()
+        spacer3.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        gameRow.addArrangedSubview(spacer3)
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -695,6 +759,7 @@ private final class WolfHoleCell: UITableViewCell {
             col.font      = .systemFont(ofSize: 15, weight: .semibold)
         }
         moneyRow.isHidden = true
+        gameRow.isHidden  = true
     }
 
     func configureAsScoreTotals(results: [WolfHoleResult], playerCount: Int) {
@@ -719,6 +784,7 @@ private final class WolfHoleCell: UITableViewCell {
             col.textColor = .label
         }
         moneyRow.isHidden = true
+        gameRow.isHidden  = true
     }
 
     func configureAsTotals(results: [WolfHoleResult], playerCount: Int) {
@@ -749,9 +815,10 @@ private final class WolfHoleCell: UITableViewCell {
             else          { col.text = "0";              col.textColor = .secondaryLabel }
         }
         moneyRow.isHidden = true
+        gameRow.isHidden  = true
     }
 
-    func configure(hole: Int, result: WolfHoleResult?, playerNames: [String]) {
+    func configure(hole: Int, result: WolfHoleResult?, playerNames: [String], cumulativeTotals: [Double] = []) {
         holePressLevel       = result?.wolfPlayer ?? 0
         holeLabel.text       = "\(hole)"
         holeLabel.textColor  = holePressLevel > 0 ? .systemOrange : .label
@@ -796,8 +863,8 @@ private final class WolfHoleCell: UITableViewCell {
             }
         }
 
-        // Money sub-row: show only when this hole has non-zero deltas
-        if let deltas = result?.moneyDeltas ?? result?.payouts, deltas.contains(where: { $0 != 0 }) {
+        // Money sub-row: show whenever a hole result exists (display 0 for zero deltas)
+        if let deltas = result?.moneyDeltas ?? result?.payouts {
             moneyRow.isHidden = false
             for (i, col) in moneyCols.enumerated() {
                 if i < deltas.count {
@@ -824,5 +891,30 @@ private final class WolfHoleCell: UITableViewCell {
         } else {
             moneyRow.isHidden = true
         }
+
+        // Game dollars sub-row: running cumulative total through this hole
+        if !cumulativeTotals.isEmpty {
+            gameRow.isHidden = false
+            for (i, col) in gameCols.enumerated() {
+                guard i < cumulativeTotals.count else { col.text = ""; col.textColor = .tertiaryLabel; continue }
+                let v = cumulativeTotals[i]
+                let absV = Swift.abs(v)
+                let formatted = absV.truncatingRemainder(dividingBy: 1) == 0
+                    ? String(Int(absV))
+                    : String(format: "%.2f", absV)
+                if v > 0      { col.text = "+\(formatted)"; col.textColor = .systemGreen }
+                else if v < 0 { col.text = "−\(formatted)"; col.textColor = .systemRed }
+                else          { col.text = "0";              col.textColor = .secondaryLabel }
+            }
+        } else {
+            gameRow.isHidden = true
+        }
     }
+}
+
+// MARK: - UITableViewDelegate
+
+extension WolfSpectatorViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? { nil }
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { 0 }
 }
