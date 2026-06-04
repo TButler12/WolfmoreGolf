@@ -1224,56 +1224,42 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     @IBAction func pressedPush2(_ sender: UIButton) {
         GameManager.shared.update { g in
-            // Ensure arrays exist (old save safety)
-            if g.pressMask.count != STANDARD_HOLES        { g.pressMask        = Array(repeating: false, count: STANDARD_HOLES) }
-            if g.pressBaseDollars.count != STANDARD_HOLES { g.pressBaseDollars = Array(repeating: 0.0,  count: STANDARD_HOLES) }
+            if g.pressLevel.count != STANDARD_HOLES      { g.pressLevel      = Array(repeating: 0,   count: STANDARD_HOLES) }
+            if g.pressBaseDollars.count != STANDARD_HOLES { g.pressBaseDollars = Array(repeating: 0.0, count: STANDARD_HOLES) }
             if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
 
             func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
 
-            // Restore any currently pressed holes back to their remembered base
-            func restorePressedRange() {
-                let limit = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
-                for i in 0..<limit where g.pressMask[i] {
-                    let base = (g.pressBaseDollars[i] == 0 ? g.gameHoleDollarsArray[i] : g.pressBaseDollars[i])
-                    g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, base))
-                    g.pressMask[i] = false
-                    g.pressBaseDollars[i] = 0
-                }
-            }
-
             let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
-            let idx   = max(0, min(g.hole, max(0, count - 1)))
-            let isPressedHere = (g.pressMask.indices.contains(idx) ? g.pressMask[idx] : false)
+            let h     = max(0, min(g.hole, count - 1))
+            let end   = min(h < 9 ? 9 : STANDARD_HOLES, count)
 
-            if isPressedHere {
-                // Currently ON at this hole -> turn OFF (restore the whole pressed window)
-                restorePressedRange()
-            } else {
-                // Currently OFF -> turn ON from this hole forward, up to 9 holes (no wrap)
-                restorePressedRange() // clear any old window first
-
-                let start = idx
-                let endExclusive = min(start + 9, count)
-                for i in start..<endExclusive {
-                    let base = (g.gameHoleDollarsArray[i] == 0 ? 2.0 : g.gameHoleDollarsArray[i])
-                    g.pressBaseDollars[i] = base
-                    g.pressMask[i] = true
-                    g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, base * 2.0))
+            if g.pressInitiatedHole == h {
+                // Cancel: undo the last press for holes h..<end
+                for i in h..<end {
+                    if g.pressBaseDollars[i] > 0 {
+                        g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, g.pressBaseDollars[i]))
+                        g.pressBaseDollars[i] = 0
+                    }
+                    if g.pressLevel[i] > 0 { g.pressLevel[i] -= 1 }
                 }
+                g.pressInitiatedHole = nil
+            } else {
+                // New press: double stakes for holes h..<end, increment pressLevel
+                for i in h..<end {
+                    let base = g.gameHoleDollarsArray[i] == 0 ? 2.0 : g.gameHoleDollarsArray[i]
+                    g.pressBaseDollars[i] = base
+                    g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, base * 2.0))
+                    g.pressLevel[i] += 1
+                }
+                g.pressInitiatedHole = h
             }
         }
-
-        // Paint UI from model (brown ON / green OFF)
         refreshForCurrentHole()
-
-        // Optional debug
         if let g = GameManager.shared.currentGame {
             let pretty = g.gameHoleDollarsArray.map { String(format: "%.2f", $0) }.joined(separator: ", ")
-            print("Press: hole \(g.hole + 1), dollars = [\(pretty)]")
+            print("Press: hole \(g.hole + 1), level=\(g.pressLevel[g.hole]) dollars=[\(pretty)]")
         }
-        
-        refreshForCurrentHole()
         paintEverythingForCurrentHole()
     }
 
@@ -2348,7 +2334,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let wentAlone     = g.aloneApplied[safe: hole] ?? false
             let rerollOn      = g.rerollApplied[safe: hole] ?? false
             let rollOn        = g.rollApplied[safe: hole] ?? false
-            let pressOn       = g.pressMask[safe: hole] ?? false
+            let pressLevel    = g.pressLevel[safe: hole] ?? 0
             let teamWon       = hole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[hole]
             let holePayouts   = g.playerMoney.map { $0[safe: hole] ?? 0.0 }
             let decision: String? = wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
@@ -2357,7 +2343,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             print("DEBUG wolf wolfPlayerPerHole[\(hole)]=\(String(describing: g.wolfPlayerPerHole?[safe: hole] ?? nil)) wolfMask=\(wolfMask) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot))")
             Task {
                 do {
-                    print("DEBUG submitWolfHole hole=\(hole+1) scores=\(holeScores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(holePayouts) hammer=\(holeHammer) press=\(pressOn)")
+                    print("DEBUG submitWolfHole hole=\(hole+1) scores=\(holeScores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(holePayouts) hammer=\(holeHammer) press=\(pressLevel)")
                     try await SupabaseService.shared.submitWolfHole(
                         sessionId: sessionId,
                         hole: hole + 1,
@@ -2369,7 +2355,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         payouts: holePayouts,
                         decision: decision,
                         hammerMultiplier: holeHammer,
-                        pressed: pressOn
+                        pressed: pressLevel
                     )
                 } catch let pgError as PostgrestError {
                     print("ERROR submitWolfHole Postgrest code=\(pgError.code ?? "nil")")
@@ -2802,13 +2788,22 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let rollOn   = g.rollApplied[safe: h]   ?? false
         let rerollOn = (g.rerollApplied[safe: h] ?? false) && rollOn
         let aloneOn  = g.aloneApplied[safe: h]  ?? false
-        let pressOn  = g.pressMask[safe: h]     ?? false
+        let pressLevel = g.pressLevel[safe: h] ?? 0
 
         rollPushed.isSelected    = rollOn
         rerollPushed.isSelected  = rerollOn
         rerollPushed.isEnabled   = rollOn      // disabled look when Roll is off
         alonePushed.isSelected   = aloneOn
-        pressedPushed2.isSelected = pressOn
+        pressedPushed2.isSelected = pressLevel > 0
+        if pressLevel == 0 {
+            pressedPushed2.backgroundColor = .systemOrange
+            pressedPushed2.setTitle("Press", for: .normal)
+            pressedPushed2.setTitleColor(.white, for: .normal)
+        } else {
+            pressedPushed2.backgroundColor = .label
+            pressedPushed2.setTitle("Press \(pressLevel + 1)", for: .normal)
+            pressedPushed2.setTitleColor(.systemBackground, for: .normal)
+        }
     }
     private func showGameOnboardingIfNeeded() {
         let key = "onboarding_game_shown"

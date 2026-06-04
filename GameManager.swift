@@ -171,7 +171,8 @@ final class GameManager {
         g.rerollApplied        = Array(repeating: false, count: STANDARD_HOLES)
         g.rerollBaseAmount     = Array(repeating: 0.0, count: STANDARD_HOLES)
         g.aloneApplied         = Array(repeating: false, count: STANDARD_HOLES)
-        g.pressMask            = Array(repeating: false, count: STANDARD_HOLES)
+        g.pressLevel           = Array(repeating: 0, count: STANDARD_HOLES)
+        g.pressInitiatedHole   = nil
         g.proxWinnerPerHole    = Array(repeating: nil, count: STANDARD_HOLES)
         g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
         g.gameHoleDollarsArray = Array(repeating: defaultBet, count: STANDARD_HOLES)

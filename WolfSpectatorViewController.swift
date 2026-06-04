@@ -584,6 +584,30 @@ private final class WolfHoleCell: UITableViewCell {
 
     private let outerStack = UIStackView()
 
+    private var holePressLevel: Int = 0 {
+        didSet { if oldValue != holePressLevel { setNeedsLayout() } }
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // Rebuild press border layers on the hole label
+        holeLabel.layer.sublayers?.filter { $0.name == "pb" }.forEach { $0.removeFromSuperlayer() }
+        holeLabel.layer.borderWidth = 0
+        holeLabel.clipsToBounds = false
+        guard holePressLevel > 0 else { return }
+        let b = holeLabel.bounds
+        for i in 0..<min(holePressLevel, 3) {
+            let inset = CGFloat(i) * 3.0
+            let bl = CALayer()
+            bl.name = "pb"
+            bl.frame = b.insetBy(dx: inset, dy: inset)
+            bl.borderWidth = 1.5
+            bl.borderColor = UIColor.systemOrange.cgColor
+            bl.cornerRadius = max(2, 4 - inset * 0.5)
+            holeLabel.layer.addSublayer(bl)
+        }
+    }
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
@@ -660,6 +684,7 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsHeader(playerNames: [String]) {
+        holePressLevel = 0
         holeLabel.text        = "Hole"
         holeLabel.textColor   = .secondaryLabel
         decisionLabel.text    = ""
@@ -673,6 +698,7 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsScoreTotals(results: [WolfHoleResult], playerCount: Int) {
+        holePressLevel = 0
         holeLabel.text        = "Score"
         holeLabel.textColor   = .secondaryLabel
         holeLabel.font        = .systemFont(ofSize: 13, weight: .semibold)
@@ -696,6 +722,7 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsTotals(results: [WolfHoleResult], playerCount: Int) {
+        holePressLevel = 0
         holeLabel.text        = "Total"
         holeLabel.textColor   = .secondaryLabel
         holeLabel.font        = .systemFont(ofSize: 13, weight: .semibold)
@@ -725,13 +752,9 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configure(hole: Int, result: WolfHoleResult?, playerNames: [String]) {
-        let isPressed = result?.wolfPlayer == true
-        holeLabel.text               = "\(hole)"
-        holeLabel.textColor          = isPressed ? .systemOrange : .label
-        holeLabel.layer.borderWidth  = isPressed ? 1.5 : 0
-        holeLabel.layer.borderColor  = UIColor.systemOrange.cgColor
-        holeLabel.layer.cornerRadius = isPressed ? 4 : 0
-        holeLabel.clipsToBounds      = true
+        holePressLevel       = result?.wolfPlayer ?? 0
+        holeLabel.text       = "\(hole)"
+        holeLabel.textColor  = holePressLevel > 0 ? .systemOrange : .label
 
         switch result?.decision {
         case "alone":

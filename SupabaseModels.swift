@@ -110,7 +110,7 @@ struct WolfHoleResult: Codable {
     // Booleans — stored inconsistently across rows (native Bool or "true"/"false" string)
     let teamWon: Bool?
     let wentAlone: Bool?
-    let wolfPlayer: Bool?
+    let wolfPlayer: Int?
     let alone: Bool?
     // Integer fields
     let wolfSlot: Int?
@@ -169,7 +169,7 @@ struct WolfHoleResult: Codable {
         proxWinner   = try c.decodeIfPresent(String.self, forKey: .proxWinner)
         teamWon    = Self.flexBool(c, .teamWon)
         wentAlone  = Self.flexBool(c, .wentAlone)
-        wolfPlayer = Self.flexBool(c, .wolfPlayer)
+        wolfPlayer = try? c.decodeIfPresent(Int.self, forKey: .wolfPlayer)
         alone      = Self.flexBool(c, .alone)
     }
 }

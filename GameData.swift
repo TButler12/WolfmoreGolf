@@ -59,7 +59,8 @@ struct GameData: Codable {
     var rosterNames: [String] = []
     var proxWinnerPerHole: [Int?] = Array(repeating: nil, count: STANDARD_HOLES)
 
-    var pressMask: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+    var pressLevel: [Int] = Array(repeating: 0, count: STANDARD_HOLES)
+    var pressInitiatedHole: Int? = nil
     var pressBaseDollars: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
     var pressBaseAmount: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
 
