@@ -186,8 +186,8 @@ final class SupabaseService {
         matchId: String,
         onScore: @escaping (HoleScoreRecord) -> Void
     ) {
-        let channel = client.channel("scores-\(matchId)")
-        holeScoreChannels[matchId] = channel
+        let channel = client.channel("scores-\(matchId)-\(UUID().uuidString)")
+        holeScoreChannels["ins-\(matchId)"] = channel
 
         channel.onPostgresChange(
             InsertAction.self,
@@ -204,13 +204,51 @@ final class SupabaseService {
         }
 
         Task {
-            await channel.subscribe()
+            do {
+                try await channel.subscribeWithError()
+            } catch {
+                print("ERROR hole_scores INSERT subscribe failed: \(error)")
+            }
+        }
+    }
+
+    // Score corrections come through as UPDATE events — separate channel required by SDK.
+    func subscribeToHoleScoreUpdates(
+        matchId: String,
+        onScore: @escaping (HoleScoreRecord) -> Void
+    ) {
+        let channel = client.channel("scores-upd-\(matchId)-\(UUID().uuidString)")
+        holeScoreChannels["upd-\(matchId)"] = channel
+
+        channel.onPostgresChange(
+            UpdateAction.self,
+            schema: "public",
+            table: "hole_scores",
+            filter: "match_id=eq.\(matchId)"
+        ) { action in
+            if let record = try? action.decodeRecord(
+                as: HoleScoreRecord.self,
+                decoder: JSONDecoder()
+            ) {
+                DispatchQueue.main.async { onScore(record) }
+            }
+        }
+
+        Task {
+            do {
+                try await channel.subscribeWithError()
+            } catch {
+                print("ERROR hole_scores UPDATE subscribe failed: \(error)")
+            }
         }
     }
 
     func unsubscribeFromHoleScores(matchId: String) {
-        guard let channel = holeScoreChannels.removeValue(forKey: matchId) else { return }
-        Task { await channel.unsubscribe() }
+        for key in ["ins-\(matchId)", "upd-\(matchId)"] {
+            if let ch = holeScoreChannels.removeValue(forKey: key) {
+                Task { await ch.unsubscribe() }
+            }
+        }
     }
 
     // MARK: - Fetch resolved hole results
@@ -281,7 +319,9 @@ final class SupabaseService {
         partnerSlot: Int?,
         wentAlone: Bool,
         teamWon: Bool,
-        payouts: [Double]
+        payouts: [Double],
+        decision: String? = nil,
+        hammerMultiplier: Int = 1
     ) async throws {
         struct Payload: Encodable {
             var session_id: String
@@ -292,6 +332,8 @@ final class SupabaseService {
             var money_deltas: [Double]
             var wolf_slot: Int?
             var partner_slot: Int?
+            var decision: String?
+            var hammer_multiplier: Int
         }
         let payload = Payload(
             session_id: sessionId,
@@ -301,7 +343,9 @@ final class SupabaseService {
             team_won: teamWon,
             money_deltas: payouts,
             wolf_slot: wolfSlot,
-            partner_slot: partnerSlot
+            partner_slot: partnerSlot,
+            decision: decision,
+            hammer_multiplier: hammerMultiplier
         )
         print("DEBUG upsert payload: session=\(sessionId) hole=\(hole) scores=\(scores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(payouts)")
         try await client.from("wolf_hole_results")

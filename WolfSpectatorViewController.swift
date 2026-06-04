@@ -573,7 +573,8 @@ extension WolfSpectatorViewController: UITableViewDataSource {
 private final class WolfHoleCell: UITableViewCell {
     static let reuseID = "WolfHoleCell"
 
-    private let holeLabel  = UILabel()
+    private let holeLabel     = UILabel()
+    private let decisionLabel = UILabel()
     private var scoreCols: [UILabel] = []
     private let scoreRow   = UIStackView()
 
@@ -603,12 +604,15 @@ private final class WolfHoleCell: UITableViewCell {
         scoreRow.spacing = 6
         outerStack.addArrangedSubview(scoreRow)
 
-        configLabel(holeLabel, size: 13, weight: .regular, width: 28)
+        configLabel(holeLabel, size: 15, weight: .regular, width: 32)
         scoreRow.addArrangedSubview(holeLabel)
+
+        configLabel(decisionLabel, size: 11, weight: .semibold, width: 30)
+        scoreRow.addArrangedSubview(decisionLabel)
 
         for _ in 0..<MAX_PLAYERS {
             let l = UILabel()
-            configLabel(l, size: 13, weight: .semibold, width: 34)
+            configLabel(l, size: 16, weight: .semibold, width: 40)
             scoreCols.append(l)
             scoreRow.addArrangedSubview(l)
         }
@@ -623,14 +627,19 @@ private final class WolfHoleCell: UITableViewCell {
         moneyRow.isHidden = true
         outerStack.addArrangedSubview(moneyRow)
 
-        configLabel(moneyLabel, size: 11, weight: .regular, width: 28)
+        configLabel(moneyLabel, size: 13, weight: .regular, width: 32)
         moneyLabel.text      = "$"
         moneyLabel.textColor = .secondaryLabel
         moneyRow.addArrangedSubview(moneyLabel)
 
+        // Spacer to align money cols under score cols (skip decision column)
+        let moneyDecisionSpacer = UIView()
+        moneyDecisionSpacer.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        moneyRow.addArrangedSubview(moneyDecisionSpacer)
+
         for _ in 0..<MAX_PLAYERS {
             let l = UILabel()
-            configLabel(l, size: 11, weight: .semibold, width: 34)
+            configLabel(l, size: 13, weight: .semibold, width: 40)
             moneyCols.append(l)
             moneyRow.addArrangedSubview(l)
         }
@@ -651,20 +660,23 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsHeader(playerNames: [String]) {
-        holeLabel.text      = "Hole"
-        holeLabel.textColor = .secondaryLabel
+        holeLabel.text        = "Hole"
+        holeLabel.textColor   = .secondaryLabel
+        decisionLabel.text    = ""
+        decisionLabel.textColor = .secondaryLabel
         for (i, col) in scoreCols.enumerated() {
             col.text      = i < playerNames.count ? String(playerNames[i].prefix(4)) : ""
-            col.textColor = .secondaryLabel
-            col.font      = .systemFont(ofSize: 11, weight: .regular)
+            col.textColor = .label
+            col.font      = .systemFont(ofSize: 15, weight: .semibold)
         }
         moneyRow.isHidden = true
     }
 
     func configureAsScoreTotals(results: [WolfHoleResult], playerCount: Int) {
-        holeLabel.text      = "Score"
-        holeLabel.textColor = .secondaryLabel
-        holeLabel.font      = .systemFont(ofSize: 11, weight: .semibold)
+        holeLabel.text        = "Score"
+        holeLabel.textColor   = .secondaryLabel
+        holeLabel.font        = .systemFont(ofSize: 13, weight: .semibold)
+        decisionLabel.text    = ""
 
         var totals = Array(repeating: 0, count: playerCount)
         for result in results {
@@ -676,7 +688,7 @@ private final class WolfHoleCell: UITableViewCell {
 
         for (i, col) in scoreCols.enumerated() {
             guard i < playerCount else { col.text = ""; continue }
-            col.font      = .systemFont(ofSize: 13, weight: .bold)
+            col.font      = .systemFont(ofSize: 16, weight: .bold)
             col.text      = totals[i] > 0 ? "\(totals[i])" : "—"
             col.textColor = .label
         }
@@ -684,9 +696,10 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsTotals(results: [WolfHoleResult], playerCount: Int) {
-        holeLabel.text      = "Total"
-        holeLabel.textColor = .secondaryLabel
-        holeLabel.font      = .systemFont(ofSize: 11, weight: .semibold)
+        holeLabel.text        = "Total"
+        holeLabel.textColor   = .secondaryLabel
+        holeLabel.font        = .systemFont(ofSize: 13, weight: .semibold)
+        decisionLabel.text    = ""
 
         var totals = Array(repeating: 0.0, count: playerCount)
         for result in results {
@@ -715,6 +728,21 @@ private final class WolfHoleCell: UITableViewCell {
         holeLabel.text      = "\(hole)"
         holeLabel.textColor = .label
 
+        switch result?.decision {
+        case "alone":
+            decisionLabel.text      = "A"
+            decisionLabel.textColor = .systemOrange
+        case "reroll":
+            decisionLabel.text      = "RR"
+            decisionLabel.textColor = .systemYellow
+        case "roll":
+            decisionLabel.text      = "R"
+            decisionLabel.textColor = .label
+        default:
+            decisionLabel.text      = ""
+            decisionLabel.textColor = .label
+        }
+
         let wolfSlot    = result?.wolfSlot
         let partnerSlot = result?.partnerSlot
         let deltas      = result?.moneyDeltas ?? result?.payouts
@@ -730,7 +758,7 @@ private final class WolfHoleCell: UITableViewCell {
         }
 
         for (i, col) in scoreCols.enumerated() {
-            col.font = .systemFont(ofSize: 13, weight: .semibold)
+            col.font = .systemFont(ofSize: 16, weight: .semibold)
             if let r = result, let scores = r.scores, i < scores.count, scores[i] > 0 {
                 col.text      = "\(scores[i])"
                 col.textColor = wolfTeamIndices.contains(i) ? .systemOrange : .label

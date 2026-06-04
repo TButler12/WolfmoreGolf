@@ -15,6 +15,7 @@ final class LiveNassauViewController: UIViewController {
         let statusLine: String
         let moneyLine: String
         let isComplete: Bool
+        let moneyDelta: Double   // signed from owner's perspective; 0 if incomplete or tied
     }
 
     private struct PairingSection {
@@ -23,6 +24,15 @@ final class LiveNassauViewController: UIViewController {
         let isOverallComplete: Bool
         let ownerName: String
         let opponentName: String
+        var totalMoneyLine: String {
+            let total = rows.reduce(0) { $0 + $1.moneyDelta }
+            if total > 0 { return "Total: \(ownerName) +\(formatMoney(total))" }
+            if total < 0 { return "Total: \(opponentName) +\(formatMoney(-total))" }
+            return "Total: Even"
+        }
+        private func formatMoney(_ v: Double) -> String {
+            v == floor(v) ? "$\(Int(v))" : String(format: "$%.2f", v)
+        }
     }
 
     private var pairings: [PairingSection] = []
@@ -123,7 +133,8 @@ final class LiveNassauViewController: UIViewController {
 
     private func subscribeToScores() {
         guard let matchId = match?.id else { return }
-        SupabaseService.shared.subscribeToHoleScores(matchId: matchId) { [weak self] record in
+
+        let scoreCallback: (HoleScoreRecord) -> Void = { [weak self] record in
             guard let self else { return }
             // Deduplicate: keep latest score per (player, hole)
             self.receivedScores.removeAll {
@@ -137,6 +148,13 @@ final class LiveNassauViewController: UIViewController {
             self.rebuildStandings()
             self.setStatus(live: true)
         }
+
+        SupabaseService.shared.subscribeToHoleScores(matchId: matchId, onScore: scoreCallback)
+        Task {
+            try? await Task.sleep(nanoseconds: 500_000_000)
+            SupabaseService.shared.subscribeToHoleScoreUpdates(matchId: matchId, onScore: scoreCallback)
+        }
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
             guard let self, self.statusLabel.text == "Connecting…" else { return }
             self.setStatus(live: true)
@@ -300,19 +318,24 @@ final class LiveNassauViewController: UIViewController {
         let last = status.last ?? 0
         let statusLine: String
         let moneyLine: String
+        let moneyDelta: Double
 
         if last > 0 {
             statusLine = "\(t1) \(last) up"
             moneyLine  = complete ? "\(t1) +\(money(stake))" : "\(t1) leads"
+            moneyDelta = complete ? stake : 0
         } else if last < 0 {
             statusLine = "\(t2) \(abs(last)) up"
             moneyLine  = complete ? "\(t2) +\(money(stake))" : "\(t2) leads"
+            moneyDelta = complete ? -stake : 0
         } else {
             statusLine = status.isEmpty ? "Not started" : "All Square"
             moneyLine  = complete ? "Halved — Even" : "All Square"
+            moneyDelta = 0
         }
 
-        return SegmentRow(title: title, statusLine: statusLine, moneyLine: moneyLine, isComplete: complete)
+        return SegmentRow(title: title, statusLine: statusLine, moneyLine: moneyLine,
+                          isComplete: complete, moneyDelta: moneyDelta)
     }
 
     // MARK: - Scorecard detail
@@ -457,6 +480,11 @@ extension LiveNassauViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
         guard section < pairings.count else { return "Standings" }
         return pairings[section].title
+    }
+
+    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        guard section < pairings.count else { return nil }
+        return pairings[section].totalMoneyLine
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

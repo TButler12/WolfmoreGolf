@@ -122,7 +122,6 @@ struct WolfHoleResult: Codable {
     let decision: String?
     let partnerName: String?
     let proxWinner: String?
-
     enum CodingKeys: String, CodingKey {
         case id, hole, scores, decision, payouts, alone
         case sessionId        = "session_id"

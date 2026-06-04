@@ -419,16 +419,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         holeInfoLabel?.text = "Hole \(h + 1)  ·  Par \(par)  ·  HC \(si)"
 
+        let storedName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let courseName: String
-        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
-        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
-        if let match = CourseLibrary.shared.courses.first(where: {
-            Array($0.pars.prefix(STANDARD_HOLES)) == currentPars &&
-            Array($0.hcs.prefix(STANDARD_HOLES)) == currentHCs
-        }) {
-            courseName = match.name
+        if !storedName.isEmpty && storedName != "WolfMore" {
+            courseName = storedName
         } else {
-            courseName = "Custom Course"
+            let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
+            let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
+            courseName = CourseLibrary.shared.courses.first(where: {
+                Array($0.pars.prefix(STANDARD_HOLES)) == currentPars &&
+                Array($0.hcs.prefix(STANDARD_HOLES)) == currentHCs
+            })?.name ?? "Custom Course"
         }
         courseHeaderLabel?.text = courseName
     }
@@ -2345,13 +2346,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let wolfSlot      = wolfTeamSlots[safe: 0] ?? nil
             let partnerSlot   = wolfTeamSlots[safe: 1] ?? nil
             let wentAlone     = g.aloneApplied[safe: hole] ?? false
+            let rerollOn      = g.rerollApplied[safe: hole] ?? false
+            let rollOn        = g.rollApplied[safe: hole] ?? false
             let teamWon       = hole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[hole]
             let holePayouts   = g.playerMoney.map { $0[safe: hole] ?? 0.0 }
+            let decision: String? = wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
+            let holeHammer    = Int(g.hammerMultiplier(for: hole))
             // wolfPlayerPerHole is vestigial (never written); wolf comes from wolfMaskByHole
             print("DEBUG wolf wolfPlayerPerHole[\(hole)]=\(String(describing: g.wolfPlayerPerHole?[safe: hole] ?? nil)) wolfMask=\(wolfMask) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot))")
             Task {
                 do {
-                    print("DEBUG submitWolfHole hole=\(hole+1) scores=\(holeScores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(holePayouts)")
+                    print("DEBUG submitWolfHole hole=\(hole+1) scores=\(holeScores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(holePayouts) hammer=\(holeHammer)")
                     try await SupabaseService.shared.submitWolfHole(
                         sessionId: sessionId,
                         hole: hole + 1,
@@ -2360,7 +2365,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         partnerSlot: partnerSlot,
                         wentAlone: wentAlone,
                         teamWon: teamWon,
-                        payouts: holePayouts
+                        payouts: holePayouts,
+                        decision: decision,
+                        hammerMultiplier: holeHammer
                     )
                 } catch let pgError as PostgrestError {
                     print("ERROR submitWolfHole Postgrest code=\(pgError.code ?? "nil")")

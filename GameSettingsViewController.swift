@@ -442,6 +442,12 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             return
         }
 
+        let stored = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !stored.isEmpty && stored != "WolfMore" {
+            courseNameLabel.text = stored
+            return
+        }
+
         let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
         let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
 

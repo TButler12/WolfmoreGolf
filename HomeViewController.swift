@@ -69,6 +69,7 @@ final class ViewController: UIViewController {
         fixIconButton(editCourseButton)
         buildTournamentButton()
         buildWatchLiveButton()
+        buildQuickStartButton()
 
         NotificationCenter.default.addObserver(
             self,
@@ -860,6 +861,94 @@ final class ViewController: UIViewController {
         }
         GameManager.shared.update { g in g.gameType = .tournament }
         presentManagePlayers()
+    }
+
+    // MARK: - Quick Start
+
+    private weak var quickStartButton: UIButton?
+
+    private func buildQuickStartButton() {
+        var cfg = UIButton.Configuration.tinted()
+        cfg.title = "⚡ Quick Start"
+        cfg.subtitle = "Skip contacts · type player names on next screen"
+        cfg.baseBackgroundColor = .systemOrange
+        cfg.baseForegroundColor = .systemOrange
+        cfg.cornerStyle = .large
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 15, weight: .semibold); return a
+        }
+        cfg.subtitleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 12, weight: .regular); return a
+        }
+        let btn = UIButton(configuration: cfg)
+        btn.addTarget(self, action: #selector(quickStartHomeTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        quickStartButton = btn
+        view.addSubview(btn)
+        NSLayoutConstraint.activate([
+            btn.centerXAnchor.constraint(equalTo: playGameButton.centerXAnchor),
+            btn.bottomAnchor.constraint(equalTo: playGameButton.topAnchor, constant: -12),
+            btn.widthAnchor.constraint(equalTo: playGameButton.widthAnchor),
+        ])
+    }
+
+    @objc private func quickStartHomeTapped() {
+        guard GameManager.shared.hasSavedGame else {
+            doQuickStart()
+            return
+        }
+        let alert = UIAlertController(
+            title: "Quick Start",
+            message: "Your current game data will be cleared. Continue?",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Clear & Start", style: .destructive) { [weak self] _ in
+            self?.doQuickStart()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func doQuickStart() {
+        let rawName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = (rawName.isEmpty || rawName == "Player 1") ? "Player 1" : rawName
+
+        let idsToArchive = GameManager.shared.currentGame?.remoteMatchIds ?? []
+        Task { for id in idsToArchive { try? await SupabaseService.shared.archiveMatch(id: id) } }
+
+        GameManager.shared.startNewGame(name: "New Game")
+        GameManager.shared.update { g in
+            g.playerNames     = Array(repeating: "",    count: MAX_PLAYERS)
+            g.hcPlayers       = Array(repeating: 0,     count: MAX_PLAYERS)
+            g.playerActivated = Array(repeating: false, count: MAX_PLAYERS)
+
+            g.playerNames[0]     = name
+            g.hcPlayers[0]       = ProfileStore.myHC
+            g.playerActivated[0] = true
+
+            if let cid = CourseLibrary.shared.selectedCourseID,
+               let course = CourseLibrary.shared.get(id: cid) {
+                g.course.pars          = Array(course.pars.prefix(STANDARD_HOLES))
+                g.course.holeHandicaps = Array(course.hcs.prefix(STANDARD_HOLES))
+                g.course.name          = course.name
+                g.course.id            = course.id
+            }
+
+            g.nassauState = NassauEngine.makeDefaultState(
+                playerNames: g.playerNames,
+                activeFlags: g.playerActivated
+            )
+            if var ns = g.nassauState {
+                NassauEngine.recalculate(state: &ns, gameData: g)
+                g.nassauState = ns
+            }
+            g.hole = 0
+        }
+
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let roundNav = sb.instantiateViewController(withIdentifier: "RoundNav") as? UINavigationController else { return }
+        present(roundNav, animated: true)
     }
 
     // MARK: - Watch Live
