@@ -2093,6 +2093,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             compareMode: mode,
             roundApplied: false
         )
+        print("DEBUG RemoteNassau sameCourse: \(match.sameCourse) local: \(myRound.courseName) remote: \(opponentRound.courseName)")
         RemoteMatchStore.shared.add(match)
         sendAcceptanceMessage(match: match)
     }
@@ -2192,6 +2193,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         vc.opponentRound = opponentRound
         vc.result = result
         vc.compareMode = mode
+        vc.sameCourse = match.sameCourse
 
         navigationController?.pushViewController(vc, animated: true)
     }

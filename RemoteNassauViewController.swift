@@ -14,6 +14,7 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     var opponentRound: SharedRound!
     var result: RemoteNassauResult!
     var compareMode: RemoteCompareMode = .holeByHole
+    var sameCourse: Bool = false
 
     private let matchupLabel = UILabel()
     private let frontLabel = UILabel()
@@ -27,13 +28,14 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
 
-        switch compareMode {
-        case .holeByHole:
-            title = "Hole by Hole"
-        case .frontBackByHC:
-            title = "Front / Back 9 by HC"
-        case .all18ByHC:
-            title = "18 Holes by HC"
+        if sameCourse {
+            title = "Hole by Hole (Same Course)"
+        } else {
+            switch compareMode {
+            case .holeByHole:    title = "Hole by Hole"
+            case .frontBackByHC: title = "Front / Back 9 by HC"
+            case .all18ByHC:     title = "18 Holes by HC"
+            }
         }
 
         if let g = GameManager.shared.currentGame {
@@ -133,15 +135,18 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
             return result.holeResults
         }
 
+        // Same course: always use natural hole-number order — no HC alignment needed
+        if sameCourse || compareMode == .holeByHole {
+            return result.holeResults.sorted { $0.holeNumberA < $1.holeNumberA }
+        }
+
         switch compareMode {
         case .holeByHole:
             return result.holeResults.sorted { $0.holeNumberA < $1.holeNumberA }
-
         case .frontBackByHC:
             let front = RemoteNassauScorer.sortedFront9ByHCA(playerA: myRound, playerB: opponentRound)
-            let back = RemoteNassauScorer.sortedBack9ByHCA(playerA: myRound, playerB: opponentRound)
+            let back  = RemoteNassauScorer.sortedBack9ByHCA(playerA: myRound, playerB: opponentRound)
             return front + back
-
         case .all18ByHC:
             return RemoteNassauScorer.sortedAll18ByHCA(playerA: myRound, playerB: opponentRound)
         }

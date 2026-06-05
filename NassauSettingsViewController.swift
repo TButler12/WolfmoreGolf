@@ -514,6 +514,7 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             compareMode: mode,
             roundApplied: false
         )
+        print("DEBUG RemoteNassau sameCourse: \(match.sameCourse) local: \(myRound.courseName) remote: \(opponentRound.courseName)")
         RemoteMatchStore.shared.add(match)
         sendAcceptanceMessage(match: match)
     }

@@ -167,6 +167,13 @@ final class LiveNassauViewController: UIViewController {
         (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
+    private var isSameCourse: Bool {
+        guard let a = match?.courseA?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+              let b = match?.courseB?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+              !a.isEmpty, !b.isEmpty else { return false }
+        return a == b
+    }
+
     private var amHost: Bool {
         let hostRaw = match?.hostName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         return !hostRaw.isEmpty && hostRaw.lowercased() == myName.lowercased()
@@ -222,32 +229,47 @@ final class LiveNassauViewController: UIViewController {
             else if pnLower == opponentLower { oppScores.append(s)   }
         }
 
-        let ownerFront = ownerScores.filter { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
-        let ownerBack  = ownerScores.filter { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
-        let oppFront   = oppScores.filter   { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
-        let oppBack    = oppScores.filter   { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
-
-        for (i, (o, p)) in zip(ownerFront, oppFront).enumerated() {
-            g.scores[0][i] = o.grossScore
-            g.scores[1][i] = p.grossScore
-            g.holeCommitted[i] = true
-        }
-        for (i, (o, p)) in zip(ownerBack, oppBack).enumerated() {
-            g.scores[0][i + 9] = o.grossScore
-            g.scores[1][i + 9] = p.grossScore
-            g.holeCommitted[i + 9] = true
-        }
-
-        // Player handicaps: read from first submitted score record for each player
         g.hcPlayers[0] = ownerScores.first?.playerHc ?? 0
         g.hcPlayers[1] = oppScores.first?.playerHc   ?? 0
 
-        // Course HC rankings for synthetic positions: map each HC-sorted position
-        // back to its HC rank so NassauEngine.strokesGiven uses the right stroke index.
-        // Owner's holeHandicaps are used as the reference (slot 0 = host course).
         var holeHCs = Array(repeating: STANDARD_HOLES, count: STANDARD_HOLES)
-        for (i, s) in ownerFront.enumerated() { holeHCs[i]     = hcRank(s) }
-        for (i, s) in ownerBack.enumerated()  { holeHCs[i + 9] = hcRank(s) }
+
+        if isSameCourse {
+            // Same course: match holes by physical hole number (hole 1 vs hole 1, etc.)
+            for s in ownerScores {
+                guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
+                g.scores[0][s.hole] = s.grossScore
+                holeHCs[s.hole] = hcRank(s)
+            }
+            for s in oppScores {
+                guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
+                g.scores[1][s.hole] = s.grossScore
+            }
+            // Only mark a hole committed when both players have scored it
+            for i in 0..<STANDARD_HOLES {
+                g.holeCommitted[i] = g.scores[0][i] != nil && g.scores[1][i] != nil
+            }
+        } else {
+            // Different courses: HC-sort each player's scores independently, then zip positionally
+            let ownerFront = ownerScores.filter { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
+            let ownerBack  = ownerScores.filter { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
+            let oppFront   = oppScores.filter   { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
+            let oppBack    = oppScores.filter   { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
+
+            for (i, (o, p)) in zip(ownerFront, oppFront).enumerated() {
+                g.scores[0][i] = o.grossScore
+                g.scores[1][i] = p.grossScore
+                g.holeCommitted[i] = true
+            }
+            for (i, (o, p)) in zip(ownerBack, oppBack).enumerated() {
+                g.scores[0][i + 9] = o.grossScore
+                g.scores[1][i + 9] = p.grossScore
+                g.holeCommitted[i + 9] = true
+            }
+            for (i, s) in ownerFront.enumerated() { holeHCs[i]     = hcRank(s) }
+            for (i, s) in ownerBack.enumerated()  { holeHCs[i + 9] = hcRank(s) }
+        }
+
         g.course.holeHandicaps = holeHCs
 
         var state = NassauEngine.makeDefaultState(playerNames: g.playerNames, activeFlags: g.playerActivated)
@@ -363,38 +385,25 @@ final class LiveNassauViewController: UIViewController {
             else if pnLower == opponentLower { oppScores.append(s)   }
         }
 
-        let sortedOwner = ownerScores.sorted { hcRank($0) < hcRank($1) }
-        let sortedOpp   = oppScores.sorted   { hcRank($0) < hcRank($1) }
-
-        // Handicap deltas — same for every hole, only SI changes per position
         let hostHc    = ownerScores.first?.playerHc ?? 0
         let oppHc     = oppScores.first?.playerHc   ?? 0
         let baseHC    = min(hostHc, oppHc)
         let hostDelta = max(0, hostHc - baseHC)
         let oppDelta  = max(0, oppHc  - baseHC)
 
-        let count = max(sortedOwner.count, sortedOpp.count)
-        return (0..<count).map { i in
-            let o = sortedOwner[safe: i]
-            let p = sortedOpp[safe: i]
-
-            // Stroke index: owner's holeHc for this position, fallback to opponent's, then position
-            let rawSI = o?.holeHc ?? p?.holeHc ?? (i + 1)
+        func makePairedHole(rank: Int, o: HoleScoreRecord?, p: HoleScoreRecord?) -> PairedHole {
+            let rawSI = o?.holeHc ?? p?.holeHc ?? (rank + 1)
             let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
-
             let hostStrokes = NassauEngine.pops(for: hostDelta, strokeIndex: si)
             let oppStrokes  = NassauEngine.pops(for: oppDelta,  strokeIndex: si)
-
             let hostNet: Int? = o.map { $0.grossScore - hostStrokes }
             let oppNet:  Int? = p.map { $0.grossScore - oppStrokes  }
-
             let net: Int = {
                 guard let hn = hostNet, let on = oppNet else { return 0 }
-                return on - hn   // positive = host winning (lower net score wins)
+                return on - hn
             }()
-
             return PairedHole(
-                hcRank: i + 1,
+                hcRank: rank + 1,
                 hostPhysicalHole: (o?.hole ?? 0) + 1,
                 hostScore: o?.grossScore,
                 hostNetScore: hostNet,
@@ -405,6 +414,25 @@ final class LiveNassauViewController: UIViewController {
                 opponentStrokes: oppStrokes,
                 netResult: net
             )
+        }
+
+        if isSameCourse {
+            // Same course: pair by physical hole number
+            let range = front ? (0..<9) : (9..<STANDARD_HOLES)
+            return range.compactMap { h -> PairedHole? in
+                let o = ownerScores.first { $0.hole == h }
+                let p = oppScores.first   { $0.hole == h }
+                guard o != nil || p != nil else { return nil }
+                return makePairedHole(rank: h, o: o, p: p)
+            }
+        }
+
+        let sortedOwner = ownerScores.sorted { hcRank($0) < hcRank($1) }
+        let sortedOpp   = oppScores.sorted   { hcRank($0) < hcRank($1) }
+
+        let count = max(sortedOwner.count, sortedOpp.count)
+        return (0..<count).map { i in
+            makePairedHole(rank: i, o: sortedOwner[safe: i], p: sortedOpp[safe: i])
         }
     }
 

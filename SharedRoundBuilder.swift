@@ -9,15 +9,7 @@ import Foundation
 enum SharedRoundBuilder {
 
     private static func resolvedCourseName(from g: GameData) -> String {
-        let pars = Array(g.course.pars.prefix(STANDARD_HOLES))
-        let hcs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
-        if let match = CourseLibrary.shared.courses.first(where: {
-            Array($0.pars.prefix(STANDARD_HOLES)) == pars &&
-            Array($0.hcs.prefix(STANDARD_HOLES)) == hcs
-        }) {
-            return match.name
-        }
-        let stored = g.course.name
+        let stored = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
         return (stored.isEmpty || stored == "WolfMore") ? "Custom Course" : stored
     }
 

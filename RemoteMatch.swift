@@ -21,6 +21,7 @@ struct RemoteMatch: Identifiable {
 
     var compareMode: RemoteCompareMode
     var roundApplied: Bool
+    var sameCourse: Bool
 }
 
 extension RemoteMatch {
@@ -58,6 +59,10 @@ extension RemoteMatch {
         self.isAccepted = isAccepted
         self.compareMode = compareMode
         self.roundApplied = roundApplied
+
+        let localName  = myRound.courseName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let remoteName = (opponentRound?.courseName ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        self.sameCourse = !localName.isEmpty && !remoteName.isEmpty && localName == remoteName
     }
 }
 
@@ -66,7 +71,7 @@ extension RemoteMatch {
 extension RemoteMatch: Codable {
     enum CodingKeys: String, CodingKey {
         case id, createdAt, myRound, opponentRound, opponentName
-        case stakePerBet, inviteCode, isAccepted, compareMode, roundApplied
+        case stakePerBet, inviteCode, isAccepted, compareMode, roundApplied, sameCourse
     }
 
     init(from decoder: Decoder) throws {
@@ -82,5 +87,14 @@ extension RemoteMatch: Codable {
         compareMode  = try c.decodeIfPresent(RemoteCompareMode.self, forKey: .compareMode) ?? .holeByHole
         // Old matches that already had opponentRound set were fully applied
         roundApplied = try c.decodeIfPresent(Bool.self, forKey: .roundApplied) ?? (opponentRound != nil)
+        // Recompute sameCourse on decode for backward compat; stored value used when present
+        let storedSameCourse = try c.decodeIfPresent(Bool.self, forKey: .sameCourse)
+        if let stored = storedSameCourse {
+            sameCourse = stored
+        } else {
+            let localName  = myRound.courseName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            let remoteName = (opponentRound?.courseName ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            sameCourse = !localName.isEmpty && !remoteName.isEmpty && localName == remoteName
+        }
     }
 }
