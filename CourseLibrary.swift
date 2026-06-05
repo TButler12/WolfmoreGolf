@@ -111,6 +111,26 @@ let BILTMORE_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold",  yardage: 5900, rating: 69.0, slope: 123),
     TeeInfo(teeName: "Red",   yardage: 5400, rating: 72.1, slope: 128)
 ]
+// MARK: Wilmette Golf Club
+private let WILMETTE_GC_ID = UUID(uuidString: "WILMETTE1-0001-0001-0001-000000000001")!
+let WILMETTE_GC_PARS: [Int] = [4,3,4,4,4,5,3,4,4, 4,4,3,4,4,4,3,5,4]   // par 70
+let WILMETTE_GC_HCS:  [Int] = [9,17,1,5,15,3,13,11,7, 10,2,18,12,6,14,16,4,8]
+let WILMETTE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6363, rating: 70.8, slope: 128),
+    TeeInfo(teeName: "Gold",   yardage: 6032, rating: 69.2, slope: 124),
+    TeeInfo(teeName: "Orange", yardage: 5686, rating: 67.7, slope: 120),
+    TeeInfo(teeName: "Green",  yardage: 4899, rating: 64.0, slope: 112),
+    TeeInfo(teeName: "White",  yardage: 4668, rating: 63.0, slope: 109),
+]
+
+// MARK: Elgin Country Club (Blue)
+private let ELGIN_CC_ID = UUID(uuidString: "ELGINCC1-0001-0001-0001-000000000001")!
+let ELGIN_CC_PARS: [Int] = [5,4,4,3,4,3,4,5,3, 5,4,4,4,5,4,3,4,4]   // par 72
+let ELGIN_CC_HCS:  [Int] = [12,14,10,8,2,16,4,6,18, 11,17,9,1,5,3,13,15,7]
+let ELGIN_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6450, rating: 72.2, slope: 135),
+]
+
 // MARK: Cedar Rapids CC (Championship)
 private let CEDAR_RAPIDS_CC_ID = UUID(uuidString: "8A9C62C7-2D5E-4B6F-9B6D-4F1C2D7F0A11")!
 let CEDAR_RAPIDS_PARS: [Int] = [4,4,4,4,3,5,4,3,5, 4,4,3,4,4,5,4,4,4]
@@ -7913,6 +7933,34 @@ private enum BuiltIns {
             phone: "(847) 381-1960",
             website: "https://www.biltmore-cc.com",
             address: "160 Biltmore Drive, North Barrington, IL 60010",
+            isWolfApproved: true
+        ),
+        c(
+            ELGIN_CC_ID,
+            "Elgin Country Club",
+            ELGIN_CC_PARS,
+            ELGIN_CC_HCS,
+            ELGIN_CC_TEES,
+            country: "USA",
+            state: "IL",
+            type: "Private",
+            phone: "(847) 741-1716",
+            website: "https://www.elgincc.com",
+            address: "2575 Weld Road, Elgin, IL 60124",
+            isWolfApproved: true
+        ),
+        c(
+            WILMETTE_GC_ID,
+            "Wilmette Golf Club",
+            WILMETTE_GC_PARS,
+            WILMETTE_GC_HCS,
+            WILMETTE_GC_TEES,
+            country: "USA",
+            state: "IL",
+            type: "Public",
+            phone: "(847) 256-9777",
+            website: "https://www.golfwilmette.com",
+            address: "Lake Ave. & Harms Rd., Wilmette, IL",
             isWolfApproved: true
         ),
         c(
