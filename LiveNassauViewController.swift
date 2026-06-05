@@ -49,6 +49,7 @@ final class LiveNassauViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         title = match.map { "Live · \($0.code)" } ?? "Live Match"
+        print("DEBUG isSameCourse: \(isSameCourse) courseA: \(match?.courseA ?? "nil") courseB: \(match?.courseB ?? "nil")")
         setupUI()
         fetchPriorScores()
         subscribeToScores()
@@ -169,25 +170,43 @@ final class LiveNassauViewController: UIViewController {
 
     private var isSameCourse: Bool {
         // Primary: explicit course names stored on the MatchRecord
-        if let a = match?.courseA?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-           let b = match?.courseB?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-           !a.isEmpty, !b.isEmpty {
+        let a = (match?.courseA ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let b = (match?.courseB ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if !a.isEmpty && !b.isEmpty {
             return a == b
         }
-        // Fallback: infer from holeHc values in received scores.
-        // On the same course every physical hole has the same HC rank for both players.
-        var hcByPlayer: [String: [Int: Int]] = [:]   // playerName → (hole → holeHc)
+
+        // Build per-player (hole → holeHc) maps from received scores
+        var hcByPlayer: [String: [Int: Int]] = [:]
         for s in receivedScores {
             guard let pn = s.playerName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
                   !pn.isEmpty, let hc = s.holeHc else { continue }
             if hcByPlayer[pn] == nil { hcByPlayer[pn] = [:] }
             hcByPlayer[pn]![s.hole] = hc
         }
+        guard hcByPlayer.count >= 2 else { return false }
         let players = Array(hcByPlayer.values)
-        guard players.count >= 2 else { return false }
+
+        // Fallback 1: any shared holes with matching HC values → same course
         let common = Set(players[0].keys).intersection(Set(players[1].keys))
-        guard common.count >= 2 else { return false }
-        return common.allSatisfy { players[0][$0] == players[1][$0] }
+        if !common.isEmpty && common.allSatisfy({ players[0][$0] == players[1][$0] }) {
+            return true
+        }
+
+        // Fallback 2: each player's (hole → hc) pairs match the same known course in CourseLibrary.
+        // Works even when players haven't played any common hole numbers yet.
+        let coursesPerPlayer: [Set<String>] = hcByPlayer.values.map { hcMap in
+            let matching = CourseLibrary.shared.courses.filter { course in
+                hcMap.allSatisfy { hole, hc in
+                    guard hole >= 0, hole < course.hcs.count else { return false }
+                    return course.hcs[hole] == hc
+                }
+            }
+            return Set(matching.map { $0.name })
+        }
+        guard let first = coursesPerPlayer.first else { return false }
+        let sharedCourses = coursesPerPlayer.dropFirst().reduce(first) { $0.intersection($1) }
+        return !sharedCourses.isEmpty
     }
 
     private var amHost: Bool {
