@@ -172,6 +172,42 @@ final class SupabaseService {
         try await client.from("hole_scores").upsert(payload, onConflict: "match_id,player_slot,hole").execute()
     }
 
+    // MARK: - Remote Nassau per-hole scores (remote_nassau_hole_scores table)
+    // Upserts one hole at a time; conflict key is (match_id, side, hole).
+    func submitRemoteNassauHole(
+        matchId:    String,
+        side:       String,   // "A" = host, "B" = opponent
+        hole:       Int,      // 1-based
+        grossScore: Int,
+        handicap:   Int,      // hole HC difficulty rank
+        playerHc:   Int? = nil,
+        playerName: String? = nil
+    ) async throws {
+        var payload: [String: String] = [
+            "match_id":    matchId,
+            "side":        side,
+            "hole":        String(hole),
+            "gross_score": String(grossScore),
+            "handicap":    String(handicap)
+        ]
+        if let ph = playerHc   { payload["player_hc"]   = String(ph) }
+        if let pn = playerName { payload["player_name"] = pn }
+        try await client
+            .from("remote_nassau_hole_scores")
+            .upsert(payload, onConflict: "match_id,side,hole")
+            .execute()
+    }
+
+    func fetchRemoteNassauHoles(matchId: String) async throws -> [RemoteNassauHoleScore] {
+        let response: PostgrestResponse<[RemoteNassauHoleScore]> = try await client
+            .from("remote_nassau_hole_scores")
+            .select()
+            .eq("match_id", value: matchId)
+            .order("hole")
+            .execute()
+        return response.value
+    }
+
     // MARK: - Fetch raw hole scores
     func fetchHoleScores(matchId: String) async throws -> [HoleScoreRecord] {
         let response: PostgrestResponse<[HoleScoreRecord]> = try await client

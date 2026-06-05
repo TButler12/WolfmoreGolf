@@ -2500,7 +2500,38 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
-        // 5c) Wolf Live score sync
+        // 5c) Remote Nassau per-hole write — upsert into remote_nassau_hole_scores
+        if let g = GameManager.shared.currentGame {
+            let matchIds: [String] = {
+                let ids = g.remoteMatchIds
+                if !ids.isEmpty { return ids }
+                return g.remoteMatchId.map { [$0] } ?? []
+            }()
+            if !matchIds.isEmpty {
+                let ownerSlot = myPlayerIndex(in: g) ?? 0
+                if ownerSlot < g.scores.count, let gross = g.scores[ownerSlot][hole] {
+                    let side      = ownerSlot == 0 ? "A" : "B"
+                    let hc        = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
+                    let playerHc  = g.hcPlayers[safe: ownerSlot] ?? 0
+                    let ownerName = g.playerNames[safe: ownerSlot] ?? (ProfileStore.name ?? "")
+                    Task {
+                        for matchId in matchIds {
+                            try? await SupabaseService.shared.submitRemoteNassauHole(
+                                matchId:    matchId,
+                                side:       side,
+                                hole:       hole + 1,   // convert to 1-based
+                                grossScore: gross,
+                                handicap:   hc,
+                                playerHc:   playerHc,
+                                playerName: ownerName
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // 5d) Wolf Live score sync
         print("DEBUG 5c liveSessionId=\(GameManager.shared.currentGame?.liveSessionId ?? "nil")")
         if let g = GameManager.shared.currentGame, let sessionId = g.liveSessionId {
             let holeScores = (0..<MAX_PLAYERS).map { s -> Int in

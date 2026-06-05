@@ -630,14 +630,21 @@ extension LiveNassauViewController {
     func refreshScores() async -> Bool {
         guard let matchId = match?.id else { return false }
         do {
-            async let freshMatch  = SupabaseService.shared.fetchMatch(id: matchId)
-            async let freshScores = SupabaseService.shared.fetchHoleScores(matchId: matchId)
-            let (m, s) = try await (freshMatch, freshScores)
+            async let freshMatch        = SupabaseService.shared.fetchMatch(id: matchId)
+            async let nassauHoles       = SupabaseService.shared.fetchRemoteNassauHoles(matchId: matchId)
+            async let legacyHoleScores  = SupabaseService.shared.fetchHoleScores(matchId: matchId)
+            let (m, nassau, legacy) = try await (freshMatch, nassauHoles, legacyHoleScores)
+            // Prefer remote_nassau_hole_scores when populated; fall back to hole_scores for
+            // older matches that only have data in the legacy table.
+            let scores: [HoleScoreRecord] = nassau.isEmpty
+                ? legacy
+                : nassau.map { $0.toHoleScoreRecord() }
             await MainActor.run {
                 self.match = m
-                self.receivedScores = s
+                self.receivedScores = scores
                 self.rebuildStandings()
                 self.setStatus(live: true)
+                print("DEBUG refresh: nassau=\(nassau.count) legacy=\(legacy.count) using=\(scores.count) courseA=\(m.courseA ?? "nil") courseB=\(m.courseB ?? "nil")")
             }
             return true
         } catch {

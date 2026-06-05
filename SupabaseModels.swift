@@ -49,6 +49,17 @@ struct HoleScoreRecord: Codable {
         case playerHc   = "player_hc"
     }
 
+    init(matchId: String, playerSlot: Int, hole: Int, grossScore: Int,
+         playerName: String? = nil, holeHc: Int? = nil, playerHc: Int? = nil) {
+        self.matchId    = matchId
+        self.playerSlot = playerSlot
+        self.hole       = hole
+        self.grossScore = grossScore
+        self.playerName = playerName
+        self.holeHc     = holeHc
+        self.playerHc   = playerHc
+    }
+
     // hole_scores inserts numerics as strings; handle both text and int DB columns
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -188,5 +199,39 @@ struct HoleResultRecord: Codable {
         case winnerSlot     = "winner_slot"
         case pointsExchanged = "points_exchanged"
         case revealedAt     = "revealed_at"
+    }
+}
+
+// Per-hole scores for Remote Nassau batch comparison.
+// Table: remote_nassau_hole_scores — upsert key: (match_id, side, hole)
+struct RemoteNassauHoleScore: Codable {
+    let matchId:    String
+    let side:       String   // "A" = host/creator, "B" = joiner/opponent
+    let hole:       Int      // 1-based hole number
+    let grossScore: Int
+    let handicap:   Int      // hole HC difficulty rank (1 = hardest)
+    let playerHc:   Int?     // player course handicap
+    let playerName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case side, hole, handicap
+        case matchId    = "match_id"
+        case grossScore = "gross_score"
+        case playerHc   = "player_hc"
+        case playerName = "player_name"
+    }
+
+    /// Convert to the common HoleScoreRecord used by LiveNassauViewController's display pipeline.
+    /// side "A" → playerSlot 0, side "B" → playerSlot 1; hole is converted to 0-based.
+    func toHoleScoreRecord() -> HoleScoreRecord {
+        HoleScoreRecord(
+            matchId:    matchId,
+            playerSlot: side == "A" ? 0 : 1,
+            hole:       hole - 1,
+            grossScore: grossScore,
+            playerName: playerName,
+            holeHc:     handicap,
+            playerHc:   playerHc
+        )
     }
 }
