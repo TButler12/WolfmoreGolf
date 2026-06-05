@@ -324,7 +324,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        print("DEBUG 2 viewWillAppear course: \(GameManager.shared.currentGame?.course.name ?? "nil")")
         // Sync local currentHole from the model every time the screen appears
         // so returning to an active game always shows the correct hole.
         if let g = GameManager.shared.currentGame {
@@ -418,9 +417,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         holeInfoLabel?.text = "Hole \(h + 1)  ·  Par \(par)  ·  HC \(si)"
 
         let storedName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        print("DEBUG 3 refreshHoleInfoHeader storedName: \(storedName)")
         courseHeaderLabel?.text = storedName.isEmpty ? "Custom Course" : storedName
-        print("DEBUG 4 courseHeaderLabel.text = \(courseHeaderLabel?.text ?? "nil")")
     }
 
     private func installSortButtonIfNeeded() {
