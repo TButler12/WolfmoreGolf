@@ -316,7 +316,8 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                         games: ["nassau"]
                     )
                     GameManager.shared.update { g in
-                        g.remoteMatchId = match.id
+                        g.remoteMatchId    = match.id
+                        g.remoteNassauSide = "A"
                         if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
                     }
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
@@ -372,7 +373,8 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                     let joinerCourse = GameManager.shared.currentGame?.course.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                     let match = try await SupabaseService.shared.joinMatch(code: code, courseB: joinerCourse)
                     GameManager.shared.update { g in
-                        g.remoteMatchId = match.id
+                        g.remoteMatchId    = match.id
+                        g.remoteNassauSide = "B"
                         if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
                     }
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)

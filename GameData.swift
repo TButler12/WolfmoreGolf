@@ -19,6 +19,8 @@ struct GameData: Codable {
     var remoteMatchId: String? = nil
     // All remote match IDs created/joined during this game session
     var remoteMatchIds: [String] = []
+    // "A" if this player created the match, "B" if they joined — determines remote_nassau_hole_scores side
+    var remoteNassauSide: String? = nil
     // Wolf Live session ID and shareable code (nil = not broadcasting)
     var liveSessionId: String? = nil
     var liveSessionCode: String? = nil

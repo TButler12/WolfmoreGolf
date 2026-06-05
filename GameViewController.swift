@@ -2512,7 +2512,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             print("DEBUG 5c remoteMatchId=\(g.remoteMatchId ?? "nil") remoteMatchIds=\(g.remoteMatchIds) matchIds=\(matchIds) ownerSlot=\(ownerSlot) gross=\(String(describing: gross5c))")
             if !matchIds.isEmpty {
                 if let gross = gross5c {
-                    let side      = ownerSlot == 0 ? "A" : "B"
+                    let side      = g.remoteNassauSide ?? (ownerSlot == 0 ? "A" : "B")
                     let hc        = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
                     let playerHc  = g.hcPlayers[safe: ownerSlot] ?? 0
                     let ownerName = g.playerNames[safe: ownerSlot] ?? (ProfileStore.name ?? "")
