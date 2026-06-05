@@ -270,6 +270,16 @@ final class LiveNassauViewController: UIViewController {
             if      pnLower == ownerLower    { ownerScores.append(s) }
             else if pnLower == opponentLower { oppScores.append(s)   }
         }
+        // Slot-based fallback for Remote Nassau: side A→slot 0, side B→slot 1.
+        // Kicks in when name matching misses a side (e.g. opponent name not yet in match record).
+        if ownerScores.isEmpty || oppScores.isEmpty {
+            let mySlot  = isHost ? 0 : 1
+            let oppSlot = 1 - mySlot
+            let slotOwner = receivedScores.filter { $0.playerSlot == mySlot  && $0.hole >= 0 && $0.hole < STANDARD_HOLES }
+            let slotOpp   = receivedScores.filter { $0.playerSlot == oppSlot && $0.hole >= 0 && $0.hole < STANDARD_HOLES }
+            if ownerScores.isEmpty && !slotOwner.isEmpty { ownerScores = slotOwner }
+            if oppScores.isEmpty   && !slotOpp.isEmpty   { oppScores   = slotOpp   }
+        }
 
         g.hcPlayers[0] = ownerScores.first?.playerHc ?? 0
         g.hcPlayers[1] = oppScores.first?.playerHc   ?? 0
@@ -404,6 +414,18 @@ final class LiveNassauViewController: UIViewController {
             let pnLower = pn.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
             if      pnLower == ownerLower    { ownerScores.append(s) }
             else if pnLower == opponentLower { oppScores.append(s)   }
+        }
+        // Slot-based fallback (same logic as buildSyntheticGame)
+        if ownerScores.isEmpty || oppScores.isEmpty {
+            let mySlot  = isHost ? 0 : 1
+            let oppSlot = 1 - mySlot
+            let inRange: (HoleScoreRecord) -> Bool = { s in
+                s.hole >= 0 && s.hole < STANDARD_HOLES && (front ? s.hole <= 8 : s.hole >= 9)
+            }
+            let slotOwner = receivedScores.filter { $0.playerSlot == mySlot  && inRange($0) }
+            let slotOpp   = receivedScores.filter { $0.playerSlot == oppSlot && inRange($0) }
+            if ownerScores.isEmpty && !slotOwner.isEmpty { ownerScores = slotOwner }
+            if oppScores.isEmpty   && !slotOpp.isEmpty   { oppScores   = slotOpp   }
         }
 
         let hostHc    = ownerScores.first?.playerHc ?? 0
