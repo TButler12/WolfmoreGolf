@@ -65,6 +65,13 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - UI Setup
 
     private func setupUI() {
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "arrow.clockwise"),
+            style: .plain,
+            target: self,
+            action: #selector(refreshTapped)
+        )
+
         statusLabel.text          = "Connecting…"
         statusLabel.textColor     = .systemYellow
         statusLabel.font          = .systemFont(ofSize: 13, weight: .medium)
@@ -439,11 +446,11 @@ final class LiveNassauViewController: UIViewController {
             }()
             return PairedHole(
                 hcRank: rank + 1,
-                hostPhysicalHole: (o?.hole ?? 0) + 1,
+                hostPhysicalHole: (o?.hole ?? rank) + 1,
                 hostScore: o?.grossScore,
                 hostNetScore: hostNet,
                 hostStrokes: hostStrokes,
-                opponentPhysicalHole: (p?.hole ?? 0) + 1,
+                opponentPhysicalHole: (p?.hole ?? rank) + 1,
                 opponentScore: p?.grossScore,
                 opponentNetScore: oppNet,
                 opponentStrokes: oppStrokes,
@@ -515,6 +522,29 @@ final class LiveNassauViewController: UIViewController {
         )
         ac.addAction(UIAlertAction(title: "Done", style: .default))
         present(ac, animated: true)
+    }
+
+    // MARK: - Refresh
+
+    @objc private func refreshTapped() {
+        guard let matchId = match?.id else { return }
+        setStatus(live: false)
+        Task {
+            do {
+                async let freshMatch  = SupabaseService.shared.fetchMatch(id: matchId)
+                async let freshScores = SupabaseService.shared.fetchHoleScores(matchId: matchId)
+                let (m, s) = try await (freshMatch, freshScores)
+                await MainActor.run {
+                    self.match = m
+                    self.receivedScores = s
+                    self.rebuildStandings()
+                    self.setStatus(live: true)
+                    print("DEBUG refresh: courseA: \(m.courseA ?? "nil") courseB: \(m.courseB ?? "nil") isSameCourse: \(self.isSameCourse) scores: \(s.count)")
+                }
+            } catch {
+                await MainActor.run { self.setStatus(live: false) }
+            }
+        }
     }
 
     // MARK: - Connection status
