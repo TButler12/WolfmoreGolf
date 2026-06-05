@@ -276,44 +276,19 @@ final class LiveNassauViewController: UIViewController {
 
         var holeHCs = Array(repeating: STANDARD_HOLES, count: STANDARD_HOLES)
 
-        // Pair by physical hole number when any holes overlap; otherwise HC-sort positionally.
-        let ownerHoleSet  = Set(ownerScores.map { $0.hole })
-        let oppHoleSet    = Set(oppScores.map   { $0.hole })
-        let holesOverlap  = !ownerHoleSet.intersection(oppHoleSet).isEmpty
-
-        if holesOverlap {
-            // Same-course path: match each score to its physical hole slot
-            for s in ownerScores {
-                guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
-                g.scores[0][s.hole] = s.grossScore
-                holeHCs[s.hole] = hcRank(s)
-            }
-            for s in oppScores {
-                guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
-                g.scores[1][s.hole] = s.grossScore
-            }
-            for i in 0..<STANDARD_HOLES {
-                g.holeCommitted[i] = g.scores[0][i] != nil && g.scores[1][i] != nil
-            }
-        } else {
-            // Different-course path: HC-sort each player independently, zip positionally
-            let ownerFront = ownerScores.filter { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
-            let ownerBack  = ownerScores.filter { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
-            let oppFront   = oppScores.filter   { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
-            let oppBack    = oppScores.filter   { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
-
-            for (i, (o, p)) in zip(ownerFront, oppFront).enumerated() {
-                g.scores[0][i] = o.grossScore
-                g.scores[1][i] = p.grossScore
-                g.holeCommitted[i] = true
-            }
-            for (i, (o, p)) in zip(ownerBack, oppBack).enumerated() {
-                g.scores[0][i + 9] = o.grossScore
-                g.scores[1][i + 9] = p.grossScore
-                g.holeCommitted[i + 9] = true
-            }
-            for (i, s) in ownerFront.enumerated() { holeHCs[i]     = hcRank(s) }
-            for (i, s) in ownerBack.enumerated()  { holeHCs[i + 9] = hcRank(s) }
+        // Always pair by physical hole number: H1 vs H1, H2 vs H2, etc.
+        for s in ownerScores {
+            guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
+            g.scores[0][s.hole] = s.grossScore
+            holeHCs[s.hole] = hcRank(s)
+        }
+        for s in oppScores {
+            guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
+            g.scores[1][s.hole] = s.grossScore
+        }
+        // A hole is committed (counts toward Nassau) only when both players have scored it.
+        for i in 0..<STANDARD_HOLES {
+            g.holeCommitted[i] = g.scores[0][i] != nil && g.scores[1][i] != nil
         }
 
         g.course.holeHandicaps = holeHCs
@@ -462,33 +437,14 @@ final class LiveNassauViewController: UIViewController {
             )
         }
 
-        // Pair by hole number if any holes overlap; otherwise fall back to HC-sort
-        let ownerHoleSet = Set(ownerScores.map { $0.hole })
-        let oppHoleSet   = Set(oppScores.map   { $0.hole })
-        let overlap      = ownerHoleSet.intersection(oppHoleSet)
-
-        if !overlap.isEmpty {
-            // Same physical holes present — pair by hole number for the entire front/back range
-            let range = front ? (0..<9) : (9..<STANDARD_HOLES)
-            return range.compactMap { h -> PairedHole? in
-                let o = ownerScores.first { $0.hole == h }
-                let p = oppScores.first   { $0.hole == h }
-                guard o != nil || p != nil else { return nil }
-                print("DEBUG pairing: local H\(h + 1) vs remote H\(h + 1)")
-                return makePairedHole(rank: h, o: o, p: p)
-            }
-        }
-
-        // No overlapping holes — different courses, HC-sort positionally
-        let sortedOwner = ownerScores.sorted { hcRank($0) < hcRank($1) }
-        let sortedOpp   = oppScores.sorted   { hcRank($0) < hcRank($1) }
-
-        let count = max(sortedOwner.count, sortedOpp.count)
-        return (0..<count).map { i in
-            let o = sortedOwner[safe: i]
-            let p = sortedOpp[safe: i]
-            print("DEBUG pairing: local H\((o?.hole ?? -1) + 1) vs remote H\((p?.hole ?? -1) + 1)")
-            return makePairedHole(rank: i, o: o, p: p)
+        // Always pair by physical hole number — iterate the full front/back range,
+        // show holes where at least one player has a score, skip truly empty holes.
+        let range = front ? (0..<9) : (9..<STANDARD_HOLES)
+        return range.compactMap { h -> PairedHole? in
+            let o = ownerScores.first { $0.hole == h }
+            let p = oppScores.first   { $0.hole == h }
+            guard o != nil || p != nil else { return nil }
+            return makePairedHole(rank: h, o: o, p: p)
         }
     }
 
