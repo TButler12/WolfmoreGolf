@@ -2723,14 +2723,30 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             self.refreshForCurrentHole()
 
             // Live Supabase submission (no-op when not in a live match)
-            if let matchId = GameManager.shared.currentGame?.remoteMatchId,
-               let gross = score {
-                Task { try? await SupabaseService.shared.submitHoleScore(
-                    matchId: matchId,
-                    playerSlot: playerIndex,
-                    hole: hole,
-                    grossScore: gross
-                )}
+            if let g = GameManager.shared.currentGame, let gross = score {
+                let matchIds: [String] = {
+                    let ids = g.remoteMatchIds
+                    if !ids.isEmpty { return ids }
+                    return g.remoteMatchId.map { [$0] } ?? []
+                }()
+                if !matchIds.isEmpty {
+                    let hc       = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
+                    let playerHc = g.hcPlayers[safe: playerIndex] ?? 0
+                    let name     = g.playerNames[safe: playerIndex] ?? (ProfileStore.name ?? "")
+                    Task {
+                        for matchId in matchIds {
+                            try? await SupabaseService.shared.submitHoleScore(
+                                matchId: matchId,
+                                playerSlot: playerIndex,
+                                hole: hole,
+                                grossScore: gross,
+                                playerName: name,
+                                holeHc: hc,
+                                playerHc: playerHc
+                            )
+                        }
+                    }
+                }
             }
 
             print("✅ Saved hole stats")

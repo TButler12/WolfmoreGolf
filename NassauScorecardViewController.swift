@@ -15,10 +15,12 @@ struct PairedHole {
 
 final class NassauScorecardViewController: UIViewController {
 
-    var pairedHoles:  [PairedHole] = []
-    var segmentTitle: String = ""
-    var ownerName:    String = ""
-    var opponentName: String = ""
+    var pairedHoles:    [PairedHole] = []
+    var segmentTitle:   String = ""
+    var ownerName:      String = ""
+    var opponentName:   String = ""
+    /// Set by the presenting VC to provide fresh holes on refresh.
+    var refreshProvider: (() async -> [PairedHole])?
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
 
@@ -26,6 +28,16 @@ final class NassauScorecardViewController: UIViewController {
         super.viewDidLoad()
         title = segmentTitle
         view.backgroundColor = .systemBackground
+
+        if refreshProvider != nil {
+            navigationItem.rightBarButtonItem = UIBarButtonItem(
+                image: UIImage(systemName: "arrow.clockwise"),
+                style: .plain,
+                target: self,
+                action: #selector(refreshTapped)
+            )
+        }
+
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate   = self
@@ -40,6 +52,17 @@ final class NassauScorecardViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
+    }
+
+    @objc private func refreshTapped() {
+        guard let provider = refreshProvider else { return }
+        Task {
+            let holes = await provider()
+            await MainActor.run {
+                self.pairedHoles = holes
+                self.tableView.reloadData()
+            }
+        }
     }
 
     private func makeLegendView() -> UIView {

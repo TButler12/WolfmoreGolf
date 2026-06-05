@@ -276,8 +276,13 @@ final class LiveNassauViewController: UIViewController {
 
         var holeHCs = Array(repeating: STANDARD_HOLES, count: STANDARD_HOLES)
 
-        if isSameCourse {
-            // Same course: match holes by physical hole number (hole 1 vs hole 1, etc.)
+        // Pair by physical hole number when any holes overlap; otherwise HC-sort positionally.
+        let ownerHoleSet  = Set(ownerScores.map { $0.hole })
+        let oppHoleSet    = Set(oppScores.map   { $0.hole })
+        let holesOverlap  = !ownerHoleSet.intersection(oppHoleSet).isEmpty
+
+        if holesOverlap {
+            // Same-course path: match each score to its physical hole slot
             for s in ownerScores {
                 guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
                 g.scores[0][s.hole] = s.grossScore
@@ -287,12 +292,11 @@ final class LiveNassauViewController: UIViewController {
                 guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
                 g.scores[1][s.hole] = s.grossScore
             }
-            // Only mark a hole committed when both players have scored it
             for i in 0..<STANDARD_HOLES {
                 g.holeCommitted[i] = g.scores[0][i] != nil && g.scores[1][i] != nil
             }
         } else {
-            // Different courses: HC-sort each player's scores independently, then zip positionally
+            // Different-course path: HC-sort each player independently, zip positionally
             let ownerFront = ownerScores.filter { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
             let ownerBack  = ownerScores.filter { $0.hole >= 9 }.sorted { hcRank($0) < hcRank($1) }
             let oppFront   = oppScores.filter   { $0.hole <= 8 }.sorted { hcRank($0) < hcRank($1) }
@@ -458,8 +462,13 @@ final class LiveNassauViewController: UIViewController {
             )
         }
 
-        if isSameCourse {
-            // Same course: pair by physical hole number
+        // Pair by hole number if any holes overlap; otherwise fall back to HC-sort
+        let ownerHoleSet = Set(ownerScores.map { $0.hole })
+        let oppHoleSet   = Set(oppScores.map   { $0.hole })
+        let overlap      = ownerHoleSet.intersection(oppHoleSet)
+
+        if !overlap.isEmpty {
+            // Same physical holes present — pair by hole number for the entire front/back range
             let range = front ? (0..<9) : (9..<STANDARD_HOLES)
             return range.compactMap { h -> PairedHole? in
                 let o = ownerScores.first { $0.hole == h }
@@ -470,6 +479,7 @@ final class LiveNassauViewController: UIViewController {
             }
         }
 
+        // No overlapping holes — different courses, HC-sort positionally
         let sortedOwner = ownerScores.sorted { hcRank($0) < hcRank($1) }
         let sortedOpp   = oppScores.sorted   { hcRank($0) < hcRank($1) }
 
@@ -527,24 +537,8 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - Refresh
 
     @objc private func refreshTapped() {
-        guard let matchId = match?.id else { return }
         setStatus(live: false)
-        Task {
-            do {
-                async let freshMatch  = SupabaseService.shared.fetchMatch(id: matchId)
-                async let freshScores = SupabaseService.shared.fetchHoleScores(matchId: matchId)
-                let (m, s) = try await (freshMatch, freshScores)
-                await MainActor.run {
-                    self.match = m
-                    self.receivedScores = s
-                    self.rebuildStandings()
-                    self.setStatus(live: true)
-                    print("DEBUG refresh: courseA: \(m.courseA ?? "nil") courseB: \(m.courseB ?? "nil") isSameCourse: \(self.isSameCourse) scores: \(s.count)")
-                }
-            } catch {
-                await MainActor.run { self.setStatus(live: false) }
-            }
-        }
+        Task { await refreshScores() }
     }
 
     // MARK: - Connection status
@@ -608,7 +602,7 @@ extension LiveNassauViewController: UITableViewDataSource {
 extension LiveNassauViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        // Rows 0 (Front 9) and 1 (Back 9) drill into the HC-paired scorecard
+        // Rows 0 (Front 9) and 1 (Back 9) drill into the scorecard
         guard indexPath.section < pairings.count,
               indexPath.row == 0 || indexPath.row == 1 else { return }
         let section = pairings[indexPath.section]
@@ -619,6 +613,36 @@ extension LiveNassauViewController: UITableViewDelegate {
         vc.ownerName    = section.ownerName.isEmpty    ? "Player 1" : section.ownerName
         vc.opponentName = section.opponentName.isEmpty ? "Player 2" : section.opponentName
         vc.pairedHoles  = pairs
+        vc.refreshProvider = { [weak self] in
+            guard let self else { return pairs }
+            await self.refreshScores()
+            return self.buildPairedHoles(ownerName: section.ownerName,
+                                         opponentName: section.opponentName,
+                                         front: front)
+        }
         navigationController?.pushViewController(vc, animated: true)
+    }
+}
+
+extension LiveNassauViewController {
+    /// Re-fetches the match record and all hole scores; rebuilds standings on main actor.
+    @discardableResult
+    func refreshScores() async -> Bool {
+        guard let matchId = match?.id else { return false }
+        do {
+            async let freshMatch  = SupabaseService.shared.fetchMatch(id: matchId)
+            async let freshScores = SupabaseService.shared.fetchHoleScores(matchId: matchId)
+            let (m, s) = try await (freshMatch, freshScores)
+            await MainActor.run {
+                self.match = m
+                self.receivedScores = s
+                self.rebuildStandings()
+                self.setStatus(live: true)
+            }
+            return true
+        } catch {
+            await MainActor.run { self.setStatus(live: false) }
+            return false
+        }
     }
 }
