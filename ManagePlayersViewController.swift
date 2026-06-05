@@ -468,6 +468,9 @@ final class ManagePlayersViewController: UIViewController,
 
     // MARK: - Start Round (unchanged)
     @IBAction func startRoundTapped(_ sender: Any) {
+        print("DEBUG [startRoundTapped] selectedCourseID =", CourseLibrary.shared.selectedCourseID as Any)
+        print("DEBUG [startRoundTapped] selectedCourseName =", CourseLibrary.shared.selectedCourseName as Any)
+        print("DEBUG [startRoundTapped] homeCourseID =", ProfileStore.homeCourseID)
         var selected = FriendStore.shared.friends.filter { $0.preselectForRound }
         if ProfileStore.myPreselectForRound,
            let myName = ProfileStore.name,
@@ -652,6 +655,28 @@ final class ManagePlayersViewController: UIViewController,
             }
 
             g.hole = 0
+
+            // DEBUG: trace what course IDs are available
+            print("DEBUG selectedCourseID =", CourseLibrary.shared.selectedCourseID as Any)
+            print("DEBUG selectedCourseName =", CourseLibrary.shared.selectedCourseName as Any)
+            print("DEBUG homeCourseID (ProfileStore) =", ProfileStore.homeCourseID)
+
+            // Try CourseLibrary.selectedCourseID first, then fall back to ProfileStore.homeCourseID
+            let resolvedProfile: CourseProfile? = {
+                if let id = CourseLibrary.shared.selectedCourseID,
+                   let p = CourseLibrary.shared.get(id: id) { return p }
+                let raw = ProfileStore.homeCourseID.trimmingCharacters(in: .whitespacesAndNewlines)
+                if let id = UUID(uuidString: raw),
+                   let p = CourseLibrary.shared.get(id: id) { return p }
+                return nil
+            }()
+
+            if let profile = resolvedProfile {
+                g.course = Course(name: profile.name,
+                                  pars: Array(profile.pars.prefix(STANDARD_HOLES)),
+                                  holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)))
+            }
+            print("DEBUG g.course.name after assignment =", g.course.name)
         }
 
         guard let roundNav = storyboard?.instantiateViewController(withIdentifier: "RoundNav") as? UINavigationController else {

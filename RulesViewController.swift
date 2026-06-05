@@ -189,6 +189,31 @@ private extension RulesViewController {
         • Add new players using the New Game button
         """)
 
+        header("GAME SETUP")
+        body("""
+        Access game settings before or during a round to customize your game.
+
+        • Tap the gear/settings icon from the scoring screen to open Game Settings
+        • Adjust Wolf scoring style: 6-Point Scotch, Wolf 2pt, Wolf LowBall
+        • Set Hammer style: Doubling (2× → 4× → 8×) or Additive (2× → 3× → 4×)
+        • Toggle Umbrella (sweep rule) on or off
+        • Change base stake amount
+        • Select or change course
+        • Go Live — start a Wolf Live session and get your 6-character spectator code
+
+        Nassau Settings:
+        • Set Nassau stake independently from main game
+        • Configure auto-press rules (holes down trigger)
+        • Select which players are included in Nassau matches
+
+        Skins Settings:
+        • Set skin value (bet per skin)
+        • Toggle carryovers on or off
+        • Select which players are included in Skins
+
+        Changes to game settings take effect immediately and apply to remaining holes.
+        """)
+
         header("COURSES")
         body("""
         • WolfMore includes built-in courses plus any custom courses you add
@@ -196,6 +221,7 @@ private extension RulesViewController {
         • On the course picker, swipe left to mark a course as your Home Course
         • Swipe right on a course for more information including phone, website, address, and available details
         • Your Home Course is used for personal stats, comparisons, and tracking over time
+        • To add a custom course: tap the course picker, then tap 'Add Course' — enter the course name, then set par and handicap for each hole. Custom courses are saved and available for all future rounds.
         """)
 
         header("SCORING")
@@ -204,6 +230,8 @@ private extension RulesViewController {
 
         • All scoring happens from one screen
         • Results update instantly across all games
+        • Alone, Re-Roll, Roll buttons assign wolf decision for each hole
+        • Press and Hammer steppers show current multiplier
 
         W = Wolf partners
         P = Prox (closest to pin)
@@ -224,6 +252,7 @@ private extension RulesViewController {
         • Wolf (2 Point)
         • Wolf (1 Point)
         • Hammer
+        • Wolf Live (real-time spectator mode)
 
         • Nassau and Skins run automatically as side games
         • You can change game modes mid-round if you want to mix it up
@@ -285,9 +314,15 @@ private extension RulesViewController {
 
         header("HAMMER")
         body("""
-        • Hammer doubles the hole wager
-        • Each additional tap doubles again (2× → 4× → 8×)
-        • Reject removes the last hammer
+        Hammer raises the hole bet. Tap + to hammer, − to undo the last hammer on this hole only.
+        Two styles available (set in Game Settings):
+        • Doubling: each hammer doubles — 1× → 2× → 4× → 8×
+        • Additive: each hammer adds the base stake — 1× → 2× → 3× → 4×
+        """)
+
+        header("PRESS")
+        body("""
+        Press doubles the bet for all remaining holes in the half. Tap + to add a press, − to undo the last press on this hole only. Multiple presses stack: 1× → 2× → 4× → 8×. Press carries forward through remaining holes automatically.
         """)
 
         header("LONE WOLF")
@@ -326,6 +361,18 @@ private extension RulesViewController {
 
         - Results show Front 9, Back 9, Overall, and total dollar amount owed
         - Matches are saved until you delete them
+        """)
+
+        header("WOLF LIVE")
+        body("""
+        Wolf Live lets spectators watch a Wolf game in real time from their own phone.
+        • Scorer taps 'Go Live' in Game Settings to start a live session and get a 6-character code
+        • Spectators open Watch Live from the home screen and enter the code
+        • Scores, wolf assignments, press indicators, money, and roll decisions update in real time
+        • Tap the refresh button to manually sync the latest scores
+        • Watch up to 10 live matches simultaneously in the spectator view
+        • Orange scores = wolf player, green = won money, red = lost money
+        • Boxed hole numbers = press is active on that hole
         """)
 
         header("TRACKING")

@@ -1,5 +1,10 @@
 import Foundation
 
+enum HammerStyle: String, Codable {
+    case doubling  // traditional Wolf: ×2, ×4, ×8...
+    case additive  // TGL style: stake grows linearly (+base each tap)
+}
+
 struct GameData: Codable {
     var holeStatsPromptMuted: Bool = false
     var scorePerHole: [[Int?]] = []
@@ -23,6 +28,7 @@ struct GameData: Codable {
 
     var gameType: GameType?
     var hammerCountPerHole: [Int]?
+    var hammerStyle: HammerStyle = .doubling
     var wolfPlayerPerHole: [Int?]?
     var wolfWentAlonePerHole: [Bool]?
 
@@ -146,8 +152,11 @@ struct GameData: Codable {
 
 extension GameData {
     func hammerMultiplier(for hole: Int) -> Double {
-        let c = hammerCountPerHole?[safe: hole] ?? 0
-        return Double(1 << max(0, c))
+        let c = max(0, hammerCountPerHole?[safe: hole] ?? 0)
+        switch hammerStyle {
+        case .doubling: return Double(1 << c)   // 1×, 2×, 4×, 8×…
+        case .additive: return Double(c + 1)    // 1×, 2×, 3×, 4×… (linear)
+        }
     }
 }
 

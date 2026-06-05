@@ -66,10 +66,9 @@ extension GameManager {
         let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI)) // 1…18 (0 → 18)
 
         // Stake (includes hammer multiplier)
-        let baseStake = (g.gameHoleDollarsArray[safe: hole] ?? 2.0)
-        let hammerC   = g.hammerCountPerHole?[safe: hole] ?? 0
-        let hammerMult = Double(1 << max(0, hammerC)) // 1,2,4,8...
-        let stake = baseStake * hammerMult
+        let baseStake  = (g.gameHoleDollarsArray[safe: hole] ?? 2.0)
+        let hammerMult = g.hammerMultiplier(for: hole)
+        let stake      = baseStake * hammerMult
 
         // ✅ Point values by mode
         let lowBallPts: Int = mode.isScotch ? 2 : 1

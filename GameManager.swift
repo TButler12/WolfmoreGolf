@@ -100,21 +100,25 @@ final class GameManager {
     /// Start a fresh round but keep: course (pars/HC), roster (names/HC/active), rosterNames.
     func resetForNewRoundPreservingCourseAndRoster() {
         guard let old = currentGame else { return }
-        
-        let keepCoursePar  = old.courseParToPass
-        let keepCourseHC   = old.courseHCToPass
-        let keepNames      = old.playerNames
-        let keepHCs        = old.hcPlayers
-        let keepActives    = old.playerActivated
-        let keepRosterList = old.rosterNames
-        
+
+        let keepCoursePar   = old.courseParToPass
+        let keepCourseHC    = old.courseHCToPass
+        let keepCourse      = old.course
+        let keepNames       = old.playerNames
+        let keepHCs         = old.hcPlayers
+        let keepActives     = old.playerActivated
+        let keepRosterList  = old.rosterNames
+        let keepHammerStyle = old.hammerStyle
+
         var fresh = baselineNewGame(named: old.gameName)
-        fresh.courseParToPass   = keepCoursePar
-        fresh.courseHCToPass    = keepCourseHC
-        fresh.playerNames       = keepNames
-        fresh.hcPlayers         = keepHCs
-        fresh.playerActivated   = keepActives
-        fresh.rosterNames       = keepRosterList
+        fresh.course          = keepCourse
+        fresh.courseParToPass = keepCoursePar
+        fresh.courseHCToPass  = keepCourseHC
+        fresh.playerNames     = keepNames
+        fresh.hcPlayers       = keepHCs
+        fresh.playerActivated = keepActives
+        fresh.rosterNames     = keepRosterList
+        fresh.hammerStyle     = keepHammerStyle
         // If you want to keep the existing per-hole stakes, uncomment:
         // fresh.gameHoleDollarsArray = old.gameHoleDollarsArray
         

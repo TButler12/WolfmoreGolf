@@ -62,9 +62,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBOutlet private weak var textHubButton: UIButton!
     // Press stepper (replaces pressedPushed2 visually)
     private var pressStepperContainer: UIView?
+    private var pressTitleLabel: UILabel?
     private var pressLevelLabel: UILabel?
     private var pressMinusButton: UIButton?
     private var pressPlusButton: UIButton?
+    // Bottom layout container
+    private var bottomStackView: UIStackView?
+    private var bottomSeparator: UIView?
+    private var dollarStepper: UIStepper?
     
     @IBOutlet weak var rerollPushed: UIButton!
     
@@ -98,6 +103,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBOutlet weak var rejectHammerButton: UIButton!
     // Hammer stepper (replaces hammerButton / rejectHammerButton visually)
     private var hammerStepperContainer: UIView?
+    private var hammerTitleLabel: UILabel?
     private var hammerLevelLabel: UILabel?
     private var hammerMinusButton: UIButton?
     private var hammerPlusButton: UIButton?
@@ -170,6 +176,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private weak var liveNassauButton: UIButton?
     private var liveNassauInstalled = false
+
+    private var liveTabBar: UIView?
+    private var liveTabBarInstalled = false
+    private var liveTabScoreButton: UIButton?
+    private var liveTabLiveButton: UIButton?
+    private weak var liveContentVC: WolfSpectatorViewController?
+    private var liveContentContainer: UIView?
 
     private var displayOrder: [Int] {
         let all = Array(0..<MAX_PLAYERS)
@@ -307,6 +320,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @objc private func handleReloadUI() {
         applyGameTypeUI()
         paintEverythingForCurrentHole()
+        updateLiveTabBarVisibility()
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -324,6 +338,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         } else {
             liveNassauButton?.isHidden = true
         }
+        updateLiveTabBarVisibility()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -336,7 +351,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         installSortButtonIfNeeded()
         installHoleInfoHeaderIfNeeded()
         installLiveNassauButtonIfNeeded()
+        installLiveTabBarIfNeeded()
         layoutBottomControls()
+        // Keep live container above bottom stack (bringSubviewToFront order, not zPosition, governs hit testing)
+        if let container = liveContentContainer { view.bringSubviewToFront(container) }
+        if let bar = liveTabBar { view.bringSubviewToFront(bar) }
     }
 
     // MARK: - Combined hole/par/HC header
@@ -398,18 +417,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         holeInfoLabel?.text = "Hole \(h + 1)  ·  Par \(par)  ·  HC \(si)"
 
         let storedName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let courseName: String
-        if !storedName.isEmpty && storedName != "WolfMore" {
-            courseName = storedName
-        } else {
-            let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
-            let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
-            courseName = CourseLibrary.shared.courses.first(where: {
-                Array($0.pars.prefix(STANDARD_HOLES)) == currentPars &&
-                Array($0.hcs.prefix(STANDARD_HOLES)) == currentHCs
-            })?.name ?? "Custom Course"
-        }
-        courseHeaderLabel?.text = courseName
+        courseHeaderLabel?.text = storedName.isEmpty ? "Custom Course" : storedName
     }
 
     private func installSortButtonIfNeeded() {
@@ -484,6 +492,149 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 }
             }
         }
+    }
+
+    // MARK: - Live Tab Bar
+
+    private func installLiveTabBarIfNeeded() {
+        guard !liveTabBarInstalled else { return }
+        liveTabBarInstalled = true
+
+        let bar = UIView()
+        bar.translatesAutoresizingMaskIntoConstraints = false
+        bar.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.97)
+        bar.layer.borderWidth = 0.5
+        bar.layer.borderColor = UIColor.separator.cgColor
+        bar.layer.zPosition = 1000
+        self.view.addSubview(bar)
+
+        NSLayoutConstraint.activate([
+            bar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            bar.heightAnchor.constraint(equalToConstant: 44),
+        ])
+
+        let scoreBtn = UIButton(type: .system)
+        scoreBtn.setTitle("🎯 Score", for: .normal)
+        scoreBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        scoreBtn.translatesAutoresizingMaskIntoConstraints = false
+        scoreBtn.addTarget(self, action: #selector(liveTabScoreTapped), for: .touchUpInside)
+        bar.addSubview(scoreBtn)
+
+        let liveBtn = UIButton(type: .system)
+        liveBtn.setTitle("📺 Live", for: .normal)
+        liveBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        liveBtn.translatesAutoresizingMaskIntoConstraints = false
+        liveBtn.addTarget(self, action: #selector(liveTabLiveTapped), for: .touchUpInside)
+        bar.addSubview(liveBtn)
+
+        // Pulsing green dot next to Live button
+        let dot = UIView()
+        dot.translatesAutoresizingMaskIntoConstraints = false
+        dot.backgroundColor = UIColor(red: 0.2, green: 1.0, blue: 0.4, alpha: 1)
+        dot.layer.cornerRadius = 4
+        dot.isUserInteractionEnabled = false
+        bar.addSubview(dot)
+
+        let pulse = CABasicAnimation(keyPath: "opacity")
+        pulse.fromValue = 1.0; pulse.toValue = 0.2
+        pulse.duration = 0.85; pulse.autoreverses = true; pulse.repeatCount = .infinity
+        dot.layer.add(pulse, forKey: "livePulse")
+
+        NSLayoutConstraint.activate([
+            scoreBtn.leadingAnchor.constraint(equalTo: bar.leadingAnchor),
+            scoreBtn.topAnchor.constraint(equalTo: bar.topAnchor),
+            scoreBtn.bottomAnchor.constraint(equalTo: bar.bottomAnchor),
+            scoreBtn.widthAnchor.constraint(equalTo: bar.widthAnchor, multiplier: 0.5),
+
+            liveBtn.trailingAnchor.constraint(equalTo: bar.trailingAnchor),
+            liveBtn.topAnchor.constraint(equalTo: bar.topAnchor),
+            liveBtn.bottomAnchor.constraint(equalTo: bar.bottomAnchor),
+            liveBtn.widthAnchor.constraint(equalTo: bar.widthAnchor, multiplier: 0.5),
+
+            dot.widthAnchor.constraint(equalToConstant: 8),
+            dot.heightAnchor.constraint(equalToConstant: 8),
+            dot.centerYAnchor.constraint(equalTo: liveBtn.centerYAnchor),
+            dot.trailingAnchor.constraint(equalTo: liveBtn.trailingAnchor, constant: -24),
+        ])
+
+        liveTabBar = bar
+        liveTabScoreButton = scoreBtn
+        liveTabLiveButton = liveBtn
+        selectScoreTab()
+        updateLiveTabBarVisibility()
+    }
+
+    private func updateLiveTabBarVisibility() {
+        let isLive = GameManager.shared.currentGame?.liveSessionId != nil
+        liveTabBar?.isHidden = !isLive
+        if !isLive { hideLiveContent() }
+    }
+
+    @objc private func liveTabScoreTapped() { hideLiveContent() }
+
+    @objc private func liveTabLiveTapped() { showLiveContent() }
+
+    private func selectScoreTab() {
+        liveTabScoreButton?.tintColor = .label
+        liveTabLiveButton?.tintColor = .secondaryLabel
+    }
+
+    private func selectLiveTab() {
+        liveTabScoreButton?.tintColor = .secondaryLabel
+        liveTabLiveButton?.tintColor = .systemGreen
+    }
+
+    private func showLiveContent() {
+        guard liveContentVC == nil,
+              let code = GameManager.shared.currentGame?.liveSessionCode,
+              !code.isEmpty,
+              let bar = liveTabBar else { return }
+
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = .systemBackground
+        container.layer.zPosition = 999
+        self.view.insertSubview(container, belowSubview: bar)
+
+        NSLayoutConstraint.activate([
+            container.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            container.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            container.topAnchor.constraint(equalTo: view.topAnchor),
+            container.bottomAnchor.constraint(equalTo: bar.topAnchor),
+        ])
+
+        let vc = WolfSpectatorViewController()
+        vc.sessionCode = code
+        addChild(vc)
+        vc.view.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(vc.view)
+        NSLayoutConstraint.activate([
+            vc.view.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            vc.view.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            vc.view.topAnchor.constraint(equalTo: container.topAnchor),
+            vc.view.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+        ])
+        vc.didMove(toParent: self)
+
+        liveContentVC = vc
+        liveContentContainer = container
+        selectLiveTab()
+    }
+
+    private func hideLiveContent() {
+        guard let vc = liveContentVC else {
+            selectScoreTab()
+            return
+        }
+        vc.willMove(toParent: nil)
+        vc.view.removeFromSuperview()
+        vc.removeFromParent()
+        liveContentVC = nil
+        liveContentContainer?.removeFromSuperview()
+        liveContentContainer = nil
+        selectScoreTab()
     }
 
     @objc private func sortButtonTapped() {
@@ -846,26 +997,44 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 strokePops = pops(for: delta, strokeIndex: si)
             }
 
-            label.lineBreakMode = .byTruncatingMiddle
+            label.lineBreakMode = .byTruncatingTail
             label.numberOfLines = 1
-            let fontSize = label.font.pointSize
+
+            let nominalPt = label.font.pointSize
+            let colWidth = label.bounds.width > 4 ? label.bounds.width : 100.0
+
+            // Shrink font until name fits or hits 60% of nominal size
+            func fittingPt(_ s: String, weight: UIFont.Weight = .regular) -> CGFloat {
+                var pt = nominalPt
+                let minPt = (nominalPt * 0.6).rounded(.down)
+                while pt > minPt {
+                    let f = UIFont.systemFont(ofSize: pt, weight: weight)
+                    let w = (s as NSString).size(withAttributes: [.font: f]).width
+                    if w <= colWidth { break }
+                    pt -= 0.5
+                }
+                return pt
+            }
+
             if strokePops > 0 {
-                let boldFont = UIFont.boldSystemFont(ofSize: fontSize)
+                let pt = fittingPt(name, weight: .bold)
+                let boldFont = UIFont.boldSystemFont(ofSize: pt)
                 let nameAttr = NSAttributedString(string: name, attributes: [
                     .font: boldFont,
                     .foregroundColor: UIColor.systemGreen
                 ])
                 let badgeAttr = NSAttributedString(string: " " + String(repeating: "•", count: strokePops), attributes: [
-                    .font: UIFont.systemFont(ofSize: fontSize + 12),
+                    .font: UIFont.systemFont(ofSize: pt + 2),
                     .foregroundColor: UIColor.systemRed
                 ])
                 let combined = NSMutableAttributedString(attributedString: nameAttr)
                 combined.append(badgeAttr)
                 label.attributedText = combined
             } else {
+                let pt = fittingPt(name)
                 label.attributedText = nil
                 label.text = name
-                label.font = UIFont.systemFont(ofSize: fontSize, weight: .regular)
+                label.font = UIFont.systemFont(ofSize: pt, weight: .regular)
                 label.textColor = .label
             }
         }
@@ -931,10 +1100,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func effectiveStake(for hole: Int, in g: GameData) -> Double {
-        let base = baseStake(for: hole, in: g)
-        let c = hammerCount(for: hole, in: g)
-        let mult = Double(1 << c)              // 1,2,4,8...
-        return roundToHalf(base * mult)
+        roundToHalf(baseStake(for: hole, in: g) * g.hammerMultiplier(for: hole))
     }
 
     private func paintHammerUIForCurrentHole() {
@@ -944,25 +1110,27 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         paintHammerStepperView(count: count)
         let shown = effectiveStake(for: h, in: g)
         gameDollarsField.text = String(format: "%.2f", shown)
+        syncDollarStepper()
     }
 
     private func paintHammerStepperView(count: Int) {
         guard let container = hammerStepperContainer,
               let levelLabel = hammerLevelLabel,
               let minusBtn   = hammerMinusButton else { return }
-        levelLabel.text    = "\(count)"
+        let style = GameManager.shared.currentGame?.hammerStyle ?? .doubling
+        let mult  = style == .doubling ? (1 << count) : (count + 1)
+        levelLabel.text    = count == 0 ? "–" : "\(mult)×"
         minusBtn.isEnabled = count > 0
-        if count == 0 {
-            container.backgroundColor  = .systemGray5
-            levelLabel.textColor       = .secondaryLabel
-            minusBtn.tintColor         = .secondaryLabel
-            hammerPlusButton?.tintColor = .secondaryLabel
-        } else {
-            container.backgroundColor  = GameViewController.hammerGreen
-            levelLabel.textColor       = .label
-            minusBtn.tintColor         = .label
-            hammerPlusButton?.tintColor = .label
-        }
+
+        let bg: UIColor   = count == 0 ? GameViewController.hammerGreen : .black
+        let fg: UIColor   = .white
+        let minusFG       = count == 0 ? UIColor.white.withAlphaComponent(0.4) : .white
+
+        container.backgroundColor    = bg
+        hammerTitleLabel?.textColor  = fg
+        levelLabel.textColor         = fg
+        minusBtn.tintColor           = minusFG
+        hammerPlusButton?.tintColor  = fg
     }
     private func refreshForCurrentHole() {
         applyGameTypeUI()
@@ -1146,10 +1314,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func effectiveStakeForHole(_ h: Int, g: GameData) -> Double {
-        let base = baseStakeForHole(h, g: g)
-        let c = hammerCountForHole(h, g: g)
-        let mult = Double(1 << c) // 1,2,4,8...
-        return roundToHalf(base * mult)
+        roundToHalf(baseStakeForHole(h, g: g) * g.hammerMultiplier(for: h))
     }
 
     private func refreshDollarsLabel() {
@@ -1157,6 +1322,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let h = max(0, min(17, g.hole))
         let shown = effectiveStakeForHole(h, g: g)
         gameDollarsField.text = String(format: "%.2f", shown)
+        syncDollarStepper()
     }
 
 
@@ -1353,11 +1519,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     Only available if Roll is already ON.
     """)
 
-        addHelp(to: pressedPushed2, title: "Press", message: """
-    Persistent double.
-    Starts at the current hole and stays ON for up to 9 holes.
-    Press affects stake going forward until the pressed window ends or is turned off.
-    """)
+        // Press tooltip is added to the stepper container in layoutBottomControls
 
         addHelp(to: alonePushed, title: "Alone (Lone Wolf)", message: """
     Player goes solo (no partner).
@@ -1396,11 +1558,30 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         view.addGestureRecognizer(lp)
     }
 
+    private func hammerTooltipMessage() -> String {
+        let style = GameManager.shared.currentGame?.hammerStyle ?? .doubling
+        let dTag  = style == .doubling ? " (current)" : ""
+        let aTag  = style == .additive ? " (current)" : ""
+        return """
+        Hammer raises the hole bet. Tap + to hammer, − to undo the last hammer on this hole only.
+
+        Doubling mode\(dTag): each hammer doubles the bet — 1× → 2× → 4× → 8×
+        Additive mode\(aTag): each hammer adds the base stake — 1× → 2× → 3× → 4×
+
+        Change mode in Game Settings → Hammer Style.
+        """
+    }
+
     @objc private func handleHelpLongPress(_ gr: UILongPressGestureRecognizer) {
         guard gr.state == .began, let source = gr.view else { return }
 
         let title = source.accessibilityLabel ?? "Help"
-        let message = source.accessibilityValue ?? ""
+        let message: String
+        if source === hammerStepperContainer {
+            message = hammerTooltipMessage()
+        } else {
+            message = source.accessibilityValue ?? ""
+        }
 
         let ac = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
         ac.addAction(UIAlertAction(title: "Got it", style: .cancel))
@@ -1680,6 +1861,29 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBAction private func minusPointDollarsTapped(_ sender: UIButton) {
         stepDollars(by: -0.5)
     }
+
+    @objc private func dollarStepperChanged(_ sender: UIStepper) {
+        let snapped = (sender.value * 2).rounded() / 2.0
+        sender.value = snapped
+        GameManager.shared.update { g in
+            g.normalize(holes: STANDARD_HOLES)
+            let h = max(0, min(17, g.hole))
+            self.currentHole = h
+            g.gameHoleDollarsArray[h] = snapped
+        }
+        DispatchQueue.main.async {
+            self.refreshForCurrentHole()
+            self.paintEverythingForCurrentHole()
+        }
+    }
+
+    private func syncDollarStepper() {
+        guard let stepper = dollarStepper,
+              let g = GameManager.shared.currentGame else { return }
+        let h = max(0, min(17, g.hole))
+        stepper.value = baseStakeForHole(h, g: g)
+    }
+
     // Call this when a score field edits
     
     @IBAction private func wolfButtonTapped(_ sender: UIButton) {
@@ -1738,52 +1942,60 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         1 << max(0, count)
     }
 
-    // Creates a stepper view (Press or Hammer) — internal subviews only, no frame/superview.
+    // Creates a stepper view with Auto Layout internals so it works inside a UIStackView.
     private func makeStepperView(title: String, minusAction: Selector, plusAction: Selector)
-        -> (container: UIView, levelLabel: UILabel, minus: UIButton, plus: UIButton) {
+        -> (container: UIView, titleLabel: UILabel, levelLabel: UILabel, minus: UIButton, plus: UIButton) {
         let container = UIView()
         container.layer.cornerRadius = 10
         container.clipsToBounds = true
 
-        let titleH: CGFloat = 16
         let titleLabel = UILabel()
-        titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 9, weight: .medium)
+        titleLabel.text          = title
+        titleLabel.font          = UIFont.systemFont(ofSize: 11, weight: .semibold)
         titleLabel.textAlignment = .center
-        // Frame set in layoutBottomControls when dimensions are known
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let symConfig = UIImage.SymbolConfiguration(pointSize: 17, weight: .bold)
 
         let minus = UIButton(type: .system)
-        minus.setTitle("−", for: .normal)
-        minus.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
+        minus.setImage(UIImage(systemName: "minus", withConfiguration: symConfig), for: .normal)
         minus.addTarget(self, action: minusAction, for: .touchUpInside)
+        minus.translatesAutoresizingMaskIntoConstraints = false
 
         let levelLabel = UILabel()
-        levelLabel.text = "0"
-        levelLabel.font = UIFont.systemFont(ofSize: 17, weight: .bold)
+        levelLabel.text          = "–"
+        levelLabel.font          = UIFont.systemFont(ofSize: 17, weight: .bold)
         levelLabel.textAlignment = .center
+        levelLabel.translatesAutoresizingMaskIntoConstraints = false
 
         let plus = UIButton(type: .system)
-        plus.setTitle("+", for: .normal)
-        plus.titleLabel?.font = UIFont.systemFont(ofSize: 20, weight: .semibold)
+        plus.setImage(UIImage(systemName: "plus", withConfiguration: symConfig), for: .normal)
         plus.addTarget(self, action: plusAction, for: .touchUpInside)
+        plus.translatesAutoresizingMaskIntoConstraints = false
 
-        container.tag = Int(titleH)  // store titleH for layout
         [titleLabel, minus, levelLabel, plus].forEach { container.addSubview($0) }
-        return (container, levelLabel, minus, plus)
-    }
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: container.topAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            titleLabel.heightAnchor.constraint(equalToConstant: 18),
 
-    // Applies a frame to a stepper container, repositioning its fixed subviews.
-    private func applyFrame(_ frame: CGRect, to container: UIView) {
-        container.frame = frame
-        let titleH: CGFloat = 16
-        let btnH = frame.height - titleH
-        let btnW = frame.width / 3
-        let subs = container.subviews
-        guard subs.count == 4 else { return }
-        subs[0].frame = CGRect(x: 0, y: 0,         width: frame.width, height: titleH)  // title label
-        subs[1].frame = CGRect(x: 0,       y: titleH, width: btnW, height: btnH)         // minus
-        subs[2].frame = CGRect(x: btnW,    y: titleH, width: btnW, height: btnH)         // level label
-        subs[3].frame = CGRect(x: btnW*2,  y: titleH, width: btnW, height: btnH)         // plus
+            minus.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            minus.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            minus.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            minus.widthAnchor.constraint(equalTo: container.widthAnchor, multiplier: 1.0/3.0),
+
+            levelLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            levelLabel.leadingAnchor.constraint(equalTo: minus.trailingAnchor),
+            levelLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            levelLabel.widthAnchor.constraint(equalTo: container.widthAnchor, multiplier: 1.0/3.0),
+
+            plus.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
+            plus.leadingAnchor.constraint(equalTo: levelLabel.trailingAnchor),
+            plus.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            plus.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+        ])
+        return (container, titleLabel, levelLabel, minus, plus)
     }
 
     @objc private func hammerStepperPlusTapped() {
@@ -2368,7 +2580,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
-        refreshHoleValueLabel()
+        paintHammerUIForCurrentHole()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
@@ -2771,20 +2983,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
               let levelLabel = pressLevelLabel,
               let minusBtn = pressMinusButton else { return }
 
-        levelLabel.text = "\(pressLevel)"
+        levelLabel.text    = pressLevel == 0 ? "–" : "\(1 << pressLevel)×"
         minusBtn.isEnabled = pressLevel > 0
 
-        if pressLevel == 0 {
-            container.backgroundColor = .systemGray5
-            levelLabel.textColor = .secondaryLabel
-            minusBtn.tintColor = .secondaryLabel
-            pressPlusButton?.tintColor = .secondaryLabel
-        } else {
-            container.backgroundColor = .systemOrange
-            levelLabel.textColor = .white
-            minusBtn.tintColor = .white
-            pressPlusButton?.tintColor = .white
-        }
+        let bg: UIColor   = pressLevel == 0 ? .systemOrange : .black
+        let fg: UIColor   = .white
+        let minusFG       = pressLevel == 0 ? UIColor.white.withAlphaComponent(0.4) : .white
+
+        container.backgroundColor  = bg
+        pressTitleLabel?.textColor = fg
+        levelLabel.textColor       = fg
+        minusBtn.tintColor         = minusFG
+        pressPlusButton?.tintColor = fg
     }
     private func showGameOnboardingIfNeeded() {
         let key = "onboarding_game_shown"
@@ -2850,88 +3060,98 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func layoutBottomControls() {
         guard let sup = pressedPushed2.superview, pressedPushed2.frame != .zero else { return }
 
-        // Geometry anchors from the storyboard's original row position
-        let leading:  CGFloat = 32
-        let totalW:   CGFloat = 346          // x=32 … x=378
-        let stepperH: CGFloat = 46
-        let gap:      CGFloat = 4
-        let rowGap:   CGFloat = 10
-        let row1Y = pressedPushed2.frame.minY   // ≈ 467 from storyboard
+        let leading: CGFloat = 32
+        let totalW:  CGFloat = 346
+        let row1Y    = pressedPushed2.frame.minY
 
-        // ── Row 1: [Press stepper] [Alone] [Re-Roll] [Roll] ──────────────────
-        let btnW = (totalW - 3 * gap) / 4   // equal widths ≈ 83.5
+        // Separator line between score area and button controls
+        if bottomSeparator == nil {
+            let sep = UIView()
+            sep.backgroundColor = .separator
+            sup.addSubview(sep)
+            bottomSeparator = sep
+        }
+        let sepH: CGFloat = 1.0 / UIScreen.main.scale
+        bottomSeparator?.frame = CGRect(x: 0, y: row1Y - 6, width: sup.bounds.width, height: sepH)
 
-        if pressStepperContainer == nil {
-            let (c, lbl, minus, plus) = makeStepperView(
+        if bottomStackView == nil {
+            let vStack = UIStackView()
+            vStack.axis         = .vertical
+            vStack.spacing      = 8
+            vStack.distribution = .fill
+            vStack.alignment    = .fill
+            sup.addSubview(vStack)
+            bottomStackView = vStack
+
+            // ── Row 1: Alone | Re-Roll | Roll ────────────────────────────────
+            let row1 = UIStackView(arrangedSubviews: [alonePushed, rerollPushed, rollPushed])
+            row1.axis = .horizontal; row1.spacing = 6; row1.distribution = .fillEqually
+            row1.heightAnchor.constraint(equalToConstant: 44).isActive = true
+            vStack.addArrangedSubview(row1)
+
+            // ── Row 2: Press | Hammer side by side ───────────────────────────
+            let (pc, ptlbl, plbl, pminus, pplus) = makeStepperView(
                 title: "Press",
                 minusAction: #selector(pressStepperMinusTapped),
                 plusAction:  #selector(pressStepperPlusTapped)
             )
-            sup.addSubview(c)
-            pressStepperContainer = c
-            pressLevelLabel  = lbl
-            pressMinusButton = minus
-            pressPlusButton  = plus
+            pressStepperContainer = pc; pressTitleLabel = ptlbl; pressLevelLabel = plbl
+            pressMinusButton = pminus; pressPlusButton = pplus
+            addHelp(to: pc, title: "Press", message: "Press doubles the bet for all remaining holes in the half. Tap + to add a press, − to undo the last press on this hole only. Multiple presses stack: 1× → 2× → 4× → 8×\nPress applies to remaining holes — once committed it carries forward.")
             paintPressStepperView(pressLevel: 0)
-        }
-        applyFrame(CGRect(x: leading,             y: row1Y, width: btnW, height: stepperH), to: pressStepperContainer!)
-        pressedPushed2.isHidden = true
+            pressedPushed2.isHidden = true
 
-        alonePushed.frame   = CGRect(x: leading + btnW + gap,       y: row1Y, width: btnW, height: stepperH)
-        rerollPushed.frame  = CGRect(x: leading + (btnW + gap) * 2, y: row1Y, width: btnW, height: stepperH)
-        rollPushed.frame    = CGRect(x: leading + (btnW + gap) * 3, y: row1Y, width: btnW, height: stepperH)
-
-        // ── Row 2: [Hammer stepper] [Update Hole Scores] ─────────────────────
-        let row2Y = row1Y + stepperH + rowGap
-
-        if hammerStepperContainer == nil {
-            let (c, lbl, minus, plus) = makeStepperView(
+            let (hc, htlbl, hlbl, hminus, hplus) = makeStepperView(
                 title: "Hammer",
                 minusAction: #selector(hammerStepperMinusTapped),
                 plusAction:  #selector(hammerStepperPlusTapped)
             )
-            sup.addSubview(c)
-            hammerStepperContainer = c
-            hammerLevelLabel  = lbl
-            hammerMinusButton = minus
-            hammerPlusButton  = plus
-            addHelp(to: c, title: "Hammer", message: """
-    Doubles the hole stake each tap (1× → 2× → 4× → 8×…).
-    Tap + to hammer, − to reject the most recent hammer.
-    """)
+            hammerStepperContainer = hc; hammerTitleLabel = htlbl; hammerLevelLabel = hlbl
+            hammerMinusButton = hminus; hammerPlusButton = hplus
+            addHelp(to: hc, title: "Hammer", message: "__hammer__") // message built dynamically in handleHelpLongPress
             paintHammerStepperView(count: 0)
+            hammerButton.isHidden = true; rejectHammerButton.isHidden = true
+
+            let row2 = UIStackView(arrangedSubviews: [pc, hc])
+            row2.axis = .horizontal; row2.spacing = 6; row2.distribution = .fillEqually
+            row2.heightAnchor.constraint(equalToConstant: 44).isActive = true
+            vStack.addArrangedSubview(row2)
+
+            // ── Row 3: Update Scores (full width) ────────────────────────────
+            UpdateScores.setTitle("Update Scores", for: .normal)
+            UpdateScores.heightAnchor.constraint(equalToConstant: 44).isActive = true
+            vStack.addArrangedSubview(UpdateScores)
+
+            // ── Row 4: Game Results | stepper | $2.00 ────────────────────────
+            minusPointDollars.isHidden = true
+            plusPointDollars.isHidden  = true
+
+            let stepper = UIStepper()
+            stepper.minimumValue = 0.5
+            stepper.maximumValue = 100
+            stepper.stepValue    = 0.5
+            stepper.value        = 2.0
+            stepper.addTarget(self, action: #selector(dollarStepperChanged(_:)), for: .valueChanged)
+            dollarStepper = stepper
+
+            gameResultsButton.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            gameResultsButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            gameDollarsField.widthAnchor.constraint(equalToConstant: 80).isActive = true
+            let row4 = UIStackView(arrangedSubviews: [gameResultsButton, stepper, gameDollarsField])
+            row4.axis = .horizontal; row4.spacing = 8; row4.distribution = .fill
+            row4.alignment = .center
+            row4.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            vStack.addArrangedSubview(row4)
+
+            // ── Row 5: Text (full width) ──────────────────────────────────────
+            textHubButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            vStack.addArrangedSubview(textHubButton)
         }
-        applyFrame(CGRect(x: leading, y: row2Y, width: btnW, height: stepperH), to: hammerStepperContainer!)
-        hammerButton.isHidden       = true
-        rejectHammerButton.isHidden = true
 
-        let updateX = leading + btnW + gap
-        UpdateScores.frame = CGRect(x: updateX, y: row2Y, width: totalW - btnW - gap, height: stepperH)
-
-        // ── Row 3: [Game Results] [−] [+] [stake label] ──────────────────────
-        let row3Y  = row2Y + stepperH + rowGap
-        let row3H: CGFloat = 40
-        let pmW:   CGFloat = 40
-        let stakeW: CGFloat = 84
-
-        // Right-to-left: stake → + → − → Game Results
-        let stakeX  = leading + totalW - stakeW
-        let plusX   = stakeX - gap - pmW
-        let minusX  = plusX  - gap - pmW
-        let grW     = minusX - gap - leading
-
-        gameResultsButton.frame   = CGRect(x: leading, y: row3Y, width: grW,    height: row3H)
-        minusPointDollars.frame   = CGRect(x: minusX,  y: row3Y, width: pmW,    height: row3H)
-        plusPointDollars.frame    = CGRect(x: plusX,   y: row3Y, width: pmW,    height: row3H)
-        gameDollarsField.frame    = CGRect(x: stakeX,  y: row3Y, width: stakeW, height: row3H)
-
-        // ── Row 4: [Text] ─────────────────────────────────────────────────────
-        let row4Y  = row3Y + row3H + rowGap
-        let row4H: CGFloat = 34
-        textHubButton.frame = CGRect(x: leading, y: row4Y, width: totalW, height: row4H)
-
-        sup.bringSubviewToFront(pressStepperContainer!)
-        sup.bringSubviewToFront(hammerStepperContainer!)
+        // Update frame every layout pass (handles rotation / safe-area changes)
+        // Total: 44 + 8 + 44 + 8 + 44 + 8 + 40 + 8 + 40 = 244
+        bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: 244)
+        sup.bringSubviewToFront(bottomStackView!)
     }
 
     @objc private func pressStepperPlusTapped() {

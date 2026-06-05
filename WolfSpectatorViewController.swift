@@ -19,9 +19,12 @@ final class WolfSpectatorViewController: UIViewController {
     }
 
     // MARK: - UI
-    private let tabScrollView    = UIScrollView()
-    private let tabStack         = UIStackView()
+    private let tabContainerView = UIView()
+    private let tabRow1          = UIStackView()   // sessions 0-4
+    private let tabRow2          = UIStackView()   // sessions 5-9
+    private var tabContainerHeightConstraint: NSLayoutConstraint?
     private var tabButtons: [UIButton] = []
+    private var addSessionBarButton: UIBarButtonItem?
     private let statusBanner     = UILabel()
     private let namesHeaderView  = UIView()
     private let cachedHeaderCell = WolfHoleCell(style: .default, reuseIdentifier: nil)
@@ -29,13 +32,14 @@ final class WolfSpectatorViewController: UIViewController {
     private let loadingView      = UIActivityIndicatorView(style: .large)
 
     private let savedCodesKey = "watchedWolfSessions"
-    private let maxSessions   = 3
+    private let maxSessions   = 10
 
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Live Match"
+        navigationItem.prompt = "Long-press a tab to remove it"
         view.backgroundColor = .systemBackground
         setupTabBar()
         setupStatusBanner()
@@ -56,7 +60,13 @@ final class WolfSpectatorViewController: UIViewController {
             target: self,
             action: #selector(refreshTapped)
         )
-        navigationItem.rightBarButtonItems = [trashButton, refreshButton]
+        let addButton = UIBarButtonItem(
+            barButtonSystemItem: .add,
+            target: self,
+            action: #selector(addSessionTapped)
+        )
+        addSessionBarButton = addButton
+        navigationItem.rightBarButtonItems = [trashButton, refreshButton, addButton]
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(appDidBecomeActive),
@@ -86,28 +96,41 @@ final class WolfSpectatorViewController: UIViewController {
     // MARK: - Setup
 
     private func setupTabBar() {
-        tabScrollView.translatesAutoresizingMaskIntoConstraints = false
-        tabScrollView.showsHorizontalScrollIndicator = false
-        tabScrollView.alwaysBounceHorizontal = true
-        view.addSubview(tabScrollView)
+        tabContainerView.translatesAutoresizingMaskIntoConstraints = false
+        tabContainerView.backgroundColor = .systemBackground
+        view.addSubview(tabContainerView)
+
+        let hConstraint = tabContainerView.heightAnchor.constraint(equalToConstant: 44)
+        tabContainerHeightConstraint = hConstraint
         NSLayoutConstraint.activate([
-            tabScrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tabScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tabScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tabScrollView.heightAnchor.constraint(equalToConstant: 44),
+            tabContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tabContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tabContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            hConstraint,
         ])
 
-        tabStack.axis      = .horizontal
-        tabStack.spacing   = 8
-        tabStack.alignment = .center
-        tabStack.translatesAutoresizingMaskIntoConstraints = false
-        tabScrollView.addSubview(tabStack)
+        func configureRow(_ row: UIStackView) {
+            row.axis         = .horizontal
+            row.spacing      = 6
+            row.alignment    = .fill
+            row.distribution = .fillEqually
+            row.translatesAutoresizingMaskIntoConstraints = false
+            tabContainerView.addSubview(row)
+        }
+        configureRow(tabRow1)
+        configureRow(tabRow2)
+        tabRow2.isHidden = true
+
         NSLayoutConstraint.activate([
-            tabStack.topAnchor.constraint(equalTo: tabScrollView.contentLayoutGuide.topAnchor),
-            tabStack.leadingAnchor.constraint(equalTo: tabScrollView.contentLayoutGuide.leadingAnchor, constant: 12),
-            tabStack.trailingAnchor.constraint(equalTo: tabScrollView.contentLayoutGuide.trailingAnchor, constant: -12),
-            tabStack.bottomAnchor.constraint(equalTo: tabScrollView.contentLayoutGuide.bottomAnchor),
-            tabStack.heightAnchor.constraint(equalTo: tabScrollView.frameLayoutGuide.heightAnchor),
+            tabRow1.topAnchor.constraint(equalTo: tabContainerView.topAnchor, constant: 6),
+            tabRow1.leadingAnchor.constraint(equalTo: tabContainerView.leadingAnchor, constant: 12),
+            tabRow1.trailingAnchor.constraint(equalTo: tabContainerView.trailingAnchor, constant: -12),
+            tabRow1.heightAnchor.constraint(equalToConstant: 32),
+
+            tabRow2.topAnchor.constraint(equalTo: tabRow1.bottomAnchor, constant: 6),
+            tabRow2.leadingAnchor.constraint(equalTo: tabContainerView.leadingAnchor, constant: 12),
+            tabRow2.trailingAnchor.constraint(equalTo: tabContainerView.trailingAnchor, constant: -12),
+            tabRow2.heightAnchor.constraint(equalToConstant: 32),
         ])
     }
 
@@ -121,7 +144,7 @@ final class WolfSpectatorViewController: UIViewController {
         statusBanner.isHidden        = true
         view.addSubview(statusBanner)
         NSLayoutConstraint.activate([
-            statusBanner.topAnchor.constraint(equalTo: tabScrollView.bottomAnchor),
+            statusBanner.topAnchor.constraint(equalTo: tabContainerView.bottomAnchor),
             statusBanner.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             statusBanner.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             statusBanner.heightAnchor.constraint(equalToConstant: 28),
@@ -158,6 +181,9 @@ final class WolfSpectatorViewController: UIViewController {
         tableView.register(WolfHoleCell.self, forCellReuseIdentifier: WolfHoleCell.reuseID)
         tableView.rowHeight          = UITableView.automaticDimension
         tableView.estimatedRowHeight = 44
+        tableView.contentInsetAdjustmentBehavior = .automatic
+        tableView.contentInset          = UIEdgeInsets(top: 0, left: 0, bottom: 83, right: 0)
+        tableView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 83, right: 0)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: namesHeaderView.bottomAnchor),
@@ -180,21 +206,28 @@ final class WolfSpectatorViewController: UIViewController {
     // MARK: - Tab bar
 
     private func rebuildTabBar() {
-        for v in tabStack.arrangedSubviews {
-            tabStack.removeArrangedSubview(v)
-            v.removeFromSuperview()
+        for row in [tabRow1, tabRow2] {
+            row.arrangedSubviews.forEach { row.removeArrangedSubview($0); $0.removeFromSuperview() }
         }
         tabButtons = []
 
         for (i, session) in sessions.enumerated() {
             let btn = makeTabButton(code: session.code, index: i)
             tabButtons.append(btn)
-            tabStack.addArrangedSubview(btn)
+            if i < 5 { tabRow1.addArrangedSubview(btn) }
+            else      { tabRow2.addArrangedSubview(btn) }
         }
 
-        if sessions.count < maxSessions {
-            tabStack.addArrangedSubview(makeAddButton())
+        let needsRow2 = sessions.count > 5
+        tabRow2.isHidden = !needsRow2
+        // 6 + 6 (top/row gaps) + 32 (row1) + 6 (gap) + 32 (row2) + 6 (bottom) = 88
+        let newH: CGFloat = needsRow2 ? 88 : 44
+        if tabContainerHeightConstraint?.constant != newH {
+            tabContainerHeightConstraint?.constant = newH
+            UIView.animate(withDuration: 0.2) { self.view.layoutIfNeeded() }
         }
+
+        addSessionBarButton?.isEnabled = sessions.count < maxSessions
 
         updateTabHighlight()
     }
@@ -203,12 +236,12 @@ final class WolfSpectatorViewController: UIViewController {
         var cfg = UIButton.Configuration.filled()
         cfg.title = code
         cfg.cornerStyle = .capsule
-        cfg.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
         cfg.baseBackgroundColor = .systemGray5
         cfg.baseForegroundColor = .label
         cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
             var out = incoming
-            out.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .semibold)
+            out.font = UIFont.monospacedSystemFont(ofSize: 10, weight: .semibold)
             return out
         }
         let btn = UIButton(configuration: cfg)
@@ -216,21 +249,6 @@ final class WolfSpectatorViewController: UIViewController {
         btn.addTarget(self, action: #selector(tabButtonTapped(_:)), for: .touchUpInside)
         let lp = UILongPressGestureRecognizer(target: self, action: #selector(tabLongPressed(_:)))
         btn.addGestureRecognizer(lp)
-        return btn
-    }
-
-    private func makeAddButton() -> UIButton {
-        var cfg = UIButton.Configuration.plain()
-        cfg.title = "+"
-        cfg.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 12, bottom: 6, trailing: 12)
-        cfg.baseForegroundColor = .secondaryLabel
-        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-            var out = incoming
-            out.font = UIFont.systemFont(ofSize: 20, weight: .medium)
-            return out
-        }
-        let btn = UIButton(configuration: cfg)
-        btn.addTarget(self, action: #selector(addSessionTapped), for: .touchUpInside)
         return btn
     }
 
@@ -520,7 +538,7 @@ final class WolfSpectatorViewController: UIViewController {
         guard !sessions.isEmpty else { return }
         let alert = UIAlertController(
             title: "Clear All Sessions?",
-            message: "Stop watching all \(sessions.count) live game(s).",
+            message: "Stop watching all \(sessions.count) live game(s).\n\nTip: Long-press a single tab to remove just that session.",
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Clear All", style: .destructive) { [weak self] _ in
@@ -743,7 +761,9 @@ private final class WolfHoleCell: UITableViewCell {
         l.font      = .systemFont(ofSize: size, weight: weight)
         l.textAlignment = .center
         l.adjustsFontSizeToFitWidth = true
-        l.minimumScaleFactor = 0.8
+        l.minimumScaleFactor = 0.7
+        l.lineBreakMode = .byClipping
+        l.numberOfLines = 1
         l.widthAnchor.constraint(equalToConstant: width).isActive = true
     }
 
@@ -753,13 +773,53 @@ private final class WolfHoleCell: UITableViewCell {
         holeLabel.textColor   = .secondaryLabel
         decisionLabel.text    = ""
         decisionLabel.textColor = .secondaryLabel
+
+        let labels = Self.deduplicatedDisplayNames(playerNames)
         for (i, col) in scoreCols.enumerated() {
-            col.text      = i < playerNames.count ? String(playerNames[i].prefix(4)) : ""
-            col.textColor = .label
-            col.font      = .systemFont(ofSize: 15, weight: .semibold)
+            col.text                    = i < labels.count ? labels[i] : ""
+            col.textColor               = .label
+            col.font                    = .systemFont(ofSize: 11, weight: .bold)
+            col.adjustsFontSizeToFitWidth = true
+            col.minimumScaleFactor      = 0.7
+            col.lineBreakMode           = .byClipping
         }
         moneyRow.isHidden = true
         gameRow.isHidden  = true
+    }
+
+    /// Returns the shortest display label per player that keeps every entry unique.
+    /// Pass 1: first name up to 8 chars ("Michael")
+    /// Pass 2: if duplicates, append last-name initial ("Tom B")
+    /// Pass 3: if still duplicates, append first 3 of last name ("Tom But")
+    static func deduplicatedDisplayNames(_ names: [String]) -> [String] {
+        func parts(_ raw: String) -> (first: String, last: String) {
+            let tokens = raw.trimmingCharacters(in: .whitespaces).components(separatedBy: " ")
+            let first = tokens.first ?? ""
+            let last  = tokens.count > 1 ? tokens.last! : ""
+            return (first, last)
+        }
+
+        // Pass 1 — first name, max 8
+        var result = names.map { String(parts($0).first.prefix(8)) }
+        guard result.count != Set(result).count else { return result }
+
+        // Pass 2 — first name + last initial ("Tom B")
+        result = names.map { raw in
+            let (first, last) = parts(raw)
+            let f = String(first.prefix(8))
+            guard let li = last.first else { return f }
+            return "\(f) \(li)"
+        }
+        guard result.count != Set(result).count else { return result }
+
+        // Pass 3 — first name + first 3 of last ("Tom But")
+        result = names.map { raw in
+            let (first, last) = parts(raw)
+            let f = String(first.prefix(8))
+            let l = String(last.prefix(3))
+            return l.isEmpty ? f : "\(f) \(l)"
+        }
+        return result
     }
 
     func configureAsScoreTotals(results: [WolfHoleResult], playerCount: Int) {
