@@ -116,15 +116,12 @@ final class ViewController: UIViewController {
     private func refreshCourseButtonTitle() {
         let name: String
         if let g = GameManager.shared.currentGame {
-            let pars = Array(g.course.pars.prefix(STANDARD_HOLES))
-            let hcs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
-            name = CourseLibrary.shared.courses.first(where: {
-                Array($0.pars.prefix(STANDARD_HOLES)) == pars &&
-                Array($0.hcs.prefix(STANDARD_HOLES)) == hcs
-            })?.name ?? CourseLibrary.shared.selectedCourseName ?? "Choose Course"
+            let stored = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            name = stored.isEmpty ? (CourseLibrary.shared.selectedCourseName ?? "Choose Course") : stored
         } else {
             name = CourseLibrary.shared.selectedCourseName ?? "Choose Course"
         }
+        print("DEBUG yellow button course: \(name)")
         courseButton.configuration = styledButton(title: name, style: .secondaryChevron)
     }
 
@@ -407,13 +404,7 @@ final class ViewController: UIViewController {
                 return
             }
 
-            // Resolve the current game's course name via library match
-            let curPars = Array(currentGame.course.pars.prefix(STANDARD_HOLES))
-            let curHCs  = Array(currentGame.course.holeHandicaps.prefix(STANDARD_HOLES))
-            let curName = CourseLibrary.shared.courses.first(where: {
-                Array($0.pars.prefix(STANDARD_HOLES)) == curPars &&
-                Array($0.hcs.prefix(STANDARD_HOLES))  == curHCs
-            })?.name ?? currentGame.course.name
+            let curName = currentGame.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
 
             // Same course — nothing to confirm
             if curName == newCourse.name {
