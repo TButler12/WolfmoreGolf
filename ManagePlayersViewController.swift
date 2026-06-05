@@ -676,7 +676,7 @@ final class ManagePlayersViewController: UIViewController,
                                   pars: Array(profile.pars.prefix(STANDARD_HOLES)),
                                   holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)))
             }
-            print("DEBUG g.course.name after assignment =", g.course.name)
+            print("DEBUG 1 course set: \(g.course.name)")
         }
 
         guard let roundNav = storyboard?.instantiateViewController(withIdentifier: "RoundNav") as? UINavigationController else {
