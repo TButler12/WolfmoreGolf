@@ -515,12 +515,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let stored = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
         let name = stored.isEmpty ? "Custom" : stored
         let matchedCourse = stored.isEmpty ? nil : CourseLibrary.shared.courses.first { $0.name == stored }
-        let isHome: Bool
-        if let hid = ProfileStore.homeCourseID, let mc = matchedCourse {
-            isHome = mc.id.uuidString == hid
-        } else {
-            isHome = false
-        }
+        let hid = ProfileStore.homeCourseID
+        let isHome = !hid.isEmpty && matchedCourse?.id.uuidString == hid
         courseLabel.text = isHome ? "Course: ⭐ \(name)" : "Course: \(name)"
 
         gameInfoLabel?.text  = "Game:   \(g.gameType?.displayName ?? "Casual")"
