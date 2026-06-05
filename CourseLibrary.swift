@@ -112,7 +112,7 @@ let BILTMORE_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",   yardage: 5400, rating: 72.1, slope: 128)
 ]
 // MARK: Wilmette Golf Club
-private let WILMETTE_GC_ID = UUID(uuidString: "WILMETTE1-0001-0001-0001-000000000001")!
+private let WILMETTE_GC_ID = UUID(uuidString: "77777701-0001-0001-0001-000000000001")!
 let WILMETTE_GC_PARS: [Int] = [4,3,4,4,4,5,3,4,4, 4,4,3,4,4,4,3,5,4]   // par 70
 let WILMETTE_GC_HCS:  [Int] = [9,17,1,5,15,3,13,11,7, 10,2,18,12,6,14,16,4,8]
 let WILMETTE_GC_TEES: [TeeInfo] = [
@@ -124,7 +124,7 @@ let WILMETTE_GC_TEES: [TeeInfo] = [
 ]
 
 // MARK: Elgin Country Club (Blue)
-private let ELGIN_CC_ID = UUID(uuidString: "ELGINCC1-0001-0001-0001-000000000001")!
+private let ELGIN_CC_ID = UUID(uuidString: "e16100cc-0001-0001-0001-000000000001")!
 let ELGIN_CC_PARS: [Int] = [5,4,4,3,4,3,4,5,3, 5,4,4,4,5,4,3,4,4]   // par 72
 let ELGIN_CC_HCS:  [Int] = [12,14,10,8,2,16,4,6,18, 11,17,9,1,5,3,13,15,7]
 let ELGIN_CC_TEES: [TeeInfo] = [
