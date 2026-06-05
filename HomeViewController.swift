@@ -121,7 +121,6 @@ final class ViewController: UIViewController {
         } else {
             name = CourseLibrary.shared.selectedCourseName ?? "Choose Course"
         }
-        print("DEBUG yellow button course: \(name)")
         courseButton.configuration = styledButton(title: name, style: .secondaryChevron)
     }
 
