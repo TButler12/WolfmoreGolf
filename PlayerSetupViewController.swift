@@ -512,20 +512,16 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             return
         }
 
-        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
-        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
-
-        let match = CourseLibrary.shared.courses.first { c in
-            Array(c.pars.prefix(STANDARD_HOLES)) == currentPars &&
-            Array(c.hcs.prefix(STANDARD_HOLES))  == currentHCs
-        }
-
-        if let course = match {
-            let isHome = (course.id.uuidString == ProfileStore.homeCourseID)
-            courseLabel.text = isHome ? "Course: ⭐ \(course.name)" : "Course: \(course.name)"
+        let stored = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = stored.isEmpty ? "Custom" : stored
+        let matchedCourse = stored.isEmpty ? nil : CourseLibrary.shared.courses.first { $0.name == stored }
+        let isHome: Bool
+        if let hid = ProfileStore.homeCourseID, let mc = matchedCourse {
+            isHome = mc.id.uuidString == hid
         } else {
-            courseLabel.text = "Course: Custom"
+            isHome = false
         }
+        courseLabel.text = isHome ? "Course: ⭐ \(name)" : "Course: \(name)"
 
         gameInfoLabel?.text  = "Game:   \(g.gameType?.displayName ?? "Casual")"
         stakeInfoLabel?.text = "Stake:  $\(g.baseGameStake)"

@@ -168,10 +168,26 @@ final class LiveNassauViewController: UIViewController {
     }
 
     private var isSameCourse: Bool {
-        guard let a = match?.courseA?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-              let b = match?.courseB?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-              !a.isEmpty, !b.isEmpty else { return false }
-        return a == b
+        // Primary: explicit course names stored on the MatchRecord
+        if let a = match?.courseA?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+           let b = match?.courseB?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+           !a.isEmpty, !b.isEmpty {
+            return a == b
+        }
+        // Fallback: infer from holeHc values in received scores.
+        // On the same course every physical hole has the same HC rank for both players.
+        var hcByPlayer: [String: [Int: Int]] = [:]   // playerName → (hole → holeHc)
+        for s in receivedScores {
+            guard let pn = s.playerName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                  !pn.isEmpty, let hc = s.holeHc else { continue }
+            if hcByPlayer[pn] == nil { hcByPlayer[pn] = [:] }
+            hcByPlayer[pn]![s.hole] = hc
+        }
+        let players = Array(hcByPlayer.values)
+        guard players.count >= 2 else { return false }
+        let common = Set(players[0].keys).intersection(Set(players[1].keys))
+        guard common.count >= 2 else { return false }
+        return common.allSatisfy { players[0][$0] == players[1][$0] }
     }
 
     private var amHost: Bool {
@@ -423,6 +439,7 @@ final class LiveNassauViewController: UIViewController {
                 let o = ownerScores.first { $0.hole == h }
                 let p = oppScores.first   { $0.hole == h }
                 guard o != nil || p != nil else { return nil }
+                print("DEBUG pairing: local H\(h + 1) vs remote H\(h + 1)")
                 return makePairedHole(rank: h, o: o, p: p)
             }
         }
@@ -432,7 +449,10 @@ final class LiveNassauViewController: UIViewController {
 
         let count = max(sortedOwner.count, sortedOpp.count)
         return (0..<count).map { i in
-            makePairedHole(rank: i, o: sortedOwner[safe: i], p: sortedOpp[safe: i])
+            let o = sortedOwner[safe: i]
+            let p = sortedOpp[safe: i]
+            print("DEBUG pairing: local H\((o?.hole ?? -1) + 1) vs remote H\((p?.hole ?? -1) + 1)")
+            return makePairedHole(rank: i, o: o, p: p)
         }
     }
 

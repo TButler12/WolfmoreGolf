@@ -69,7 +69,8 @@ final class ManagePlayersViewController: UIViewController,
         titleLabel.textColor = .label
         titleLabel.textAlignment = .center
 
-        let courseName = CourseLibrary.shared.selectedCourseName ?? "No Course"
+        let storedCourse = GameManager.shared.currentGame?.course.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let courseName = storedCourse.isEmpty ? (CourseLibrary.shared.selectedCourseName ?? "No Course") : storedCourse
         let courseLabel = UILabel()
         courseLabel.text = courseName
         courseLabel.font = courseFont

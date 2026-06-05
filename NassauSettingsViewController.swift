@@ -369,7 +369,8 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                   !code.isEmpty else { return }
             Task {
                 do {
-                    let match = try await SupabaseService.shared.joinMatch(code: code)
+                    let joinerCourse = GameManager.shared.currentGame?.course.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                    let match = try await SupabaseService.shared.joinMatch(code: code, courseB: joinerCourse)
                     GameManager.shared.update { g in
                         g.remoteMatchId = match.id
                         if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }

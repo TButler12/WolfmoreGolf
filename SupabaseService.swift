@@ -53,7 +53,7 @@ final class SupabaseService {
     }
 
     // MARK: - Join match (applies host's Nassau settings to local state)
-    func joinMatch(code: String) async throws -> MatchRecord {
+    func joinMatch(code: String, courseB: String = "") async throws -> MatchRecord {
         let response: PostgrestResponse<MatchRecord> = try await client
             .from("matches")
             .select()
@@ -72,13 +72,15 @@ final class SupabaseService {
         let playerSlot = currentOpponents.count + 1   // host=0, first joiner=1, etc.
         let newOpponents = currentOpponents + [myName]
 
-        // Append joiner to opponent_names; keep legacy opponent_name for old clients
+        // Append joiner to opponent_names; record joiner's course for same-course detection
+        var updateFields: [String: AnyJSON] = [
+            "opponent_name":  AnyJSON.string(myName),
+            "opponent_names": AnyJSON.array(newOpponents.map { .string($0) })
+        ]
+        if !courseB.isEmpty { updateFields["course_b"] = AnyJSON.string(courseB) }
         try await client
             .from("matches")
-            .update([
-                "opponent_name":  AnyJSON.string(myName),
-                "opponent_names": AnyJSON.array(newOpponents.map { .string($0) })
-            ] as [String: AnyJSON])
+            .update(updateFields)
             .eq("id", value: match.id)
             .execute()
 

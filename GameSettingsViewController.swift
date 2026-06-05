@@ -487,20 +487,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         }
 
         let stored = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !stored.isEmpty && stored != "WolfMore" {
-            courseNameLabel.text = stored
-            return
-        }
-
-        let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
-        let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
-
-        let match = CourseLibrary.shared.courses.first {
-            Array($0.pars.prefix(STANDARD_HOLES)) == currentPars &&
-            Array($0.hcs.prefix(STANDARD_HOLES)) == currentHCs
-        }
-
-        courseNameLabel.text = match?.name ?? "Custom Course"
+        courseNameLabel.text = stored.isEmpty ? "Custom Course" : stored
     }
 
     private func refreshUmbrellaButtonUI() {
