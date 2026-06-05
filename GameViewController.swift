@@ -2507,9 +2507,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 if !ids.isEmpty { return ids }
                 return g.remoteMatchId.map { [$0] } ?? []
             }()
+            let ownerSlot = myPlayerIndex(in: g) ?? 0
+            let gross5c   = ownerSlot < g.scores.count ? g.scores[ownerSlot][hole] : nil
+            print("DEBUG 5c remoteMatchId=\(g.remoteMatchId ?? "nil") remoteMatchIds=\(g.remoteMatchIds) matchIds=\(matchIds) ownerSlot=\(ownerSlot) gross=\(String(describing: gross5c))")
             if !matchIds.isEmpty {
-                let ownerSlot = myPlayerIndex(in: g) ?? 0
-                if ownerSlot < g.scores.count, let gross = g.scores[ownerSlot][hole] {
+                if let gross = gross5c {
                     let side      = ownerSlot == 0 ? "A" : "B"
                     let hc        = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
                     let playerHc  = g.hcPlayers[safe: ownerSlot] ?? 0
@@ -2521,7 +2523,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                 try await SupabaseService.shared.submitRemoteNassauHole(
                                     matchId:    matchId,
                                     side:       side,
-                                    hole:       hole + 1,   // convert to 1-based
+                                    hole:       hole + 1,
                                     grossScore: gross,
                                     handicap:   hc,
                                     playerHc:   playerHc,
