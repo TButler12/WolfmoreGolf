@@ -2516,15 +2516,21 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     let ownerName = g.playerNames[safe: ownerSlot] ?? (ProfileStore.name ?? "")
                     Task {
                         for matchId in matchIds {
-                            try? await SupabaseService.shared.submitRemoteNassauHole(
-                                matchId:    matchId,
-                                side:       side,
-                                hole:       hole + 1,   // convert to 1-based
-                                grossScore: gross,
-                                handicap:   hc,
-                                playerHc:   playerHc,
-                                playerName: ownerName
-                            )
+                            print("DEBUG remote nassau writing: matchId=\(matchId) side=\(side) hole=\(hole + 1) score=\(gross) hc=\(hc) playerHc=\(playerHc) name=\(ownerName)")
+                            do {
+                                try await SupabaseService.shared.submitRemoteNassauHole(
+                                    matchId:    matchId,
+                                    side:       side,
+                                    hole:       hole + 1,   // convert to 1-based
+                                    grossScore: gross,
+                                    handicap:   hc,
+                                    playerHc:   playerHc,
+                                    playerName: ownerName
+                                )
+                                print("DEBUG remote nassau write SUCCESS: matchId=\(matchId) side=\(side) hole=\(hole + 1)")
+                            } catch {
+                                print("ERROR remote nassau write FAILED: matchId=\(matchId) side=\(side) hole=\(hole + 1) error=\(error)")
+                            }
                         }
                     }
                 }
