@@ -273,7 +273,9 @@ final class LiveNassauViewController: UIViewController {
         // Slot-based fallback for Remote Nassau: side A→slot 0, side B→slot 1.
         // Kicks in when name matching misses a side (e.g. opponent name not yet in match record).
         if ownerScores.isEmpty || oppScores.isEmpty {
-            let mySlot  = amHost ? 0 : 1
+            // remoteNassauSide is set at create("A")/join("B") time — more reliable than amHost name comparison.
+            let mySide  = GameManager.shared.currentGame?.remoteNassauSide ?? (amHost ? "A" : "B")
+            let mySlot  = mySide == "A" ? 0 : 1
             let oppSlot = 1 - mySlot
             let slotOwner = receivedScores.filter { $0.playerSlot == mySlot  && $0.hole >= 0 && $0.hole < STANDARD_HOLES }
             let slotOpp   = receivedScores.filter { $0.playerSlot == oppSlot && $0.hole >= 0 && $0.hole < STANDARD_HOLES }
@@ -417,7 +419,9 @@ final class LiveNassauViewController: UIViewController {
         }
         // Slot-based fallback (same logic as buildSyntheticGame)
         if ownerScores.isEmpty || oppScores.isEmpty {
-            let mySlot  = amHost ? 0 : 1
+            // remoteNassauSide is set at create("A")/join("B") time — more reliable than amHost name comparison.
+            let mySide  = GameManager.shared.currentGame?.remoteNassauSide ?? (amHost ? "A" : "B")
+            let mySlot  = mySide == "A" ? 0 : 1
             let oppSlot = 1 - mySlot
             let inRange: (HoleScoreRecord) -> Bool = { s in
                 s.hole >= 0 && s.hole < STANDARD_HOLES && (front ? s.hole <= 8 : s.hole >= 9)
