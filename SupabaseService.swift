@@ -205,7 +205,10 @@ final class SupabaseService {
             .eq("match_id", value: matchId)
             .order("hole")
             .execute()
-        return response.value
+        let rows = response.value
+        print("DEBUG fetch returned \(rows.count) rows")
+        for r in rows { print("DEBUG row: side=\(r.side) hole=\(r.hole) score=\(r.grossScore)") }
+        return rows
     }
 
     // MARK: - Fetch raw hole scores
