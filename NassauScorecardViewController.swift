@@ -54,6 +54,11 @@ final class NassauScorecardViewController: UIViewController {
         ])
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        if refreshProvider != nil { refreshTapped() }
+    }
+
     @objc private func refreshTapped() {
         guard let provider = refreshProvider else { return }
         Task {
