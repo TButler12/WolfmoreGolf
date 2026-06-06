@@ -176,6 +176,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private weak var liveNassauButton: UIButton?
     private var liveNassauInstalled = false
+    private var liveNassauBottomConstraint: NSLayoutConstraint?
 
     private var liveTabBar: UIView?
     private var liveTabBarInstalled = false
@@ -465,12 +466,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         btn.isHidden = GameManager.shared.currentGame?.remoteMatchId == nil
         view.addSubview(btn)
 
-        // Bottom-right of safe area, level with the "Text" / "Game Results" row
+        let bottomCon = btn.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16)
         NSLayoutConstraint.activate([
             btn.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -16),
-            btn.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            bottomCon,
         ])
-
+        liveNassauBottomConstraint = bottomCon
         liveNassauButton = btn
     }
 
@@ -523,7 +524,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         bar.addSubview(scoreBtn)
 
         let liveBtn = UIButton(type: .system)
-        liveBtn.setTitle("📺 Live", for: .normal)
+        liveBtn.setTitle("📺 Live Wolf", for: .normal)
         liveBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
         liveBtn.translatesAutoresizingMaskIntoConstraints = false
         liveBtn.addTarget(self, action: #selector(liveTabLiveTapped), for: .touchUpInside)
@@ -564,6 +565,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         liveTabLiveButton = liveBtn
         selectScoreTab()
         updateLiveTabBarVisibility()
+
+        // Push Live Nassau button above the tab bar so they don't overlap
+        if let con = liveNassauBottomConstraint {
+            con.constant = -(16 + 44)
+        }
     }
 
     private func updateLiveTabBarVisibility() {
