@@ -19,6 +19,8 @@ final class NassauScorecardViewController: UIViewController {
     var segmentTitle:   String = ""
     var ownerName:      String = ""
     var opponentName:   String = ""
+    var ownerCourse:    String = ""
+    var opponentCourse: String = ""
     /// Set by the presenting VC to provide fresh holes on refresh.
     var refreshProvider: (() async -> [PairedHole])?
 
@@ -106,7 +108,8 @@ extension NassauScorecardViewController: UITableViewDataSource {
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: PairedHoleCell.reuseID, for: indexPath) as! PairedHoleCell
         if indexPath.row == 0 {
-            cell.configureAsHeader(ownerName: ownerName, opponentName: opponentName)
+            cell.configureAsHeader(ownerName: ownerName, opponentName: opponentName,
+                                   ownerCourse: ownerCourse, opponentCourse: opponentCourse)
         } else {
             cell.configure(with: pairedHoles[indexPath.row - 1], ownerName: ownerName, opponentName: opponentName)
         }
@@ -134,11 +137,18 @@ final class PairedHoleCell: UITableViewCell {
     static let reuseID = "PairedHoleCell"
 
     // Name row — shown only in header mode
-    private let nameRow       = UIStackView()
-    private let hcSpacer      = UIView()
-    private let ownerNameLbl  = UILabel()
-    private let oppNameLbl    = UILabel()
-    private let nameEndSpacer = UIView()
+    private let nameRow        = UIStackView()
+    private let hcSpacer       = UIView()
+    private let ownerNameLbl   = UILabel()
+    private let oppNameLbl     = UILabel()
+    private let nameEndSpacer  = UIView()
+
+    // Course row — shown in header mode when courses are provided
+    private let courseRow         = UIStackView()
+    private let hcCourseSpacer    = UIView()
+    private let ownerCourseLbl    = UILabel()
+    private let oppCourseLbl      = UILabel()
+    private let courseEndSpacer   = UIView()
 
     // Column row — always visible
     private let colRow      = UIStackView()
@@ -170,6 +180,20 @@ final class PairedHoleCell: UITableViewCell {
         nameRow.isHidden = true
         for v in [hcSpacer, ownerNameLbl, oppNameLbl, nameEndSpacer] { nameRow.addArrangedSubview(v) }
 
+        // -- Course row --
+        hcCourseSpacer.widthAnchor.constraint(equalToConstant: HoleCellCol.hc).isActive = true
+        configLabel(ownerCourseLbl, size: 10, weight: .regular, align: .center)
+        configLabel(oppCourseLbl,   size: 10, weight: .regular, align: .center)
+        ownerCourseLbl.textColor = .secondaryLabel
+        oppCourseLbl.textColor   = .secondaryLabel
+        ownerCourseLbl.widthAnchor.constraint(equalToConstant: HoleCellCol.hole + HoleCellCol.gap + HoleCellCol.scr).isActive = true
+        oppCourseLbl.widthAnchor.constraint(equalToConstant: HoleCellCol.hole + HoleCellCol.gap + HoleCellCol.scr).isActive = true
+        courseEndSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        courseRow.axis    = .horizontal
+        courseRow.spacing = HoleCellCol.gap
+        courseRow.isHidden = true
+        for v in [hcCourseSpacer, ownerCourseLbl, oppCourseLbl, courseEndSpacer] { courseRow.addArrangedSubview(v) }
+
         // -- Column row --
         configLabel(hcLbl,        size: 12, weight: .regular,  align: .center)
         configLabel(ownerHoleLbl, size: 13, weight: .regular,  align: .center)
@@ -193,6 +217,7 @@ final class PairedHoleCell: UITableViewCell {
         outerStack.spacing = 2
         outerStack.translatesAutoresizingMaskIntoConstraints = false
         outerStack.addArrangedSubview(nameRow)
+        outerStack.addArrangedSubview(courseRow)
         outerStack.addArrangedSubview(colRow)
         contentView.addSubview(outerStack)
         NSLayoutConstraint.activate([
@@ -213,12 +238,18 @@ final class PairedHoleCell: UITableViewCell {
         l.minimumScaleFactor = 0.75
     }
 
-    func configureAsHeader(ownerName: String, opponentName: String) {
+    func configureAsHeader(ownerName: String, opponentName: String,
+                           ownerCourse: String = "", opponentCourse: String = "") {
         nameRow.isHidden = false
         ownerNameLbl.text  = ownerName
         oppNameLbl.text    = opponentName
         ownerNameLbl.textColor = .label
         oppNameLbl.textColor   = .label
+
+        let hasCourses = !ownerCourse.isEmpty || !opponentCourse.isEmpty
+        courseRow.isHidden   = !hasCourses
+        ownerCourseLbl.text  = ownerCourse.isEmpty    ? "" : ownerCourse
+        oppCourseLbl.text    = opponentCourse.isEmpty ? "" : opponentCourse
 
         hcLbl.text        = "#"
         ownerHoleLbl.text = "Hole"

@@ -590,11 +590,20 @@ extension LiveNassauViewController: UITableViewDelegate {
         let section = pairings[indexPath.section]
         let front   = indexPath.row == 0
         let pairs   = buildPairedHoles(ownerName: section.ownerName, opponentName: section.opponentName, front: front)
+        let ownerCourse = amHost
+            ? (match?.courseA ?? "")
+            : (match?.courseB ?? "")
+        let opponentCourse = amHost
+            ? (match?.courseB ?? "")
+            : (match?.courseA ?? "")
+
         let vc      = NassauScorecardViewController()
-        vc.segmentTitle = front ? "Front 9" : "Back 9"
-        vc.ownerName    = section.ownerName.isEmpty    ? "Player 1" : section.ownerName
-        vc.opponentName = section.opponentName.isEmpty ? "Player 2" : section.opponentName
-        vc.pairedHoles  = pairs
+        vc.segmentTitle   = front ? "Front 9" : "Back 9"
+        vc.ownerName      = section.ownerName.isEmpty    ? "Player 1" : section.ownerName
+        vc.opponentName   = section.opponentName.isEmpty ? "Player 2" : section.opponentName
+        vc.ownerCourse    = ownerCourse
+        vc.opponentCourse = opponentCourse
+        vc.pairedHoles    = pairs
         vc.refreshProvider = { [weak self] in
             guard let self else { return pairs }
             await self.refreshScores()
