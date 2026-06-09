@@ -25,6 +25,7 @@ final class NassauScorecardViewController: UIViewController {
     var refreshProvider: (() async -> [PairedHole])?
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private var refreshTimer: Timer?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -58,7 +59,17 @@ final class NassauScorecardViewController: UIViewController {
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        if refreshProvider != nil { refreshTapped() }
+        guard refreshProvider != nil else { return }
+        refreshTapped()
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            self?.refreshTapped()
+        }
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        refreshTimer?.invalidate()
+        refreshTimer = nil
     }
 
     @objc private func refreshTapped() {
@@ -102,7 +113,7 @@ extension NassauScorecardViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        "\(ownerName) vs \(opponentName)"
+        return nil
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -264,7 +275,8 @@ final class PairedHoleCell: UITableViewCell {
     }
 
     func configure(with hole: PairedHole, ownerName: String, opponentName: String) {
-        nameRow.isHidden = true
+        nameRow.isHidden   = true
+        courseRow.isHidden = true
 
         hcLbl.text             = "\(hole.hcRank)"
         hcLbl.textColor        = .tertiaryLabel

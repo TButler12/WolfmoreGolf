@@ -36,6 +36,7 @@ final class LiveNassauViewController: UIViewController {
     }
 
     private var pairings: [PairingSection] = []
+    private var refreshTimer: Timer?
 
     // MARK: - UI
 
@@ -55,8 +56,18 @@ final class LiveNassauViewController: UIViewController {
         subscribeToScores()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        Task { await refreshScores() }
+        refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { await self?.refreshScores() }
+        }
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        refreshTimer?.invalidate()
+        refreshTimer = nil
         if let id = match?.id {
             SupabaseService.shared.unsubscribeFromHoleScores(matchId: id)
         }
@@ -339,7 +350,16 @@ final class LiveNassauViewController: UIViewController {
                                 stake: press.stake))
         }
 
-        return PairingSection(title: "\(t1) vs \(t2)", rows: rows,
+        let courseA = amHost ? (match?.courseA ?? "") : (match?.courseB ?? "")
+        let courseB = amHost ? (match?.courseB ?? "") : (match?.courseA ?? "")
+
+        let title: String
+        if !courseA.isEmpty && !courseB.isEmpty {
+            title = "\(t1) (\(courseA)) vs \(t2) (\(courseB))"
+        } else {
+            title = "\(t1) vs \(t2)"
+        }
+        return PairingSection(title: title, rows: rows,
                               isOverallComplete: NassauEngine.isOverallComplete(gameData: g),
                               ownerName: ownerName, opponentName: opponentName)
     }
@@ -463,14 +483,31 @@ final class LiveNassauViewController: UIViewController {
             )
         }
 
-        // Always pair by physical hole number — iterate the full front/back range,
-        // show holes where at least one player has a score, skip truly empty holes.
-        let range = front ? (0..<9) : (9..<STANDARD_HOLES)
-        return range.compactMap { h -> PairedHole? in
-            let o = ownerScores.first { $0.hole == h }
-            let p = oppScores.first   { $0.hole == h }
-            guard o != nil || p != nil else { return nil }
-            return makePairedHole(rank: h, o: o, p: p)
+        if isSameCourse {
+            // Same course — match by physical hole number
+            let range = front ? (0..<9) : (9..<STANDARD_HOLES)
+            return range.compactMap { h -> PairedHole? in
+                let o = ownerScores.first { $0.hole == h }
+                let p = oppScores.first   { $0.hole == h }
+                guard o != nil || p != nil else { return nil }
+                return makePairedHole(rank: h, o: o, p: p)
+            }
+        } else {
+            // Different courses — match by HC rank (hardest vs hardest)
+            let ownerSorted = ownerScores
+                .filter { front ? $0.hole < 9 : $0.hole >= 9 }
+                .sorted { hcRank($0) < hcRank($1) }
+            let oppSorted = oppScores
+                .filter { front ? $0.hole < 9 : $0.hole >= 9 }
+                .sorted { hcRank($0) < hcRank($1) }
+
+            let count = max(ownerSorted.count, oppSorted.count)
+            return (0..<count).compactMap { i -> PairedHole? in
+                let o = i < ownerSorted.count ? ownerSorted[i] : nil
+                let p = i < oppSorted.count   ? oppSorted[i]   : nil
+                guard o != nil || p != nil else { return nil }
+                return makePairedHole(rank: i, o: o, p: p)
+            }
         }
     }
 

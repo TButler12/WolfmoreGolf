@@ -707,6 +707,21 @@ let CHALET_HILLS_BLACK_HCS: [Int] = [
 let CHALET_HILLS_BLACK_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6898, rating: 73.8, slope: 140)
 ]
+// MARK: Glen Oak Country Club — Glen Ellyn, IL
+private let GLEN_OAK_CC_ID = UUID(uuidString: "B3C5D7E9-1F2A-4B3C-8D4E-5F6A7B8C9D0E")!
+
+let GLEN_OAK_CC_PARS: [Int] = [
+    4,4,3,4,5,3,5,4,4,
+    5,3,4,4,4,4,3,5,4
+]
+let GLEN_OAK_CC_HCS: [Int] = [
+    7,9,15,5,3,17,1,13,11,
+    2,18,6,14,4,12,16,10,8
+]
+let GLEN_OAK_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6841, rating: 73.2, slope: 139)
+]
+
 // MARK: Old Head Golf Links
 private let OLD_HEAD_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000010")!
 let OLD_HEAD_PARS: [Int] = [4,4,5,3,4,4, 5,4,4, 4,5,3, 4,5,3, 4,4,4]
@@ -1524,6 +1539,135 @@ let DAVENPORT_CC_BLACK_HCS: [Int] = [
 ]
 let DAVENPORT_CC_BLACK_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6790, rating: 73.7, slope: 140)
+]
+
+// MARK: Wakonda Club — Des Moines, IA
+private let WAKONDA_CLUB_ID = UUID(uuidString: "A3C5F2B1-7D9E-4A4B-8C6E-1F3D5B7A9C2E")!
+
+let WAKONDA_CLUB_PARS: [Int] = [
+    4,3,4,4,5,4,4,5,3,
+    4,4,4,5,3,5,4,3,4
+]
+let WAKONDA_CLUB_HCS: [Int] = [
+    5,15,11,7,1,9,13,3,17,
+    6,12,8,2,16,4,14,18,10
+]
+let WAKONDA_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6910)
+]
+
+// MARK: Blue Top Ridge — Riverside, IA
+private let BLUE_TOP_RIDGE_ID = UUID(uuidString: "B8E4D3A2-5C6F-4B1E-9D7A-2E4F6C8A0B3D")!
+
+let BLUE_TOP_RIDGE_PARS: [Int] = [
+    4,4,4,5,4,3,5,3,4,
+    4,3,5,4,3,4,5,4,4
+]
+let BLUE_TOP_RIDGE_HCS: [Int] = [
+    11,7,17,5,3,15,1,13,9,
+    6,12,4,10,18,14,2,16,8
+]
+let BLUE_TOP_RIDGE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7481, rating: 77.2, slope: 143),
+    TeeInfo(teeName: "Gold",         yardage: 7019, rating: 74.9, slope: 139),
+    TeeInfo(teeName: "Blue",         yardage: 6454, rating: 71.6, slope: 136),
+    TeeInfo(teeName: "White",        yardage: 5789, rating: 68.3, slope: 131),
+    TeeInfo(teeName: "Red",          yardage: 5208, rating: 66.1, slope: 122)
+]
+
+// MARK: Glen Oaks Country Club — West Des Moines, IA
+private let GLEN_OAKS_CC_IA_ID = UUID(uuidString: "C4D6E8F0-2A3B-4C5D-9E7F-6A8B0C2D4E6F")!
+
+let GLEN_OAKS_CC_IA_PARS: [Int] = [
+    4,3,4,4,3,4,4,4,5,
+    4,5,4,4,3,5,3,4,4
+]
+let GLEN_OAKS_CC_IA_HCS: [Int] = [
+    12,10,4,18,8,2,6,14,16,
+    3,15,11,5,9,13,17,1,7
+]
+let GLEN_OAKS_CC_IA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6950, rating: 74.9, slope: 145)
+]
+
+// MARK: Des Moines Golf and Country Club — North (West Des Moines, IA)
+private let DMGCC_NORTH_ID = UUID(uuidString: "F1A3B5C7-2D4E-4F6A-8B0C-3E5D7A9B1C4F")!
+
+let DMGCC_NORTH_PARS: [Int] = [
+    4,5,3,4,3,4,4,4,5,
+    4,4,3,5,4,4,4,3,5
+]
+let DMGCC_NORTH_HCS: [Int] = [
+    5,9,13,7,15,1,3,11,17,
+    18,6,16,10,2,8,14,12,4
+]
+let DMGCC_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7294, rating: 75.2, slope: 136)
+]
+
+// MARK: Des Moines Golf and Country Club — South (West Des Moines, IA)
+private let DMGCC_SOUTH_ID = UUID(uuidString: "A2B4C6D8-3E5F-4A7B-9C1D-4F6E8A0B2C5D")!
+
+let DMGCC_SOUTH_PARS: [Int] = [
+    4,5,4,4,3,5,4,3,4,
+    4,4,4,5,4,3,5,3,4
+]
+let DMGCC_SOUTH_HCS: [Int] = [
+    7,9,3,1,17,13,11,15,5,
+    8,10,4,18,2,12,14,16,6
+]
+let DMGCC_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7347, rating: 75.0, slope: 140)
+]
+
+// MARK: Tournament Club of Iowa — Polk City, IA
+private let TOURNAMENT_CLUB_IOWA_ID = UUID(uuidString: "D4E6F3A1-8B2C-4D5E-9A3F-5C1B8D4E7A2F")!
+
+let TOURNAMENT_CLUB_IOWA_PARS: [Int] = [
+    4,4,3,5,3,4,5,4,3,
+    4,4,4,5,4,3,3,5,4
+]
+let TOURNAMENT_CLUB_IOWA_HCS: [Int] = [
+    17,7,15,3,13,1,5,9,11,
+    16,8,2,12,18,14,10,6,4
+]
+let TOURNAMENT_CLUB_IOWA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "King",   yardage: 7013, rating: 73.5, slope: 140),
+    TeeInfo(teeName: "Palmer", yardage: 6551, rating: 71.5, slope: 140),
+    TeeInfo(teeName: "Deacon", yardage: 6153, rating: 69.0, slope: 132)
+]
+
+// MARK: Amana Colonies Golf Club — Amana, IA
+private let AMANA_COLONIES_GC_ID = UUID(uuidString: "E5F7A2B3-9C4D-4E6F-8B1A-6D2C9E5F0B4A")!
+
+let AMANA_COLONIES_GC_PARS: [Int] = [
+    4,5,4,3,4,5,4,3,4,
+    4,5,4,3,4,5,4,3,4
+]
+let AMANA_COLONIES_GC_HCS: [Int] = [
+    7,1,3,17,9,5,11,15,13,
+    6,12,2,18,14,8,4,10,16
+]
+let AMANA_COLONIES_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6824, rating: 73.6, slope: 146),
+    TeeInfo(teeName: "Gold",  yardage: 6540, rating: 72.2, slope: 144),
+    TeeInfo(teeName: "Blue",  yardage: 6194, rating: 70.6, slope: 142),
+    TeeInfo(teeName: "White", yardage: 5804, rating: 69.5, slope: 129)
+]
+
+// MARK: Spirit Hollow Golf Course — Burlington, IA
+private let SPIRIT_HOLLOW_ID = UUID(uuidString: "C7D2A4B5-3E8F-4C2A-9B5D-4F1E3A6C8D0B")!
+
+let SPIRIT_HOLLOW_PARS: [Int] = [
+    4,5,3,5,4,4,3,4,4,
+    5,4,3,4,4,3,4,4,5
+]
+let SPIRIT_HOLLOW_HCS: [Int] = [
+    3,11,9,13,15,1,17,5,7,
+    8,12,14,2,4,18,16,10,6
+]
+let SPIRIT_HOLLOW_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7301, rating: 75.9, slope: 135)
 ]
 
 // MARK: TPC Deere Run — TPC (Silvis, IL)
@@ -5766,6 +5910,44 @@ let BALLYS_FERRY_POINT_TEES: [TeeInfo] = [
         slope: 141
     )
 ]
+
+// MARK: Fishers Island Club — Fishers Island, NY
+private let FISHERS_ISLAND_CLUB_ID = UUID(uuidString: "C9D0E1F2-A3B4-4C5D-6E7F-8A9B0C1D2E3F")!
+
+let FISHERS_ISLAND_CLUB_PARS: [Int] = [
+    4,3,4,4,3,5,4,4,4,
+    4,3,4,4,4,5,3,4,4
+]
+
+let FISHERS_ISLAND_CLUB_HCS: [Int] = [
+    7,13,9,1,5,11,3,17,15,
+    4,12,6,8,2,14,18,10,16
+]
+
+let FISHERS_ISLAND_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6597, rating: 72.8, slope: 144)
+]
+
+// MARK: Friar's Head — Baiting Hollow, NY
+private let FRIARS_HEAD_ID = UUID(uuidString: "D0E1F2A3-B4C5-4D6E-7F8A-9B0C1D2E3F4A")!
+
+let FRIARS_HEAD_PARS: [Int] = [
+    4,5,4,3,4,4,5,3,4,
+    3,5,3,4,5,4,4,3,4
+]
+
+let FRIARS_HEAD_HCS: [Int] = [
+    9,7,1,13,15,3,5,17,11,
+    16,12,14,2,10,8,6,18,4
+]
+
+let FRIARS_HEAD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back",      yardage: 7041, rating: 74.4, slope: 140),
+    TeeInfo(teeName: "Composite", yardage: 6700, rating: 73.4, slope: 136),
+    TeeInfo(teeName: "Member",    yardage: 6300, rating: 71.8, slope: 133),
+    TeeInfo(teeName: "Short",     yardage: 5800, rating: 70.2, slope: 128)
+]
+
 private let OLD_MEMORIAL_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000122")!
 
 let OLD_MEMORIAL_PARS: [Int] = [
@@ -5969,6 +6151,24 @@ let SHINGLE_CREEK_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "White",  yardage: 5810, rating: 67.5, slope: 125),
     TeeInfo(teeName: "Silver", yardage: 5290, rating: 65.2, slope: 120)
 ]
+
+// MARK: KAROO at Streamsong — Brooksville, FL
+private let KAROO_STREAMSONG_ID = UUID(uuidString: "E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B")!
+
+let KAROO_STREAMSONG_PARS: [Int] = [
+    4,4,3,5,4,5,3,4,4,
+    3,4,4,4,5,4,3,5,4
+]
+
+let KAROO_STREAMSONG_HCS: [Int] = [
+    9,7,1,17,5,15,13,11,3,
+    8,14,4,2,12,16,10,18,6
+]
+
+let KAROO_STREAMSONG_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7562, rating: 75.2, slope: 140)
+]
+
 // MARK: - TPC Scottsdale (Stadium Course)
 
 private let TPC_SCOTTSDALE_STADIUM_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000202")!
@@ -6631,6 +6831,29 @@ let LAWSONIA_LINKS_TEES: [TeeInfo] = [
         slope: 115
     )
 ]
+
+// MARK: SentryWorld — Stevens Point, WI
+private let SENTRYWORLD_ID = UUID(uuidString: "F2A3B4C5-D6E7-4F8A-9B0C-1D2E3F4A5B6C")!
+
+let SENTRYWORLD_PARS: [Int] = [
+    4,4,3,4,5,4,3,4,5,
+    5,4,3,4,5,4,3,4,4
+]
+
+let SENTRYWORLD_HCS: [Int] = [
+    7,5,17,13,1,9,15,11,3,
+    4,14,18,12,2,10,16,8,6
+]
+
+let SENTRYWORLD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7320, rating: 76.6, slope: 151),
+    TeeInfo(teeName: "Black",        yardage: 7102, rating: 75.7, slope: 145),
+    TeeInfo(teeName: "Blue",         yardage: 6543, rating: 72.9, slope: 137),
+    TeeInfo(teeName: "White",        yardage: 5961, rating: 69.9, slope: 129),
+    TeeInfo(teeName: "Gold",         yardage: 5452, rating: 67.5, slope: 120),
+    TeeInfo(teeName: "Green",        yardage: 4652, rating: 68.2, slope: 116)
+]
+
 private let PAAKO_RIDGE_1_18_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5005")!
 private let PAAKO_RIDGE_10_27_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5006")!
 private let PAAKO_RIDGE_1_9_19_27_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5007")!
@@ -6853,6 +7076,164 @@ let DOTHAN_COUNTRY_CLUB_HCS: [Int] = [
 let DOTHAN_COUNTRY_CLUB_TEES: [TeeInfo] = [
     TeeInfo(teeName: "1", yardage: 6479, rating: 71.4, slope: 130)
 ]
+
+// MARK: Sweetens Cove Golf Club — South Pittsburg, TN
+private let SWEETENS_COVE_GC_ID = UUID(uuidString: "E5F6A7B8-C9D0-4E1F-2A3B-4C5D6E7F8A9B")!
+
+let SWEETENS_COVE_GC_PARS: [Int] = [
+    5,4,5,3,4,4,4,4,3,
+    5,4,5,3,4,4,4,4,3
+]
+
+let SWEETENS_COVE_GC_HCS: [Int] = [
+    3,9,5,13,15,1,11,7,17,
+    4,10,6,14,16,2,12,8,18
+]
+
+let SWEETENS_COVE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6602, rating: 70.0, slope: 120)
+]
+
+// MARK: The Honors Course — Ooltewah, TN
+private let HONORS_COURSE_ID = UUID(uuidString: "F6A7B8C9-D0E1-4F2A-3B4C-5D6E7F8A9B0C")!
+
+let HONORS_COURSE_PARS: [Int] = [
+    4,5,3,4,4,5,4,3,4,
+    4,5,4,4,3,4,3,5,4
+]
+
+let HONORS_COURSE_HCS: [Int] = [
+    9,17,13,5,3,11,1,15,7,
+    4,12,8,14,16,2,10,18,6
+]
+
+let HONORS_COURSE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Silver", yardage: 7694, rating: 78.3, slope: 155)
+]
+
+// MARK: Hermitage Golf Course (President's Reserve) — Old Hickory, TN
+private let HERMITAGE_PR_ID = UUID(uuidString: "B8C9D0E1-F2A3-4B4C-5D6E-7F8A9B0C1D2E")!
+
+let HERMITAGE_PR_PARS: [Int] = [
+    4,5,3,4,4,4,3,5,4,
+    4,4,3,4,5,3,4,4,5
+]
+
+let HERMITAGE_PR_HCS: [Int] = [
+    18,2,14,16,6,12,10,4,8,
+    15,3,13,1,5,11,9,17,7
+]
+
+let HERMITAGE_PR_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7157, rating: 74.8, slope: 134),
+    TeeInfo(teeName: "Gold",  yardage: 6792, rating: 73.0, slope: 130),
+    TeeInfo(teeName: "Blue",  yardage: 6443, rating: 71.2, slope: 126),
+    TeeInfo(teeName: "White", yardage: 6056, rating: 69.0, slope: 121),
+    TeeInfo(teeName: "Green", yardage: 5669, rating: 66.8, slope: 115)
+]
+
+// MARK: Gaylord Springs Golf Links — Nashville, TN
+private let GAYLORD_SPRINGS_ID = UUID(uuidString: "E7F8A9B0-C1D2-4E3F-4A5B-6C7D8E9F0A1B")!
+
+let GAYLORD_SPRINGS_PARS: [Int] = [
+    5,4,3,4,4,5,4,3,4,
+    5,4,5,3,4,4,4,3,4
+]
+
+let GAYLORD_SPRINGS_HCS: [Int] = [
+    9,3,15,11,1,7,5,17,13,
+    10,4,8,18,12,6,14,16,2
+]
+
+let GAYLORD_SPRINGS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6981, rating: 73.1, slope: 133)
+]
+
+// MARK: Tennessee National — Loudon, TN
+private let TENNESSEE_NATIONAL_ID = UUID(uuidString: "D6E7F8A9-B0C1-4D2E-3F4A-5B6C7D8E9F0A")!
+
+let TENNESSEE_NATIONAL_PARS: [Int] = [
+    4,5,3,5,4,4,3,4,4,
+    4,5,3,4,5,4,4,3,4
+]
+
+let TENNESSEE_NATIONAL_HCS: [Int] = [
+    11,5,13,1,9,7,17,15,3,
+    4,2,16,12,10,14,6,18,8
+]
+
+let TENNESSEE_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7393, rating: 75.8, slope: 140)
+]
+
+// MARK: Black Creek Golf Club — Ellabell, GA
+private let BLACK_CREEK_GC_GA_ID = UUID(uuidString: "A7B8C9D0-E1F2-4A3B-4C5D-6E7F8A9B0C1D")!
+
+let BLACK_CREEK_GC_GA_PARS: [Int] = [
+    4,3,4,5,4,3,4,5,4,
+    5,3,4,4,4,3,5,4,4
+]
+
+let BLACK_CREEK_GC_GA_HCS: [Int] = [
+    15,9,1,13,11,5,3,17,7,
+    14,18,4,12,6,10,16,8,2
+]
+
+let BLACK_CREEK_GC_GA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6335, rating: 70.2, slope: 128)
+]
+
+// MARK: Lookout Mountain Golf Club — Lookout Mountain, GA
+private let LOOKOUT_MOUNTAIN_GC_ID = UUID(uuidString: "F8A9B0C1-D2E3-4F4A-5B6C-7D8E9F0A1B2C")!
+
+let LOOKOUT_MOUNTAIN_GC_PARS: [Int] = [
+    4,4,4,3,4,3,4,4,4,
+    5,4,4,3,5,4,3,4,4
+]
+
+let LOOKOUT_MOUNTAIN_GC_HCS: [Int] = [
+    7,3,9,5,11,17,1,15,13,
+    4,16,18,14,6,2,8,10,12
+]
+
+let LOOKOUT_MOUNTAIN_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6613, rating: 72.0, slope: 128)
+]
+
+// MARK: Blessings Golf Club — Fayetteville, AR
+private let BLESSINGS_GC_ID = UUID(uuidString: "A9B0C1D2-E3F4-4A5B-6C7D-8E9F0A1B2C3D")!
+
+let BLESSINGS_GC_PARS: [Int] = [
+    4,5,3,4,5,4,4,3,4,
+    5,4,4,3,4,5,4,3,4
+]
+
+let BLESSINGS_GC_HCS: [Int] = [
+    5,15,9,11,1,7,3,17,13,
+    6,14,8,12,2,16,10,18,4
+]
+
+let BLESSINGS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 8015, rating: 81.0, slope: 155)
+]
+
+// MARK: The Alotian Club — Roland, AR
+private let ALOTIAN_CLUB_ID = UUID(uuidString: "B0C1D2E3-F4A5-4B6C-7D8E-9F0A1B2C3D4E")!
+
+let ALOTIAN_CLUB_PARS: [Int] = [
+    5,4,4,3,4,3,4,5,4,
+    4,3,4,4,5,4,3,5,4
+]
+
+let ALOTIAN_CLUB_HCS: [Int] = [
+    15,9,13,7,5,11,1,17,3,
+    14,18,4,16,12,6,10,8,2
+]
+
+let ALOTIAN_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7272, rating: 75.6, slope: 137)
+]
+
 private let SHOREACRES_ID = UUID(uuidString: "A1B2C3D4-1111-4AAA-8C11-100000000404")!
 
 let SHOREACRES_PARS: [Int] = [
@@ -7794,6 +8175,450 @@ let SLEEPY_HOLLOW_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6648, rating: 73.4, slope: 145)
 ]
 
+// MARK: Oakmont Country Club — Oakmont, PA
+private let OAKMONT_CC_ID = UUID(uuidString: "F9B0C526-7A81-4E3D-A417-0D5F9B8C2E35")!
+
+let OAKMONT_CC_PARS: [Int] = [
+    4,4,4,5,4,3,4,3,4,
+    4,4,5,3,4,4,3,4,4
+]
+
+let OAKMONT_CC_HCS: [Int] = [
+    5,9,1,13,7,15,3,11,17,
+    6,14,8,18,12,2,16,10,4
+]
+
+let OAKMONT_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7427, rating: 77.6, slope: 143)
+]
+
+// MARK: Aronimink Golf Club — Newtown Square, PA
+private let ARONIMINK_GC_ID = UUID(uuidString: "D4E5F6A7-B8C9-4D0E-1F2A-3B4C5D6E7F8A")!
+
+let ARONIMINK_GC_PARS: [Int] = [
+    4,4,4,4,3,4,4,3,5,
+    4,4,4,4,3,4,5,3,4
+]
+
+let ARONIMINK_GC_HCS: [Int] = [
+    3,11,7,1,17,9,5,13,15,
+    8,4,6,14,12,2,16,18,10
+]
+
+let ARONIMINK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7313, rating: 75.5, slope: 144)
+]
+
+// MARK: Bulle Rock Golf Club — Havre de Grace, MD
+private let BULLE_ROCK_GC_ID = UUID(uuidString: "C1D2E3F4-A5B6-4C7D-8E9F-0A1B2C3D4E5F")!
+
+let BULLE_ROCK_GC_PARS: [Int] = [
+    4,5,3,4,4,3,5,4,4,
+    4,5,3,4,4,5,4,3,4
+]
+
+let BULLE_ROCK_GC_HCS: [Int] = [
+    13,3,17,5,1,9,15,11,7,
+    12,6,10,2,14,8,18,16,4
+]
+
+let BULLE_ROCK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7375, rating: 75.6, slope: 146),
+    TeeInfo(teeName: "Gold",  yardage: 6925, rating: 73.1, slope: 141),
+    TeeInfo(teeName: "Blue",  yardage: 6410, rating: 71.0, slope: 137),
+    TeeInfo(teeName: "White", yardage: 6055, rating: 69.2, slope: 133),
+    TeeInfo(teeName: "Green", yardage: 5507, rating: 66.0, slope: 127)
+]
+
+// MARK: Worthington Manor Golf Club — Dickerson, MD
+private let WORTHINGTON_MANOR_GC_ID = UUID(uuidString: "D2E3F4A5-B6C7-4D8E-9F0A-1B2C3D4E5F6A")!
+
+let WORTHINGTON_MANOR_GC_PARS: [Int] = [
+    4,4,4,4,5,3,4,3,5,
+    4,4,4,5,4,3,4,3,5
+]
+
+let WORTHINGTON_MANOR_GC_HCS: [Int] = [
+    5,7,1,9,15,13,17,11,3,
+    14,12,2,8,16,18,4,6,10
+]
+
+let WORTHINGTON_MANOR_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7165, rating: 75.0, slope: 144),
+    TeeInfo(teeName: "Black",        yardage: 7034, rating: 74.4, slope: 143),
+    TeeInfo(teeName: "Blue",         yardage: 6525, rating: 72.1, slope: 138),
+    TeeInfo(teeName: "White",        yardage: 6002, rating: 69.7, slope: 133),
+    TeeInfo(teeName: "Gold",         yardage: 5403, rating: 66.8, slope: 128),
+    TeeInfo(teeName: "Silver",       yardage: 5086, rating: 69.7, slope: 128)
+]
+
+// MARK: Philadelphia Cricket Club — Wissahickon — Flourtown, PA
+private let PCC_WISSAHICKON_ID = UUID(uuidString: "C3D4E5F6-A7B8-4C9D-0E1F-2A3B4C5D6E7F")!
+
+let PCC_WISSAHICKON_PARS: [Int] = [
+    4,4,3,4,3,4,5,4,4,
+    3,4,5,4,4,3,4,4,4
+]
+
+let PCC_WISSAHICKON_HCS: [Int] = [
+    3,9,17,7,13,1,15,5,11,
+    18,6,16,2,12,14,10,8,4
+]
+
+let PCC_WISSAHICKON_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7131, rating: 74.7, slope: 138)
+]
+
+// MARK: Merion Golf Club — East Course — Ardmore, PA
+private let MERION_EAST_ID = UUID(uuidString: "A1B2C3D4-E5F6-4A7B-8C9D-0E1F2A3B4C5D")!
+
+let MERION_EAST_PARS: [Int] = [
+    4,5,3,5,4,4,4,4,3,
+    4,4,4,3,4,4,3,4,4
+]
+
+let MERION_EAST_HCS: [Int] = [
+    15,3,13,9,1,5,11,17,7,
+    16,10,14,18,2,6,8,12,4
+]
+
+let MERION_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6946, rating: 75.1, slope: 151)
+]
+
+// MARK: Merion Golf Club — West Course — Ardmore, PA
+private let MERION_WEST_ID = UUID(uuidString: "B2C3D4E5-F6A7-4B8C-9D0E-1F2A3B4C5D6E")!
+
+let MERION_WEST_PARS: [Int] = [
+    4,4,5,3,4,3,4,4,4,
+    4,4,4,4,4,3,5,3,4
+]
+
+let MERION_WEST_HCS: [Int] = [
+    17,5,7,13,1,11,9,15,3,
+    10,2,14,12,4,18,8,16,6
+]
+
+let MERION_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back", yardage: 6019, rating: 69.9, slope: 129)
+]
+
+// MARK: Keswick Club — Keswick, VA
+private let KESWICK_CLUB_ID = UUID(uuidString: "D7F8A304-5E69-4C1B-E295-8B3D7F6A0C13")!
+
+let KESWICK_CLUB_PARS: [Int] = [
+    4,5,4,3,4,4,3,5,4,
+    4,3,5,4,4,4,3,5,4
+]
+
+let KESWICK_CLUB_HCS: [Int] = [
+    11,3,9,17,1,7,13,5,15,
+    10,18,6,16,12,2,14,4,8
+]
+
+let KESWICK_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 7134, rating: 74.1, slope: 138)
+]
+
+// MARK: Spring Creek Golf Club — Gordonsville, VA
+private let SPRING_CREEK_GC_VA_ID = UUID(uuidString: "E8A9B415-6F70-4D2C-F306-9C4E8A7B1D24")!
+
+let SPRING_CREEK_GC_VA_PARS: [Int] = [
+    4,5,4,4,3,4,4,3,5,
+    4,4,5,3,4,4,4,3,5
+]
+
+let SPRING_CREEK_GC_VA_HCS: [Int] = [
+    3,9,7,13,11,1,5,15,17,
+    4,8,14,18,2,10,12,16,6
+]
+
+let SPRING_CREEK_GC_VA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7348, rating: 76.4, slope: 151),
+    TeeInfo(teeName: "★★★★",         yardage: 6838, rating: 74.1, slope: 146),
+    TeeInfo(teeName: "★★★",          yardage: 6209, rating: 71.2, slope: 141),
+    TeeInfo(teeName: "★★",           yardage: 5494, rating: 67.9, slope: 132),
+    TeeInfo(teeName: "★",            yardage: 4677, rating: 64.4, slope: 125)
+]
+
+// MARK: Kinloch Golf Club — Manakin-Sabot, VA
+private let KINLOCH_GC_ID = UUID(uuidString: "B5D6E182-3C47-4A9F-C073-6F1B5D4E8A91")!
+
+let KINLOCH_GC_PARS: [Int] = [
+    4,4,5,4,3,4,3,4,5,
+    4,5,4,5,3,4,4,3,4
+]
+
+let KINLOCH_GC_HCS: [Int] = [
+    9,11,7,15,17,1,13,3,5,
+    6,12,4,10,18,16,2,14,8
+]
+
+let KINLOCH_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7373, rating: 76.1, slope: 146)
+]
+
+// MARK: Ballyhack Golf Club — Roanoke, VA (Dormie Network)
+private let BALLYHACK_GC_ID = UUID(uuidString: "C6E7F293-4D58-4B0A-D184-7A2C6E5F9B02")!
+
+let BALLYHACK_GC_PARS: [Int] = [
+    4,5,3,4,4,4,3,4,5,
+    5,4,4,3,4,5,4,3,4
+]
+
+let BALLYHACK_GC_HCS: [Int] = [
+    3,11,15,1,5,13,17,9,7,
+    12,14,4,16,6,10,2,18,8
+]
+
+let BALLYHACK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Ballyhack", yardage: 7294, rating: 76.1, slope: 155)
+]
+
+// MARK: Deacon's Lodge — Breezy Point, MN
+private let DEACONS_LODGE_ID = UUID(uuidString: "E1A3C857-6F24-4D8B-B940-3C7E2A1F5D68")!
+
+let DEACONS_LODGE_PARS: [Int] = [
+    4,5,3,4,4,3,4,4,5,
+    4,3,4,4,5,4,4,3,5
+]
+
+let DEACONS_LODGE_HCS: [Int] = [
+    3,5,13,9,7,17,1,15,11,
+    14,12,18,4,8,2,16,6,10
+]
+
+let DEACONS_LODGE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Palmer", yardage: 6943),
+    TeeInfo(teeName: "King",   yardage: 6586),
+    TeeInfo(teeName: "Combo",  yardage: 6414),
+    TeeInfo(teeName: "Deacon", yardage: 6091),
+    TeeInfo(teeName: "Lodge",  yardage: 5364),
+    TeeInfo(teeName: "Winnie", yardage: 4766)
+]
+
+// MARK: Whitebirch Golf Course — Breezy Point, MN
+private let WHITEBIRCH_GC_ID = UUID(uuidString: "F2B4D968-7A35-4E9C-C051-4D8F3B2A6E79")!
+
+let WHITEBIRCH_GC_PARS: [Int] = [
+    4,4,4,5,3,4,5,4,3,
+    4,4,3,4,4,5,4,3,5
+]
+
+let WHITEBIRCH_GC_HCS: [Int] = [
+    13,17,3,7,15,5,1,11,9,
+    4,2,18,14,10,6,12,16,8
+]
+
+let WHITEBIRCH_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6680, rating: 72.2, slope: 137),
+    TeeInfo(teeName: "Blue",  yardage: 6292, rating: 70.5, slope: 131),
+    TeeInfo(teeName: "White", yardage: 5816, rating: 68.2, slope: 123),
+    TeeInfo(teeName: "Gold",  yardage: 4718, rating: 63.2, slope: 112)
+]
+
+// MARK: StoneRidge Golf Club — Stillwater, MN
+private let STONERIDGE_GC_MN_ID = UUID(uuidString: "A3C5E079-8B46-4F1D-D162-5E9A4C3B7F80")!
+
+let STONERIDGE_GC_MN_PARS: [Int] = [
+    4,5,4,5,4,4,3,4,3,
+    4,5,4,4,3,4,3,5,4
+]
+
+let STONERIDGE_GC_MN_HCS: [Int] = [
+    18,12,10,4,2,8,16,6,14,
+    5,11,1,17,15,7,13,9,3
+]
+
+let STONERIDGE_GC_MN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7013, rating: 74.1, slope: 143)
+]
+
+// MARK: The Wilderness at Fortune Bay — Tower, MN
+private let WILDERNESS_FORTUNE_BAY_ID = UUID(uuidString: "D2E75A38-4C96-4F1B-B823-6A0F1D5C8E47")!
+
+let WILDERNESS_FORTUNE_BAY_PARS: [Int] = [
+    5,4,3,4,4,4,3,5,4,
+    4,4,3,4,4,5,5,3,4
+]
+
+let WILDERNESS_FORTUNE_BAY_HCS: [Int] = [
+    3,5,15,7,13,1,17,9,11,
+    10,8,16,14,12,6,2,18,4
+]
+
+let WILDERNESS_FORTUNE_BAY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",        yardage: 7207, rating: 75.3, slope: 142),
+    TeeInfo(teeName: "Blue",        yardage: 6772, rating: 73.2, slope: 137),
+    TeeInfo(teeName: "Blue/White",  yardage: 6460, rating: 71.8, slope: 134),
+    TeeInfo(teeName: "White",       yardage: 6147, rating: 70.4, slope: 131),
+    TeeInfo(teeName: "White/Green", yardage: 5562, rating: 68.1, slope: 127),
+    TeeInfo(teeName: "Green",       yardage: 5324, rating: 71.7, slope: 129)
+]
+
+// MARK: Hazeltine National Golf Club — Chaska, MN
+private let HAZELTINE_NATIONAL_ID = UUID(uuidString: "C6F3A847-2D19-4B7E-A508-9E1C4D7B3F82")!
+
+let HAZELTINE_NATIONAL_PARS: [Int] = [
+    4,4,5,3,4,4,5,3,4,
+    4,5,4,3,4,5,4,3,4
+]
+
+let HAZELTINE_NATIONAL_HCS: [Int] = [
+    5,9,11,15,1,3,13,17,7,
+    8,12,2,16,18,6,10,14,4
+]
+
+let HAZELTINE_NATIONAL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 7674, rating: 77.8, slope: 145)
+]
+
+// MARK: The Club at Porto Cima — Lake of the Ozarks, MO
+private let PORTO_CIMA_ID = UUID(uuidString: "A9C4D71E-3B5F-48A2-B60E-1D7F3E8C5A29")!
+
+let PORTO_CIMA_PARS: [Int] = [
+    4,4,3,5,4,3,4,5,4,
+    4,4,4,5,3,5,3,4,4
+]
+
+let PORTO_CIMA_HCS: [Int] = [
+    5,3,11,7,1,15,17,13,9,
+    18,12,4,10,8,16,14,6,2
+]
+
+let PORTO_CIMA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7060, rating: 74.2, slope: 141),
+    TeeInfo(teeName: "Gold",  yardage: 6699, rating: 72.7, slope: 138),
+    TeeInfo(teeName: "Blue",  yardage: 6303, rating: 70.9, slope: 134),
+    TeeInfo(teeName: "White", yardage: 5810, rating: 68.7, slope: 130),
+    TeeInfo(teeName: "Red",   yardage: 4740, rating: 68.0, slope: 117)
+]
+
+// MARK: Branson Hills Golf Club — Branson, MO
+private let BRANSON_HILLS_GC_ID = UUID(uuidString: "B4E82F19-7D3A-4C5E-9061-2F8B7A1D4C36")!
+
+let BRANSON_HILLS_GC_PARS: [Int] = [
+    4,3,4,5,4,4,3,5,4,
+    4,5,3,4,5,3,4,4,4
+]
+
+let BRANSON_HILLS_GC_HCS: [Int] = [
+    5,7,15,11,3,9,17,13,1,
+    4,6,14,18,16,12,10,8,2
+]
+
+let BRANSON_HILLS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 7324, rating: 75.1, slope: 135),
+    TeeInfo(teeName: "Green",  yardage: 7046, rating: 73.9, slope: 132),
+    TeeInfo(teeName: "Blue",   yardage: 6741, rating: 72.6, slope: 132),
+    TeeInfo(teeName: "Silver", yardage: 6299, rating: 70.2, slope: 130),
+    TeeInfo(teeName: "Orange", yardage: 5323, rating: 71.8, slope: 126)
+]
+
+// MARK: Old Kinderhook Golf Club — Camdenton, MO
+private let OLD_KINDERHOOK_GC_ID = UUID(uuidString: "7C3D9E51-2A84-4F6B-B1C8-5E0D2A9F3B74")!
+
+let OLD_KINDERHOOK_GC_PARS: [Int] = [
+    4,4,3,4,4,4,3,4,5,
+    4,3,4,4,5,4,3,4,5
+]
+
+let OLD_KINDERHOOK_GC_HCS: [Int] = [
+    3,11,13,5,1,17,15,7,9,
+    6,14,12,4,2,10,16,18,8
+]
+
+let OLD_KINDERHOOK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Silver", yardage: 6726, rating: 72.3, slope: 133)
+]
+
+// MARK: Bellerive Country Club — St. Louis, MO
+private let BELLERIVE_CC_ID = UUID(uuidString: "3A7F2B84-1C56-4E9D-B037-8D4A1F6C2E53")!
+
+let BELLERIVE_CC_PARS: [Int] = [
+    4,4,3,5,4,3,4,5,4,
+    4,4,4,3,4,4,3,5,4
+]
+
+let BELLERIVE_CC_HCS: [Int] = [
+    9,13,11,17,1,5,15,7,3,
+    4,12,6,18,16,2,14,8,10
+]
+
+let BELLERIVE_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7547),
+    TeeInfo(teeName: "Gold",  yardage: 7393),
+    TeeInfo(teeName: "Silver", yardage: 5673)
+]
+
+// MARK: Nara Kokusai GC — Nara, Japan
+private let NARA_KOKUSAI_GC_ID = UUID(uuidString: "2F8A1C47-9D3E-4B6F-A521-7C0E3D8B9F42")!
+
+let NARA_KOKUSAI_GC_PARS: [Int] = [
+    5,4,3,4,4,5,4,3,4,
+    5,4,4,3,4,4,3,4,5
+]
+
+let NARA_KOKUSAI_GC_HCS: [Int] = [
+    9,3,17,15,1,7,5,11,13,
+    8,4,14,18,10,2,16,6,12
+]
+
+let NARA_KOKUSAI_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 7055, rating: 77.1, slope: 133)
+]
+
+// MARK: Hirono Golf Club — Miki-shi, Hyogo, Japan
+private let HIRONO_GC_ID = UUID(uuidString: "A3B4C5D6-E7F8-4A9B-0C1D-2E3F4A5B6C7D")!
+
+let HIRONO_GC_PARS: [Int] = [
+    5,4,4,4,3,4,3,4,5,
+    4,4,5,3,4,5,4,3,4
+]
+
+let HIRONO_GC_HCS: [Int] = [
+    9,5,2,11,18,4,16,13,7,
+    14,8,1,17,10,3,12,15,6
+]
+
+let HIRONO_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Champion", yardage: 7169, rating: 77.6, slope: 134)
+]
+
+// MARK: Kawana Hotel GC (Fuji Course) — Ito, Shizuoka, Japan
+private let KAWANA_FUJI_ID = UUID(uuidString: "B4C5D6E7-F8A9-4B0C-1D2E-3F4A5B6C7D8E")!
+
+let KAWANA_FUJI_PARS: [Int] = [
+    4,4,5,5,3,4,4,3,4,
+    3,5,4,4,4,5,3,4,4
+]
+
+let KAWANA_FUJI_HCS: [Int] = [
+    3,5,17,9,15,1,7,13,11,
+    18,6,8,14,4,16,12,2,10
+]
+
+let KAWANA_FUJI_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6701, rating: 75.5, slope: 130)
+]
+
+// MARK: Naruo GC — Hyogo, Japan
+private let NARUO_GC_ID = UUID(uuidString: "C5D6E7F8-A9B0-4C1D-2E3F-4A5B6C7D8E9F")!
+
+let NARUO_GC_PARS: [Int] = [
+    4,3,4,3,4,4,5,4,4,
+    4,4,3,4,5,3,4,4,4
+]
+
+let NARUO_GC_HCS: [Int] = [
+    5,17,11,15,3,9,1,7,13,
+    4,12,18,16,6,14,2,10,8
+]
+
+let NARUO_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back", yardage: 6612, rating: 75.1, slope: 129)
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -8189,6 +9014,69 @@ private enum BuiltIns {
           phone: "(563) 322-3000",
           website: "https://www.davenportcc.com",
           address: "25500 Valley Drive, Pleasant Valley, IA 52767"),
+        c(GLEN_OAKS_CC_IA_ID, "Glen Oaks Country Club", GLEN_OAKS_CC_IA_PARS, GLEN_OAKS_CC_IA_HCS, GLEN_OAKS_CC_IA_TEES,
+          country: "USA",
+          state: "IA",
+          region: "Des Moines",
+          architect: "Tom Fazio",
+          type: "Private",
+          phone: "(515) 221-9000",
+          website: "https://www.glenoakscc.com",
+          address: "1401 Glen Oaks Drive, West Des Moines, IA 50266"),
+        c(DMGCC_NORTH_ID, "Des Moines G&CC (North)", DMGCC_NORTH_PARS, DMGCC_NORTH_HCS, DMGCC_NORTH_TEES,
+          country: "USA",
+          state: "IA",
+          region: "Des Moines",
+          type: "Private",
+          phone: "(515) 440-7500",
+          website: "https://www.dmgcc.org",
+          address: "1600 Jordan Creek Parkway, West Des Moines, IA 50266"),
+        c(DMGCC_SOUTH_ID, "Des Moines G&CC (South)", DMGCC_SOUTH_PARS, DMGCC_SOUTH_HCS, DMGCC_SOUTH_TEES,
+          country: "USA",
+          state: "IA",
+          region: "Des Moines",
+          type: "Private",
+          phone: "(515) 440-7500",
+          website: "https://www.dmgcc.org",
+          address: "1600 Jordan Creek Parkway, West Des Moines, IA 50266"),
+        c(WAKONDA_CLUB_ID, "Wakonda Club", WAKONDA_CLUB_PARS, WAKONDA_CLUB_HCS, WAKONDA_CLUB_TEES,
+          country: "USA",
+          state: "IA",
+          region: "Des Moines",
+          architect: "William B. Langford",
+          type: "Private",
+          address: "3915 Fleur Drive, Des Moines, IA 50321"),
+        c(BLUE_TOP_RIDGE_ID, "Blue Top Ridge", BLUE_TOP_RIDGE_PARS, BLUE_TOP_RIDGE_HCS, BLUE_TOP_RIDGE_TEES,
+          country: "USA",
+          state: "IA",
+          region: "Iowa City",
+          architect: "Rees Jones",
+          type: "Resort",
+          address: "3184 Highway 22, Riverside, IA 52327"),
+        c(SPIRIT_HOLLOW_ID, "Spirit Hollow Golf Course", SPIRIT_HOLLOW_PARS, SPIRIT_HOLLOW_HCS, SPIRIT_HOLLOW_TEES,
+          country: "USA",
+          state: "IA",
+          region: "Southeast Iowa",
+          type: "Semi-Private",
+          phone: "(319) 752-0004",
+          website: "https://www.spirithollow.com",
+          address: "5592 Clubhouse Dr, Burlington, IA 52601"),
+        c(TOURNAMENT_CLUB_IOWA_ID, "Tournament Club of Iowa", TOURNAMENT_CLUB_IOWA_PARS, TOURNAMENT_CLUB_IOWA_HCS, TOURNAMENT_CLUB_IOWA_TEES,
+          country: "USA",
+          state: "IA",
+          region: "Des Moines",
+          architect: "Arnold Palmer",
+          type: "Daily-Fee",
+          phone: "(515) 984-6668",
+          address: "1000 Tournament Club Drive, Polk City, IA 50226"),
+        c(AMANA_COLONIES_GC_ID, "Amana Colonies Golf Club", AMANA_COLONIES_GC_PARS, AMANA_COLONIES_GC_HCS, AMANA_COLONIES_GC_TEES,
+          country: "USA",
+          state: "IA",
+          region: "Iowa City",
+          type: "Semi-Private",
+          phone: "(319) 622-6222",
+          website: "https://www.amanagolf.com",
+          address: "451 27th Avenue, Amana, IA 52203"),
 
         // -------------------------
         // Florida
@@ -9874,6 +10762,77 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
+            DEACONS_LODGE_ID,
+            "Deacon's Lodge",
+            DEACONS_LODGE_PARS,
+            DEACONS_LODGE_HCS,
+            DEACONS_LODGE_TEES,
+            country: "USA",
+            state: "MN",
+            region: "Breezy Point",
+            architect: "Arnold Palmer",
+            type: "Resort",
+            phone: "218-562-6262",
+            website: "https://www.deaconslodge.com",
+            address: "9348 Arnold Palmer Drive, Breezy Point, MN 56472"
+        ),
+        c(
+            WHITEBIRCH_GC_ID,
+            "Whitebirch Golf Course",
+            WHITEBIRCH_GC_PARS,
+            WHITEBIRCH_GC_HCS,
+            WHITEBIRCH_GC_TEES,
+            country: "USA",
+            state: "MN",
+            region: "Breezy Point",
+            type: "Resort",
+            phone: "218-562-7177",
+            website: "https://www.breezypointresort.com",
+            address: "7891 Co Rd 11, Breezy Point, MN 56472"
+        ),
+        c(
+            STONERIDGE_GC_MN_ID,
+            "StoneRidge Golf Club",
+            STONERIDGE_GC_MN_PARS,
+            STONERIDGE_GC_MN_HCS,
+            STONERIDGE_GC_MN_TEES,
+            country: "USA",
+            state: "MN",
+            region: "Stillwater",
+            architect: "Bobby Weed",
+            type: "Semi-Private"
+        ),
+        c(
+            WILDERNESS_FORTUNE_BAY_ID,
+            "The Wilderness at Fortune Bay",
+            WILDERNESS_FORTUNE_BAY_PARS,
+            WILDERNESS_FORTUNE_BAY_HCS,
+            WILDERNESS_FORTUNE_BAY_TEES,
+            country: "USA",
+            state: "MN",
+            region: "Tower",
+            architect: "Jeffrey D. Brauer",
+            type: "Resort",
+            phone: "800-922-4680",
+            website: "https://www.golfthewilderness.com",
+            address: "1450 Bois Forte Road, Tower, MN 55790"
+        ),
+        c(
+            HAZELTINE_NATIONAL_ID,
+            "Hazeltine National Golf Club",
+            HAZELTINE_NATIONAL_PARS,
+            HAZELTINE_NATIONAL_HCS,
+            HAZELTINE_NATIONAL_TEES,
+            country: "USA",
+            state: "MN",
+            region: "Chaska",
+            architect: "Robert Trent Jones",
+            type: "Private",
+            phone: "952-556-5400",
+            website: "https://www.hazeltinenational.com",
+            address: "1900 Hazeltine Blvd., Chaska, MN 55318"
+        ),
+        c(
             RICHTER_PARK_GOLF_COURSE_ID,
             "Richter Park Golf Course",
             RICHTER_PARK_GOLF_COURSE_PARS,
@@ -10721,6 +11680,61 @@ private enum BuiltIns {
             isWolfApproved: true,
             resortBrand: "Big Cedar",
             promo: nil
+        ),
+        c(
+            PORTO_CIMA_ID,
+            "The Club at Porto Cima",
+            PORTO_CIMA_PARS,
+            PORTO_CIMA_HCS,
+            PORTO_CIMA_TEES,
+            country: "USA",
+            state: "MO",
+            region: "Lake of the Ozarks",
+            type: "Private",
+            website: "https://www.portocima.com",
+            address: "Lake of the Ozarks, MO"
+        ),
+        c(
+            BRANSON_HILLS_GC_ID,
+            "Branson Hills Golf Club",
+            BRANSON_HILLS_GC_PARS,
+            BRANSON_HILLS_GC_HCS,
+            BRANSON_HILLS_GC_TEES,
+            country: "USA",
+            state: "MO",
+            region: "Branson",
+            architect: "Chuck Smith",
+            type: "Public",
+            phone: "417-337-2963",
+            website: "https://www.bransonhillsgolfclub.com",
+            address: "100 North Payne Stewart Drive, Branson, MO 65616"
+        ),
+        c(
+            OLD_KINDERHOOK_GC_ID,
+            "Old Kinderhook Golf Club",
+            OLD_KINDERHOOK_GC_PARS,
+            OLD_KINDERHOOK_GC_HCS,
+            OLD_KINDERHOOK_GC_TEES,
+            country: "USA",
+            state: "MO",
+            region: "Lake of the Ozarks",
+            architect: "Tom Weiskopf",
+            type: "Semi-Private",
+            address: "678 Old Kinderhook Dr, Camdenton, MO 65020"
+        ),
+        c(
+            BELLERIVE_CC_ID,
+            "Bellerive Country Club",
+            BELLERIVE_CC_PARS,
+            BELLERIVE_CC_HCS,
+            BELLERIVE_CC_TEES,
+            country: "USA",
+            state: "MO",
+            region: "St. Louis",
+            architect: "Robert Trent Jones, Sr.",
+            type: "Private",
+            phone: "(314) 434-4400",
+            address: "12925 Ladue Road, St. Louis, MO 63141"
         ),
         c(
             BEAR_DANCE_ID,
@@ -11691,6 +12705,60 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
+            BLACK_CREEK_GC_GA_ID,
+            "Black Creek Golf Club",
+            BLACK_CREEK_GC_GA_PARS,
+            BLACK_CREEK_GC_GA_HCS,
+            BLACK_CREEK_GC_GA_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Savannah",
+            architect: "Jim Bevins",
+            type: "Semi-Private",
+            phone: "912-858-4653",
+            address: "277 Canterwood Drive, Ellabell, GA 31308"
+        ),
+        c(
+            LOOKOUT_MOUNTAIN_GC_ID,
+            "Lookout Mountain Golf Club",
+            LOOKOUT_MOUNTAIN_GC_PARS,
+            LOOKOUT_MOUNTAIN_GC_HCS,
+            LOOKOUT_MOUNTAIN_GC_TEES,
+            country: "USA",
+            state: "GA",
+            region: "Chattanooga",
+            architect: "Seth Raynor",
+            type: "Private",
+            phone: "(706) 820-1551",
+            address: "1201 Fleetwood Drive, Lookout Mountain, GA 30750"
+        ),
+        c(
+            BLESSINGS_GC_ID,
+            "Blessings Golf Club",
+            BLESSINGS_GC_PARS,
+            BLESSINGS_GC_HCS,
+            BLESSINGS_GC_TEES,
+            country: "USA",
+            state: "AR",
+            region: "Fayetteville",
+            architect: "Robert Trent Jones Jr.",
+            type: "Private",
+            address: "Fayetteville, AR 72701"
+        ),
+        c(
+            ALOTIAN_CLUB_ID,
+            "The Alotian Club",
+            ALOTIAN_CLUB_PARS,
+            ALOTIAN_CLUB_HCS,
+            ALOTIAN_CLUB_TEES,
+            country: "USA",
+            state: "AR",
+            region: "Little Rock",
+            architect: "Tom Fazio",
+            type: "Private",
+            address: "101 Alotian Dr, Roland, AR 72135"
+        ),
+        c(
             CASTLE_PINES_GC_ID,
             "Castle Pines Golf Club",
             CASTLE_PINES_GC_PARS,
@@ -12219,6 +13287,34 @@ private enum BuiltIns {
             promo: nil
         ),
         c(
+            BULLE_ROCK_GC_ID,
+            "Bulle Rock Golf Club",
+            BULLE_ROCK_GC_PARS,
+            BULLE_ROCK_GC_HCS,
+            BULLE_ROCK_GC_TEES,
+            country: "USA",
+            state: "MD",
+            region: "Baltimore",
+            architect: "Pete Dye",
+            type: "Public",
+            phone: "(410) 939-8887",
+            address: "320 Blenheim Lane, Havre de Grace, MD 21078"
+        ),
+        c(
+            WORTHINGTON_MANOR_GC_ID,
+            "Worthington Manor Golf Club",
+            WORTHINGTON_MANOR_GC_PARS,
+            WORTHINGTON_MANOR_GC_HCS,
+            WORTHINGTON_MANOR_GC_TEES,
+            country: "USA",
+            state: "MD",
+            region: "Washington DC",
+            architect: nil,
+            type: "Public",
+            phone: "(301) 874-5400",
+            address: "Dickerson, MD 20842"
+        ),
+        c(
             TRUMP_NATIONAL_HUDSON_VALLEY_ID,
             "Trump National Golf Club (Hudson Valley)",
             TRUMP_NATIONAL_HUDSON_VALLEY_PARS,
@@ -12322,6 +13418,34 @@ private enum BuiltIns {
             isWolfApproved: false,
             resortBrand: "Bally's",
             promo: nil
+        ),
+        c(
+            FISHERS_ISLAND_CLUB_ID,
+            "Fishers Island Club",
+            FISHERS_ISLAND_CLUB_PARS,
+            FISHERS_ISLAND_CLUB_HCS,
+            FISHERS_ISLAND_CLUB_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Seth Raynor",
+            type: "Private",
+            phone: "(631) 788-7225",
+            address: "Fishers Island, NY 06390"
+        ),
+        c(
+            FRIARS_HEAD_ID,
+            "Friar's Head",
+            FRIARS_HEAD_PARS,
+            FRIARS_HEAD_HCS,
+            FRIARS_HEAD_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Coore & Crenshaw",
+            type: "Private",
+            phone: "(631) 722-6010",
+            address: "3000 Sound Avenue, Riverhead, NY 11901"
         ),
         c(
             OLD_MEMORIAL_ID,
@@ -12434,6 +13558,20 @@ private enum BuiltIns {
             address: "9939 Universal Blvd, Orlando, FL 32819",
             isWolfApproved: true,
             resortBrand: "Omni",
+        ),
+        c(
+            KAROO_STREAMSONG_ID,
+            "KAROO at Streamsong",
+            KAROO_STREAMSONG_PARS,
+            KAROO_STREAMSONG_HCS,
+            KAROO_STREAMSONG_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Tampa Bay",
+            architect: "Coore & Crenshaw",
+            type: "Resort",
+            address: "Brooksville, FL 34601",
+            resortBrand: "Streamsong"
         ),
         c(
             TPC_SCOTTSDALE_CHAMPIONS_ID,
@@ -12675,6 +13813,60 @@ private enum BuiltIns {
             isWolfApproved: true,
             resortBrand: nil,
             promo: nil
+        ),
+        c(
+            KESWICK_CLUB_ID,
+            "Keswick Club",
+            KESWICK_CLUB_PARS,
+            KESWICK_CLUB_HCS,
+            KESWICK_CLUB_TEES,
+            country: "USA",
+            state: "VA",
+            region: "Charlottesville",
+            architect: "Pete Dye",
+            type: "Resort",
+            address: "701 Club Dr, Keswick, VA 22947"
+        ),
+        c(
+            SPRING_CREEK_GC_VA_ID,
+            "Spring Creek Golf Club",
+            SPRING_CREEK_GC_VA_PARS,
+            SPRING_CREEK_GC_VA_HCS,
+            SPRING_CREEK_GC_VA_TEES,
+            country: "USA",
+            state: "VA",
+            region: "Charlottesville",
+            architect: "Ed Carton",
+            type: "Private",
+            phone: "540-832-0744",
+            website: "https://www.springcreekgolfclub.com",
+            address: "109 Clubhouse Way, Zion Crossroads, VA 22942"
+        ),
+        c(
+            KINLOCH_GC_ID,
+            "Kinloch Golf Club",
+            KINLOCH_GC_PARS,
+            KINLOCH_GC_HCS,
+            KINLOCH_GC_TEES,
+            country: "USA",
+            state: "VA",
+            region: "Richmond",
+            architect: "Lester George",
+            type: "Private",
+            address: "100 Kinloch Dr, Manakin-Sabot, VA 23103"
+        ),
+        c(
+            BALLYHACK_GC_ID,
+            "Ballyhack Golf Club",
+            BALLYHACK_GC_PARS,
+            BALLYHACK_GC_HCS,
+            BALLYHACK_GC_TEES,
+            country: "USA",
+            state: "VA",
+            region: "Roanoke",
+            architect: "Lester George",
+            type: "Private",
+            website: "https://www.dormienetwork.com/clubs/ballyhack"
         ),
         c(
             POLO_FIELDS_ANN_ARBOR_ID,
@@ -12952,6 +14144,21 @@ private enum BuiltIns {
             promo: nil
         ),
         c(
+            SENTRYWORLD_ID,
+            "SentryWorld",
+            SENTRYWORLD_PARS,
+            SENTRYWORLD_HCS,
+            SENTRYWORLD_TEES,
+            country: "USA",
+            state: "WI",
+            region: "Central Wisconsin",
+            architect: "Robert Trent Jones Jr.",
+            type: "Public",
+            phone: "866-479-6753",
+            website: "https://www.sentryworld.com",
+            address: "601 Michigan Ave. N., Stevens Point, WI 54481"
+        ),
+        c(
             PAAKO_RIDGE_1_18_ID,
             "Paako Ridge Golf Club (1–18)",
             PAAKO_RIDGE_1_18_PARS,
@@ -13126,6 +14333,75 @@ private enum BuiltIns {
             isWolfApproved: true,
             resortBrand: nil,
             promo: nil
+        ),
+        c(
+            SWEETENS_COVE_GC_ID,
+            "Sweetens Cove Golf Club",
+            SWEETENS_COVE_GC_PARS,
+            SWEETENS_COVE_GC_HCS,
+            SWEETENS_COVE_GC_TEES,
+            country: "USA",
+            state: "TN",
+            region: "Southeast Tennessee",
+            architect: "King-Collins",
+            type: "Daily-Fee",
+            address: "2040 Sweetens Cove Road, South Pittsburg, TN 37380"
+        ),
+        c(
+            HONORS_COURSE_ID,
+            "The Honors Course",
+            HONORS_COURSE_PARS,
+            HONORS_COURSE_HCS,
+            HONORS_COURSE_TEES,
+            country: "USA",
+            state: "TN",
+            region: "Chattanooga",
+            architect: "Pete Dye",
+            type: "Private",
+            phone: "fax 423-238-5284",
+            address: "Ooltewah, TN 37363"
+        ),
+        c(
+            HERMITAGE_PR_ID,
+            "Hermitage Golf Course (President's Reserve)",
+            HERMITAGE_PR_PARS,
+            HERMITAGE_PR_HCS,
+            HERMITAGE_PR_TEES,
+            country: "USA",
+            state: "TN",
+            region: "Nashville",
+            architect: nil,
+            type: "Daily-Fee",
+            phone: "615.847.4001",
+            address: "3939 Old Hickory Boulevard, Old Hickory, TN 37138"
+        ),
+        c(
+            GAYLORD_SPRINGS_ID,
+            "Gaylord Springs Golf Links",
+            GAYLORD_SPRINGS_PARS,
+            GAYLORD_SPRINGS_HCS,
+            GAYLORD_SPRINGS_TEES,
+            country: "USA",
+            state: "TN",
+            region: "Nashville",
+            architect: "Larry Nelson",
+            type: "Resort",
+            phone: "(615) 458-1730",
+            address: "18 Springhouse Ln, Nashville, TN 37214"
+        ),
+        c(
+            TENNESSEE_NATIONAL_ID,
+            "Tennessee National",
+            TENNESSEE_NATIONAL_PARS,
+            TENNESSEE_NATIONAL_HCS,
+            TENNESSEE_NATIONAL_TEES,
+            country: "USA",
+            state: "TN",
+            region: "Knoxville",
+            architect: nil,
+            type: "Semi-Private",
+            phone: "(865) 408-9992",
+            address: "Loudon, TN 37774"
         ),
         c(
             KNOLLWOOD_CLUB_ID,
@@ -13311,6 +14587,15 @@ private enum BuiltIns {
             address: "250 W Greggs Pkwy, Vernon Hills, IL",
             isWolfApproved: true
         ),
+        c(GLEN_OAK_CC_ID, "Glen Oak Country Club", GLEN_OAK_CC_PARS, GLEN_OAK_CC_HCS, GLEN_OAK_CC_TEES,
+          country: "USA",
+          state: "IL",
+          region: "Chicago West Suburbs",
+          architect: "Tom Bendelow",
+          type: "Private",
+          phone: "(630) 469-5600",
+          website: "https://www.glenoakcountryclub.org",
+          address: "21W451 Hill Ave, Glen Ellyn, IL 60137"),
         c(
         BETHPAGE_BLACK_ID,
         "Bethpage State Park - Black",
@@ -13907,6 +15192,75 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
+            OAKMONT_CC_ID,
+            "Oakmont Country Club",
+            OAKMONT_CC_PARS,
+            OAKMONT_CC_HCS,
+            OAKMONT_CC_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Pittsburgh",
+            architect: "H.C. Fownes",
+            type: "Private",
+            phone: "(412) 828-8000",
+            website: "https://www.oakmontcc.org",
+            address: "1233 Hulton Rd., Oakmont, PA 15139"
+        ),
+        c(
+            ARONIMINK_GC_ID,
+            "Aronimink Golf Club",
+            ARONIMINK_GC_PARS,
+            ARONIMINK_GC_HCS,
+            ARONIMINK_GC_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Philadelphia",
+            architect: "Donald Ross",
+            type: "Private",
+            phone: "(610) 356-8000",
+            address: "3600 St. Davids Road, Newtown Square, PA 19073"
+        ),
+        c(
+            PCC_WISSAHICKON_ID,
+            "Philadelphia Cricket Club (Wissahickon)",
+            PCC_WISSAHICKON_PARS,
+            PCC_WISSAHICKON_HCS,
+            PCC_WISSAHICKON_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Philadelphia",
+            architect: "Willie Tucker",
+            type: "Private",
+            phone: "215.247.6113",
+            address: "6025 West Valley Green Road, Flourtown, PA 19031"
+        ),
+        c(
+            MERION_EAST_ID,
+            "Merion Golf Club (East)",
+            MERION_EAST_PARS,
+            MERION_EAST_HCS,
+            MERION_EAST_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Philadelphia",
+            architect: "Hugh Wilson",
+            type: "Private",
+            address: "450 Ardmore Ave., Ardmore, PA 19003"
+        ),
+        c(
+            MERION_WEST_ID,
+            "Merion Golf Club (West)",
+            MERION_WEST_PARS,
+            MERION_WEST_HCS,
+            MERION_WEST_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Philadelphia",
+            architect: "Hugh Wilson",
+            type: "Private",
+            address: "450 Ardmore Ave., Ardmore, PA 19003"
+        ),
+        c(
             FOWLERS_MILL_ID,
             "Fowler's Mill Golf Course",
             FOWLERS_MILL_PARS,
@@ -14090,9 +15444,61 @@ private enum BuiltIns {
             address: "9445 Brecksville Road, Brecksville, OH 44141",
             isWolfApproved: true
         ),
+
+        // -------------------------
+        // Japan
+        // -------------------------
+        c(
+            NARA_KOKUSAI_GC_ID,
+            "Nara Kokusai GC",
+            NARA_KOKUSAI_GC_PARS,
+            NARA_KOKUSAI_GC_HCS,
+            NARA_KOKUSAI_GC_TEES,
+            country: "Japan",
+            state: nil,
+            region: "Nara",
+            type: "Private"
+        ),
+        c(
+            HIRONO_GC_ID,
+            "Hirono Golf Club",
+            HIRONO_GC_PARS,
+            HIRONO_GC_HCS,
+            HIRONO_GC_TEES,
+            country: "Japan",
+            state: nil,
+            region: "Hyogo",
+            architect: "Charles Hugh Alison",
+            type: "Private"
+        ),
+        c(
+            KAWANA_FUJI_ID,
+            "Kawana Hotel GC (Fuji Course)",
+            KAWANA_FUJI_PARS,
+            KAWANA_FUJI_HCS,
+            KAWANA_FUJI_TEES,
+            country: "Japan",
+            state: nil,
+            region: "Shizuoka",
+            architect: "Charles Hugh Alison",
+            type: "Resort"
+        ),
+        c(
+            NARUO_GC_ID,
+            "Naruo GC",
+            NARUO_GC_PARS,
+            NARUO_GC_HCS,
+            NARUO_GC_TEES,
+            country: "Japan",
+            state: nil,
+            region: "Hyogo",
+            architect: "Charles Hugh Alison",
+            type: "Private",
+            phone: "+81 727 94 1011"
+        ),
         ]
-    
-    
+
+
 #if DEBUG
     private static func assertNoDuplicateIDs() {
         let ids = all.map(\.id)

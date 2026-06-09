@@ -473,6 +473,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         ])
         liveNassauBottomConstraint = bottomCon
         liveNassauButton = btn
+        updateLiveNassauButtonPosition()
+    }
+
+    private func updateLiveNassauButtonPosition() {
+        guard liveNassauButton != nil else { return }
+        let tabBarHeight: CGFloat = liveTabBar != nil ? 44 : 0
+        liveNassauBottomConstraint?.constant = -(16 + tabBarHeight)
+        UIView.animate(withDuration: 0.2) { self.view.layoutIfNeeded() }
     }
 
     @objc private func liveNassauTapped() {
@@ -565,11 +573,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         liveTabLiveButton = liveBtn
         selectScoreTab()
         updateLiveTabBarVisibility()
-
-        // Push Live Nassau button above the tab bar so they don't overlap
-        if let con = liveNassauBottomConstraint {
-            con.constant = -(16 + 44)
-        }
+        updateLiveNassauButtonPosition()
     }
 
     private func updateLiveTabBarVisibility() {
