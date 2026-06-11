@@ -368,7 +368,8 @@ final class ViewController: UIViewController {
 
     private func openAddCourse() {
         let sb = UIStoryboard(name: "Main", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC")
+        guard let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC") as? CourseSetupViewController else { return }
+        vc.prefillTemplate = true
         navigationController?.pushViewController(vc, animated: true)
     }
 

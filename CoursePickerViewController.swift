@@ -68,6 +68,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     private let summaryHeader = UIView()
     private let summaryLabel1 = UILabel()
     private let summaryLabel2 = UILabel()
+    private let hintLabel     = UILabel()
 
     // MARK: - Lifecycle
 
@@ -143,7 +144,12 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         summaryLabel2.font = .systemFont(ofSize: 13, weight: .regular)
         summaryLabel2.textColor = .secondaryLabel
 
-        let stack = UIStackView(arrangedSubviews: [summaryLabel1, summaryLabel2])
+        hintLabel.text = "Don't see your course? Tap + to add it"
+        hintLabel.font = .systemFont(ofSize: 16)
+        hintLabel.textColor = .secondaryLabel
+        hintLabel.textAlignment = .center
+
+        let stack = UIStackView(arrangedSubviews: [summaryLabel1, summaryLabel2, hintLabel])
         stack.axis = .vertical
         stack.spacing = 4
         stack.translatesAutoresizingMaskIntoConstraints = false

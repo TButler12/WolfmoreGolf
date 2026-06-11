@@ -246,6 +246,28 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         main.setCustomSpacing(10, after: resetBtn)
         main.addArrangedSubview(randBtn)
         main.setCustomSpacing(24, after: randBtn)
+
+        main.addArrangedSubview(hairline())
+
+        let remoteNassauBtn = makeFilledButton(title: "📡  Remote Nassau", bg: .systemYellow, fg: .black)
+        remoteNassauBtn.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            WolfActions.presentRemoteNassau(from: self)
+        }, for: .touchUpInside)
+        main.addArrangedSubview(remoteNassauBtn)
+        main.setCustomSpacing(10, after: remoteNassauBtn)
+
+        let liveWolfBtn = makeFilledButton(title: "📺  Live Wolf", bg: .black, fg: .white)
+        liveWolfBtn.addAction(UIAction { [weak self] _ in
+            guard let self else { return }
+            WolfActions.presentGoLive(from: self)
+        }, for: .touchUpInside)
+        main.addArrangedSubview(liveWolfBtn)
+
+        let bottomHairline = hairline()
+        main.addArrangedSubview(bottomHairline)
+        main.setCustomSpacing(24, after: bottomHairline)
+
         settingsButton.translatesAutoresizingMaskIntoConstraints = false
         main.addArrangedSubview(settingsButton)
     }

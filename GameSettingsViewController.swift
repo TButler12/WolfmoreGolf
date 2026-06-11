@@ -56,6 +56,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         installWolfScoringSegment()
         installHammerStyleSegment()
         installGoLiveButton()
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshGoLiveButton), name: .reloadUI, object: nil)
         saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
 
         addKeyboardObservers()
@@ -64,6 +65,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         removeKeyboardObservers()
+        NotificationCenter.default.removeObserver(self, name: .reloadUI, object: nil)
     }
 
     // MARK: - Scroll Layout
@@ -316,7 +318,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         refreshGoLiveButton()
     }
 
-    private func refreshGoLiveButton() {
+    @objc private func refreshGoLiveButton() {
         guard let btn = goLiveButton else { return }
         let isLive = GameManager.shared.currentGame?.liveSessionId != nil
         let title = isLive ? "Stop Live" : "Go Live"
@@ -325,89 +327,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func goLiveTapped() {
-        guard let g = GameManager.shared.currentGame else { return }
-
-        if let sessionId = g.liveSessionId {
-            // Already live — offer to reshare or stop
-            let code = g.liveSessionCode ?? ""
-            let alert = UIAlertController(
-                title: "Live Session Active",
-                message: code.isEmpty ? nil : "Code: \(code)",
-                preferredStyle: .alert
-            )
-            if !code.isEmpty {
-                alert.addAction(UIAlertAction(title: "Share Code", style: .default) { [weak self] _ in
-                    self?.showGoLiveCreatedAlert(code: code)
-                })
-            }
-            alert.addAction(UIAlertAction(title: "Stop Live", style: .destructive) { [weak self] _ in
-                self?.stopLiveSession(id: sessionId)
-            })
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            present(alert, animated: true)
-        } else {
-            let names = (0..<MAX_PLAYERS).compactMap { s -> String? in
-                guard g.playerActivated[safe: s] == true else { return nil }
-                return g.playerNames[safe: s] ?? ""
-            }
-            let course = g.course.name.isEmpty ? "Custom Course" : g.course.name
-            Task {
-                do {
-                    let session = try await SupabaseService.shared.createWolfSession(
-                        playerNames: names,
-                        courseName: course
-                    )
-                    GameManager.shared.update { g in
-                        g.liveSessionId = session.id
-                        g.liveSessionCode = session.code
-                    }
-                    GameManager.shared.saveCurrent()
-                    DispatchQueue.main.async {
-                        self.refreshGoLiveButton()
-                        self.showGoLiveCreatedAlert(code: session.code)
-                    }
-                } catch {
-                    DispatchQueue.main.async {
-                        self.showAlert(title: "Go Live Failed", message: error.localizedDescription)
-                    }
-                }
-            }
-        }
-    }
-
-    private func stopLiveSession(id: String) {
-        Task {
-            do {
-                try await SupabaseService.shared.archiveWolfSession(id: id)
-            } catch {
-                print("ERROR archiveWolfSession: \(error)")
-            }
-            GameManager.shared.update { g in
-                g.liveSessionId = nil
-                g.liveSessionCode = nil
-            }
-            GameManager.shared.saveCurrent()
-            DispatchQueue.main.async { self.refreshGoLiveButton() }
-        }
-    }
-
-    private func showGoLiveCreatedAlert(code: String) {
-        let link = "wolfmore://watch?code=\(code)"
-        let alert = UIAlertController(
-            title: "Live Session Created",
-            message: "Share this link with spectators:\n\(link)",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
-            UIPasteboard.general.string = code
-        })
-        alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak self] _ in
-            guard let self else { return }
-            let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
-            self.present(av, animated: true)
-        })
-        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-        present(alert, animated: true)
+        WolfActions.presentGoLive(from: self)
     }
 
     @objc private func doneTapped() {
@@ -438,8 +358,10 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             }
 
             GameManager.shared.update { g in
-                g.course.pars = picked.pars
+                g.course.pars          = picked.pars
                 g.course.holeHandicaps = picked.hcs
+                g.course.name          = picked.name
+                g.course.id            = picked.id
             }
 
             CourseLibrary.shared.selectedCourseID = picked.id

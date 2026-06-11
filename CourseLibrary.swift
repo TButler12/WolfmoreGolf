@@ -914,6 +914,145 @@ let ROYAL_DORNOCH_CHAMP_TEES: [TeeInfo] = [
         slope: 0
     )
 ]
+// MARK: Carnoustie Golf Links — Carnoustie, Scotland
+
+private let CARNOUSTIE_CHAMP_ID = UUID(uuidString: "1E2F3A4B-5C6D-4E7F-8A9B-0C1D2E3F4A5C")!
+
+let CARNOUSTIE_CHAMP_PARS: [Int] = [
+    4,4,4,4,4,5,4,3,4,
+    4,4,5,4,3,5,4,3,4
+]
+
+let CARNOUSTIE_CHAMP_HCS: [Int] = [
+    10,4,14,16,12,2,8,18,6,
+    3,15,9,17,1,7,13,5,11
+]
+
+let CARNOUSTIE_CHAMP_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White",  yardage: 6945, rating: 75.2, slope: 139),
+    TeeInfo(teeName: "Yellow", yardage: 6589, rating: 73.6, slope: 135),
+    TeeInfo(teeName: "Green",  yardage: 6139, rating: 71.5, slope: 130),
+    TeeInfo(teeName: "Black",  yardage: 5610, rating: 69.1, slope: 126)
+]
+
+private let CARNOUSTIE_BURNSIDE_ID = UUID(uuidString: "2F3A4B5C-6D7E-4F8A-9B0C-1D2E3F4A5B6D")!
+
+let CARNOUSTIE_BURNSIDE_PARS: [Int] = [
+    4,4,3,4,3,4,4,4,3,
+    4,4,4,4,3,5,3,4,4
+]
+
+let CARNOUSTIE_BURNSIDE_HCS: [Int] = [
+    18,4,16,2,10,14,12,6,8,
+    15,7,13,5,1,11,9,3,17
+]
+
+let CARNOUSTIE_BURNSIDE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White",  yardage: 5943, rating: 69.5, slope: 125),
+    TeeInfo(teeName: "Yellow", yardage: 5731, rating: 68.3, slope: 122),
+    TeeInfo(teeName: "Green",  yardage: 5400, rating: 66.5, slope: 122),
+    TeeInfo(teeName: "Black",  yardage: 4070, rating: 61.6, slope: 110)
+]
+
+private let CARNOUSTIE_BUDDON_ID = UUID(uuidString: "3A4B5C6D-7E8F-4A9B-0C1D-2E3F4A5B6C7E")!
+
+let CARNOUSTIE_BUDDON_PARS: [Int] = [
+    4,3,4,3,4,4,3,5,4,
+    4,4,4,3,4,3,5,3,4
+]
+
+let CARNOUSTIE_BUDDON_HCS: [Int] = [
+    6,16,8,18,14,4,12,2,10,
+    1,7,9,13,3,17,11,15,5
+]
+
+let CARNOUSTIE_BUDDON_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White",  yardage: 5921, rating: 69.0, slope: 120),
+    TeeInfo(teeName: "Yellow", yardage: 5652, rating: 67.7, slope: 117),
+    TeeInfo(teeName: "Green",  yardage: 5041, rating: 64.9, slope: 112),
+    TeeInfo(teeName: "Black",  yardage: 4070, rating: 62.0, slope: 106)
+]
+
+// MARK: Kingsbarns Golf Links — St Andrews, Scotland
+
+private let KINGSBARNS_ID = UUID(uuidString: "4B5C6D7E-8F9A-4B0C-1D2E-3F4A5B6C7D8F")!
+
+let KINGSBARNS_PARS: [Int] = [
+    4,3,5,4,4,4,4,3,5,
+    4,4,5,3,4,3,5,4,4
+]
+
+let KINGSBARNS_HCS: [Int] = [
+    13,9,15,3,7,11,1,17,5,
+    14,10,2,12,18,6,16,8,4
+]
+
+let KINGSBARNS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7226, rating: 0.0, slope: 0),
+    TeeInfo(teeName: "White", yardage: 6853, rating: 0.0, slope: 0),
+    TeeInfo(teeName: "Green", yardage: 6408, rating: 0.0, slope: 0),
+    TeeInfo(teeName: "Blue",  yardage: 6057, rating: 0.0, slope: 0),
+    TeeInfo(teeName: "Red",   yardage: 5231, rating: 0.0, slope: 0)
+]
+
+// MARK: Castle Stuart Golf Links — Inverness, Scotland
+
+private let CASTLE_STUART_ID = UUID(uuidString: "5C6E7F8A-9B0C-4D1E-2F3A-4B5C6D7E8F9A")!
+
+let CASTLE_STUART_PARS: [Int] = [
+    4,5,4,3,4,5,4,3,4,
+    4,3,5,4,4,4,4,3,5
+]
+
+let CASTLE_STUART_HCS: [Int] = [
+    9,5,13,17,7,3,1,15,11,
+    14,16,2,4,10,8,18,6,12
+]
+
+let CASTLE_STUART_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7009, rating: 74.1, slope: 141)
+]
+
+// MARK: Cruden Bay Golf Club — Cruden Bay, Scotland
+
+private let CRUDEN_BAY_ID = UUID(uuidString: "6D7F8A9B-0C1D-4E2F-3A4B-5C6D7E8F9A0B")!
+
+let CRUDEN_BAY_PARS: [Int] = [
+    4,4,4,3,5,5,4,4,5,
+    4,3,4,5,4,3,3,4,5
+]
+
+let CRUDEN_BAY_HCS: [Int] = [
+    9,13,17,5,11,7,1,15,3,
+    6,12,16,8,2,18,14,4,10
+]
+
+let CRUDEN_BAY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6634, rating: 73.4, slope: 137),
+    TeeInfo(teeName: "Gold",  yardage: 6250, rating: 71.7, slope: 130),
+    TeeInfo(teeName: "White", yardage: 5868, rating: 69.8, slope: 124),
+    TeeInfo(teeName: "Blue",  yardage: 5441, rating: 67.8, slope: 119),
+    TeeInfo(teeName: "Green", yardage: 5002, rating: 65.8, slope: 115)
+]
+
+// MARK: Kings Links Golf Centre — Aberdeen, Scotland
+
+private let KINGS_LINKS_ID = UUID(uuidString: "7E8F0A1B-2C3D-4E5F-6A7B-8C9D0E1F2A3B")!
+
+let KINGS_LINKS_PARS: [Int] = [
+    4,4,3,5,4,4,5,3,5,
+    3,4,4,4,4,5,3,4,3
+]
+
+let KINGS_LINKS_HCS: [Int] = [
+    11,3,17,9,13,2,7,15,5,
+    12,6,18,8,1,10,16,4,14
+]
+
+let KINGS_LINKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 6442, rating: 69.9, slope: 116)
+]
+
 private let ROYAL_ST_GEORGES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000008")!
 
 let ROYAL_ST_GEORGES_PARS: [Int] = [
@@ -5948,6 +6087,176 @@ let FRIARS_HEAD_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Short",     yardage: 5800, rating: 70.2, slope: 128)
 ]
 
+// MARK: Winged Foot Golf Club — East — Mamaroneck, NY
+private let WINGED_FOOT_EAST_ID = UUID(uuidString: "0A1B2C3D-E4F5-4A6B-7C8D-9E0F1A2B3C4E")!
+
+let WINGED_FOOT_EAST_PARS: [Int] = [
+    4,5,3,5,4,3,4,5,4,
+    4,4,5,3,4,4,4,3,4
+]
+
+let WINGED_FOOT_EAST_HCS: [Int] = [
+    13,5,17,1,9,11,3,15,7,
+    12,8,2,18,6,10,4,16,14
+]
+
+let WINGED_FOOT_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6737, rating: 73.6, slope: 140)
+]
+
+// MARK: Winged Foot Golf Club — West — Mamaroneck, NY
+private let WINGED_FOOT_WEST_ID = UUID(uuidString: "0B1C2D3E-F4A5-4B6C-7D8E-9F0A1B2C3D4F")!
+
+let WINGED_FOOT_WEST_PARS: [Int] = [
+    4,4,3,4,5,4,3,4,5,
+    3,4,5,3,4,4,4,5,4
+]
+
+let WINGED_FOOT_WEST_HCS: [Int] = [
+    3,9,11,7,5,13,17,1,15,
+    14,12,6,16,10,4,18,2,8
+]
+
+let WINGED_FOOT_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 7426, rating: 76.4, slope: 140)
+]
+
+// MARK: Shinnecock Hills Golf Club — Southampton, NY
+private let SHINNECOCK_HILLS_ID = UUID(uuidString: "0C1D2E3F-A4B5-4C6D-7E8F-9A0B1C2D3E4A")!
+
+let SHINNECOCK_HILLS_PARS: [Int] = [
+    4,3,4,4,5,4,3,4,4,
+    4,3,4,4,4,4,5,3,4
+]
+
+let SHINNECOCK_HILLS_HCS: [Int] = [
+    11,17,3,7,9,1,15,13,5,
+    4,16,2,12,6,14,8,18,10
+]
+
+let SHINNECOCK_HILLS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Red",   yardage: 6940, rating: 74.7, slope: 145),
+    TeeInfo(teeName: "Green", yardage: 6530, rating: 72.5, slope: 140),
+    TeeInfo(teeName: "Blue",  yardage: 6141, rating: 70.8, slope: 135),
+    TeeInfo(teeName: "White", yardage: 5396, rating: 72.8, slope: 135)
+]
+
+// MARK: National Golf Links of America — Southampton, NY
+private let NGLA_ID = UUID(uuidString: "0D1E2F3A-B4C5-4D6E-7F8A-9B0C1D2E3F4B")!
+
+let NGLA_PARS: [Int] = [
+    4,4,4,3,4,3,5,4,5,
+    4,4,4,3,4,4,4,4,5
+]
+
+let NGLA_HCS: [Int] = [
+    11,15,1,13,3,17,9,5,7,
+    4,10,2,18,12,6,14,16,8
+]
+
+let NGLA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6935, rating: 74.3, slope: 139),
+    TeeInfo(teeName: "Regular",      yardage: 6505, rating: 72.3, slope: 133),
+    TeeInfo(teeName: "Short",        yardage: 5771, rating: 68.8, slope: 127)
+]
+
+// MARK: Oak Hill Country Club — Rochester, NY
+
+private let OAK_HILL_EAST_ID = UUID(uuidString: "0E1F2A3B-C4D5-4E6F-7A8B-9C0D1E2F3A4C")!
+
+let OAK_HILL_EAST_PARS: [Int] = [
+    4,4,3,5,3,4,4,4,4,
+    4,3,4,5,4,3,4,5,4
+]
+
+let OAK_HILL_EAST_HCS: [Int] = [
+    5,11,15,13,17,1,3,9,7,
+    8,16,10,2,12,18,6,14,4
+]
+
+let OAK_HILL_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7390, rating: 77.3, slope: 153),
+    TeeInfo(teeName: "Black",        yardage: 6995, rating: 75.5, slope: 146),
+    TeeInfo(teeName: "Blue",         yardage: 6655, rating: 74.0, slope: 141),
+    TeeInfo(teeName: "White",        yardage: 6195, rating: 71.6, slope: 138),
+    TeeInfo(teeName: "Gold",         yardage: 5595, rating: 69.0, slope: 130),
+    TeeInfo(teeName: "Green",        yardage: 5265, rating: 67.2, slope: 127)
+]
+
+// MARK: Garden City Golf Club — Garden City, NY
+
+private let GARDEN_CITY_GC_ID = UUID(uuidString: "5C6D7E8F-9A0B-4C1D-2E3F-4A5B6C7D8E9F")!
+
+let GARDEN_CITY_GC_PARS: [Int] = [
+    4,3,4,5,4,4,5,4,4,
+    4,4,3,5,4,4,4,5,3
+]
+
+let GARDEN_CITY_GC_HCS: [Int] = [
+    15,17,9,5,11,3,7,1,13,
+    6,4,16,8,14,2,10,12,18
+]
+
+let GARDEN_CITY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back", yardage: 6926, rating: 74.0, slope: 141)
+]
+
+// MARK: Sleepy Hollow Country Club (Upper Course) — Briarcliff Manor, NY
+
+private let SLEEPY_HOLLOW_UPPER_ID = UUID(uuidString: "6D7E8F9A-0B1C-4D2E-3F4A-5B6C7D8E9F0A")!
+
+let SLEEPY_HOLLOW_UPPER_PARS: [Int] = [
+    4,4,3,4,4,5,3,4,4,
+    3,4,5,4,4,4,3,4,4
+]
+
+let SLEEPY_HOLLOW_UPPER_HCS: [Int] = [
+    7,11,15,5,9,3,17,1,13,
+    16,10,2,4,12,8,18,14,6
+]
+
+let SLEEPY_HOLLOW_UPPER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6902, rating: 74.0, slope: 140)
+]
+
+// MARK: The Creek Club — Locust Valley, NY
+
+private let THE_CREEK_CLUB_ID = UUID(uuidString: "7E8F9A0B-1C2D-4E3F-4A5B-6C7D8E9F0A1B")!
+
+let THE_CREEK_CLUB_PARS: [Int] = [
+    4,4,4,3,4,4,5,3,4,
+    4,3,4,4,4,4,4,3,5
+]
+
+let THE_CREEK_CLUB_HCS: [Int] = [
+    9,7,11,17,13,1,5,15,3,
+    10,16,14,4,2,8,6,18,12
+]
+
+let THE_CREEK_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Silver", yardage: 6583, rating: 73.0, slope: 142)
+]
+
+// MARK: Sebonack Golf Club — Southampton, NY
+
+private let SEBONACK_GC_ID = UUID(uuidString: "8F9A0B1C-2D3E-4F5A-6B7C-8D9E0F1A2B3C")!
+
+let SEBONACK_GC_PARS: [Int] = [
+    4,4,4,3,4,4,4,3,5,
+    4,4,3,5,4,5,4,3,5
+]
+
+let SEBONACK_GC_HCS: [Int] = [
+    15,1,5,13,17,7,3,11,9,
+    12,2,18,4,8,6,14,16,10
+]
+
+let SEBONACK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7220, rating: 0.0, slope: 0),
+    TeeInfo(teeName: "Blue",  yardage: 6717, rating: 0.0, slope: 0),
+    TeeInfo(teeName: "White", yardage: 6164, rating: 0.0, slope: 0)
+]
+
 private let OLD_MEMORIAL_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000122")!
 
 let OLD_MEMORIAL_PARS: [Int] = [
@@ -7399,6 +7708,40 @@ private let BETHPAGE_BLACK_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",   yardage: 6223, rating: 71.2, slope: 137),
     TeeInfo(teeName: "Red (L)", yardage: 6223, rating: 77.8, slope: 150)
 ]
+private let BETHPAGE_RED_ID = UUID(uuidString: "A4E7A4A1-3A8F-4F4F-9B2F-6E9C1A0B4002")!
+
+let BETHPAGE_RED_PARS: [Int] = [
+    4,4,4,3,5,4,3,4,4,
+    4,4,3,4,4,4,5,3,4
+]
+
+let BETHPAGE_RED_HCS: [Int] = [
+    3,7,11,15,5,9,17,13,1,
+    14,12,16,6,4,2,8,18,10
+]
+
+let BETHPAGE_RED_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6921, rating: 73.7, slope: 128)
+]
+
+// MARK: Harbor Links Golf Course — Port Washington, NY
+
+private let HARBOR_LINKS_ID = UUID(uuidString: "8F0A1B2C-3D4E-4F5A-6B7C-8D9E0F1A2B3C")!
+
+let HARBOR_LINKS_PARS: [Int] = [
+    5,4,3,4,4,5,4,3,4,
+    4,4,3,5,4,4,5,3,4
+]
+
+let HARBOR_LINKS_HCS: [Int] = [
+    7,5,17,13,11,1,9,15,3,
+    2,18,16,12,8,10,6,14,4
+]
+
+let HARBOR_LINKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6886, rating: 73.3, slope: 137)
+]
+
 // MARK: - South Carolina Private Courses
 
 private let OLD_BARNWELL_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000001")!
@@ -10278,6 +10621,104 @@ private enum BuiltIns {
             website: "https://royaldornoch.com",
             address: "Golf Rd, Dornoch IV25 3LW, Scotland, United Kingdom",
             isWolfApproved: true
+        ),
+        c(
+            CARNOUSTIE_CHAMP_ID,
+            "Carnoustie Golf Links (Championship Course)",
+            CARNOUSTIE_CHAMP_PARS,
+            CARNOUSTIE_CHAMP_HCS,
+            CARNOUSTIE_CHAMP_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Old Tom Morris",
+            type: "Public",
+            phone: "+44 (0)1241 802270",
+            website: "https://www.carnoustiegolflinks.com",
+            address: "Links Parade, Carnoustie, Angus DD7 7JE, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            CARNOUSTIE_BURNSIDE_ID,
+            "Carnoustie Golf Links (Burnside Course)",
+            CARNOUSTIE_BURNSIDE_PARS,
+            CARNOUSTIE_BURNSIDE_HCS,
+            CARNOUSTIE_BURNSIDE_TEES,
+            country: "Scotland",
+            state: nil,
+            type: "Public",
+            phone: "+44 (0)1241 802270",
+            website: "https://www.carnoustiegolflinks.com",
+            address: "Links Parade, Carnoustie, Angus DD7 7JE, Scotland, United Kingdom"
+        ),
+        c(
+            CARNOUSTIE_BUDDON_ID,
+            "Carnoustie Golf Links (Buddon Course)",
+            CARNOUSTIE_BUDDON_PARS,
+            CARNOUSTIE_BUDDON_HCS,
+            CARNOUSTIE_BUDDON_TEES,
+            country: "Scotland",
+            state: nil,
+            type: "Public",
+            phone: "+44 (0)1241 802270",
+            website: "https://www.carnoustiegolflinks.com",
+            address: "Links Parade, Carnoustie, Angus DD7 7JE, Scotland, United Kingdom"
+        ),
+        c(
+            KINGSBARNS_ID,
+            "Kingsbarns Golf Links",
+            KINGSBARNS_PARS,
+            KINGSBARNS_HCS,
+            KINGSBARNS_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Kyle Phillips",
+            type: "Public",
+            phone: "+44 (0)1334 460860",
+            website: "https://www.kingsbarns.com",
+            address: "Kingsbarns, St Andrews, Fife KY16 8QD, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            CASTLE_STUART_ID,
+            "Castle Stuart Golf Links",
+            CASTLE_STUART_PARS,
+            CASTLE_STUART_HCS,
+            CASTLE_STUART_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Gil Hanse",
+            type: "Private",
+            website: "https://www.castlestuartgolf.com",
+            address: "Petty, Inverness IV2 7PG, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            CRUDEN_BAY_ID,
+            "Cruden Bay Golf Club",
+            CRUDEN_BAY_PARS,
+            CRUDEN_BAY_HCS,
+            CRUDEN_BAY_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Tom Simpson / Herbert Fowler",
+            type: "Public",
+            phone: "+44 (0)1779 812285",
+            website: "https://www.crudenbaygolfclub.co.uk",
+            address: "Aulton Road, Cruden Bay, Aberdeenshire AB42 0NN, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            KINGS_LINKS_ID,
+            "Kings Links Golf Centre",
+            KINGS_LINKS_PARS,
+            KINGS_LINKS_HCS,
+            KINGS_LINKS_TEES,
+            country: "Scotland",
+            state: nil,
+            type: "Public",
+            phone: "+44 (0)1224 641577",
+            website: "https://www.kings-links.com",
+            address: "Golf Road, Aberdeen AB24 1RZ, Scotland, United Kingdom"
         ),
         c(
             ROYAL_ST_GEORGES_ID,
@@ -13448,6 +13889,134 @@ private enum BuiltIns {
             address: "3000 Sound Avenue, Riverhead, NY 11901"
         ),
         c(
+            WINGED_FOOT_EAST_ID,
+            "Winged Foot Golf Club — East",
+            WINGED_FOOT_EAST_PARS,
+            WINGED_FOOT_EAST_HCS,
+            WINGED_FOOT_EAST_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Westchester",
+            architect: "A.W. Tillinghast",
+            type: "Private",
+            phone: "(914) 698-8400",
+            address: "851 Fenimore Rd, Mamaroneck, NY 10543"
+        ),
+        c(
+            WINGED_FOOT_WEST_ID,
+            "Winged Foot Golf Club — West",
+            WINGED_FOOT_WEST_PARS,
+            WINGED_FOOT_WEST_HCS,
+            WINGED_FOOT_WEST_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Westchester",
+            architect: "A.W. Tillinghast",
+            type: "Private",
+            phone: "(914) 698-8400",
+            address: "851 Fenimore Rd, Mamaroneck, NY 10543"
+        ),
+        c(
+            SHINNECOCK_HILLS_ID,
+            "Shinnecock Hills Golf Club",
+            SHINNECOCK_HILLS_PARS,
+            SHINNECOCK_HILLS_HCS,
+            SHINNECOCK_HILLS_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "William Flynn",
+            type: "Private",
+            phone: "(631) 283-1310",
+            address: "200 Tuckahoe Road, Southampton, NY 11968"
+        ),
+        c(
+            NGLA_ID,
+            "National Golf Links of America",
+            NGLA_PARS,
+            NGLA_HCS,
+            NGLA_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Charles B. MacDonald",
+            type: "Private",
+            address: "Sebonac Inlet Road, Southampton, NY 11968"
+        ),
+        c(
+            OAK_HILL_EAST_ID,
+            "Oak Hill Country Club (East Course)",
+            OAK_HILL_EAST_PARS,
+            OAK_HILL_EAST_HCS,
+            OAK_HILL_EAST_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Upstate NY",
+            architect: "Donald Ross",
+            type: "Private",
+            phone: "(585) 586-1660",
+            address: "145 Kilbourn Road, Rochester, NY 14618",
+            isWolfApproved: true
+        ),
+        c(
+            GARDEN_CITY_GC_ID,
+            "Garden City Golf Club",
+            GARDEN_CITY_GC_PARS,
+            GARDEN_CITY_GC_HCS,
+            GARDEN_CITY_GC_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Devereux Emmet",
+            type: "Private",
+            phone: "(516) 747-2880",
+            website: "https://www.gardencitygolfclub.com",
+            address: "315 Stewart Avenue, Garden City, NY 11530"
+        ),
+        c(
+            SLEEPY_HOLLOW_UPPER_ID,
+            "Sleepy Hollow Country Club (Upper Course)",
+            SLEEPY_HOLLOW_UPPER_PARS,
+            SLEEPY_HOLLOW_UPPER_HCS,
+            SLEEPY_HOLLOW_UPPER_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Westchester",
+            architect: "Charles Blair Macdonald",
+            type: "Private",
+            address: "777 Albany Post Road, Briarcliff Manor, NY 10510"
+        ),
+        c(
+            THE_CREEK_CLUB_ID,
+            "The Creek Club",
+            THE_CREEK_CLUB_PARS,
+            THE_CREEK_CLUB_HCS,
+            THE_CREEK_CLUB_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Charles Blair Macdonald / Seth Raynor",
+            type: "Private",
+            phone: "(516) 676-1405",
+            website: "https://www.creek.net",
+            address: "1 Horse Hollow Road, Locust Valley, NY 11560"
+        ),
+        c(
+            SEBONACK_GC_ID,
+            "Sebonack Golf Club",
+            SEBONACK_GC_PARS,
+            SEBONACK_GC_HCS,
+            SEBONACK_GC_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Jack Nicklaus / Tom Doak",
+            type: "Private",
+            website: "https://www.sebonack.com",
+            address: "405 Sebonac Road, Southampton, NY 11968",
+            isWolfApproved: true
+        ),
+        c(
             OLD_MEMORIAL_ID,
             "Old Memorial Golf Club",
             OLD_MEMORIAL_PARS,
@@ -14611,6 +15180,34 @@ private enum BuiltIns {
         website: "https://www.bethpagegolfcourse.com",
         address: "99 Quaker Meeting House Rd, Farmingdale, NY",
         isWolfApproved: true
+        ),
+        c(
+        BETHPAGE_RED_ID,
+        "Bethpage State Park - Red",
+        BETHPAGE_RED_PARS,
+        BETHPAGE_RED_HCS,
+        BETHPAGE_RED_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Long Island",
+        architect: "A.W. Tillinghast",
+        type: "Public",
+        phone: "(516) 249-0700",
+        website: "https://www.bethpagegolfcourse.com",
+        address: "99 Quaker Meeting House Rd, Farmingdale, NY"
+        ),
+        c(
+        HARBOR_LINKS_ID,
+        "Harbor Links Golf Course",
+        HARBOR_LINKS_PARS,
+        HARBOR_LINKS_HCS,
+        HARBOR_LINKS_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Long Island",
+        type: "Public",
+        phone: "(516) 767-4816",
+        address: "1 Fairway Drive, Port Washington, NY 11050"
         ),
         // MARK: - Built-In Course Entries
 

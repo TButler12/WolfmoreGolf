@@ -15,6 +15,9 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     /// If set by CoursePicker (Edit), we load that course.
     var loadCourseID: UUID?
 
+    /// When true, pre-fill holes with Biltmore template data; course name stays blank.
+    var prefillTemplate: Bool = false
+
     // MARK: - State
 
     private var activeCourseID: UUID?
@@ -37,6 +40,7 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         CourseLibrary.shared.seedIfNeeded()
         loadInitialCourse()
         updateCourseLabel()
+        if prefillTemplate { title = "Boilerplate" }
         startInstructionGlow()
     }
 
@@ -49,6 +53,13 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     // MARK: - Initial Load
 
     private func loadInitialCourse() {
+        if prefillTemplate {
+            applyToUIAndModel(pars: Array(BILTMORE_CC_PARS), hcs: Array(BILTMORE_CC_HCS))
+            activeCourseID = nil
+            GameManager.shared.update { g in g.course.name = "" }
+            return
+        }
+
         if let id = loadCourseID, let c = CourseLibrary.shared.get(id: id) {
             setActiveCourse(c)
             return
@@ -72,7 +83,10 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     private func setActiveCourse(_ c: CourseProfile) {
         activeCourseID = c.id
         applyToUIAndModel(pars: c.pars, hcs: c.hcs)
-        // Keep Home picker in sync with what you actually loaded
+        GameManager.shared.update { g in
+            g.course.name = c.name
+            g.course.id   = c.id
+        }
         CourseLibrary.shared.selectedCourseID = c.id
     }
 
@@ -278,6 +292,10 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     // MARK: - Label
 
     private func updateCourseLabel() {
+        if prefillTemplate {
+            courseLabel.text = "Boilerplate"
+            return
+        }
         CourseLibrary.shared.seedIfNeeded()
 
         // prefer the active course id

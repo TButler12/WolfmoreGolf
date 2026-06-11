@@ -64,6 +64,7 @@
 		F681886C2F62898D004162EE /* PlayerSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605B2F60D62500EC0C30 /* PlayerSetupViewController.swift */; };
 		F688C7412F37F9E800A4B094 /* ContactsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F688C7402F37F9E800A4B094 /* ContactsViewController.swift */; };
 		F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F688C7802F3906C400A4B094 /* SummaryFormatter.swift */; };
+		F6A010012FA0000000000AE1 /* WolfActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A010002FA0000000000AE1 /* WolfActions.swift */; };
 		F6D041842F611C3200CABD08 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F6D041822F611C3200CABD08 /* Main.storyboard */; };
 		F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D351512EC0313E00CE24F9 /* RulesViewController.swift */; };
 		F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */; };
@@ -166,6 +167,7 @@
 		F6750CFF2F785E24001828D2 /* GameSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameSettingsViewController.swift; sourceTree = "<group>"; };
 		F688C7402F37F9E800A4B094 /* ContactsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsViewController.swift; sourceTree = "<group>"; };
 		F688C7802F3906C400A4B094 /* SummaryFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryFormatter.swift; sourceTree = "<group>"; };
+		F6A010002FA0000000000AE1 /* WolfActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfActions.swift; sourceTree = "<group>"; };
 		F6D041832F611C3200CABD08 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WolfmoreGolf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6D351512EC0313E00CE24F9 /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
@@ -239,6 +241,7 @@
 				F6E008142F8D26FC00763694 /* RemoteMatchStore.swift */,
 				F6E008122F8D269F00763694 /* RemoteMatch.swift */,
 				F6E0080A2F8965B600763694 /* RemoteNassauViewController.swift */,
+				F6A010002FA0000000000AE1 /* WolfActions.swift */,
 				F6E008082F89408500763694 /* RemoteNassauScorer.swift */,
 				F6E008062F89403800763694 /* SharedRoundBuilder.swift */,
 				F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */,
@@ -523,6 +526,7 @@
 				F63960752F60D62500EC0C30 /* PlayerSetupStore.swift in Sources */,
 				F6750D002F785E24001828D2 /* GameSettingsViewController.swift in Sources */,
 				F6E0080B2F8965B600763694 /* RemoteNassauViewController.swift in Sources */,
+				F6A010012FA0000000000AE1 /* WolfActions.swift in Sources */,
 				F63960772F60D62500EC0C30 /* ProfileStore.swift in Sources */,
 				F63960782F60D62500EC0C30 /* RoundStore.swift in Sources */,
 				F63960792F60D62500EC0C30 /* RoundSummary.swift in Sources */,
@@ -580,7 +584,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 32;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -595,7 +599,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.6;
+				MARKETING_VERSION = 2.1.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -621,7 +625,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 30;
+				CURRENT_PROJECT_VERSION = 32;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -636,7 +640,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.1.6;
+				MARKETING_VERSION = 2.1.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
