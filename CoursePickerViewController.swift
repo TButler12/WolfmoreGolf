@@ -575,7 +575,7 @@ final class CoursePickerViewController: UIViewController,
         } else {
             collapsedSections.insert(section)
         }
-        tableView.reloadSections(IndexSet(integer: section), with: .automatic)
+        tableView.reloadData()
     }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
