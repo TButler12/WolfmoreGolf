@@ -2407,6 +2407,47 @@ let GOLD_MTN_CASCADE_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Forward", yardage: 5333, rating: 65.4, slope: 112)
 ]
 
+// MARK: Suncadia Resort – Prospector — Roslyn, WA
+// Par 72 | 7,112 yds | Rating 74.5 | Slope 139 | Type: Resort | Architect: Arnold Palmer Design
+
+private let SUNCADIA_PROSPECTOR_ID = UUID(uuidString: "0CDEF678-9ABC-4C0D-F678-9ABCDEF012CD")!
+
+let SUNCADIA_PROSPECTOR_PARS: [Int] = [
+    4,4,3,5,4,3,4,5,4,
+    4,5,3,4,4,3,4,4,5
+]
+
+let SUNCADIA_PROSPECTOR_HCS: [Int] = [
+    13,9,17,11,15,5,1,7,3,
+    10,4,18,14,8,12,16,2,6
+]
+
+let SUNCADIA_PROSPECTOR_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7112, rating: 74.5, slope: 139),
+    TeeInfo(teeName: "Back",         yardage: 6641, rating: 72.4, slope: 134),
+    TeeInfo(teeName: "Middle",       yardage: 6159, rating: 68.8, slope: 132),
+    TeeInfo(teeName: "Forward",      yardage: 5362, rating: 71.3, slope: 132)
+]
+
+// MARK: Suncadia Resort – Rope Rider — Roslyn, WA
+// Par 72 | 7,226 yds | Rating 73.5 | Slope 132 | Type: Resort | Architect: Jacobsen Hardy GC Design
+
+private let SUNCADIA_ROPE_RIDER_ID = UUID(uuidString: "0DEF0789-ABCD-4D0E-0789-ABCDEF0123DE")!
+
+let SUNCADIA_ROPE_RIDER_PARS: [Int] = [
+    4,5,3,4,4,4,3,5,4,
+    5,3,4,4,5,4,4,3,4
+]
+
+let SUNCADIA_ROPE_RIDER_HCS: [Int] = [
+    7,3,13,9,11,15,17,1,5,
+    6,18,16,12,2,8,4,14,10
+]
+
+let SUNCADIA_ROPE_RIDER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Jake 2025", yardage: 7226, rating: 73.5, slope: 132)
+]
+
 // MARK: Salish Cliffs Golf Club — Shelton, WA
 // Par 72 | 7,206 yds | Rating 75.1 | Slope 142 | Type: Daily-Fee | Architect: Gene Bates
 
@@ -10871,6 +10912,36 @@ private enum BuiltIns {
             type: "Municipal",
             phone: "(509) 625-6200",
             address: "4304 W West Dr, Spokane, WA 99224"
+        ),
+        c(
+            SUNCADIA_PROSPECTOR_ID,
+            "Suncadia Resort (Prospector)",
+            SUNCADIA_PROSPECTOR_PARS,
+            SUNCADIA_PROSPECTOR_HCS,
+            SUNCADIA_PROSPECTOR_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "Arnold Palmer Design",
+            type: "Resort",
+            phone: "(509) 260-4225",
+            website: "https://www.suncadia.com",
+            address: "3600 Suncadia Trail, Cle Elum, WA 98922",
+            isWolfApproved: true
+        ),
+        c(
+            SUNCADIA_ROPE_RIDER_ID,
+            "Suncadia Resort (Rope Rider)",
+            SUNCADIA_ROPE_RIDER_PARS,
+            SUNCADIA_ROPE_RIDER_HCS,
+            SUNCADIA_ROPE_RIDER_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "Jacobsen Hardy GC Design",
+            type: "Resort",
+            phone: "(509) 260-4225",
+            website: "https://www.suncadia.com",
+            address: "3600 Suncadia Trail, Cle Elum, WA 98922",
+            isWolfApproved: true
         ),
         c(
             ARCADIA_BLUFFS_BLUFFS_BLUE_ID,
