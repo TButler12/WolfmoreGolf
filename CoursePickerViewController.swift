@@ -11,10 +11,7 @@
 
 import UIKit
 
-final class CoursePickerViewController: UIViewController,
-                                        UITableViewDelegate,
-                                        UITableViewDataSource,
-                                        UISearchResultsUpdating {
+final class CoursePickerViewController: UITableViewController, UISearchResultsUpdating {
 
     // MARK: - Types
 
@@ -68,8 +65,6 @@ final class CoursePickerViewController: UIViewController,
         return UUID(uuidString: raw)
     }
 
-    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
-
     private let summaryHeader = UIView()
     private let summaryLabel1 = UILabel()
     private let summaryLabel2 = UILabel()
@@ -81,6 +76,7 @@ final class CoursePickerViewController: UIViewController,
         super.viewDidLoad()
 
         title = "Choose Course"
+        tableView = UITableView(frame: .zero, style: .insetGrouped)
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
@@ -95,7 +91,6 @@ final class CoursePickerViewController: UIViewController,
 
         configureSummaryHeader()
         configureSearch()
-        layoutTableBelowHeader()
         reloadCourses()
     }
 
@@ -169,40 +164,7 @@ final class CoursePickerViewController: UIViewController,
         ])
 
         summaryHeader.frame.size.height = 52
-    }
-
-    private func layoutTableBelowHeader() {
-        summaryHeader.translatesAutoresizingMaskIntoConstraints = false
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        tableView.delegate   = self
-        tableView.dataSource = self
-        // Prevent UIKit from adding its own top inset (nav bar safe area) —
-        // we manage contentInset.top ourselves in viewDidLayoutSubviews.
-        tableView.contentInsetAdjustmentBehavior = .never
-
-        // tableView fills the full safe area; summaryHeader floats on top.
-        view.addSubview(tableView)
-        view.addSubview(summaryHeader)   // added last → higher z-order → always visible
-
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-
-            summaryHeader.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            summaryHeader.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            summaryHeader.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-        ])
-    }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        let top = summaryHeader.bounds.height
-        guard top > 0, tableView.contentInset.top != top else { return }
-        tableView.contentInset          = UIEdgeInsets(top: top, left: 0, bottom: 0, right: 0)
-        tableView.scrollIndicatorInsets = UIEdgeInsets(top: top, left: 0, bottom: 0, right: 0)
-        tableView.contentOffset         = CGPoint(x: 0, y: -top)
+        tableView.tableHeaderView = summaryHeader
     }
 
     private func updateSummaryHeader() {
@@ -215,6 +177,16 @@ final class CoursePickerViewController: UIViewController,
 
         summaryHeader.setNeedsLayout()
         summaryHeader.layoutIfNeeded()
+
+        let target = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
+        let height = summaryHeader.systemLayoutSizeFitting(target).height
+
+        if summaryHeader.frame.height != height {
+            var frame = summaryHeader.frame
+            frame.size.height = height
+            summaryHeader.frame = frame
+            tableView.tableHeaderView = summaryHeader
+        }
     }
 
     // MARK: - Data
@@ -520,13 +492,13 @@ final class CoursePickerViewController: UIViewController,
 
     // MARK: - Table View
 
-    func numberOfSections(in tableView: UITableView) -> Int {
+    override func numberOfSections(in tableView: UITableView) -> Int {
         sections.count
     }
 
-    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? { nil }
+    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? { nil }
 
-    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard sortMode == .groupedLocation else {
             let label = UILabel()
             label.text = sections[section].title
@@ -534,72 +506,68 @@ final class CoursePickerViewController: UIViewController,
             label.textColor = .secondaryLabel
             return label
         }
+        let header = UIView()
+        header.backgroundColor = .clear
 
-        // UIButton fires .touchUpInside reliably in UITableView section headers;
-        // gesture recognizers on plain UIViews are consumed by the table's scroll recognizer.
-        let btn = UIButton(type: .custom)
-        btn.backgroundColor = .clear
-        btn.tag = section
-        btn.addTarget(self, action: #selector(sectionHeaderTapped(_:)), for: .touchUpInside)
-
-        let chevronName = collapsedSections.contains(section) ? "chevron.right" : "chevron.down"
-        let chevron = UIImageView(image: UIImage(systemName: chevronName))
+        let chevron = UIImageView(image: UIImage(systemName: collapsedSections.contains(section) ? "chevron.right" : "chevron.down"))
         chevron.tintColor = .secondaryLabel
         chevron.translatesAutoresizingMaskIntoConstraints = false
         chevron.contentMode = .scaleAspectFit
-        chevron.isUserInteractionEnabled = false
 
         let label = UILabel()
         label.text = sections[section].title
         label.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
         label.textColor = .secondaryLabel
         label.translatesAutoresizingMaskIntoConstraints = false
-        label.isUserInteractionEnabled = false
 
         let count = UILabel()
         count.text = "\(sections[section].items.count)"
         count.font = UIFont.systemFont(ofSize: 12, weight: .regular)
         count.textColor = .tertiaryLabel
         count.translatesAutoresizingMaskIntoConstraints = false
-        count.isUserInteractionEnabled = false
 
-        btn.addSubview(chevron)
-        btn.addSubview(label)
-        btn.addSubview(count)
+        header.addSubview(chevron)
+        header.addSubview(label)
+        header.addSubview(count)
 
         NSLayoutConstraint.activate([
-            chevron.leadingAnchor.constraint(equalTo: btn.leadingAnchor, constant: 16),
-            chevron.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+            chevron.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            chevron.centerYAnchor.constraint(equalTo: header.centerYAnchor),
             chevron.widthAnchor.constraint(equalToConstant: 12),
             chevron.heightAnchor.constraint(equalToConstant: 12),
 
             label.leadingAnchor.constraint(equalTo: chevron.trailingAnchor, constant: 6),
-            label.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+            label.centerYAnchor.constraint(equalTo: header.centerYAnchor),
 
             count.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 6),
-            count.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+            count.centerYAnchor.constraint(equalTo: header.centerYAnchor),
         ])
 
-        return btn
+        let tap = SectionTapGesture(target: self, action: #selector(sectionHeaderTapped(_:)))
+        tap.section = section
+        header.addGestureRecognizer(tap)
+        header.isUserInteractionEnabled = true
+
+        return header
     }
 
-    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { 32 }
+    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { 32 }
 
-    @objc private func sectionHeaderTapped(_ sender: UIButton) {
-        let section = sender.tag
+    @objc private func sectionHeaderTapped(_ gesture: SectionTapGesture) {
+        let section = gesture.section
         if collapsedSections.contains(section) {
             collapsedSections.remove(section)
         } else {
             collapsedSections.insert(section)
         }
-        tableView.reloadData()
+        tableView.reloadSections(IndexSet(integer: section), with: .automatic)
     }
 
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         collapsedSections.contains(section) ? 0 : sections[section].items.count
     }
 
-    func tableView(_ tableView: UITableView,
+    override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let reuseID = "CourseCell"
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseID)
@@ -643,14 +611,14 @@ final class CoursePickerViewController: UIViewController,
         return cell
     }
 
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
         let c = course(at: indexPath)
         showCourseOptions(c)
     }
 
-    func tableView(_ tableView: UITableView,
+    override func tableView(_ tableView: UITableView,
                             leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
         let c = course(at: indexPath)
@@ -669,7 +637,7 @@ final class CoursePickerViewController: UIViewController,
         return config
     }
 
-    func tableView(_ tableView: UITableView,
+    override func tableView(_ tableView: UITableView,
                             trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
         let c = course(at: indexPath)
