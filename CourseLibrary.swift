@@ -2276,6 +2276,175 @@ let SAHALEE_NORTH_SOUTH_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green",        yardage: 5411)
 ]
 
+// MARK: Aldarra Golf Club — Sammamish, WA
+// Par 71 | 6,926 yds | Rating 74.9 | Slope 151 | Type: Private | Architect: Tom Fazio
+
+private let ALDARRA_GC_ID = UUID(uuidString: "04D5E6F0-1234-4405-D6E7-F01A2B3C4D5E")!
+
+let ALDARRA_GC_PARS: [Int] = [
+    4,3,5,4,4,3,5,4,3,
+    4,5,5,3,4,3,4,4,4
+]
+
+let ALDARRA_GC_HCS: [Int] = [
+    5,9,1,7,11,15,13,3,17,
+    14,2,18,12,16,4,8,10,6
+]
+
+let ALDARRA_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Aldarra", yardage: 6926, rating: 74.9, slope: 151)
+]
+
+// MARK: Wine Valley Golf Club — Walla Walla, WA
+// Par 72 | 7,600 yds (Gold) | Type: Daily-Fee | Architect: Dan Hixon
+
+private let WINE_VALLEY_GC_ID = UUID(uuidString: "05E6F012-3456-4506-E7F0-12A3B4C5D6E7")!
+
+let WINE_VALLEY_GC_PARS: [Int] = [
+    4,4,5,4,4,3,5,3,4,
+    4,4,4,4,3,5,3,4,5
+]
+
+let WINE_VALLEY_GC_HCS: [Int] = [
+    7,11,3,15,1,17,9,13,5,
+    6,16,4,2,18,12,14,8,10
+]
+
+let WINE_VALLEY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",     yardage: 7600, rating: 76.4, slope: 133),
+    TeeInfo(teeName: "Cabernet", yardage: 7195, rating: 74.4, slope: 130),
+    TeeInfo(teeName: "Black",    yardage: 6760, rating: 72.6, slope: 127),
+    TeeInfo(teeName: "Merlot",   yardage: 6510, rating: 71.3, slope: 127),
+    TeeInfo(teeName: "Blue",     yardage: 6333, rating: 70.3, slope: 126),
+    TeeInfo(teeName: "Syrah",    yardage: 6090, rating: 69.1, slope: 125),
+    TeeInfo(teeName: "White",    yardage: 5845, rating: 68.4, slope: 114)
+]
+
+// MARK: Palouse Ridge Golf Course — Pullman, WA
+// Par 72 | 7,302 yds (Crimson) | Rating 75.5 | Slope 144 | Type: Daily-Fee | Architect: John Harbottle III
+
+private let PALOUSE_RIDGE_GC_ID = UUID(uuidString: "06F7A012-3456-4607-F7A0-12B3C4D5E6F7")!
+
+let PALOUSE_RIDGE_GC_PARS: [Int] = [
+    4,4,4,3,5,3,4,4,5,
+    5,3,4,3,4,4,3,5,5
+]
+
+let PALOUSE_RIDGE_GC_HCS: [Int] = [
+    3,17,5,9,1,7,15,11,13,
+    8,10,4,2,14,18,16,12,6
+]
+
+let PALOUSE_RIDGE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Crimson", yardage: 7302, rating: 75.5, slope: 144)
+]
+
+// MARK: The Home Course — DuPont, WA
+// Par 72 | 7,420 yds (Dynamite) | Rating 74.9 | Slope 138 | Type: Daily-Fee
+
+private let HOME_COURSE_ID = UUID(uuidString: "07A8B123-4567-4708-A8B1-23C4D5E6F7A8")!
+
+let HOME_COURSE_PARS: [Int] = [
+    4,4,4,3,5,3,4,5,4,
+    5,4,3,4,3,4,5,4,4
+]
+
+let HOME_COURSE_HCS: [Int] = [
+    11,13,1,15,17,5,7,9,3,
+    14,16,6,2,10,8,18,12,4
+]
+
+let HOME_COURSE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Dynamite", yardage: 7420, rating: 74.9, slope: 138),
+    TeeInfo(teeName: "Black",    yardage: 7031, rating: 73.3, slope: 135),
+    TeeInfo(teeName: "Blue",     yardage: 6584, rating: 71.2, slope: 131),
+    TeeInfo(teeName: "White",    yardage: 6094, rating: 69.0, slope: 125)
+]
+
+// MARK: Gold Mountain Golf Club — Olympic Course — Bremerton, WA
+// Par 72 | 7,168 yds (Pro) | Rating 74.8 | Slope 139 | Type: Daily-Fee
+
+private let GOLD_MTN_OLYMPIC_ID = UUID(uuidString: "08B9C234-5678-4809-B9C2-34D5E6F7A8B9")!
+
+let GOLD_MTN_OLYMPIC_PARS: [Int] = [
+    4,4,4,4,3,5,4,3,5,
+    4,4,4,4,3,5,4,3,5
+]
+
+let GOLD_MTN_OLYMPIC_HCS: [Int] = [
+    3,13,9,11,17,7,1,15,5,
+    2,8,14,12,10,4,16,18,6
+]
+
+let GOLD_MTN_OLYMPIC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Pro",     yardage: 7168, rating: 74.8, slope: 139),
+    TeeInfo(teeName: "Tourney", yardage: 6505, rating: 71.9, slope: 135),
+    TeeInfo(teeName: "Player",  yardage: 6034, rating: 70.0, slope: 126),
+    TeeInfo(teeName: "Scoring", yardage: 5607, rating: 68.3, slope: 121),
+    TeeInfo(teeName: "Forward", yardage: 5220, rating: 66.2, slope: 117)
+]
+
+// MARK: Gold Mountain Golf Club — Cascade Course — Bremerton, WA
+// Par 72 | 6,775 yds (Pro) | Rating 73.0 | Slope 125 | Type: Daily-Fee
+
+private let GOLD_MTN_CASCADE_ID = UUID(uuidString: "09CAD345-6789-490A-CAD3-45E6F7A8B9CA")!
+
+let GOLD_MTN_CASCADE_PARS: [Int] = [
+    5,4,3,4,5,4,3,4,4,
+    4,4,4,4,3,5,4,3,5
+]
+
+let GOLD_MTN_CASCADE_HCS: [Int] = [
+    9,11,15,13,1,3,17,7,5,
+    2,8,14,12,10,4,16,18,6
+]
+
+let GOLD_MTN_CASCADE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Pro",     yardage: 6775, rating: 73.0, slope: 125),
+    TeeInfo(teeName: "Tourney", yardage: 6386, rating: 71.2, slope: 122),
+    TeeInfo(teeName: "Player",  yardage: 6081, rating: 69.4, slope: 119),
+    TeeInfo(teeName: "Scoring", yardage: 5711, rating: 67.5, slope: 117),
+    TeeInfo(teeName: "Forward", yardage: 5333, rating: 65.4, slope: 112)
+]
+
+// MARK: Salish Cliffs Golf Club — Shelton, WA
+// Par 72 | 7,206 yds | Rating 75.1 | Slope 142 | Type: Daily-Fee | Architect: Gene Bates
+
+private let SALISH_CLIFFS_GC_ID = UUID(uuidString: "0ADBE456-789A-4A0B-DBE4-56789ABCDEF0")!
+
+let SALISH_CLIFFS_GC_PARS: [Int] = [
+    5,4,3,4,4,3,4,5,4,
+    5,4,4,3,4,4,4,3,5
+]
+
+let SALISH_CLIFFS_GC_HCS: [Int] = [
+    3,15,13,9,11,17,5,1,7,
+    8,4,12,16,2,14,10,18,6
+]
+
+let SALISH_CLIFFS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7206, rating: 75.1, slope: 142)
+]
+
+// MARK: Indian Canyon Golf Course — Spokane, WA
+// Par 71 | 6,255 yds | Rating 69.6 | Slope 123 | Type: Municipal
+
+private let INDIAN_CANYON_GC_ID = UUID(uuidString: "0BCEF567-89AB-4B0C-EF56-789ABCDEF01B")!
+
+let INDIAN_CANYON_GC_PARS: [Int] = [
+    4,5,4,3,4,4,4,3,4,
+    4,3,5,3,4,4,4,4,5
+]
+
+let INDIAN_CANYON_GC_HCS: [Int] = [
+    10,8,16,18,2,14,12,4,6,
+    9,17,3,15,1,11,7,13,5
+]
+
+let INDIAN_CANYON_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6255, rating: 69.6, slope: 123)
+]
+
 // MARK: Kapalua Resort – Plantation — Tournament — Lahaina, HI
 // Par 73 | 7,596 yds | Rating 77.0 | Slope 144 | Type: Resort | Architect: Bill Coore & Ben Crenshaw
 
@@ -10590,6 +10759,118 @@ private enum BuiltIns {
             website: "https://www.sahalee.com",
             address: "21200 NE Sahalee Country Club Dr, Sammamish, WA 98074",
             isWolfApproved: true
+        ),
+        c(
+            ALDARRA_GC_ID,
+            "Aldarra Golf Club",
+            ALDARRA_GC_PARS,
+            ALDARRA_GC_HCS,
+            ALDARRA_GC_TEES,
+            country: "USA",
+            state: "WA",
+            type: "Private",
+            address: "23005 SE Tiger Mountain Rd, Fall City, WA 98024",
+            isWolfApproved: true
+        ),
+        c(
+            WINE_VALLEY_GC_ID,
+            "Wine Valley Golf Club",
+            WINE_VALLEY_GC_PARS,
+            WINE_VALLEY_GC_HCS,
+            WINE_VALLEY_GC_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "Dan Hixson",
+            type: "Daily-Fee",
+            phone: "(509) 522-4653",
+            website: "https://www.winevalleygolfclub.com",
+            address: "17111 N Stateline Rd, Walla Walla, WA 99362",
+            isWolfApproved: true
+        ),
+        c(
+            PALOUSE_RIDGE_GC_ID,
+            "Palouse Ridge Golf Club",
+            PALOUSE_RIDGE_GC_PARS,
+            PALOUSE_RIDGE_GC_HCS,
+            PALOUSE_RIDGE_GC_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "John Harbottle III",
+            type: "Daily-Fee",
+            phone: "(509) 335-4342",
+            website: "https://www.palouseridge.com",
+            address: "1260 NE Palouse Ridge Dr, Pullman, WA 99163",
+            isWolfApproved: true
+        ),
+        c(
+            HOME_COURSE_ID,
+            "The Home Course",
+            HOME_COURSE_PARS,
+            HOME_COURSE_HCS,
+            HOME_COURSE_TEES,
+            country: "USA",
+            state: "WA",
+            type: "Daily-Fee",
+            phone: "(253) 964-5965",
+            website: "https://www.thehomecourse.com",
+            address: "5 Inverness Dr E, DuPont, WA 98327",
+            isWolfApproved: true
+        ),
+        c(
+            GOLD_MTN_OLYMPIC_ID,
+            "Gold Mountain Golf Club (Olympic)",
+            GOLD_MTN_OLYMPIC_PARS,
+            GOLD_MTN_OLYMPIC_HCS,
+            GOLD_MTN_OLYMPIC_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "John Harbottle III",
+            type: "Municipal",
+            phone: "(360) 415-5432",
+            website: "https://www.goldmountaingolf.com",
+            address: "7263 W Belfair Valley Rd, Bremerton, WA 98312",
+            isWolfApproved: true
+        ),
+        c(
+            GOLD_MTN_CASCADE_ID,
+            "Gold Mountain Golf Club (Cascade)",
+            GOLD_MTN_CASCADE_PARS,
+            GOLD_MTN_CASCADE_HCS,
+            GOLD_MTN_CASCADE_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "John Harbottle III",
+            type: "Municipal",
+            phone: "(360) 415-5432",
+            website: "https://www.goldmountaingolf.com",
+            address: "7263 W Belfair Valley Rd, Bremerton, WA 98312",
+            isWolfApproved: true
+        ),
+        c(
+            SALISH_CLIFFS_GC_ID,
+            "Salish Cliffs Golf Club",
+            SALISH_CLIFFS_GC_PARS,
+            SALISH_CLIFFS_GC_HCS,
+            SALISH_CLIFFS_GC_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "Gene Bates",
+            type: "Daily-Fee",
+            phone: "(360) 462-3673",
+            address: "91 W State Route 108, Shelton, WA 98584",
+            isWolfApproved: true
+        ),
+        c(
+            INDIAN_CANYON_GC_ID,
+            "Indian Canyon Golf Course",
+            INDIAN_CANYON_GC_PARS,
+            INDIAN_CANYON_GC_HCS,
+            INDIAN_CANYON_GC_TEES,
+            country: "USA",
+            state: "WA",
+            type: "Municipal",
+            phone: "(509) 625-6200",
+            address: "4304 W West Dr, Spokane, WA 99224"
         ),
         c(
             ARCADIA_BLUFFS_BLUFFS_BLUE_ID,
