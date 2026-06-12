@@ -1053,6 +1053,55 @@ let KINGS_LINKS_TEES: [TeeInfo] = [
     TeeInfo(teeName: "White", yardage: 6442, rating: 69.9, slope: 116)
 ]
 
+private let PRESTWICK_GC_ID = UUID(uuidString: "CC3D4E5F-6A7B-4C3D-4E5F-6A7B8C9D0E1F")!
+
+let PRESTWICK_GC_PARS: [Int] = [
+    4,3,5,4,3,4,4,4,4,
+    4,3,5,4,4,4,4,4,4
+]
+
+let PRESTWICK_GC_HCS: [Int] = [
+    11,17,3,13,5,15,1,9,7,
+    4,16,8,2,14,10,18,6,12
+]
+
+let PRESTWICK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6908, rating: 74.4, slope: 139)
+]
+
+private let WESTERN_GAILES_ID = UUID(uuidString: "DD4E5F6A-7B8C-4D4E-5F6A-7B8C9D0E1F2A")!
+
+let WESTERN_GAILES_PARS: [Int] = [
+    4,4,4,4,4,5,3,4,4,
+    4,4,4,3,5,3,4,4,4
+]
+
+let WESTERN_GAILES_HCS: [Int] = [
+    13,3,11,9,1,5,15,7,17,
+    14,2,8,18,6,16,10,4,12
+]
+
+let WESTERN_GAILES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7014, rating: 75.3, slope: 144)
+]
+
+private let MACHRIHANISH_GC_ID = UUID(uuidString: "EE5F6A7B-8C9D-4E5F-6A7B-8C9D0E1F2A3B")!
+
+let MACHRIHANISH_GC_PARS: [Int] = [
+    4,4,4,3,4,4,4,4,4,
+    5,3,5,4,4,3,3,4,4
+]
+
+let MACHRIHANISH_GC_HCS: [Int] = [
+    3,7,11,18,5,13,2,9,15,
+    10,8,6,12,1,16,4,14,17
+]
+
+let MACHRIHANISH_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6226, rating: 71.0, slope: 130),
+    TeeInfo(teeName: "Yellow", yardage: 5956, rating: 70.0, slope: 126)
+]
+
 private let ROYAL_ST_GEORGES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000008")!
 
 let ROYAL_ST_GEORGES_PARS: [Int] = [
@@ -10719,6 +10768,48 @@ private enum BuiltIns {
             phone: "+44 (0)1224 641577",
             website: "https://www.kings-links.com",
             address: "Golf Road, Aberdeen AB24 1RZ, Scotland, United Kingdom"
+        ),
+        c(
+            PRESTWICK_GC_ID,
+            "Prestwick Golf Club",
+            PRESTWICK_GC_PARS,
+            PRESTWICK_GC_HCS,
+            PRESTWICK_GC_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Old Tom Morris",
+            type: "Semi-Private",
+            phone: "+44 (0)1292 477404",
+            address: "2-4 Links Road, Prestwick, Ayrshire KA9 1QH, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            WESTERN_GAILES_ID,
+            "Western Gailes Golf Club",
+            WESTERN_GAILES_PARS,
+            WESTERN_GAILES_HCS,
+            WESTERN_GAILES_TEES,
+            country: "Scotland",
+            state: nil,
+            type: "Private",
+            phone: "+44 (0)1294 311649",
+            website: "https://www.westerngailes.com",
+            address: "Western Gailes, Gailes Rd, Irvine KA11 5AE, Scotland, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            MACHRIHANISH_GC_ID,
+            "Machrihanish Golf Club",
+            MACHRIHANISH_GC_PARS,
+            MACHRIHANISH_GC_HCS,
+            MACHRIHANISH_GC_TEES,
+            country: "Scotland",
+            state: nil,
+            type: "Semi-Private",
+            phone: "+44 (0)1586 810213",
+            website: "https://www.machgolf.com",
+            address: "Machrihanish, Campbeltown, PA28 6PT, Scotland, United Kingdom",
+            isWolfApproved: true
         ),
         c(
             ROYAL_ST_GEORGES_ID,
