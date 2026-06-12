@@ -2188,6 +2188,30 @@ let SCARECROW_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Forward",      yardage: 4656, rating: 66.9, slope: 110)
 ]
 
+// MARK: Chambers Bay — University Place, WA
+// Par 72 | 7,158 yds (Black) 74.4/138 | Architect: Robert Trent Jones Jr. | Type: Public
+// 2015 U.S. Open host
+
+private let CHAMBERS_BAY_ID = UUID(uuidString: "FF6A7B8C-9D0E-4F6A-7B8C-9D0E1F2A3B4C")!
+
+let CHAMBERS_BAY_PARS: [Int] = [
+    4,4,3,5,4,4,4,5,3,
+    4,4,4,5,4,3,4,4,5
+]
+
+let CHAMBERS_BAY_HCS: [Int] = [
+    3,9,15,13,5,7,1,17,11,
+    4,8,18,14,2,16,10,6,12
+]
+
+let CHAMBERS_BAY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",     yardage: 7158, rating: 74.4, slope: 138),
+    TeeInfo(teeName: "Blue",      yardage: 6748, rating: 72.4, slope: 134),
+    TeeInfo(teeName: "Sand",      yardage: 6345, rating: 70.6, slope: 130),
+    TeeInfo(teeName: "White",     yardage: 5822, rating: 68.0, slope: 122),
+    TeeInfo(teeName: "Teal",      yardage: 4708, rating: 63.0, slope: 109)
+]
+
 // MARK: Kapalua Resort – Plantation — Tournament — Lahaina, HI
 // Par 73 | 7,596 yds | Rating 77.0 | Slope 144 | Type: Resort | Architect: Bill Coore & Ben Crenshaw
 
@@ -10445,6 +10469,21 @@ private enum BuiltIns {
             isWolfApproved: true,
             resortBrand: nil,
             promo: nil
+        ),
+        c(
+            CHAMBERS_BAY_ID,
+            "Chambers Bay",
+            CHAMBERS_BAY_PARS,
+            CHAMBERS_BAY_HCS,
+            CHAMBERS_BAY_TEES,
+            country: "USA",
+            state: "WA",
+            architect: "Robert Trent Jones Jr.",
+            type: "Public",
+            phone: "877-295-4657",
+            website: "https://www.chambersbaygolf.com",
+            address: "6320 Grandview Drive West, University Place, WA 98467",
+            isWolfApproved: true
         ),
         c(
             ARCADIA_BLUFFS_BLUFFS_BLUE_ID,
