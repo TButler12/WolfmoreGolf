@@ -11,7 +11,10 @@
 
 import UIKit
 
-final class CoursePickerViewController: UITableViewController, UISearchResultsUpdating {
+final class CoursePickerViewController: UIViewController,
+                                        UITableViewDelegate,
+                                        UITableViewDataSource,
+                                        UISearchResultsUpdating {
 
     // MARK: - Types
 
@@ -65,6 +68,8 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         return UUID(uuidString: raw)
     }
 
+    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+
     private let summaryHeader = UIView()
     private let summaryLabel1 = UILabel()
     private let summaryLabel2 = UILabel()
@@ -76,7 +81,6 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         super.viewDidLoad()
 
         title = "Choose Course"
-        tableView = UITableView(frame: .zero, style: .insetGrouped)
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .cancel,
@@ -91,6 +95,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
         configureSummaryHeader()
         configureSearch()
+        layoutTableBelowHeader()
         reloadCourses()
     }
 
@@ -164,7 +169,27 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         ])
 
         summaryHeader.frame.size.height = 52
-        tableView.tableHeaderView = summaryHeader
+    }
+
+    private func layoutTableBelowHeader() {
+        summaryHeader.translatesAutoresizingMaskIntoConstraints = false
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.delegate   = self
+        tableView.dataSource = self
+
+        view.addSubview(summaryHeader)
+        view.addSubview(tableView)
+
+        NSLayoutConstraint.activate([
+            summaryHeader.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            summaryHeader.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            summaryHeader.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+
+            tableView.topAnchor.constraint(equalTo: summaryHeader.bottomAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
     }
 
     private func updateSummaryHeader() {
@@ -177,16 +202,6 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
         summaryHeader.setNeedsLayout()
         summaryHeader.layoutIfNeeded()
-
-        let target = CGSize(width: tableView.bounds.width, height: UIView.layoutFittingCompressedSize.height)
-        let height = summaryHeader.systemLayoutSizeFitting(target).height
-
-        if summaryHeader.frame.height != height {
-            var frame = summaryHeader.frame
-            frame.size.height = height
-            summaryHeader.frame = frame
-            tableView.tableHeaderView = summaryHeader
-        }
     }
 
     // MARK: - Data
@@ -492,13 +507,13 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
     // MARK: - Table View
 
-    override func numberOfSections(in tableView: UITableView) -> Int {
+    func numberOfSections(in tableView: UITableView) -> Int {
         sections.count
     }
 
-    override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? { nil }
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? { nil }
 
-    override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
         guard sortMode == .groupedLocation else {
             let label = UILabel()
             label.text = sections[section].title
@@ -551,7 +566,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         return header
     }
 
-    override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { 32 }
+    func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { 32 }
 
     @objc private func sectionHeaderTapped(_ gesture: SectionTapGesture) {
         let section = gesture.section
@@ -563,11 +578,11 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         tableView.reloadSections(IndexSet(integer: section), with: .automatic)
     }
 
-    override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         collapsedSections.contains(section) ? 0 : sections[section].items.count
     }
 
-    override func tableView(_ tableView: UITableView,
+    func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let reuseID = "CourseCell"
         let cell = tableView.dequeueReusableCell(withIdentifier: reuseID)
@@ -611,14 +626,14 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         return cell
     }
 
-    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
         let c = course(at: indexPath)
         showCourseOptions(c)
     }
 
-    override func tableView(_ tableView: UITableView,
+    func tableView(_ tableView: UITableView,
                             leadingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
         let c = course(at: indexPath)
@@ -637,7 +652,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         return config
     }
 
-    override func tableView(_ tableView: UITableView,
+    func tableView(_ tableView: UITableView,
                             trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
     -> UISwipeActionsConfiguration? {
         let c = course(at: indexPath)
