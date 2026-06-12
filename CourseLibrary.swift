@@ -2212,6 +2212,70 @@ let CHAMBERS_BAY_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Teal",      yardage: 4708, rating: 63.0, slope: 109)
 ]
 
+// MARK: Sahalee Country Club — Sammamish, WA (3 × 9-hole courses = 3 combinations)
+// Type: Private | Phone: (425) 868-8800 | sahalee.com
+// HC computed by pairing equal 9-hole ranks; longer yardage gets the harder 18-hole HC
+
+private let SAHALEE_EAST_NORTH_ID = UUID(uuidString: "01A2B3C4-D5E6-4F01-A2B3-C4D5E6F01A2B")!
+
+let SAHALEE_EAST_NORTH_PARS: [Int] = [
+    5,4,4,3,5,4,4,3,4,   // East Course (holes 1–9)
+    4,5,4,3,4,4,4,3,5    // North Course (holes 10–18)
+]
+
+let SAHALEE_EAST_NORTH_HCS: [Int] = [
+    2,15,11,14,3,9,8,17,6,
+    10,1,4,18,12,7,13,16,5
+]
+
+let SAHALEE_EAST_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6966),
+    TeeInfo(teeName: "Blue",         yardage: 6769),
+    TeeInfo(teeName: "White",        yardage: 6325),
+    TeeInfo(teeName: "Gold",         yardage: 5762),
+    TeeInfo(teeName: "Green",        yardage: 5412)
+]
+
+private let SAHALEE_EAST_SOUTH_ID = UUID(uuidString: "02B3C4D5-E6F0-4102-B3C4-D5E6F01A2B3C")!
+
+let SAHALEE_EAST_SOUTH_PARS: [Int] = [
+    5,4,4,3,5,4,4,3,4,   // East Course (holes 1–9)
+    4,5,4,4,3,5,4,4,3    // South Course (holes 10–18)
+]
+
+let SAHALEE_EAST_SOUTH_HCS: [Int] = [
+    1,15,11,14,3,9,8,18,6,
+    10,2,7,12,17,5,13,4,16
+]
+
+let SAHALEE_EAST_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6965),
+    TeeInfo(teeName: "Blue",         yardage: 6769),
+    TeeInfo(teeName: "White",        yardage: 6322),
+    TeeInfo(teeName: "Gold",         yardage: 5700),
+    TeeInfo(teeName: "Green",        yardage: 5413)
+]
+
+private let SAHALEE_NORTH_SOUTH_ID = UUID(uuidString: "03C4D5E6-F012-4203-C4D5-E6F01A2B3C4D")!
+
+let SAHALEE_NORTH_SOUTH_PARS: [Int] = [
+    4,5,4,3,4,4,4,3,5,   // North Course (holes 1–9)
+    4,5,4,4,3,5,4,4,3    // South Course (holes 10–18)
+]
+
+let SAHALEE_NORTH_SOUTH_HCS: [Int] = [
+    10,1,3,18,12,7,14,15,5,
+    9,2,8,11,17,6,13,4,16
+]
+
+let SAHALEE_NORTH_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7003),
+    TeeInfo(teeName: "Blue",         yardage: 6754),
+    TeeInfo(teeName: "White",        yardage: 6321),
+    TeeInfo(teeName: "Gold",         yardage: 5742),
+    TeeInfo(teeName: "Green",        yardage: 5411)
+]
+
 // MARK: Kapalua Resort – Plantation — Tournament — Lahaina, HI
 // Par 73 | 7,596 yds | Rating 77.0 | Slope 144 | Type: Resort | Architect: Bill Coore & Ben Crenshaw
 
@@ -10483,6 +10547,48 @@ private enum BuiltIns {
             phone: "877-295-4657",
             website: "https://www.chambersbaygolf.com",
             address: "6320 Grandview Drive West, University Place, WA 98467",
+            isWolfApproved: true
+        ),
+        c(
+            SAHALEE_EAST_NORTH_ID,
+            "Sahalee Country Club (East-North)",
+            SAHALEE_EAST_NORTH_PARS,
+            SAHALEE_EAST_NORTH_HCS,
+            SAHALEE_EAST_NORTH_TEES,
+            country: "USA",
+            state: "WA",
+            type: "Private",
+            phone: "(425) 868-8800",
+            website: "https://www.sahalee.com",
+            address: "21200 NE Sahalee Country Club Dr, Sammamish, WA 98074",
+            isWolfApproved: true
+        ),
+        c(
+            SAHALEE_EAST_SOUTH_ID,
+            "Sahalee Country Club (East-South)",
+            SAHALEE_EAST_SOUTH_PARS,
+            SAHALEE_EAST_SOUTH_HCS,
+            SAHALEE_EAST_SOUTH_TEES,
+            country: "USA",
+            state: "WA",
+            type: "Private",
+            phone: "(425) 868-8800",
+            website: "https://www.sahalee.com",
+            address: "21200 NE Sahalee Country Club Dr, Sammamish, WA 98074",
+            isWolfApproved: true
+        ),
+        c(
+            SAHALEE_NORTH_SOUTH_ID,
+            "Sahalee Country Club (North-South)",
+            SAHALEE_NORTH_SOUTH_PARS,
+            SAHALEE_NORTH_SOUTH_HCS,
+            SAHALEE_NORTH_SOUTH_TEES,
+            country: "USA",
+            state: "WA",
+            type: "Private",
+            phone: "(425) 868-8800",
+            website: "https://www.sahalee.com",
+            address: "21200 NE Sahalee Country Club Dr, Sammamish, WA 98074",
             isWolfApproved: true
         ),
         c(
