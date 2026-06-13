@@ -980,9 +980,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         let isTournament = g.resolvedGameType == .tournament
-        // Tournament uses absolute HC (0 baseline) so every player's dots reflect their own HC.
-        // Wolf/Scotch uses relative HC (min-player baseline) so only strokes vs. the field show.
-        let baseHC = isTournament ? 0 : (activeSeats.map { g.hcPlayers[$0] }.min() ?? 0)
         let sortedNameLabels = playerNameLabels.sorted(by: { $0.tag < $1.tag })
 
         for (i, label) in sortedNameLabels.enumerated() {
@@ -1004,8 +1001,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                    !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             var strokePops = 0
             if isActive {
-                let delta = max(0, (seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0) - baseHC)
-                strokePops = pops(for: delta, strokeIndex: si)
+                let playerHC = seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0
+                strokePops = GameManager.shared.absoluteStrokesGiven(playerHC: playerHC, strokeIndex: si)
             }
 
             label.lineBreakMode = .byTruncatingTail
