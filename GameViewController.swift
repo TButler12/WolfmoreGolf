@@ -330,6 +330,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         if let g = GameManager.shared.currentGame {
             currentHole = g.hole
         }
+        debugHole1Strokes() // TEMP DEBUG — remove once HC verified
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
@@ -1652,6 +1653,24 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         print("🧮[\(tag)] names:", g.playerNames)
         print("🧮[\(tag)] actives:", g.playerActivated)
         print("🧮[\(tag)] HCs:", g.hcPlayers)
+    }
+
+    // TEMP DEBUG — remove once HC verified
+    private func debugHole1Strokes() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let isTournament = g.resolvedGameType == .tournament
+        let activeSeats = (0..<min(g.playerNames.count, g.hcPlayers.count, g.playerActivated.count))
+            .filter { g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        let baseHC = isTournament ? 0 : (activeSeats.map { g.hcPlayers[$0] }.min() ?? 0)
+        let si = siAt(0, in: g.course)   // hole index 0 = Hole 1
+        print("🔍 Hole 1 SI=\(si), baseHC=\(baseHC)")
+        for seat in 0..<min(g.playerNames.count, g.hcPlayers.count) {
+            let name   = g.playerNames[seat]
+            let hc     = g.hcPlayers[seat]
+            let delta  = max(0, hc - baseHC)
+            let strokes = pops(for: delta, strokeIndex: si)
+            print("🔍 seat\(seat) \(name): HC=\(hc), delta=\(delta), strokesOnHole1=\(strokes)")
+        }
     }
 
     private func refreshScoreFieldsForCurrentHole() {
