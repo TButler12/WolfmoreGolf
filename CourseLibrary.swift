@@ -2088,6 +2088,222 @@ let MARTIS_CAMP_MEDAL_HCS: [Int] = [
     8,4,10,2,18,12,14,16,6
 ]
 
+// MARK: Pasatiempo Golf Club — Santa Cruz, CA (Alister MacKenzie, 1929)
+private let PASATIEMPO_CHAMPIONSHIP_ID = UUID(uuidString: "B1C2D3E4-F5A6-4B1C-2D3E-4F5A6B7C8D9E")!
+let PASATIEMPO_CHAMPIONSHIP_PARS: [Int] = [
+    4,4,3,4,3,5,4,3,5,
+    4,4,4,5,4,3,4,4,3
+]
+let PASATIEMPO_CHAMPIONSHIP_HCS: [Int] = [
+    4,8,2,16,6,10,12,14,18,
+    5,1,13,15,7,17,3,9,11
+]
+let PASATIEMPO_CHAMPIONSHIP_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6495),
+    TeeInfo(teeName: "Middle",       yardage: 6093),
+]
+
+private let PASATIEMPO_MIDDLE_ID = UUID(uuidString: "C2D3E4F5-A6B7-4C2D-3E4F-5A6B7C8D9E0F")!
+let PASATIEMPO_MIDDLE_PARS: [Int] = [
+    4,4,3,4,3,5,4,3,5,
+    4,4,4,5,4,3,4,4,3
+]
+let PASATIEMPO_MIDDLE_HCS: [Int] = [
+    4,8,2,16,6,10,12,14,18,
+    5,1,13,15,7,17,3,9,11
+]
+
+// MARK: Los Angeles Country Club — Los Angeles, CA (George Thomas / Gil Hanse)
+private let LACC_NORTH_BLUE_ID = UUID(uuidString: "D3E4F5A6-B7C8-4D3E-4F5A-6B7C8D9E0F1A")!
+let LACC_NORTH_BLUE_PARS: [Int] = [
+    5,4,4,3,4,4,3,5,3,
+    4,3,4,4,5,3,4,4,4
+]
+let LACC_NORTH_BLUE_HCS: [Int] = [
+    11,3,7,15,1,5,17,9,13,
+    12,14,8,4,2,18,16,6,10
+]
+let LACC_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7010, rating: 74.6, slope: 139),
+    TeeInfo(teeName: "Blue",  yardage: 6466, rating: 72.4, slope: 135),
+    TeeInfo(teeName: "White", yardage: 6089, rating: 70.2, slope: 131),
+    TeeInfo(teeName: "Green", yardage: 5610, rating: 67.7, slope: 122),
+]
+
+private let LACC_SOUTH_CHAMPIONSHIP_ID = UUID(uuidString: "E4F5A6B7-C8D9-4E4F-5A6B-7C8D9E0F1A2B")!
+let LACC_SOUTH_CHAMPIONSHIP_PARS: [Int] = [
+    4,4,5,3,4,4,3,5,3,
+    5,3,4,4,3,4,5,3,4
+]
+let LACC_SOUTH_CHAMPIONSHIP_HCS: [Int] = [
+    13,7,5,11,1,3,15,9,17,
+    4,8,14,12,16,2,6,18,10
+]
+let LACC_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6407, rating: 71.1, slope: 129),
+]
+
+// MARK: Cypress Point Country Club — Virginia Beach, VA
+private let CYPRESS_POINT_VA_BLUE_ID = UUID(uuidString: "F5A6B7C8-D9E0-4F5A-6B7C-8D9E0F1A2B3C")!
+let CYPRESS_POINT_VA_BLUE_PARS: [Int] = [
+    4,5,3,5,3,4,4,5,3,
+    4,3,4,4,5,4,4,3,5
+]
+let CYPRESS_POINT_VA_BLUE_HCS: [Int] = [
+    11,7,17,5,13,3,1,9,15,
+    2,16,8,18,4,10,6,14,12
+]
+let CYPRESS_POINT_VA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",    yardage: 6541, rating: 70.6, slope: 121),
+    TeeInfo(teeName: "White",   yardage: 6210, rating: 69.0, slope: 118),
+    TeeInfo(teeName: "Yellow",  yardage: 5581, rating: 66.2, slope: 111),
+    TeeInfo(teeName: "Forward", yardage: 5237, rating: 69.6, slope: 117),
+]
+
+// MARK: Dunes Golf & Beach Club — Myrtle Beach, SC (Robert Trent Jones, 1948)
+private let DUNES_GOLF_BEACH_GOLD_ID = UUID(uuidString: "A6B7C8D9-E0F1-4A6B-7C8D-9E0F1A2B3C4D")!
+let DUNES_GOLF_BEACH_GOLD_PARS: [Int] = [
+    4,4,4,5,3,4,4,5,3,
+    4,4,3,5,4,5,4,3,4
+]
+let DUNES_GOLF_BEACH_GOLD_HCS: [Int] = [
+    6,12,2,16,14,8,4,10,18,
+    9,5,13,1,7,11,15,17,3
+]
+let DUNES_GOLF_BEACH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 7362, rating: 76.3, slope: 145),
+    TeeInfo(teeName: "Blue",  yardage: 6569),
+    TeeInfo(teeName: "White", yardage: 6175),
+]
+
+// MARK: Riviera Country Club — Pacific Palisades, CA (George C. Thomas)
+private let RIVIERA_CC_BLACK_ID = UUID(uuidString: "B8C9D0E1-F2A3-4B8C-9D0E-1F2A3B4C5D6E")!
+let RIVIERA_CC_BLACK_PARS: [Int] = [
+    5,4,4,3,4,3,4,4,4,
+    4,5,4,4,3,4,3,5,4
+]
+let RIVIERA_CC_BLACK_HCS: [Int] = [
+    17,1,7,9,5,15,11,13,3,
+    16,10,8,6,18,2,14,12,4
+]
+let RIVIERA_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7400, rating: 76.3, slope: 144),
+]
+
+// MARK: Baltusrol Golf Club — Springfield, NJ (A.W. Tillinghast)
+private let BALTUSROL_LOWER_ID = UUID(uuidString: "C9D0E1F2-A3B4-4C9D-0E1F-2A3B4C5D6E7F")!
+let BALTUSROL_LOWER_PARS: [Int] = [
+    5,4,4,3,4,4,5,4,3,
+    4,4,3,4,4,4,3,5,5
+]
+let BALTUSROL_LOWER_HCS: [Int] = [
+    17,11,3,13,7,1,9,5,15,
+    4,8,18,2,12,10,16,6,14
+]
+let BALTUSROL_LOWER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tee V",   yardage: 7135),
+    TeeInfo(teeName: "Tee IV",  yardage: 6665),
+    TeeInfo(teeName: "Tee III", yardage: 6225),
+    TeeInfo(teeName: "Tee II",  yardage: 5430),
+    TeeInfo(teeName: "Tee I",   yardage: 5000),
+]
+
+private let BALTUSROL_UPPER_ID = UUID(uuidString: "D0E1F2A3-B4C5-4D0E-1F2A-3B4C5D6E7F8A")!
+let BALTUSROL_UPPER_PARS: [Int] = [
+    5,4,3,4,4,4,3,5,4,
+    3,5,4,4,4,3,4,5,4
+]
+let BALTUSROL_UPPER_HCS: [Int] = [
+    9,3,13,7,11,1,15,5,17,
+    16,6,12,10,2,18,8,14,4
+]
+let BALTUSROL_UPPER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tee V",   yardage: 7000),
+    TeeInfo(teeName: "Tee IV",  yardage: 6510),
+    TeeInfo(teeName: "Tee III", yardage: 6060),
+    TeeInfo(teeName: "Tee II",  yardage: 5575),
+    TeeInfo(teeName: "Tee I",   yardage: 5005),
+]
+
+// MARK: Plainfield Country Club — Edison, NJ (Donald Ross / Gil Hanse renovation)
+private let PLAINFIELD_CC_CHAMPIONSHIP_ID = UUID(uuidString: "E1F2A3B4-C5D6-4E1F-2A3B-4C5D6E7F8A9B")!
+let PLAINFIELD_CC_CHAMPIONSHIP_PARS: [Int] = [
+    4,4,3,4,5,3,4,5,4,
+    4,3,5,4,3,4,5,4,4
+]
+let PLAINFIELD_CC_CHAMPIONSHIP_HCS: [Int] = [
+    9,3,15,13,5,17,1,7,11,
+    16,18,6,2,12,14,8,4,10
+]
+let PLAINFIELD_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7110, rating: 74.7, slope: 138),
+    TeeInfo(teeName: "Plainfield",   yardage: 6616, rating: 72.6, slope: 136),
+    TeeInfo(teeName: "Ross",         yardage: 6356, rating: 71.3, slope: 131),
+    TeeInfo(teeName: "Hillside",     yardage: 6069, rating: 70.2, slope: 127),
+    TeeInfo(teeName: "Calkins",      yardage: 5452, rating: 67.5, slope: 121),
+    TeeInfo(teeName: "Club",         yardage: 4719, rating: 64.4, slope: 114),
+]
+
+// MARK: Liberty National Golf Club — Jersey City, NJ (Tom Kite / Bob Cupp, 2003)
+private let LIBERTY_NATIONAL_GC_ID = UUID(uuidString: "1A2B3C4D-E5F6-4A1B-2C3D-4E5F6A1B2C3D")!
+let LIBERTY_NATIONAL_GC_PARS: [Int] = [
+    4,3,4,3,4,5,4,5,4,
+    5,3,4,5,3,4,4,4,4
+]
+let LIBERTY_NATIONAL_GC_HCS: [Int] = [
+    15,17,11,13,5,9,3,1,7,
+    12,8,14,10,18,4,16,6,2
+]
+let LIBERTY_NATIONAL_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 7387, rating: 77.7, slope: 155),
+    TeeInfo(teeName: "Medal",      yardage: 6762, rating: 74.2, slope: 142),
+    TeeInfo(teeName: "Liberty",    yardage: 6500, rating: 72.9, slope: 141),
+    TeeInfo(teeName: "Member",     yardage: 6264, rating: 72.2, slope: 134),
+    TeeInfo(teeName: "Regular",    yardage: 5748, rating: 69.6, slope: 120),
+]
+
+// MARK: Ridgewood Country Club — Paramus, NJ (A.W. Tillinghast, 1929)
+private let RIDGEWOOD_CC_ID = UUID(uuidString: "F2A3B4C5-D6E7-4F2A-3B4C-5D6E7F8A9B0C")!
+let RIDGEWOOD_CC_PARS: [Int] = [
+    4,3,5,4,4,3,4,4,4,
+    4,3,4,5,4,3,4,5,4
+]
+let RIDGEWOOD_CC_HCS: [Int] = [
+    11,17,1,9,13,3,7,15,5,
+    16,10,6,2,12,18,14,4,8
+]
+let RIDGEWOOD_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7576, rating: 77.0, slope: 146),
+]
+
+// MARK: Poipu Bay Golf Course — Koloa, Kauai, HI (Robert Trent Jones Jr., 1991)
+private let POIPU_BAY_GC_ID = UUID(uuidString: "3C4D5E6F-A7B8-4C3D-4E5F-6A7B8C9D0E1F")!
+let POIPU_BAY_GC_PARS: [Int] = [
+    4,5,3,4,4,5,3,4,4,
+    4,3,4,4,5,4,4,3,5
+]
+let POIPU_BAY_GC_HCS: [Int] = [
+    15,5,7,3,11,13,17,9,1,
+    6,10,4,16,8,18,2,12,14
+]
+let POIPU_BAY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 7123, rating: 74.7, slope: 131),
+]
+
+// MARK: Princeville Makai Golf Club — Princeville, Kauai, HI (Robert Trent Jones Jr., 1971)
+private let PRINCEVILLE_MAKAI_GC_ID = UUID(uuidString: "4D5E6F7A-B8C9-4D4E-5F6A-7B8C9D0E1F2A")!
+let PRINCEVILLE_MAKAI_GC_PARS: [Int] = [
+    4,5,3,4,5,4,3,4,4,
+    4,5,4,3,4,4,3,4,5
+]
+let PRINCEVILLE_MAKAI_GC_HCS: [Int] = [
+    13,9,15,1,11,3,7,17,5,
+    6,14,2,4,18,10,12,8,16
+]
+let PRINCEVILLE_MAKAI_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7223, rating: 75.4, slope: 134),
+]
+
 // MARK: Shooting Star — Teton Village, WY (Tom Fazio)
 private let SHOOTING_STAR_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A107")!
 let SHOOTING_STAR_CHAMPIONSHIP_PARS: [Int] = [
@@ -10280,6 +10496,70 @@ private enum BuiltIns {
             website: "https://www.martiscamp.com/",
             address: "7951 Fleur du Lac Drive, Truckee, CA 96161"
         ),
+        c(
+            PASATIEMPO_CHAMPIONSHIP_ID,
+            "Pasatiempo (Championship)",
+            PASATIEMPO_CHAMPIONSHIP_PARS,
+            PASATIEMPO_CHAMPIONSHIP_HCS,
+            PASATIEMPO_CHAMPIONSHIP_TEES,
+            country: "USA",
+            state: "CA",
+            region: "NorCal",
+            architect: "Alister MacKenzie",
+            type: "Daily-Fee",
+            address: "20 Clubhouse Road, Santa Cruz, CA 95060"
+        ),
+        c(
+            PASATIEMPO_MIDDLE_ID,
+            "Pasatiempo (Middle)",
+            PASATIEMPO_MIDDLE_PARS,
+            PASATIEMPO_MIDDLE_HCS,
+            country: "USA",
+            state: "CA",
+            region: "NorCal",
+            architect: "Alister MacKenzie",
+            type: "Daily-Fee",
+            address: "20 Clubhouse Road, Santa Cruz, CA 95060"
+        ),
+        c(
+            LACC_NORTH_BLUE_ID,
+            "LACC (North – Blue)",
+            LACC_NORTH_BLUE_PARS,
+            LACC_NORTH_BLUE_HCS,
+            LACC_NORTH_TEES,
+            country: "USA",
+            state: "CA",
+            region: "SoCal",
+            architect: "George Thomas",
+            type: "Private",
+            address: "10101 Wilshire Blvd, Los Angeles, CA 90024"
+        ),
+        c(
+            LACC_SOUTH_CHAMPIONSHIP_ID,
+            "LACC (South – Championship)",
+            LACC_SOUTH_CHAMPIONSHIP_PARS,
+            LACC_SOUTH_CHAMPIONSHIP_HCS,
+            LACC_SOUTH_TEES,
+            country: "USA",
+            state: "CA",
+            region: "SoCal",
+            architect: "George Thomas / Gil Hanse",
+            type: "Private",
+            address: "10101 Wilshire Blvd, Los Angeles, CA 90024"
+        ),
+        c(
+            RIVIERA_CC_BLACK_ID,
+            "Riviera CC (Black)",
+            RIVIERA_CC_BLACK_PARS,
+            RIVIERA_CC_BLACK_HCS,
+            RIVIERA_CC_TEES,
+            country: "USA",
+            state: "CA",
+            region: "SoCal",
+            architect: "George C. Thomas",
+            type: "Private",
+            address: "1250 Capri Drive, Pacific Palisades, CA 90272"
+        ),
         // -------------------------
         // South Carolina
         // -------------------------
@@ -13186,6 +13466,34 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
+            POIPU_BAY_GC_ID,
+            "Poipu Bay Golf Course",
+            POIPU_BAY_GC_PARS,
+            POIPU_BAY_GC_HCS,
+            POIPU_BAY_GC_TEES,
+            country: "USA",
+            state: "HI",
+            region: "Kauai",
+            architect: "Robert Trent Jones Jr.",
+            type: "Resort",
+            phone: "(808) 742-8711",
+            address: "2250 Ainako St., Koloa, HI 96756"
+        ),
+        c(
+            PRINCEVILLE_MAKAI_GC_ID,
+            "Princeville Makai Golf Club",
+            PRINCEVILLE_MAKAI_GC_PARS,
+            PRINCEVILLE_MAKAI_GC_HCS,
+            PRINCEVILLE_MAKAI_GC_TEES,
+            country: "USA",
+            state: "HI",
+            region: "Kauai",
+            architect: "Robert Trent Jones Jr.",
+            type: "Resort",
+            phone: "(808) 826-1912",
+            address: "4080 Lei O Papa Rd, Princeville, HI 96722"
+        ),
+        c(
             SHOREHAVEN_GC_ID,
             "Shorehaven Golf Club",
             SHOREHAVEN_GC_PARS,
@@ -14316,6 +14624,76 @@ private enum BuiltIns {
             promo: nil
         ),
         c(
+            BALTUSROL_LOWER_ID,
+            "Baltusrol (Lower Course)",
+            BALTUSROL_LOWER_PARS,
+            BALTUSROL_LOWER_HCS,
+            BALTUSROL_LOWER_TEES,
+            country: "USA",
+            state: "NJ",
+            region: "Springfield",
+            architect: "A.W. Tillinghast",
+            type: "Private",
+            phone: "(973) 376-1900",
+            address: "201 Shunpike Road, Springfield, NJ 07081"
+        ),
+        c(
+            BALTUSROL_UPPER_ID,
+            "Baltusrol (Upper Course)",
+            BALTUSROL_UPPER_PARS,
+            BALTUSROL_UPPER_HCS,
+            BALTUSROL_UPPER_TEES,
+            country: "USA",
+            state: "NJ",
+            region: "Springfield",
+            architect: "A.W. Tillinghast",
+            type: "Private",
+            phone: "(973) 376-1900",
+            address: "201 Shunpike Road, Springfield, NJ 07081"
+        ),
+        c(
+            PLAINFIELD_CC_CHAMPIONSHIP_ID,
+            "Plainfield Country Club",
+            PLAINFIELD_CC_CHAMPIONSHIP_PARS,
+            PLAINFIELD_CC_CHAMPIONSHIP_HCS,
+            PLAINFIELD_CC_TEES,
+            country: "USA",
+            state: "NJ",
+            region: "Edison",
+            architect: "Donald Ross / Gil Hanse",
+            type: "Private",
+            phone: "(908) 757-1800",
+            address: "1591 Woodland Ave, Edison, NJ 08820"
+        ),
+        c(
+            LIBERTY_NATIONAL_GC_ID,
+            "Liberty National Golf Club",
+            LIBERTY_NATIONAL_GC_PARS,
+            LIBERTY_NATIONAL_GC_HCS,
+            LIBERTY_NATIONAL_GC_TEES,
+            country: "USA",
+            state: "NJ",
+            region: "Jersey City",
+            architect: "Tom Kite / Bob Cupp",
+            type: "Private",
+            phone: "(201) 333-4105",
+            address: "100 Caven Point Road, Jersey City, NJ 07305"
+        ),
+        c(
+            RIDGEWOOD_CC_ID,
+            "Ridgewood Country Club",
+            RIDGEWOOD_CC_PARS,
+            RIDGEWOOD_CC_HCS,
+            RIDGEWOOD_CC_TEES,
+            country: "USA",
+            state: "NJ",
+            region: "Paramus",
+            architect: "A.W. Tillinghast",
+            type: "Private",
+            phone: "(201) 599-3900",
+            address: "96 W Midland Avenue, Paramus, NJ 07652"
+        ),
+        c(
             BULLE_ROCK_GC_ID,
             "Bulle Rock Golf Club",
             BULLE_ROCK_GC_PARS,
@@ -15024,6 +15402,18 @@ private enum BuiltIns {
             architect: "Lester George",
             type: "Private",
             website: "https://www.dormienetwork.com/clubs/ballyhack"
+        ),
+        c(
+            CYPRESS_POINT_VA_BLUE_ID,
+            "Cypress Point CC (Blue)",
+            CYPRESS_POINT_VA_BLUE_PARS,
+            CYPRESS_POINT_VA_BLUE_HCS,
+            CYPRESS_POINT_VA_TEES,
+            country: "USA",
+            state: "VA",
+            region: "Virginia Beach",
+            type: "Private",
+            address: "5340 Club Head Road, Virginia Beach, VA 23455"
         ),
         c(
             POLO_FIELDS_ANN_ARBOR_ID,
@@ -15965,6 +16355,20 @@ private enum BuiltIns {
             website: "https://www.bullsbaygolf.com",
             address: "995 Bulls Bay Drive, Awendaw, SC 29429",
             isWolfApproved: true
+        ),
+        c(
+            DUNES_GOLF_BEACH_GOLD_ID,
+            "Dunes Golf & Beach Club",
+            DUNES_GOLF_BEACH_GOLD_PARS,
+            DUNES_GOLF_BEACH_GOLD_HCS,
+            DUNES_GOLF_BEACH_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Myrtle Beach",
+            architect: "Robert Trent Jones",
+            type: "Semi-Private",
+            phone: "(843) 449-5236",
+            address: "9000 N. Ocean Blvd, Myrtle Beach, SC 29572"
         ),
         c(
             WARREN_GC_ID,

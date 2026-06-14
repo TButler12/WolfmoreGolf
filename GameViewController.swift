@@ -330,7 +330,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         if let g = GameManager.shared.currentGame {
             currentHole = g.hole
         }
-        debugHole1Strokes() // TEMP DEBUG — remove once HC verified
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
@@ -358,6 +357,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // Keep live container above bottom stack (bringSubviewToFront order, not zPosition, governs hit testing)
         if let container = liveContentContainer { view.bringSubviewToFront(container) }
         if let bar = liveTabBar { view.bringSubviewToFront(bar) }
+        if let btn = liveNassauButton { view.bringSubviewToFront(btn) }
     }
 
     // MARK: - Combined hole/par/HC header
@@ -1025,13 +1025,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
 
             if strokePops > 0 {
-                let pt = fittingPt(name, weight: .bold)
+                let dotsStr = " " + String(repeating: "•", count: strokePops)
+                // Truncate name so name+dots always fits — dots can never be clipped
+                let truncName = name.count > 13 ? String(name.prefix(12)) + "…" : name
+                let pt = fittingPt(truncName + dotsStr, weight: .bold)
                 let boldFont = UIFont.boldSystemFont(ofSize: pt)
-                let nameAttr = NSAttributedString(string: name, attributes: [
+                let nameAttr = NSAttributedString(string: truncName, attributes: [
                     .font: boldFont,
                     .foregroundColor: UIColor.systemGreen
                 ])
-                let badgeAttr = NSAttributedString(string: " " + String(repeating: "•", count: strokePops), attributes: [
+                let badgeAttr = NSAttributedString(string: dotsStr, attributes: [
                     .font: UIFont.systemFont(ofSize: pt + 2),
                     .foregroundColor: UIColor.systemRed
                 ])
@@ -1650,24 +1653,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         print("🧮[\(tag)] names:", g.playerNames)
         print("🧮[\(tag)] actives:", g.playerActivated)
         print("🧮[\(tag)] HCs:", g.hcPlayers)
-    }
-
-    // TEMP DEBUG — remove once HC verified
-    private func debugHole1Strokes() {
-        guard let g = GameManager.shared.currentGame else { return }
-        let isTournament = g.resolvedGameType == .tournament
-        let activeSeats = (0..<min(g.playerNames.count, g.hcPlayers.count, g.playerActivated.count))
-            .filter { g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-        let baseHC = isTournament ? 0 : (activeSeats.map { g.hcPlayers[$0] }.min() ?? 0)
-        let si = siAt(0, in: g.course)   // hole index 0 = Hole 1
-        print("🔍 Hole 1 SI=\(si), baseHC=\(baseHC)")
-        for seat in 0..<min(g.playerNames.count, g.hcPlayers.count) {
-            let name   = g.playerNames[seat]
-            let hc     = g.hcPlayers[seat]
-            let delta  = max(0, hc - baseHC)
-            let strokes = pops(for: delta, strokeIndex: si)
-            print("🔍 seat\(seat) \(name): HC=\(hc), delta=\(delta), strokesOnHole1=\(strokes)")
-        }
     }
 
     private func refreshScoreFieldsForCurrentHole() {
@@ -3227,13 +3212,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             vStack.addArrangedSubview(row4)
 
             // ── Row 5: Text (full width) ──────────────────────────────────────
-            textHubButton.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            textHubButton.heightAnchor.constraint(equalToConstant: 32).isActive = true
             vStack.addArrangedSubview(textHubButton)
         }
 
         // Update frame every layout pass (handles rotation / safe-area changes)
-        // Total: 44 + 8 + 44 + 8 + 44 + 8 + 40 + 8 + 40 = 244
-        bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: 244)
+        // Total: 44 + 8 + 44 + 8 + 44 + 8 + 40 + 8 + 32 = 236
+        bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: 236)
         sup.bringSubviewToFront(bottomStackView!)
     }
 
