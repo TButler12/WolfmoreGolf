@@ -44,11 +44,15 @@ struct RoundSummary: Codable, Identifiable {
     var girPerHole: [Bool?]
     var puttsPerHole: [Int?]
 
+    /// true only when all STANDARD_HOLES have a recorded score
+    var isComplete: Bool
+
     enum CodingKeys: String, CodingKey {
         case id, gameID, date, courseID, playerName, totalMoney, totalProx, totalScore,
              holesPlayed, moneyPerHole, proxPerHole, scorePerHole,
              wolfCalledPerHole, wolfTeamWonPerHole, umbieWonPerHole,
-             gameTypePerHole, fairwayHitPerHole, girPerHole, puttsPerHole
+             gameTypePerHole, fairwayHitPerHole, girPerHole, puttsPerHole,
+             isComplete
     }
 
     /// Backwards compatible decode (legacy saves won’t have newer fields).
@@ -88,6 +92,9 @@ struct RoundSummary: Codable, Identifiable {
             ?? Array(repeating: nil, count: STANDARD_HOLES)
         puttsPerHole = try c.decodeIfPresent([Int?].self, forKey: .puttsPerHole)
             ?? Array(repeating: nil, count: STANDARD_HOLES)
+
+        // Legacy saves treated as complete (they were only saved from the manual End Round flow)
+        isComplete = try c.decodeIfPresent(Bool.self, forKey: .isComplete) ?? true
     }
 
     init(
@@ -109,7 +116,8 @@ struct RoundSummary: Codable, Identifiable {
         gameTypePerHole: [GameType]? = nil,
         fairwayHitPerHole: [Bool?] = Array(repeating: nil, count: STANDARD_HOLES),
         girPerHole: [Bool?] = Array(repeating: nil, count: STANDARD_HOLES),
-        puttsPerHole: [Int?] = Array(repeating: nil, count: STANDARD_HOLES)
+        puttsPerHole: [Int?] = Array(repeating: nil, count: STANDARD_HOLES),
+        isComplete: Bool = false
     ) {
         self.id = id
         self.gameID = gameID
@@ -132,6 +140,7 @@ struct RoundSummary: Codable, Identifiable {
         self.fairwayHitPerHole = Array(fairwayHitPerHole.prefix(STANDARD_HOLES))
         self.girPerHole = Array(girPerHole.prefix(STANDARD_HOLES))
         self.puttsPerHole = Array(puttsPerHole.prefix(STANDARD_HOLES))
+        self.isComplete = isComplete
     }
 }
 
@@ -329,7 +338,8 @@ extension RoundStore {
     func recordFromCurrentGame(
         playerNameOverride: String? = nil,
         gameID: UUID? = nil,
-        date: Date = Date()
+        date: Date = Date(),
+        skipAdd: Bool = false
     ) -> RoundSummary? {
 
         guard let g = GameManager.shared.currentGame else { return nil }
@@ -397,38 +407,36 @@ extension RoundStore {
         }()
 
         // ---------- SCORES (18 optional ints) ----------
+        // Only record a score for holes where updateScorePushed was called (holeCommitted[h] == true).
+        // Score fields have default/par values pre-filled, so uncommitted holes must be forced to nil.
         var scoresForSeat = [Int?](repeating: nil, count: STANDARD_HOLES)
+
+        func committed(_ h: Int) -> Bool {
+            h < g.holeCommitted.count && g.holeCommitted[h]
+        }
 
         if seat < g.scores.count,
            let first = g.scores.first,
            first.count == STANDARD_HOLES {
             // [player][hole]
             for h in 0..<min(STANDARD_HOLES, g.scores[seat].count) {
-                scoresForSeat[h] = g.scores[seat][h]
+                scoresForSeat[h] = committed(h) ? g.scores[seat][h] : nil
             }
         } else if g.scores.count == STANDARD_HOLES {
             // [hole][player]
             for h in 0..<STANDARD_HOLES {
                 let row = g.scores[h]
                 if seat < row.count {
-                    scoresForSeat[h] = row[seat]
+                    scoresForSeat[h] = committed(h) ? row[seat] : nil
                 }
             }
         }
 
         // ---------- HOLES PLAYED ----------
-        // Last hole index that has any evidence it was played.
-        var holesPlayed = 0
-        for h in 0..<STANDARD_HOLES {
-            let hasScore = (scoresForSeat[h] != nil)
-            let hasMoney = (moneyPerHoleInt[h] != 0)
-            let hasProx  = proxFlags[h]
-            let hasFlag  = wolfCalled[h] || umbieWon[h] || wolfTeamWon[h]
-
-            if hasScore || hasMoney || hasProx || hasFlag {
-                holesPlayed = h + 1
-            }
-        }
+        // Count only holes that have an actual recorded score.
+        // Using "last hole with any evidence" inflated the count to 18 whenever
+        // money payouts existed for all 18 holes (committed but unscored holes).
+        let holesPlayed = scoresForSeat.compactMap { $0 }.count
 
         // ---------- TOTAL SCORE ----------
         var sum = 0
@@ -468,6 +476,8 @@ extension RoundStore {
                 : ""
         }()
 
+        let isComplete = holesPlayed == STANDARD_HOLES
+
         let summary = RoundSummary(
             id: UUID(),
             gameID: sharedGameID,
@@ -487,10 +497,11 @@ extension RoundStore {
             gameTypePerHole: gameTypes,
             fairwayHitPerHole: firForSeat,
             girPerHole: girForSeat,
-            puttsPerHole: puttsForSeat
+            puttsPerHole: puttsForSeat,
+            isComplete: isComplete
         )
 
-        add(summary)
+        if !skipAdd { add(summary) }
         return summary
     }
 }
@@ -583,10 +594,10 @@ extension RoundStore {
 
 extension RoundStore {
 
-    func recordAllPlayersFromCurrentGame() {
+    func recordAllPlayersFromCurrentGame(gameID: UUID? = nil) {
         guard let g = GameManager.shared.currentGame else { return }
 
-        let sharedGameID = UUID()
+        let sharedGameID = gameID ?? UUID()
         let now = Date()
 
         let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
@@ -602,6 +613,30 @@ extension RoundStore {
                 date: now
             )
         }
+    }
+
+    /// Replaces all existing rows for gameID then re-records. Used for auto-save on every hole.
+    /// Does NOT post .reloadUI to avoid spurious UI repaints during play.
+    func upsertAllPlayersFromCurrentGame(gameID: UUID) {
+        rounds.removeAll { $0.gameID == gameID }
+        guard let g = GameManager.shared.currentGame else { save(); return }
+
+        let now = Date()
+        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
+
+        for seat in seats where g.playerActivated[seat] {
+            let name = g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { continue }
+            if let summary = recordFromCurrentGame(
+                playerNameOverride: name,
+                gameID: gameID,
+                date: now,
+                skipAdd: true
+            ) {
+                rounds.insert(summary, at: 0)
+            }
+        }
+        save()
     }
 }
 

@@ -30,16 +30,14 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let header = HeaderView()
 
-    private let sendBtn = UIButton(type: .system)
-    private let historyBtn = UIButton(type: .system)
+    private let sendBtn      = UIButton(type: .system)
+    private let historyBtn   = UIButton(type: .system)
     private let lastRoundLabel = UILabel()
     // MARK: - State
 
     private var rows: [Row] = []
     private var sortKey: SortKey = .score
     private var ascending = false
-
-    private var hasSavedThisOpen = false
 
     // Money (no cents)
     private let currency0: NumberFormatter = {
@@ -80,12 +78,12 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         sendBtn.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(sendBtn)
 
-        historyBtn.setTitle("Save to History", for: .normal)
+        historyBtn.setTitle("View History", for: .normal)
         historyBtn.setTitleColor(.white, for: .normal)
         historyBtn.backgroundColor = .systemIndigo
         historyBtn.layer.cornerRadius = 14
         historyBtn.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        historyBtn.addTarget(self, action: #selector(saveToHistoryTapped(_:)), for: .touchUpInside)
+        historyBtn.addTarget(self, action: #selector(viewHistoryTapped), for: .touchUpInside)
         historyBtn.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(historyBtn)
 
@@ -137,34 +135,10 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
 
     // MARK: - Actions
 
-    @objc private func saveToHistoryTapped(_ sender: UIButton) {
-        guard !hasSavedThisOpen else {
-            showAlert("Already Saved", "This round is already in History.")
-            return
-        }
-
-        let ac = UIAlertController(
-            title: "Save Round to History?",
-            message: "This will save stats for all players on this card.",
-            preferredStyle: .alert
-        )
-        ac.addAction(UIAlertAction(title: "No", style: .cancel))
-
-        ac.addAction(UIAlertAction(title: "Yes, Save", style: .default) { [weak self] _ in
-            guard let self else { return }
-
-            RoundStore.shared.recordAllPlayersFromCurrentGame()
-            self.maybeRequestReview()
-
-            self.hasSavedThisOpen = true
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-
-            sender.isEnabled = false
-            sender.alpha = 0.7
-            sender.setTitle("Saved ✓", for: .disabled)
-        })
-
-        present(ac, animated: true)
+    @objc private func viewHistoryTapped() {
+        let vc = PastGamesViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        present(nav, animated: true)
     }
 
     @objc private func sendSummaryTapped(_ sender: UIButton) {

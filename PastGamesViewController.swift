@@ -10,14 +10,16 @@ private struct GameSummary {
     let userMoney: Int
     let gameType: GameType?
     let winnerPoints: Int?  // populated for .tournament rounds only
+    let isComplete: Bool
 }
 
 // MARK: - Cell
 
 private final class PastGameCell: UITableViewCell {
-    private let courseLabel = UILabel()
-    private let dateLabel   = UILabel()
-    private let detailLabel = UILabel()
+    private let courseLabel     = UILabel()
+    private let dateLabel       = UILabel()
+    private let detailLabel     = UILabel()
+    private let incompleteLabel = UILabel()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -38,7 +40,13 @@ private final class PastGameCell: UITableViewCell {
         detailLabel.adjustsFontForContentSizeCategory = true
         detailLabel.textColor = .secondaryLabel
 
-        let stack = UIStackView(arrangedSubviews: [courseLabel, dateLabel, detailLabel])
+        incompleteLabel.text = "(incomplete)"
+        incompleteLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
+        incompleteLabel.adjustsFontForContentSizeCategory = true
+        incompleteLabel.textColor = .tertiaryLabel
+        incompleteLabel.isHidden = true
+
+        let stack = UIStackView(arrangedSubviews: [courseLabel, dateLabel, detailLabel, incompleteLabel])
         stack.axis = .vertical
         stack.spacing = 2
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -81,6 +89,8 @@ private final class PastGameCell: UITableViewCell {
             detailLabel.text      = players
             detailLabel.textColor = .secondaryLabel
         }
+
+        incompleteLabel.isHidden = summary.isComplete
     }
 
     private static func relativeDate(_ date: Date) -> String {
@@ -211,7 +221,8 @@ final class PastGamesViewController: UIViewController {
                 playerCount:  playerRows.count,
                 userMoney:    gameType == .tournament ? 0 : (userRow?.totalMoney ?? 0),
                 gameType:     gameType,
-                winnerPoints: winnerPoints
+                winnerPoints: winnerPoints,
+                isComplete:   playerRows.allSatisfy(\.isComplete)
             )
         }
         .sorted { $0.date > $1.date }
@@ -245,5 +256,27 @@ extension PastGamesViewController: UITableViewDataSource, UITableViewDelegate {
             .filter { $0.gameID == summary.gameID }
         let vc = PastGameDetailViewController(rows: rows, courseID: summary.courseID)
         navigationController?.pushViewController(vc, animated: true)
+    }
+
+    func tableView(_ tableView: UITableView,
+                   trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath)
+                   -> UISwipeActionsConfiguration? {
+        let gameID = games[indexPath.row].gameID
+        let delete = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, completion in
+            guard let self else { completion(false); return }
+            let ac = UIAlertController(
+                title: "Delete this round from history?",
+                message: nil,
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in completion(false) })
+            ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+                RoundStore.shared.deleteGame(gameID: gameID)
+                self?.loadData()
+                completion(true)
+            })
+            self.present(ac, animated: true)
+        }
+        return UISwipeActionsConfiguration(actions: [delete])
     }
 }

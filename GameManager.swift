@@ -239,6 +239,9 @@ final class GameManager {
         g.pressedPushedToggleArray         = Array(repeating: false, count: STANDARD_HOLES)
         g.previousPressedPushedToggleArray = Array(repeating: false, count: STANDARD_HOLES)
         
+        // Stable ID used to upsert history records for this game session
+        g.historyGameID = UUID()
+
         // Roster picker list
         g.rosterNames = []
         
@@ -296,6 +299,9 @@ final class GameManager {
         // Roster list ok even if empty
         if g.rosterNames.isEmpty { g.rosterNames = [] }
         
+        // Ensure legacy saves get a stable history ID
+        if g.historyGameID == nil { g.historyGameID = UUID() }
+
         // Clamp current hole
         g.hole = max(0, min(17, g.hole))
     }

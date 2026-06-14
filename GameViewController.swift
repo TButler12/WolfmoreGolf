@@ -308,6 +308,28 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         NotificationCenter.default.addObserver(self, selector: #selector(handleReloadUI), name: .reloadUI, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRemoteMatchDidStart), name: .remoteMatchDidStart, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleAppBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
+    }
+
+    @objc private func handleAppBackground() {
+        autoSaveToHistory()
+    }
+
+    private func autoSaveToHistory() {
+        guard let g = GameManager.shared.currentGame,
+              let gameID = g.historyGameID else { return }
+
+        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
+        for seat in seats where g.playerActivated[seat] {
+            let name = g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty, seat < g.scores.count else { continue }
+            let nonNil = zip(g.scores[seat].prefix(STANDARD_HOLES), g.holeCommitted.prefix(STANDARD_HOLES))
+                .filter { score, committed in score != nil && committed }
+                .count
+            print("🗄 autoSave '\(name)' seat\(seat): \(nonNil) committed non-nil scores")
+        }
+
+        RoundStore.shared.upsertAllPlayersFromCurrentGame(gameID: gameID)
     }
 
     @objc private func handleRemoteMatchDidStart() {
@@ -2633,6 +2655,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
         paintHammerUIForCurrentHole()
+
+        // Auto-save to history on every hole commit (upsert — no duplicate entries)
+        autoSaveToHistory()
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }

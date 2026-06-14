@@ -15,6 +15,9 @@ struct GameData: Codable {
     var nassauState: NassauState?
     var skinsState: SkinsState?
 
+    // Stable UUID for history upsert — generated once per game session, nil on legacy saves
+    var historyGameID: UUID? = nil
+
     // Supabase live match identifier (nil = local/text-based flow)
     var remoteMatchId: String? = nil
     // All remote match IDs created/joined during this game session
