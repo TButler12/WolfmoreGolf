@@ -12,6 +12,7 @@
 		44DDAAF7AA504F088F946EB1 /* PastGamesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DA27DBD514F44729ADCBC19 /* PastGamesViewController.swift */; };
 		A2B3C4D5E6F7081929304A5B /* TeeGamesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */; };
 		A3B4C5D6E7F8092030415A6C /* TeeGameSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */; };
+		A4B5C6D7E8F90A2131526B7C /* "UIViewController+ActionSheet.swift" in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F90A2131526B7D /* "UIViewController+ActionSheet.swift" */; };
 		A6B7C8D9EA0B1C2D3E4F5067 /* TournamentLeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */; };
 		A7B8C9D0EB1C2D3E4F506179 /* GroupDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */; };
 		4D843132DAAB4D78B8688A94 /* GameManager+Tournament.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */; };
@@ -117,6 +118,7 @@
 		6DA27DBD514F44729ADCBC19 /* PastGamesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastGamesViewController.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeGamesViewController.swift; sourceTree = "<group>"; };
 		A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeGameSetupViewController.swift; sourceTree = "<group>"; };
+		A4B5C6D7E8F90A2131526B7D /* "UIViewController+ActionSheet.swift" */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+ActionSheet.swift"; sourceTree = "<group>"; };
 		A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentLeaderboardViewController.swift; sourceTree = "<group>"; };
 		A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailViewController.swift; sourceTree = "<group>"; };
 		7298A503BD3F427C807DB30C /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
@@ -259,6 +261,7 @@
 				79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */,
 				A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */,
 				A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */,
+				A4B5C6D7E8F90A2131526B7D /* "UIViewController+ActionSheet.swift" */,
 				A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */,
 				A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */,
 				F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */,
@@ -503,6 +506,7 @@
 				B66C2E5033A842F5A84999BE /* PastGameDetailViewController.swift in Sources */,
 				A2B3C4D5E6F7081929304A5B /* TeeGamesViewController.swift in Sources */,
 				A3B4C5D6E7F8092030415A6C /* TeeGameSetupViewController.swift in Sources */,
+				A4B5C6D7E8F90A2131526B7C /* "UIViewController+ActionSheet.swift" in Sources */,
 				A6B7C8D9EA0B1C2D3E4F5067 /* TournamentLeaderboardViewController.swift in Sources */,
 				A7B8C9D0EB1C2D3E4F506179 /* GroupDetailViewController.swift in Sources */,
 				F6E008152F8D26FC00763694 /* RemoteMatchStore.swift in Sources */,
@@ -629,7 +633,7 @@
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
@@ -669,7 +673,7 @@
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TARGETED_DEVICE_FAMILY = 1;
+				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};

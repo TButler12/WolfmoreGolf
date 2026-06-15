@@ -138,6 +138,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     @objc private func viewHistoryTapped() {
         let vc = PastGamesViewController()
         let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
 

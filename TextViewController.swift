@@ -297,7 +297,7 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
         }
 
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = UIModalPresentationStyle.formSheet
+        nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
     // MARK: - Targets + Quick Text

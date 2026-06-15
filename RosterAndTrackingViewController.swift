@@ -360,9 +360,11 @@ final class RosterAndTrackingViewController: UIViewController,
     private func safePresent(_ vc: UIViewController) {
         if let presented = presentedViewController {
             presented.dismiss(animated: false) { [weak self] in
+                vc.modalPresentationStyle = .fullScreen
                 self?.present(vc, animated: true)
             }
         } else {
+            vc.modalPresentationStyle = .fullScreen
             present(vc, animated: true)
         }
     }

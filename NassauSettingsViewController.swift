@@ -368,7 +368,7 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
 
     private func promptForRemoteRound(completion: @escaping (SharedRound) -> Void) {
         let vc = ImportRemoteRoundViewController()
-        vc.modalPresentationStyle = .formSheet
+        vc.modalPresentationStyle = .fullScreen
         vc.onImport = { [weak self, weak vc] rawText in
             guard let self else { return }
             let cleaned = rawText

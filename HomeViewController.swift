@@ -448,7 +448,7 @@ final class ViewController: UIViewController {
         }
 
         let nav = UINavigationController(rootViewController: picker)
-        nav.modalPresentationStyle = .pageSheet
+        nav.modalPresentationStyle = .fullScreen
         if let sheet = nav.sheetPresentationController {
             sheet.detents = [.medium(), .large()]
             sheet.prefersGrabberVisible = true
@@ -654,7 +654,7 @@ final class ViewController: UIViewController {
         if let nav = navigationController {
             nav.pushViewController(vc, animated: true)
         } else {
-            vc.modalPresentationStyle = .formSheet
+            vc.modalPresentationStyle = .fullScreen
             present(vc, animated: true)
         }
     }
@@ -712,6 +712,7 @@ final class ViewController: UIViewController {
     private func openPastGames() {
         let vc = PastGamesViewController()
         let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
 
@@ -721,7 +722,7 @@ final class ViewController: UIViewController {
             nav.pushViewController(rules, animated: true)
         } else {
             let wrap = UINavigationController(rootViewController: rules)
-            wrap.modalPresentationStyle = .pageSheet
+            wrap.modalPresentationStyle = .fullScreen
             present(wrap, animated: true)
         }
     }
@@ -736,7 +737,7 @@ final class ViewController: UIViewController {
         if let nav = navigationController {
             nav.pushViewController(vc, animated: true)
         } else {
-            vc.modalPresentationStyle = .formSheet
+            vc.modalPresentationStyle = .fullScreen
             present(vc, animated: true)
         }
     }
@@ -813,7 +814,7 @@ final class ViewController: UIViewController {
     @objc private func teeGamesTapped() {
         let vc = TeeGamesViewController()
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet
+        nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
 
@@ -1126,7 +1127,7 @@ final class ViewController: UIViewController {
             nav.pushViewController(vc, animated: true)
         } else {
             let wrap = UINavigationController(rootViewController: vc)
-            wrap.modalPresentationStyle = .pageSheet
+            wrap.modalPresentationStyle = .fullScreen
             present(wrap, animated: true)
         }
     }
@@ -1325,7 +1326,7 @@ extension ViewController {
             nav.pushViewController(vc, animated: true)
         } else {
             let wrap = UINavigationController(rootViewController: vc)
-            wrap.modalPresentationStyle = .pageSheet
+            wrap.modalPresentationStyle = .fullScreen
             present(wrap, animated: true)
         }
     }

@@ -98,8 +98,8 @@ final class SkinsSettingsViewController: UIViewController {
             carryoversLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
             carryoversSegment.topAnchor.constraint(equalTo: carryoversLabel.bottomAnchor, constant: 8),
-            carryoversSegment.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 100),
-            carryoversSegment.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -100),
+            carryoversSegment.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
+            carryoversSegment.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
 
             editPlayersButton.topAnchor.constraint(equalTo: carryoversSegment.bottomAnchor, constant: 36),
             editPlayersButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),

@@ -149,7 +149,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let vc = sb.instantiateViewController(withIdentifier: "TextVC") // your Storyboard ID
 
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet
+        nav.modalPresentationStyle = .fullScreen
 
         if let sheet = nav.sheetPresentationController {
             sheet.detents = [.medium(), .large()]      // collapsible sizes
@@ -159,7 +159,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         present(nav, animated: true)
     }
-   
+
     @IBAction func nassauTapped(_ sender: UIButton) {
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let vc = sb.instantiateViewController(withIdentifier: "NassauViewController") as! NassauViewController
@@ -570,7 +570,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             leaveBtn.bottomAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
         ])
 
-        vc.modalPresentationStyle = .pageSheet
+        vc.modalPresentationStyle = .fullScreen
         if let sheet = vc.sheetPresentationController {
             sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
@@ -785,7 +785,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
         let vc  = TournamentLeaderboardViewController(code: code)
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet
+        nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
 
@@ -1509,6 +1509,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let vc = TournamentScorecardViewController(game: g)
         let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
     }
     
@@ -1586,7 +1587,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 as? HoleStatsViewController else { return }
 
         vc.holeIndex = holeIndex
-        vc.modalPresentationStyle = (UIDevice.current.userInterfaceIdiom == .pad) ? .fullScreen : .pageSheet
+        vc.modalPresentationStyle = .fullScreen
         present(vc, animated: true)
 
     }
@@ -2457,7 +2458,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func promptForRemoteRound(completion: @escaping (SharedRound) -> Void) {
         let vc = ImportRemoteRoundViewController()
-        vc.modalPresentationStyle = .formSheet
+        vc.modalPresentationStyle = .fullScreen
 
         vc.onImport = { [weak self, weak vc] rawText in
             guard let self else { return }
@@ -3099,7 +3100,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBAction func statsTapped(_ sender: UIButton) {
         let vc = StatsContainerViewController()
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet
+        nav.modalPresentationStyle = .fullScreen
         if let sheet = nav.sheetPresentationController {
             sheet.detents = [.large()]
             sheet.selectedDetentIdentifier = .large
@@ -3136,7 +3137,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBAction func statsButtonTapped(_ sender: UIButton) {
         let vc = StatsContainerViewController()
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .pageSheet
+        nav.modalPresentationStyle = .fullScreen
         if let sheet = nav.sheetPresentationController {
             sheet.detents = [.large()]
             sheet.selectedDetentIdentifier = .large

@@ -324,7 +324,7 @@ final class TeeGamesViewController: UIViewController {
             self?.advanceDay()
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(sheet, animated: true)
+        presentActionSheet(sheet, from: manageButton ?? view)
     }
 
     private func advanceDay() {

@@ -98,7 +98,7 @@ final class ManagePlayersViewController: UIViewController,
         stack.axis = .vertical
         stack.alignment = .center
         stack.spacing = spacing
-        stack.frame = CGRect(x: 0, y: 0, width: 220, height: totalHeight)
+        stack.frame = CGRect(x: 0, y: 0, width: min(UIScreen.main.bounds.width * 0.6, 400), height: totalHeight)
 
         navigationItem.titleView = stack
     }
@@ -676,6 +676,7 @@ final class ManagePlayersViewController: UIViewController,
             return
         }
 
+        roundNav.modalPresentationStyle = .fullScreen
         present(roundNav, animated: true)
     }
 }
