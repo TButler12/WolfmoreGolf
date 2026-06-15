@@ -201,6 +201,7 @@ final class TeeGamesViewController: UIViewController {
             g.tournamentScoringType  = record.scoring
         }
         GameManager.shared.saveCurrent()
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
         print("🏆 joined tournament: code=\(record.code) groupCode=\(groupCode) matchId=\(tournamentMatchId)")
         dismiss(animated: true)
     }
@@ -270,6 +271,7 @@ final class TeeGamesViewController: UIViewController {
             g.tournamentScoringType = scoring
         }
         GameManager.shared.saveCurrent()
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
         print("🏆 rejoined tournament: code=\(code) matchId=\(matchId ?? "nil")")
         dismiss(animated: true)
     }

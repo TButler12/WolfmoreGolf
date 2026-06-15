@@ -37,7 +37,20 @@ final class GameManager {
     func startNewGame(name: String = "New Game") {
         lastOddDollarRecipient = nil
         lastOddDollarHole = -1
-        let g = baselineNewGame(named: name)
+        // Preserve tournament linkage — a round reset doesn't mean leaving the tournament
+        let tCode    = currentGame?.tournamentCode
+        let tMatchId = currentGame?.tournamentMatchId
+        let tGroup   = currentGame?.groupCode
+        let tName    = currentGame?.tournamentName
+        let tType    = currentGame?.tournamentGameType
+        let tScoring = currentGame?.tournamentScoringType
+        var g = baselineNewGame(named: name)
+        g.tournamentCode        = tCode
+        g.tournamentMatchId     = tMatchId
+        g.groupCode             = tGroup
+        g.tournamentName        = tName
+        g.tournamentGameType    = tType
+        g.tournamentScoringType = tScoring
         currentGame = g
         saveCurrent()
         requestReload()
@@ -111,14 +124,20 @@ final class GameManager {
         let keepHammerStyle = old.hammerStyle
 
         var fresh = baselineNewGame(named: old.gameName)
-        fresh.course          = keepCourse
-        fresh.courseParToPass = keepCoursePar
-        fresh.courseHCToPass  = keepCourseHC
-        fresh.playerNames     = keepNames
-        fresh.hcPlayers       = keepHCs
-        fresh.playerActivated = keepActives
-        fresh.rosterNames     = keepRosterList
-        fresh.hammerStyle     = keepHammerStyle
+        fresh.course             = keepCourse
+        fresh.courseParToPass    = keepCoursePar
+        fresh.courseHCToPass     = keepCourseHC
+        fresh.playerNames        = keepNames
+        fresh.hcPlayers          = keepHCs
+        fresh.playerActivated    = keepActives
+        fresh.rosterNames        = keepRosterList
+        fresh.hammerStyle        = keepHammerStyle
+        fresh.tournamentCode     = old.tournamentCode
+        fresh.tournamentMatchId  = old.tournamentMatchId
+        fresh.groupCode          = old.groupCode
+        fresh.tournamentName     = old.tournamentName
+        fresh.tournamentGameType = old.tournamentGameType
+        fresh.tournamentScoringType = old.tournamentScoringType
         // If you want to keep the existing per-hole stakes, uncomment:
         // fresh.gameHoleDollarsArray = old.gameHoleDollarsArray
         

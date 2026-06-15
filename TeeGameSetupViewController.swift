@@ -270,6 +270,7 @@ final class TeeGameSetupViewController: UIViewController {
                             g.tournamentScoringType = record.scoring
                         }
                         GameManager.shared.saveCurrent()
+                        NotificationCenter.default.post(name: .reloadUI, object: nil)
                         self.showSuccess(code: record.code)
                     }
                 }

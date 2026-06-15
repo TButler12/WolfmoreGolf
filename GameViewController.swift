@@ -348,6 +348,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @objc private func handleReloadUI() {
         applyGameTypeUI()
         paintEverythingForCurrentHole()
+        installLiveTabBarIfNeeded()
+        refreshTournamentBanner()
         updateLiveTabBarVisibility()
     }
     override func viewWillAppear(_ animated: Bool) {
@@ -482,8 +484,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
         let name    = g.tournamentName ?? "Tournament"
         let type    = (g.tournamentGameType ?? "wolf").capitalized
-        let scoring = (g.tournamentScoringType ?? "gross").capitalized
-        tournamentBannerLabel?.text = "🏆 \(name)  ·  \(type)  ·  \(scoring)  ·  Code: \(code)"
+        tournamentBannerLabel?.text = "🏆 \(name)  ·  \(type)  ·  Code: \(code)"
         tournamentBannerView?.isHidden = false
     }
 
@@ -2752,48 +2753,58 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
-        // 5e) Tournament hole score write — fires whenever tournamentCode is set, independent of Live Wolf
-        print("🏆 5e check: tournamentCode=\(GameManager.shared.currentGame?.tournamentCode ?? "nil")")
+        // 5e) Tournament hole score write — backfills startHole...hole so rejoining groups
+        //     catch up any holes the server hasn't seen yet.
         if let g = GameManager.shared.currentGame, let tCode = g.tournamentCode {
-            let hc    = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
-            let gCode = g.groupCode ?? ""
+            let gCode  = g.groupCode ?? ""
+            let startH = max(0, min(17, g.startHole ?? hole))
+            let endH   = max(0, min(17, hole))
+            let backfillRange: [Int] = startH <= endH
+                ? Array(startH...endH)
+                : Array(startH..<STANDARD_HOLES) + Array(0...endH)
+
             Task {
-                for seat in 0..<min(MAX_PLAYERS, g.playerActivated.count) {
-                    guard g.playerActivated[seat],
-                          seat < g.scores.count,
-                          let gross = g.scores[seat][hole] else { continue }
-                    let name = g.playerNames[safe: seat] ?? ""
-                    guard !name.isEmpty else { continue }
-                    let playerHc  = g.hcPlayers[safe: seat] ?? 0
-                    let holeMoney  = seat < g.playerMoney.count ? (g.playerMoney[seat][safe: hole] ?? 0.0) : 0.0
-                    // Mirror refreshTotalMoneyLabels: sum holes from startHole to current, wrapping around correctly
-                    let startH = max(0, min(17, g.startHole ?? hole))
-                    let endH   = max(0, min(17, hole))
-                    let holesToSum: [Int] = startH <= endH
-                        ? Array(startH...endH)
-                        : Array(startH..<STANDARD_HOLES) + Array(0...endH)
-                    let totalMoney = seat < g.playerMoney.count
-                        ? holesToSum.reduce(0.0) { $0 + (g.playerMoney[seat][safe: $1] ?? 0.0) }
-                        : 0.0
-                    let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: hc)
-                    let netScore = gross - strokes
-                    do {
-                        print("🏆 5e tournament write seat=\(seat) name=\(name) hole=\(hole+1) gross=\(gross) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney) tCode=\(tCode)")
-                        try await SupabaseService.shared.submitTournamentHoleScore(
-                            playerSlot:     seat,
-                            playerName:     name,
-                            hole:           hole,
-                            grossScore:     gross,
-                            netScore:       netScore,
-                            holeMoney:      holeMoney,
-                            totalMoney:     totalMoney,
-                            holeHc:         hc,
-                            playerHc:       playerHc,
-                            tournamentCode: tCode,
-                            groupCode:      gCode
-                        )
-                    } catch {
-                        print("ERROR 5e tournament write failed seat=\(seat) name=\(name): \(error)")
+                for backfillHole in backfillRange {
+                    let holeHc = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
+
+                    for seat in 0..<min(MAX_PLAYERS, g.playerActivated.count) {
+                        guard g.playerActivated[seat],
+                              seat < g.scores.count,
+                              let gross = g.scores[seat][backfillHole] else { continue }
+                        let name = g.playerNames[safe: seat] ?? ""
+                        guard !name.isEmpty else { continue }
+
+                        let playerHc = g.hcPlayers[safe: seat] ?? 0
+                        let holeMoney = seat < g.playerMoney.count
+                            ? (g.playerMoney[seat][safe: backfillHole] ?? 0.0) : 0.0
+                        // totalMoney = running sum from startHole through backfillHole
+                        let totalRange: [Int] = startH <= backfillHole
+                            ? Array(startH...backfillHole)
+                            : Array(startH..<STANDARD_HOLES) + Array(0...backfillHole)
+                        let totalMoney = seat < g.playerMoney.count
+                            ? totalRange.reduce(0.0) { $0 + (g.playerMoney[seat][safe: $1] ?? 0.0) }
+                            : 0.0
+                        let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                        let netScore = gross - strokes
+
+                        do {
+                            print("🏆 5e tournament write seat=\(seat) name=\(name) hole=\(backfillHole+1) gross=\(gross) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney)")
+                            try await SupabaseService.shared.submitTournamentHoleScore(
+                                playerSlot:     seat,
+                                playerName:     name,
+                                hole:           backfillHole,
+                                grossScore:     gross,
+                                netScore:       netScore,
+                                holeMoney:      holeMoney,
+                                totalMoney:     totalMoney,
+                                holeHc:         holeHc,
+                                playerHc:       playerHc,
+                                tournamentCode: tCode,
+                                groupCode:      gCode
+                            )
+                        } catch {
+                            print("ERROR 5e tournament write failed seat=\(seat) name=\(name) hole=\(backfillHole+1): \(error)")
+                        }
                     }
                 }
             }
@@ -3454,6 +3465,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             stepper.addTarget(self, action: #selector(dollarStepperChanged(_:)), for: .valueChanged)
             dollarStepper = stepper
 
+            gameResultsButton.backgroundColor = UIColor.systemGray4
             gameResultsButton.setContentHuggingPriority(.defaultLow, for: .horizontal)
             gameResultsButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
             gameDollarsField.widthAnchor.constraint(equalToConstant: 80).isActive = true
@@ -3464,10 +3476,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             vStack.addArrangedSubview(row4)
 
             // ── Row 5: Hole Stats | Text ──────────────────────────────────────
-            var hsCfg = UIButton.Configuration.filled()
-            hsCfg.baseBackgroundColor = UIColor(red: 0.474, green: 0.340, blue: 0.115, alpha: 1.0)
-            hsCfg.baseForegroundColor = .white
-            hsCfg.cornerStyle = .medium
+            var hsCfg = UIButton.Configuration.plain()
+            hsCfg.baseForegroundColor = .label
+            hsCfg.background.backgroundColor = UIColor.systemGray4
+            hsCfg.background.cornerRadius = 8
             hsCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
             }

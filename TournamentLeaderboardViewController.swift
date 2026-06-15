@@ -133,10 +133,13 @@ final class TournamentLeaderboardViewController: UIViewController {
             ScoreRow(rank: i+1, name: kv.key, total: kv.value, holesPlayed: sHoles[kv.key] ?? 0)
         }
 
-        // ── Groups: DISTINCT match_id, collect player names ──
+        // ── Groups: DISTINCT match_id from deduplicated rows only ──
+        // Using deduped means a match_id that was entirely superseded by a rejoin
+        // (all its holes already claimed by another match_id) contributes zero rows
+        // and therefore doesn't appear as a phantom extra group.
         var gNames: [String: [String]]  = [:]
         var gHoles: [String: Set<Int>]  = [:]
-        for r in allRows {
+        for r in deduped {
             if !(gNames[r.matchId, default: []].contains(r.playerName)) {
                 gNames[r.matchId, default: []].append(r.playerName)
             }
@@ -256,7 +259,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         subtitleLabel.text = parts.joined(separator: " · ")
 
         let playerCount = Set(allRows.map { $0.playerName }).count
-        let groupCount  = Set(allRows.map { $0.matchId }).count
+        let groupCount  = groupData.count
         statsLabel.text = "· \(playerCount) player\(playerCount == 1 ? "" : "s") · \(groupCount) group\(groupCount == 1 ? "" : "s")"
     }
 
