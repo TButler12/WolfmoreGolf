@@ -37,6 +37,8 @@ struct GameData: Codable {
     var tournamentName: String? = nil
     var tournamentGameType: String? = nil      // "wolf", "skins", "stableford"
     var tournamentScoringType: String? = nil   // "gross", "net"
+    var tournamentDay: Int = 1
+    var tournamentIsOrganizer: Bool = false
 
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: STANDARD_HOLES)

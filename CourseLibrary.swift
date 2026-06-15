@@ -9457,6 +9457,62 @@ let BELLERIVE_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Silver", yardage: 5673)
 ]
 
+// MARK: TPC Toronto at Osprey Valley — North Course — Caledon, ON
+private let TPC_TORONTO_NORTH_ID = UUID(uuidString: "A7B3C5D8-E2F1-4A9C-B6D4-1E2F3A4B5C6D")!
+
+let TPC_TORONTO_NORTH_PARS: [Int] = [
+    5,4,4,3,4,4,3,4,4,
+    4,3,4,5,3,4,4,4,4
+]
+
+let TPC_TORONTO_NORTH_HCS: [Int] = [
+    5,3,11,17,1,15,13,2,7,
+    14,18,10,4,16,8,6,12,9
+]
+
+let TPC_TORONTO_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7445),
+    TeeInfo(teeName: "Osprey",       yardage: 6324),
+]
+
+// MARK: TPC Toronto at Osprey Valley — Hoot Course — Caledon, ON
+private let TPC_TORONTO_HOOT_ID = UUID(uuidString: "B8C4D6E9-F3A2-4B0D-C7E5-2F3A4B5C6D7E")!
+
+let TPC_TORONTO_HOOT_PARS: [Int] = [
+    5,4,4,3,4,5,4,3,4,
+    3,5,4,5,4,3,4,4,4
+]
+
+let TPC_TORONTO_HOOT_HCS: [Int] = [
+    7,9,5,17,1,11,13,15,3,
+    16,2,14,4,6,18,8,12,10
+]
+
+let TPC_TORONTO_HOOT_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 7021),
+    TeeInfo(teeName: "Osprey", yardage: 6064),
+    TeeInfo(teeName: "White",  yardage: 5841),
+]
+
+// MARK: TPC Toronto at Osprey Valley — Heathlands Course — Caledon, ON
+private let TPC_TORONTO_HEATHLANDS_ID = UUID(uuidString: "C9D5E7F0-A4B3-4C1E-D8F6-3A4B5C6D7E8F")!
+
+let TPC_TORONTO_HEATHLANDS_PARS: [Int] = [
+    5,4,4,4,3,4,4,3,5,
+    5,4,3,4,4,3,5,3,4
+]
+
+let TPC_TORONTO_HEATHLANDS_HCS: [Int] = [
+    11,9,5,13,15,3,7,17,1,
+    6,10,18,2,12,14,4,16,8
+]
+
+let TPC_TORONTO_HEATHLANDS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6983),
+    TeeInfo(teeName: "Osprey",       yardage: 6137),
+    TeeInfo(teeName: "White",        yardage: 5960),
+]
+
 // MARK: Nara Kokusai GC — Nara, Japan
 private let NARA_KOKUSAI_GC_ID = UUID(uuidString: "2F8A1C47-9D3E-4B6F-A521-7C0E3D8B9F42")!
 
@@ -17031,6 +17087,52 @@ private enum BuiltIns {
             phone: "(216) 635-3200",
             website: "https://www.clevelandmetroparks.com/golf/courses/sleepy-hollow-golf-course",
             address: "9445 Brecksville Road, Brecksville, OH 44141",
+            isWolfApproved: true
+        ),
+
+        // -------------------------
+        // Canada
+        // -------------------------
+        c(
+            TPC_TORONTO_NORTH_ID,
+            "TPC Toronto at Osprey Valley (North)",
+            TPC_TORONTO_NORTH_PARS,
+            TPC_TORONTO_NORTH_HCS,
+            TPC_TORONTO_NORTH_TEES,
+            country: "Canada",
+            state: "ON",
+            region: "Caledon",
+            architect: "Doug Carrick",
+            type: "Resort",
+            address: "19131 Main St., Caledon, ON L7K 1R1",
+            isWolfApproved: true
+        ),
+        c(
+            TPC_TORONTO_HOOT_ID,
+            "TPC Toronto at Osprey Valley (Hoot)",
+            TPC_TORONTO_HOOT_PARS,
+            TPC_TORONTO_HOOT_HCS,
+            TPC_TORONTO_HOOT_TEES,
+            country: "Canada",
+            state: "ON",
+            region: "Caledon",
+            architect: "Doug Carrick",
+            type: "Resort",
+            address: "19131 Main St., Caledon, ON L7K 1R1",
+            isWolfApproved: true
+        ),
+        c(
+            TPC_TORONTO_HEATHLANDS_ID,
+            "TPC Toronto at Osprey Valley (Heathlands)",
+            TPC_TORONTO_HEATHLANDS_PARS,
+            TPC_TORONTO_HEATHLANDS_HCS,
+            TPC_TORONTO_HEATHLANDS_TEES,
+            country: "Canada",
+            state: "ON",
+            region: "Caledon",
+            architect: "Doug Carrick",
+            type: "Resort",
+            address: "19131 Main St., Caledon, ON L7K 1R1",
             isWolfApproved: true
         ),
 

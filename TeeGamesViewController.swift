@@ -6,6 +6,7 @@ final class TeeGamesViewController: UIViewController {
 
     private let stackView = UIStackView()
     private weak var rejoinButton: UIButton?
+    private weak var manageButton: UIButton?
 
     // MARK: - Lifecycle
 
@@ -24,6 +25,7 @@ final class TeeGamesViewController: UIViewController {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         refreshRejoinButton()
+        refreshManageButton()
     }
 
     // MARK: - Setup
@@ -45,6 +47,11 @@ final class TeeGamesViewController: UIViewController {
                                         color: UIColor(red: 0.12, green: 0.45, blue: 0.55, alpha: 1.0))
         leaderboardBtn.addTarget(self, action: #selector(leaderboardTapped), for: .touchUpInside)
 
+        let manageBtn = makeButton(title: "Manage Tournament", subtitle: "Advance day, adjust settings", color: UIColor(red: 0.48, green: 0.18, blue: 0.62, alpha: 1.0))
+        manageBtn.addTarget(self, action: #selector(manageTapped), for: .touchUpInside)
+        manageBtn.isHidden = true
+        manageButton = manageBtn
+
         stackView.axis = .vertical
         stackView.spacing = 16
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -52,6 +59,7 @@ final class TeeGamesViewController: UIViewController {
         stackView.addArrangedSubview(joinBtn)
         stackView.addArrangedSubview(rejoinBtn)
         stackView.addArrangedSubview(leaderboardBtn)
+        stackView.addArrangedSubview(manageBtn)
         view.addSubview(stackView)
 
         NSLayoutConstraint.activate([
@@ -199,7 +207,10 @@ final class TeeGamesViewController: UIViewController {
             g.tournamentName         = record.name
             g.tournamentGameType     = record.gameType
             g.tournamentScoringType  = record.scoring
+            g.tournamentDay          = record.currentDay ?? 1
+            g.tournamentIsOrganizer  = false
         }
+        UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
         GameManager.shared.saveCurrent()
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         print("🏆 joined tournament: code=\(record.code) groupCode=\(groupCode) matchId=\(tournamentMatchId)")
@@ -269,11 +280,61 @@ final class TeeGamesViewController: UIViewController {
             g.tournamentName        = name
             g.tournamentGameType    = gameType
             g.tournamentScoringType = scoring
+            g.tournamentDay         = UserDefaults.standard.integer(forKey: "lastTournamentDay_\(code)")
+            if g.tournamentDay == 0 { g.tournamentDay = 1 }
         }
         GameManager.shared.saveCurrent()
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         print("🏆 rejoined tournament: code=\(code) matchId=\(matchId ?? "nil")")
         dismiss(animated: true)
+    }
+
+    private func refreshManageButton() {
+        let isOrganizer = GameManager.shared.currentGame?.tournamentIsOrganizer == true
+            && GameManager.shared.currentGame?.tournamentCode != nil
+        manageButton?.isHidden = !isOrganizer
+        if isOrganizer {
+            let day = GameManager.shared.currentGame?.tournamentDay ?? 1
+            manageButton?.configuration?.subtitle = "Currently Day \(day)"
+        }
+    }
+
+    @objc private func manageTapped() {
+        let sheet = UIAlertController(title: "Manage Tournament", message: nil, preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
+            self?.advanceDay()
+        })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(sheet, animated: true)
+    }
+
+    private func advanceDay() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
+        let spinner = UIAlertController(title: nil, message: "Advancing day…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                try await SupabaseService.shared.advanceTournamentDay(code: code)
+                let record = try await SupabaseService.shared.fetchTournament(code: code)
+                let newDay = record.currentDay ?? 1
+                GameManager.shared.update { g in g.tournamentDay = newDay }
+                UserDefaults.standard.set(newDay, forKey: "lastTournamentDay_\(code)")
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.refreshManageButton()
+                        let ac = UIAlertController(title: "Advanced to Day \(newDay)", message: nil, preferredStyle: .alert)
+                        ac.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(ac, animated: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Failed to advance day: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
     }
 
     private func showError(_ message: String) {

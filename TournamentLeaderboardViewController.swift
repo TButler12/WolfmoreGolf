@@ -18,6 +18,8 @@ final class TournamentLeaderboardViewController: UIViewController {
     private var groupData: [GroupRow] = []
     private var refreshTimer: Timer?
     private var isRefreshing = false
+    private var availableDays: [Int] = []
+    private var selectedDay: Int? = nil
 
     private var currentUserName: String? {
         let n = ProfileStore.name?.trimmingCharacters(in: .whitespaces) ?? ""
@@ -32,6 +34,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let liveLabel     = UILabel()
     private let statsLabel    = UILabel()
     private let segment       = UISegmentedControl(items: ["Money", "Score", "Groups", "Proxes"])
+    private let dayPicker     = UISegmentedControl()
     private let tableView     = UITableView(frame: .zero, style: .plain)
     private let proxesLabel   = UILabel()
     private let spinner       = UIActivityIndicatorView(style: .medium)
@@ -89,6 +92,7 @@ final class TournamentLeaderboardViewController: UIViewController {
             record  = rec
             allRows = rows
             recompute()
+            updateDayPicker()
             applyHeader()
             tableView.reloadData()
         } catch {
@@ -98,45 +102,65 @@ final class TournamentLeaderboardViewController: UIViewController {
 
     // MARK: - Aggregation
     private func recompute() {
-        // Deduplicate: one row per (playerName, hole). If the same player submitted
-        // from multiple match_ids (e.g. after a rejoin), keep the first occurrence so
-        // each hole only counts once in both money and score calculations.
+        // ── Deduplicate: one row per (playerName, day, hole) ──
         let deduped: [TournamentHoleScoreRow] = {
             var seen = Set<String>()
-            return allRows.filter { seen.insert("\($0.playerName)|\($0.hole)").inserted }
+            return allRows.filter {
+                seen.insert("\($0.playerName)|\($0.day ?? 1)|\($0.hole)").inserted
+            }
         }()
 
-        let grouped = Dictionary(grouping: deduped, by: { $0.playerName })
+        // ── Available days (for day picker) ──
+        availableDays = Array(Set(deduped.compactMap { $0.day })).sorted()
 
-        // ── Money: total_money from the highest-hole row per player ──
+        // ── Filter to selected day or all ──
+        let rows: [TournamentHoleScoreRow]
+        if let selectedDay = selectedDay {
+            rows = deduped.filter { ($0.day ?? 1) == selectedDay }
+        } else {
+            rows = deduped
+        }
+
+        let grouped = Dictionary(grouping: rows, by: { $0.playerName })
+
+        // ── Money ──
         var totals: [String: Double] = [:]
         var pHoles: [String: Int]    = [:]
-        for (player, rows) in grouped {
-            if let latest = rows.max(by: { $0.hole < $1.hole }) {
-                totals[player] = latest.totalMoney ?? 0
+
+        if selectedDay != nil {
+            for (player, playerRows) in grouped {
+                if let latest = playerRows.max(by: { $0.hole < $1.hole }) {
+                    totals[player] = latest.totalMoney ?? 0
+                }
+                pHoles[player] = playerRows.count
             }
-            pHoles[player] = rows.count
+        } else {
+            for (player, playerRows) in grouped {
+                let byDay = Dictionary(grouping: playerRows, by: { $0.day ?? 1 })
+                totals[player] = byDay.values.reduce(0.0) { sum, dayRows in
+                    sum + (dayRows.max(by: { $0.hole < $1.hole })?.totalMoney ?? 0)
+                }
+                pHoles[player] = playerRows.count
+            }
         }
+
         moneyData = totals.sorted { $0.value > $1.value }.enumerated().map { i, kv in
             MoneyRow(rank: i+1, name: kv.key, total: kv.value, holesPlayed: pHoles[kv.key] ?? 0)
         }
 
-        // ── Score: SUM(net or gross) across deduplicated rows per player ──
+        // ── Score ──
         let useNet = record?.scoring == "net"
         var sums:   [String: Int] = [:]
         var sHoles: [String: Int] = [:]
-        for (player, rows) in grouped {
-            sums[player]   = rows.reduce(0) { $0 + (useNet ? ($1.netScore ?? $1.grossScore) : $1.grossScore) }
-            sHoles[player] = rows.count
+        for (player, playerRows) in grouped {
+            sums[player]   = playerRows.reduce(0) { $0 + (useNet ? ($1.netScore ?? $1.grossScore) : $1.grossScore) }
+            sHoles[player] = playerRows.count
         }
         scoreData = sums.sorted { $0.value < $1.value }.enumerated().map { i, kv in
             ScoreRow(rank: i+1, name: kv.key, total: kv.value, holesPlayed: sHoles[kv.key] ?? 0)
         }
 
-        // ── Groups: DISTINCT match_id from deduplicated rows only ──
-        // Using deduped means a match_id that was entirely superseded by a rejoin
-        // (all its holes already claimed by another match_id) contributes zero rows
-        // and therefore doesn't appear as a phantom extra group.
+        // ── Groups: from full deduped set (not day-filtered) ──
         var gNames: [String: [String]]  = [:]
         var gHoles: [String: Set<Int>]  = [:]
         for r in deduped {
@@ -148,6 +172,24 @@ final class TournamentLeaderboardViewController: UIViewController {
         groupData = gNames.map { id, names in
             GroupRow(matchId: id, playerNames: names, holesPlayed: gHoles[id]?.count ?? 0)
         }.sorted { ($0.playerNames.first ?? "") < ($1.playerNames.first ?? "") }
+    }
+
+    private func updateDayPicker() {
+        dayPicker.removeAllSegments()
+        dayPicker.insertSegment(withTitle: "All", at: 0, animated: false)
+        for (i, day) in availableDays.enumerated() {
+            dayPicker.insertSegment(withTitle: "Day \(day)", at: i + 1, animated: false)
+        }
+        dayPicker.selectedSegmentIndex = 0
+        dayPicker.isHidden = availableDays.count <= 1
+    }
+
+    @objc private func dayPickerChanged() {
+        selectedDay = dayPicker.selectedSegmentIndex == 0
+            ? nil
+            : availableDays[dayPicker.selectedSegmentIndex - 1]
+        recompute()
+        tableView.reloadData()
     }
 
     // MARK: - Header setup
@@ -183,7 +225,10 @@ final class TournamentLeaderboardViewController: UIViewController {
         segment.selectedSegmentIndex = 0
         segment.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
 
-        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, segment])
+        dayPicker.addTarget(self, action: #selector(dayPickerChanged), for: .valueChanged)
+        dayPicker.isHidden = true
+
+        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, dayPicker, segment])
         vStack.axis = .vertical; vStack.spacing = 6
         vStack.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(vStack)

@@ -2800,7 +2800,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                 holeHc:         holeHc,
                                 playerHc:       playerHc,
                                 tournamentCode: tCode,
-                                groupCode:      gCode
+                                groupCode:      gCode,
+                                day:            g.tournamentDay
                             )
                         } catch {
                             print("ERROR 5e tournament write failed seat=\(seat) name=\(name) hole=\(backfillHole+1): \(error)")

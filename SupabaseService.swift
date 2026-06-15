@@ -189,7 +189,8 @@ final class SupabaseService {
         holeHc: Int? = nil,
         playerHc: Int? = nil,
         tournamentCode: String,
-        groupCode: String
+        groupCode: String,
+        day: Int = 1
     ) async throws {
         let g = GameManager.shared.currentGame
         guard let matchId = g?.tournamentMatchId else {
@@ -208,7 +209,8 @@ final class SupabaseService {
             "hole_money":      .double(holeMoney),
             "total_money":     .double(totalMoney),
             "tournament_code": .string(tournamentCode),
-            "group_code":      .string(groupCode)
+            "group_code":      .string(groupCode),
+            "day":             .string(String(day)),
         ]
         if let hc = holeHc   { payload["hole_hc"]   = .string(String(hc)) }
         if let hc = playerHc { payload["player_hc"] = .string(String(hc)) }
@@ -609,6 +611,21 @@ final class SupabaseService {
             .single()
             .execute()
         return response.value
+    }
+
+    func advanceTournamentDay(code: String) async throws {
+        let records: [TournamentRecord] = try await client
+            .from("tournaments")
+            .select()
+            .eq("code", value: code)
+            .execute()
+            .value
+        guard let current = records.first?.currentDay else { return }
+        try await client
+            .from("tournaments")
+            .update(["current_day": current + 1])
+            .eq("code", value: code)
+            .execute()
     }
 
     func fetchTournament(code: String) async throws -> TournamentRecord {
