@@ -780,6 +780,7 @@ final class ViewController: UIViewController {
         btn.addTarget(self, action: #selector(tournamentTapped), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
         tournamentButton = btn
+        btn.isHidden = true
         view.addSubview(btn)
         // Anchor below courseButton (y≈542), which sits in the 148-pt gap before the chip row.
         // Anchoring below playGameButton (y≈461) would overlap courseButton at y=482.
@@ -804,7 +805,7 @@ final class ViewController: UIViewController {
         view.addSubview(btn)
         NSLayoutConstraint.activate([
             btn.centerXAnchor.constraint(equalTo: playGameButton.centerXAnchor),
-            btn.topAnchor.constraint(equalTo: stablefordBtn.bottomAnchor, constant: 10),
+            btn.topAnchor.constraint(equalTo: playGameButton.bottomAnchor, constant: 16),
             btn.widthAnchor.constraint(equalTo: playGameButton.widthAnchor),
         ])
     }

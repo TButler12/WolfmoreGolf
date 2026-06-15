@@ -8,7 +8,7 @@ final class TeeGameSetupViewController: UIViewController {
     private let contentView = UIView()
 
     private let nameField        = UITextField()
-    private let gameTypeControl  = UISegmentedControl(items: ["Wolf", "Skins", "Stableford"])
+    private let gameTypeControl  = UISegmentedControl(items: ["Wolf", "Skins"])
     private let scoringControl   = UISegmentedControl(items: ["Gross", "Net"])
     private let stakeField       = UITextField()
     private let carryTiesControl = UISegmentedControl(items: ["No Carry", "Carry Ties"])
@@ -88,15 +88,17 @@ final class TeeGameSetupViewController: UIViewController {
 
         // Tournament name
         stack.addArrangedSubview(labeled("Tournament Name", field: nameField))
-        nameField.placeholder = "e.g. Saturday Skins"
+        nameField.placeholder = "e.g. Wolf Tourney"
         nameField.borderStyle = .roundedRect
         nameField.autocapitalizationType = .words
         nameField.clearButtonMode = .whileEditing
         nameField.returnKeyType = .done
         nameField.addTarget(self, action: #selector(dismissKeyboard), for: .editingDidEndOnExit)
 
-        // Game type — Wolf (0), Skins (1), Stableford (2)
-        stack.addArrangedSubview(labeled("Format", control: gameTypeControl))
+        // Game type — Wolf only for now; Format row hidden until Skins/Stableford re-enabled
+        let formatRow = labeled("Format", control: gameTypeControl)
+        formatRow.isHidden = true
+        stack.addArrangedSubview(formatRow)
         gameTypeControl.selectedSegmentIndex = 0
         gameTypeControl.addTarget(self, action: #selector(gameTypeChanged), for: .valueChanged)
 
