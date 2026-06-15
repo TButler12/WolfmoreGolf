@@ -35,6 +35,7 @@ final class ContactsViewController: UITableViewController {
         tableView = UITableView(frame: .zero, style: .insetGrouped)
         tableView.keyboardDismissMode = .onDrag
         tableView.tableFooterView = UIView()
+        tableView.cellLayoutMarginsFollowReadableWidth = false
 
         navigationItem.leftItemsSupplementBackButton = true
         navigationItem.leftBarButtonItem =

@@ -8,8 +8,12 @@ extension UIViewController {
         if let pop = ac.popoverPresentationController {
             let sv = sourceView ?? view!
             pop.sourceView = sv
-            pop.sourceRect = sourceRect ?? sv.bounds
-            if sourceView == nil {
+            if let rect = sourceRect {
+                pop.sourceRect = rect
+            } else if sourceView != nil {
+                pop.sourceRect = sv.bounds
+            } else {
+                pop.sourceRect = CGRect(x: sv.bounds.midX, y: sv.bounds.midY, width: 0, height: 0)
                 pop.permittedArrowDirections = []
             }
         }

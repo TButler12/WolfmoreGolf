@@ -598,6 +598,7 @@ final class ManagePlayersViewController: UIViewController,
             btn.topAnchor.constraint(equalTo: startBtn.bottomAnchor, constant: 14),
             btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
             btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
+            btn.heightAnchor.constraint(equalToConstant: 60),
         ]
         if let closeBtn {
             constraints.append(btn.bottomAnchor.constraint(equalTo: closeBtn.topAnchor, constant: -12))
