@@ -274,6 +274,18 @@ struct TournamentHoleScoreRow: Codable {
     }
 }
 
+// Player money offsets per day (manual adjustments by organizer).
+// Table: player_offsets — upsert key: (tournament_code, day, player_name)
+struct PlayerOffsetRow: Codable {
+    let playerName:    String
+    let offsetAmount:  Double
+
+    enum CodingKeys: String, CodingKey {
+        case playerName   = "player_name"
+        case offsetAmount = "offset_amount"
+    }
+}
+
 // Per-hole scores for Remote Nassau batch comparison.
 // Table: remote_nassau_hole_scores — upsert key: (match_id, side, hole)
 struct RemoteNassauHoleScore: Codable {

@@ -647,6 +647,29 @@ final class SupabaseService {
         return response.value
     }
 
+    func fetchPlayerOffsets(code: String, day: Int) async throws -> [String: Double] {
+        let rows: [PlayerOffsetRow] = try await client
+            .from("player_offsets")
+            .select()
+            .eq("tournament_code", value: code)
+            .eq("day", value: day)
+            .execute()
+            .value
+        return Dictionary(uniqueKeysWithValues: rows.map { ($0.playerName, $0.offsetAmount) })
+    }
+
+    func upsertPlayerOffset(code: String, day: Int, playerName: String, amount: Double) async throws {
+        try await client
+            .from("player_offsets")
+            .upsert([
+                "tournament_code": AnyJSON.string(code),
+                "day":             AnyJSON.integer(day),
+                "player_name":     AnyJSON.string(playerName),
+                "offset_amount":   AnyJSON.double(amount)
+            ])
+            .execute()
+    }
+
     // MARK: - Helpers
     private func generateCode() -> String {
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
