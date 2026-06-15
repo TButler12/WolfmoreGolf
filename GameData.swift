@@ -28,6 +28,16 @@ struct GameData: Codable {
     var liveSessionId: String? = nil
     var liveSessionCode: String? = nil
 
+    // Tee Game (tournament group) code and group code (nil = not in a tee game)
+    var tournamentCode: String? = nil
+    var groupCode: String? = nil
+    // Stable UUID used as match_id for all tournament hole_score rows in this group session
+    var tournamentMatchId: String? = nil
+    // Display metadata cached from TournamentRecord at join/create time
+    var tournamentName: String? = nil
+    var tournamentGameType: String? = nil      // "wolf", "skins", "stableford"
+    var tournamentScoringType: String? = nil   // "gross", "net"
+
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: STANDARD_HOLES)
 

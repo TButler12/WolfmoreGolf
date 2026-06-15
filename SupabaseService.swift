@@ -160,16 +160,61 @@ final class SupabaseService {
         playerHc: Int? = nil
     ) async throws {
         let name = playerName ?? ProfileStore.name ?? ""
-        var payload: [String: String] = [
-            "match_id":    matchId,
-            "player_slot": String(playerSlot),
-            "hole":        String(hole),
-            "gross_score": String(grossScore),
-            "player_name": name
+        let g = GameManager.shared.currentGame
+        var payload: [String: AnyJSON] = [
+            "match_id":        .string(matchId),
+            "player_slot":     .string(String(playerSlot)),
+            "hole":            .string(String(hole)),
+            "gross_score":     .string(String(grossScore)),
+            "player_name":     .string(name),
+            "tournament_code": g?.tournamentCode.map { .string($0) } ?? .null,
+            "group_code":      g?.groupCode.map { .string($0) } ?? .null
         ]
-        if let hc = holeHc   { payload["hole_hc"]   = String(hc) }
-        if let hc = playerHc { payload["player_hc"] = String(hc) }
+        if let hc = holeHc   { payload["hole_hc"]   = .string(String(hc)) }
+        if let hc = playerHc { payload["player_hc"] = .string(String(hc)) }
         try await client.from("hole_scores").upsert(payload, onConflict: "match_id,player_slot,hole").execute()
+    }
+
+    // MARK: - Tournament per-hole scores
+    // Writes one row per player per hole into hole_scores.
+    // Conflict key: (match_id, tournament_code, player_name, hole) — fires regardless of Live Wolf status.
+    func submitTournamentHoleScore(
+        playerSlot: Int,
+        playerName: String,
+        hole: Int,
+        grossScore: Int,
+        netScore: Int,
+        holeMoney: Double,
+        totalMoney: Double,
+        holeHc: Int? = nil,
+        playerHc: Int? = nil,
+        tournamentCode: String,
+        groupCode: String
+    ) async throws {
+        let g = GameManager.shared.currentGame
+        guard let matchId = g?.tournamentMatchId else {
+            print("❌ submitTournamentHoleScore skipped — tournamentMatchId is nil (game not in a tournament)")
+            return
+        }
+        let storedHole = hole + 1   // caller passes 0-based index; store as 1-based
+        print("🏆 submitTournamentHoleScore matchId=\(matchId) player=\(playerName) hole=\(storedHole) gross=\(grossScore) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney)")
+        var payload: [String: AnyJSON] = [
+            "match_id":        .string(matchId),
+            "player_slot":     .string(String(playerSlot)),
+            "player_name":     .string(playerName),
+            "hole":            .string(String(storedHole)),
+            "gross_score":     .string(String(grossScore)),
+            "net_score":       .string(String(netScore)),
+            "hole_money":      .double(holeMoney),
+            "total_money":     .double(totalMoney),
+            "tournament_code": .string(tournamentCode),
+            "group_code":      .string(groupCode)
+        ]
+        if let hc = holeHc   { payload["hole_hc"]   = .string(String(hc)) }
+        if let hc = playerHc { payload["player_hc"] = .string(String(hc)) }
+        try await client.from("hole_scores")
+            .upsert(payload, onConflict: "match_id,tournament_code,player_name,hole")
+            .execute()
     }
 
     // MARK: - Remote Nassau per-hole scores (remote_nassau_hole_scores table)
@@ -365,6 +410,7 @@ final class SupabaseService {
         hammerMultiplier: Int = 1,
         pressed: Int = 0
     ) async throws {
+        let g = GameManager.shared.currentGame
         struct Payload: Encodable {
             var session_id: String
             var hole: Int
@@ -377,6 +423,8 @@ final class SupabaseService {
             var decision: String?
             var hammer_multiplier: Int
             var wolf_player: Int  // repurposed: press active (1) / inactive (0); column is integer in DB
+            var tournament_code: String?
+            var group_code: String?
         }
         let payload = Payload(
             session_id: sessionId,
@@ -389,8 +437,11 @@ final class SupabaseService {
             partner_slot: partnerSlot,
             decision: decision,
             hammer_multiplier: hammerMultiplier,
-            wolf_player: pressed
+            wolf_player: pressed,
+            tournament_code: g?.tournamentCode,
+            group_code: g?.groupCode
         )
+        print("🏆 submitWolfHole tournament_code=\(g?.tournamentCode ?? "nil") group_code=\(g?.groupCode ?? "nil")")
         print("DEBUG upsert payload: session=\(sessionId) hole=\(hole) scores=\(scores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(payouts)")
         try await client.from("wolf_hole_results")
             .upsert(payload, onConflict: "session_id,hole")
@@ -527,6 +578,56 @@ final class SupabaseService {
                 await ch.unsubscribe()
             }
         }
+    }
+
+    // MARK: - Tee Games (tournaments table)
+
+    func createTournament(
+        name: String,
+        gameType: String,
+        scoringType: String,
+        stake: Double?,
+        carryTies: Bool?,
+        courseName: String
+    ) async throws -> TournamentRecord {
+        let code = generateCode()
+        var payload: [String: AnyJSON] = [
+            "code":        AnyJSON.string(code),
+            "name":        AnyJSON.string(name),
+            "game_type":   AnyJSON.string(gameType),
+            "scoring":     AnyJSON.string(scoringType),
+            "created_by":  AnyJSON.string(ProfileStore.name ?? ""),
+            "course_name": AnyJSON.string(courseName)
+        ]
+        if let s = stake { payload["stake"] = AnyJSON.double(s) }
+        if let c = carryTies { payload["carry_ties"] = AnyJSON.bool(c) }
+
+        let response: PostgrestResponse<TournamentRecord> = try await client
+            .from("tournaments")
+            .insert(payload)
+            .select()
+            .single()
+            .execute()
+        return response.value
+    }
+
+    func fetchTournament(code: String) async throws -> TournamentRecord {
+        let response: PostgrestResponse<TournamentRecord> = try await client
+            .from("tournaments")
+            .select()
+            .eq("code", value: code.uppercased())
+            .single()
+            .execute()
+        return response.value
+    }
+
+    func fetchTournamentHoleScores(code: String) async throws -> [TournamentHoleScoreRow] {
+        let response: PostgrestResponse<[TournamentHoleScoreRow]> = try await client
+            .from("hole_scores")
+            .select("match_id, player_name, hole, gross_score, net_score, hole_money, total_money")
+            .eq("tournament_code", value: code.uppercased())
+            .execute()
+        return response.value
     }
 
     // MARK: - Helpers

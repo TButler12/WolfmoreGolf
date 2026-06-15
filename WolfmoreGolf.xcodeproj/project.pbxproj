@@ -10,6 +10,10 @@
 		249133D5DF2043B8BC34834D /* SupabaseModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2E5EC0551DDE495DBC914610 /* SupabaseModels.swift */; };
 		43718BCECA3E4E7EBF3C92BF /* SupabaseConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30D556E2E1A2444F9E91213A /* SupabaseConfig.swift */; };
 		44DDAAF7AA504F088F946EB1 /* PastGamesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DA27DBD514F44729ADCBC19 /* PastGamesViewController.swift */; };
+		A2B3C4D5E6F7081929304A5B /* TeeGamesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */; };
+		A3B4C5D6E7F8092030415A6C /* TeeGameSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */; };
+		A6B7C8D9EA0B1C2D3E4F5067 /* TournamentLeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */; };
+		A7B8C9D0EB1C2D3E4F506179 /* GroupDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */; };
 		4D843132DAAB4D78B8688A94 /* GameManager+Tournament.swift in Sources */ = {isa = PBXBuildFile; fileRef = EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */; };
 		7B4E1A3D0EBE4811A681DE64 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7298A503BD3F427C807DB30C /* SupabaseService.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* TournamentScorecardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */; };
@@ -111,6 +115,10 @@
 		2E5EC0551DDE495DBC914610 /* SupabaseModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseModels.swift; sourceTree = "<group>"; };
 		30D556E2E1A2444F9E91213A /* SupabaseConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseConfig.swift; sourceTree = "<group>"; };
 		6DA27DBD514F44729ADCBC19 /* PastGamesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastGamesViewController.swift; sourceTree = "<group>"; };
+		A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeGamesViewController.swift; sourceTree = "<group>"; };
+		A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeGameSetupViewController.swift; sourceTree = "<group>"; };
+		A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentLeaderboardViewController.swift; sourceTree = "<group>"; };
+		A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailViewController.swift; sourceTree = "<group>"; };
 		7298A503BD3F427C807DB30C /* SupabaseService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseService.swift; sourceTree = "<group>"; };
 		79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastGameDetailViewController.swift; sourceTree = "<group>"; };
 		9402F93CD28E4C029E042DFC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
@@ -249,6 +257,10 @@
 				F6E007FA2F81913500763694 /* StatsContainerViewController.swift */,
 				6DA27DBD514F44729ADCBC19 /* PastGamesViewController.swift */,
 				79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */,
+				A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */,
+				A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */,
+				A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */,
+				A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */,
 				F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */,
 				F6E007F62F80182400763694 /* SkinsViewController.swift */,
 				F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */,
@@ -489,6 +501,10 @@
 				F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */,
 				44DDAAF7AA504F088F946EB1 /* PastGamesViewController.swift in Sources */,
 				B66C2E5033A842F5A84999BE /* PastGameDetailViewController.swift in Sources */,
+				A2B3C4D5E6F7081929304A5B /* TeeGamesViewController.swift in Sources */,
+				A3B4C5D6E7F8092030415A6C /* TeeGameSetupViewController.swift in Sources */,
+				A6B7C8D9EA0B1C2D3E4F5067 /* TournamentLeaderboardViewController.swift in Sources */,
+				A7B8C9D0EB1C2D3E4F506179 /* GroupDetailViewController.swift in Sources */,
 				F6E008152F8D26FC00763694 /* RemoteMatchStore.swift in Sources */,
 				F6E008052F884A9D00763694 /* RemoteRoundCodec.swift in Sources */,
 				F63960672F60D62500EC0C30 /* Game.swift in Sources */,

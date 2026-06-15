@@ -202,6 +202,73 @@ struct HoleResultRecord: Codable {
     }
 }
 
+// Tee Game tournament record (tournaments table)
+struct TournamentRecord: Codable {
+    let id: String
+    let code: String
+    let name: String
+    let gameType: String    // "wolf", "skins", or "stableford"
+    let scoring: String     // "gross" or "net"
+    let stake: Double?
+    let carryTies: Bool?
+    let createdBy: String
+    let createdAt: String?
+    let courseName: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, code, name, stake, scoring
+        case gameType  = "game_type"
+        case carryTies = "carry_ties"
+        case createdBy = "created_by"
+        case createdAt = "created_at"
+        case courseName = "course_name"
+    }
+}
+
+// Per-hole scores read from hole_scores for tournament leaderboard.
+// Columns written as strings by submitTournamentHoleScore; custom decoder handles both.
+struct TournamentHoleScoreRow: Codable {
+    let matchId: String
+    let playerName: String
+    let hole: Int
+    let grossScore: Int
+    let netScore: Int?
+    let holeMoney: Double?
+    let totalMoney: Double?
+
+    private enum CodingKeys: String, CodingKey {
+        case matchId    = "match_id"
+        case playerName = "player_name"
+        case hole
+        case grossScore = "gross_score"
+        case netScore   = "net_score"
+        case holeMoney  = "hole_money"
+        case totalMoney = "total_money"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c       = try decoder.container(keyedBy: CodingKeys.self)
+        matchId     = try c.decode(String.self, forKey: .matchId)
+        playerName  = try c.decode(String.self, forKey: .playerName)
+        hole        = Self.intOrStr(c, key: .hole)
+        grossScore  = Self.intOrStr(c, key: .grossScore)
+        netScore    = Self.intOrStrOpt(c, key: .netScore)
+        holeMoney   = try? c.decodeIfPresent(Double.self, forKey: .holeMoney)
+        totalMoney  = try? c.decodeIfPresent(Double.self, forKey: .totalMoney)
+    }
+
+    private static func intOrStr(_ c: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> Int {
+        if let v = try? c.decode(Int.self,    forKey: key) { return v }
+        if let s = try? c.decode(String.self, forKey: key), let i = Int(s) { return i }
+        return 0
+    }
+    private static func intOrStrOpt(_ c: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> Int? {
+        if let v = try? c.decode(Int.self,    forKey: key) { return v }
+        if let s = try? c.decode(String.self, forKey: key) { return Int(s) }
+        return nil
+    }
+}
+
 // Per-hole scores for Remote Nassau batch comparison.
 // Table: remote_nassau_hole_scores — upsert key: (match_id, side, hole)
 struct RemoteNassauHoleScore: Codable {

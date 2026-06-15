@@ -24,6 +24,7 @@ final class ViewController: UIViewController {
     // MARK: - State
     private var shouldPromptForName = false
     private weak var tournamentButton: UIButton?
+    private weak var teeGamesButton: UIButton?
     private weak var watchLiveButton: UIButton?
 
     // MARK: - Keys
@@ -68,6 +69,7 @@ final class ViewController: UIViewController {
 
         fixIconButton(editCourseButton)
         buildTournamentButton()
+        buildTeeGamesButton()
         buildWatchLiveButton()
         buildQuickStartButton()
 
@@ -81,8 +83,11 @@ final class ViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        guard let tb = tournamentButton else { return }
-        courseButton.frame.origin.y = tb.frame.maxY + 16
+        if let tgb = teeGamesButton {
+            courseButton.frame.origin.y = tgb.frame.maxY + 16
+        } else if let tb = tournamentButton {
+            courseButton.frame.origin.y = tb.frame.maxY + 16
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -783,6 +788,32 @@ final class ViewController: UIViewController {
             btn.topAnchor.constraint(equalTo: playGameButton.bottomAnchor, constant: 16),
             btn.widthAnchor.constraint(equalTo: playGameButton.widthAnchor),
         ])
+    }
+
+    // MARK: - Tee Games entry point
+
+    private func buildTeeGamesButton() {
+        guard let stablefordBtn = tournamentButton else { return }
+        let btn = UIButton(type: .system)
+        var cfg = styledButton(title: "Tee Games", style: .primary)
+        cfg.baseBackgroundColor = UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)
+        btn.configuration = cfg
+        btn.addTarget(self, action: #selector(teeGamesTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        teeGamesButton = btn
+        view.addSubview(btn)
+        NSLayoutConstraint.activate([
+            btn.centerXAnchor.constraint(equalTo: playGameButton.centerXAnchor),
+            btn.topAnchor.constraint(equalTo: stablefordBtn.bottomAnchor, constant: 10),
+            btn.widthAnchor.constraint(equalTo: playGameButton.widthAnchor),
+        ])
+    }
+
+    @objc private func teeGamesTapped() {
+        let vc = TeeGamesViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+        present(nav, animated: true)
     }
 
     @objc private func tournamentTapped() {

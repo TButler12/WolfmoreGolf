@@ -130,6 +130,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // Programmatic header labels replacing the fixed "Hole / Par" storyboard labels
     private weak var holeInfoLabel: UILabel?
     private weak var courseHeaderLabel: UILabel?
+    private weak var tournamentBannerView: UIView?
+    private weak var tournamentBannerLabel: UILabel?
 
     var hole = (0)
  
@@ -182,6 +184,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var liveTabBarInstalled = false
     private var liveTabScoreButton: UIButton?
     private var liveTabLiveButton: UIButton?
+    private weak var liveTabLeaderboardButton: UIButton?
+    private var liveTabBarHeightConstraint: NSLayoutConstraint?
     private weak var liveContentVC: WolfSpectatorViewController?
     private var liveContentContainer: UIView?
 
@@ -299,6 +303,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         navigationItem.backButtonTitle = "Players"
         holeStatsSwitch.isOn = !AppSettings.holeStatsPromptMuted
         holeStatsSwitch.addTarget(self, action: #selector(holeStatsSwitchChanged), for: .valueChanged)
+        holeStatsTapped.isHidden = true
 
         // S column replaced by inline stroke indicators on name labels
         playerStrokesFields.forEach { $0.isHidden = true }
@@ -355,6 +360,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
+        refreshTournamentBanner()
         if GameManager.shared.currentGame?.remoteMatchId != nil {
             installLiveNassauButtonIfNeeded()
             liveNassauButton?.isHidden = false
@@ -428,7 +434,147 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         holeInfoLabel = infoLabel
         courseHeaderLabel = courseLabel
 
+        buildTournamentBanner()
         refreshHoleInfoHeader()
+    }
+
+    private func buildTournamentBanner() {
+        let banner = UIView()
+        banner.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.15)
+        banner.layer.cornerRadius = 6
+        banner.translatesAutoresizingMaskIntoConstraints = false
+
+        let label = UILabel()
+        label.font = UIFont.systemFont(ofSize: 11, weight: .medium)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.adjustsFontSizeToFitWidth = true
+        label.minimumScaleFactor = 0.75
+        label.translatesAutoresizingMaskIntoConstraints = false
+        banner.addSubview(label)
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(tournamentBannerTapped))
+        banner.addGestureRecognizer(tap)
+        banner.isUserInteractionEnabled = true
+
+        view.addSubview(banner)
+        NSLayoutConstraint.activate([
+            banner.topAnchor.constraint(equalTo: courseHeaderLabel!.bottomAnchor, constant: 4),
+            banner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            banner.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 16),
+            banner.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -16),
+
+            label.topAnchor.constraint(equalTo: banner.topAnchor, constant: 3),
+            label.bottomAnchor.constraint(equalTo: banner.bottomAnchor, constant: -3),
+            label.leadingAnchor.constraint(equalTo: banner.leadingAnchor, constant: 8),
+            label.trailingAnchor.constraint(equalTo: banner.trailingAnchor, constant: -8),
+        ])
+
+        tournamentBannerView  = banner
+        tournamentBannerLabel = label
+        refreshTournamentBanner()
+    }
+
+    func refreshTournamentBanner() {
+        guard let g = GameManager.shared.currentGame, let code = g.tournamentCode else {
+            tournamentBannerView?.isHidden = true
+            return
+        }
+        let name    = g.tournamentName ?? "Tournament"
+        let type    = (g.tournamentGameType ?? "wolf").capitalized
+        let scoring = (g.tournamentScoringType ?? "gross").capitalized
+        tournamentBannerLabel?.text = "🏆 \(name)  ·  \(type)  ·  \(scoring)  ·  Code: \(code)"
+        tournamentBannerView?.isHidden = false
+    }
+
+    @objc private func tournamentBannerTapped() {
+        guard let g = GameManager.shared.currentGame, let code = g.tournamentCode else { return }
+        let name    = g.tournamentName ?? "Tournament"
+        let type    = (g.tournamentGameType ?? "wolf").capitalized
+        let scoring = (g.tournamentScoringType ?? "gross").capitalized
+
+        let vc = UIViewController()
+        vc.view.backgroundColor = .systemBackground
+
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 16
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        vc.view.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.topAnchor, constant: 32),
+            stack.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor, constant: -24),
+        ])
+
+        func row(_ title: String, _ value: String) -> UIView {
+            let t = UILabel(); t.text = title
+            t.font = UIFont.systemFont(ofSize: 13, weight: .regular); t.textColor = .secondaryLabel
+            let v = UILabel(); v.text = value
+            v.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+            let s = UIStackView(arrangedSubviews: [t, v])
+            s.axis = .vertical; s.spacing = 2; return s
+        }
+        stack.addArrangedSubview(row("Tournament", name))
+        stack.addArrangedSubview(row("Format", type))
+        stack.addArrangedSubview(row("Scoring", scoring))
+        stack.addArrangedSubview(row("Code", code))
+
+        let leaveBtn = UIButton(type: .system)
+        var cfg = UIButton.Configuration.filled()
+        cfg.baseBackgroundColor = .systemRed
+        cfg.baseForegroundColor = .white
+        cfg.cornerStyle = .large
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        cfg.title = "Leave Tournament"
+        leaveBtn.configuration = cfg
+        leaveBtn.translatesAutoresizingMaskIntoConstraints = false
+        leaveBtn.addAction(UIAction { [weak self, weak vc] _ in
+            vc?.dismiss(animated: true) {
+                let confirm = UIAlertController(
+                    title: "Leave Tournament?",
+                    message: "You will need your tournament code to rejoin. Your scores already submitted will be kept.",
+                    preferredStyle: .alert
+                )
+                confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                confirm.addAction(UIAlertAction(title: "Leave Tournament", style: .destructive) { [weak self] _ in
+                    let ud = UserDefaults.standard
+                    if let g = GameManager.shared.currentGame {
+                        ud.set(g.tournamentCode,        forKey: "lastTournamentCode")
+                        ud.set(g.tournamentMatchId,     forKey: "lastTournamentMatchId")
+                        ud.set(g.groupCode,             forKey: "lastTournamentGroupCode")
+                        ud.set(g.tournamentName,        forKey: "lastTournamentName")
+                        ud.set(g.tournamentGameType,    forKey: "lastTournamentGameType")
+                        ud.set(g.tournamentScoringType, forKey: "lastTournamentScoringType")
+                    }
+                    GameManager.shared.update { g in
+                        g.tournamentCode        = nil
+                        g.groupCode             = nil
+                        g.tournamentMatchId     = nil
+                        g.tournamentName        = nil
+                        g.tournamentGameType    = nil
+                        g.tournamentScoringType = nil
+                    }
+                    GameManager.shared.saveCurrent()
+                    self?.refreshTournamentBanner()
+                    self?.updateLiveTabBarVisibility()
+                })
+                self?.present(confirm, animated: true)
+            }
+        }, for: .touchUpInside)
+        vc.view.addSubview(leaveBtn)
+        NSLayoutConstraint.activate([
+            leaveBtn.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor, constant: 24),
+            leaveBtn.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor, constant: -24),
+            leaveBtn.bottomAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
+        ])
+
+        vc.modalPresentationStyle = .pageSheet
+        if let sheet = vc.sheetPresentationController {
+            sheet.detents = [.medium()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(vc, animated: true)
     }
 
     private func refreshHoleInfoHeader() {
@@ -501,7 +647,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func updateLiveNassauButtonPosition() {
         guard liveNassauButton != nil else { return }
-        let tabBarHeight: CGFloat = liveTabBar != nil ? 44 : 0
+        let tabBarHeight: CGFloat
+        if let bar = liveTabBar, !bar.isHidden {
+            tabBarHeight = liveTabBarHeightConstraint?.constant ?? 44
+        } else {
+            tabBarHeight = 0
+        }
         liveNassauBottomConstraint?.constant = -(16 + tabBarHeight)
         UIView.animate(withDuration: 0.2) { self.view.layoutIfNeeded() }
     }
@@ -540,28 +691,45 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         bar.layer.zPosition = 1000
         self.view.addSubview(bar)
 
+        let heightCon = bar.heightAnchor.constraint(equalToConstant: 44)
+        liveTabBarHeightConstraint = heightCon
         NSLayoutConstraint.activate([
             bar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             bar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             bar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            bar.heightAnchor.constraint(equalToConstant: 44),
+            heightCon,
         ])
 
         let scoreBtn = UIButton(type: .system)
         scoreBtn.setTitle("🎯 Score", for: .normal)
         scoreBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        scoreBtn.translatesAutoresizingMaskIntoConstraints = false
         scoreBtn.addTarget(self, action: #selector(liveTabScoreTapped), for: .touchUpInside)
-        bar.addSubview(scoreBtn)
 
         let liveBtn = UIButton(type: .system)
         liveBtn.setTitle("📺 Live Wolf", for: .normal)
         liveBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
-        liveBtn.translatesAutoresizingMaskIntoConstraints = false
         liveBtn.addTarget(self, action: #selector(liveTabLiveTapped), for: .touchUpInside)
-        bar.addSubview(liveBtn)
 
-        // Pulsing green dot next to Live button
+        let leaderboardBtn = UIButton(type: .system)
+        leaderboardBtn.setTitle("🏆 Leaderboard", for: .normal)
+        leaderboardBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        leaderboardBtn.addTarget(self, action: #selector(liveTabLeaderboardTapped), for: .touchUpInside)
+        leaderboardBtn.isHidden = true
+
+        // Stack distributes widths automatically: 50/50 when leaderboard hidden, 33/33/33 when shown
+        let btnStack = UIStackView(arrangedSubviews: [scoreBtn, liveBtn, leaderboardBtn])
+        btnStack.axis         = .horizontal
+        btnStack.distribution = .fillEqually
+        btnStack.translatesAutoresizingMaskIntoConstraints = false
+        bar.addSubview(btnStack)
+        NSLayoutConstraint.activate([
+            btnStack.leadingAnchor.constraint(equalTo: bar.leadingAnchor),
+            btnStack.trailingAnchor.constraint(equalTo: bar.trailingAnchor),
+            btnStack.topAnchor.constraint(equalTo: bar.topAnchor),
+            btnStack.bottomAnchor.constraint(equalTo: bar.bottomAnchor),
+        ])
+
+        // Pulsing green dot anchored near the trailing edge of the Live Wolf button
         let dot = UIView()
         dot.translatesAutoresizingMaskIntoConstraints = false
         dot.backgroundColor = UIColor(red: 0.2, green: 1.0, blue: 0.4, alpha: 1)
@@ -575,39 +743,50 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         dot.layer.add(pulse, forKey: "livePulse")
 
         NSLayoutConstraint.activate([
-            scoreBtn.leadingAnchor.constraint(equalTo: bar.leadingAnchor),
-            scoreBtn.topAnchor.constraint(equalTo: bar.topAnchor),
-            scoreBtn.bottomAnchor.constraint(equalTo: bar.bottomAnchor),
-            scoreBtn.widthAnchor.constraint(equalTo: bar.widthAnchor, multiplier: 0.5),
-
-            liveBtn.trailingAnchor.constraint(equalTo: bar.trailingAnchor),
-            liveBtn.topAnchor.constraint(equalTo: bar.topAnchor),
-            liveBtn.bottomAnchor.constraint(equalTo: bar.bottomAnchor),
-            liveBtn.widthAnchor.constraint(equalTo: bar.widthAnchor, multiplier: 0.5),
-
             dot.widthAnchor.constraint(equalToConstant: 8),
             dot.heightAnchor.constraint(equalToConstant: 8),
             dot.centerYAnchor.constraint(equalTo: liveBtn.centerYAnchor),
-            dot.trailingAnchor.constraint(equalTo: liveBtn.trailingAnchor, constant: -24),
+            dot.trailingAnchor.constraint(equalTo: liveBtn.trailingAnchor, constant: -8),
         ])
 
-        liveTabBar = bar
-        liveTabScoreButton = scoreBtn
-        liveTabLiveButton = liveBtn
+        liveTabBar            = bar
+        liveTabScoreButton    = scoreBtn
+        liveTabLiveButton     = liveBtn
+        liveTabLeaderboardButton = leaderboardBtn
         selectScoreTab()
         updateLiveTabBarVisibility()
         updateLiveNassauButtonPosition()
     }
 
     private func updateLiveTabBarVisibility() {
-        let isLive = GameManager.shared.currentGame?.liveSessionId != nil
-        liveTabBar?.isHidden = !isLive
+        let isLive        = GameManager.shared.currentGame?.liveSessionId  != nil
+        let hasTournament = GameManager.shared.currentGame?.tournamentCode != nil
+
+        // Show bar when either feature is active
+        liveTabBar?.isHidden = !(isLive || hasTournament)
         if !isLive { hideLiveContent() }
+
+        // Live Wolf tab: only when a live session is running
+        liveTabLiveButton?.isHidden = !isLive
+        // Leaderboard tab: only when a tournament code is set
+        liveTabLeaderboardButton?.isHidden = !hasTournament
+
+        // 50 pt for all three tabs, 44 pt for any two-tab combination
+        liveTabBarHeightConstraint?.constant = (isLive && hasTournament) ? 50 : 44
+        updateLiveNassauButtonPosition()
     }
 
     @objc private func liveTabScoreTapped() { hideLiveContent() }
 
     @objc private func liveTabLiveTapped() { showLiveContent() }
+
+    @objc private func liveTabLeaderboardTapped() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
+        let vc  = TournamentLeaderboardViewController(code: code)
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+        present(nav, animated: true)
+    }
 
     private func selectScoreTab() {
         liveTabScoreButton?.tintColor = .label
@@ -2512,6 +2691,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     let ownerName = g.playerNames[ownerSlot]
                     let hc       = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
                     let playerHc = g.hcPlayers[safe: ownerSlot] ?? 0
+                    print("🏆 tournament debug: tournamentCode=\(GameManager.shared.currentGame?.tournamentCode ?? "nil") groupCode=\(GameManager.shared.currentGame?.groupCode ?? "nil")")
                     Task {
                         for matchId in matchIds {
                             do {
@@ -2567,6 +2747,53 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                 print("ERROR remote nassau write FAILED: matchId=\(matchId) side=\(side) hole=\(hole + 1) error=\(error)")
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        // 5e) Tournament hole score write — fires whenever tournamentCode is set, independent of Live Wolf
+        print("🏆 5e check: tournamentCode=\(GameManager.shared.currentGame?.tournamentCode ?? "nil")")
+        if let g = GameManager.shared.currentGame, let tCode = g.tournamentCode {
+            let hc    = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
+            let gCode = g.groupCode ?? ""
+            Task {
+                for seat in 0..<min(MAX_PLAYERS, g.playerActivated.count) {
+                    guard g.playerActivated[seat],
+                          seat < g.scores.count,
+                          let gross = g.scores[seat][hole] else { continue }
+                    let name = g.playerNames[safe: seat] ?? ""
+                    guard !name.isEmpty else { continue }
+                    let playerHc  = g.hcPlayers[safe: seat] ?? 0
+                    let holeMoney  = seat < g.playerMoney.count ? (g.playerMoney[seat][safe: hole] ?? 0.0) : 0.0
+                    // Mirror refreshTotalMoneyLabels: sum holes from startHole to current, wrapping around correctly
+                    let startH = max(0, min(17, g.startHole ?? hole))
+                    let endH   = max(0, min(17, hole))
+                    let holesToSum: [Int] = startH <= endH
+                        ? Array(startH...endH)
+                        : Array(startH..<STANDARD_HOLES) + Array(0...endH)
+                    let totalMoney = seat < g.playerMoney.count
+                        ? holesToSum.reduce(0.0) { $0 + (g.playerMoney[seat][safe: $1] ?? 0.0) }
+                        : 0.0
+                    let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: hc)
+                    let netScore = gross - strokes
+                    do {
+                        print("🏆 5e tournament write seat=\(seat) name=\(name) hole=\(hole+1) gross=\(gross) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney) tCode=\(tCode)")
+                        try await SupabaseService.shared.submitTournamentHoleScore(
+                            playerSlot:     seat,
+                            playerName:     name,
+                            hole:           hole,
+                            grossScore:     gross,
+                            netScore:       netScore,
+                            holeMoney:      holeMoney,
+                            totalMoney:     totalMoney,
+                            holeHc:         hc,
+                            playerHc:       playerHc,
+                            tournamentCode: tCode,
+                            groupCode:      gCode
+                        )
+                    } catch {
+                        print("ERROR 5e tournament write failed seat=\(seat) name=\(name): \(error)")
                     }
                 }
             }
@@ -3236,9 +3463,22 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             row4.heightAnchor.constraint(equalToConstant: 40).isActive = true
             vStack.addArrangedSubview(row4)
 
-            // ── Row 5: Text (full width) ──────────────────────────────────────
-            textHubButton.heightAnchor.constraint(equalToConstant: 32).isActive = true
-            vStack.addArrangedSubview(textHubButton)
+            // ── Row 5: Hole Stats | Text ──────────────────────────────────────
+            var hsCfg = UIButton.Configuration.filled()
+            hsCfg.baseBackgroundColor = UIColor(red: 0.474, green: 0.340, blue: 0.115, alpha: 1.0)
+            hsCfg.baseForegroundColor = .white
+            hsCfg.cornerStyle = .medium
+            hsCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+                var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
+            }
+            hsCfg.title = "Hole Stats"
+            let holeStatsBtn = UIButton(configuration: hsCfg)
+            holeStatsBtn.addTarget(self, action: #selector(holeStatsTapped(_:)), for: .touchUpInside)
+
+            let row5 = UIStackView(arrangedSubviews: [holeStatsBtn, textHubButton])
+            row5.axis = .horizontal; row5.spacing = 6; row5.distribution = .fillEqually
+            row5.heightAnchor.constraint(equalToConstant: 32).isActive = true
+            vStack.addArrangedSubview(row5)
         }
 
         // Update frame every layout pass (handles rotation / safe-area changes)
