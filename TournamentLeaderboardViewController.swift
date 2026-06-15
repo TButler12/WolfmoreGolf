@@ -5,7 +5,7 @@ import UIKit
 final class TournamentLeaderboardViewController: UIViewController {
 
     // MARK: - Private models
-    private struct MoneyRow { let rank: Int; let name: String; let total: Double; let holesPlayed: Int }
+    private struct MoneyRow { let rank: Int; let name: String; let dayTotal: Double; let total: Double; let holesPlayed: Int; let offset: Double? }
     private struct ScoreRow { let rank: Int; let name: String; let total: Int;    let holesPlayed: Int }
     private struct GroupRow { let matchId: String; let playerNames: [String];     let holesPlayed: Int }
 
@@ -13,9 +13,10 @@ final class TournamentLeaderboardViewController: UIViewController {
     let tournamentCode: String
     private var record: TournamentRecord?
     private(set) var allRows: [TournamentHoleScoreRow] = []
-    private var moneyData: [MoneyRow] = []
-    private var scoreData: [ScoreRow] = []
-    private var groupData: [GroupRow] = []
+    private var moneyData:      [MoneyRow] = []
+    private var tournamentData: [MoneyRow] = []
+    private var scoreData:      [ScoreRow] = []
+    private var groupData:      [GroupRow] = []
     private var refreshTimer: Timer?
     private var isRefreshing = false
     private var availableDays: [Int] = []
@@ -34,10 +35,9 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let liveDot       = UIView()
     private let liveLabel     = UILabel()
     private let statsLabel    = UILabel()
-    private let segment       = UISegmentedControl(items: ["Money", "Score", "Groups", "Proxes"])
+    private let segment       = UISegmentedControl(items: ["Money", "Score", "Groups", "Tournament"])
     private let dayPicker     = UISegmentedControl()
     private let tableView     = UITableView(frame: .zero, style: .plain)
-    private let proxesLabel   = UILabel()
     private let spinner       = UIActivityIndicatorView(style: .medium)
 
     // MARK: - Init
@@ -89,12 +89,14 @@ final class TournamentLeaderboardViewController: UIViewController {
         do {
             async let a = SupabaseService.shared.fetchTournament(code: tournamentCode)
             async let b = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
-            let currentDay = selectedDay ?? availableDays.last ?? 1
-            async let c = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: currentDay)
-            let (rec, rows, offsets) = try await (a, b, c)
-            record        = rec
-            allRows       = rows
-            playerOffsets = offsets
+            let (rec, rows) = try await (a, b)
+            record  = rec
+            allRows = rows
+
+            let currentDay = selectedDay ?? Set(rows.compactMap { $0.day }).max() ?? 1
+            playerOffsets = try await SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: currentDay)
+
+            print("🗓 distinct days in allRows: \(Set(allRows.compactMap { $0.day }).sorted())")
             recompute()
             updateDayPicker()
             applyHeader()
@@ -124,17 +126,28 @@ final class TournamentLeaderboardViewController: UIViewController {
         let grouped = Dictionary(grouping: rows, by: { $0.playerName })
 
         // ── Money ──
-        var totals: [String: Double] = [:]
-        var pHoles: [String: Int]    = [:]
+        var dayTotals: [String: Double] = [:]
+        var pHoles:    [String: Int]    = [:]
         for (player, playerRows) in grouped {
             if let latest = playerRows.max(by: { $0.hole < $1.hole }) {
-                totals[player] = (latest.totalMoney ?? 0) + (playerOffsets[player] ?? 0)
+                dayTotals[player] = latest.totalMoney ?? 0
             }
             pHoles[player] = playerRows.count
         }
 
-        moneyData = totals.sorted { $0.value > $1.value }.enumerated().map { i, kv in
-            MoneyRow(rank: i+1, name: kv.key, total: kv.value, holesPlayed: pHoles[kv.key] ?? 0)
+        moneyData = dayTotals.sorted { $0.value > $1.value }.enumerated().map { i, kv in
+            MoneyRow(rank: i+1, name: kv.key, dayTotal: kv.value, total: kv.value,
+                     holesPlayed: pHoles[kv.key] ?? 0, offset: playerOffsets[kv.key])
+        }
+
+        tournamentData = moneyData.map { row in
+            let agg = row.dayTotal + (playerOffsets[row.name] ?? 0)
+            return MoneyRow(rank: 0, name: row.name, dayTotal: row.dayTotal, total: agg,
+                            holesPlayed: row.holesPlayed, offset: playerOffsets[row.name])
+        }.sorted { $0.total > $1.total }
+         .enumerated().map { i, r in
+            MoneyRow(rank: i+1, name: r.name, dayTotal: r.dayTotal, total: r.total,
+                     holesPlayed: r.holesPlayed, offset: r.offset)
         }
 
         // ── Score ──
@@ -164,18 +177,23 @@ final class TournamentLeaderboardViewController: UIViewController {
     }
 
     private func updateDayPicker() {
+        let previous = selectedDay
         dayPicker.removeAllSegments()
         for (i, day) in availableDays.enumerated() {
             dayPicker.insertSegment(withTitle: "Day \(day)", at: i, animated: false)
         }
-        dayPicker.selectedSegmentIndex = max(0, availableDays.count - 1)
+        if let previous, let idx = availableDays.firstIndex(of: previous) {
+            dayPicker.selectedSegmentIndex = idx
+        } else {
+            dayPicker.selectedSegmentIndex = max(0, availableDays.count - 1)
+            selectedDay = availableDays.last
+        }
         dayPicker.isHidden = availableDays.count <= 1
     }
 
     @objc private func dayPickerChanged() {
         selectedDay = availableDays[safe: dayPicker.selectedSegmentIndex]
-        recompute()
-        tableView.reloadData()
+        Task { await loadData() }
     }
 
     // MARK: - Header setup
@@ -224,10 +242,8 @@ final class TournamentLeaderboardViewController: UIViewController {
         sep.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(sep)
 
-        tableView.translatesAutoresizingMaskIntoConstraints   = false
-        proxesLabel.translatesAutoresizingMaskIntoConstraints = false
+        tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
-        view.addSubview(proxesLabel)
 
         NSLayoutConstraint.activate([
             headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
@@ -248,9 +264,6 @@ final class TournamentLeaderboardViewController: UIViewController {
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-
-            proxesLabel.centerXAnchor.constraint(equalTo: tableView.centerXAnchor),
-            proxesLabel.centerYAnchor.constraint(equalTo: tableView.centerYAnchor),
         ])
 
         startLivePulse()
@@ -304,18 +317,10 @@ final class TournamentLeaderboardViewController: UIViewController {
         tableView.rowHeight        = UITableView.automaticDimension
         tableView.estimatedRowHeight = 52
 
-        proxesLabel.text          = "Coming Soon"
-        proxesLabel.font          = UIFont.systemFont(ofSize: 20, weight: .medium)
-        proxesLabel.textColor     = .secondaryLabel
-        proxesLabel.textAlignment = .center
-        proxesLabel.isHidden      = true
     }
 
     @objc private func segmentChanged() {
-        let isProxes         = segment.selectedSegmentIndex == 3
-        tableView.isHidden   = isProxes
-        proxesLabel.isHidden = !isProxes
-        if !isProxes { tableView.reloadData() }
+        tableView.reloadData()
     }
 }
 
@@ -328,6 +333,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
         case 0: return moneyData.count
         case 1: return scoreData.count
         case 2: return groupData.count
+        case 3: return tournamentData.count
         default: return 0
         }
     }
@@ -342,9 +348,17 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
             let cell = tableView.dequeueReusableCell(withIdentifier: "money",
                                                      for: indexPath) as! LeaderboardMoneyCell
             let r = moneyData[i]
+            cell.configure(rank: r.rank, name: r.name, total: r.dayTotal,
+                           holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+            return cell
+
+        case 3:
+            let cell = tableView.dequeueReusableCell(withIdentifier: "money",
+                                                     for: indexPath) as! LeaderboardMoneyCell
+            let r = tournamentData[i]
             cell.configure(rank: r.rank, name: r.name, total: r.total,
                            holesPlayed: r.holesPlayed, isCurrentUser: r.name == me,
-                           offset: playerOffsets[r.name])
+                           dayTotal: r.dayTotal)
             return cell
 
         case 1:
@@ -373,14 +387,14 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if segment.selectedSegmentIndex == 0 {
-            guard GameManager.shared.currentGame?.tournamentIsOrganizer == true else {
+            guard UserDefaults.standard.bool(forKey: "isOrganizer_\(tournamentCode)") else {
                 tableView.deselectRow(at: indexPath, animated: true)
                 return
             }
             let row = moneyData[indexPath.row]
             let alert = UIAlertController(
                 title: "Carry-over for \(row.name)",
-                message: "Enter Day \((selectedDay ?? 1) - 1) ending balance",
+                message: "Enter carry-over from previous days",
                 preferredStyle: .alert
             )
             alert.addTextField { tf in
@@ -393,15 +407,18 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                       let text = alert.textFields?.first?.text,
                       let amount = Double(text) else { return }
                 Task {
-                    try await SupabaseService.shared.upsertPlayerOffset(
-                        code: self.tournamentCode,
-                        day: self.selectedDay ?? 1,
-                        playerName: row.name,
-                        amount: amount
-                    )
-                    self.playerOffsets[row.name] = amount
-                    self.recompute()
-                    await MainActor.run { self.tableView.reloadData() }
+                    do {
+                        try await SupabaseService.shared.upsertPlayerOffset(
+                            code: self.tournamentCode,
+                            day: self.selectedDay ?? 1,
+                            playerName: row.name,
+                            amount: amount
+                        )
+                        print("✅ upsertPlayerOffset succeeded")
+                        await self.loadData()
+                    } catch {
+                        print("❌ upsertPlayerOffset failed: \(error)")
+                    }
                 }
             })
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -425,15 +442,15 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
 
 private final class LeaderboardMoneyCell: UITableViewCell {
 
-    private let rankLabel  = UILabel()
-    private let nameLabel  = UILabel()
-    private let carryLabel = UILabel()
-    private let moneyLabel = UILabel()
-    private let holesLabel = UILabel()
+    private let rankLabel     = UILabel()
+    private let nameLabel     = UILabel()
+    private let moneyLabel    = UILabel()
+    private let dayTotalLabel = UILabel()
+    private let holesLabel    = UILabel()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
-        selectionStyle = .none
+        selectionStyle = .default
 
         rankLabel.font          = UIFont.systemFont(ofSize: 15, weight: .semibold)
         rankLabel.textAlignment = .center
@@ -443,21 +460,25 @@ private final class LeaderboardMoneyCell: UITableViewCell {
 
         nameLabel.font = UIFont.systemFont(ofSize: 16)
         nameLabel.adjustsFontSizeToFitWidth = true; nameLabel.minimumScaleFactor = 0.75
-
-        carryLabel.font      = UIFont.systemFont(ofSize: 11)
-        carryLabel.textColor = .secondaryLabel
-        carryLabel.isHidden  = true
-
-        let nameStack = UIStackView(arrangedSubviews: [nameLabel, carryLabel])
-        nameStack.axis    = .vertical
-        nameStack.spacing = 1
-        nameStack.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        nameStack.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        nameLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        nameLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
 
         moneyLabel.font          = UIFont.systemFont(ofSize: 15, weight: .semibold)
         moneyLabel.textAlignment = .right
         moneyLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
         moneyLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+
+        dayTotalLabel.font          = UIFont.systemFont(ofSize: 11)
+        dayTotalLabel.textColor     = .tertiaryLabel
+        dayTotalLabel.textAlignment = .right
+        dayTotalLabel.isHidden      = true
+
+        let valueStack = UIStackView(arrangedSubviews: [moneyLabel, dayTotalLabel])
+        valueStack.axis    = .vertical
+        valueStack.spacing = 1
+        valueStack.alignment = .trailing
+        valueStack.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        valueStack.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
 
         holesLabel.font          = UIFont.systemFont(ofSize: 12)
         holesLabel.textColor     = .tertiaryLabel
@@ -465,7 +486,7 @@ private final class LeaderboardMoneyCell: UITableViewCell {
         holesLabel.widthAnchor.constraint(equalToConstant: 30).isActive = true
         holesLabel.setContentHuggingPriority(.required, for: .horizontal)
 
-        let stack = UIStackView(arrangedSubviews: [rankLabel, nameStack, moneyLabel, holesLabel])
+        let stack = UIStackView(arrangedSubviews: [rankLabel, nameLabel, valueStack, holesLabel])
         stack.axis = .horizontal; stack.spacing = 8; stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stack)
@@ -478,23 +499,23 @@ private final class LeaderboardMoneyCell: UITableViewCell {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    func configure(rank: Int, name: String, total: Double, holesPlayed: Int, isCurrentUser: Bool, offset: Double? = nil) {
+    func configure(rank: Int, name: String, total: Double, holesPlayed: Int, isCurrentUser: Bool, dayTotal: Double? = nil) {
         let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
-        rankLabel.text      = "#\(rank)"
-        rankLabel.textColor = rank == 1 ? gold : .secondaryLabel
-        nameLabel.text      = name
-        let sign = total >= 0 ? "+" : "-"
+        rankLabel.text       = "#\(rank)"
+        rankLabel.textColor  = rank == 1 ? gold : .secondaryLabel
+        nameLabel.text       = name
+        let sign             = total >= 0 ? "+" : "-"
         moneyLabel.text      = "\(sign)$\(String(format: "%.2f", abs(total)))"
         moneyLabel.textColor = total > 0 ? .systemGreen : (total < 0 ? .systemRed : .secondaryLabel)
         holesLabel.text      = "\(holesPlayed)h"
         backgroundColor      = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
 
-        if let offset, offset != 0 {
-            let osign = offset >= 0 ? "+" : "-"
-            carryLabel.text  = "\(osign)$\(String(format: "%.2f", abs(offset))) carry"
-            carryLabel.isHidden = false
+        if let dayTotal, abs(dayTotal - total) > 0.001 {
+            let dsign            = dayTotal >= 0 ? "+" : "-"
+            dayTotalLabel.text   = "Today: \(dsign)$\(String(format: "%.2f", abs(dayTotal)))"
+            dayTotalLabel.isHidden = false
         } else {
-            carryLabel.isHidden = true
+            dayTotalLabel.isHidden = true
         }
     }
 }

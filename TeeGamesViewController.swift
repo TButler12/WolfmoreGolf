@@ -208,7 +208,7 @@ final class TeeGamesViewController: UIViewController {
             g.tournamentGameType     = record.gameType
             g.tournamentScoringType  = record.scoring
             g.tournamentDay          = record.currentDay ?? 1
-            g.tournamentIsOrganizer  = false
+            g.tournamentIsOrganizer  = UserDefaults.standard.bool(forKey: "isOrganizer_\(record.code)")
         }
         UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
         GameManager.shared.saveCurrent()
@@ -261,32 +261,51 @@ final class TeeGamesViewController: UIViewController {
     private func applyRejoin() {
         let ud = UserDefaults.standard
         guard let code = ud.string(forKey: "lastTournamentCode") else { return }
-        let matchId   = ud.string(forKey: "lastTournamentMatchId")
-        let groupCode = ud.string(forKey: "lastTournamentGroupCode")
-        let name      = ud.string(forKey: "lastTournamentName")
-        let gameType  = ud.string(forKey: "lastTournamentGameType")
-        let scoring   = ud.string(forKey: "lastTournamentScoringType")
+        let savedMatchId = ud.string(forKey: "lastTournamentMatchId")
+        let groupCode    = ud.string(forKey: "lastTournamentGroupCode")
+        let name         = ud.string(forKey: "lastTournamentName")
+        let gameType     = ud.string(forKey: "lastTournamentGameType")
+        let scoring      = ud.string(forKey: "lastTournamentScoringType")
+        let savedDay     = ud.integer(forKey: "lastTournamentDay_\(code)")
 
-        if GameManager.shared.currentGame == nil {
-            _ = GameManager.shared.loadLastOpened(notify: false)
+        let spinner = UIAlertController(title: nil, message: "Rejoining…", preferredStyle: .alert)
+        present(spinner, animated: true)
+
+        Task {
+            var liveDay = savedDay
+            if let record = try? await SupabaseService.shared.fetchTournament(code: code) {
+                liveDay = record.currentDay ?? savedDay
+                ud.set(liveDay, forKey: "lastTournamentDay_\(code)")
+            }
+
+            // New day → new matchId so Day 2 rows don't collide with Day 1
+            let matchId = (liveDay > savedDay && savedDay > 0)
+                ? UUID().uuidString
+                : (savedMatchId ?? UUID().uuidString)
+
+            if GameManager.shared.currentGame == nil {
+                _ = GameManager.shared.loadLastOpened(notify: false)
+            }
+            if GameManager.shared.currentGame == nil {
+                GameManager.shared.startNewGame()
+            }
+            GameManager.shared.update { g in
+                g.tournamentCode        = code
+                g.tournamentMatchId     = matchId
+                g.groupCode             = groupCode
+                g.tournamentName        = name
+                g.tournamentGameType    = gameType
+                g.tournamentScoringType = scoring
+                g.tournamentDay         = liveDay > 0 ? liveDay : 1
+                g.tournamentIsOrganizer = UserDefaults.standard.bool(forKey: "isOrganizer_\(code)")
+            }
+            GameManager.shared.saveCurrent()
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
+            print("🏆 rejoined tournament: code=\(code) matchId=\(matchId) day=\(liveDay)")
+            await MainActor.run {
+                spinner.dismiss(animated: false) { self.dismiss(animated: true) }
+            }
         }
-        if GameManager.shared.currentGame == nil {
-            GameManager.shared.startNewGame()
-        }
-        GameManager.shared.update { g in
-            g.tournamentCode        = code
-            g.tournamentMatchId     = matchId
-            g.groupCode             = groupCode
-            g.tournamentName        = name
-            g.tournamentGameType    = gameType
-            g.tournamentScoringType = scoring
-            g.tournamentDay         = UserDefaults.standard.integer(forKey: "lastTournamentDay_\(code)")
-            if g.tournamentDay == 0 { g.tournamentDay = 1 }
-        }
-        GameManager.shared.saveCurrent()
-        NotificationCenter.default.post(name: .reloadUI, object: nil)
-        print("🏆 rejoined tournament: code=\(code) matchId=\(matchId ?? "nil")")
-        dismiss(animated: true)
     }
 
     private func refreshManageButton() {

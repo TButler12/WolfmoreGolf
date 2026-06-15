@@ -215,7 +215,7 @@ final class SupabaseService {
         if let hc = holeHc   { payload["hole_hc"]   = .string(String(hc)) }
         if let hc = playerHc { payload["player_hc"] = .string(String(hc)) }
         try await client.from("hole_scores")
-            .upsert(payload, onConflict: "match_id,tournament_code,player_name,hole")
+            .upsert(payload, onConflict: "match_id,tournament_code,player_name,hole,day")
             .execute()
     }
 
@@ -641,7 +641,7 @@ final class SupabaseService {
     func fetchTournamentHoleScores(code: String) async throws -> [TournamentHoleScoreRow] {
         let response: PostgrestResponse<[TournamentHoleScoreRow]> = try await client
             .from("hole_scores")
-            .select("match_id, player_name, hole, gross_score, net_score, hole_money, total_money")
+            .select("match_id, player_name, hole, gross_score, net_score, hole_money, total_money, day")
             .eq("tournament_code", value: code.uppercased())
             .execute()
         return response.value
@@ -659,14 +659,21 @@ final class SupabaseService {
     }
 
     func upsertPlayerOffset(code: String, day: Int, playerName: String, amount: Double) async throws {
+        print("🟡 upsertPlayerOffset called: code=\(code) day=\(day) player=\(playerName) amount=\(amount)")
+        struct PlayerOffsetInsert: Encodable {
+            let tournament_code: String
+            let day: Int
+            let player_name: String
+            let offset_amount: Double
+        }
         try await client
             .from("player_offsets")
-            .upsert([
-                "tournament_code": AnyJSON.string(code),
-                "day":             AnyJSON.integer(day),
-                "player_name":     AnyJSON.string(playerName),
-                "offset_amount":   AnyJSON.double(amount)
-            ])
+            .upsert(PlayerOffsetInsert(
+                tournament_code: code,
+                day: day,
+                player_name: playerName,
+                offset_amount: amount
+            ))
             .execute()
     }
 

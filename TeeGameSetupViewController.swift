@@ -261,6 +261,7 @@ final class TeeGameSetupViewController: UIViewController {
                 )
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
+                        UserDefaults.standard.set(true, forKey: "isOrganizer_\(record.code)")
                         GameManager.shared.update { g in
                             g.tournamentCode        = record.code
                             g.groupCode             = record.id

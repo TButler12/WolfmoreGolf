@@ -2789,6 +2789,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
                         do {
                             print("🏆 5e tournament write seat=\(seat) name=\(name) hole=\(backfillHole+1) gross=\(gross) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney)")
+                            print("🗓 writing hole \(backfillHole) for \(name) as day \(g.tournamentDay)")
                             try await SupabaseService.shared.submitTournamentHoleScore(
                                 playerSlot:     seat,
                                 playerName:     name,

@@ -259,7 +259,7 @@ struct TournamentHoleScoreRow: Codable {
         netScore    = Self.intOrStrOpt(c, key: .netScore)
         holeMoney   = try? c.decodeIfPresent(Double.self, forKey: .holeMoney)
         totalMoney  = try? c.decodeIfPresent(Double.self, forKey: .totalMoney)
-        day         = Self.intOrStrOpt(c, key: .day)
+        day         = Self.intOrStrOpt(c, key: .day) ?? 1
     }
 
     private static func intOrStr(_ c: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> Int {
