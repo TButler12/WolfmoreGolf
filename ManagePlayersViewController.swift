@@ -39,6 +39,7 @@ final class ManagePlayersViewController: UIViewController,
         }
 
         buildQuickStartFooter()
+        applyAdaptiveConstraints()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -599,9 +600,40 @@ final class ManagePlayersViewController: UIViewController,
             btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
         ]
         if let closeBtn {
-            constraints.append(btn.bottomAnchor.constraint(lessThanOrEqualTo: closeBtn.topAnchor, constant: -12))
+            constraints.append(btn.bottomAnchor.constraint(equalTo: closeBtn.topAnchor, constant: -12))
         }
         NSLayoutConstraint.activate(constraints)
+    }
+
+    // Replaces storyboard fixed frames with safe-area-relative constraints so the
+    // layout fills the full width on iPad.
+    private func applyAdaptiveConstraints() {
+        guard let startBtn = startRoundButton,
+              let homeBtn  = button(forAction: #selector(closeTapped(_:))) else { return }
+
+        startBtn.translatesAutoresizingMaskIntoConstraints = false
+        homeBtn.translatesAutoresizingMaskIntoConstraints  = false
+
+        let guide = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            // TableView fills full width; height driven by button chain below
+            tableView.topAnchor.constraint(equalTo: guide.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: startBtn.topAnchor, constant: -8),
+
+            // Start Round button spans usable width
+            startBtn.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
+            startBtn.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
+            startBtn.heightAnchor.constraint(equalToConstant: 50),
+
+            // Home button pinned to safe-area bottom, centered
+            homeBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            homeBtn.leadingAnchor.constraint(greaterThanOrEqualTo: guide.leadingAnchor, constant: 20),
+            homeBtn.trailingAnchor.constraint(lessThanOrEqualTo: guide.trailingAnchor, constant: -20),
+            homeBtn.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -16),
+            homeBtn.heightAnchor.constraint(equalToConstant: 44),
+        ])
     }
 
     @objc private func quickStartTapped() {
