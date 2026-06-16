@@ -66,6 +66,12 @@ final class TournamentLeaderboardViewController: UIViewController {
         scheduleTimer()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        Task { await loadData() }
+        if refreshTimer == nil { scheduleTimer() }
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         refreshTimer?.invalidate()

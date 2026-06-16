@@ -2811,7 +2811,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 }
 
                 // 5e-skins) Skins tournament backfill — parallel write for groups running Skins
-                let skinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
+                var skinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
+                SkinsEngine.recalculate(state: &skinsState, gameData: g)
                 let activeIndexes = SkinsEngine.activePlayerIndexes(from: g, state: skinsState)
                 guard activeIndexes.count >= 2 else { return }
 
