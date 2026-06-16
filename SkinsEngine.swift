@@ -19,8 +19,6 @@ enum SkinsEngine {
         state: inout SkinsState,
         gameData: GameData
     ) {
-        state.settings.scoringMode = .net
-
         normalizeState(&state, gameData: gameData)
 
         let activeIndexes = activePlayerIndexes(from: gameData, state: state)
@@ -208,6 +206,8 @@ enum SkinsEngine {
             return nil
         }
 
+        guard state.settings.scoringMode != .gross else { return gross }
+
         let pops = popsForPlayer(
             playerIndex,
             hole: hole,
@@ -241,19 +241,16 @@ enum SkinsEngine {
               hole < gameData.courseHCToPass.count else { return 0 }
 
         let activeIndexes = activePlayerIndexes(from: gameData, state: state)
-
         let activeCaps = activeIndexes.compactMap { idx -> Int? in
             guard idx < gameData.hcPlayers.count else { return nil }
             return gameData.hcPlayers[idx]
         }
-
         guard let lowCap = activeCaps.min() else { return 0 }
 
         let playerCap = gameData.hcPlayers[playerIndex]
-        let delta = max(0, playerCap - lowCap)
-
-        let siRaw = gameData.courseHCToPass[hole]
-        let si = max(1, min(STANDARD_HOLES, siRaw == 0 ? STANDARD_HOLES : siRaw))
+        let delta     = max(0, playerCap - lowCap)
+        let siRaw     = gameData.courseHCToPass[hole]
+        let si        = max(1, min(STANDARD_HOLES, siRaw == 0 ? STANDARD_HOLES : siRaw))
 
         return pops(for: delta, strokeIndex: si)
     }

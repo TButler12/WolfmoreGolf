@@ -5,18 +5,20 @@ import UIKit
 final class TournamentLeaderboardViewController: UIViewController {
 
     // MARK: - Private models
-    private struct MoneyRow { let rank: Int; let name: String; let dayTotal: Double; let total: Double; let holesPlayed: Int; let offset: Double? }
-    private struct ScoreRow { let rank: Int; let name: String; let total: Int;    let holesPlayed: Int }
-    private struct GroupRow { let matchId: String; let playerNames: [String];     let holesPlayed: Int }
+    private struct MoneyRow  { let rank: Int; let name: String; let dayTotal: Double; let total: Double; let holesPlayed: Int; let offset: Double? }
+    private struct ScoreRow  { let rank: Int; let name: String; let total: Int;    let holesPlayed: Int }
+    private struct GroupRow  { let matchId: String; let playerNames: [String];     let holesPlayed: Int }
+    private struct SkinsRow  { let rank: Int; let name: String; let skinsWon: Int; let holesPlayed: Int }
 
     // MARK: - State
     let tournamentCode: String
     private var record: TournamentRecord?
     private(set) var allRows: [TournamentHoleScoreRow] = []
-    private var moneyData:      [MoneyRow] = []
-    private var tournamentData: [MoneyRow] = []
-    private var scoreData:      [ScoreRow] = []
-    private var groupData:      [GroupRow] = []
+    private var moneyData:      [MoneyRow]  = []
+    private var tournamentData: [MoneyRow]  = []
+    private var scoreData:      [ScoreRow]  = []
+    private var groupData:      [GroupRow]  = []
+    private var skinsData:      [SkinsRow]  = []
     private var refreshTimer: Timer?
     private var isRefreshing = false
     private var availableDays: [Int] = []
@@ -148,6 +150,17 @@ final class TournamentLeaderboardViewController: UIViewController {
         moneyData = dayTotals.sorted { $0.value > $1.value }.enumerated().map { i, kv in
             MoneyRow(rank: i+1, name: kv.key, dayTotal: kv.value, total: kv.value,
                      holesPlayed: pHoles[kv.key] ?? 0, offset: playerOffsets[kv.key])
+        }
+
+        // ── Skins ──
+        var skinTotals: [String: Int] = [:]
+        for (player, playerRows) in grouped {
+            if let latest = playerRows.max(by: { $0.hole < $1.hole }) {
+                skinTotals[player] = latest.skinsWon ?? 0
+            }
+        }
+        skinsData = skinTotals.sorted { $0.value > $1.value }.enumerated().map { i, kv in
+            SkinsRow(rank: i+1, name: kv.key, skinsWon: kv.value, holesPlayed: pHoles[kv.key] ?? 0)
         }
 
         tournamentData = moneyData.map { row in
@@ -349,7 +362,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch segment.selectedSegmentIndex {
-        case 0: return moneyData.count
+        case 0: return selectedGameType == "skins" ? skinsData.count : moneyData.count
         case 1: return scoreData.count
         case 2: return groupData.count
         case 3: return tournamentData.count
@@ -366,9 +379,15 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
         case 0:
             let cell = tableView.dequeueReusableCell(withIdentifier: "money",
                                                      for: indexPath) as! LeaderboardMoneyCell
-            let r = moneyData[i]
-            cell.configure(rank: r.rank, name: r.name, total: r.dayTotal,
-                           holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+            if selectedGameType == "skins" {
+                let r = skinsData[i]
+                cell.configureSkins(rank: r.rank, name: r.name, skinsWon: r.skinsWon,
+                                    holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+            } else {
+                let r = moneyData[i]
+                cell.configure(rank: r.rank, name: r.name, total: r.dayTotal,
+                               holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+            }
             return cell
 
         case 3:
@@ -406,10 +425,44 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         if segment.selectedSegmentIndex == 0 {
-            guard UserDefaults.standard.bool(forKey: "isOrganizer_\(tournamentCode)") else {
-                tableView.deselectRow(at: indexPath, animated: true)
+            tableView.deselectRow(at: indexPath, animated: true)
+
+            if selectedGameType == "skins" {
+                let row = skinsData[indexPath.row]
+                let playerRows = allRows
+                    .filter { $0.playerName == row.name && ($0.gameType ?? "wolf") == "skins" }
+                    .sorted { $0.hole < $1.hole }
+                var prev = 0
+                var wonHoles: [(hole: Int, count: Int)] = []
+                for r in playerRows {
+                    let current = r.skinsWon ?? 0
+                    if current > prev { wonHoles.append((r.hole, current - prev)) }
+                    prev = current
+                }
+                let message: String
+                if wonHoles.isEmpty {
+                    message = "No skins won yet"
+                } else {
+                    let totalSkins = wonHoles.reduce(0) { $0 + $1.count }
+                    let lines = wonHoles.map { hole, count -> String in
+                        let carryovers = count - 1
+                        let skinWord = count == 1 ? "skin" : "skins"
+                        if carryovers > 0 {
+                            let cWord = carryovers == 1 ? "carryover" : "carryovers"
+                            return "Hole \(hole): \(count) \(skinWord) (included \(carryovers) \(cWord))"
+                        }
+                        return "Hole \(hole): \(count) \(skinWord)"
+                    }
+                    let totalWord = totalSkins == 1 ? "skin" : "skins"
+                    message = "Won skins on:\n\(lines.joined(separator: "\n"))\n\n\(totalSkins) \(totalWord) total"
+                }
+                let alert = UIAlertController(title: row.name, message: message, preferredStyle: .alert)
+                alert.addAction(UIAlertAction(title: "OK", style: .default))
+                present(alert, animated: true)
                 return
             }
+
+            guard UserDefaults.standard.bool(forKey: "isOrganizer_\(tournamentCode)") else { return }
             let row = moneyData[indexPath.row]
             let alert = UIAlertController(
                 title: "Carry-over for \(row.name)",
@@ -442,7 +495,6 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
             })
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             present(alert, animated: true)
-            tableView.deselectRow(at: indexPath, animated: true)
             return
         }
 
@@ -517,6 +569,18 @@ private final class LeaderboardMoneyCell: UITableViewCell {
         ])
     }
     required init?(coder: NSCoder) { fatalError() }
+
+    func configureSkins(rank: Int, name: String, skinsWon: Int, holesPlayed: Int, isCurrentUser: Bool) {
+        let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
+        rankLabel.text       = "#\(rank)"
+        rankLabel.textColor  = rank == 1 ? gold : .secondaryLabel
+        nameLabel.text       = name
+        moneyLabel.text      = "\(skinsWon) skin\(skinsWon == 1 ? "" : "s")"
+        moneyLabel.textColor = skinsWon > 0 ? .systemGreen : .secondaryLabel
+        holesLabel.text      = "\(holesPlayed)h"
+        dayTotalLabel.isHidden = true
+        backgroundColor      = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
+    }
 
     func configure(rank: Int, name: String, total: Double, holesPlayed: Int, isCurrentUser: Bool, dayTotal: Double? = nil) {
         let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)

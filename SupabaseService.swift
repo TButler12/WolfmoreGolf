@@ -191,7 +191,8 @@ final class SupabaseService {
         tournamentCode: String,
         groupCode: String,
         day: Int = 1,
-        game_type: String = "wolf"
+        game_type: String = "wolf",
+        skins_won: Int = 0
     ) async throws {
         let g = GameManager.shared.currentGame
         guard let matchId = g?.tournamentMatchId else {
@@ -213,6 +214,7 @@ final class SupabaseService {
             "group_code":      .string(groupCode),
             "day":             .string(String(day)),
             "game_type":       .string(game_type),
+            "skins_won":       .string(String(skins_won)),
         ]
         if let hc = holeHc   { payload["hole_hc"]   = .string(String(hc)) }
         if let hc = playerHc { payload["player_hc"] = .string(String(hc)) }
@@ -643,7 +645,7 @@ final class SupabaseService {
     func fetchTournamentHoleScores(code: String) async throws -> [TournamentHoleScoreRow] {
         let response: PostgrestResponse<[TournamentHoleScoreRow]> = try await client
             .from("hole_scores")
-            .select("match_id, player_name, hole, gross_score, net_score, hole_money, total_money, day, game_type")
+            .select("match_id, player_name, hole, gross_score, net_score, hole_money, total_money, day, game_type, skins_won")
             .eq("tournament_code", value: code.uppercased())
             .execute()
         return response.value

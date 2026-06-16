@@ -1201,8 +1201,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                    !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             var strokePops = 0
             if isActive {
-                let playerHC = seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0
-                strokePops = GameManager.shared.absoluteStrokesGiven(playerHC: playerHC, strokeIndex: si)
+                let baseHC    = activeSeats.compactMap { $0 < g.hcPlayers.count ? g.hcPlayers[$0] : nil }.min() ?? 0
+                let playerHC  = seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0
+                let delta     = max(0, playerHC - baseHC)
+                strokePops    = GameManager.shared.absoluteStrokesGiven(playerHC: delta, strokeIndex: si)
             }
 
             label.lineBreakMode = .byTruncatingTail
@@ -1585,8 +1587,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 as? HoleStatsViewController else { return }
 
         vc.holeIndex = holeIndex
-        vc.modalPresentationStyle = .fullScreen
-        present(vc, animated: true)
+        navigationController?.pushViewController(vc, animated: true)
 
     }
 
@@ -2811,12 +2812,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 }
 
                 // 5e-skins) Skins tournament backfill — parallel write for groups running Skins
-                var skinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
-                SkinsEngine.recalculate(state: &skinsState, gameData: g)
-                let activeIndexes = SkinsEngine.activePlayerIndexes(from: g, state: skinsState)
+                var tourneySkinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
+                tourneySkinsState.settings.carryoversEnabled = false
+                tourneySkinsState.settings.scoringMode = g.tournamentScoringType == "gross" ? .gross : .net
+                SkinsEngine.recalculate(state: &tourneySkinsState, gameData: g)
+                let activeIndexes = SkinsEngine.activePlayerIndexes(from: g, state: tourneySkinsState)
                 guard activeIndexes.count >= 2 else { return }
 
-                let skinValue   = skinsState.settings.skinValue
+                let skinValue   = tourneySkinsState.settings.skinValue
                 let activeCount = activeIndexes.count
 
                 for backfillHole in backfillRange {
@@ -2824,16 +2827,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
                     var cumulativeMoney: [Int: Double] = [:]
                     var holeMoneyBySeat: [Int: Double] = [:]
+                    var cumulativeSkinsWon: [Int: Int] = [:]
 
                     for h in 0...backfillHole {
-                        guard let result = skinsState.resultsByHole[safe: h],
+                        guard let result = tourneySkinsState.resultsByHole[safe: h],
                               !result.winningPlayerIndexes.isEmpty else { continue }
-                        let skinsWon = Double(result.awardedSkinCount)
-                        let earned   = skinsWon * Double(activeCount - 1) * skinValue
-                        let paid     = skinsWon * skinValue
+                        let skinsCount = Double(result.awardedSkinCount)
+                        let earned     = skinsCount * Double(activeCount - 1) * skinValue
+                        let paid       = skinsCount * skinValue
                         for idx in activeIndexes {
                             if result.winningPlayerIndexes.contains(idx) {
                                 cumulativeMoney[idx, default: 0] += earned
+                                cumulativeSkinsWon[idx, default: 0] += result.awardedSkinCount
                                 if h == backfillHole { holeMoneyBySeat[idx] = earned }
                             } else {
                                 cumulativeMoney[idx, default: 0] -= paid
@@ -2849,10 +2854,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         let gross   = (seat < g.scores.count && backfillHole < g.scores[seat].count)
                                           ? (g.scores[seat][backfillHole] ?? 0) : 0
                         let holeHc  = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
-                        let pops    = SkinsEngine.popsForPlayer(seat, hole: backfillHole, gameData: g, state: skinsState)
+                        let pops    = SkinsEngine.popsForPlayer(seat, hole: backfillHole, gameData: g, state: tourneySkinsState)
                         let net     = gross - pops
                         let holeMoney  = holeMoneyBySeat[seat] ?? 0
                         let totalMoney = cumulativeMoney[seat] ?? 0
+                        let skinsWon   = cumulativeSkinsWon[seat] ?? 0
 
                         do {
                             try await SupabaseService.shared.submitTournamentHoleScore(
@@ -2867,7 +2873,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                 tournamentCode: tCode,
                                 groupCode:      gCode,
                                 day:            g.tournamentDay,
-                                game_type:      "skins"
+                                game_type:      "skins",
+                                skins_won:      skinsWon
                             )
                         } catch {
                             print("ERROR 5e-skins write failed seat=\(seat) name=\(name) hole=\(backfillHole+1): \(error)")
