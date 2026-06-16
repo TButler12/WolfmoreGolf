@@ -2801,10 +2801,75 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                 playerHc:       playerHc,
                                 tournamentCode: tCode,
                                 groupCode:      gCode,
-                                day:            g.tournamentDay
+                                day:            g.tournamentDay,
+                                game_type:      "wolf"
                             )
                         } catch {
                             print("ERROR 5e tournament write failed seat=\(seat) name=\(name) hole=\(backfillHole+1): \(error)")
+                        }
+                    }
+                }
+
+                // 5e-skins) Skins tournament backfill — parallel write for groups running Skins
+                let skinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
+                let activeIndexes = SkinsEngine.activePlayerIndexes(from: g, state: skinsState)
+                guard activeIndexes.count >= 2 else { return }
+
+                let skinValue   = skinsState.settings.skinValue
+                let activeCount = activeIndexes.count
+
+                for backfillHole in backfillRange {
+                    guard g.holeCommitted[safe: backfillHole] == true else { continue }
+
+                    var cumulativeMoney: [Int: Double] = [:]
+                    var holeMoneyBySeat: [Int: Double] = [:]
+
+                    for h in 0...backfillHole {
+                        guard let result = skinsState.resultsByHole[safe: h],
+                              !result.winningPlayerIndexes.isEmpty else { continue }
+                        let skinsWon = Double(result.awardedSkinCount)
+                        let earned   = skinsWon * Double(activeCount - 1) * skinValue
+                        let paid     = skinsWon * skinValue
+                        for idx in activeIndexes {
+                            if result.winningPlayerIndexes.contains(idx) {
+                                cumulativeMoney[idx, default: 0] += earned
+                                if h == backfillHole { holeMoneyBySeat[idx] = earned }
+                            } else {
+                                cumulativeMoney[idx, default: 0] -= paid
+                                if h == backfillHole { holeMoneyBySeat[idx] = -paid }
+                            }
+                        }
+                    }
+
+                    for seat in activeIndexes {
+                        guard let tCode = g.tournamentCode, !tCode.isEmpty else { continue }
+                        let name = g.playerNames[safe: seat] ?? ""
+                        guard !name.isEmpty else { continue }
+                        let gross   = (seat < g.scores.count && backfillHole < g.scores[seat].count)
+                                          ? (g.scores[seat][backfillHole] ?? 0) : 0
+                        let holeHc  = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
+                        let pops    = SkinsEngine.popsForPlayer(seat, hole: backfillHole, gameData: g, state: skinsState)
+                        let net     = gross - pops
+                        let holeMoney  = holeMoneyBySeat[seat] ?? 0
+                        let totalMoney = cumulativeMoney[seat] ?? 0
+
+                        do {
+                            try await SupabaseService.shared.submitTournamentHoleScore(
+                                playerSlot:     seat,
+                                playerName:     name,
+                                hole:           backfillHole,
+                                grossScore:     gross,
+                                netScore:       net,
+                                holeMoney:      holeMoney,
+                                totalMoney:     totalMoney,
+                                holeHc:         holeHc,
+                                tournamentCode: tCode,
+                                groupCode:      gCode,
+                                day:            g.tournamentDay,
+                                game_type:      "skins"
+                            )
+                        } catch {
+                            print("ERROR 5e-skins write failed seat=\(seat) name=\(name) hole=\(backfillHole+1): \(error)")
                         }
                     }
                 }

@@ -190,7 +190,8 @@ final class SupabaseService {
         playerHc: Int? = nil,
         tournamentCode: String,
         groupCode: String,
-        day: Int = 1
+        day: Int = 1,
+        game_type: String = "wolf"
     ) async throws {
         let g = GameManager.shared.currentGame
         guard let matchId = g?.tournamentMatchId else {
@@ -198,7 +199,7 @@ final class SupabaseService {
             return
         }
         let storedHole = hole + 1   // caller passes 0-based index; store as 1-based
-        print("🏆 submitTournamentHoleScore matchId=\(matchId) player=\(playerName) hole=\(storedHole) gross=\(grossScore) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney)")
+        print("🏆 submitTournamentHoleScore matchId=\(matchId) player=\(playerName) hole=\(storedHole) gross=\(grossScore) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney) game_type=\(game_type)")
         var payload: [String: AnyJSON] = [
             "match_id":        .string(matchId),
             "player_slot":     .string(String(playerSlot)),
@@ -211,11 +212,12 @@ final class SupabaseService {
             "tournament_code": .string(tournamentCode),
             "group_code":      .string(groupCode),
             "day":             .string(String(day)),
+            "game_type":       .string(game_type),
         ]
         if let hc = holeHc   { payload["hole_hc"]   = .string(String(hc)) }
         if let hc = playerHc { payload["player_hc"] = .string(String(hc)) }
         try await client.from("hole_scores")
-            .upsert(payload, onConflict: "match_id,tournament_code,player_name,hole,day")
+            .upsert(payload, onConflict: "match_id,tournament_code,player_name,hole,day,game_type")
             .execute()
     }
 
@@ -641,7 +643,7 @@ final class SupabaseService {
     func fetchTournamentHoleScores(code: String) async throws -> [TournamentHoleScoreRow] {
         let response: PostgrestResponse<[TournamentHoleScoreRow]> = try await client
             .from("hole_scores")
-            .select("match_id, player_name, hole, gross_score, net_score, hole_money, total_money, day")
+            .select("match_id, player_name, hole, gross_score, net_score, hole_money, total_money, day, game_type")
             .eq("tournament_code", value: code.uppercased())
             .execute()
         return response.value

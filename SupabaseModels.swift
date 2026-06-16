@@ -238,6 +238,7 @@ struct TournamentHoleScoreRow: Codable {
     let holeMoney: Double?
     let totalMoney: Double?
     let day: Int?
+    let gameType: String?
 
     private enum CodingKeys: String, CodingKey {
         case matchId    = "match_id"
@@ -248,6 +249,7 @@ struct TournamentHoleScoreRow: Codable {
         case holeMoney  = "hole_money"
         case totalMoney = "total_money"
         case day
+        case gameType   = "game_type"
     }
 
     init(from decoder: Decoder) throws {
@@ -260,6 +262,7 @@ struct TournamentHoleScoreRow: Codable {
         holeMoney   = try? c.decodeIfPresent(Double.self, forKey: .holeMoney)
         totalMoney  = try? c.decodeIfPresent(Double.self, forKey: .totalMoney)
         day         = Self.intOrStrOpt(c, key: .day) ?? 1
+        gameType    = try? c.decodeIfPresent(String.self, forKey: .gameType)
     }
 
     private static func intOrStr(_ c: KeyedDecodingContainer<CodingKeys>, key: CodingKeys) -> Int {

@@ -22,6 +22,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private var availableDays: [Int] = []
     private var selectedDay: Int? = nil
     private var playerOffsets: [String: Double] = [:]
+    private var selectedGameType: String = "wolf"
 
     private var currentUserName: String? {
         let n = ProfileStore.name?.trimmingCharacters(in: .whitespaces) ?? ""
@@ -37,6 +38,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let statsLabel    = UILabel()
     private let segment       = UISegmentedControl(items: ["Money", "Score", "Groups", "Tournament"])
     private let dayPicker     = UISegmentedControl()
+    private let gameTypePicker = UISegmentedControl(items: ["Wolf", "Skins"])
     private let tableView     = UITableView(frame: .zero, style: .plain)
     private let spinner       = UIActivityIndicatorView(style: .medium)
 
@@ -108,20 +110,22 @@ final class TournamentLeaderboardViewController: UIViewController {
 
     // MARK: - Aggregation
     private func recompute() {
-        // ── Deduplicate: one row per (playerName, day, hole) ──
+        // ── Deduplicate: one row per (playerName, day, hole, game_type) ──
         let deduped: [TournamentHoleScoreRow] = {
             var seen = Set<String>()
             return allRows.filter {
-                seen.insert("\($0.playerName)|\($0.day ?? 1)|\($0.hole)").inserted
+                seen.insert("\($0.playerName)|\($0.day ?? 1)|\($0.hole)|\($0.gameType ?? "wolf")").inserted
             }
         }()
 
         // ── Available days (for day picker) ──
         availableDays = Array(Set(deduped.compactMap { $0.day })).sorted()
 
-        // ── Filter to selected day ──
+        // ── Filter to selected day and game type ──
         let currentDay = selectedDay ?? availableDays.last ?? 1
-        let rows = deduped.filter { ($0.day ?? 1) == currentDay }
+        let rows = deduped.filter {
+            ($0.day ?? 1) == currentDay && ($0.gameType ?? "wolf") == selectedGameType
+        }
 
         let grouped = Dictionary(grouping: rows, by: { $0.playerName })
 
@@ -196,6 +200,12 @@ final class TournamentLeaderboardViewController: UIViewController {
         Task { await loadData() }
     }
 
+    @objc private func gameTypePickerChanged() {
+        selectedGameType = gameTypePicker.selectedSegmentIndex == 1 ? "skins" : "wolf"
+        recompute()
+        tableView.reloadData()
+    }
+
     // MARK: - Header setup
     private func setupHeader() {
         headerView.translatesAutoresizingMaskIntoConstraints = false
@@ -232,7 +242,10 @@ final class TournamentLeaderboardViewController: UIViewController {
         dayPicker.addTarget(self, action: #selector(dayPickerChanged), for: .valueChanged)
         dayPicker.isHidden = true
 
-        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, dayPicker, segment])
+        gameTypePicker.selectedSegmentIndex = 0
+        gameTypePicker.addTarget(self, action: #selector(gameTypePickerChanged), for: .valueChanged)
+
+        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, gameTypePicker, dayPicker, segment])
         vStack.axis = .vertical; vStack.spacing = 6
         vStack.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(vStack)

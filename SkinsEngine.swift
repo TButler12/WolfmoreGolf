@@ -218,7 +218,7 @@ enum SkinsEngine {
         return gross - pops
     }
 
-    private static func activePlayerIndexes(
+    static func activePlayerIndexes(
         from gameData: GameData,
         state: SkinsState
     ) -> [Int] {
@@ -231,7 +231,7 @@ enum SkinsEngine {
         }
     }
 
-    private static func popsForPlayer(
+    static func popsForPlayer(
         _ playerIndex: Int,
         hole: Int,
         gameData: GameData,
