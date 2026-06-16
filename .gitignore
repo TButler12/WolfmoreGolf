@@ -18,3 +18,4 @@ build/
 
 # Supabase credentials — never commit
 SupabaseConfig.swift
+.claude/
