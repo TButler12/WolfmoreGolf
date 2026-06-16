@@ -783,10 +783,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     @objc private func liveTabLeaderboardTapped() {
         guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
-        let vc  = TournamentLeaderboardViewController(code: code)
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+        let vc = TournamentLeaderboardViewController(code: code)
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func selectScoreTab() {
