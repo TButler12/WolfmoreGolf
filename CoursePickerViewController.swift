@@ -547,7 +547,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? { nil }
 
     override func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
-        guard sortMode == .groupedLocation else {
+        guard sortMode == .groupedLocation || sortMode == .groupedArchitect else {
             let label = UILabel()
             label.text = sections[section].title
             label.font = .preferredFont(forTextStyle: .footnote)
