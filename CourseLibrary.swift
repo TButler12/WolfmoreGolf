@@ -9628,6 +9628,23 @@ let VISBY_GC_HCS: [Int] = [
     10,6,14,16,18,8,2,12,4
 ]
 
+// MARK: Falsterbo Golf Club — Falsterbo, Sweden
+private let FALSTERBO_GC_ID = UUID(uuidString: "A9B0C1D2-E3F4-4A5B-6C7D-8E9F0A1B2C3D")!
+
+let FALSTERBO_GC_PARS: [Int] = [
+    4,3,5,4,4,3,4,3,4,
+    4,3,4,5,3,5,4,4,5
+]
+
+let FALSTERBO_GC_HCS: [Int] = [
+    7,17,11,1,5,15,9,13,3,
+    8,18,2,6,10,14,4,12,16
+]
+
+let FALSTERBO_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 6650, rating: 72.1, slope: 121)
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -17283,6 +17300,21 @@ private enum BuiltIns {
             phone: "+46 498 200930",
             website: "https://www.visbygk.com",
             address: "Västergarn Kronholmen 415, 622 30 Gotlands Tofta, Sweden",
+            isWolfApproved: true
+        ),
+        c(
+            FALSTERBO_GC_ID,
+            "Falsterbo Golf Club",
+            FALSTERBO_GC_PARS,
+            FALSTERBO_GC_HCS,
+            FALSTERBO_GC_TEES,
+            country: "Sweden",
+            state: nil,
+            region: "Falsterbo",
+            type: "Private",
+            phone: "+46 40-47 00 78",
+            website: "https://www.falsterbogk.se",
+            address: "Fyrvägen 34, 239 40, Falsterbo, Sweden",
             isWolfApproved: true
         ),
         ]
