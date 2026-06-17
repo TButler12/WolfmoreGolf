@@ -9581,6 +9581,53 @@ let NARUO_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Back", yardage: 6612, rating: 75.1, slope: 129)
 ]
 
+// MARK: Bro Hof Slott Golf Club — Stadium Course — Bro, Sweden
+private let BRO_HOF_STADIUM_ID = UUID(uuidString: "D6E7F8A9-B0C1-4D2E-3F4A-5B6C7D8E9F0A")!
+
+let BRO_HOF_STADIUM_PARS: [Int] = [
+    5,4,4,3,4,4,3,4,5,
+    4,3,5,5,4,5,3,3,4
+]
+
+let BRO_HOF_STADIUM_HCS: [Int] = [
+    8,4,18,16,2,14,12,10,6,
+    3,15,7,9,17,1,11,5,13
+]
+
+let BRO_HOF_STADIUM_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 8056, rating: 79.9, slope: 148)
+]
+
+// MARK: Bro Hof Slott Golf Club — Castle Course — Bro, Sweden
+private let BRO_HOF_CASTLE_ID = UUID(uuidString: "E7F8A9B0-C1D2-4E3F-4A5B-6C7D8E9F0A1B")!
+
+let BRO_HOF_CASTLE_PARS: [Int] = [
+    5,3,4,3,5,4,3,4,5,
+    5,3,3,5,4,5,4,3,4
+]
+
+let BRO_HOF_CASTLE_HCS: [Int] = [
+    5,13,11,9,7,1,17,15,3,
+    4,16,18,6,14,2,12,10,8
+]
+
+let BRO_HOF_CASTLE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6712, rating: 75.2, slope: 138)
+]
+
+// MARK: Visby Golf Club — Gotland, Sweden
+private let VISBY_GC_ID = UUID(uuidString: "F8A9B0C1-D2E3-4F4A-5B6C-7D8E9F0A1B2C")!
+
+let VISBY_GC_PARS: [Int] = [
+    3,4,4,5,3,5,3,4,4,
+    5,4,4,4,3,4,5,3,5
+]
+
+let VISBY_GC_HCS: [Int] = [
+    17,7,5,1,13,11,9,3,15,
+    10,6,14,16,18,8,2,12,4
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -17186,6 +17233,57 @@ private enum BuiltIns {
             architect: "Charles Hugh Alison",
             type: "Private",
             phone: "+81 727 94 1011"
+        ),
+
+        // -------------------------
+        // Sweden
+        // -------------------------
+        c(
+            BRO_HOF_STADIUM_ID,
+            "Bro Hof Slott (Stadium Course)",
+            BRO_HOF_STADIUM_PARS,
+            BRO_HOF_STADIUM_HCS,
+            BRO_HOF_STADIUM_TEES,
+            country: "Sweden",
+            state: nil,
+            region: "Bro",
+            architect: "Robert Trent Jones Jr. / Bruce Charlton",
+            type: "Resort",
+            phone: "+46 (0)8 545 279 90",
+            website: "https://www.brohofslott.se",
+            address: "Bro Hof Slott, 197 91 Bro, Sweden",
+            isWolfApproved: true
+        ),
+        c(
+            BRO_HOF_CASTLE_ID,
+            "Bro Hof Slott (Castle Course)",
+            BRO_HOF_CASTLE_PARS,
+            BRO_HOF_CASTLE_HCS,
+            BRO_HOF_CASTLE_TEES,
+            country: "Sweden",
+            state: nil,
+            region: "Bro",
+            architect: "Robert Trent Jones Jr. / Bruce Charlton",
+            type: "Resort",
+            phone: "+46 (0)8 545 279 90",
+            website: "https://www.brohofslott.se",
+            address: "Bro Hof Slott, 197 91 Bro, Sweden",
+            isWolfApproved: true
+        ),
+        c(
+            VISBY_GC_ID,
+            "Visby Golf Club",
+            VISBY_GC_PARS,
+            VISBY_GC_HCS,
+            country: "Sweden",
+            state: nil,
+            region: "Gotland",
+            architect: "Pierre Fulke / Adam Mednickson",
+            type: "Semi-Private",
+            phone: "+46 498 200930",
+            website: "https://www.visbygk.com",
+            address: "Västergarn Kronholmen 415, 622 30 Gotlands Tofta, Sweden",
+            isWolfApproved: true
         ),
         ]
 
