@@ -9582,7 +9582,7 @@ let NARUO_GC_TEES: [TeeInfo] = [
 ]
 
 // MARK: Bro Hof Slott Golf Club — Stadium Course — Bro, Sweden
-private let BRO_HOF_STADIUM_ID = UUID(uuidString: "D6E7F8A9-B0C1-4D2E-3F4A-5B6C7D8E9F0A")!
+private let BRO_HOF_STADIUM_ID = UUID(uuidString: "1A2B3C4D-5E6F-4A1B-8C2D-3E4F5A6B7C8D")!
 
 let BRO_HOF_STADIUM_PARS: [Int] = [
     5,4,4,3,4,4,3,4,5,
@@ -9599,7 +9599,7 @@ let BRO_HOF_STADIUM_TEES: [TeeInfo] = [
 ]
 
 // MARK: Bro Hof Slott Golf Club — Castle Course — Bro, Sweden
-private let BRO_HOF_CASTLE_ID = UUID(uuidString: "E7F8A9B0-C1D2-4E3F-4A5B-6C7D8E9F0A1B")!
+private let BRO_HOF_CASTLE_ID = UUID(uuidString: "2B3C4D5E-6F7A-4B2C-9D3E-4F5A6B7C8D9E")!
 
 let BRO_HOF_CASTLE_PARS: [Int] = [
     5,3,4,3,5,4,3,4,5,
@@ -9616,7 +9616,7 @@ let BRO_HOF_CASTLE_TEES: [TeeInfo] = [
 ]
 
 // MARK: Visby Golf Club — Gotland, Sweden
-private let VISBY_GC_ID = UUID(uuidString: "F8A9B0C1-D2E3-4F4A-5B6C-7D8E9F0A1B2C")!
+private let VISBY_GC_ID = UUID(uuidString: "3C4D5E6F-7A8B-4C3D-AE4F-5A6B7C8D9E0F")!
 
 let VISBY_GC_PARS: [Int] = [
     3,4,4,5,3,5,3,4,4,
@@ -9629,7 +9629,7 @@ let VISBY_GC_HCS: [Int] = [
 ]
 
 // MARK: Falsterbo Golf Club — Falsterbo, Sweden
-private let FALSTERBO_GC_ID = UUID(uuidString: "A9B0C1D2-E3F4-4A5B-6C7D-8E9F0A1B2C3D")!
+private let FALSTERBO_GC_ID = UUID(uuidString: "4D5E6F7A-8B9C-4D4E-BF5A-6B7C8D9E0F1A")!
 
 let FALSTERBO_GC_PARS: [Int] = [
     4,3,5,4,4,3,4,3,4,
