@@ -69,6 +69,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             self, selector: #selector(reloadFromModel), name: .reloadUI, object: nil)
 
         navigationItem.rightBarButtonItem = nil
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
+        )
 
         updateCourseLabel()
         populateFromModel()
@@ -978,6 +981,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     // MARK: - Helpers
+    @objc private func closeTapped() { closeToHome() }
     @objc private func dismissKB() { view.endEditing(true) }
 
     private func showAlert(title: String, message: String) {
