@@ -17311,6 +17311,7 @@ private enum BuiltIns {
             country: "Sweden",
             state: nil,
             region: "Falsterbo",
+            architect: "Robert Turnbull / Gunnar Bauer / Peter Nordwall / Peter Chamberlain",
             type: "Private",
             phone: "+46 40-47 00 78",
             website: "https://www.falsterbogk.se",
