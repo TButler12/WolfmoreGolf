@@ -34,7 +34,14 @@ final class TextViewController: UIViewController, MFMessageComposeViewController
 
     override func viewDidLoad() {
         super.viewDidLoad()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
+        )
         refreshServiceButtonTitles()
+    }
+
+    @objc private func closeTapped() {
+        dismiss(animated: true)
     }
 
     override func viewWillAppear(_ animated: Bool) {

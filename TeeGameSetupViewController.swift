@@ -9,7 +9,6 @@ final class TeeGameSetupViewController: UIViewController {
 
     private let nameField        = UITextField()
     private let gameTypeControl  = UISegmentedControl(items: ["Wolf", "Skins"])
-    private let scoringControl   = UISegmentedControl(items: ["Gross", "Net"])
     private let stakeField       = UITextField()
     private let carryTiesControl = UISegmentedControl(items: ["No Carry", "Carry Ties"])
     private let createButton     = UIButton(type: .system)
@@ -87,6 +86,13 @@ final class TeeGameSetupViewController: UIViewController {
         ])
 
         // Tournament name
+        let infoLabel = UILabel()
+        infoLabel.text = "Tournament mode tracks both Wolf and Skins for the field and is based on net score."
+        infoLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        infoLabel.textColor = .secondaryLabel
+        infoLabel.numberOfLines = 0
+        stack.addArrangedSubview(infoLabel)
+
         stack.addArrangedSubview(labeled("Tournament Name", field: nameField))
         nameField.placeholder = "e.g. Wolf Tourney"
         nameField.borderStyle = .roundedRect
@@ -101,10 +107,6 @@ final class TeeGameSetupViewController: UIViewController {
         stack.addArrangedSubview(formatRow)
         gameTypeControl.selectedSegmentIndex = 0
         gameTypeControl.addTarget(self, action: #selector(gameTypeChanged), for: .valueChanged)
-
-        // Scoring type (shown for all formats)
-        stack.addArrangedSubview(labeled("Scoring", control: scoringControl))
-        scoringControl.selectedSegmentIndex = 0
 
         // Stake (Skins only)
         stakeLabel.text = "Stake ($ per hole)"
@@ -214,7 +216,6 @@ final class TeeGameSetupViewController: UIViewController {
         // Capture all control values before endEditing to avoid any responder-chain side-effects
         let name        = nameField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let gameIdx     = gameTypeControl.selectedSegmentIndex
-        let scoringIdx  = scoringControl.selectedSegmentIndex
         let stakeText   = stakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let carryIdx    = carryTiesControl.selectedSegmentIndex
         let courseName  = GameManager.shared.currentGame?.course.name ?? ""
@@ -232,7 +233,7 @@ final class TeeGameSetupViewController: UIViewController {
         case 1: gameType = "skins"
         default: gameType = "stableford"
         }
-        let scoringType = scoringIdx == 0 ? "gross" : "net"
+        let scoringType = "net"
         var stake: Double? = nil
         var carryTies: Bool? = nil
 
@@ -298,10 +299,10 @@ final class TeeGameSetupViewController: UIViewController {
         )
         ac.addAction(UIAlertAction(title: "Copy Code", style: .default) { [weak self] _ in
             UIPasteboard.general.string = code
-            self?.navigationController?.dismiss(animated: true)
+            self?.navigationController?.popViewController(animated: true)
         })
         ac.addAction(UIAlertAction(title: "Done", style: .cancel) { [weak self] _ in
-            self?.navigationController?.dismiss(animated: true)
+            self?.navigationController?.popViewController(animated: true)
         })
         present(ac, animated: true)
     }

@@ -149,10 +149,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let vc = sb.instantiateViewController(withIdentifier: "TextVC") // your Storyboard ID
 
         let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .fullScreen
+        nav.modalPresentationStyle = .pageSheet
 
         if let sheet = nav.sheetPresentationController {
-            sheet.detents = [.medium(), .large()]      // collapsible sizes
+            sheet.detents = [.medium(), .large()]
             sheet.prefersGrabberVisible = true
             sheet.preferredCornerRadius = 18
         }
@@ -570,12 +570,20 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             leaveBtn.bottomAnchor.constraint(equalTo: vc.view.safeAreaLayoutGuide.bottomAnchor, constant: -24),
         ])
 
-        vc.modalPresentationStyle = .fullScreen
-        if let sheet = vc.sheetPresentationController {
+        vc.navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .close, target: nil, action: nil
+        )
+        vc.navigationItem.rightBarButtonItem?.primaryAction = UIAction { [weak vc] _ in
+            vc?.dismiss(animated: true)
+        }
+
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
             sheet.detents = [.medium()]
             sheet.prefersGrabberVisible = true
         }
-        present(vc, animated: true)
+        present(nav, animated: true)
     }
 
     private func refreshHoleInfoHeader() {
