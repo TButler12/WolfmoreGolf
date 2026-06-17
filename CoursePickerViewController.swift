@@ -18,6 +18,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     private enum SortMode {
         case groupedLocation
         case nameAZ
+        case groupedArchitect
     }
 
     private enum CourseFilter: Equatable {
@@ -219,6 +220,14 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         })
 
         ac.addAction(UIAlertAction(
+            title: sortMode == .groupedArchitect ? "✓ Sort: By Architect" : "Sort: By Architect",
+            style: .default
+        ) { [weak self] _ in
+            self?.sortMode = .groupedArchitect
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
             title: activeFilter == .all ? "✓ Filter: All Courses" : "Filter: All Courses",
             style: .default
         ) { [weak self] _ in
@@ -306,6 +315,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
                 || (course.country ?? "").lowercased().contains(q)
                 || (course.region ?? "").lowercased().contains(q)
                 || (course.type ?? "").lowercased().contains(q)
+                || (course.architect ?? "").lowercased().contains(q)
         }
 
         working = working.filter { matchesFilter($0) }
@@ -321,6 +331,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
         case .groupedLocation:
             buildSections(from: working)
+            collapsedSections = Set(sections.indices)
+
+        case .groupedArchitect:
+            buildArchitectSections(from: working)
             collapsedSections = Set(sections.indices)
         }
 
@@ -409,6 +423,40 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             return (title: title, items: items)
         }
     }
+    private func buildArchitectSections(from courses: [CourseProfile]) {
+        var grouped: [String: [CourseProfile]] = [:]
+
+        for course in courses {
+            let key = primaryArchitect(for: course)
+            grouped[key, default: []].append(course)
+        }
+
+        let unknown = "Unknown Architect"
+        let titles = grouped.keys.sorted { lhs, rhs in
+            if lhs == unknown { return false }
+            if rhs == unknown { return true }
+            return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+        }
+
+        sections = titles.map { title in
+            let items = (grouped[title] ?? []).sorted {
+                $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
+            return (title: title, items: items)
+        }
+    }
+
+    private func primaryArchitect(for course: CourseProfile) -> String {
+        guard let raw = course.architect, !raw.trimmingCharacters(in: .whitespaces).isEmpty else {
+            return "Unknown Architect"
+        }
+        let primary = raw
+            .components(separatedBy: CharacterSet(charactersIn: "&/"))
+            .first?
+            .trimmingCharacters(in: .whitespacesAndNewlines) ?? raw
+        return primary.isEmpty ? "Unknown Architect" : primary
+    }
+
     // MARK: - Helpers
     private func isTrumpCourse(_ course: CourseProfile) -> Bool {
         let name = course.name.lowercased()
