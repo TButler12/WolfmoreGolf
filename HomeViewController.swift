@@ -798,14 +798,14 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     private func sendFeedbackEmail() {
         guard MFMailComposeViewController.canSendMail() else {
-            if let url = URL(string: "mailto:updatecourses@wolfmoregolf.com?subject=WolfMore%20Feedback") {
+            if let url = URL(string: "mailto:coursemanagement@wolfmore.com?subject=WolfMore%20Feedback") {
                 UIApplication.shared.open(url)
             }
             return
         }
         let composer = MFMailComposeViewController()
         composer.mailComposeDelegate = self
-        composer.setToRecipients(["updatecourses@wolfmoregolf.com"])
+        composer.setToRecipients(["coursemanagement@wolfmore.com"])
         composer.setSubject("WolfMore Feedback")
         present(composer, animated: true)
     }
