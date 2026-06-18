@@ -6,8 +6,9 @@
 //  Created by Tom BUTLER on 9/24/25.
 //
 import UIKit
+import MessageUI
 
-final class ViewController: UIViewController {
+final class ViewController: UIViewController, MFMailComposeViewControllerDelegate {
 
     // MARK: - Outlets
     @IBOutlet private weak var welcomeLabel: UILabel!
@@ -695,6 +696,10 @@ final class ViewController: UIViewController {
             }
         })
 
+        ac.addAction(UIAlertAction(title: "Send Feedback", style: .default) { [weak self] _ in
+            self?.sendFeedbackEmail()
+        })
+
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
         if let pop = ac.popoverPresentationController {
@@ -787,6 +792,28 @@ final class ViewController: UIViewController {
             btn.topAnchor.constraint(equalTo: playGameButton.bottomAnchor, constant: 16),
             btn.widthAnchor.constraint(equalTo: playGameButton.widthAnchor),
         ])
+    }
+
+    // MARK: - Feedback
+
+    private func sendFeedbackEmail() {
+        guard MFMailComposeViewController.canSendMail() else {
+            if let url = URL(string: "mailto:updatecourses@wolfmoregolf.com?subject=WolfMore%20Feedback") {
+                UIApplication.shared.open(url)
+            }
+            return
+        }
+        let composer = MFMailComposeViewController()
+        composer.mailComposeDelegate = self
+        composer.setToRecipients(["updatecourses@wolfmoregolf.com"])
+        composer.setSubject("WolfMore Feedback")
+        present(composer, animated: true)
+    }
+
+    func mailComposeController(_ controller: MFMailComposeViewController,
+                               didFinishWith result: MFMailComposeResult,
+                               error: Error?) {
+        controller.dismiss(animated: true)
     }
 
     // MARK: - Live & Connected entry point
