@@ -24,12 +24,11 @@ final class ViewController: UIViewController {
     // MARK: - State
     private var shouldPromptForName = false
     private weak var tournamentButton: UIButton?
-    private weak var teeGamesButton: UIButton?
-    private weak var watchLiveButton: UIButton?
+    private weak var liveConnectedButton: UIButton?
 
     // MARK: - Keys
-    private let didPromptHomeCourseKey = "profile.didPromptHomeCourse_v1"
-    private let suppressWelcomeTipsKey = "onboarding.suppressWelcomeTips_v1"
+    private let didPromptHomeCourseKey  = "profile.didPromptHomeCourse_v1"
+    private let suppressWelcomeTipsKey  = "onboarding.suppressWelcomeTips_v1"
 
     private var didPromptHomeCourse: Bool {
         get { UserDefaults.standard.bool(forKey: didPromptHomeCourseKey) }
@@ -69,8 +68,7 @@ final class ViewController: UIViewController {
 
         fixIconButton(editCourseButton)
         buildTournamentButton()
-        buildTeeGamesButton()
-        buildWatchLiveButton()
+        buildLiveConnectedButton()
         buildQuickStartButton()
 
         NotificationCenter.default.addObserver(
@@ -83,8 +81,8 @@ final class ViewController: UIViewController {
 
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
-        if let tgb = teeGamesButton {
-            courseButton.frame.origin.y = tgb.frame.maxY + 16
+        if let lcb = liveConnectedButton {
+            courseButton.frame.origin.y = lcb.frame.maxY + 16
         } else if let tb = tournamentButton {
             courseButton.frame.origin.y = tb.frame.maxY + 16
         }
@@ -96,7 +94,6 @@ final class ViewController: UIViewController {
         refreshCourseButtonTitle()
         refreshPlayArea()
         refreshBottomButtons()
-        refreshWatchLiveButton()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -792,17 +789,16 @@ final class ViewController: UIViewController {
         ])
     }
 
-    // MARK: - Tee Games entry point
+    // MARK: - Live & Connected entry point
 
-    private func buildTeeGamesButton() {
-        guard let stablefordBtn = tournamentButton else { return }
+    private func buildLiveConnectedButton() {
         let btn = UIButton(type: .system)
-        var cfg = styledButton(title: "Tee Games", style: .primary)
+        var cfg = styledButton(title: "Live & Connected", style: .primary)
         cfg.baseBackgroundColor = UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)
         btn.configuration = cfg
-        btn.addTarget(self, action: #selector(teeGamesTapped), for: .touchUpInside)
+        btn.addTarget(self, action: #selector(liveConnectedTapped), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
-        teeGamesButton = btn
+        liveConnectedButton = btn
         view.addSubview(btn)
         NSLayoutConstraint.activate([
             btn.centerXAnchor.constraint(equalTo: playGameButton.centerXAnchor),
@@ -811,8 +807,8 @@ final class ViewController: UIViewController {
         ])
     }
 
-    @objc private func teeGamesTapped() {
-        let vc = TeeGamesViewController()
+    @objc private func liveConnectedTapped() {
+        let vc = LiveConnectedViewController(style: .insetGrouped)
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
@@ -973,142 +969,6 @@ final class ViewController: UIViewController {
         let sb = UIStoryboard(name: "Main", bundle: nil)
         guard let roundNav = sb.instantiateViewController(withIdentifier: "RoundNav") as? UINavigationController else { return }
         present(roundNav, animated: true)
-    }
-
-    // MARK: - Watch Live
-
-    private let watchedSessionsKey = "watchedWolfSessions"
-
-    private func buildWatchLiveButton() {
-        let btn = UIButton(type: .system)
-        btn.addTarget(self, action: #selector(watchLiveTapped), for: .touchUpInside)
-        let lp = UILongPressGestureRecognizer(target: self, action: #selector(watchLiveLongPressed))
-        btn.addGestureRecognizer(lp)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        watchLiveButton = btn
-        view.addSubview(btn)
-        NSLayoutConstraint.activate([
-            btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            btn.topAnchor.constraint(equalTo: moreButton.bottomAnchor, constant: 12),
-        ])
-        refreshWatchLiveButton()
-    }
-
-    @objc private func watchLiveLongPressed(_ gr: UILongPressGestureRecognizer) {
-        guard gr.state == .began else { return }
-        let saved = UserDefaults.standard.stringArray(forKey: watchedSessionsKey) ?? []
-        guard !saved.isEmpty else { return }
-        let alert = UIAlertController(
-            title: "Clear Saved Sessions?",
-            message: "Stop watching \(saved.count) saved game(s).",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "Clear All", style: .destructive) { [weak self] _ in
-            guard let self else { return }
-            UserDefaults.standard.removeObject(forKey: self.watchedSessionsKey)
-            self.refreshWatchLiveButton()
-        })
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        present(alert, animated: true)
-    }
-
-    private func refreshWatchLiveButton() {
-        guard let btn = watchLiveButton else { return }
-        let saved = UserDefaults.standard.stringArray(forKey: watchedSessionsKey) ?? []
-        let title = saved.isEmpty ? "Watch Live" : "● Watch Live"
-        btn.configuration = styledButton(title: title, style: .utilityChip)
-    }
-
-    @objc private func watchLiveTapped() {
-        let saved = UserDefaults.standard.stringArray(forKey: watchedSessionsKey) ?? []
-
-        guard !saved.isEmpty else {
-            showWatchLiveAlert()
-            return
-        }
-
-        // Concurrently check which saved sessions are still active
-        Task {
-            var activeCodes: [String] = []
-            await withTaskGroup(of: (String, Bool).self) { group in
-                for code in saved {
-                    group.addTask {
-                        let session = try? await SupabaseService.shared.fetchWolfSessionByCode(code: code)
-                        return (code, session?.status == "active")
-                    }
-                }
-                for await (code, isActive) in group {
-                    if isActive { activeCodes.append(code) }
-                }
-            }
-
-            DispatchQueue.main.async {
-                if !activeCodes.isEmpty {
-                    // Go directly — spectator VC will reload from UserDefaults
-                    let vc = WolfSpectatorViewController()
-                    vc.sessionCode = ""
-                    self.navigationController?.pushViewController(vc, animated: true)
-                } else {
-                    // All saved sessions ended — clear and show alert
-                    UserDefaults.standard.removeObject(forKey: self.watchedSessionsKey)
-                    self.refreshWatchLiveButton()
-                    self.showWatchLiveAlert()
-                }
-            }
-        }
-    }
-
-    private func showWatchLiveAlert() {
-        let alert = UIAlertController(
-            title: "Watch Live",
-            message: "Enter the 6-character code shared by the scorekeeper",
-            preferredStyle: .alert
-        )
-        alert.addTextField { tf in
-            tf.placeholder = "e.g. ABC123"
-            tf.autocapitalizationType = .allCharacters
-            tf.autocorrectionType = .no
-            tf.returnKeyType = .go
-            NotificationCenter.default.addObserver(
-                forName: UITextField.textDidChangeNotification,
-                object: tf,
-                queue: .main
-            ) { _ in
-                if let text = tf.text, text.count > 6 { tf.text = String(text.prefix(6)) }
-            }
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Watch", style: .default) { [weak self, weak alert] _ in
-            let code = (alert?.textFields?.first?.text ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .uppercased()
-            guard !code.isEmpty else { return }
-            self?.fetchAndOpenSession(code: code)
-        })
-        present(alert, animated: true)
-    }
-
-    private func fetchAndOpenSession(code: String) {
-        Task {
-            do {
-                let session = try await SupabaseService.shared.fetchWolfSessionByCode(code: code)
-                DispatchQueue.main.async {
-                    let vc = WolfSpectatorViewController()
-                    vc.sessionCode = session.code
-                    self.navigationController?.pushViewController(vc, animated: true)
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    let alert = UIAlertController(
-                        title: "Code Not Found",
-                        message: "Check the code and try again.",
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: "OK", style: .default))
-                    self.present(alert, animated: true)
-                }
-            }
-        }
     }
 
     // MARK: - Helpers

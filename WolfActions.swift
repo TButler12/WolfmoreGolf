@@ -39,7 +39,7 @@ enum WolfActions {
         presenter.present(ac, animated: true)
     }
 
-    private static func startLiveMatch(from presenter: UIViewController) {
+    static func startLiveMatch(from presenter: UIViewController) {
         guard let g = GameManager.shared.currentGame else { return }
         let nassau     = g.nassauState
         let stake      = nassau?.settings.baseStake ?? Double(g.baseGameStake)
@@ -131,7 +131,7 @@ enum WolfActions {
         presenter.present(confirm, animated: true)
     }
 
-    private static func joinLiveMatch(from presenter: UIViewController) {
+    static func joinLiveMatch(from presenter: UIViewController) {
         let prompt = UIAlertController(
             title: "Join Live Match",
             message: "Enter the 6-character match code",
