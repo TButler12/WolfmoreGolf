@@ -2896,52 +2896,51 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
-        // 5d) Wolf Live score sync
-        print("DEBUG 5c liveSessionId=\(GameManager.shared.currentGame?.liveSessionId ?? "nil")")
+        // 5d) Wolf Live score sync — backfills all committed holes (0...hole) so spectators
+        //     who join mid-round see the full history, not just the hole being committed now.
+        print("DEBUG 5d liveSessionId=\(GameManager.shared.currentGame?.liveSessionId ?? "nil")")
         if let g = GameManager.shared.currentGame, let sessionId = g.liveSessionId {
-            let holeScores = (0..<MAX_PLAYERS).map { s -> Int in
-                guard s < g.playerActivated.count, g.playerActivated[s],
-                      s < g.scores.count, hole < g.scores[s].count else { return 0 }
-                return g.scores[s][hole] ?? 0
-            }
-            // wolfMaskByHole[hole] = [Bool] — all wolf-team members for this hole
-            let wolfMask      = g.wolfMaskByHole[safe: hole] ?? []
-            let wolfTeamSlots = wolfMask.enumerated().compactMap { $0.element ? $0.offset : nil }
-            let wolfSlot      = wolfTeamSlots[safe: 0] ?? nil
-            let partnerSlot   = wolfTeamSlots[safe: 1] ?? nil
-            let wentAlone     = g.aloneApplied[safe: hole] ?? false
-            let rerollOn      = g.rerollApplied[safe: hole] ?? false
-            let rollOn        = g.rollApplied[safe: hole] ?? false
-            let pressLevel    = g.pressLevel[safe: hole] ?? 0
-            let teamWon       = hole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[hole]
-            let holePayouts   = g.playerMoney.map { $0[safe: hole] ?? 0.0 }
-            let decision: String? = wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
-            let holeHammer    = Int(g.hammerMultiplier(for: hole))
-            // wolfPlayerPerHole is vestigial (never written); wolf comes from wolfMaskByHole
-            print("DEBUG wolf wolfPlayerPerHole[\(hole)]=\(String(describing: g.wolfPlayerPerHole?[safe: hole] ?? nil)) wolfMask=\(wolfMask) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot))")
             Task {
-                do {
-                    print("DEBUG submitWolfHole hole=\(hole+1) scores=\(holeScores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(holePayouts) hammer=\(holeHammer) press=\(pressLevel)")
-                    try await SupabaseService.shared.submitWolfHole(
-                        sessionId: sessionId,
-                        hole: hole + 1,
-                        scores: holeScores,
-                        wolfSlot: wolfSlot,
-                        partnerSlot: partnerSlot,
-                        wentAlone: wentAlone,
-                        teamWon: teamWon,
-                        payouts: holePayouts,
-                        decision: decision,
-                        hammerMultiplier: holeHammer,
-                        pressed: pressLevel
-                    )
-                } catch let pgError as PostgrestError {
-                    print("ERROR submitWolfHole Postgrest code=\(pgError.code ?? "nil")")
-                    print("ERROR submitWolfHole Postgrest message=\(pgError.message)")
-                    print("ERROR submitWolfHole Postgrest detail=\(pgError.detail ?? "nil")")
-                    print("ERROR submitWolfHole Postgrest hint=\(pgError.hint ?? "nil")")
-                } catch {
-                    print("ERROR submitWolfHole failed: \(error)")
+                for backfillHole in 0...hole {
+                    guard g.holeCommitted[safe: backfillHole] == true else { continue }
+
+                    let holeScores = (0..<MAX_PLAYERS).map { s -> Int in
+                        guard s < g.playerActivated.count, g.playerActivated[s],
+                              s < g.scores.count, backfillHole < g.scores[s].count else { return 0 }
+                        return g.scores[s][backfillHole] ?? 0
+                    }
+                    let wolfMask      = g.wolfMaskByHole[safe: backfillHole] ?? []
+                    let wolfTeamSlots = wolfMask.enumerated().compactMap { $0.element ? $0.offset : nil }
+                    let wolfSlot      = wolfTeamSlots[safe: 0] ?? nil
+                    let partnerSlot   = wolfTeamSlots[safe: 1] ?? nil
+                    let wentAlone     = g.aloneApplied[safe: backfillHole] ?? false
+                    let rerollOn      = g.rerollApplied[safe: backfillHole] ?? false
+                    let rollOn        = g.rollApplied[safe: backfillHole] ?? false
+                    let pressLevel    = g.pressLevel[safe: backfillHole] ?? 0
+                    let teamWon       = backfillHole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[backfillHole]
+                    let holePayouts   = g.playerMoney.map { $0[safe: backfillHole] ?? 0.0 }
+                    let decision: String? = wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
+                    let holeHammer    = Int(g.hammerMultiplier(for: backfillHole))
+
+                    do {
+                        try await SupabaseService.shared.submitWolfHole(
+                            sessionId: sessionId,
+                            hole: backfillHole + 1,
+                            scores: holeScores,
+                            wolfSlot: wolfSlot,
+                            partnerSlot: partnerSlot,
+                            wentAlone: wentAlone,
+                            teamWon: teamWon,
+                            payouts: holePayouts,
+                            decision: decision,
+                            hammerMultiplier: holeHammer,
+                            pressed: pressLevel
+                        )
+                    } catch let pgError as PostgrestError {
+                        print("ERROR submitWolfHole hole=\(backfillHole+1) Postgrest \(pgError.code ?? "") \(pgError.message)")
+                    } catch {
+                        print("ERROR submitWolfHole hole=\(backfillHole+1): \(error)")
+                    }
                 }
             }
         }
