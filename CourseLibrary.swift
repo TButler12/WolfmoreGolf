@@ -179,6 +179,24 @@ let CHAMPIONGATE_BLENDED_BLACK_PARS: [Int] = [4,3,4,5,4,3,4,4,5, 5,3,4,4,3,4,4,4
 let CHAMPIONGATE_BLENDED_BLACK_HCS:  [Int] = [7,15,3,1,11,17,13,9,5, 14,18,2,10,16,6,8,4,12]
 
 
+// MARK: Chicago Golf Club — Wheaton, IL
+
+private let CHICAGO_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000126")!
+
+let CHICAGO_GC_PARS: [Int] = [
+    4,4,3,5,4,4,3,4,4,
+    3,4,4,3,4,4,5,4,4
+]
+
+let CHICAGO_GC_HCS: [Int] = [
+    5,3,17,1,13,9,15,7,11,
+    16,6,4,18,14,10,2,12,8
+]
+
+let CHICAGO_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6950, rating: 74.4, slope: 141)
+]
+
 // MARK: Butler National (BUTLER / Championship) — Oak Brook, IL
 // Par 71 | 7,550 yds | Rating 78.4 | Slope 155
 private let BUTLER_NATIONAL_BUTLER_TEE_ID = UUID(uuidString: "A6E1C1F2-4E2B-4C4C-9B1A-2B3C4D5E6F70")!
@@ -894,6 +912,24 @@ let SUNNINGDALE_OLD_TEES: [TeeInfo] = [
         slope: 134
     )
 ]
+// MARK: Sunningdale Golf Club — New Course
+
+private let SUNNINGDALE_NEW_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000125")!
+
+let SUNNINGDALE_NEW_PARS: [Int] = [
+    4,3,4,4,3,5,4,4,4,
+    3,4,4,5,3,4,4,3,5
+]
+
+let SUNNINGDALE_NEW_HCS: [Int] = [
+    8,16,4,10,12,2,18,14,6,
+    9,1,15,5,11,3,13,17,7
+]
+
+let SUNNINGDALE_NEW_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 6444, rating: 70.0, slope: 113)
+]
+
 private let ROYAL_DORNOCH_CHAMP_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000007")!
 
 let ROYAL_DORNOCH_CHAMP_PARS: [Int] = [
@@ -10564,7 +10600,7 @@ private enum BuiltIns {
             PACIFIC_DUNES_HCS,
             country: "USA",
             state: "OR",
-            architect: "Tom Fazio",
+            architect: "Tom Doak",
             type: "Resort",
             phone: "(541) 347-5831",
             website: "https://www.bandondunesgolf.com/golf/golf-courses/pacific-dunes",
@@ -11637,11 +11673,28 @@ private enum BuiltIns {
             SUNNINGDALE_OLD_TEES,
             country: "England",
             state: nil,
+            region: "Berkshire",
             architect: "Willie Park Jr.",
             type: "Private",
+            phone: "+44 (0)1344 621681",
             website: "https://www.sunningdalegolfclub.co.uk",
-            address: "Ridgemount Rd, Sunningdale, Ascot SL5 9RR, England, United Kingdom",
+            address: "Ridgemount Road, Sunningdale, Berkshire, SL5 9RR, England, United Kingdom",
             isWolfApproved: true
+        ),
+        c(
+            SUNNINGDALE_NEW_ID,
+            "Sunningdale Golf Club (New Course)",
+            SUNNINGDALE_NEW_PARS,
+            SUNNINGDALE_NEW_HCS,
+            SUNNINGDALE_NEW_TEES,
+            country: "England",
+            state: nil,
+            region: "Berkshire",
+            architect: "Harry Colt",
+            type: "Private",
+            phone: "+44 (0)1344 621681",
+            website: "https://www.sunningdalegolfclub.co.uk",
+            address: "Ridgemount Road, Sunningdale, Berkshire, SL5 9RR, England, United Kingdom"
         ),
         c(
             ROYAL_DORNOCH_CHAMP_ID,
@@ -15060,7 +15113,8 @@ private enum BuiltIns {
             region: "Long Island",
             architect: "Seth Raynor",
             type: "Private",
-            phone: "(631) 788-7225",
+            phone: "+1 631 788 7223",
+            website: "https://www.ficlub.net",
             address: "Fishers Island, NY 06390"
         ),
         c(
@@ -15130,6 +15184,8 @@ private enum BuiltIns {
             region: "Long Island",
             architect: "Charles Blair Macdonald",
             type: "Private",
+            phone: "(631) 283-0410",
+            website: "https://www.ngla.us",
             address: "Sebonac Inlet Road, Southampton, NY 11968"
         ),
         c(
@@ -16293,6 +16349,20 @@ private enum BuiltIns {
             resortBrand: "Cantigny"
         ),
         
+        c(
+            CHICAGO_GC_ID,
+            "Chicago Golf Club",
+            CHICAGO_GC_PARS,
+            CHICAGO_GC_HCS,
+            CHICAGO_GC_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Chicago West",
+            architect: "Charles Blair Macdonald & Seth Raynor",
+            type: "Private",
+            phone: "+1 630 665 2988",
+            address: "Wheaton, IL 60189"
+        ),
         c(
             GLEN_CLUB_ID,
             "The Glen Club",
