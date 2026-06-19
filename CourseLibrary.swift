@@ -914,6 +914,42 @@ let ROYAL_DORNOCH_CHAMP_TEES: [TeeInfo] = [
         slope: 0
     )
 ]
+// MARK: Alwoodley Golf Club — Leeds, England
+
+private let ALWOODLEY_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000123")!
+
+let ALWOODLEY_GC_PARS: [Int] = [
+    4,4,5,5,4,4,3,5,3,
+    5,3,4,4,3,4,4,4,4
+]
+
+let ALWOODLEY_GC_HCS: [Int] = [
+    14,6,10,3,16,8,18,1,12,
+    5,17,2,11,9,15,4,13,7
+]
+
+let ALWOODLEY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 6673, rating: 70.0, slope: 113)
+]
+
+// MARK: Moortown Golf Club — Leeds, England
+
+private let MOORTOWN_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000124")!
+
+let MOORTOWN_GC_PARS: [Int] = [
+    5,4,4,3,4,4,5,3,4,
+    3,4,5,4,4,4,4,3,4
+]
+
+let MOORTOWN_GC_HCS: [Int] = [
+    1,2,3,4,5,6,7,8,9,
+    10,11,12,13,14,15,16,17,18
+]
+
+let MOORTOWN_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 7301, rating: 70.0, slope: 113)
+]
+
 // MARK: Carnoustie Golf Links — Carnoustie, Scotland
 
 private let CARNOUSTIE_CHAMP_ID = UUID(uuidString: "1E2F3A4B-5C6D-4E7F-8A9B-0C1D2E3F4A5C")!
@@ -10876,7 +10912,7 @@ private enum BuiltIns {
             OAK_TREE_CC_EAST_TEES,
             country: "USA",
             state: "OK",
-            architect: "Pete & Alice Dye",
+            architect: "Pete Dye",
             type: "Private",
             phone: "(405) 340-1010",
             website: "https://www.oaktreecountryclub.com/",
@@ -10891,7 +10927,7 @@ private enum BuiltIns {
             OAK_TREE_CC_WEST_TEES,
             country: "USA",
             state: "OK",
-            architect: "Pete & Alice Dye",
+            architect: "Pete Dye",
             type: "Private",
             phone: "(405) 340-1010",
             website: "https://www.oaktreecountryclub.com/",
@@ -11034,7 +11070,7 @@ private enum BuiltIns {
             AUGUSTA_NATIONAL_MASTERS_HCS,
             country: "USA",
             state: "GA",
-            architect: "Bobby Jones / Alister MacKenzie",
+            architect: "Alister MacKenzie & Bobby Jones",
             type: "Private",
             phone: "(706) 667-6000",
             website: "https://www.masters.com",
@@ -11562,6 +11598,36 @@ private enum BuiltIns {
             phone: "+1 809-412-0000",
             website: "https://laestanciagolf.com",
             address: "Carretera La Romana – Higuey, La Romana, Dominican Republic"
+        ),
+        c(
+            ALWOODLEY_GC_ID,
+            "Alwoodley Golf Club",
+            ALWOODLEY_GC_PARS,
+            ALWOODLEY_GC_HCS,
+            ALWOODLEY_GC_TEES,
+            country: "England",
+            state: nil,
+            region: "Leeds",
+            architect: "Alister MacKenzie",
+            type: "Private",
+            phone: "+44 (0)113 268 1680",
+            website: "https://www.alwoodley.co.uk",
+            address: "Wigton Lane, Leeds, LS17 8SA, England, United Kingdom"
+        ),
+        c(
+            MOORTOWN_GC_ID,
+            "Moortown Golf Club",
+            MOORTOWN_GC_PARS,
+            MOORTOWN_GC_HCS,
+            MOORTOWN_GC_TEES,
+            country: "England",
+            state: nil,
+            region: "Leeds",
+            architect: "Alister MacKenzie",
+            type: "Private",
+            phone: "+44 (0)113 268 6521",
+            website: "https://www.moortown-golf-club.co.uk",
+            address: "Harrogate Road, Leeds, LS17 7DB, England, United Kingdom"
         ),
         c(
             SUNNINGDALE_OLD_ID,
