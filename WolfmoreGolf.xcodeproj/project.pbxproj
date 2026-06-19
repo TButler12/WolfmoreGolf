@@ -14,7 +14,6 @@
 		7B4E1A3D0EBE4811A681DE64 /* SupabaseService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7298A503BD3F427C807DB30C /* SupabaseService.swift */; };
 		A1B2C3D4E5F60718293A4B5C /* TournamentScorecardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */; };
 		A2B3C4D5E6F7081929304A5B /* TeeGamesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */; };
-		LC01B2C3D4E5F607182930AA /* LiveConnectedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */; };
 		A3B4C5D6E7F8092030415A6C /* TeeGameSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */; };
 		A4B5C6D7E8F90A2131526B7C /* UIViewController+ActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F90A2131526B7D /* UIViewController+ActionSheet.swift */; };
 		A6B7C8D9EA0B1C2D3E4F5067 /* TournamentLeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */; };
@@ -109,6 +108,7 @@
 		F6E008232F8E62C600763694 /* RoundHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008222F8E62C600763694 /* RoundHistoryStore.swift */; };
 		F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */; };
 		F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */; };
+		LC01B2C3D4E5F607182930AA /* LiveConnectedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -121,7 +121,6 @@
 		79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PastGameDetailViewController.swift; sourceTree = "<group>"; };
 		9402F93CD28E4C029E042DFC /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeGamesViewController.swift; sourceTree = "<group>"; };
-		LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveConnectedViewController.swift; sourceTree = "<group>"; };
 		A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeGameSetupViewController.swift; sourceTree = "<group>"; };
 		A4B5C6D7E8F90A2131526B7D /* UIViewController+ActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+ActionSheet.swift"; sourceTree = "<group>"; };
 		A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentLeaderboardViewController.swift; sourceTree = "<group>"; };
@@ -219,6 +218,7 @@
 		F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauSettingsViewController.swift; sourceTree = "<group>"; };
 		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
 		F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardViewController.swift; sourceTree = "<group>"; };
+		LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveConnectedViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -608,7 +608,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -623,7 +623,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.1;
+				MARKETING_VERSION = 2.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -649,7 +649,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 35;
+				CURRENT_PROJECT_VERSION = 38;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -664,7 +664,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.2.1;
+				MARKETING_VERSION = 2.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
