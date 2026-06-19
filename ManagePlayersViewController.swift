@@ -612,6 +612,7 @@ final class ManagePlayersViewController: UIViewController,
         guard let startBtn = startRoundButton,
               let homeBtn  = button(forAction: #selector(closeTapped(_:))) else { return }
 
+        tableView.translatesAutoresizingMaskIntoConstraints = false
         startBtn.translatesAutoresizingMaskIntoConstraints = false
         homeBtn.translatesAutoresizingMaskIntoConstraints  = false
 

@@ -35,6 +35,9 @@ final class GameManager {
     
     /// Create a brand-new game with defaults, save, and notify once.
     func startNewGame(name: String = "New Game") {
+        if let sessionId = currentGame?.liveSessionId {
+            Task { try? await SupabaseService.shared.archiveWolfSession(id: sessionId) }
+        }
         lastOddDollarRecipient = nil
         lastOddDollarHole = -1
         // Preserve tournament linkage — a round reset doesn't mean leaving the tournament
@@ -117,6 +120,10 @@ final class GameManager {
     /// Start a fresh round but keep: course (pars/HC), roster (names/HC/active), rosterNames.
     func resetForNewRoundPreservingCourseAndRoster() {
         guard let old = currentGame else { return }
+
+        if let sessionId = old.liveSessionId {
+            Task { try? await SupabaseService.shared.archiveWolfSession(id: sessionId) }
+        }
 
         let keepCoursePar   = old.courseParToPass
         let keepCourseHC    = old.courseHCToPass

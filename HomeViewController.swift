@@ -516,9 +516,12 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private func confirmStartNewGame() {
         let isTournamentActive = (GameManager.shared.currentGame?.resolvedGameType == .tournament)
             && (GameManager.shared.currentGame?.holeCommitted.contains(true) ?? false)
-        let message = isTournamentActive
+        var message = isTournamentActive
             ? "This will delete your current Stableford round."
             : "This will delete your previous game data."
+        if GameManager.shared.currentGame?.liveSessionId != nil {
+            message += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
+        }
         let ac = UIAlertController(title: "Start New Game?", message: message, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
             // Archive all remote matches from this game session
@@ -945,9 +948,13 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             doQuickStart()
             return
         }
+        var quickStartMessage = "Your current game data will be cleared. Continue?"
+        if GameManager.shared.currentGame?.liveSessionId != nil {
+            quickStartMessage += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
+        }
         let alert = UIAlertController(
             title: "Quick Start",
-            message: "Your current game data will be cleared. Continue?",
+            message: quickStartMessage,
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Clear & Start", style: .destructive) { [weak self] _ in

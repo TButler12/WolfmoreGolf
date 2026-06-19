@@ -182,6 +182,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private var liveTabBar: UIView?
     private var liveTabBarInstalled = false
+    private var shownLiveCodePromptForSession: String?
     private var liveTabScoreButton: UIButton?
     private var liveTabLiveButton: UIButton?
     private weak var liveTabLeaderboardButton: UIButton?
@@ -374,7 +375,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        showGameOnboardingIfNeeded()
+        let showedOnboarding = showGameOnboardingIfNeeded()
+        if !showedOnboarding {
+            showLiveCodePromptIfNeeded()
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -3409,11 +3413,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         minusBtn.tintColor         = minusFG
         pressPlusButton?.tintColor = fg
     }
-    private func showGameOnboardingIfNeeded() {
+    @discardableResult
+    private func showGameOnboardingIfNeeded() -> Bool {
         let key = "onboarding_game_shown"
         let defaults = UserDefaults.standard
 
-        if defaults.bool(forKey: key) { return }
+        if defaults.bool(forKey: key) { return false }
 
         let ac = UIAlertController(
             title: "How to Score a Hole",
@@ -3431,12 +3436,54 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         ac.addAction(UIAlertAction(title: "Later", style: .cancel))
 
-        ac.addAction(UIAlertAction(title: "Don't Show Again", style: .destructive) { _ in
+        ac.addAction(UIAlertAction(title: "Don’t Show Again", style: .destructive) { _ in
             defaults.set(true, forKey: key)
         })
 
         present(ac, animated: true)
+        return true
     }
+
+    private func showLiveCodePromptIfNeeded() {
+        print("DEBUG livePrompt: entered — currentGame=\(GameManager.shared.currentGame != nil), presentedVC=\(presentedViewController != nil)")
+        guard let g = GameManager.shared.currentGame else { print("DEBUG livePrompt: guard FAILED — no currentGame"); return }
+        let gameId = g.historyGameID?.uuidString ?? g.gameName
+        guard shownLiveCodePromptForSession != gameId else { print("DEBUG livePrompt: guard FAILED — already shown for gameId=\(gameId)"); return }
+        print("DEBUG livePrompt: showing popup — gameId=\(gameId) code=\(g.liveSessionCode ?? "nil")")
+        shownLiveCodePromptForSession = gameId
+
+        if let code = g.liveSessionCode, !code.isEmpty {
+            let ac = UIAlertController(
+                title: "Send Live Wolf Code?",
+                message: "Share code with spectators:\n\(code)",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Share", style: .default) { [weak self] _ in
+                guard let self else { return }
+                let link = "wolfmore://watch?code=\(code)"
+                let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
+                self.present(av, animated: true)
+            })
+            ac.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
+                UIPasteboard.general.string = code
+            })
+            ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
+            present(ac, animated: true)
+        } else {
+            let ac = UIAlertController(
+                title: "Send Live Wolf Code?",
+                message: "Broadcast this round to spectators in real time.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Go Live", style: .default) { [weak self] _ in
+                guard let self else { return }
+                WolfActions.presentGoLive(from: self)
+            })
+            ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
+            present(ac, animated: true)
+        }
+    }
+
     @objc private func moneyChanged(_ sender: UITextField) {
         let seat = sender.tag
         let amount = Double(sender.text ?? "") ?? 0.0
