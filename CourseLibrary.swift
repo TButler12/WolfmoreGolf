@@ -6936,6 +6936,24 @@ let SLEEPY_HOLLOW_UPPER_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6902, rating: 74.0, slope: 140)
 ]
 
+// MARK: Sleepy Hollow CC — Lower Course (9-hole played twice)
+private let SLEEPY_HOLLOW_LOWER_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000133")!
+
+let SLEEPY_HOLLOW_LOWER_PARS: [Int] = [
+    4,3,3,4,3,4,3,4,3,   // Front (holes 1–9)
+    4,3,3,4,3,4,3,4,3    // Back (same 9 repeated)
+]
+
+// Official HCPs not published; odd front / even back is standard convention for a repeated 9
+let SLEEPY_HOLLOW_LOWER_HCS: [Int] = [
+    1,3,5,7,9,11,13,15,17,
+    2,4,6,8,10,12,14,16,18
+]
+
+let SLEEPY_HOLLOW_LOWER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 4216, slope: 110)   // 30.5 is the 9-hole rating
+]
+
 // MARK: The Creek Club — Locust Valley, NY
 
 private let THE_CREEK_CLUB_ID = UUID(uuidString: "7E8F9A0B-1C2D-4E3F-4A5B-6C7D8E9F0A1B")!
@@ -15380,9 +15398,26 @@ private enum BuiltIns {
             country: "USA",
             state: "NY",
             region: "Westchester",
-            architect: "Charles Blair Macdonald",
+            architect: "C.B. Macdonald / Seth Raynor",
             type: "Private",
-            address: "777 Albany Post Road, Briarcliff Manor, NY 10510"
+            phone: "+1 914 941 8070",
+            website: "https://www.sleepyhollowcc.org",
+            address: "777 Albany Post Road, Scarborough, NY 10510"
+        ),
+        c(
+            SLEEPY_HOLLOW_LOWER_ID,
+            "Sleepy Hollow Country Club (Lower Course)",
+            SLEEPY_HOLLOW_LOWER_PARS,
+            SLEEPY_HOLLOW_LOWER_HCS,
+            SLEEPY_HOLLOW_LOWER_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Westchester",
+            architect: "C.B. Macdonald / Seth Raynor",
+            type: "Private",
+            phone: "+1 914 941 8070",
+            website: "https://www.sleepyhollowcc.org",
+            address: "777 Albany Post Road, Scarborough, NY 10510"
         ),
         c(
             THE_CREEK_CLUB_ID,
