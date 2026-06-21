@@ -23,6 +23,7 @@ struct TeeInfo: Codable, Equatable {
 }
 enum CourseRouting: String, Codable {
     case eighteenStandard
+    case nineStandard
     case loopAtoB
     case loopBtoC
     case loopAtoC
@@ -195,6 +196,56 @@ let CHICAGO_GC_HCS: [Int] = [
 
 let CHICAGO_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6950, rating: 74.4, slope: 141)
+]
+
+// MARK: Camargo Club — Cincinnati, OH (Indian Hill)
+private let CAMARGO_CLUB_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000127")!
+
+let CAMARGO_CLUB_PARS: [Int] = [
+    4,5,4,4,3,4,4,3,4,
+    4,3,4,4,4,3,4,5,4
+]
+
+let CAMARGO_CLUB_HCS: [Int] = [
+    17,5,13,1,15,7,3,11,9,
+    2,18,4,16,10,14,8,12,6
+]
+
+let CAMARGO_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6655, rating: 71.6, slope: 130)
+]
+
+// MARK: Tashua Knolls Golf Course (18-hole) — Trumbull, CT
+private let TASHUA_KNOLLS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000128")!
+
+let TASHUA_KNOLLS_PARS: [Int] = [
+    5,4,3,4,4,3,5,4,4,
+    4,4,3,4,5,4,5,3,4
+]
+
+let TASHUA_KNOLLS_HCS: [Int] = [
+    5,7,17,3,11,15,1,13,9,
+    12,10,16,14,6,2,4,18,8
+]
+
+let TASHUA_KNOLLS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6540, rating: 72.0, slope: 139),
+    TeeInfo(teeName: "Back",         yardage: 6119, rating: 70.3, slope: 137),
+    TeeInfo(teeName: "Middle",       yardage: 5656, rating: 68.3, slope: 124),
+    TeeInfo(teeName: "Forward",      yardage: 5050, rating: 65.8, slope: 108)
+]
+
+// MARK: Tashua Glen Golf Course (9-hole) — Trumbull, CT
+private let TASHUA_GLEN_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000129")!
+
+let TASHUA_GLEN_PARS: [Int] = [4,3,4,3,3,4,4,3,5]   // par 33
+let TASHUA_GLEN_HCS:  [Int] = [1,2,3,4,5,6,7,8,9]
+
+let TASHUA_GLEN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 2184),
+    TeeInfo(teeName: "Back",         yardage: 2036),
+    TeeInfo(teeName: "Middle",       yardage: 1851),
+    TeeInfo(teeName: "Forward",      yardage: 1664)
 ]
 
 // MARK: Butler National (BUTLER / Championship) — Oak Brook, IL
@@ -13784,6 +13835,35 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
+            TASHUA_KNOLLS_ID,
+            "Tashua Knolls Golf Course",
+            TASHUA_KNOLLS_PARS,
+            TASHUA_KNOLLS_HCS,
+            TASHUA_KNOLLS_TEES,
+            country: "USA",
+            state: "CT",
+            region: "Trumbull",
+            type: "Daily-Fee",
+            phone: "(203) 452-5186",
+            website: "https://www.tashuaknolls.com",
+            address: "40 Tashua Knolls Lane, Trumbull, CT 06611"
+        ),
+        c(
+            TASHUA_GLEN_ID,
+            "Tashua Glen Golf Course",
+            TASHUA_GLEN_PARS,
+            TASHUA_GLEN_HCS,
+            TASHUA_GLEN_TEES,
+            country: "USA",
+            state: "CT",
+            region: "Trumbull",
+            type: "Daily-Fee",
+            phone: "(203) 452-5186",
+            website: "https://www.tashuaknolls.com",
+            address: "40 Tashua Knolls Lane, Trumbull, CT 06611",
+            routing: .nineStandard
+        ),
+        c(
             CORDILLERA_VALLEY_ID,
             "Cordillera Valley Course",
             CORDILLERA_VALLEY_PARS,
@@ -17182,6 +17262,20 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
+            CAMARGO_CLUB_ID,
+            "Camargo Club",
+            CAMARGO_CLUB_PARS,
+            CAMARGO_CLUB_HCS,
+            CAMARGO_CLUB_TEES,
+            country: "USA",
+            state: "OH",
+            region: "Cincinnati",
+            architect: "Seth Raynor",
+            type: "Private",
+            phone: "(513) 561-9292",
+            address: "8605 Shawnee Run Road, Cincinnati, OH 45243"
+        ),
+        c(
             MANAKIKI_ID,
             "Manakiki Golf Course",
             MANAKIKI_PARS,
@@ -17749,6 +17843,7 @@ extension CourseRouting {
     var displayName: String {
         switch self {
         case .eighteenStandard: return "Standard 18"
+        case .nineStandard:     return "9-Hole"
         case .loopAtoB: return "A → B"
         case .loopBtoC: return "B → C"
         case .loopAtoC: return "A → C"
