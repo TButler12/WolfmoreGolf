@@ -16511,7 +16511,7 @@ private enum BuiltIns {
             country: "USA",
             state: "IL",
             region: "Chicago West",
-            architect: "Charles Blair Macdonald & Seth Raynor",
+            architect: "C.B. Macdonald",
             type: "Private",
             phone: "+1 630 665 2988",
             address: "Wheaton, IL 60189"
