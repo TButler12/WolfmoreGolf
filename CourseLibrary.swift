@@ -215,17 +215,52 @@ let CAMARGO_CLUB_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold", yardage: 6655, rating: 71.6, slope: 130)
 ]
 
-// MARK: Tashua Knolls Golf Course (18-hole) — Trumbull, CT
+// MARK: - Tashua Knolls Golf Course
 private let TASHUA_KNOLLS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000128")!
 
 let TASHUA_KNOLLS_PARS: [Int] = [
-    5,4,3,4,4,3,5,4,4,
-    4,4,3,4,5,4,5,3,4
+    5, 4, 3, 4, 4, 3, 5, 4, 4,   // Front 9 (Out)
+    4, 4, 3, 4, 5, 4, 5, 3, 4    // Back 9 (In)
 ]
 
-let TASHUA_KNOLLS_HCS: [Int] = [
-    5,7,17,3,11,15,1,13,9,
-    12,10,16,14,6,2,4,18,8
+let TASHUA_KNOLLS_HCS_CHAMPIONSHIP: [Int] = [
+    5, 7, 17, 3, 11, 15, 1, 13, 9,
+    12, 10, 16, 14, 6, 2, 4, 18, 8
+]
+
+let TASHUA_KNOLLS_HCS_BACK: [Int] = [
+    3, 9, 15, 5, 11, 17, 1, 13, 7,
+    8, 12, 18, 14, 6, 2, 4, 16, 10
+]
+
+let TASHUA_KNOLLS_HCS_MIDDLE: [Int] = [
+    3, 7, 13, 5, 15, 17, 1, 9, 11,
+    10, 12, 18, 14, 4, 6, 2, 16, 8
+]
+
+let TASHUA_KNOLLS_HCS_FORWARD: [Int] = [
+    3, 15, 13, 5, 7, 17, 1, 9, 11,
+    10, 12, 18, 14, 4, 6, 2, 16, 8
+]
+
+let TASHUA_KNOLLS_YARDS_CHAMPIONSHIP: [Int] = [
+    561, 375, 167, 391, 370, 211, 501, 366, 378,
+    373, 385, 163, 303, 506, 394, 527, 162, 407
+]
+
+let TASHUA_KNOLLS_YARDS_BACK: [Int] = [
+    532, 317, 151, 342, 353, 192, 480, 354, 356,
+    349, 367, 154, 262, 495, 373, 506, 145, 391
+]
+
+let TASHUA_KNOLLS_YARDS_MIDDLE: [Int] = [
+    495, 302, 146, 325, 330, 155, 445, 324, 307,
+    333, 327, 146, 250, 487, 330, 469, 140, 345
+]
+
+let TASHUA_KNOLLS_YARDS_FORWARD: [Int] = [
+    420, 270, 115, 280, 316, 120, 395, 308, 307,
+    286, 304, 142, 243, 404, 280, 415, 110, 335
 ]
 
 let TASHUA_KNOLLS_TEES: [TeeInfo] = [
@@ -13838,7 +13873,7 @@ private enum BuiltIns {
             TASHUA_KNOLLS_ID,
             "Tashua Knolls Golf Course",
             TASHUA_KNOLLS_PARS,
-            TASHUA_KNOLLS_HCS,
+            TASHUA_KNOLLS_HCS_CHAMPIONSHIP,
             TASHUA_KNOLLS_TEES,
             country: "USA",
             state: "CT",
