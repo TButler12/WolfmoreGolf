@@ -216,7 +216,10 @@ let CAMARGO_CLUB_TEES: [TeeInfo] = [
 ]
 
 // MARK: - Tashua Knolls Golf Course
-private let TASHUA_KNOLLS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000128")!
+private let TASHUA_KNOLLS_CHAMPIONSHIP_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000128")!
+private let TASHUA_KNOLLS_BACK_ID         = UUID(uuidString: "B7A10000-0000-0000-0000-000000000130")!
+private let TASHUA_KNOLLS_MIDDLE_ID       = UUID(uuidString: "B7A10000-0000-0000-0000-000000000131")!
+private let TASHUA_KNOLLS_FORWARD_ID      = UUID(uuidString: "B7A10000-0000-0000-0000-000000000132")!
 
 let TASHUA_KNOLLS_PARS: [Int] = [
     5, 4, 3, 4, 4, 3, 5, 4, 4,   // Front 9 (Out)
@@ -261,13 +264,6 @@ let TASHUA_KNOLLS_YARDS_MIDDLE: [Int] = [
 let TASHUA_KNOLLS_YARDS_FORWARD: [Int] = [
     420, 270, 115, 280, 316, 120, 395, 308, 307,
     286, 304, 142, 243, 404, 280, 415, 110, 335
-]
-
-let TASHUA_KNOLLS_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Championship", yardage: 6540, rating: 72.0, slope: 139),
-    TeeInfo(teeName: "Back",         yardage: 6119, rating: 70.3, slope: 137),
-    TeeInfo(teeName: "Middle",       yardage: 5656, rating: 68.3, slope: 124),
-    TeeInfo(teeName: "Forward",      yardage: 5050, rating: 65.8, slope: 108)
 ]
 
 // MARK: Tashua Glen Golf Course (9-hole) — Trumbull, CT
@@ -13870,11 +13866,53 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
-            TASHUA_KNOLLS_ID,
-            "Tashua Knolls Golf Course",
+            TASHUA_KNOLLS_CHAMPIONSHIP_ID,
+            "Tashua Knolls (Championship)",
             TASHUA_KNOLLS_PARS,
             TASHUA_KNOLLS_HCS_CHAMPIONSHIP,
-            TASHUA_KNOLLS_TEES,
+            [TeeInfo(teeName: "Championship", yardage: 6540, rating: 72.0, slope: 139)],
+            country: "USA",
+            state: "CT",
+            region: "Trumbull",
+            type: "Daily-Fee",
+            phone: "(203) 452-5186",
+            website: "https://www.tashuaknolls.com",
+            address: "40 Tashua Knolls Lane, Trumbull, CT 06611"
+        ),
+        c(
+            TASHUA_KNOLLS_BACK_ID,
+            "Tashua Knolls (Back)",
+            TASHUA_KNOLLS_PARS,
+            TASHUA_KNOLLS_HCS_BACK,
+            [TeeInfo(teeName: "Back", yardage: 6119, rating: 70.3, slope: 137)],
+            country: "USA",
+            state: "CT",
+            region: "Trumbull",
+            type: "Daily-Fee",
+            phone: "(203) 452-5186",
+            website: "https://www.tashuaknolls.com",
+            address: "40 Tashua Knolls Lane, Trumbull, CT 06611"
+        ),
+        c(
+            TASHUA_KNOLLS_MIDDLE_ID,
+            "Tashua Knolls (Middle)",
+            TASHUA_KNOLLS_PARS,
+            TASHUA_KNOLLS_HCS_MIDDLE,
+            [TeeInfo(teeName: "Middle", yardage: 5656, rating: 68.3, slope: 124)],
+            country: "USA",
+            state: "CT",
+            region: "Trumbull",
+            type: "Daily-Fee",
+            phone: "(203) 452-5186",
+            website: "https://www.tashuaknolls.com",
+            address: "40 Tashua Knolls Lane, Trumbull, CT 06611"
+        ),
+        c(
+            TASHUA_KNOLLS_FORWARD_ID,
+            "Tashua Knolls (Forward)",
+            TASHUA_KNOLLS_PARS,
+            TASHUA_KNOLLS_HCS_FORWARD,
+            [TeeInfo(teeName: "Forward", yardage: 5050, rating: 65.8, slope: 108)],
             country: "USA",
             state: "CT",
             region: "Trumbull",
