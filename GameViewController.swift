@@ -623,7 +623,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         superview.addSubview(btn)
 
         NSLayoutConstraint.activate([
-            btn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 100),
+            btn.centerYAnchor.constraint(equalTo: firstLabel.centerYAnchor, constant: -36),
             btn.leadingAnchor.constraint(equalTo: firstLabel.leadingAnchor),
             btn.heightAnchor.constraint(equalToConstant: 28)
         ])
