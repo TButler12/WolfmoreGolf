@@ -7898,6 +7898,23 @@ let SENTRYWORLD_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green",        yardage: 4652, rating: 68.2, slope: 116)
 ]
 
+// MARK: Blue Mound Golf & Country Club — Wauwatosa, WI
+private let BLUE_MOUND_GCC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000134")!
+
+let BLUE_MOUND_GCC_PARS: [Int] = [
+    4,4,3,4,5,4,3,4,4,
+    4,4,4,3,4,4,4,3,5
+]
+
+let BLUE_MOUND_GCC_HCS: [Int] = [
+    9,7,1,5,17,13,15,3,11,
+    8,10,4,14,12,2,18,16,6
+]
+
+let BLUE_MOUND_GCC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6854, rating: 72.9, slope: 133)
+]
+
 private let PAAKO_RIDGE_1_18_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5005")!
 private let PAAKO_RIDGE_10_27_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5006")!
 private let PAAKO_RIDGE_1_9_19_27_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5007")!
@@ -16172,6 +16189,21 @@ private enum BuiltIns {
             phone: "866-479-6753",
             website: "https://www.sentryworld.com",
             address: "601 Michigan Ave. N., Stevens Point, WI 54481"
+        ),
+        c(
+            BLUE_MOUND_GCC_ID,
+            "Blue Mound Golf & Country Club",
+            BLUE_MOUND_GCC_PARS,
+            BLUE_MOUND_GCC_HCS,
+            BLUE_MOUND_GCC_TEES,
+            country: "USA",
+            state: "WI",
+            region: "Milwaukee",
+            architect: "Seth Raynor",
+            type: "Private",
+            phone: "+1 414 258 4656",
+            website: "https://www.bluemoundgcc.com",
+            address: "Wauwatosa, WI 53205"
         ),
         c(
             PAAKO_RIDGE_1_18_ID,
