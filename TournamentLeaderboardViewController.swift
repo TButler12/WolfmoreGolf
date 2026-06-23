@@ -68,6 +68,7 @@ final class TournamentLeaderboardViewController: UIViewController {
 
         setupHeader()
         setupTable()
+        buildTabBar()
 
         Task { await loadData() }
         scheduleTimer()
@@ -91,6 +92,95 @@ final class TournamentLeaderboardViewController: UIViewController {
             Task { await self?.loadData() }
         }
     }
+
+    // MARK: - Tab bar
+
+    private func buildTabBar() {
+        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        let isLive = GameManager.shared.currentGame?.liveSessionId != nil
+
+        let bar = UIView()
+        bar.translatesAutoresizingMaskIntoConstraints = false
+        bar.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.97)
+        bar.layer.borderWidth = 0.5
+        bar.layer.borderColor = UIColor.separator.cgColor
+        view.addSubview(bar)
+        NSLayoutConstraint.activate([
+            bar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            bar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            bar.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            bar.heightAnchor.constraint(equalToConstant: 44),
+        ])
+
+        func makeTabBtn(icon: String, title: String) -> UIButton {
+            var cfg = UIButton.Configuration.plain()
+            cfg.image = UIImage(systemName: icon, withConfiguration: UIImage.SymbolConfiguration(pointSize: 14, weight: .medium))
+            cfg.title = title
+            cfg.imagePlacement = .leading
+            cfg.imagePadding = 4
+            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { a in
+                var a = a; a.font = UIFont.systemFont(ofSize: 12, weight: .semibold); return a
+            }
+            let btn = UIButton(configuration: cfg)
+            btn.tintColor = .secondaryLabel
+            return btn
+        }
+
+        let scoreBtn = makeTabBtn(icon: "target", title: "Score")
+        scoreBtn.addTarget(self, action: #selector(tabScoreTapped), for: .touchUpInside)
+
+        let liveBtn = makeTabBtn(icon: "tv", title: "Live Wolf")
+        liveBtn.addTarget(self, action: #selector(tabLiveTapped), for: .touchUpInside)
+        liveBtn.isHidden = !isLive
+
+        let leaderboardBtn = makeTabBtn(icon: "trophy", title: "Leaderboard")
+        leaderboardBtn.addTarget(self, action: #selector(tabLeaderboardTapped), for: .touchUpInside)
+        leaderboardBtn.tintColor = wolfGreen
+
+        let stack = UIStackView(arrangedSubviews: [scoreBtn, liveBtn, leaderboardBtn])
+        stack.axis = .horizontal
+        stack.distribution = .fillEqually
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        bar.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: bar.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: bar.trailingAnchor),
+            stack.topAnchor.constraint(equalTo: bar.topAnchor),
+            stack.bottomAnchor.constraint(equalTo: bar.bottomAnchor),
+        ])
+
+        if isLive {
+            let dot = UIView()
+            dot.translatesAutoresizingMaskIntoConstraints = false
+            dot.backgroundColor = UIColor(red: 0.2, green: 1.0, blue: 0.4, alpha: 1)
+            dot.layer.cornerRadius = 4
+            dot.isUserInteractionEnabled = false
+            bar.addSubview(dot)
+            let pulse = CABasicAnimation(keyPath: "opacity")
+            pulse.fromValue = 1.0; pulse.toValue = 0.2
+            pulse.duration = 0.85; pulse.autoreverses = true; pulse.repeatCount = .infinity
+            dot.layer.add(pulse, forKey: "livePulse")
+            NSLayoutConstraint.activate([
+                dot.widthAnchor.constraint(equalToConstant: 8),
+                dot.heightAnchor.constraint(equalToConstant: 8),
+                dot.centerYAnchor.constraint(equalTo: liveBtn.centerYAnchor),
+                dot.trailingAnchor.constraint(equalTo: liveBtn.trailingAnchor, constant: -8),
+            ])
+        }
+
+        tableView.contentInset.bottom = 44
+        tableView.scrollIndicatorInsets.bottom = 44
+    }
+
+    @objc private func tabScoreTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+
+    @objc private func tabLiveTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+
+    @objc private func tabLeaderboardTapped() { /* already here */ }
 
     // MARK: - Actions
 

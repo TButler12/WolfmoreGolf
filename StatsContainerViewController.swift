@@ -19,13 +19,16 @@ final class StatsContainerViewController: UIViewController {
         view.backgroundColor = .systemBackground
         title = "Today's Results"
 
-        let doneBtn = UIButton(type: .system)
-        doneBtn.setTitle("Done", for: .normal)
-        doneBtn.setTitleColor(UIColor(red: 0.165, green: 0.133, blue: 0, alpha: 1), for: .normal)
-        doneBtn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        doneBtn.backgroundColor = UIColor(red: 0.910, green: 0.851, blue: 0.541, alpha: 1)
-        doneBtn.layer.cornerRadius = 8
-        doneBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 14, bottom: 6, right: 14)
+        var doneCfg = UIButton.Configuration.filled()
+        doneCfg.title = "Done"
+        doneCfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        doneCfg.baseForegroundColor = .white
+        doneCfg.cornerStyle = .capsule
+        doneCfg.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 16, bottom: 6, trailing: 16)
+        doneCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 15, weight: .semibold); return a
+        }
+        let doneBtn = UIButton(configuration: doneCfg)
         doneBtn.addTarget(self, action: #selector(close), for: .touchUpInside)
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: doneBtn)
 

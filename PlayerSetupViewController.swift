@@ -26,11 +26,12 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Constants
     private let capacity = 5
     private var maxActive: Int { capacity }
-    private let settingsButton = UIButton(type: .system)
+    private weak var editStakeLinkButton: UIButton?
     private weak var gameInfoLabel: UILabel?
     private weak var stakeInfoLabel: UILabel?
-   
- 
+    private weak var headerCourseChipLabel: UILabel?
+    private weak var headerGamePillsStack: UIStackView?
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -39,22 +40,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
         GameManager.shared.update { g in self.ensureModelHasCapacity(&g) }
         CourseLibrary.shared.seedIfNeeded()
-
-        // Configure settings button before layout (buildDynamicUI inserts it)
-        var settingsCfg = UIButton.Configuration.filled()
-        settingsCfg.title = "Edit Game Settings"
-        settingsCfg.image = UIImage(systemName: "gearshape.fill")
-        settingsCfg.imagePlacement = .leading
-        settingsCfg.imagePadding = 8
-        settingsCfg.baseBackgroundColor = UIColor.systemOrange
-        settingsCfg.baseForegroundColor = .white
-        settingsCfg.cornerStyle = .large
-        settingsCfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
-        settingsCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
-            var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .callout); return a
-        }
-        settingsButton.configuration = settingsCfg
-        settingsButton.addTarget(self, action: #selector(settingsTapped), for: .touchUpInside)
 
         // Replace fixed-frame storyboard layout with Dynamic Type–aware layout
         buildDynamicUI()
@@ -69,9 +54,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             self, selector: #selector(reloadFromModel), name: .reloadUI, object: nil)
 
         navigationItem.rightBarButtonItem = nil
-        navigationItem.leftBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
-        )
 
         updateCourseLabel()
         populateFromModel()
@@ -102,7 +84,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             hf.textAlignment = .center
             hfs.append(hf)
 
-            let sw = UISwitch(); sw.tag = i; sws.append(sw)
+            let sw = UISwitch()
+            sw.tag = i
+            sw.onTintColor = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+            sws.append(sw)
 
             let sl = UILabel()
             sl.tag = i
@@ -123,22 +108,49 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         goBtn.addTarget(self, action: #selector(goToGameTapped(_:)), for: .touchUpInside)
         goToGameButton = goBtn
 
-        let resetBtn = makeFilledButton(
-            title: "Reset for New Game",
-            bg: .systemGray,
-            fg: .white)
+        let resetBtn = makeOutlinedButton(title: "Reset for New Game")
         resetBtn.addTarget(self, action: #selector(resetGameTapped(_:)), for: .touchUpInside)
 
-        let randBtn = makeFilledButton(title: "Randomize", bg: .systemBrown, fg: .white)
+        var randCfg = UIButton.Configuration.filled()
+        randCfg.image = UIImage(systemName: "shuffle")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 17, weight: .medium))
+        randCfg.baseBackgroundColor = .systemBackground
+        randCfg.baseForegroundColor = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+        randCfg.cornerStyle = .large
+        randCfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
+        randCfg.background.strokeWidth = 1
+        randCfg.background.strokeColor = .systemGray3
+        let randBtn = UIButton(type: .custom)
+        randBtn.translatesAutoresizingMaskIntoConstraints = false
+        randBtn.configuration = randCfg
         randBtn.addTarget(self, action: #selector(randomizePlayersTapped(_:)), for: .touchUpInside)
+        randBtn.widthAnchor.constraint(equalToConstant: 50).isActive = true
         randomizeButton = randBtn
 
-        let newCourseLabel = UILabel()
-        newCourseLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-        newCourseLabel.adjustsFontForContentSizeCategory = true
-        newCourseLabel.numberOfLines = 0
-        newCourseLabel.textColor = .secondaryLabel
-        courseLabel = newCourseLabel
+        // courseLabel is an @IBOutlet wired in the storyboard; it stays retained by the
+        // view hierarchy (hidden) — do not reassign it to a local label that has no owner.
+
+        let newGameLabel = UILabel()
+        newGameLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        newGameLabel.adjustsFontForContentSizeCategory = true
+        newGameLabel.numberOfLines = 0
+        newGameLabel.textColor = .secondaryLabel
+        gameInfoLabel = newGameLabel
+
+        let newStakeLabel = UILabel()
+        newStakeLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        newStakeLabel.adjustsFontForContentSizeCategory = true
+        newStakeLabel.numberOfLines = 0
+        newStakeLabel.textColor = .secondaryLabel
+        stakeInfoLabel = newStakeLabel
+
+        // ── Dark green fixed header ────────────────────────────────────
+        let headerView = buildSetupHeader()
+        view.addSubview(headerView)
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            headerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
 
         // ── Scroll + content stack ─────────────────────────────────────
         let scroll = UIScrollView()
@@ -146,7 +158,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         scroll.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scroll)
         NSLayoutConstraint.activate([
-            scroll.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scroll.topAnchor.constraint(equalTo: headerView.bottomAnchor),
             scroll.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scroll.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scroll.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -165,11 +177,11 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
         let main = UIStackView()
         main.axis = .vertical
-        main.spacing = 14
+        main.spacing = 10
         main.translatesAutoresizingMaskIntoConstraints = false
         content.addSubview(main)
         NSLayoutConstraint.activate([
-            main.topAnchor.constraint(equalTo: content.topAnchor, constant: 20),
+            main.topAnchor.constraint(equalTo: content.topAnchor, constant: 16),
             main.leadingAnchor.constraint(equalTo: content.leadingAnchor, constant: 16),
             main.trailingAnchor.constraint(equalTo: content.trailingAnchor, constant: -16),
             main.bottomAnchor.constraint(equalTo: content.bottomAnchor, constant: -30),
@@ -193,11 +205,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         main.addArrangedSubview(hdrRow)
         main.addArrangedSubview(hairline())
 
-        // Player rows
+        // Player rows as white cards
         for i in 0..<capacity {
             let row = hRow()
 
-            // Switch in fixed-width container so column width never shifts
             let swWrap = UIView()
             swWrap.translatesAutoresizingMaskIntoConstraints = false
             swWrap.widthAnchor.constraint(equalToConstant: switchColW).isActive = true
@@ -219,43 +230,41 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             sls[i].widthAnchor.constraint(equalToConstant: strokeColW).isActive = true
 
             [swWrap, nfs[i], hfs[i], sls[i]].forEach { row.addArrangedSubview($0) }
-            main.addArrangedSubview(row)
+
+            let card = UIView()
+            card.backgroundColor = .systemBackground
+            card.layer.cornerRadius = 10
+            card.layer.borderWidth = 1
+            card.layer.borderColor = UIColor.systemGray4.cgColor
+            card.layer.masksToBounds = true
+            card.translatesAutoresizingMaskIntoConstraints = false
+            row.translatesAutoresizingMaskIntoConstraints = false
+            card.addSubview(row)
+            NSLayoutConstraint.activate([
+                row.topAnchor.constraint(equalTo: card.topAnchor, constant: 6),
+                row.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -6),
+                row.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 8),
+                row.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -8),
+            ])
+            main.addArrangedSubview(card)
         }
 
-        let newGameLabel = UILabel()
-        newGameLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-        newGameLabel.adjustsFontForContentSizeCategory = true
-        newGameLabel.numberOfLines = 0
-        newGameLabel.textColor = .secondaryLabel
-        gameInfoLabel = newGameLabel
-
-        let newStakeLabel = UILabel()
-        newStakeLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
-        newStakeLabel.adjustsFontForContentSizeCategory = true
-        newStakeLabel.numberOfLines = 0
-        newStakeLabel.textColor = .secondaryLabel
-        stakeInfoLabel = newStakeLabel
-
         main.addArrangedSubview(hairline())
-        main.addArrangedSubview(newCourseLabel)
-        main.setCustomSpacing(2, after: newCourseLabel)
-        main.addArrangedSubview(newGameLabel)
-        main.setCustomSpacing(2, after: newGameLabel)
-        main.addArrangedSubview(newStakeLabel)
-        main.setCustomSpacing(20, after: newStakeLabel)
+        let editLink = makeEditStakeLink()
+        editStakeLinkButton = editLink
+        main.addArrangedSubview(editLink)
+        main.setCustomSpacing(4, after: editLink)
+
         main.addArrangedSubview(goBtn)
         main.setCustomSpacing(10, after: goBtn)
-        main.addArrangedSubview(resetBtn)
-        main.setCustomSpacing(10, after: resetBtn)
-        main.addArrangedSubview(randBtn)
-        main.setCustomSpacing(24, after: randBtn)
 
-        let bottomHairline = hairline()
-        main.addArrangedSubview(bottomHairline)
-        main.setCustomSpacing(24, after: bottomHairline)
-
-        settingsButton.translatesAutoresizingMaskIntoConstraints = false
-        main.addArrangedSubview(settingsButton)
+        let resetRandRow = UIStackView(arrangedSubviews: [resetBtn, randBtn])
+        resetRandRow.axis = .horizontal
+        resetRandRow.spacing = 10
+        resetRandRow.alignment = .fill
+        resetRandRow.distribution = .fill
+        resetBtn.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        main.addArrangedSubview(resetRandRow)
     }
 
     // MARK: - Layout helpers
@@ -324,6 +333,170 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         v.widthAnchor.constraint(equalToConstant: width).isActive = true
         return v
     }
+
+    private func makeOutlinedButton(title: String) -> UIButton {
+        let btn = UIButton(type: .custom)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        var cfg = UIButton.Configuration.filled()
+        cfg.title = title
+        cfg.baseBackgroundColor = .systemBackground
+        cfg.baseForegroundColor = .label
+        cfg.cornerStyle = .large
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs
+            a.font = UIFont.preferredFont(forTextStyle: .callout)
+            return a
+        }
+        cfg.background.strokeWidth = 1
+        cfg.background.strokeColor = .systemGray3
+        btn.configuration = cfg
+        return btn
+    }
+
+    private func buildSetupHeader() -> UIView {
+        let headerBg = UIColor(red: 0.118, green: 0.227, blue: 0.165, alpha: 1.0)
+
+        let hv = UIView()
+        hv.backgroundColor = headerBg
+        hv.translatesAutoresizingMaskIntoConstraints = false
+
+        let closeBtn = UIButton(type: .system)
+        closeBtn.setImage(UIImage(systemName: "xmark"), for: .normal)
+        closeBtn.tintColor = .white
+        closeBtn.translatesAutoresizingMaskIntoConstraints = false
+        closeBtn.widthAnchor.constraint(equalToConstant: 36).isActive = true
+        closeBtn.heightAnchor.constraint(equalToConstant: 36).isActive = true
+        closeBtn.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
+
+        let titleLbl = UILabel()
+        titleLbl.text = "Start round"
+        titleLbl.textColor = .white
+        titleLbl.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
+        titleLbl.textAlignment = .center
+        titleLbl.translatesAutoresizingMaskIntoConstraints = false
+
+        let coursePillContainer = UIView()
+        coursePillContainer.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        coursePillContainer.layer.cornerRadius = 12
+        coursePillContainer.layer.masksToBounds = true
+        coursePillContainer.translatesAutoresizingMaskIntoConstraints = false
+
+        let courseLbl = UILabel()
+        courseLbl.text = ""
+        courseLbl.textColor = .white
+        courseLbl.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        courseLbl.textAlignment = .center
+        courseLbl.translatesAutoresizingMaskIntoConstraints = false
+        coursePillContainer.addSubview(courseLbl)
+        NSLayoutConstraint.activate([
+            courseLbl.topAnchor.constraint(equalTo: coursePillContainer.topAnchor, constant: 5),
+            courseLbl.bottomAnchor.constraint(equalTo: coursePillContainer.bottomAnchor, constant: -5),
+            courseLbl.leadingAnchor.constraint(equalTo: coursePillContainer.leadingAnchor, constant: 12),
+            courseLbl.trailingAnchor.constraint(equalTo: coursePillContainer.trailingAnchor, constant: -12),
+        ])
+        headerCourseChipLabel = courseLbl
+
+        let pillsStack = UIStackView()
+        pillsStack.axis = .horizontal
+        pillsStack.spacing = 8
+        pillsStack.alignment = .center
+        pillsStack.translatesAutoresizingMaskIntoConstraints = false
+        headerGamePillsStack = pillsStack
+
+        [closeBtn, titleLbl, coursePillContainer, pillsStack].forEach { hv.addSubview($0) }
+
+        NSLayoutConstraint.activate([
+            titleLbl.topAnchor.constraint(equalTo: hv.topAnchor, constant: 14),
+            titleLbl.centerXAnchor.constraint(equalTo: hv.centerXAnchor),
+
+            closeBtn.centerYAnchor.constraint(equalTo: titleLbl.centerYAnchor),
+            closeBtn.leadingAnchor.constraint(equalTo: hv.leadingAnchor, constant: 16),
+
+            coursePillContainer.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 10),
+            coursePillContainer.centerXAnchor.constraint(equalTo: hv.centerXAnchor),
+
+            pillsStack.topAnchor.constraint(equalTo: coursePillContainer.bottomAnchor, constant: 8),
+            pillsStack.centerXAnchor.constraint(equalTo: hv.centerXAnchor),
+            pillsStack.bottomAnchor.constraint(equalTo: hv.bottomAnchor, constant: -14),
+        ])
+
+        return hv
+    }
+
+    private func refreshHeaderChips() {
+        guard let g = GameManager.shared.currentGame else { return }
+
+        let stored = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let name = stored.isEmpty ? "Custom" : stored
+        let matchedCourse = stored.isEmpty ? nil : CourseLibrary.shared.courses.first { $0.name == stored }
+        let hid = ProfileStore.homeCourseID
+        let isHome = !hid.isEmpty && matchedCourse?.id.uuidString == hid
+        headerCourseChipLabel?.text = isHome ? "⭐ \(name)" : name
+
+        guard let pillsStack = headerGamePillsStack else { return }
+        pillsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        let pillBg = UIColor.white.withAlphaComponent(0.20)
+        let pillFg = UIColor.white
+
+        let gameType = g.gameType?.displayName ?? "Casual"
+        pillsStack.addArrangedSubview(makeSmallPill("\(gameType) $\(g.baseGameStake)", bg: pillBg, fg: pillFg))
+
+        if let ns = g.nassauState {
+            let s = ns.settings.baseStake
+            let stakeStr = s.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(s))" : String(format: "%.2f", s)
+            pillsStack.addArrangedSubview(makeSmallPill("Nassau $\(stakeStr)", bg: pillBg, fg: pillFg))
+        }
+
+        if let ss = g.skinsState {
+            let v = ss.settings.skinValue
+            let stakeStr = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.2f", v)
+            pillsStack.addArrangedSubview(makeSmallPill("Skins $\(stakeStr)", bg: pillBg, fg: pillFg))
+        }
+    }
+
+    private func makeSmallPill(_ text: String, bg: UIColor, fg: UIColor) -> UIView {
+        let lbl = UILabel()
+        lbl.text = text
+        lbl.textColor = fg
+        lbl.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+
+        let v = UIView()
+        v.backgroundColor = bg
+        v.layer.cornerRadius = 11
+        v.layer.masksToBounds = true
+        v.translatesAutoresizingMaskIntoConstraints = false
+        v.addSubview(lbl)
+        NSLayoutConstraint.activate([
+            lbl.topAnchor.constraint(equalTo: v.topAnchor, constant: 4),
+            lbl.bottomAnchor.constraint(equalTo: v.bottomAnchor, constant: -4),
+            lbl.leadingAnchor.constraint(equalTo: v.leadingAnchor, constant: 10),
+            lbl.trailingAnchor.constraint(equalTo: v.trailingAnchor, constant: -10),
+        ])
+        return v
+    }
+
+    private func makeEditStakeLink() -> UIButton {
+        var cfg = UIButton.Configuration.plain()
+        cfg.image = UIImage(systemName: "pencil")?
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 12, weight: .medium))
+        cfg.imagePadding = 5
+        cfg.imagePlacement = .leading
+        cfg.baseForegroundColor = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+        cfg.attributedTitle = AttributedString("Edit stake & format", attributes: AttributeContainer([
+            .font: UIFont.systemFont(ofSize: 13, weight: .medium),
+            .foregroundColor: UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+        ]))
+        cfg.contentInsets = .zero
+        let btn = UIButton(configuration: cfg)
+        btn.contentHorizontalAlignment = .trailing
+        btn.addTarget(self, action: #selector(settingsTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.heightAnchor.constraint(greaterThanOrEqualToConstant: 36).isActive = true
+        return btn
+    }
     
     @IBAction func gameSettingsTapped(_ sender: UIButton) {
         guard let g = GameManager.shared.currentGame else { return }
@@ -351,8 +524,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
         if let pop = ac.popoverPresentationController {
-            pop.sourceView = settingsButton
-            pop.sourceRect = settingsButton.bounds
+            let anchor: UIView = editStakeLinkButton ?? view
+            pop.sourceView = anchor
+            pop.sourceRect = anchor.bounds
         }
 
         present(ac, animated: true)
@@ -421,6 +595,16 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     enum Mode { case preRound, inRound }
        var mode: Mode = .preRound
        var onDone: (() -> Void)?
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
@@ -529,6 +713,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
         gameInfoLabel?.text  = "Game:   \(g.gameType?.displayName ?? "Casual")"
         stakeInfoLabel?.text = "Stake:  $\(g.baseGameStake)"
+        refreshHeaderChips()
     }
 
     // MARK: - Wiring

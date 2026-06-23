@@ -548,7 +548,7 @@ final class HeaderView: UIView {
 final class StatsCell: UITableViewCell {
     static let reuseID = "StatsCell"
 
-    private let nameLabel   = StatsCell.makeLabel(alignment: .left, monospaced: false)
+    private let nameLabel   = StatsCell.makeLabel(alignment: .left)
     private let front9Label = StatsCell.makeLabel()
     private let scoreLabel  = StatsCell.makeLabel(weight: .semibold)
     private let moneyLabel  = StatsCell.makeLabel(weight: .semibold)
@@ -599,21 +599,20 @@ final class StatsCell: UITableViewCell {
         scoreLabel.text  = "\(totalScore)"
         moneyLabel.text  = totalMoneyText
         proxLabel.text   = "\(proxCount)"
-        moneyLabel.textColor = moneyIsNegative ? .systemRed : .label
+        moneyLabel.textColor = moneyIsNegative
+            ? .systemRed
+            : UIColor(red: 0.10, green: 0.45, blue: 0.25, alpha: 1.0)
     }
 
     private static func makeLabel(
         alignment: NSTextAlignment = .center,
-        monospaced: Bool = true,
         weight: UIFont.Weight = .regular
     ) -> UILabel {
         let l = UILabel()
         l.textAlignment = alignment
         l.adjustsFontSizeToFitWidth = true
         l.minimumScaleFactor = 0.8
-        l.font = monospaced
-            ? .monospacedDigitSystemFont(ofSize: 16, weight: weight)
-            : .systemFont(ofSize: 16, weight: weight)
+        l.font = .systemFont(ofSize: 16, weight: weight)
         return l
     }
 }

@@ -73,6 +73,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private weak var liveSummaryWolfLabel: UILabel?
     private weak var liveSummarySkinsLabel: UILabel?
     private weak var liveSummaryNassauLabel: UILabel?
+    private weak var liveSummaryPlayerLabel: UILabel?
     
     @IBOutlet weak var rerollPushed: UIButton!
     
@@ -179,12 +180,28 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private weak var sortButton: UIButton?
     private var sortButtonInstalled = false
 
+    // Player row card backgrounds
+    private var playerRowCardViews: [UIView] = []
+    private var playerRowCardsInstalled = false
+
+    // Storyboard subview upward shift to close gap below dynamic header
+    private var ibSubviews: [UIView] = []
+    private var storyboardContentShifted = false
+
+    // Hole dot views for the dark green header
+    private var holeDotViews: [UIView] = []
+
+    // Dark green header
+    private var gameHeaderView: UIView?
+    private var gameHeaderInstalled = false
+
     private weak var liveNassauButton: UIButton?
     private var liveNassauInstalled = false
     private var liveNassauBottomConstraint: NSLayoutConstraint?
 
     private var liveTabBar: UIView?
     private var liveTabBarInstalled = false
+    private var activeTabIndex = 0
     private var shownLiveCodePromptForSession: String?
     private var liveTabScoreButton: UIButton?
     private var liveTabLiveButton: UIButton?
@@ -217,7 +234,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        ibSubviews = view.subviews
+
         installUmbieHelp()
         
         installLongPressHelp()
@@ -266,6 +284,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             f.keyboardType = .numberPad
             f.addTarget(self, action: #selector(scoreEdited(_:)), for: .editingDidEnd)
             f.addTarget(self, action: #selector(scoreChanged(_:)), for: .editingChanged)
+            f.backgroundColor = .secondarySystemBackground
+            f.textColor = .label
         }
         
         // --- Player money fields ---
@@ -358,6 +378,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        navigationController?.setNavigationBarHidden(true, animated: animated)
         // Sync local currentHole from the model every time the screen appears
         // so returning to an active game always shows the correct hole.
         if let g = GameManager.shared.currentGame {
@@ -376,6 +397,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         updateLiveTabBarVisibility()
     }
 
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        navigationController?.setNavigationBarHidden(false, animated: animated)
+    }
+
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         let showedOnboarding = showGameOnboardingIfNeeded()
@@ -387,61 +413,188 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         installSortButtonIfNeeded()
-        installHoleInfoHeaderIfNeeded()
+        repositionSortButton()
+        installGameHeaderIfNeeded()
         installLiveNassauButtonIfNeeded()
         installLiveTabBarIfNeeded()
         layoutBottomControls()
+        applyStoryboardShiftIfNeeded()
+        refreshPlayerRowCards()
         // Keep live container above bottom stack (bringSubviewToFront order, not zPosition, governs hit testing)
         if let container = liveContentContainer { view.bringSubviewToFront(container) }
         if let bar = liveTabBar { view.bringSubviewToFront(bar) }
         if let btn = liveNassauButton { view.bringSubviewToFront(btn) }
+        if let header = gameHeaderView { view.bringSubviewToFront(header) }
     }
 
-    // MARK: - Combined hole/par/HC header
+    // MARK: - Dark green game header
 
-    private var holeInfoHeaderInstalled = false
+    private func installGameHeaderIfNeeded() {
+        guard !gameHeaderInstalled else { return }
+        gameHeaderInstalled = true
 
-    private func installHoleInfoHeaderIfNeeded() {
-        guard !holeInfoHeaderInstalled else { return }
-        holeInfoHeaderInstalled = true
-
-        // Hide the storyboard number labels; the static "Hole" / "Par" text
-        // labels are already hidden via storyboard hidden="YES"
         holePlaying.isHidden = true
         parOfHole.isHidden = true
 
+        let darkGreen = UIColor(red: 0.118, green: 0.227, blue: 0.165, alpha: 1.0) // #1e3a2a
+
+        let header = UIView()
+        header.backgroundColor = darkGreen
+        header.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(header)
+        gameHeaderView = header
+
+        NSLayoutConstraint.activate([
+            header.topAnchor.constraint(equalTo: view.topAnchor),
+            header.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            header.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            // Height is driven by nav row bottom — set below after prevBtn is created
+        ])
+
+        // Ghost back button (top-left, safe area)
+        let backBtn = UIButton(type: .system)
+        backBtn.translatesAutoresizingMaskIntoConstraints = false
+        backBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        backBtn.layer.cornerRadius = 18
+        backBtn.clipsToBounds = true
+        backBtn.tintColor = .white
+        let chevronCfg = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+        backBtn.setImage(UIImage(systemName: "chevron.left", withConfiguration: chevronCfg), for: .normal)
+        backBtn.addTarget(self, action: #selector(gameBackTapped), for: .touchUpInside)
+        header.addSubview(backBtn)
+        NSLayoutConstraint.activate([
+            backBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            backBtn.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            backBtn.widthAnchor.constraint(equalToConstant: 36),
+            backBtn.heightAnchor.constraint(equalToConstant: 36),
+        ])
+
+        // Hole info label (centered, white, bold 17)
         let infoLabel = UILabel()
         infoLabel.textAlignment = .center
-        infoLabel.font = UIFont.systemFont(ofSize: 17, weight: .semibold)
+        infoLabel.font = UIFont.systemFont(ofSize: 17, weight: .bold)
+        infoLabel.textColor = .white
         infoLabel.adjustsFontSizeToFitWidth = true
         infoLabel.minimumScaleFactor = 0.6
         infoLabel.translatesAutoresizingMaskIntoConstraints = false
+        header.addSubview(infoLabel)
+        NSLayoutConstraint.activate([
+            infoLabel.centerXAnchor.constraint(equalTo: header.centerXAnchor),
+            infoLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 14),
+            infoLabel.leadingAnchor.constraint(greaterThanOrEqualTo: backBtn.trailingAnchor, constant: 8),
+            infoLabel.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -60),
+        ])
+        holeInfoLabel = infoLabel
 
+        // Course name label (below info, white 60% opacity, size 12)
         let courseLabel = UILabel()
         courseLabel.textAlignment = .center
-        courseLabel.font = UIFont.systemFont(ofSize: 11, weight: .regular)
-        courseLabel.textColor = .secondaryLabel
+        courseLabel.font = UIFont.systemFont(ofSize: 12, weight: .regular)
+        courseLabel.textColor = UIColor.white.withAlphaComponent(0.60)
         courseLabel.adjustsFontSizeToFitWidth = true
         courseLabel.minimumScaleFactor = 0.7
         courseLabel.translatesAutoresizingMaskIntoConstraints = false
+        header.addSubview(courseLabel)
+        NSLayoutConstraint.activate([
+            courseLabel.centerXAnchor.constraint(equalTo: header.centerXAnchor),
+            courseLabel.topAnchor.constraint(equalTo: infoLabel.bottomAnchor, constant: 3),
+            courseLabel.leadingAnchor.constraint(greaterThanOrEqualTo: header.leadingAnchor, constant: 60),
+            courseLabel.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -60),
+        ])
+        courseHeaderLabel = courseLabel
 
-        view.addSubview(infoLabel)
-        view.addSubview(courseLabel)
+        // Hole navigation row (Prev pill | dots | Next pill)
+        let ghostPillBG = UIColor.white.withAlphaComponent(0.15)
+
+        let prevBtn = UIButton(type: .system)
+        prevBtn.translatesAutoresizingMaskIntoConstraints = false
+        prevBtn.setTitle("< Prev", for: .normal)
+        prevBtn.setTitleColor(.white, for: .normal)
+        prevBtn.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        prevBtn.backgroundColor = ghostPillBG
+        prevBtn.layer.cornerRadius = 16
+        prevBtn.clipsToBounds = true
+        prevBtn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+        prevBtn.addTarget(self, action: #selector(previousHoleTapped(_:)), for: .touchUpInside)
+        header.addSubview(prevBtn)
+
+        let nextBtn = UIButton(type: .system)
+        nextBtn.translatesAutoresizingMaskIntoConstraints = false
+        nextBtn.setTitle("Next >", for: .normal)
+        nextBtn.setTitleColor(.white, for: .normal)
+        nextBtn.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        nextBtn.backgroundColor = ghostPillBG
+        nextBtn.layer.cornerRadius = 16
+        nextBtn.clipsToBounds = true
+        nextBtn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
+        nextBtn.addTarget(self, action: #selector(nextHoleTapped(_:)), for: .touchUpInside)
+        header.addSubview(nextBtn)
+
+        // Dots container
+        let dotsContainer = UIView()
+        dotsContainer.translatesAutoresizingMaskIntoConstraints = false
+        dotsContainer.backgroundColor = .clear
+        header.addSubview(dotsContainer)
 
         NSLayoutConstraint.activate([
-            infoLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            infoLabel.centerYAnchor.constraint(equalTo: holePlaying.centerYAnchor),
-            infoLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 108),
-            infoLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -108),
+            prevBtn.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            // Pin nav row directly below course label (no dead space within header)
+            prevBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 10),
+            prevBtn.heightAnchor.constraint(equalToConstant: 32),
 
-            courseLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            courseLabel.topAnchor.constraint(equalTo: infoLabel.bottomAnchor, constant: 3),
-            courseLabel.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 108),
-            courseLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -108),
+            nextBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
+            nextBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 10),
+            nextBtn.heightAnchor.constraint(equalToConstant: 32),
+
+            dotsContainer.leadingAnchor.constraint(equalTo: prevBtn.trailingAnchor, constant: 6),
+            dotsContainer.trailingAnchor.constraint(equalTo: nextBtn.leadingAnchor, constant: -6),
+            dotsContainer.centerYAnchor.constraint(equalTo: prevBtn.centerYAnchor),
+            dotsContainer.heightAnchor.constraint(equalToConstant: 10),
+
+            // Header height is content-driven: ends 12pt below the nav row
+            header.bottomAnchor.constraint(equalTo: prevBtn.bottomAnchor, constant: 12),
         ])
 
-        holeInfoLabel = infoLabel
-        courseHeaderLabel = courseLabel
+        // Build 18 dots
+        holeDotViews.removeAll()
+        var prevDot: UIView? = nil
+        for i in 0..<18 {
+            let dot = UIView()
+            dot.translatesAutoresizingMaskIntoConstraints = false
+            dot.layer.cornerRadius = 3
+            dot.backgroundColor = UIColor.white.withAlphaComponent(0.30)
+            dotsContainer.addSubview(dot)
+            holeDotViews.append(dot)
+
+            NSLayoutConstraint.activate([
+                dot.widthAnchor.constraint(equalToConstant: 6),
+                dot.heightAnchor.constraint(equalToConstant: 6),
+                dot.centerYAnchor.constraint(equalTo: dotsContainer.centerYAnchor),
+            ])
+
+            if let prev = prevDot {
+                dot.leadingAnchor.constraint(equalTo: prev.trailingAnchor, constant: 3).isActive = true
+            } else {
+                dot.leadingAnchor.constraint(greaterThanOrEqualTo: dotsContainer.leadingAnchor).isActive = true
+            }
+
+            if i == 17 {
+                dot.trailingAnchor.constraint(lessThanOrEqualTo: dotsContainer.trailingAnchor).isActive = true
+            }
+
+            prevDot = dot
+        }
+
+        // Center the dots horizontally
+        if let firstDot = holeDotViews.first, let lastDot = holeDotViews.last {
+            let centerGroup = UILayoutGuide()
+            dotsContainer.addLayoutGuide(centerGroup)
+            NSLayoutConstraint.activate([
+                centerGroup.centerXAnchor.constraint(equalTo: dotsContainer.centerXAnchor),
+                firstDot.leadingAnchor.constraint(equalTo: centerGroup.leadingAnchor),
+                lastDot.trailingAnchor.constraint(equalTo: centerGroup.trailingAnchor),
+            ])
+        }
 
         buildTournamentBanner()
         refreshHoleInfoHeader()
@@ -449,13 +602,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func buildTournamentBanner() {
         let banner = UIView()
-        banner.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.15)
+        banner.backgroundColor = UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 0.18) // amber
         banner.layer.cornerRadius = 6
         banner.translatesAutoresizingMaskIntoConstraints = false
 
         let label = UILabel()
         label.font = UIFont.systemFont(ofSize: 11, weight: .medium)
-        label.textColor = .secondaryLabel
+        label.textColor = UIColor(red: 0.7, green: 0.35, blue: 0.0, alpha: 1.0) // dark amber
         label.textAlignment = .center
         label.adjustsFontSizeToFitWidth = true
         label.minimumScaleFactor = 0.75
@@ -485,13 +638,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     func refreshTournamentBanner() {
-        guard let g = GameManager.shared.currentGame, let code = g.tournamentCode else {
+        guard let g = GameManager.shared.currentGame,
+              g.resolvedGameType == .tournament || g.tournamentCode != nil else {
             tournamentBannerView?.isHidden = true
             return
         }
-        let name    = g.tournamentName ?? "Tournament"
-        let type    = (g.tournamentGameType ?? "wolf").capitalized
-        tournamentBannerLabel?.text = "🏆 \(name)  ·  \(type)  ·  Code: \(code)"
+        let name = g.tournamentName ?? "Tournament"
+        tournamentBannerLabel?.text = "🏆 TOURNEY  \(name)"
         tournamentBannerView?.isHidden = false
     }
 
@@ -604,47 +757,118 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         let storedName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
         courseHeaderLabel?.text = storedName.isEmpty ? "Custom Course" : storedName
+
+        refreshHoleDots()
+    }
+
+    private func refreshHoleDots() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let currentH = max(0, min(17, g.hole))
+        for (i, dot) in holeDotViews.enumerated() {
+            dot.backgroundColor = (i == currentH)
+                ? .white
+                : UIColor.white.withAlphaComponent(0.30)
+        }
+    }
+
+    private func repositionSortButton() {
+        guard let btn = sortButton,
+              let first = playerNameLabels.sorted(by: { $0.tag < $1.tag }).first,
+              first.frame.minY > 0 else { return }
+        // Column headers in the storyboard sit ~20pt above the first player row's center.
+        // Align the sort pill's center to match the column header row's center.
+        let headerCenterY = first.frame.minY - 20
+        let h: CGFloat = 26
+        let w: CGFloat = 72
+        btn.frame = CGRect(x: first.frame.minX, y: headerCenterY - h / 2, width: w, height: h)
+    }
+
+    private func applyStoryboardShiftIfNeeded() {
+        guard !storyboardContentShifted,
+              let header = gameHeaderView,
+              header.frame.maxY > 50 else { return }
+
+        let gap = CGFloat(200) - header.frame.maxY
+        guard gap > 4 else { storyboardContentShifted = true; return }
+
+        let shift = gap - 8  // leave 8pt breathing room below header
+        guard shift > 0 else { storyboardContentShifted = true; return }
+
+        for sv in ibSubviews {
+            var f = sv.frame
+            f.origin.y -= shift
+            sv.frame = f
+        }
+        storyboardContentShifted = true
+
+        playerRowCardViews.forEach { $0.removeFromSuperview() }
+        playerRowCardViews.removeAll()
+        playerRowCardsInstalled = false
     }
 
     private func installSortButtonIfNeeded() {
+        let labels = playerNameLabels.sorted(by: { $0.tag < $1.tag })
         guard !sortButtonInstalled,
-              let firstLabel = playerNameLabels.sorted(by: { $0.tag < $1.tag }).first,
+              let firstLabel = labels.first,
               let superview = firstLabel.superview else { return }
         sortButtonInstalled = true
 
+        // ── Sort pill lives in the header row at the player-name column (frame-based) ───
         let btn = UIButton(type: .custom)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        btn.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
         btn.setTitleColor(.label, for: .normal)
         btn.backgroundColor = UIColor.systemGray6
-        btn.layer.cornerRadius = 12
+        btn.layer.cornerRadius = 11
         btn.layer.borderWidth = 1
         btn.layer.borderColor = UIColor.systemGray3.cgColor
         btn.layer.masksToBounds = true
-        btn.contentEdgeInsets = UIEdgeInsets(top: 5, left: 12, bottom: 5, right: 12)
+        btn.contentEdgeInsets = UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10)
         btn.addTarget(self, action: #selector(sortButtonTapped), for: .touchUpInside)
         superview.addSubview(btn)
 
-        NSLayoutConstraint.activate([
-            btn.centerYAnchor.constraint(equalTo: firstLabel.centerYAnchor, constant: -36),
-            btn.leadingAnchor.constraint(equalTo: firstLabel.leadingAnchor),
-            btn.heightAnchor.constraint(equalToConstant: 28)
-        ])
-
         sortButton = btn
         updateSortButtonTitle()
+    }
+
+    private func refreshPlayerRowCards() {
+        let labels = playerNameLabels.sorted(by: { $0.tag < $1.tag })
+        guard !playerRowCardsInstalled,
+              let superview = labels.first?.superview,
+              let firstFrame = labels.first?.frame,
+              firstFrame != .zero else { return }
+        playerRowCardsInstalled = true
+
+        playerRowCardViews.forEach { $0.removeFromSuperview() }
+        playerRowCardViews.removeAll()
+
+        for label in labels {
+            let cardView = UIView()
+            cardView.backgroundColor = UIColor.secondarySystemGroupedBackground
+            cardView.layer.cornerRadius = 8
+            cardView.layer.borderWidth = 0.5
+            cardView.layer.borderColor = UIColor.separator.cgColor
+            let y = label.frame.minY - 6
+            let h = label.frame.height + 12
+            cardView.frame = CGRect(x: 0, y: y, width: superview.bounds.width, height: h)
+            superview.insertSubview(cardView, at: 0)
+            playerRowCardViews.append(cardView)
+        }
     }
 
     private func installLiveNassauButtonIfNeeded() {
         guard !liveNassauInstalled else { return }
         liveNassauInstalled = true
 
-        var cfg = UIButton.Configuration.tinted()
+        let amber = UIColor(red: 0.831, green: 0.725, blue: 0.416, alpha: 1.0)
+        let headerGreen = UIColor(red: 0.118, green: 0.227, blue: 0.165, alpha: 1.0)
+        var cfg = UIButton.Configuration.filled()
         cfg.title = "Live Nassau"
         cfg.image = UIImage(systemName: "dot.radiowaves.left.and.right")
         cfg.imagePlacement = .leading
         cfg.imagePadding = 6
         cfg.cornerStyle = .capsule
+        cfg.baseBackgroundColor = amber
+        cfg.baseForegroundColor = headerGreen
         let btn = UIButton(configuration: cfg)
         btn.addTarget(self, action: #selector(liveNassauTapped), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
@@ -699,6 +923,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard !liveTabBarInstalled else { return }
         liveTabBarInstalled = true
 
+        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+
         let bar = UIView()
         bar.translatesAutoresizingMaskIntoConstraints = false
         bar.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.97)
@@ -716,19 +942,27 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             heightCon,
         ])
 
-        let scoreBtn = UIButton(type: .system)
-        scoreBtn.setTitle("🎯 Score", for: .normal)
-        scoreBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        func makeTabButton(icon: String, title: String) -> UIButton {
+            var cfg = UIButton.Configuration.plain()
+            cfg.image = UIImage(systemName: icon, withConfiguration: UIImage.SymbolConfiguration(pointSize: 14, weight: .medium))
+            cfg.title = title
+            cfg.imagePlacement = .leading
+            cfg.imagePadding = 4
+            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+                var a = attrs; a.font = UIFont.systemFont(ofSize: 12, weight: .semibold); return a
+            }
+            let btn = UIButton(configuration: cfg)
+            btn.tintColor = .secondaryLabel
+            return btn
+        }
+
+        let scoreBtn = makeTabButton(icon: "target", title: "Score")
         scoreBtn.addTarget(self, action: #selector(liveTabScoreTapped), for: .touchUpInside)
 
-        let liveBtn = UIButton(type: .system)
-        liveBtn.setTitle("📺 Live Wolf", for: .normal)
-        liveBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        let liveBtn = makeTabButton(icon: "tv", title: "Live Wolf")
         liveBtn.addTarget(self, action: #selector(liveTabLiveTapped), for: .touchUpInside)
 
-        let leaderboardBtn = UIButton(type: .system)
-        leaderboardBtn.setTitle("🏆 Leaderboard", for: .normal)
-        leaderboardBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        let leaderboardBtn = makeTabButton(icon: "trophy", title: "Leaderboard")
         leaderboardBtn.addTarget(self, action: #selector(liveTabLeaderboardTapped), for: .touchUpInside)
         leaderboardBtn.isHidden = true
 
@@ -769,7 +1003,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         liveTabScoreButton    = scoreBtn
         liveTabLiveButton     = liveBtn
         liveTabLeaderboardButton = leaderboardBtn
-        selectScoreTab()
+        activeTabIndex = 0
+        scoreBtn.tintColor = wolfGreen
         updateLiveTabBarVisibility()
         updateLiveNassauButtonPosition()
     }
@@ -803,13 +1038,19 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func selectScoreTab() {
-        liveTabScoreButton?.tintColor = .label
+        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        liveTabScoreButton?.tintColor = wolfGreen
         liveTabLiveButton?.tintColor = .secondaryLabel
+        liveTabLeaderboardButton?.tintColor = .secondaryLabel
+        activeTabIndex = 0
     }
 
     private func selectLiveTab() {
+        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
         liveTabScoreButton?.tintColor = .secondaryLabel
-        liveTabLiveButton?.tintColor = .systemGreen
+        liveTabLiveButton?.tintColor = wolfGreen
+        liveTabLeaderboardButton?.tintColor = .secondaryLabel
+        activeTabIndex = 1
     }
 
     private func showLiveContent() {
@@ -871,7 +1112,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func updateSortButtonTitle() {
-        sortButton?.setTitle(isSortedByDollarGame ? "Sort: $ Game ▲" : "Sort: Order", for: .normal)
+        sortButton?.setTitle("Sort", for: .normal)
     }
 
     deinit {
@@ -997,21 +1238,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     @objc private func gameBackTapped() {
-        // If Game is inside a navigation controller that was presented modally
-        // (your RoundNav), close that whole flow.
-        if let nav = navigationController, nav.presentingViewController != nil {
-            nav.dismiss(animated: true)
+        if let nav = navigationController {
+            // Pop back to PlayerSetupViewController if it's in the stack
+            if let setupVC = nav.viewControllers.last(where: { $0 is PlayerSetupViewController }) {
+                nav.popToViewController(setupVC, animated: true)
+            } else {
+                nav.popViewController(animated: true)
+            }
             return
         }
-
-        // If Game itself was presented modally, just dismiss it
-        if presentingViewController != nil {
-            dismiss(animated: true)
-            return
-        }
-
-        // Fallback: if it's on a push stack somewhere, just pop
-        navigationController?.popViewController(animated: true)
+        dismiss(animated: true)
     }
 
     private func setRejectHammerEnabled(_ on: Bool) { /* replaced by hammer stepper */ }
@@ -1114,13 +1350,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         if #available(iOS 15.0, *) {
             var c = button.configuration ?? .filled()
             c.baseForegroundColor = isOn ? .systemBackground : .white
-            c.baseBackgroundColor = isOn ? .label : .systemGreen
+            c.baseBackgroundColor = isOn ? .label : UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
             c.cornerStyle = .large
             button.configuration = c
         }
         // Direct assignment ensures immediate visual response (tap feedback)
         // and serves as a fallback on pre-iOS 15.
-        button.backgroundColor = isOn ? .label : .systemGreen
+        button.backgroundColor = isOn ? .label : UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
         button.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
         button.layer.cornerRadius = 10
         button.layer.masksToBounds = true
@@ -1135,12 +1371,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             if #available(iOS 15.0, *) {
                 var c = b.configuration ?? .filled()
                 c.baseForegroundColor = .white       // title color
-                c.baseBackgroundColor = .systemGreen // default OFF color
+                c.baseBackgroundColor = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0) // default OFF color
                 c.cornerStyle = .large
                 b.configuration = c
             } else {
                 b.setTitleColor(.white, for: .normal)
-                b.backgroundColor = .systemGreen     // default OFF color
+                b.backgroundColor = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)     // default OFF color
                 b.layer.cornerRadius = 10
                 b.layer.masksToBounds = true
             }
@@ -1255,7 +1491,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 let boldFont = UIFont.boldSystemFont(ofSize: pt)
                 let nameAttr = NSAttributedString(string: truncName, attributes: [
                     .font: boldFont,
-                    .foregroundColor: UIColor.systemGreen
+                    .foregroundColor: UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
                 ])
                 let badgeAttr = NSAttributedString(string: dotsStr, attributes: [
                     .font: UIFont.systemFont(ofSize: pt + 2),
@@ -1279,8 +1515,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let on = (hole < g.aloneApplied.count) ? g.aloneApplied[hole] : false
         alonePushed.isSelected = on
-        alonePushed.backgroundColor = on ? .label : .systemOrange
-        alonePushed.setTitleColor(on ? .systemBackground : .white, for: .normal)
+        alonePushed.setBackgroundImage(.pixel(of: on ? UIColor(white: 0.22, alpha: 1) : .systemOrange), for: .normal)
+        alonePushed.setTitleColor(.white, for: .normal)
         alonePushed.setTitle(on ? "Alone On" : "Alone", for: .normal)
     }
     // Paint all 5 buttons from the saved model (multiple Wolves allowed)
@@ -1308,7 +1544,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     // Simple, reliable painting
     private func applyWolfStyleDirect(_ button: UIButton, isOn: Bool) {
-        button.backgroundColor = isOn ? .label : .systemGreen
+        button.backgroundColor = isOn ? .label : UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
         button.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
         button.layer.cornerRadius = 10
         button.layer.masksToBounds = true
@@ -1356,11 +1592,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         levelLabel.text    = count == 0 ? "–" : "\(mult)×"
         minusBtn.isEnabled = count > 0
 
-        let bg: UIColor   = count == 0 ? GameViewController.hammerGreen : .black
-        let fg: UIColor   = .white
-        let minusFG       = count == 0 ? UIColor.white.withAlphaComponent(0.4) : .white
+        let fg: UIColor    = .white
+        let minusFG        = count == 0 ? UIColor.white.withAlphaComponent(0.4) : UIColor.white
 
-        container.backgroundColor    = bg
+        container.backgroundColor    = .systemOrange
         hammerTitleLabel?.textColor  = fg
         levelLabel.textColor         = fg
         minusBtn.tintColor           = minusFG
@@ -1401,7 +1636,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             b.tag = seat
             let isWolf = (wolfSeat == seat)
             b.isSelected = isWolf
-            b.backgroundColor = isWolf ? .label : .systemGreen
+            b.backgroundColor = isWolf ? .label : UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
             b.setTitleColor(isWolf ? .systemBackground : .white, for: .normal)
         }
 
@@ -1412,7 +1647,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             b.tag = seat
             let on = (proxSeat == seat)
             b.isSelected = on
-            b.backgroundColor = on ? .systemGreen : .systemGray
+            b.backgroundColor = on ? UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0) : .systemGray
         }
 
         // Scores
@@ -1904,7 +2139,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let oldColor = sender.backgroundColor
         sender.backgroundColor = .systemGray
         DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-            sender.backgroundColor = oldColor ?? .systemGreen
+            sender.backgroundColor = oldColor ?? UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
         }
         
         // copy current hole's amount to ALL holes
@@ -3222,9 +3457,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         hStack.translatesAutoresizingMaskIntoConstraints = false
         bg.addSubview(hStack)
 
+        // Small attribution label: whose perspective these numbers reflect
+        let nameLbl = UILabel()
+        nameLbl.font = .systemFont(ofSize: 9, weight: .regular)
+        nameLbl.textColor = UIColor.tertiaryLabel
+        nameLbl.textAlignment = .center
+        nameLbl.translatesAutoresizingMaskIntoConstraints = false
+        bg.addSubview(nameLbl)
+
         NSLayoutConstraint.activate([
-            hStack.topAnchor.constraint(equalTo: bg.topAnchor, constant: 2),
-            hStack.bottomAnchor.constraint(equalTo: bg.bottomAnchor, constant: -2),
+            hStack.topAnchor.constraint(equalTo: bg.topAnchor, constant: 3),
             hStack.leadingAnchor.constraint(equalTo: bg.leadingAnchor, constant: 6),
             hStack.trailingAnchor.constraint(equalTo: bg.trailingAnchor, constant: -6),
             div1.widthAnchor.constraint(equalToConstant: 1),
@@ -3232,12 +3474,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             div2.widthAnchor.constraint(equalToConstant: 1),
             div2.heightAnchor.constraint(equalToConstant: 14),
             wolfLbl.widthAnchor.constraint(equalTo: skinLbl.widthAnchor),
-            nassLbl.widthAnchor.constraint(equalTo: skinLbl.widthAnchor)
+            nassLbl.widthAnchor.constraint(equalTo: skinLbl.widthAnchor),
+            nameLbl.topAnchor.constraint(equalTo: hStack.bottomAnchor, constant: 1),
+            nameLbl.leadingAnchor.constraint(equalTo: bg.leadingAnchor, constant: 4),
+            nameLbl.trailingAnchor.constraint(equalTo: bg.trailingAnchor, constant: -4),
+            nameLbl.bottomAnchor.constraint(equalTo: bg.bottomAnchor, constant: -2),
         ])
 
         liveSummaryWolfLabel  = wolfLbl
         liveSummarySkinsLabel = skinLbl
         liveSummaryNassauLabel = nassLbl
+        liveSummaryPlayerLabel = nameLbl
 
         return bg
     }
@@ -3253,31 +3500,44 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         guard liveSummaryWolfLabel != nil else { return }
 
-        // Wolf: seat-0 running net through committed holes
+        // Wolf: scorekeeper's seat running net through committed holes
+        let mySeat = myPlayerIndex(in: g) ?? 0
         let current = max(0, min(17, g.hole))
         let start   = max(0, min(17, g.startHole ?? current))
         let holes   = start <= current
             ? Array(start...current)
             : Array(start..<STANDARD_HOLES) + Array(0...current)
-        let wolfNet = holes.reduce(0.0) { $0 + (g.playerMoney[safe: 0]?[safe: $1] ?? 0.0) }
+        let wolfNet = holes.reduce(0.0) { $0 + (g.playerMoney[safe: mySeat]?[safe: $1] ?? 0.0) }
         let wolfSign = wolfNet >= 0 ? "+" : ""
         liveSummaryWolfLabel?.text = "Wolf \(wolfSign)$\(formatMoney(wolfNet))"
 
-        // Skins: current pot dollars
-        if let ss = g.skinsState, ss.settings.isEnabled {
-            let hIdx    = min(current, STANDARD_HOLES - 1)
-            let potSize = ss.resultsByHole[safe: hIdx]?.potValue ?? 1
-            let dollars = Double(potSize) * ss.settings.skinValue
-            liveSummarySkinsLabel?.text = "Skins $\(formatMoney(dollars))"
+        let playerName = g.playerNames[safe: mySeat]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        liveSummaryPlayerLabel?.text = playerName.isEmpty ? nil : playerName
+
+        // Skins: McTommy's net money from skins (not the pot value)
+        if let ss = g.skinsState, ss.settings.isEnabled,
+           mySeat < ss.moneyWonByPlayer.count {
+            let money = ss.moneyWonByPlayer[mySeat]
+            let sign  = money > 0 ? "+" : ""
+            liveSummarySkinsLabel?.text = "Skins \(sign)$\(formatMoney(money))"
         } else {
             liveSummarySkinsLabel?.text = "Skins —"
         }
 
-        // Nassau: overall status of first match
-        if let ns = g.nassauState, ns.isEnabled,
-           let match = ns.oneVsOneMatches.first ?? ns.twoVsTwoMatches.first {
-            let txt = NassauEngine.runningStatusText(match.overallStatusByHole)
-            liveSummaryNassauLabel?.text = "Nassau \(txt)"
+        // Nassau: McTommy's standing in their match (flipped if they're team 2)
+        if let ns = g.nassauState, ns.isEnabled {
+            let allMatches = ns.oneVsOneMatches + ns.twoVsTwoMatches
+            if let match = allMatches.first(where: {
+                $0.team1PlayerIndexes.contains(mySeat) || $0.team2PlayerIndexes.contains(mySeat)
+            }) {
+                let fromMyPerspective = match.team2PlayerIndexes.contains(mySeat)
+                    ? match.overallStatusByHole.map { -$0 }
+                    : match.overallStatusByHole
+                let txt = NassauEngine.runningStatusText(fromMyPerspective)
+                liveSummaryNassauLabel?.text = "Nassau \(txt)"
+            } else {
+                liveSummaryNassauLabel?.text = "Nassau —"
+            }
         } else {
             liveSummaryNassauLabel?.text = "Nassau —"
         }
@@ -3375,16 +3635,19 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         if var cfg = b.configuration {
             cfg.baseBackgroundColor = isOn ? onColor : offColor
-            cfg.baseForegroundColor = isOn ? .systemBackground : .white
+            cfg.baseForegroundColor = .white
             cfg.title = isOn ? onTitle : offTitle
             b.configuration = cfg
         } else {
-            b.backgroundColor = isOn ? onColor : offColor
+            let selectedBg = UIColor(white: 0.22, alpha: 1)
+            b.setBackgroundImage(.pixel(of: isOn ? selectedBg : offColor), for: .normal)
+            b.setBackgroundImage(.pixel(of: isOn ? selectedBg : offColor), for: .selected)
             b.setTitle(isOn ? onTitle : offTitle, for: .normal)
+            b.setTitle(isOn ? onTitle : offTitle, for: .selected)
             b.setTitleColor(.white, for: .normal)
-            b.setTitleColor(.systemBackground, for: .selected)
+            b.setTitleColor(.white, for: .selected)
         }
-        b.tintColor = isOn ? .systemBackground : .white
+        b.tintColor = .white
     }
 
     // MARK: - POPS (handicap strokes per hole)
@@ -3608,13 +3871,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                    onTitle: String,
                                    offTitle: String) {
         guard let b = b else { return }
-        b.configuration = nil                           // kill config override
-        b.setBackgroundImage(.pixel(of: onColor),  for: .selected)
-        b.setBackgroundImage(.pixel(of: offColor), for: .normal)
+        b.configuration = nil
+        // Use a fixed dark charcoal for the "selected" state so white text is legible in both
+        // light and dark mode. UIImage.pixel() renders a static bitmap — .label would be
+        // black in light mode but the text (.systemBackground) becomes black in dark mode too.
+        let selectedBg = UIColor(white: 0.22, alpha: 1)
+        b.setBackgroundImage(.pixel(of: selectedBg), for: .selected)
+        b.setBackgroundImage(.pixel(of: offColor),   for: .normal)
         b.setTitle(onTitle,  for: .selected)
         b.setTitle(offTitle, for: .normal)
         b.setTitleColor(.white, for: .normal)
-        b.setTitleColor(.systemBackground, for: .selected)
+        b.setTitleColor(.white, for: .selected)
         b.layer.cornerRadius = 10
         b.clipsToBounds = true
     }
@@ -3682,11 +3949,19 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
             // ── Row 3: Live summary strip (Wolf · Skins · Nassau) ────────────
             let strip = makeLiveSummaryStrip()
-            strip.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            strip.heightAnchor.constraint(equalToConstant: 40).isActive = true
             vStack.addArrangedSubview(strip)
 
             // ── Row 4: Update Scores (full width) ────────────────────────────
-            UpdateScores.setTitle("Update Scores", for: .normal)
+            var usCfg = UIButton.Configuration.filled()
+            usCfg.title = "Update Scores"
+            usCfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+            usCfg.baseForegroundColor = .white
+            usCfg.cornerStyle = .large
+            usCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+                var a = attrs; a.font = UIFont.systemFont(ofSize: 17, weight: .semibold); return a
+            }
+            UpdateScores.configuration = usCfg
             UpdateScores.heightAnchor.constraint(equalToConstant: 44).isActive = true
             vStack.addArrangedSubview(UpdateScores)
 
@@ -3729,11 +4004,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             row6.axis = .horizontal; row6.spacing = 6; row6.distribution = .fillEqually
             row6.heightAnchor.constraint(equalToConstant: 32).isActive = true
             vStack.addArrangedSubview(row6)
+
+            // Strip labels are nil during viewDidLoad refresh calls; populate now that they exist
+            refreshLiveSummaryStrip()
         }
 
         // Update frame every layout pass (handles rotation / safe-area changes)
-        // Total: 44 + 8 + 44 + 8 + 28 + 8 + 44 + 8 + 40 + 8 + 32 = 272
-        bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: 272)
+        // Total: 44 + 8 + 44 + 8 + 40 + 8 + 44 + 8 + 40 + 8 + 32 = 284
+        bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: 284)
         sup.bringSubviewToFront(bottomStackView!)
     }
 
@@ -3794,7 +4072,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let seat = order[safe: slot] ?? slot
             b.tag = seat
             let isOn = (winner == seat)
-            b.backgroundColor = isOn ? .label : .systemGreen
+            b.backgroundColor = isOn ? .label : UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
             b.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
             b.layer.cornerRadius = 10
             b.layer.masksToBounds = true

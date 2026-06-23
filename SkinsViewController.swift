@@ -37,7 +37,7 @@ final class SkinsViewController: UIViewController {
         textView.isEditable = false
         textView.isScrollEnabled = true
         textView.backgroundColor = .clear
-        textView.font = .monospacedSystemFont(ofSize: 18, weight: .medium)
+        textView.font = .systemFont(ofSize: 16, weight: .regular)
         textView.textColor = .label
         textView.adjustsFontForContentSizeCategory = true
         textView.textContainerInset = UIEdgeInsets(top: 16, left: 10, bottom: 24, right: 10)
@@ -92,43 +92,73 @@ final class SkinsViewController: UIViewController {
     private func buildStyledSummary(_ text: String) -> NSAttributedString {
         let result = NSMutableAttributedString()
 
-        let paragraph = NSMutableParagraphStyle()
-        paragraph.lineSpacing = 4
-        paragraph.paragraphSpacing = 10
+        let wolfGreen   = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        let positiveGreen = UIColor(red: 0.10, green: 0.45, blue: 0.25, alpha: 1.0)
 
-        let baseFont = UIFont.monospacedSystemFont(ofSize: 18, weight: .medium)
-        let boldFont = UIFont.monospacedSystemFont(ofSize: 20, weight: .bold)
-        let sectionFont = UIFont.monospacedSystemFont(ofSize: 22, weight: .heavy)
+        let sectionPara = NSMutableParagraphStyle()
+        sectionPara.paragraphSpacingBefore = 12
+        sectionPara.paragraphSpacing = 4
 
+        let bodyPara = NSMutableParagraphStyle()
+        bodyPara.lineSpacing = 3
+        bodyPara.paragraphSpacing = 2
+
+        let sectionFont = UIFont.systemFont(ofSize: 13, weight: .bold)
+        let bodyFont    = UIFont.systemFont(ofSize: 15, weight: .regular)
+        let boldFont    = UIFont.systemFont(ofSize: 15, weight: .semibold)
+
+        let sectionHeaders: Set<String> = ["SKINS", "TOTALS", "BY HOLE"]
         let lines = text.components(separatedBy: "\n")
 
         for line in lines {
-
-            let attr: [NSAttributedString.Key: Any]
-
-            if line.contains("SKINS") || line.contains("TOTALS") || line.contains("BY HOLE") {
-                attr = [
+            if sectionHeaders.contains(line.trimmingCharacters(in: .whitespaces)) {
+                // Section header: green, bold, small caps feel
+                let str = line.uppercased() + "\n"
+                result.append(NSAttributedString(string: str, attributes: [
                     .font: sectionFont,
-                    .foregroundColor: UIColor.label,
-                    .paragraphStyle: paragraph
-                ]
+                    .foregroundColor: wolfGreen,
+                    .paragraphStyle: sectionPara,
+                    .kern: 0.8
+                ]))
+            } else if line.isEmpty {
+                result.append(NSAttributedString(string: "\n", attributes: [.font: bodyFont]))
+            } else if line.contains("(+$") {
+                // Positive money line — color the amount green
+                let parts = line.components(separatedBy: "(+$")
+                let base  = NSMutableAttributedString(string: parts[0], attributes: [
+                    .font: boldFont, .foregroundColor: UIColor.label, .paragraphStyle: bodyPara
+                ])
+                if parts.count > 1 {
+                    base.append(NSAttributedString(string: "(+$" + parts[1] + "\n", attributes: [
+                        .font: boldFont, .foregroundColor: positiveGreen, .paragraphStyle: bodyPara
+                    ]))
+                } else {
+                    base.append(NSAttributedString(string: "\n"))
+                }
+                result.append(base)
+            } else if line.contains("(-$") {
+                // Negative money line — color the amount red
+                let parts = line.components(separatedBy: "(-$")
+                let base  = NSMutableAttributedString(string: parts[0], attributes: [
+                    .font: boldFont, .foregroundColor: UIColor.label, .paragraphStyle: bodyPara
+                ])
+                if parts.count > 1 {
+                    base.append(NSAttributedString(string: "(-$" + parts[1] + "\n", attributes: [
+                        .font: boldFont, .foregroundColor: UIColor.systemRed, .paragraphStyle: bodyPara
+                    ]))
+                } else {
+                    base.append(NSAttributedString(string: "\n"))
+                }
+                result.append(base)
+            } else if line.contains(":") {
+                result.append(NSAttributedString(string: line + "\n", attributes: [
+                    .font: boldFont, .foregroundColor: UIColor.label, .paragraphStyle: bodyPara
+                ]))
+            } else {
+                result.append(NSAttributedString(string: line + "\n", attributes: [
+                    .font: bodyFont, .foregroundColor: UIColor.secondaryLabel, .paragraphStyle: bodyPara
+                ]))
             }
-            else if line.contains(":") {
-                attr = [
-                    .font: boldFont,
-                    .foregroundColor: UIColor.label,
-                    .paragraphStyle: paragraph
-                ]
-            }
-            else {
-                attr = [
-                    .font: baseFont,
-                    .foregroundColor: UIColor.label,
-                    .paragraphStyle: paragraph
-                ]
-            }
-
-            result.append(NSAttributedString(string: line + "\n", attributes: attr))
         }
 
         return result
