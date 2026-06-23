@@ -852,6 +852,226 @@ private let WATERVILLE_ID = UUID(uuidString: "D101A001-0000-0000-0000-0000000000
 let WATERVILLE_PARS: [Int] = [4,4,3,5,4,4, 5,3,4, 4,5,4, 4,3,4, 4,4,5]
 let WATERVILLE_HCS:  [Int] = [13,5,17,3,11,1, 15,7,9, 6,2,14, 16,10,8, 18,12,4]
 
+// MARK: Portmarnock Golf Club (Championship)
+// Original 18 holes laid out 1894 by William C. Pickeman & George Coburn
+private let PORTMARNOCK_CHAMPIONSHIP_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000027")!
+
+let PORTMARNOCK_CHAMPIONSHIP_PARS: [Int] = [
+    4,4,4,4,4,5,3,4,4,
+    4,4,3,5,4,3,5,4,4
+]
+
+let PORTMARNOCK_CHAMPIONSHIP_HCS: [Int] = [
+    11,15,13,1,5,9,17,7,3,
+    8,6,16,14,2,12,18,4,10
+]
+
+let PORTMARNOCK_CHAMPIONSHIP_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 7466, rating: 70.0, slope: 110)
+]
+
+// MARK: Portmarnock Golf Club (Yellow Nine)
+// 9-hole addition designed by Fred Hawtree (1971)
+private let PORTMARNOCK_YELLOW_NINE_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000028")!
+
+let PORTMARNOCK_YELLOW_NINE_PARS: [Int] = [4,4,3,3,5,4,5,3,5]
+
+let PORTMARNOCK_YELLOW_NINE_HCS: [Int] = [3,5,17,11,15,1,7,9,13]
+
+let PORTMARNOCK_YELLOW_NINE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 3461, rating: 37.0),
+    TeeInfo(teeName: "White", yardage: 3357, rating: 36.0),
+    TeeInfo(teeName: "Green", yardage: 3240, rating: 35.5)
+]
+
+// MARK: Rosapenna – St. Patrick's Links (Tom Doak)
+private let ROSAPENNA_ST_PATRICKS_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000029")!
+
+let ROSAPENNA_ST_PATRICKS_PARS: [Int] = [
+    4,4,3,5,3,5,4,4,4,
+    4,4,5,4,4,3,4,3,4
+]
+
+let ROSAPENNA_ST_PATRICKS_HCS: [Int] = [
+    9,11,17,5,13,7,3,15,1,
+    8,6,4,12,10,18,2,14,16
+]
+
+let ROSAPENNA_ST_PATRICKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Sandstone", yardage: 6930, rating: 73.2, slope: 128),
+    TeeInfo(teeName: "Slate",     yardage: 6490, rating: 71.0, slope: 125),
+    TeeInfo(teeName: "Granite",   yardage: 5919)
+]
+
+// MARK: Rosapenna – Sandy Hills Links (Pat Ruddy)
+private let ROSAPENNA_SANDY_HILLS_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000030")!
+
+let ROSAPENNA_SANDY_HILLS_PARS: [Int] = [
+    5,4,3,4,4,4,3,5,4,
+    4,3,4,5,4,4,3,5,4
+]
+
+let ROSAPENNA_SANDY_HILLS_HCS: [Int] = [
+    13,3,17,11,5,1,15,9,7,
+    6,12,10,8,18,2,14,16,4
+]
+
+let ROSAPENNA_SANDY_HILLS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6767, rating: 73.2, slope: 127),
+    TeeInfo(teeName: "Blue",  yardage: 6312, rating: 71.0, slope: 121),
+    TeeInfo(teeName: "White", yardage: 5890, rating: 68.9, slope: 117),
+    TeeInfo(teeName: "Red",   yardage: 4828)
+]
+
+// MARK: Rosapenna – Old Tom Morris Links (1891)
+private let ROSAPENNA_OLD_TOM_MORRIS_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000031")!
+
+let ROSAPENNA_OLD_TOM_MORRIS_PARS: [Int] = [
+    4,3,4,4,4,4,3,5,4,
+    4,4,4,4,3,4,5,3,5
+]
+
+let ROSAPENNA_OLD_TOM_MORRIS_HCS: [Int] = [
+    6,18,4,12,8,2,16,14,10,
+    5,1,7,15,13,3,17,11,9
+]
+
+let ROSAPENNA_OLD_TOM_MORRIS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6867, rating: 73.0, slope: 119),
+    TeeInfo(teeName: "Blue",  yardage: 6495, rating: 71.0, slope: 116),
+    TeeInfo(teeName: "White", yardage: 6064, rating: 69.0, slope: 113),
+    TeeInfo(teeName: "Red",   yardage: 5150, rating: 71.0, slope: 117)
+]
+
+// MARK: The European Club — Brittas Bay, Co. Wicklow, Ireland (Pat Ruddy)
+private let EUROPEAN_CLUB_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000037")!
+
+let EUROPEAN_CLUB_PARS: [Int] = [
+    4,3,5,4,4,3,4,4,4,
+    4,4,4,5,3,4,4,4,4
+]
+
+let EUROPEAN_CLUB_HCS: [Int] = [
+    8,18,16,3,5,14,1,10,12,
+    2,9,6,15,17,13,11,4,7
+]
+
+let EUROPEAN_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 7377, rating: 75.9, slope: 135)
+]
+
+// MARK: Ballinlough Castle Golf Club — Clonmellon, Co. Westmeath, Ireland (Pat Ruddy)
+private let BALLINLOUGH_CASTLE_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000038")!
+
+let BALLINLOUGH_CASTLE_PARS: [Int] = [
+    4,4,3,4,3,5,4,4,4,
+    4,4,4,4,4,4,3,4,3
+]
+
+let BALLINLOUGH_CASTLE_HCS: [Int] = [
+    9,1,7,3,15,13,11,17,6,
+    12,5,2,4,10,14,16,8,18
+]
+
+let BALLINLOUGH_CASTLE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 5786)
+]
+
+// MARK: Ballyliffin Golf Club (Glashedy Links) — Inishowen, Co. Donegal, Ireland (Pat Ruddy)
+private let BALLYLIFFIN_GLASHEDY_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000039")!
+
+let BALLYLIFFIN_GLASHEDY_PARS: [Int] = [
+    4,4,4,5,3,4,3,4,4,
+    4,4,4,5,3,4,4,5,4
+]
+
+let BALLYLIFFIN_GLASHEDY_HCS: [Int] = [
+    10,2,8,18,16,14,12,6,4,
+    17,7,3,11,15,1,5,9,13
+]
+
+let BALLYLIFFIN_GLASHEDY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7542),
+    TeeInfo(teeName: "Gold",  yardage: 6847),
+    TeeInfo(teeName: "White", yardage: 6363),
+    TeeInfo(teeName: "Red",   yardage: 5610)
+]
+
+// MARK: Castlegregory Golf & Fishing Club — Co. Kerry, Ireland (Arthur Spring, 1989; 9-hole played twice)
+private let CASTLEGREGORY_ID = UUID(uuidString: "D101A001-0000-0000-0000-00000000003A")!
+
+let CASTLEGREGORY_PARS: [Int] = [
+    5,3,4,4,3,4,4,4,3
+]
+
+let CASTLEGREGORY_HCS: [Int] = [
+    11,7,17,3,9,15,1,5,13
+]
+
+let CASTLEGREGORY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 2877, rating: 34.0),
+    TeeInfo(teeName: "White", yardage: 2766, rating: 33.5),
+    TeeInfo(teeName: "Green", yardage: 2623, rating: 33.0),
+    TeeInfo(teeName: "Red",   yardage: 2330, rating: 34.0)
+]
+
+// MARK: Castlecomer Golf Club — Castlecomer, Co. Kilkenny, Ireland
+private let CASTLECOMER_ID = UUID(uuidString: "D101A001-0000-0000-0000-00000000003B")!
+
+let CASTLECOMER_PARS: [Int] = [
+    5,4,3,4,4,5,4,4,3,
+    4,4,5,4,4,3,4,3,5
+]
+
+let CASTLECOMER_HCS: [Int] = [
+    13,7,9,1,3,5,11,15,17,
+    12,2,8,16,4,18,6,10,14
+]
+
+let CASTLECOMER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6758, rating: 74.0),
+    TeeInfo(teeName: "White", yardage: 6474, rating: 73.0),
+    TeeInfo(teeName: "Green", yardage: 6160, rating: 72.0),
+    TeeInfo(teeName: "Red",   yardage: 5487, rating: 74.0)
+]
+
+// MARK: Co. Tipperary Golf & Country Club (Dundrum House) — Dundrum, Co. Tipperary (Philip Walton & Ken Kearney)
+private let CO_TIPPERARY_GCC_ID = UUID(uuidString: "D101A001-0000-0000-0000-00000000003C")!
+
+let CO_TIPPERARY_GCC_PARS: [Int] = [
+    4,4,3,4,4,3,5,4,4,
+    4,5,3,5,4,4,4,4,4
+]
+
+let CO_TIPPERARY_GCC_HCS: [Int] = [
+    16,8,10,18,14,6,4,12,2,
+    3,9,17,7,11,15,13,5,1
+]
+
+let CO_TIPPERARY_GCC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 7164, rating: 70.0, slope: 113)
+]
+
+// MARK: County Sligo Golf Club (Rosses Point) — H.S. Harry Colt (1927)
+private let COUNTY_SLIGO_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000032")!
+
+let COUNTY_SLIGO_PARS: [Int] = [
+    4,4,5,3,5,4,4,4,3,
+    4,4,5,3,4,4,3,4,4
+]
+
+let COUNTY_SLIGO_HCS: [Int] = [
+    9,15,8,11,18,6,1,4,13,
+    16,3,14,17,5,7,12,2,10
+]
+
+let COUNTY_SLIGO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7157, rating: 74.3),
+    TeeInfo(teeName: "White", yardage: 6574, rating: 71.9),
+    TeeInfo(teeName: "Gold",  yardage: 6375, rating: 70.7),
+    TeeInfo(teeName: "Green", yardage: 5918, rating: 74.7)
+]
+
 // MARK: - Lahinch Golf Club (Old Course)
 private let LAHINCH_OLD_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000001")!
 
@@ -9770,6 +9990,83 @@ let NARUO_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Back", yardage: 6612, rating: 75.1, slope: 129)
 ]
 
+// MARK: Kasumigaseki CC — East Course — Kawagoe, Saitama, Japan
+// C.H. Alison redesign (1930); hosted 1957 Canada Cup
+private let KASUMIGASEKI_EAST_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000033")!
+
+let KASUMIGASEKI_EAST_PARS: [Int] = [
+    4,4,4,3,5,4,3,5,4,
+    3,4,4,4,5,4,3,4,4
+]
+
+let KASUMIGASEKI_EAST_HCS: [Int] = [
+    9,15,3,13,1,7,11,5,17,
+    16,10,4,14,2,8,12,6,18
+]
+
+let KASUMIGASEKI_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 7466, rating: 74.9, slope: 131)
+]
+
+// MARK: Kasumigaseki CC — West Course — Kawagoe, Saitama, Japan
+// C.H. Alison (1932); Japan's first 36-hole club
+private let KASUMIGASEKI_WEST_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000034")!
+
+let KASUMIGASEKI_WEST_PARS: [Int] = [
+    4,4,5,3,4,5,3,4,4,
+    5,3,4,5,4,5,3,4,4
+]
+
+let KASUMIGASEKI_WEST_HCS: [Int] = [
+    9,15,3,13,7,1,11,5,17,
+    10,16,4,8,14,2,12,6,18
+]
+
+let KASUMIGASEKI_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Champion", yardage: 6887, rating: 76.3, slope: 131)
+]
+
+// MARK: Tokyo Golf Club — Sayama, Saitama, Japan
+// Design: Komei Otani (1939); Redesign: Gil Hanse. Dual-green (ASAKA / CHICHIBU).
+private let TOKYO_GC_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000035")!
+
+let TOKYO_GC_PARS: [Int] = [
+    4,4,5,3,3,4,4,3,4,
+    4,4,3,5,4,5,4,3,4
+]
+
+let TOKYO_GC_HCS: [Int] = [
+    7,9,3,11,5,1,17,13,15,
+    4,12,18,8,14,10,2,16,6
+]
+
+let TOKYO_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "ASAKA",    yardage: 7215, rating: 74.3),
+    TeeInfo(teeName: "CHICHIBU", yardage: 6959, rating: 73.3)
+]
+
+// MARK: Yokohama Country Club (West Course) — Hodogaya-ku, Yokohama, Japan
+// Design: Takeo Aiyama / Hideo Takemura (1960); Redesign: Coore & Crenshaw (2015-2016)
+// Hosted 2018 Japan Open
+private let YOKOHAMA_CC_WEST_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000036")!
+
+let YOKOHAMA_CC_WEST_PARS: [Int] = [
+    4,3,4,4,5,4,4,4,3,
+    4,4,3,5,4,5,3,4,4
+]
+
+let YOKOHAMA_CC_WEST_HCS: [Int] = [
+    9,13,7,3,5,17,1,15,11,
+    4,10,18,2,8,14,16,6,12
+]
+
+let YOKOHAMA_CC_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Pro",          yardage: 6938),
+    TeeInfo(teeName: "Championship", yardage: 6621),
+    TeeInfo(teeName: "Mens",         yardage: 6311),
+    TeeInfo(teeName: "Womens",       yardage: 5707)
+]
+
 // MARK: Bro Hof Slott Golf Club — Stadium Course — Bro, Sweden
 private let BRO_HOF_STADIUM_ID = UUID(uuidString: "1A2B3C4D-5E6F-4A1B-8C2D-3E4F5A6B7C8D")!
 
@@ -11652,6 +11949,177 @@ private enum BuiltIns {
             website: "https://www.lahinchgolf.com",
             address: "Lahinch, Co. Clare, V95 HD00, Ireland",
             isWolfApproved: false
+        ),
+        c(
+            PORTMARNOCK_CHAMPIONSHIP_ID,
+            "Portmarnock Golf Club",
+            PORTMARNOCK_CHAMPIONSHIP_PARS,
+            PORTMARNOCK_CHAMPIONSHIP_HCS,
+            PORTMARNOCK_CHAMPIONSHIP_TEES,
+            country: "Ireland",
+            state: nil,
+            architect: "William C. Pickeman & George Coburn (1894)",
+            type: "Private",
+            phone: "+353 1 846 2968",
+            website: "https://www.portmarnockgolfclub.ie",
+            address: "Golf Links Road, Portmarnock, Co. Dublin, D13 KD96, Ireland"
+        ),
+        c(
+            PORTMARNOCK_YELLOW_NINE_ID,
+            "Portmarnock (Yellow Nine)",
+            PORTMARNOCK_YELLOW_NINE_PARS,
+            PORTMARNOCK_YELLOW_NINE_HCS,
+            PORTMARNOCK_YELLOW_NINE_TEES,
+            country: "Ireland",
+            state: nil,
+            architect: "Fred Hawtree (1971)",
+            type: "Private",
+            phone: "+353 1 846 2968",
+            website: "https://www.portmarnockgolfclub.ie",
+            address: "Golf Links Road, Portmarnock, Co. Dublin, D13 KD96, Ireland",
+            routing: .nineStandard
+        ),
+        c(
+            ROSAPENNA_ST_PATRICKS_ID,
+            "Rosapenna (St. Patrick's Links)",
+            ROSAPENNA_ST_PATRICKS_PARS,
+            ROSAPENNA_ST_PATRICKS_HCS,
+            ROSAPENNA_ST_PATRICKS_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Donegal",
+            architect: "Tom Doak",
+            type: "Resort",
+            website: "https://www.rosapenna.ie",
+            address: "Rosapenna, Downings, Co. Donegal, Ireland"
+        ),
+        c(
+            ROSAPENNA_SANDY_HILLS_ID,
+            "Rosapenna (Sandy Hills Links)",
+            ROSAPENNA_SANDY_HILLS_PARS,
+            ROSAPENNA_SANDY_HILLS_HCS,
+            ROSAPENNA_SANDY_HILLS_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Donegal",
+            architect: "Pat Ruddy",
+            type: "Resort",
+            website: "https://www.rosapenna.ie",
+            address: "Rosapenna, Downings, Co. Donegal, Ireland"
+        ),
+        c(
+            ROSAPENNA_OLD_TOM_MORRIS_ID,
+            "Rosapenna (Old Tom Morris Links)",
+            ROSAPENNA_OLD_TOM_MORRIS_PARS,
+            ROSAPENNA_OLD_TOM_MORRIS_HCS,
+            ROSAPENNA_OLD_TOM_MORRIS_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Donegal",
+            architect: "Old Tom Morris (1891)",
+            type: "Resort",
+            website: "https://www.rosapenna.ie",
+            address: "Rosapenna, Downings, Co. Donegal, Ireland"
+        ),
+        c(
+            COUNTY_SLIGO_ID,
+            "County Sligo Golf Club (Rosses Point)",
+            COUNTY_SLIGO_PARS,
+            COUNTY_SLIGO_HCS,
+            COUNTY_SLIGO_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Sligo",
+            architect: "Harry S. Colt (1927)",
+            type: "Private",
+            phone: "+353 71 9177134",
+            website: "https://www.countysligogolfclub.ie",
+            address: "Rosses Point, Co. Sligo, Ireland"
+        ),
+        c(
+            EUROPEAN_CLUB_ID,
+            "The European Club",
+            EUROPEAN_CLUB_PARS,
+            EUROPEAN_CLUB_HCS,
+            EUROPEAN_CLUB_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Wicklow",
+            architect: "Pat Ruddy",
+            type: "Private",
+            website: "https://www.theeuropeanclub.com",
+            address: "Brittas Bay, Co. Wicklow, Ireland"
+        ),
+        c(
+            BALLINLOUGH_CASTLE_ID,
+            "Ballinlough Castle Golf Club",
+            BALLINLOUGH_CASTLE_PARS,
+            BALLINLOUGH_CASTLE_HCS,
+            BALLINLOUGH_CASTLE_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Westmeath",
+            architect: "Pat Ruddy",
+            type: "Public",
+            address: "Clonmellon, Co. Westmeath, Ireland"
+        ),
+        c(
+            BALLYLIFFIN_GLASHEDY_ID,
+            "Ballyliffin Golf Club (Glashedy Links)",
+            BALLYLIFFIN_GLASHEDY_PARS,
+            BALLYLIFFIN_GLASHEDY_HCS,
+            BALLYLIFFIN_GLASHEDY_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Donegal",
+            architect: "Pat Ruddy",
+            type: "Semi-Private",
+            website: "https://www.ballyliffingolfclub.com",
+            address: "Ballyliffin, Inishowen, Co. Donegal, Ireland"
+        ),
+        c(
+            CASTLEGREGORY_ID,
+            "Castlegregory Golf & Fishing Club",
+            CASTLEGREGORY_PARS,
+            CASTLEGREGORY_HCS,
+            CASTLEGREGORY_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Kerry",
+            architect: "Arthur Spring (1989)",
+            type: "Public",
+            phone: "+353 66 713 9444",
+            address: "Castlegregory, Co. Kerry, Ireland",
+            routing: .nineStandard
+        ),
+        c(
+            CASTLECOMER_ID,
+            "Castlecomer Golf Club",
+            CASTLECOMER_PARS,
+            CASTLECOMER_HCS,
+            CASTLECOMER_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Kilkenny",
+            type: "Public",
+            phone: "+353 56 444 1139",
+            website: "https://www.castlecomergolf.ie",
+            address: "Drumgoole, Castlecomer, Co. Kilkenny, Ireland"
+        ),
+        c(
+            CO_TIPPERARY_GCC_ID,
+            "Co. Tipperary Golf & Country Club",
+            CO_TIPPERARY_GCC_PARS,
+            CO_TIPPERARY_GCC_HCS,
+            CO_TIPPERARY_GCC_TEES,
+            country: "Ireland",
+            state: nil,
+            region: "Tipperary",
+            architect: "Philip Walton & Ken Kearney",
+            type: "Resort",
+            phone: "+353 62 71116",
+            website: "https://www.cotipperarygolfclub.ie",
+            address: "Dundrum, Co. Tipperary, Ireland"
         ),
         c(
             ROYAL_COUNTY_DOWN_CHAMP_ID,
@@ -13909,7 +14377,8 @@ private enum BuiltIns {
             country: "USA",
             state: "CT",
             region: "Trumbull",
-            type: "Daily-Fee",
+            architect: "Al Zikorus (1976)",
+            type: "Public",
             phone: "(203) 452-5186",
             website: "https://www.tashuaknolls.com",
             address: "40 Tashua Knolls Lane, Trumbull, CT 06611"
@@ -13923,7 +14392,8 @@ private enum BuiltIns {
             country: "USA",
             state: "CT",
             region: "Trumbull",
-            type: "Daily-Fee",
+            architect: "Al Zikorus (1976)",
+            type: "Public",
             phone: "(203) 452-5186",
             website: "https://www.tashuaknolls.com",
             address: "40 Tashua Knolls Lane, Trumbull, CT 06611"
@@ -13937,7 +14407,8 @@ private enum BuiltIns {
             country: "USA",
             state: "CT",
             region: "Trumbull",
-            type: "Daily-Fee",
+            architect: "Al Zikorus (1976)",
+            type: "Public",
             phone: "(203) 452-5186",
             website: "https://www.tashuaknolls.com",
             address: "40 Tashua Knolls Lane, Trumbull, CT 06611"
@@ -13951,7 +14422,8 @@ private enum BuiltIns {
             country: "USA",
             state: "CT",
             region: "Trumbull",
-            type: "Daily-Fee",
+            architect: "Al Zikorus (1976)",
+            type: "Public",
             phone: "(203) 452-5186",
             website: "https://www.tashuaknolls.com",
             address: "40 Tashua Knolls Lane, Trumbull, CT 06611"
@@ -13965,7 +14437,8 @@ private enum BuiltIns {
             country: "USA",
             state: "CT",
             region: "Trumbull",
-            type: "Daily-Fee",
+            architect: "Michael Zikorus (2004)",
+            type: "Public",
             phone: "(203) 452-5186",
             website: "https://www.tashuaknolls.com",
             address: "40 Tashua Knolls Lane, Trumbull, CT 06611",
@@ -17668,6 +18141,66 @@ private enum BuiltIns {
             architect: "Charles Hugh Alison",
             type: "Private",
             phone: "+81 727 94 1011"
+        ),
+        c(
+            TOKYO_GC_ID,
+            "Tokyo Golf Club",
+            TOKYO_GC_PARS,
+            TOKYO_GC_HCS,
+            TOKYO_GC_TEES,
+            country: "Japan",
+            state: nil,
+            region: "Saitama",
+            architect: "Komei Otani (1939) / Gil Hanse redesign",
+            type: "Private",
+            phone: "+81 4 2953 9111",
+            website: "https://www.tokyogolfclub.jp",
+            address: "1984 Kashiwabara, Sayama, Saitama, Japan"
+        ),
+        c(
+            KASUMIGASEKI_EAST_ID,
+            "Kasumigaseki CC (East Course)",
+            KASUMIGASEKI_EAST_PARS,
+            KASUMIGASEKI_EAST_HCS,
+            KASUMIGASEKI_EAST_TEES,
+            country: "Japan",
+            state: nil,
+            region: "Saitama",
+            architect: "C.H. Alison (1930)",
+            type: "Private",
+            phone: "+81 49 231 2181",
+            website: "https://www.kasumigasekicc.or.jp",
+            address: "3398 Kasahata, Kawagoe, Saitama 350-1175, Japan"
+        ),
+        c(
+            KASUMIGASEKI_WEST_ID,
+            "Kasumigaseki CC (West Course)",
+            KASUMIGASEKI_WEST_PARS,
+            KASUMIGASEKI_WEST_HCS,
+            KASUMIGASEKI_WEST_TEES,
+            country: "Japan",
+            state: nil,
+            region: "Saitama",
+            architect: "C.H. Alison (1932)",
+            type: "Private",
+            phone: "+81 49 231 2181",
+            website: "https://www.kasumigasekicc.or.jp",
+            address: "3398 Kasahata, Kawagoe, Saitama 350-1175, Japan"
+        ),
+        c(
+            YOKOHAMA_CC_WEST_ID,
+            "Yokohama CC (West Course)",
+            YOKOHAMA_CC_WEST_PARS,
+            YOKOHAMA_CC_WEST_HCS,
+            YOKOHAMA_CC_WEST_TEES,
+            country: "Japan",
+            state: nil,
+            region: "Kanagawa",
+            architect: "Aiyama Takeo & Takemura Hideo (1960) / Coore & Crenshaw redesign (2016)",
+            type: "Private",
+            phone: "+81 45 351 1001",
+            website: "https://www.yokohama-cc.jp/west/",
+            address: "1025 Imai-cho, Hodogaya-ku, Yokohama, Kanagawa 240-0035, Japan"
         ),
 
         // -------------------------

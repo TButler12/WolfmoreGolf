@@ -70,6 +70,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var bottomStackView: UIStackView?
     private var bottomSeparator: UIView?
     private var dollarStepper: UIStepper?
+    private weak var liveSummaryWolfLabel: UILabel?
+    private weak var liveSummarySkinsLabel: UILabel?
+    private weak var liveSummaryNassauLabel: UILabel?
     
     @IBOutlet weak var rerollPushed: UIButton!
     
@@ -772,20 +775,20 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func updateLiveTabBarVisibility() {
-        let isLive        = GameManager.shared.currentGame?.liveSessionId  != nil
-        let hasTournament = GameManager.shared.currentGame?.tournamentCode != nil
+        let isLive           = GameManager.shared.currentGame?.liveSessionId    != nil
+        let isLiveTournament = GameManager.shared.currentGame?.tournamentMatchId != nil
 
-        // Show bar when either feature is active
-        liveTabBar?.isHidden = !(isLive || hasTournament)
+        // Show bar only when Live Wolf or a Live & Connected tournament is active
+        liveTabBar?.isHidden = !(isLive || isLiveTournament)
         if !isLive { hideLiveContent() }
 
         // Live Wolf tab: only when a live session is running
         liveTabLiveButton?.isHidden = !isLive
-        // Leaderboard tab: only when a tournament code is set
-        liveTabLeaderboardButton?.isHidden = !hasTournament
+        // Leaderboard tab: only when participating in a Live & Connected tournament
+        liveTabLeaderboardButton?.isHidden = !isLiveTournament
 
         // 50 pt for all three tabs, 44 pt for any two-tab combination
-        liveTabBarHeightConstraint?.constant = (isLive && hasTournament) ? 50 : 44
+        liveTabBarHeightConstraint?.constant = (isLive && isLiveTournament) ? 50 : 44
         updateLiveNassauButtonPosition()
     }
 
@@ -1058,6 +1061,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let seat = order[safe: i] ?? i
             setTotalMoneyLabel(totalMoneyLabels[i], seat < totals.count ? totals[seat] : 0)
         }
+        refreshLiveSummaryStrip()
     }
 
     private let plainMoneyFmt: NumberFormatter = {
@@ -1103,7 +1107,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     // Paint all 7 Wolf buttons from the saved model state (multiple Wolves allowed)
     
-    // One place to set the ON/OFF look
+    // One place to set the ON/OFF look — updates both configuration (for initial
+    // load persistence through the config render cycle) and direct properties
+    // + forced layout (for immediate tap feedback).
     private func applyWolfStyle(_ button: UIButton, isOn: Bool) {
         if #available(iOS 15.0, *) {
             var c = button.configuration ?? .filled()
@@ -1111,12 +1117,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             c.baseBackgroundColor = isOn ? .label : .systemGreen
             c.cornerStyle = .large
             button.configuration = c
-        } else {
-            button.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
-            button.backgroundColor = isOn ? .label : .systemGreen
-            button.layer.cornerRadius = 10
-            button.layer.masksToBounds = true
         }
+        // Direct assignment ensures immediate visual response (tap feedback)
+        // and serves as a fallback on pre-iOS 15.
+        button.backgroundColor = isOn ? .label : .systemGreen
+        button.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
+        button.layer.cornerRadius = 10
+        button.layer.masksToBounds = true
+        button.setNeedsLayout()
+        button.layoutIfNeeded()
         button.accessibilityValue = isOn ? "On" : "Off"
     }
 
@@ -1293,7 +1302,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                   g.wolfButtonStatus.count == MAX_PLAYERS,
                   g.wolfButtonStatus[seat].count == STANDARD_HOLES else { continue }
             let isOn = g.wolfButtonStatus[seat][hole]
-            applyWolfStyleDirect(b, isOn: isOn)
+            applyWolfStyle(b, isOn: isOn)
         }
     }
 
@@ -3179,6 +3188,101 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
     }
 
+    // MARK: - Live Summary Strip
+
+    private func makeLiveSummaryStrip() -> UIView {
+        let bg = UIView()
+        bg.backgroundColor = UIColor.systemGray6
+        bg.layer.cornerRadius = 8
+        bg.translatesAutoresizingMaskIntoConstraints = false
+
+        func makeLabel() -> UILabel {
+            let l = UILabel()
+            l.font = .systemFont(ofSize: 11, weight: .medium)
+            l.textColor = .secondaryLabel
+            l.textAlignment = .center
+            l.adjustsFontSizeToFitWidth = true
+            l.minimumScaleFactor = 0.7
+            l.translatesAutoresizingMaskIntoConstraints = false
+            return l
+        }
+
+        let wolfLbl  = makeLabel()
+        let skinLbl  = makeLabel()
+        let nassLbl  = makeLabel()
+
+        let div1 = makeDivider()
+        let div2 = makeDivider()
+
+        let hStack = UIStackView(arrangedSubviews: [wolfLbl, div1, skinLbl, div2, nassLbl])
+        hStack.axis = .horizontal
+        hStack.spacing = 4
+        hStack.alignment = .center
+        hStack.distribution = .fill
+        hStack.translatesAutoresizingMaskIntoConstraints = false
+        bg.addSubview(hStack)
+
+        NSLayoutConstraint.activate([
+            hStack.topAnchor.constraint(equalTo: bg.topAnchor, constant: 2),
+            hStack.bottomAnchor.constraint(equalTo: bg.bottomAnchor, constant: -2),
+            hStack.leadingAnchor.constraint(equalTo: bg.leadingAnchor, constant: 6),
+            hStack.trailingAnchor.constraint(equalTo: bg.trailingAnchor, constant: -6),
+            div1.widthAnchor.constraint(equalToConstant: 1),
+            div1.heightAnchor.constraint(equalToConstant: 14),
+            div2.widthAnchor.constraint(equalToConstant: 1),
+            div2.heightAnchor.constraint(equalToConstant: 14),
+            wolfLbl.widthAnchor.constraint(equalTo: skinLbl.widthAnchor),
+            nassLbl.widthAnchor.constraint(equalTo: skinLbl.widthAnchor)
+        ])
+
+        liveSummaryWolfLabel  = wolfLbl
+        liveSummarySkinsLabel = skinLbl
+        liveSummaryNassauLabel = nassLbl
+
+        return bg
+    }
+
+    private func makeDivider() -> UIView {
+        let v = UIView()
+        v.backgroundColor = UIColor.separator
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }
+
+    private func refreshLiveSummaryStrip() {
+        guard let g = GameManager.shared.currentGame else { return }
+        guard liveSummaryWolfLabel != nil else { return }
+
+        // Wolf: seat-0 running net through committed holes
+        let current = max(0, min(17, g.hole))
+        let start   = max(0, min(17, g.startHole ?? current))
+        let holes   = start <= current
+            ? Array(start...current)
+            : Array(start..<STANDARD_HOLES) + Array(0...current)
+        let wolfNet = holes.reduce(0.0) { $0 + (g.playerMoney[safe: 0]?[safe: $1] ?? 0.0) }
+        let wolfSign = wolfNet >= 0 ? "+" : ""
+        liveSummaryWolfLabel?.text = "Wolf \(wolfSign)$\(formatMoney(wolfNet))"
+
+        // Skins: current pot dollars
+        if let ss = g.skinsState, ss.settings.isEnabled {
+            let hIdx    = min(current, STANDARD_HOLES - 1)
+            let potSize = ss.resultsByHole[safe: hIdx]?.potValue ?? 1
+            let dollars = Double(potSize) * ss.settings.skinValue
+            liveSummarySkinsLabel?.text = "Skins $\(formatMoney(dollars))"
+        } else {
+            liveSummarySkinsLabel?.text = "Skins —"
+        }
+
+        // Nassau: overall status of first match
+        if let ns = g.nassauState, ns.isEnabled,
+           let match = ns.oneVsOneMatches.first ?? ns.twoVsTwoMatches.first {
+            let txt = NassauEngine.runningStatusText(match.overallStatusByHole)
+            liveSummaryNassauLabel?.text = "Nassau \(txt)"
+        } else {
+            liveSummaryNassauLabel?.text = "Nassau —"
+        }
+    }
+
     @IBAction func statsTapped(_ sender: UIButton) {
         let vc = StatsContainerViewController()
         let nav = UINavigationController(rootViewController: vc)
@@ -3576,12 +3680,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             row2.heightAnchor.constraint(equalToConstant: 44).isActive = true
             vStack.addArrangedSubview(row2)
 
-            // ── Row 3: Update Scores (full width) ────────────────────────────
+            // ── Row 3: Live summary strip (Wolf · Skins · Nassau) ────────────
+            let strip = makeLiveSummaryStrip()
+            strip.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            vStack.addArrangedSubview(strip)
+
+            // ── Row 4: Update Scores (full width) ────────────────────────────
             UpdateScores.setTitle("Update Scores", for: .normal)
             UpdateScores.heightAnchor.constraint(equalToConstant: 44).isActive = true
             vStack.addArrangedSubview(UpdateScores)
 
-            // ── Row 4: Game Results | stepper | $2.00 ────────────────────────
+            // ── Row 5: Game Results (gold) | stepper | $2.00 ─────────────────
             minusPointDollars.isHidden = true
             plusPointDollars.isHidden  = true
 
@@ -3593,17 +3702,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             stepper.addTarget(self, action: #selector(dollarStepperChanged(_:)), for: .valueChanged)
             dollarStepper = stepper
 
-            gameResultsButton.backgroundColor = UIColor.systemGray4
+            gameResultsButton.backgroundColor = UIColor(red: 0.910, green: 0.851, blue: 0.541, alpha: 1) // #E8D98A
+            gameResultsButton.setTitleColor(UIColor(red: 0.165, green: 0.133, blue: 0, alpha: 1), for: .normal) // #2A2200
             gameResultsButton.setContentHuggingPriority(.defaultLow, for: .horizontal)
             gameResultsButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
             gameDollarsField.widthAnchor.constraint(equalToConstant: 80).isActive = true
-            let row4 = UIStackView(arrangedSubviews: [gameResultsButton, stepper, gameDollarsField])
-            row4.axis = .horizontal; row4.spacing = 8; row4.distribution = .fill
-            row4.alignment = .center
-            row4.heightAnchor.constraint(equalToConstant: 40).isActive = true
-            vStack.addArrangedSubview(row4)
+            let row5 = UIStackView(arrangedSubviews: [gameResultsButton, stepper, gameDollarsField])
+            row5.axis = .horizontal; row5.spacing = 8; row5.distribution = .fill
+            row5.alignment = .center
+            row5.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            vStack.addArrangedSubview(row5)
 
-            // ── Row 5: Hole Stats | Text ──────────────────────────────────────
+            // ── Row 6: Hole Stats | Text ──────────────────────────────────────
             var hsCfg = UIButton.Configuration.plain()
             hsCfg.baseForegroundColor = .label
             hsCfg.background.backgroundColor = UIColor.systemGray4
@@ -3615,15 +3725,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let holeStatsBtn = UIButton(configuration: hsCfg)
             holeStatsBtn.addTarget(self, action: #selector(holeStatsTapped(_:)), for: .touchUpInside)
 
-            let row5 = UIStackView(arrangedSubviews: [holeStatsBtn, textHubButton])
-            row5.axis = .horizontal; row5.spacing = 6; row5.distribution = .fillEqually
-            row5.heightAnchor.constraint(equalToConstant: 32).isActive = true
-            vStack.addArrangedSubview(row5)
+            let row6 = UIStackView(arrangedSubviews: [holeStatsBtn, textHubButton])
+            row6.axis = .horizontal; row6.spacing = 6; row6.distribution = .fillEqually
+            row6.heightAnchor.constraint(equalToConstant: 32).isActive = true
+            vStack.addArrangedSubview(row6)
         }
 
         // Update frame every layout pass (handles rotation / safe-area changes)
-        // Total: 44 + 8 + 44 + 8 + 44 + 8 + 40 + 8 + 32 = 236
-        bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: 236)
+        // Total: 44 + 8 + 44 + 8 + 28 + 8 + 44 + 8 + 40 + 8 + 32 = 272
+        bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: 272)
         sup.bringSubviewToFront(bottomStackView!)
     }
 

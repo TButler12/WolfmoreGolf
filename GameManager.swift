@@ -40,24 +40,7 @@ final class GameManager {
         }
         lastOddDollarRecipient = nil
         lastOddDollarHole = -1
-        // Preserve tournament linkage — a round reset doesn't mean leaving the tournament
-        let tCode        = currentGame?.tournamentCode
-        let tMatchId     = currentGame?.tournamentMatchId
-        let tGroup       = currentGame?.groupCode
-        let tName        = currentGame?.tournamentName
-        let tType        = currentGame?.tournamentGameType
-        let tScoring     = currentGame?.tournamentScoringType
-        let tDay         = currentGame?.tournamentDay ?? 1
-        let tIsOrganizer = tCode.map { UserDefaults.standard.bool(forKey: "isOrganizer_\($0)") } ?? false
         var g = baselineNewGame(named: name)
-        g.tournamentCode        = tCode
-        g.tournamentMatchId     = tMatchId
-        g.groupCode             = tGroup
-        g.tournamentName        = tName
-        g.tournamentGameType    = tType
-        g.tournamentScoringType = tScoring
-        g.tournamentDay         = tDay
-        g.tournamentIsOrganizer = tIsOrganizer
         currentGame = g
         saveCurrent()
         requestReload()
@@ -143,14 +126,8 @@ final class GameManager {
         fresh.playerActivated    = keepActives
         fresh.rosterNames        = keepRosterList
         fresh.hammerStyle        = keepHammerStyle
-        fresh.tournamentCode        = old.tournamentCode
-        fresh.tournamentMatchId     = old.tournamentMatchId
-        fresh.groupCode             = old.groupCode
-        fresh.tournamentName        = old.tournamentName
-        fresh.tournamentGameType    = old.tournamentGameType
-        fresh.tournamentScoringType = old.tournamentScoringType
-        fresh.tournamentDay         = old.tournamentDay
-        fresh.tournamentIsOrganizer = old.tournamentCode.map { UserDefaults.standard.bool(forKey: "isOrganizer_\($0)") } ?? false
+        // Tournament linkage is intentionally NOT carried over — starting a new round
+        // means leaving the tournament context. Rejoin via Live & Connected if needed.
         // If you want to keep the existing per-hole stakes, uncomment:
         // fresh.gameHoleDollarsArray = old.gameHoleDollarsArray
         

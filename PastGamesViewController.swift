@@ -246,6 +246,7 @@ extension PastGamesViewController: UITableViewDataSource, UITableViewDelegate {
         let cell = tableView.dequeueReusableCell(
             withIdentifier: Self.cellID, for: indexPath) as! PastGameCell
         cell.configure(with: games[indexPath.row])
+        cell.accessoryType = .disclosureIndicator
         return cell
     }
 

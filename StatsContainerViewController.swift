@@ -17,13 +17,17 @@ final class StatsContainerViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-        title = "Results and Game Settings"
+        title = "Today's Results"
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            barButtonSystemItem: .done,
-            target: self,
-            action: #selector(close)
-        )
+        let doneBtn = UIButton(type: .system)
+        doneBtn.setTitle("Done", for: .normal)
+        doneBtn.setTitleColor(UIColor(red: 0.165, green: 0.133, blue: 0, alpha: 1), for: .normal)
+        doneBtn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        doneBtn.backgroundColor = UIColor(red: 0.910, green: 0.851, blue: 0.541, alpha: 1)
+        doneBtn.layer.cornerRadius = 8
+        doneBtn.contentEdgeInsets = UIEdgeInsets(top: 6, left: 14, bottom: 6, right: 14)
+        doneBtn.addTarget(self, action: #selector(close), for: .touchUpInside)
+        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: doneBtn)
 
         setupUI()
         setupChildren()

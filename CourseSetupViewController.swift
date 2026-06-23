@@ -324,8 +324,10 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         let parSorted = parFields.sorted { $0.tag < $1.tag }
         let hcSorted  = hcFields.sorted  { $0.tag < $1.tag }
 
-        for i in 0..<min(STANDARD_HOLES, parSorted.count) { parSorted[i].text = "\(p[i])" }
-        for i in 0..<min(STANDARD_HOLES, hcSorted.count)  { hcSorted[i].text  = "\(h[i])" }
+        for i in 0..<min(p.count, parSorted.count) { parSorted[i].text = "\(p[i])" }
+        for i in p.count..<min(STANDARD_HOLES, parSorted.count) { parSorted[i].text = "" }
+        for i in 0..<min(h.count, hcSorted.count) { hcSorted[i].text = "\(h[i])" }
+        for i in h.count..<min(STANDARD_HOLES, hcSorted.count) { hcSorted[i].text = "" }
 
         GameManager.shared.update { g in
             g.course.pars = p

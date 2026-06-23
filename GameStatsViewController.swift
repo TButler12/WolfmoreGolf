@@ -39,6 +39,8 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     private var sortKey: SortKey = .score
     private var ascending = false
 
+    private var hasSavedThisOpen = false
+
     // Money (no cents)
     private let currency0: NumberFormatter = {
         let nf = NumberFormatter()
@@ -71,19 +73,19 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     private func setupPanel() {
         sendBtn.setTitle("Send Round Summary", for: .normal)
         sendBtn.setTitleColor(.white, for: .normal)
-        sendBtn.backgroundColor = .systemGreen
+        sendBtn.backgroundColor = UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1) // #1B3A2A
         sendBtn.layer.cornerRadius = 14
         sendBtn.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
         sendBtn.addTarget(self, action: #selector(sendSummaryTapped(_:)), for: .touchUpInside)
         sendBtn.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(sendBtn)
 
-        historyBtn.setTitle("View History", for: .normal)
-        historyBtn.setTitleColor(.white, for: .normal)
-        historyBtn.backgroundColor = .systemIndigo
+        historyBtn.setTitle("Add to History", for: .normal)
+        historyBtn.setTitleColor(UIColor(red: 0.165, green: 0.133, blue: 0, alpha: 1), for: .normal) // #2A2200
+        historyBtn.backgroundColor = UIColor(red: 0.910, green: 0.851, blue: 0.541, alpha: 1) // #E8D98A
         historyBtn.layer.cornerRadius = 14
         historyBtn.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        historyBtn.addTarget(self, action: #selector(viewHistoryTapped), for: .touchUpInside)
+        historyBtn.addTarget(self, action: #selector(saveToHistoryTapped(_:)), for: .touchUpInside)
         historyBtn.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(historyBtn)
 
@@ -135,11 +137,29 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
 
     // MARK: - Actions
 
-    @objc private func viewHistoryTapped() {
-        let vc = PastGamesViewController()
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
+    @objc private func saveToHistoryTapped(_ sender: UIButton) {
+        guard !hasSavedThisOpen else {
+            showAlert("Already Saved", "This round is already in History.")
+            return
+        }
+
+        let ac = UIAlertController(
+            title: "Save Round to History?",
+            message: "This will save stats for you and any tracked friends on this card.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "No", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Yes, Save", style: .default) { [weak self] _ in
+            guard let self else { return }
+            self.recordMeAndTrackedFriendsFromCurrentGame()
+            self.maybeRequestReview()
+            self.hasSavedThisOpen = true
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+            sender.isEnabled = false
+            sender.alpha = 0.7
+            sender.setTitle("Saved ✓", for: .disabled)
+        })
+        present(ac, animated: true)
     }
 
     @objc private func sendSummaryTapped(_ sender: UIButton) {

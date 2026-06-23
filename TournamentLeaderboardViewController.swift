@@ -61,6 +61,11 @@ final class TournamentLeaderboardViewController: UIViewController {
                                         target: self, action: #selector(refreshTapped))
         navigationItem.rightBarButtonItems = [refreshBtn, UIBarButtonItem(customView: spinner)]
 
+        let leaveBtn = UIBarButtonItem(title: "Leave", style: .plain,
+                                       target: self, action: #selector(leaveTapped))
+        leaveBtn.tintColor = .systemRed
+        navigationItem.leftBarButtonItem = leaveBtn
+
         setupHeader()
         setupTable()
 
@@ -85,6 +90,26 @@ final class TournamentLeaderboardViewController: UIViewController {
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
             Task { await self?.loadData() }
         }
+    }
+
+    // MARK: - Actions
+
+    @objc private func leaveTapped() {
+        let ac = UIAlertController(
+            title: "Leave this tournament?",
+            message: "Your progress is saved.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Leave", style: .destructive) { [weak self] _ in
+            guard let self else { return }
+            if let nav = self.navigationController, nav.presentingViewController != nil {
+                nav.dismiss(animated: true)
+            } else {
+                self.navigationController?.popToRootViewController(animated: true)
+            }
+        })
+        present(ac, animated: true)
     }
 
     // MARK: - Data
