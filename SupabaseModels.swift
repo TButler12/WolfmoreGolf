@@ -210,6 +210,7 @@ struct TournamentRecord: Codable {
     let gameType: String    // "wolf", "skins", or "stableford"
     let scoring: String     // "gross" or "net"
     let stake: Double?
+    let potAmount: Double?  // skins pot mode: total prize pool divided by skins won
     let carryTies: Bool?
     let createdBy: String
     let createdAt: String?
@@ -218,6 +219,7 @@ struct TournamentRecord: Codable {
 
     enum CodingKeys: String, CodingKey {
         case id, code, name, stake, scoring
+        case potAmount  = "pot_amount"
         case gameType   = "game_type"
         case carryTies  = "carry_ties"
         case createdBy  = "created_by"

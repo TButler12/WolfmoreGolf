@@ -218,7 +218,7 @@ final class LiveConnectedViewController: UITableViewController {
             g.tournamentGameType     = record.gameType
             g.tournamentScoringType  = record.scoring
             g.tournamentDay          = record.currentDay ?? 1
-            g.tournamentIsOrganizer  = UserDefaults.standard.bool(forKey: "isOrganizer_\(record.code)")
+            g.tournamentIsOrganizer  = (record.createdBy == DeviceID.id)
         }
         UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
         GameManager.shared.saveCurrent()
@@ -237,11 +237,23 @@ final class LiveConnectedViewController: UITableViewController {
 
     private func manageTournamentTapped() {
         let sheet = UIAlertController(title: "Manage Tournament", message: nil, preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(title: "View Results", style: .default) { [weak self] _ in
+            self?.viewOrganizerResults()
+        })
         sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
             self?.advanceDay()
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet)
+    }
+
+    private func viewOrganizerResults() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode else {
+            showError("No active tournament found.")
+            return
+        }
+        let vc = TournamentLeaderboardViewController(code: code, isOrganizerView: true)
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func advanceDay() {

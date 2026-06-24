@@ -17,6 +17,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
     private var umbrellaMuted = false
     private weak var wolfScoringSegment: UISegmentedControl?
+    private weak var pressStyleSegment: UISegmentedControl?
     private weak var hammerStyleSegment: UISegmentedControl?
     private weak var goLiveButton: UIButton?
     private var scrollView: UIScrollView!
@@ -70,6 +71,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         refreshCourseLabel()
         refreshUmbrellaButtonUI()
         installWolfScoringSegment()
+        installPressStyleSegment()
         installHammerStyleSegment()
         installGoLiveButton()
         NotificationCenter.default.addObserver(self, selector: #selector(refreshGoLiveButton), name: .reloadUI, object: nil)
@@ -280,6 +282,48 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         umbrellaButton.alpha = (sender.selectedSegmentIndex == 0) ? 1.0 : 0.4
+    }
+
+    // MARK: - Press Style segment
+
+    private func installPressStyleSegment() {
+        let segment = UISegmentedControl(items: ["Doubling", "Additive"])
+        segment.addTarget(self, action: #selector(pressStyleChanged(_:)), for: .valueChanged)
+        segment.backgroundColor          = .systemGray6
+        segment.selectedSegmentTintColor = UIColor(displayP3Red: 0.751, green: 0.819, blue: 0.370, alpha: 1)
+        segment.setTitleTextAttributes([
+            .foregroundColor: UIColor.secondaryLabel,
+            .font: UIFont.systemFont(ofSize: 14, weight: .regular)
+        ], for: .normal)
+        segment.setTitleTextAttributes([
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 14, weight: .semibold)
+        ], for: .selected)
+        segment.layer.borderColor = UIColor.systemGray4.cgColor
+        segment.layer.borderWidth = 1
+
+        let style = GameManager.shared.currentGame?.pressStyle ?? .additive
+        segment.selectedSegmentIndex = (style == .additive) ? 1 : 0
+
+        let note = UILabel()
+        note.font          = UIFont.preferredFont(forTextStyle: .caption1)
+        note.textColor     = .secondaryLabel
+        note.numberOfLines = 0
+        note.text          = "Doubling: ×2, ×4, ×8… each tap  •  Additive: +$base each tap (×2, ×3, ×4…)"
+
+        let section = UIStackView(arrangedSubviews: [sectionHeader("Press Style"), segment, note])
+        section.axis    = .vertical
+        section.spacing = 6
+
+        let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
+        contentStack.insertArrangedSubview(section, at: insertIndex)
+        pressStyleSegment = segment
+    }
+
+    @objc private func pressStyleChanged(_ sender: UISegmentedControl) {
+        let style: HammerStyle = (sender.selectedSegmentIndex == 1) ? .additive : .doubling
+        GameManager.shared.update { g in g.pressStyle = style }
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
     }
 
     // MARK: - Hammer Style segment

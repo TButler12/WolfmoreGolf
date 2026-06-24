@@ -31,6 +31,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private weak var stakeInfoLabel: UILabel?
     private weak var headerCourseChipLabel: UILabel?
     private weak var headerGamePillsStack: UIStackView?
+    private var editStakeBlinkTimer: Timer?
+    private var editStakeBlinkIsGold = false
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -478,6 +480,47 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         return v
     }
 
+    // MARK: - Edit stake blink
+
+    private static let editStakeGreen = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+    private static let editStakeGold  = UIColor(red: 0.780, green: 0.635, blue: 0.188, alpha: 1.0)
+
+    private func startEditStakeBlink() {
+        stopEditStakeBlink()
+        editStakeBlinkIsGold = false
+        editStakeBlinkTimer = Timer.scheduledTimer(withTimeInterval: 0.75, repeats: true) { [weak self] _ in
+            self?.tickEditStakeBlink()
+        }
+    }
+
+    private func stopEditStakeBlink() {
+        editStakeBlinkTimer?.invalidate()
+        editStakeBlinkTimer = nil
+        applyEditStakeColor(PlayerSetupViewController.editStakeGreen)
+    }
+
+    private func tickEditStakeBlink() {
+        editStakeBlinkIsGold.toggle()
+        let color = editStakeBlinkIsGold
+            ? PlayerSetupViewController.editStakeGold
+            : PlayerSetupViewController.editStakeGreen
+        guard let btn = editStakeLinkButton else { return }
+        UIView.transition(with: btn, duration: 0.40, options: [.transitionCrossDissolve, .allowUserInteraction]) {
+            self.applyEditStakeColor(color)
+        }
+    }
+
+    private func applyEditStakeColor(_ color: UIColor) {
+        guard let btn = editStakeLinkButton else { return }
+        var cfg = btn.configuration ?? UIButton.Configuration.plain()
+        cfg.baseForegroundColor = color
+        cfg.attributedTitle = AttributedString("Edit stake & format", attributes: AttributeContainer([
+            .font: UIFont.systemFont(ofSize: 13, weight: .medium),
+            .foregroundColor: color
+        ]))
+        btn.configuration = cfg
+    }
+
     private func makeEditStakeLink() -> UIButton {
         var cfg = UIButton.Configuration.plain()
         cfg.image = UIImage(systemName: "pencil")?
@@ -610,8 +653,16 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         super.viewDidAppear(animated)
         updateCourseLabel()
         showPlayerSetupOnboardingIfNeeded()
+        startEditStakeBlink()
     }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        stopEditStakeBlink()
+    }
+
     deinit {
+        stopEditStakeBlink()
         NotificationCenter.default.removeObserver(self)
     }
     private func closeToHome(animated: Bool = true) {

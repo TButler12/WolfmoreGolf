@@ -176,8 +176,15 @@ final class TeeGamesViewController: UIViewController {
             gameDesc = "Wolf · \(scoringLabel)"
         case "skins":
             let carry = record.carryTies == true ? "carry ties" : "no carry"
-            let stakeStr = record.stake.map { "$\(Int($0))/hole" } ?? ""
-            gameDesc = "Skins · \(scoringLabel) · \(carry)\(stakeStr.isEmpty ? "" : " · \(stakeStr)")"
+            let valueStr: String
+            if let pot = record.potAmount {
+                valueStr = "Pot $\(Int(pot))"
+            } else if let s = record.stake {
+                valueStr = "$\(Int(s))/skin"
+            } else {
+                valueStr = ""
+            }
+            gameDesc = "Skins · \(scoringLabel) · \(carry)\(valueStr.isEmpty ? "" : " · \(valueStr)")"
         default:
             gameDesc = "Stableford · \(scoringLabel)"
         }
@@ -208,7 +215,13 @@ final class TeeGamesViewController: UIViewController {
             g.tournamentGameType     = record.gameType
             g.tournamentScoringType  = record.scoring
             g.tournamentDay          = record.currentDay ?? 1
-            g.tournamentIsOrganizer  = UserDefaults.standard.bool(forKey: "isOrganizer_\(record.code)")
+            g.tournamentIsOrganizer  = (record.createdBy == DeviceID.id)
+            if record.gameType == "skins" {
+                var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
+                skins.settings.potAmount = record.potAmount
+                skins.settings.skinValue = record.stake ?? skins.settings.skinValue
+                g.skinsState = skins
+            }
         }
         UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
         GameManager.shared.saveCurrent()
@@ -272,38 +285,51 @@ final class TeeGamesViewController: UIViewController {
         present(spinner, animated: true)
 
         Task {
-            var liveDay = savedDay
-            if let record = try? await SupabaseService.shared.fetchTournament(code: code) {
-                liveDay = record.currentDay ?? savedDay
+            do {
+                let record  = try await SupabaseService.shared.fetchTournament(code: code)
+                let liveDay = record.currentDay ?? (savedDay > 0 ? savedDay : 1)
                 ud.set(liveDay, forKey: "lastTournamentDay_\(code)")
-            }
 
-            // New day → new matchId so Day 2 rows don't collide with Day 1
-            let matchId = (liveDay > savedDay && savedDay > 0)
-                ? UUID().uuidString
-                : (savedMatchId ?? UUID().uuidString)
+                // New day → new matchId so Day 2 rows don't collide with Day 1
+                let matchId = (liveDay > savedDay && savedDay > 0)
+                    ? UUID().uuidString
+                    : (savedMatchId ?? UUID().uuidString)
 
-            if GameManager.shared.currentGame == nil {
-                _ = GameManager.shared.loadLastOpened(notify: false)
-            }
-            if GameManager.shared.currentGame == nil {
-                GameManager.shared.startNewGame()
-            }
-            GameManager.shared.update { g in
-                g.tournamentCode        = code
-                g.tournamentMatchId     = matchId
-                g.groupCode             = groupCode
-                g.tournamentName        = name
-                g.tournamentGameType    = gameType
-                g.tournamentScoringType = scoring
-                g.tournamentDay         = liveDay > 0 ? liveDay : 1
-                g.tournamentIsOrganizer = UserDefaults.standard.bool(forKey: "isOrganizer_\(code)")
-            }
-            GameManager.shared.saveCurrent()
-            NotificationCenter.default.post(name: .reloadUI, object: nil)
-            print("🏆 rejoined tournament: code=\(code) matchId=\(matchId) day=\(liveDay)")
-            await MainActor.run {
-                spinner.dismiss(animated: false) { self.dismiss(animated: true) }
+                if GameManager.shared.currentGame == nil {
+                    _ = GameManager.shared.loadLastOpened(notify: false)
+                }
+                if GameManager.shared.currentGame == nil {
+                    GameManager.shared.startNewGame()
+                }
+                GameManager.shared.update { g in
+                    g.tournamentCode        = record.code
+                    g.tournamentMatchId     = matchId
+                    g.groupCode             = groupCode
+                    g.tournamentName        = record.name
+                    g.tournamentGameType    = record.gameType
+                    g.tournamentScoringType = record.scoring
+                    g.tournamentDay         = liveDay
+                    g.tournamentIsOrganizer = (record.createdBy == DeviceID.id)
+                    if record.gameType == "skins" {
+                        var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
+                        skins.settings.potAmount = record.potAmount
+                        skins.settings.skinValue = record.stake ?? skins.settings.skinValue
+                        g.skinsState = skins
+                    }
+                }
+                GameManager.shared.saveCurrent()
+                NotificationCenter.default.post(name: .reloadUI, object: nil)
+                print("🏆 rejoined tournament: code=\(record.code) matchId=\(matchId) day=\(liveDay)")
+                await MainActor.run {
+                    spinner.dismiss(animated: false) { self.dismiss(animated: true) }
+                }
+            } catch {
+                print("❌ applyRejoin fetchTournament error: \(error)")
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Could not rejoin tournament: \(error.localizedDescription)")
+                    }
+                }
             }
         }
     }

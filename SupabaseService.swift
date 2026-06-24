@@ -593,6 +593,7 @@ final class SupabaseService {
         gameType: String,
         scoringType: String,
         stake: Double?,
+        potAmount: Double?,
         carryTies: Bool?,
         courseName: String
     ) async throws -> TournamentRecord {
@@ -602,10 +603,11 @@ final class SupabaseService {
             "name":        AnyJSON.string(name),
             "game_type":   AnyJSON.string(gameType),
             "scoring":     AnyJSON.string(scoringType),
-            "created_by":  AnyJSON.string(ProfileStore.name ?? ""),
+            "created_by":  AnyJSON.string(DeviceID.id),
             "course_name": AnyJSON.string(courseName)
         ]
         if let s = stake { payload["stake"] = AnyJSON.double(s) }
+        if let p = potAmount { payload["pot_amount"] = AnyJSON.double(p) }
         if let c = carryTies { payload["carry_ties"] = AnyJSON.bool(c) }
 
         let response: PostgrestResponse<TournamentRecord> = try await client

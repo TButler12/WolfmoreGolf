@@ -108,11 +108,11 @@ final class SkinsViewController: UIViewController {
         let boldFont    = UIFont.systemFont(ofSize: 15, weight: .semibold)
 
         let sectionHeaders: Set<String> = ["SKINS", "TOTALS", "BY HOLE"]
+        let gold = UIColor(red: 0.780, green: 0.635, blue: 0.188, alpha: 1.0)
         let lines = text.components(separatedBy: "\n")
 
         for line in lines {
             if sectionHeaders.contains(line.trimmingCharacters(in: .whitespaces)) {
-                // Section header: green, bold, small caps feel
                 let str = line.uppercased() + "\n"
                 result.append(NSAttributedString(string: str, attributes: [
                     .font: sectionFont,
@@ -122,8 +122,26 @@ final class SkinsViewController: UIViewController {
                 ]))
             } else if line.isEmpty {
                 result.append(NSAttributedString(string: "\n", attributes: [.font: bodyFont]))
+            } else if line.hasPrefix("Skins Pot:") {
+                // Pot mode header — gold label + bold value
+                result.append(NSAttributedString(string: line + "\n", attributes: [
+                    .font: boldFont, .foregroundColor: gold, .paragraphStyle: bodyPara
+                ]))
+            } else if line.contains(" → $") {
+                // Pot mode player row: "Name — X skins → $Y.YY"
+                let parts = line.components(separatedBy: " → $")
+                let base = NSMutableAttributedString(string: parts[0] + " → ", attributes: [
+                    .font: boldFont, .foregroundColor: UIColor.label, .paragraphStyle: bodyPara
+                ])
+                if parts.count > 1 {
+                    base.append(NSAttributedString(string: "$" + parts[1] + "\n", attributes: [
+                        .font: boldFont, .foregroundColor: positiveGreen, .paragraphStyle: bodyPara
+                    ]))
+                } else {
+                    base.append(NSAttributedString(string: "\n"))
+                }
+                result.append(base)
             } else if line.contains("(+$") {
-                // Positive money line — color the amount green
                 let parts = line.components(separatedBy: "(+$")
                 let base  = NSMutableAttributedString(string: parts[0], attributes: [
                     .font: boldFont, .foregroundColor: UIColor.label, .paragraphStyle: bodyPara
@@ -137,7 +155,6 @@ final class SkinsViewController: UIViewController {
                 }
                 result.append(base)
             } else if line.contains("(-$") {
-                // Negative money line — color the amount red
                 let parts = line.components(separatedBy: "(-$")
                 let base  = NSMutableAttributedString(string: parts[0], attributes: [
                     .font: boldFont, .foregroundColor: UIColor.label, .paragraphStyle: bodyPara

@@ -2028,7 +2028,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func hammerTooltipMessage() -> String {
-        let style = GameManager.shared.currentGame?.hammerStyle ?? .doubling
+        let style = GameManager.shared.currentGame?.hammerStyle ?? .additive
         let dTag  = style == .doubling ? " (current)" : ""
         let aTag  = style == .additive ? " (current)" : ""
         return """
@@ -2041,6 +2041,21 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         """
     }
 
+    private func pressTooltipMessage() -> String {
+        let style = GameManager.shared.currentGame?.pressStyle ?? .additive
+        let dTag  = style == .doubling ? " (current)" : ""
+        let aTag  = style == .additive ? " (current)" : ""
+        return """
+        Press raises the bet for all remaining holes in the half. Tap + to add a press, − to undo the last press on this hole only.
+
+        Doubling mode\(dTag): each press doubles the bet — 1× → 2× → 4× → 8×
+        Additive mode\(aTag): each press adds the base stake — 1× → 2× → 3× → 4×
+
+        Press applies to remaining holes — once committed it carries forward.
+        Change mode in Game Settings → Press Style.
+        """
+    }
+
     @objc private func handleHelpLongPress(_ gr: UILongPressGestureRecognizer) {
         guard gr.state == .began, let source = gr.view else { return }
 
@@ -2048,6 +2063,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let message: String
         if source === hammerStepperContainer {
             message = hammerTooltipMessage()
+        } else if source === pressStepperContainer {
+            message = pressTooltipMessage()
         } else {
             message = source.accessibilityValue ?? ""
         }
@@ -3076,6 +3093,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 guard activeIndexes.count >= 2 else { return }
 
                 let skinValue   = tourneySkinsState.settings.skinValue
+                let potAmount   = tourneySkinsState.settings.potAmount
+                let isPotMode   = (potAmount ?? 0) > 0
                 let activeCount = activeIndexes.count
 
                 for backfillHole in backfillRange {
@@ -3089,17 +3108,33 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         guard let result = tourneySkinsState.resultsByHole[safe: h],
                               !result.winningPlayerIndexes.isEmpty else { continue }
                         let skinsCount = Double(result.awardedSkinCount)
-                        let earned     = skinsCount * Double(activeCount - 1) * skinValue
-                        let paid       = skinsCount * skinValue
-                        for idx in activeIndexes {
-                            if result.winningPlayerIndexes.contains(idx) {
-                                cumulativeMoney[idx, default: 0] += earned
-                                cumulativeSkinsWon[idx, default: 0] += result.awardedSkinCount
-                                if h == backfillHole { holeMoneyBySeat[idx] = earned }
-                            } else {
-                                cumulativeMoney[idx, default: 0] -= paid
-                                if h == backfillHole { holeMoneyBySeat[idx] = -paid }
+                        if !isPotMode {
+                            let earned = skinsCount * Double(activeCount - 1) * skinValue
+                            let paid   = skinsCount * skinValue
+                            for idx in activeIndexes {
+                                if result.winningPlayerIndexes.contains(idx) {
+                                    cumulativeMoney[idx, default: 0] += earned
+                                    cumulativeSkinsWon[idx, default: 0] += result.awardedSkinCount
+                                    if h == backfillHole { holeMoneyBySeat[idx] = earned }
+                                } else {
+                                    cumulativeMoney[idx, default: 0] -= paid
+                                    if h == backfillHole { holeMoneyBySeat[idx] = -paid }
+                                }
                             }
+                        } else {
+                            for idx in activeIndexes where result.winningPlayerIndexes.contains(idx) {
+                                cumulativeSkinsWon[idx, default: 0] += result.awardedSkinCount
+                            }
+                        }
+                    }
+
+                    // Pot mode: compute running money estimate after accumulating skins
+                    if isPotMode, let pot = potAmount {
+                        let totalSkins = cumulativeSkinsWon.values.reduce(0, +)
+                        for idx in activeIndexes {
+                            let won = cumulativeSkinsWon[idx] ?? 0
+                            cumulativeMoney[idx] = totalSkins > 0 ? (Double(won) / Double(totalSkins)) * pot : 0
+                            holeMoneyBySeat[idx] = 0 // marginal per-hole undefined in pot mode
                         }
                     }
 
@@ -3766,7 +3801,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
               let levelLabel = pressLevelLabel,
               let minusBtn = pressMinusButton else { return }
 
-        levelLabel.text    = pressLevel == 0 ? "–" : "\(1 << pressLevel)×"
+        let pressStyle = GameManager.shared.currentGame?.pressStyle ?? .additive
+        let multiplierText: String
+        if pressLevel == 0 {
+            multiplierText = "–"
+        } else if pressStyle == .additive {
+            multiplierText = "\(pressLevel + 1)×"
+        } else {
+            multiplierText = "\(1 << pressLevel)×"
+        }
+        levelLabel.text    = multiplierText
         minusBtn.isEnabled = pressLevel > 0
 
         let bg: UIColor   = pressLevel == 0 ? .systemOrange : .black
@@ -3927,7 +3971,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             )
             pressStepperContainer = pc; pressTitleLabel = ptlbl; pressLevelLabel = plbl
             pressMinusButton = pminus; pressPlusButton = pplus
-            addHelp(to: pc, title: "Press", message: "Press doubles the bet for all remaining holes in the half. Tap + to add a press, − to undo the last press on this hole only. Multiple presses stack: 1× → 2× → 4× → 8×\nPress applies to remaining holes — once committed it carries forward.")
+            addHelp(to: pc, title: "Press", message: "__press__") // message built dynamically in handleHelpLongPress
             paintPressStepperView(pressLevel: 0)
             pressedPushed2.isHidden = true
 
@@ -4024,11 +4068,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
             let h     = max(0, min(g.hole, count - 1))
             let end   = min(h < 9 ? 9 : STANDARD_HOLES, count)
+            let isAdditive = g.pressStyle == .additive
             for i in h..<end {
-                let base = g.gameHoleDollarsArray[i] == 0 ? 2.0 : g.gameHoleDollarsArray[i]
-                g.pressBaseDollars[i] = base
-                g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, base * 2.0))
+                if g.pressLevel[i] == 0 {
+                    let base = g.gameHoleDollarsArray[i] == 0 ? 2.0 : g.gameHoleDollarsArray[i]
+                    g.pressBaseDollars[i] = base
+                }
                 g.pressLevel[i] += 1
+                let origBase = g.pressBaseDollars[i] == 0 ? 2.0 : g.pressBaseDollars[i]
+                let newStake = isAdditive
+                    ? origBase * Double(g.pressLevel[i] + 1)
+                    : origBase * Double(1 << g.pressLevel[i])
+                g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, newStake))
             }
             g.pressInitiatedHole = h
         }
@@ -4039,15 +4090,21 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @objc private func pressStepperMinusTapped() {
         GameManager.shared.update { g in
             if g.pressLevel.count != STANDARD_HOLES       { g.pressLevel       = Array(repeating: 0,   count: STANDARD_HOLES) }
+            if g.pressBaseDollars.count != STANDARD_HOLES { g.pressBaseDollars = Array(repeating: 0.0, count: STANDARD_HOLES) }
             if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
             func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
             let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
             let h     = max(0, min(g.hole, count - 1))
             guard (g.pressLevel[safe: h] ?? 0) > 0 else { return }
             let end = min(h < 9 ? 9 : STANDARD_HOLES, count)
+            let isAdditive = g.pressStyle == .additive
             for i in h..<end {
-                g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, g.gameHoleDollarsArray[i] / 2.0))
                 if g.pressLevel[i] > 0 { g.pressLevel[i] -= 1 }
+                let origBase = g.pressBaseDollars[i] == 0 ? 2.0 : g.pressBaseDollars[i]
+                let newStake = isAdditive
+                    ? origBase * Double(g.pressLevel[i] + 1)
+                    : (g.pressLevel[i] == 0 ? origBase : origBase * Double(1 << g.pressLevel[i]))
+                g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, newStake))
             }
             g.pressInitiatedHole = nil
         }

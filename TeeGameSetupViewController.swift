@@ -10,13 +10,16 @@ final class TeeGameSetupViewController: UIViewController {
     private let nameField        = UITextField()
     private let gameTypeControl  = UISegmentedControl(items: ["Wolf", "Skins"])
     private let stakeField       = UITextField()
+    private let potField         = UITextField()
     private let carryTiesControl = UISegmentedControl(items: ["No Carry", "Carry Ties"])
     private let createButton     = UIButton(type: .system)
 
     private let stakeRow  = UIView()
+    private let potRow    = UIView()
     private let carryRow  = UIView()
 
     private let stakeLabel = UILabel()
+    private let potLabel   = UILabel()
     private let carryLabel = UILabel()
 
     // MARK: - Lifecycle
@@ -87,7 +90,7 @@ final class TeeGameSetupViewController: UIViewController {
 
         // Tournament name
         let infoLabel = UILabel()
-        infoLabel.text = "Tournament mode tracks both Wolf and Skins for the field and is based on net score."
+        infoLabel.text = "Tournament mode tracks scores across all groups with a live leaderboard. Net scoring is used for both Wolf and Skins."
         infoLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
         infoLabel.textColor = .secondaryLabel
         infoLabel.numberOfLines = 0
@@ -101,15 +104,14 @@ final class TeeGameSetupViewController: UIViewController {
         nameField.returnKeyType = .done
         nameField.addTarget(self, action: #selector(dismissKeyboard), for: .editingDidEndOnExit)
 
-        // Game type — Wolf only for now; Format row hidden until Skins/Stableford re-enabled
+        // Game type
         let formatRow = labeled("Format", control: gameTypeControl)
-        formatRow.isHidden = true
         stack.addArrangedSubview(formatRow)
         gameTypeControl.selectedSegmentIndex = 0
         gameTypeControl.addTarget(self, action: #selector(gameTypeChanged), for: .valueChanged)
 
-        // Stake (Skins only)
-        stakeLabel.text = "Stake ($ per hole)"
+        // Stake (Skins only, disabled when pot mode is set)
+        stakeLabel.text = "Stake ($ per skin)"
         stakeLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
         stakeLabel.textColor = .secondaryLabel
         stakeField.placeholder = "e.g. 5"
@@ -129,6 +131,29 @@ final class TeeGameSetupViewController: UIViewController {
             stakeStack.bottomAnchor.constraint(equalTo: stakeRow.bottomAnchor),
         ])
         stack.addArrangedSubview(stakeRow)
+
+        // Pot amount (Skins only, optional — overrides per-skin stake)
+        potLabel.text = "Skins Pot ($)  —  total divided by skins won"
+        potLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        potLabel.textColor = .secondaryLabel
+        potField.placeholder = "e.g. 100  (optional)"
+        potField.borderStyle = .roundedRect
+        potField.keyboardType = .numberPad
+        potField.inputAccessoryView = makeNumberPadToolbar()
+        potField.addTarget(self, action: #selector(potFieldChanged), for: .editingChanged)
+        let potStack = UIStackView(arrangedSubviews: [potLabel, potField])
+        potStack.axis = .vertical
+        potStack.spacing = 6
+        potRow.translatesAutoresizingMaskIntoConstraints = false
+        potRow.addSubview(potStack)
+        potStack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            potStack.topAnchor.constraint(equalTo: potRow.topAnchor),
+            potStack.leadingAnchor.constraint(equalTo: potRow.leadingAnchor),
+            potStack.trailingAnchor.constraint(equalTo: potRow.trailingAnchor),
+            potStack.bottomAnchor.constraint(equalTo: potRow.bottomAnchor),
+        ])
+        stack.addArrangedSubview(potRow)
 
         // Carry ties (Skins only)
         carryLabel.text = "Ties"
@@ -202,10 +227,16 @@ final class TeeGameSetupViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func gameTypeChanged() {
-        // Stake and carry ties are Skins-only (index 1)
         let isSkins = gameTypeControl.selectedSegmentIndex == 1
         stakeRow.isHidden = !isSkins
+        potRow.isHidden   = !isSkins
         carryRow.isHidden = !isSkins
+    }
+
+    @objc private func potFieldChanged() {
+        let hasPot = !(potField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        stakeField.isEnabled = !hasPot
+        stakeField.alpha     = hasPot ? 0.35 : 1.0
     }
 
     @objc private func dismissKeyboard() {
@@ -217,6 +248,7 @@ final class TeeGameSetupViewController: UIViewController {
         let name        = nameField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let gameIdx     = gameTypeControl.selectedSegmentIndex
         let stakeText   = stakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let potText     = potField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let carryIdx    = carryTiesControl.selectedSegmentIndex
         let courseName  = GameManager.shared.currentGame?.course.name ?? ""
 
@@ -235,10 +267,17 @@ final class TeeGameSetupViewController: UIViewController {
         }
         let scoringType = "net"
         var stake: Double? = nil
+        var potAmount: Double? = nil
         var carryTies: Bool? = nil
 
         if gameType == "skins" {
-            if !stakeText.isEmpty {
+            if !potText.isEmpty {
+                guard let p = Double(potText), p > 0 else {
+                    showError("Please enter a valid pot amount.")
+                    return
+                }
+                potAmount = p
+            } else if !stakeText.isEmpty {
                 guard let s = Double(stakeText), s > 0 else {
                     showError("Please enter a valid stake amount.")
                     return
@@ -259,12 +298,12 @@ final class TeeGameSetupViewController: UIViewController {
                     gameType: gameType,
                     scoringType: scoringType,
                     stake: stake,
+                    potAmount: potAmount,
                     carryTies: carryTies,
                     courseName: courseName
                 )
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
-                        UserDefaults.standard.set(true, forKey: "isOrganizer_\(record.code)")
                         GameManager.shared.update { g in
                             g.tournamentCode        = record.code
                             g.groupCode             = record.id
@@ -273,7 +312,13 @@ final class TeeGameSetupViewController: UIViewController {
                             g.tournamentGameType    = record.gameType
                             g.tournamentScoringType = record.scoring
                             g.tournamentDay         = 1
-                            g.tournamentIsOrganizer = true
+                            g.tournamentIsOrganizer = (record.createdBy == DeviceID.id)
+                            if record.gameType == "skins" {
+                                var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
+                                skins.settings.potAmount  = record.potAmount
+                                skins.settings.skinValue  = record.stake ?? skins.settings.skinValue
+                                g.skinsState = skins
+                            }
                         }
                         GameManager.shared.saveCurrent()
                         NotificationCenter.default.post(name: .reloadUI, object: nil)

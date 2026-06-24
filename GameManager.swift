@@ -115,8 +115,6 @@ final class GameManager {
         let keepHCs         = old.hcPlayers
         let keepActives     = old.playerActivated
         let keepRosterList  = old.rosterNames
-        let keepHammerStyle = old.hammerStyle
-
         var fresh = baselineNewGame(named: old.gameName)
         fresh.course             = keepCourse
         fresh.courseParToPass    = keepCoursePar
@@ -125,7 +123,6 @@ final class GameManager {
         fresh.hcPlayers          = keepHCs
         fresh.playerActivated    = keepActives
         fresh.rosterNames        = keepRosterList
-        fresh.hammerStyle        = keepHammerStyle
         // Tournament linkage is intentionally NOT carried over — starting a new round
         // means leaving the tournament context. Rejoin via Live & Connected if needed.
         // If you want to keep the existing per-hole stakes, uncomment:

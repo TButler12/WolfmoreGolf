@@ -8,7 +8,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private struct MoneyRow  { let rank: Int; let name: String; let dayTotal: Double; let total: Double; let holesPlayed: Int; let offset: Double? }
     private struct ScoreRow  { let rank: Int; let name: String; let total: Int;    let holesPlayed: Int }
     private struct GroupRow  { let matchId: String; let playerNames: [String];     let holesPlayed: Int }
-    private struct SkinsRow  { let rank: Int; let name: String; let skinsWon: Int; let holesPlayed: Int }
+    private struct SkinsRow  { let rank: Int; let name: String; let skinsWon: Int; let holesPlayed: Int; let potPayout: Double? }
 
     // MARK: - State
     let tournamentCode: String
@@ -32,12 +32,15 @@ final class TournamentLeaderboardViewController: UIViewController {
     }
 
     // MARK: - UI
-    private let headerView    = UIView()
-    private let titleLabel    = UILabel()
-    private let subtitleLabel = UILabel()
-    private let liveDot       = UIView()
-    private let liveLabel     = UILabel()
-    private let statsLabel    = UILabel()
+    private let isOrganizerView: Bool
+
+    private let headerView     = UIView()
+    private let titleLabel     = UILabel()
+    private let subtitleLabel  = UILabel()
+    private let liveDot        = UIView()
+    private let liveLabel      = UILabel()
+    private let statsLabel     = UILabel()
+    private let potBannerLabel = UILabel()
     private let segment       = UISegmentedControl(items: ["Money", "Score", "Groups", "Tournament"])
     private let dayPicker     = UISegmentedControl()
     private let gameTypePicker = UISegmentedControl(items: ["Wolf", "Skins"])
@@ -45,8 +48,9 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let spinner       = UIActivityIndicatorView(style: .medium)
 
     // MARK: - Init
-    init(code: String) {
+    init(code: String, isOrganizerView: Bool = false) {
         self.tournamentCode = code.uppercased()
+        self.isOrganizerView = isOrganizerView
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -54,17 +58,19 @@ final class TournamentLeaderboardViewController: UIViewController {
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Leaderboard"
+        title = isOrganizerView ? "Tournament Results" : "Leaderboard"
         view.backgroundColor = .systemBackground
 
         let refreshBtn = UIBarButtonItem(barButtonSystemItem: .refresh,
                                         target: self, action: #selector(refreshTapped))
         navigationItem.rightBarButtonItems = [refreshBtn, UIBarButtonItem(customView: spinner)]
 
-        let leaveBtn = UIBarButtonItem(title: "Leave", style: .plain,
-                                       target: self, action: #selector(leaveTapped))
-        leaveBtn.tintColor = .systemRed
-        navigationItem.leftBarButtonItem = leaveBtn
+        if !isOrganizerView {
+            let leaveBtn = UIBarButtonItem(title: "Leave", style: .plain,
+                                           target: self, action: #selector(leaveTapped))
+            leaveBtn.tintColor = .systemRed
+            navigationItem.leftBarButtonItem = leaveBtn
+        }
 
         setupHeader()
         setupTable()
@@ -274,8 +280,17 @@ final class TournamentLeaderboardViewController: UIViewController {
                 skinTotals[player] = latest.skinsWon ?? 0
             }
         }
+        let totalSkinsForPot = skinTotals.values.reduce(0, +)
+        let pot = record?.potAmount
         skinsData = skinTotals.sorted { $0.value > $1.value }.enumerated().map { i, kv in
-            SkinsRow(rank: i+1, name: kv.key, skinsWon: kv.value, holesPlayed: pHoles[kv.key] ?? 0)
+            let potPayout: Double?
+            if let pot, pot > 0, totalSkinsForPot > 0, kv.value > 0 {
+                potPayout = (Double(kv.value) / Double(totalSkinsForPot)) * pot
+            } else {
+                potPayout = nil
+            }
+            return SkinsRow(rank: i+1, name: kv.key, skinsWon: kv.value,
+                            holesPlayed: pHoles[kv.key] ?? 0, potPayout: potPayout)
         }
 
         tournamentData = moneyData.map { row in
@@ -379,7 +394,12 @@ final class TournamentLeaderboardViewController: UIViewController {
         gameTypePicker.selectedSegmentIndex = 0
         gameTypePicker.addTarget(self, action: #selector(gameTypePickerChanged), for: .valueChanged)
 
-        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, gameTypePicker, dayPicker, segment])
+        potBannerLabel.font          = UIFont.systemFont(ofSize: 12, weight: .medium)
+        potBannerLabel.textColor     = UIColor(red: 0.780, green: 0.635, blue: 0.188, alpha: 1.0)
+        potBannerLabel.numberOfLines = 1
+        potBannerLabel.isHidden      = true
+
+        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, potBannerLabel, gameTypePicker, dayPicker, segment])
         vStack.axis = .vertical; vStack.spacing = 6
         vStack.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(vStack)
@@ -432,16 +452,14 @@ final class TournamentLeaderboardViewController: UIViewController {
         guard let rec = record else { return }
         titleLabel.text = rec.name
 
-        var parts: [String] = []
+        let currentDay = selectedDay ?? availableDays.last ?? 1
+        var parts: [String] = ["Day \(currentDay)"]
         if let cn = rec.courseName, !cn.isEmpty { parts.append(cn) }
         if let raw = rec.createdAt {
             let iso = ISO8601DateFormatter()
             iso.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
             var d = iso.date(from: raw)
-            if d == nil {
-                iso.formatOptions = [.withInternetDateTime]
-                d = iso.date(from: raw)
-            }
+            if d == nil { iso.formatOptions = [.withInternetDateTime]; d = iso.date(from: raw) }
             if let date = d {
                 let df = DateFormatter(); df.dateStyle = .medium; df.timeStyle = .none
                 parts.append(df.string(from: date))
@@ -449,9 +467,20 @@ final class TournamentLeaderboardViewController: UIViewController {
         }
         subtitleLabel.text = parts.joined(separator: " · ")
 
-        let playerCount = Set(allRows.map { $0.playerName }).count
-        let groupCount  = groupData.count
-        statsLabel.text = "· \(playerCount) player\(playerCount == 1 ? "" : "s") · \(groupCount) group\(groupCount == 1 ? "" : "s")"
+        let playerCount    = Set(allRows.map { $0.playerName }).count
+        let groupCount     = groupData.count
+        let holesCompleted = Set(allRows.filter { ($0.day ?? 1) == currentDay }.map { $0.hole }).count
+        statsLabel.text = "· \(playerCount) player\(playerCount == 1 ? "" : "s") · \(groupCount) group\(groupCount == 1 ? "" : "s") · \(holesCompleted)h"
+
+        if let pot = rec.potAmount, pot > 0 {
+            let totalSkins = skinsData.reduce(0) { $0 + $1.skinsWon }
+            let perSkin    = totalSkins > 0 ? pot / Double(totalSkins) : 0
+            let perSkinStr = perSkin == floor(perSkin) ? "$\(Int(perSkin))" : String(format: "$%.2f", perSkin)
+            potBannerLabel.text   = "Skins Pot: $\(Int(pot)) · \(totalSkins) skins won · \(perSkinStr) per skin"
+            potBannerLabel.isHidden = false
+        } else {
+            potBannerLabel.isHidden = true
+        }
     }
 
     // MARK: - Table setup
@@ -497,6 +526,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
             if selectedGameType == "skins" {
                 let r = skinsData[i]
                 cell.configureSkins(rank: r.rank, name: r.name, skinsWon: r.skinsWon,
+                                    potPayout: r.potPayout,
                                     holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
             } else {
                 let r = moneyData[i]
@@ -577,7 +607,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                 return
             }
 
-            guard UserDefaults.standard.bool(forKey: "isOrganizer_\(tournamentCode)") else { return }
+            guard isOrganizerView || GameManager.shared.currentGame?.tournamentIsOrganizer == true else { return }
             let row = moneyData[indexPath.row]
             let alert = UIAlertController(
                 title: "Carry-over for \(row.name)",
@@ -685,16 +715,21 @@ private final class LeaderboardMoneyCell: UITableViewCell {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    func configureSkins(rank: Int, name: String, skinsWon: Int, holesPlayed: Int, isCurrentUser: Bool) {
+    func configureSkins(rank: Int, name: String, skinsWon: Int, potPayout: Double?,
+                        holesPlayed: Int, isCurrentUser: Bool) {
         let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
-        rankLabel.text       = "#\(rank)"
-        rankLabel.textColor  = rank == 1 ? gold : .secondaryLabel
-        nameLabel.text       = name
-        moneyLabel.text      = "\(skinsWon) skin\(skinsWon == 1 ? "" : "s")"
-        moneyLabel.textColor = skinsWon > 0 ? .systemGreen : .secondaryLabel
-        holesLabel.text      = "\(holesPlayed)h"
+        rankLabel.text      = "#\(rank)"
+        rankLabel.textColor = rank == 1 ? gold : .secondaryLabel
+        nameLabel.text      = name
+        if let payout = potPayout, payout > 0 {
+            moneyLabel.text = "\(skinsWon) skin\(skinsWon == 1 ? "" : "s") · $\(String(format: "%.2f", payout))"
+        } else {
+            moneyLabel.text = "\(skinsWon) skin\(skinsWon == 1 ? "" : "s")"
+        }
+        moneyLabel.textColor   = skinsWon > 0 ? .systemGreen : .secondaryLabel
+        holesLabel.text        = "\(holesPlayed)h"
         dayTotalLabel.isHidden = true
-        backgroundColor      = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
+        backgroundColor        = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
     }
 
     func configure(rank: Int, name: String, total: Double, holesPlayed: Int, isCurrentUser: Bool, dayTotal: Double? = nil) {

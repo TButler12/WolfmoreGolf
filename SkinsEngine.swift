@@ -273,23 +273,32 @@ enum SkinsEngine {
             return
         }
 
-        let skinValue = state.settings.skinValue
         state.moneyWonByPlayer = Array(repeating: 0.0, count: MAX_PLAYERS)
 
-        for winner in activeIndexes {
-            let won = state.skinsWonByPlayer[winner]
-            guard won > 0 else { continue }
-
-            let gainPerSkin = Double(activeCount - 1) * skinValue
-            state.moneyWonByPlayer[winner] += Double(won) * gainPerSkin
-        }
-
-        for loser in activeIndexes {
-            let skinsWonByOthers = activeIndexes
-                .filter { $0 != loser }
-                .reduce(0) { $0 + state.skinsWonByPlayer[$1] }
-
-            state.moneyWonByPlayer[loser] -= Double(skinsWonByOthers) * skinValue
+        if let pot = state.settings.potAmount, pot > 0 {
+            // Pot mode: divide total prize pool by skins won proportion
+            let totalSkins = activeIndexes.reduce(0) { $0 + state.skinsWonByPlayer[$1] }
+            guard totalSkins > 0 else { return }
+            for idx in activeIndexes {
+                let won = state.skinsWonByPlayer[idx]
+                guard won > 0 else { continue }
+                state.moneyWonByPlayer[idx] = (Double(won) / Double(totalSkins)) * pot
+            }
+        } else {
+            // Per-skin mode: each skin won earns (playerCount - 1) × skinValue
+            let skinValue = state.settings.skinValue
+            for winner in activeIndexes {
+                let won = state.skinsWonByPlayer[winner]
+                guard won > 0 else { continue }
+                let gainPerSkin = Double(activeCount - 1) * skinValue
+                state.moneyWonByPlayer[winner] += Double(won) * gainPerSkin
+            }
+            for loser in activeIndexes {
+                let skinsWonByOthers = activeIndexes
+                    .filter { $0 != loser }
+                    .reduce(0) { $0 + state.skinsWonByPlayer[$1] }
+                state.moneyWonByPlayer[loser] -= Double(skinsWonByOthers) * skinValue
+            }
         }
     }
 
@@ -298,13 +307,23 @@ enum SkinsEngine {
         gameData: GameData
     ) -> String {
         let activeIndexes = activePlayerIndexes(from: gameData, state: state)
+        let isPotMode = (state.settings.potAmount ?? 0) > 0
         var lines: [String] = []
 
         lines.append("SKINS")
         lines.append("Mode: \(state.settings.mode == .automatic ? "Automatic" : "Manual")")
         lines.append("Scoring: Net")
         lines.append("Carryovers: \(state.settings.carryoversEnabled ? "On" : "Off")")
-        lines.append("Skin Value: \(formatMoney(state.settings.skinValue))")
+
+        if isPotMode, let pot = state.settings.potAmount {
+            let totalSkins = activeIndexes.reduce(0) { $0 + state.skinsWonByPlayer[$1] }
+            let perSkin = totalSkins > 0 ? pot / Double(totalSkins) : 0
+            let perSkinStr = perSkin == floor(perSkin)
+                ? "$\(Int(perSkin))" : String(format: "$%.2f", perSkin)
+            lines.append("Skins Pot: \(formatMoney(pot)) · \(totalSkins) skin\(totalSkins == 1 ? "" : "s") won · \(perSkinStr) per skin")
+        } else {
+            lines.append("Skin Value: \(formatMoney(state.settings.skinValue))")
+        }
 
         let names = activeIndexes.map { displayName(for: $0, gameData: gameData) }
         if !names.isEmpty {
@@ -318,7 +337,15 @@ enum SkinsEngine {
             let name = displayName(for: idx, gameData: gameData)
             let skins = state.skinsWonByPlayer[idx]
             let money = state.moneyWonByPlayer[idx]
-            lines.append("\(name): \(skins) skins (\(formatSignedMoney(money)))")
+            if isPotMode {
+                if money > 0 {
+                    lines.append("\(name) — \(skins) skin\(skins == 1 ? "" : "s") → \(formatMoney(money))")
+                } else {
+                    lines.append("\(name) — \(skins) skin\(skins == 1 ? "" : "s")")
+                }
+            } else {
+                lines.append("\(name): \(skins) skins (\(formatSignedMoney(money)))")
+            }
         }
 
         lines.append("")
