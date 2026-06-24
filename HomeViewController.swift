@@ -1081,6 +1081,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     @objc private func moreTapped(_ sender: UIButton) {
         let ac = UIAlertController(title: "More", message: nil, preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "Manage Players", style: .default) { [weak self] _ in
+            self?.presentManagePlayers()
+        })
         ac.addAction(UIAlertAction(title: "Past Games", style: .default) { [weak self] _ in
             self?.openPastGames()
         })

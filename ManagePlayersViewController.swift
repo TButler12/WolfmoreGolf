@@ -25,6 +25,7 @@ final class ManagePlayersViewController: UIViewController,
     private weak var addUIButton: UIButton?
     private weak var startRoundButton: UIButton?
     private weak var quickStartButton: UIButton?
+    private var groupsBarItem: UIBarButtonItem?
 
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -57,6 +58,7 @@ final class ManagePlayersViewController: UIViewController,
 
         let groupsButton = UIBarButtonItem(title: "Groups", style: .plain, target: self, action: #selector(groupsTapped))
         groupsButton.tintColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        groupsBarItem = groupsButton
 
         navigationItem.rightBarButtonItems = [UIBarButtonItem(customView: addButton), groupsButton]
         navigationItem.hidesBackButton = true
@@ -237,7 +239,45 @@ final class ManagePlayersViewController: UIViewController,
 
     // MARK: - Add Player flow (Name + Phone -> Next -> HC -> Add)
     @objc private func addFriendTapped() {
-        showNamePrompt(prefillName: nil)
+        let ac = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Add Manually", style: .default) { [weak self] _ in
+            self?.showNamePrompt(prefillName: nil)
+        })
+        ac.addAction(UIAlertAction(title: "Import from Contacts", style: .default) { [weak self] _ in
+            self?.openContactsImport()
+        })
+        ac.addAction(UIAlertAction(title: "Edit / Delete", style: .default) { [weak self] _ in
+            self?.enterEditMode()
+        })
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = addUIButton ?? view
+            pop.sourceRect = addUIButton?.bounds ?? CGRect(x: view.bounds.midX, y: 60, width: 1, height: 1)
+        }
+        present(ac, animated: true)
+    }
+
+    private func openContactsImport() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "ContactsViewController")
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func enterEditMode() {
+        tableView.setEditing(true, animated: true)
+        let doneItem = UIBarButtonItem(barButtonSystemItem: .done, target: self, action: #selector(exitEditMode))
+        navigationItem.rightBarButtonItems = [doneItem, groupsBarItem].compactMap { $0 }
+    }
+
+    @objc private func exitEditMode() {
+        tableView.setEditing(false, animated: true)
+        let newAddButton = makeGlowingAddButton()
+        addUIButton = newAddButton
+        var items: [UIBarButtonItem] = [UIBarButtonItem(customView: newAddButton)]
+        if let g = groupsBarItem { items.append(g) }
+        navigationItem.rightBarButtonItems = items
     }
 
     private func showNamePrompt(prefillName: String?) {
