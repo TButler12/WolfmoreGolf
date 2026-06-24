@@ -40,15 +40,6 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         navigationController?.navigationBar.tintColor = .white
     }
 
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        let restored = UINavigationBarAppearance()
-        restored.configureWithDefaultBackground()
-        navigationController?.navigationBar.standardAppearance = restored
-        navigationController?.navigationBar.scrollEdgeAppearance = restored
-        navigationController?.navigationBar.tintColor = nil
-    }
-
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -91,6 +82,11 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         super.viewWillDisappear(animated)
         removeKeyboardObservers()
         NotificationCenter.default.removeObserver(self, name: .reloadUI, object: nil)
+        let restored = UINavigationBarAppearance()
+        restored.configureWithDefaultBackground()
+        navigationController?.navigationBar.standardAppearance = restored
+        navigationController?.navigationBar.scrollEdgeAppearance = restored
+        navigationController?.navigationBar.tintColor = nil
     }
 
     // MARK: - Scroll Layout
