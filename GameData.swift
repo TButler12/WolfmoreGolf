@@ -45,7 +45,7 @@ struct GameData: Codable {
 
     var gameType: GameType?
     var hammerCountPerHole: [Int]?
-    var hammerStyle: HammerStyle = .doubling
+    var hammerStyle: HammerStyle = .additive
     var wolfPlayerPerHole: [Int?]?
     var wolfWentAlonePerHole: [Bool]?
 

@@ -24,6 +24,31 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
     var gameData: GameData?
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        let darkGreen = UIColor(red: 0.118, green: 0.227, blue: 0.165, alpha: 1.0)
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = darkGreen
+        appearance.titleTextAttributes = [
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 17, weight: .semibold)
+        ]
+        appearance.backButtonAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.tintColor = .white
+    }
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        let restored = UINavigationBarAppearance()
+        restored.configureWithDefaultBackground()
+        navigationController?.navigationBar.standardAppearance = restored
+        navigationController?.navigationBar.scrollEdgeAppearance = restored
+        navigationController?.navigationBar.tintColor = nil
+    }
+
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -279,7 +304,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         segment.layer.borderColor = UIColor.systemGray4.cgColor
         segment.layer.borderWidth = 1
 
-        let style = GameManager.shared.currentGame?.hammerStyle ?? .doubling
+        let style = GameManager.shared.currentGame?.hammerStyle ?? .additive
         segment.selectedSegmentIndex = (style == .additive) ? 1 : 0
 
         let note = UILabel()
@@ -414,30 +439,31 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
     private func refreshUmbrellaButtonUI() {
         let title = umbrellaMuted ? "Umbrella: OFF" : "Umbrella: ON"
-        let bg = umbrellaMuted ? UIColor.systemBrown : UIColor.systemOrange
+        let appGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        let bg = umbrellaMuted ? UIColor.systemGray4 : appGreen
 
         if #available(iOS 15.0, *) {
             var cfg = umbrellaButton.configuration ?? UIButton.Configuration.filled()
             cfg.title = title
             cfg.baseBackgroundColor = bg
-            cfg.baseForegroundColor = .label
+            cfg.baseForegroundColor = .white
 
             cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
                 var outgoing = incoming
                 outgoing.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
-                outgoing.foregroundColor = UIColor.label
+                outgoing.foregroundColor = UIColor.white
                 return outgoing
             }
 
             umbrellaButton.configuration = cfg
-            umbrellaButton.setTitleColor(.label, for: .normal)
-            umbrellaButton.setTitleColor(.label, for: .highlighted)
-            umbrellaButton.setTitleColor(.label, for: .selected)
-            umbrellaButton.setTitleColor(.label, for: .disabled)
+            umbrellaButton.setTitleColor(.white, for: .normal)
+            umbrellaButton.setTitleColor(.white, for: .highlighted)
+            umbrellaButton.setTitleColor(.white, for: .selected)
+            umbrellaButton.setTitleColor(.white, for: .disabled)
         } else {
             umbrellaButton.setTitle(title, for: .normal)
             umbrellaButton.backgroundColor = bg
-            umbrellaButton.setTitleColor(.label, for: .normal)
+            umbrellaButton.setTitleColor(.white, for: .normal)
             umbrellaButton.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .semibold)
             umbrellaButton.alpha = 1.0
         }
