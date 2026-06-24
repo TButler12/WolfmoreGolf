@@ -244,11 +244,8 @@ final class ManagePlayersViewController: UIViewController,
         ac.addAction(UIAlertAction(title: "Add Manually", style: .default) { [weak self] _ in
             self?.showNamePrompt(prefillName: nil)
         })
-        ac.addAction(UIAlertAction(title: "Import from Contacts", style: .default) { [weak self] _ in
+        ac.addAction(UIAlertAction(title: "Manage Contacts", style: .default) { [weak self] _ in
             self?.openContactsImport()
-        })
-        ac.addAction(UIAlertAction(title: "Edit / Delete", style: .default) { [weak self] _ in
-            self?.enterEditMode()
         })
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
