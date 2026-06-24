@@ -54,9 +54,26 @@ final class ManagePlayersViewController: UIViewController,
     private func configureNavBar() {
         let addButton = makeGlowingAddButton()
         addUIButton = addButton
-        navigationItem.rightBarButtonItem = UIBarButtonItem(customView: addButton)
+
+        let groupsButton = UIBarButtonItem(title: "Groups", style: .plain, target: self, action: #selector(groupsTapped))
+        groupsButton.tintColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+
+        navigationItem.rightBarButtonItems = [UIBarButtonItem(customView: addButton), groupsButton]
         navigationItem.hidesBackButton = true
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    }
+
+    @objc private func groupsTapped() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        let vc = sb.instantiateViewController(withIdentifier: "TextVC")
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+            sheet.preferredCornerRadius = 18
+        }
+        present(nav, animated: true)
     }
 
     private func buildNavTitle() {
