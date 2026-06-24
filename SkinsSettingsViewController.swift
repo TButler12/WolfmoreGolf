@@ -11,6 +11,9 @@ final class SkinsSettingsViewController: UIViewController {
 
     private let skinValueLabel = UILabel()
     private let skinValueField = UITextField()
+    private let potAmountLabel = UILabel()
+    private let potAmountField = UITextField()
+    private let potAmountNoteLabel = UILabel()
     private let carryoversLabel = UILabel()
     private let carryoversSegment = UISegmentedControl(items: ["On", "Off"])
     private let editPlayersButton = UIButton(type: .system)
@@ -47,8 +50,13 @@ final class SkinsSettingsViewController: UIViewController {
     }
 
     private func setupUI() {
-        configureLabel(skinValueLabel, text: "Skin Value")
+        configureLabel(skinValueLabel, text: "Skin Value ($)")
+        configureLabel(potAmountLabel, text: "Skins Pot ($)  —  optional")
         configureLabel(carryoversLabel, text: "Carryovers")
+
+        let bar = UIToolbar()
+        bar.sizeToFit()
+        bar.items = [.flexibleSpace(), UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(dismissKeyboard))]
 
         skinValueField.borderStyle = .roundedRect
         skinValueField.keyboardType = .decimalPad
@@ -56,11 +64,22 @@ final class SkinsSettingsViewController: UIViewController {
         skinValueField.font = UIFont.preferredFont(forTextStyle: .body)
         skinValueField.placeholder = "0.00"
         skinValueField.delegate = self
-
-        let bar = UIToolbar()
-        bar.sizeToFit()
-        bar.items = [.flexibleSpace(), UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(dismissKeyboard))]
         skinValueField.inputAccessoryView = bar
+
+        potAmountField.borderStyle = .roundedRect
+        potAmountField.keyboardType = .decimalPad
+        potAmountField.textAlignment = .center
+        potAmountField.font = UIFont.preferredFont(forTextStyle: .body)
+        potAmountField.placeholder = "e.g. 100"
+        potAmountField.delegate = self
+        potAmountField.inputAccessoryView = bar
+        potAmountField.addTarget(self, action: #selector(potFieldChanged), for: .editingChanged)
+
+        potAmountNoteLabel.text = "If set, total pot is split by skins won. Overrides per-skin stake."
+        potAmountNoteLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
+        potAmountNoteLabel.textColor = .secondaryLabel
+        potAmountNoteLabel.numberOfLines = 0
+        potAmountNoteLabel.textAlignment = .center
 
         editPlayersButton.configuration = {
             var cfg = UIButton.Configuration.filled()
@@ -77,6 +96,7 @@ final class SkinsSettingsViewController: UIViewController {
         saveButton.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)
 
         let views: [UIView] = [skinValueLabel, skinValueField,
+                               potAmountLabel, potAmountField, potAmountNoteLabel,
                                carryoversLabel, carryoversSegment, editPlayersButton, saveButton]
         views.forEach {
             $0.translatesAutoresizingMaskIntoConstraints = false
@@ -94,7 +114,19 @@ final class SkinsSettingsViewController: UIViewController {
             skinValueField.widthAnchor.constraint(equalToConstant: 120),
             skinValueField.heightAnchor.constraint(equalToConstant: 34),
 
-            carryoversLabel.topAnchor.constraint(equalTo: skinValueField.bottomAnchor, constant: 28),
+            potAmountLabel.topAnchor.constraint(equalTo: skinValueField.bottomAnchor, constant: 28),
+            potAmountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+
+            potAmountField.topAnchor.constraint(equalTo: potAmountLabel.bottomAnchor, constant: 8),
+            potAmountField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            potAmountField.widthAnchor.constraint(equalToConstant: 120),
+            potAmountField.heightAnchor.constraint(equalToConstant: 34),
+
+            potAmountNoteLabel.topAnchor.constraint(equalTo: potAmountField.bottomAnchor, constant: 6),
+            potAmountNoteLabel.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
+            potAmountNoteLabel.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
+
+            carryoversLabel.topAnchor.constraint(equalTo: potAmountNoteLabel.bottomAnchor, constant: 24),
             carryoversLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
             carryoversSegment.topAnchor.constraint(equalTo: carryoversLabel.bottomAnchor, constant: 8),
@@ -121,7 +153,18 @@ final class SkinsSettingsViewController: UIViewController {
     private func loadSettings() {
         guard let skins = gameData?.skinsState else { return }
         skinValueField.text = String(format: "%.2f", skins.settings.skinValue)
+        if let pot = skins.settings.potAmount, pot > 0 {
+            potAmountField.text = String(format: "%.2f", pot)
+            skinValueField.isEnabled = false
+            skinValueField.alpha = 0.35
+        }
         carryoversSegment.selectedSegmentIndex = skins.settings.carryoversEnabled ? 0 : 1
+    }
+
+    @objc private func potFieldChanged() {
+        let hasPot = !(potAmountField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        skinValueField.isEnabled = !hasPot
+        skinValueField.alpha = hasPot ? 0.35 : 1.0
     }
 
     @objc private func saveTapped() {
@@ -129,9 +172,17 @@ final class SkinsSettingsViewController: UIViewController {
         guard var data = gameData, var skins = data.skinsState else { return }
 
         skins.settings.mode = .automatic
-        if let text = skinValueField.text, let value = Double(text) {
-            skins.settings.skinValue = max(0, value)
+
+        let potText = potAmountField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if potText.isEmpty {
+            skins.settings.potAmount = nil
+            if let text = skinValueField.text, let value = Double(text) {
+                skins.settings.skinValue = max(0, value)
+            }
+        } else if let pot = Double(potText), pot > 0 {
+            skins.settings.potAmount = pot
         }
+
         skins.settings.carryoversEnabled = (carryoversSegment.selectedSegmentIndex == 0)
 
         data.skinsState = skins

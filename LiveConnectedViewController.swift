@@ -219,6 +219,7 @@ final class LiveConnectedViewController: UITableViewController {
             g.tournamentScoringType  = record.scoring
             g.tournamentDay          = record.currentDay ?? 1
             g.tournamentIsOrganizer  = (record.createdBy == DeviceID.id)
+            g.tournamentPotAmount    = record.potAmount
         }
         UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
         GameManager.shared.saveCurrent()

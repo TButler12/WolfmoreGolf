@@ -313,10 +313,10 @@ final class TeeGameSetupViewController: UIViewController {
                             g.tournamentScoringType = record.scoring
                             g.tournamentDay         = 1
                             g.tournamentIsOrganizer = (record.createdBy == DeviceID.id)
-                            if record.gameType == "skins" {
+                            g.tournamentPotAmount   = record.potAmount
+                            if record.gameType == "skins", let stake = record.stake {
                                 var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
-                                skins.settings.potAmount  = record.potAmount
-                                skins.settings.skinValue  = record.stake ?? skins.settings.skinValue
+                                skins.settings.skinValue = stake
                                 g.skinsState = skins
                             }
                         }

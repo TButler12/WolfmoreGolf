@@ -3093,7 +3093,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 guard activeIndexes.count >= 2 else { return }
 
                 let skinValue   = tourneySkinsState.settings.skinValue
-                let potAmount   = tourneySkinsState.settings.potAmount
+                let potAmount   = g.tournamentPotAmount
                 let isPotMode   = (potAmount ?? 0) > 0
                 let activeCount = activeIndexes.count
 
