@@ -362,7 +362,7 @@ final class TournamentLeaderboardViewController: UIViewController {
 
     @objc private func dayPickerChanged() {
         selectedDay = availableDays[safe: dayPicker.selectedSegmentIndex]
-        Task { await loadData() }
+        Task { await loadData(refetchRecord: false) }
     }
 
     @objc private func gameTypePickerChanged() {
@@ -648,7 +648,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                             amount: amount
                         )
                         print("✅ upsertPlayerOffset succeeded")
-                        await self.loadData()
+                        await self.loadData(refetchRecord: false)
                     } catch {
                         print("❌ upsertPlayerOffset failed: \(error)")
                     }
