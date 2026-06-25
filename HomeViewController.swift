@@ -1329,6 +1329,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         }
         let alert = UIAlertController(title: "Quick Start", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Clear & Start", style: .destructive) { [weak self] _ in
+            if let g = GameManager.shared.currentGame {
+                ResetSnapshotStore.shared.save(g)
+            }
             self?.doQuickStart()
         })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
