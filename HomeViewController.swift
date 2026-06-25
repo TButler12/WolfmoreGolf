@@ -19,6 +19,8 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private weak var inProgressTitleLabel: UILabel?
     private weak var inProgressDetailLabel: UILabel?
     private weak var inProgressChipsRow: UIStackView?
+    private weak var resetBannerCard: UIView?
+    private weak var resetBannerLabel: UILabel?
     private weak var editCourseButton: UIButton?
     private weak var tournamentButton: UIButton?
     private weak var liveConnectedButton: UIButton?
@@ -79,45 +81,6 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         runFirstLaunchPromptsIfNeeded()
         refreshHomeUI()
         UpdateChecker.shared.check(from: self)
-        checkForResetSnapshot()
-    }
-
-    // MARK: - Reset Snapshot Restore
-
-    private static var hasShownRestorePromptThisSession = false
-
-    private func checkForResetSnapshot() {
-        guard !ViewController.hasShownRestorePromptThisSession else { return }
-        guard ResetSnapshotStore.shared.load() != nil else { return }
-        ViewController.hasShownRestorePromptThisSession = true
-        if presentedViewController != nil {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                self?.showRestoreSnapshotAlert()
-            }
-        } else {
-            showRestoreSnapshotAlert()
-        }
-    }
-
-    private func showRestoreSnapshotAlert() {
-        guard let entry = ResetSnapshotStore.shared.load() else { return }
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        let timeStr = formatter.string(from: entry.savedAt)
-        let ac = UIAlertController(
-            title: "Restore Reset Game?",
-            message: "You reset a game at \(timeStr). Would you like to recover it?",
-            preferredStyle: .alert
-        )
-        ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
-            ResetSnapshotStore.shared.discard()
-        })
-        ac.addAction(UIAlertAction(title: "Restore", style: .default) { _ in
-            ResetSnapshotStore.shared.restore()
-            NotificationCenter.default.post(name: .reloadUI, object: nil)
-        })
-        present(ac, animated: true)
     }
 
     // MARK: - Navigation Bar
@@ -164,12 +127,14 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
         let header = buildHeaderView()
         let card = buildInProgressCard()
-        inProgressCard = card                   // assign weak ref before superview retains it
+        inProgressCard = card
+        let resetBanner = buildResetBannerView()
+        resetBannerCard = resetBanner
         let newRound = buildNewRoundSection()
         let utils = buildUtilityRow()
 
-        // Stack collapses hidden card to zero height automatically
-        let mainStack = UIStackView(arrangedSubviews: [card, newRound])
+        // Stack collapses hidden views to zero height automatically
+        let mainStack = UIStackView(arrangedSubviews: [card, resetBanner, newRound])
         mainStack.axis = .vertical
         mainStack.spacing = 16
         mainStack.translatesAutoresizingMaskIntoConstraints = false
@@ -361,6 +326,65 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         return card
     }
 
+    private func buildResetBannerView() -> UIView {
+        let amber = UIColor(red: 1.0, green: 0.78, blue: 0.25, alpha: 1.0)
+        let ink   = UIColor(red: 0.45, green: 0.24, blue: 0.0, alpha: 1.0)
+
+        let banner = UIView()
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        banner.backgroundColor = amber
+        banner.layer.cornerRadius = 12
+        banner.layer.masksToBounds = true
+        banner.isHidden = true
+
+        let lbl = UILabel()
+        lbl.font = .systemFont(ofSize: 14, weight: .semibold)
+        lbl.textColor = ink
+        lbl.numberOfLines = 1
+        lbl.adjustsFontSizeToFitWidth = true
+        lbl.minimumScaleFactor = 0.8
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+        banner.addSubview(lbl)
+        resetBannerLabel = lbl
+
+        let restoreBtn = UIButton(type: .system)
+        restoreBtn.setTitle("Restore", for: .normal)
+        restoreBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .bold)
+        restoreBtn.tintColor = ink
+        restoreBtn.addTarget(self, action: #selector(restoreSnapshotTapped), for: .touchUpInside)
+        restoreBtn.translatesAutoresizingMaskIntoConstraints = false
+        restoreBtn.setContentHuggingPriority(.required, for: .horizontal)
+        restoreBtn.setContentCompressionResistancePriority(.required, for: .horizontal)
+        banner.addSubview(restoreBtn)
+
+        let dismissBtn = UIButton(type: .system)
+        dismissBtn.setImage(UIImage(systemName: "xmark"), for: .normal)
+        dismissBtn.tintColor = ink.withAlphaComponent(0.55)
+        dismissBtn.addTarget(self, action: #selector(dismissResetBannerTapped), for: .touchUpInside)
+        dismissBtn.translatesAutoresizingMaskIntoConstraints = false
+        dismissBtn.setContentHuggingPriority(.required, for: .horizontal)
+        dismissBtn.setContentCompressionResistancePriority(.required, for: .horizontal)
+        banner.addSubview(dismissBtn)
+
+        NSLayoutConstraint.activate([
+            banner.heightAnchor.constraint(equalToConstant: 52),
+
+            lbl.leadingAnchor.constraint(equalTo: banner.leadingAnchor, constant: 14),
+            lbl.centerYAnchor.constraint(equalTo: banner.centerYAnchor),
+            lbl.trailingAnchor.constraint(lessThanOrEqualTo: restoreBtn.leadingAnchor, constant: -8),
+
+            restoreBtn.trailingAnchor.constraint(equalTo: dismissBtn.leadingAnchor, constant: -6),
+            restoreBtn.centerYAnchor.constraint(equalTo: banner.centerYAnchor),
+
+            dismissBtn.trailingAnchor.constraint(equalTo: banner.trailingAnchor, constant: -12),
+            dismissBtn.centerYAnchor.constraint(equalTo: banner.centerYAnchor),
+            dismissBtn.widthAnchor.constraint(equalToConstant: 30),
+            dismissBtn.heightAnchor.constraint(equalToConstant: 44),
+        ])
+
+        return banner
+    }
+
     private func buildNewRoundSection() -> UIView {
         let section = UIView()
         section.translatesAutoresizingMaskIntoConstraints = false
@@ -537,6 +561,19 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private func refreshHomeUI() {
         refreshHeaderDisplay()
         refreshInProgressCard()
+        refreshResetBanner()
+    }
+
+    private func refreshResetBanner() {
+        guard let banner = resetBannerCard else { return }
+        guard let entry = ResetSnapshotStore.shared.load() else {
+            banner.isHidden = true
+            return
+        }
+        let fmt = DateFormatter()
+        fmt.timeStyle = .short
+        resetBannerLabel?.text = "Game reset at \(fmt.string(from: entry.savedAt)) — Restore?"
+        banner.isHidden = false
     }
 
     private func refreshHeaderDisplay() {
@@ -617,6 +654,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             inProgressCaptionLabel?.text = "ROUND COMPLETE"
             inProgressTitleLabel?.text = "Round complete — view results"
             inProgressDetailLabel?.isHidden = true
+            // A completed new game means the reset recovery window is over
+            ResetSnapshotStore.shared.discard()
+            resetBannerCard?.isHidden = true
         } else {
             inProgressCaptionLabel?.text = "ROUND IN PROGRESS"
             inProgressTitleLabel?.text = "Continue \(inProgressDayLabel())"
@@ -974,6 +1014,19 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     @objc private func editCourseTapped(_ sender: UIButton) {
         openCourseSetup(sender)
+    }
+
+    // MARK: - Reset Snapshot Banner
+
+    @objc private func restoreSnapshotTapped() {
+        ResetSnapshotStore.shared.restore()
+        refreshResetBanner()
+        performSegue(withIdentifier: "showPlayerSetup", sender: self)
+    }
+
+    @objc private func dismissResetBannerTapped() {
+        ResetSnapshotStore.shared.discard()
+        UIView.animate(withDuration: 0.2) { self.resetBannerCard?.isHidden = true }
     }
 
     // MARK: - Play Game
