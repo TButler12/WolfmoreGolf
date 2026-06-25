@@ -79,6 +79,45 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         runFirstLaunchPromptsIfNeeded()
         refreshHomeUI()
         UpdateChecker.shared.check(from: self)
+        checkForResetSnapshot()
+    }
+
+    // MARK: - Reset Snapshot Restore
+
+    private static var hasShownRestorePromptThisSession = false
+
+    private func checkForResetSnapshot() {
+        guard !HomeViewController.hasShownRestorePromptThisSession else { return }
+        guard ResetSnapshotStore.shared.load() != nil else { return }
+        HomeViewController.hasShownRestorePromptThisSession = true
+        if presentedViewController != nil {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                self?.showRestoreSnapshotAlert()
+            }
+        } else {
+            showRestoreSnapshotAlert()
+        }
+    }
+
+    private func showRestoreSnapshotAlert() {
+        guard let entry = ResetSnapshotStore.shared.load() else { return }
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        let timeStr = formatter.string(from: entry.savedAt)
+        let ac = UIAlertController(
+            title: "Restore Reset Game?",
+            message: "You reset a game at \(timeStr). Would you like to recover it?",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
+            ResetSnapshotStore.shared.discard()
+        })
+        ac.addAction(UIAlertAction(title: "Restore", style: .default) { _ in
+            ResetSnapshotStore.shared.restore()
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
+        })
+        present(ac, animated: true)
     }
 
     // MARK: - Navigation Bar
