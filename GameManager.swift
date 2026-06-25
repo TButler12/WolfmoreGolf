@@ -3,7 +3,8 @@ import Foundation
 
 // MARK: - Notification Names
 extension Notification.Name {
-    static let reloadUI = Notification.Name("ReloadUI")
+    static let reloadUI       = Notification.Name("ReloadUI")
+    static let snapshotSaved  = Notification.Name("SnapshotSaved")
 }
 
 // MARK: - GameManager

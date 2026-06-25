@@ -70,6 +70,12 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             name: .roundSaveBlockedNeedsPro,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleSnapshotSaved),
+            name: .snapshotSaved,
+            object: nil
+        )
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -1041,6 +1047,26 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     // MARK: - Reset Snapshot Banner
+
+    @objc private func handleSnapshotSaved() {
+        resetBannerDismissedThisVisit = false
+        guard let banner = resetBannerCard,
+              let entry = ResetSnapshotStore.shared.load() else { return }
+        let fmt = DateFormatter()
+        fmt.timeStyle = .short
+        resetBannerLabel?.text = "Game reset at \(fmt.string(from: entry.savedAt)) — Restore?"
+        guard banner.isHidden else { return }
+        ResetSnapshotStore.shared.needsAttentionOnNextAppearance = false
+        banner.alpha = 0
+        banner.isHidden = false
+        UIView.animate(
+            withDuration: 0.45, delay: 0,
+            usingSpringWithDamping: 0.78, initialSpringVelocity: 0.4,
+            options: .curveEaseOut
+        ) {
+            banner.alpha = 1
+        }
+    }
 
     @objc private func restoreSnapshotTapped() {
         ResetSnapshotStore.shared.restore()

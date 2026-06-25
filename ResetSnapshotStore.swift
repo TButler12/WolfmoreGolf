@@ -27,18 +27,23 @@ final class ResetSnapshotStore {
     func saveFromCurrentGame() {
         // 1. In-memory game — fastest path
         if let g = GameManager.shared.currentGame {
-            save(g); needsAttentionOnNextAppearance = true; return
+            save(g); notifySnapshot(); return
         }
         // 2. Not in memory — try loading from disk first
         if GameManager.shared.loadLastOpened(notify: false),
            let g = GameManager.shared.currentGame {
-            save(g); needsAttentionOnNextAppearance = true; return
+            save(g); notifySnapshot(); return
         }
         // 3. Final fallback: deserialize currentGame_v1 directly
         if let data = UserDefaults.standard.data(forKey: "currentGame_v1"),
            let g = try? JSONDecoder().decode(GameData.self, from: data) {
-            save(g); needsAttentionOnNextAppearance = true
+            save(g); notifySnapshot()
         }
+    }
+
+    private func notifySnapshot() {
+        needsAttentionOnNextAppearance = true
+        NotificationCenter.default.post(name: .snapshotSaved, object: nil)
     }
 
     func load() -> Entry? {
