@@ -41,7 +41,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let liveLabel      = UILabel()
     private let statsLabel     = UILabel()
     private let potBannerLabel = UILabel()
-    private let segment       = UISegmentedControl(items: ["Money", "Score", "Groups", "Tournament"])
+    private let segment       = UISegmentedControl(items: ["Money", "Net Score", "Groups", "Tournament"])
     private let dayPicker     = UISegmentedControl()
     private let gameTypePicker = UISegmentedControl(items: ["Wolf", "Skins"])
     private let tableView     = UITableView(frame: .zero, style: .plain)
