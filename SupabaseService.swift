@@ -649,6 +649,7 @@ final class SupabaseService {
             .from("hole_scores")
             .select("match_id, player_name, hole, gross_score, net_score, hole_money, total_money, day, game_type, skins_won")
             .eq("tournament_code", value: code.uppercased())
+            .order("hole")
             .execute()
         return response.value
     }

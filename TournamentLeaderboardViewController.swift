@@ -76,13 +76,13 @@ final class TournamentLeaderboardViewController: UIViewController {
         setupTable()
         buildTabBar()
 
-        Task { await loadData() }
+        Task { await loadData(refetchRecord: true) }
         scheduleTimer()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        Task { await loadData() }
+        Task { await loadData(refetchRecord: false) }
         if refreshTimer == nil { scheduleTimer() }
     }
 
@@ -95,7 +95,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     // MARK: - Timer
     private func scheduleTimer() {
         refreshTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
-            Task { await self?.loadData() }
+            Task { await self?.loadData(refetchRecord: false) }
         }
     }
 
@@ -209,23 +209,39 @@ final class TournamentLeaderboardViewController: UIViewController {
     }
 
     // MARK: - Data
-    @objc private func refreshTapped() { Task { await loadData() } }
+
+    // refetchRecord: true  → re-fetch tournaments row (first load, explicit refresh button)
+    // refetchRecord: false → skip tournaments row; use cached record (auto-refresh, viewDidAppear)
+    @objc private func refreshTapped() { Task { await loadData(refetchRecord: true) } }
 
     @MainActor
-    private func loadData() async {
+    private func loadData(refetchRecord: Bool) async {
         guard !isRefreshing else { return }
         isRefreshing = true
         spinner.startAnimating()
         defer { isRefreshing = false; spinner.stopAnimating() }
-        do {
-            async let a = SupabaseService.shared.fetchTournament(code: tournamentCode)
-            async let b = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
-            let (rec, rows) = try await (a, b)
-            record  = rec
-            allRows = rows
 
-            let currentDay = selectedDay ?? Set(rows.compactMap { $0.day }).max() ?? 1
-            playerOffsets = try await SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: currentDay)
+        // Use selectedDay if known; fall back to 1 so fetchPlayerOffsets can start in parallel.
+        // If the true latest day differs (first load of a multi-day tournament), updateDayPicker
+        // sets selectedDay and the next refresh corrects the offsets automatically.
+        let day = selectedDay ?? 1
+
+        do {
+            if refetchRecord || record == nil {
+                async let recFetch     = SupabaseService.shared.fetchTournament(code: tournamentCode)
+                async let rowsFetch    = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
+                async let offsetsFetch = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: day)
+                let (rec, rows, offsets) = try await (recFetch, rowsFetch, offsetsFetch)
+                record        = rec
+                allRows       = rows
+                playerOffsets = offsets
+            } else {
+                async let rowsFetch    = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
+                async let offsetsFetch = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: day)
+                let (rows, offsets) = try await (rowsFetch, offsetsFetch)
+                allRows       = rows
+                playerOffsets = offsets
+            }
 
             print("🗓 distinct days in allRows: \(Set(allRows.compactMap { $0.day }).sorted())")
             recompute()
