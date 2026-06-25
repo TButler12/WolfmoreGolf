@@ -202,7 +202,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var liveTabBar: UIView?
     private var liveTabBarInstalled = false
     private var activeTabIndex = 0
-    private var shownLiveCodePromptForSession: String?
+    private static var shownLiveCodePromptForSession: String?
     private var liveTabScoreButton: UIButton?
     private var liveTabLiveButton: UIButton?
     private weak var liveTabLeaderboardButton: UIButton?
@@ -3858,9 +3858,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         print("DEBUG livePrompt: entered — currentGame=\(GameManager.shared.currentGame != nil), presentedVC=\(presentedViewController != nil)")
         guard let g = GameManager.shared.currentGame else { print("DEBUG livePrompt: guard FAILED — no currentGame"); return }
         let gameId = g.historyGameID?.uuidString ?? g.gameName
-        guard shownLiveCodePromptForSession != gameId else { print("DEBUG livePrompt: guard FAILED — already shown for gameId=\(gameId)"); return }
+        guard GameViewController.shownLiveCodePromptForSession != gameId else { print("DEBUG livePrompt: guard FAILED — already shown for gameId=\(gameId)"); return }
         print("DEBUG livePrompt: showing popup — gameId=\(gameId) code=\(g.liveSessionCode ?? "nil")")
-        shownLiveCodePromptForSession = gameId
+        GameViewController.shownLiveCodePromptForSession = gameId
 
         if let code = g.liveSessionCode, !code.isEmpty {
             let ac = UIAlertController(

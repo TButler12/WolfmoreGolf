@@ -460,21 +460,7 @@ extension RoundStore {
         }()
 
         // ---------- CourseID ----------
-        let courseIDForRound: String = {
-            guard
-                let homeUUID = UUID(uuidString: ProfileStore.homeCourseID),
-                let homeCourse = CourseLibrary.shared.get(id: homeUUID)
-            else { return "" }
-
-            let currentPars = Array(g.course.pars.prefix(STANDARD_HOLES))
-            let currentHCs  = Array(g.course.holeHandicaps.prefix(STANDARD_HOLES))
-            let homePars    = Array(homeCourse.pars.prefix(STANDARD_HOLES))
-            let homeHCs     = Array(homeCourse.hcs.prefix(STANDARD_HOLES))
-
-            return (currentPars == homePars && currentHCs == homeHCs)
-                ? homeCourse.id.uuidString
-                : ""
-        }()
+        let courseIDForRound: String = g.course.id.uuidString
 
         let isComplete = holesPlayed == STANDARD_HOLES
 

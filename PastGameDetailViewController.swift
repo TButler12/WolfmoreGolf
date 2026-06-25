@@ -133,7 +133,7 @@ private final class LeaderboardCell: UITableViewCell {
             stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -12),
             stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
             rankLabel.widthAnchor.constraint(equalToConstant: 28),
-            scoreLabel.widthAnchor.constraint(equalToConstant: 36),
+            scoreLabel.widthAnchor.constraint(equalToConstant: 48),
             moneyLabel.widthAnchor.constraint(equalToConstant: 68),
             proxLabel.widthAnchor.constraint(equalToConstant: 28),
         ])
