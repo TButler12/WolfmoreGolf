@@ -111,9 +111,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         goToGameButton = goBtn
 
         let resetBtn = makeOutlinedButton(title: "Reset for New Game")
-        let lp = UILongPressGestureRecognizer(target: self, action: #selector(resetLongPressed(_:)))
-        lp.minimumPressDuration = 0.4
-        resetBtn.addGestureRecognizer(lp)
+        resetBtn.addTarget(self, action: #selector(resetGameTapped(_:)), for: .touchUpInside)
 
         var randCfg = UIButton.Configuration.filled()
         randCfg.image = UIImage(systemName: "shuffle")?.withConfiguration(UIImage.SymbolConfiguration(pointSize: 17, weight: .medium))
@@ -1025,15 +1023,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         refreshRandomizeEnabled()
     }
 
-    // Called by the storyboard-wired button (touchUpInside)
     @IBAction private func resetGameTapped(_ sender: UIButton) {
-        showResetConfirmation()
-    }
-
-    // Called by the programmatic button (long press, 0.4s minimum)
-    @objc private func resetLongPressed(_ gr: UILongPressGestureRecognizer) {
-        guard gr.state == .began else { return }
-        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         showResetConfirmation()
     }
 
