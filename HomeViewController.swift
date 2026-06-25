@@ -21,6 +21,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private weak var inProgressChipsRow: UIStackView?
     private weak var resetBannerCard: UIView?
     private weak var resetBannerLabel: UILabel?
+    private var resetBannerDismissedThisVisit = false
     private weak var editCourseButton: UIButton?
     private weak var tournamentButton: UIButton?
     private weak var liveConnectedButton: UIButton?
@@ -73,6 +74,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        resetBannerDismissedThisVisit = false
         refreshHomeUI()
     }
 
@@ -566,7 +568,8 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     private func refreshResetBanner() {
         guard let banner = resetBannerCard else { return }
-        guard let entry = ResetSnapshotStore.shared.load() else {
+        guard !resetBannerDismissedThisVisit,
+              let entry = ResetSnapshotStore.shared.load() else {
             banner.isHidden = true
             return
         }
@@ -1025,7 +1028,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     @objc private func dismissResetBannerTapped() {
-        ResetSnapshotStore.shared.discard()
+        resetBannerDismissedThisVisit = true
         UIView.animate(withDuration: 0.2) { self.resetBannerCard?.isHidden = true }
     }
 
