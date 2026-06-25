@@ -1041,9 +1041,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func performConfirmedReset() {
-        if let g = GameManager.shared.currentGame {
-            ResetSnapshotStore.shared.save(g)
-        }
+        ResetSnapshotStore.shared.saveFromCurrentGame()
         GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
         GameManager.shared.canRandomizeTeams = true
 

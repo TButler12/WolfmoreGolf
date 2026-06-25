@@ -19,6 +19,25 @@ final class ResetSnapshotStore {
         UserDefaults.standard.set(data, forKey: key)
     }
 
+    /// Saves a snapshot using the best available source of current game data.
+    /// Call this from any confirmation handler before wiping the game.
+    func saveFromCurrentGame() {
+        // 1. In-memory game — fastest path
+        if let g = GameManager.shared.currentGame {
+            save(g); return
+        }
+        // 2. Not in memory — try loading from disk first
+        if GameManager.shared.loadLastOpened(notify: false),
+           let g = GameManager.shared.currentGame {
+            save(g); return
+        }
+        // 3. Final fallback: deserialize currentGame_v1 directly
+        if let data = UserDefaults.standard.data(forKey: "currentGame_v1"),
+           let g = try? JSONDecoder().decode(GameData.self, from: data) {
+            save(g)
+        }
+    }
+
     func load() -> Entry? {
         guard
             let data = UserDefaults.standard.data(forKey: key),
