@@ -41,7 +41,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let liveLabel      = UILabel()
     private let statsLabel     = UILabel()
     private let potBannerLabel = UILabel()
-    private let segment       = UISegmentedControl(items: ["Money", "Score", "Groups", "Tournament"])
+    private let segment       = UISegmentedControl(items: ["Money", "Rank", "Groups", "Tournament"])
     private let dayPicker     = UISegmentedControl()
     private let gameTypePicker = UISegmentedControl(items: ["Wolf", "Skins"])
     private let tableView     = UITableView(frame: .zero, style: .plain)
@@ -507,7 +507,12 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch segment.selectedSegmentIndex {
         case 0: return selectedGameType == "skins" ? skinsData.count : moneyData.count
-        case 1: return scoreData.count
+        case 1:
+            switch selectedGameType {
+            case "skins": return skinsData.count
+            case "wolf":  return moneyData.count
+            default:      return scoreData.count
+            }
         case 2: return groupData.count
         case 3: return tournamentData.count
         default: return 0
@@ -545,12 +550,30 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
             return cell
 
         case 1:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "score",
-                                                     for: indexPath) as! LeaderboardScoreCell
-            let r = scoreData[i]
-            cell.configure(rank: r.rank, name: r.name, total: r.total,
-                           holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
-            return cell
+            switch selectedGameType {
+            case "skins":
+                let cell = tableView.dequeueReusableCell(withIdentifier: "money",
+                                                         for: indexPath) as! LeaderboardMoneyCell
+                let r = skinsData[i]
+                cell.configureSkins(rank: r.rank, name: r.name, skinsWon: r.skinsWon,
+                                    potPayout: r.potPayout,
+                                    holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+                return cell
+            case "wolf":
+                let cell = tableView.dequeueReusableCell(withIdentifier: "money",
+                                                         for: indexPath) as! LeaderboardMoneyCell
+                let r = moneyData[i]
+                cell.configure(rank: r.rank, name: r.name, total: r.dayTotal,
+                               holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+                return cell
+            default:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "score",
+                                                         for: indexPath) as! LeaderboardScoreCell
+                let r = scoreData[i]
+                cell.configure(rank: r.rank, name: r.name, total: r.total,
+                               holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+                return cell
+            }
 
         case 2:
             let cell = tableView.dequeueReusableCell(withIdentifier: "group", for: indexPath)
