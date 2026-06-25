@@ -87,9 +87,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private static var hasShownRestorePromptThisSession = false
 
     private func checkForResetSnapshot() {
-        guard !HomeViewController.hasShownRestorePromptThisSession else { return }
+        guard !ViewController.hasShownRestorePromptThisSession else { return }
         guard ResetSnapshotStore.shared.load() != nil else { return }
-        HomeViewController.hasShownRestorePromptThisSession = true
+        ViewController.hasShownRestorePromptThisSession = true
         if presentedViewController != nil {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
                 self?.showRestoreSnapshotAlert()
