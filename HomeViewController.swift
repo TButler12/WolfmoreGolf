@@ -83,6 +83,24 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         runFirstLaunchPromptsIfNeeded()
         refreshHomeUI()
         UpdateChecker.shared.check(from: self)
+        animateResetBannerIfNeeded()
+    }
+
+    private func animateResetBannerIfNeeded() {
+        guard ResetSnapshotStore.shared.needsAttentionOnNextAppearance,
+              let banner = resetBannerCard,
+              !resetBannerDismissedThisVisit,
+              ResetSnapshotStore.shared.load() != nil else { return }
+        ResetSnapshotStore.shared.needsAttentionOnNextAppearance = false
+        banner.alpha = 0
+        banner.isHidden = false
+        UIView.animate(
+            withDuration: 0.45, delay: 0.15,
+            usingSpringWithDamping: 0.78, initialSpringVelocity: 0.4,
+            options: .curveEaseOut
+        ) {
+            banner.alpha = 1
+        }
     }
 
     // MARK: - Navigation Bar
@@ -576,7 +594,10 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         let fmt = DateFormatter()
         fmt.timeStyle = .short
         resetBannerLabel?.text = "Game reset at \(fmt.string(from: entry.savedAt)) — Restore?"
-        banner.isHidden = false
+        // If a fresh reset just happened, leave the banner hidden so viewDidAppear can animate it in
+        if !ResetSnapshotStore.shared.needsAttentionOnNextAppearance {
+            banner.isHidden = false
+        }
     }
 
     private func refreshHeaderDisplay() {
