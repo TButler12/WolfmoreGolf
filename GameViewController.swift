@@ -3128,9 +3128,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 let isPotMode   = (potAmount ?? 0) > 0
                 let activeCount = activeIndexes.count
 
-                // Pre-compute absolute-HC winner per committed hole (no carryovers in tournament).
+                // Pre-compute absolute-HC winner per committed hole, respecting carryovers.
                 // A hole has a winner only if exactly one player posts the lowest absolute-net score.
+                let carryTies = g.tournamentCarryTies == true
                 var absWinnerByHole: [Int: Int] = [:]  // hole index -> winning player index
+                var potByHole:       [Int: Int] = [:]  // hole index -> skin pot value at that hole
+                var currentPot = 1
+
                 for h in 0..<STANDARD_HOLES {
                     guard g.holeCommitted[safe: h] == true else { continue }
                     let holeHc = g.course.holeHandicaps[safe: h] ?? (h + 1)
@@ -3147,7 +3151,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     }
                     guard complete, let low = scored.map(\.net).min() else { continue }
                     let winners = scored.filter { $0.net == low }
-                    if winners.count == 1 { absWinnerByHole[h] = winners[0].idx }
+                    potByHole[h] = currentPot
+                    if winners.count == 1 {
+                        absWinnerByHole[h] = winners[0].idx
+                        currentPot = 1
+                    } else if carryTies {
+                        currentPot += 1
+                    } else {
+                        currentPot = 1
+                    }
                 }
 
                 for backfillHole in backfillRange {
@@ -3159,13 +3171,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
                     for h in 0...backfillHole {
                         guard let winner = absWinnerByHole[h] else { continue }
+                        let skinsPot = potByHole[h] ?? 1
                         if !isPotMode {
-                            let earned = Double(activeCount - 1) * skinValue
-                            let paid   = skinValue
+                            let earned = Double(activeCount - 1) * skinValue * Double(skinsPot)
+                            let paid   = skinValue * Double(skinsPot)
                             for idx in activeIndexes {
                                 if idx == winner {
                                     cumulativeMoney[idx, default: 0] += earned
-                                    cumulativeSkinsWon[idx, default: 0] += 1
+                                    cumulativeSkinsWon[idx, default: 0] += skinsPot
                                     if h == backfillHole { holeMoneyBySeat[idx] = earned }
                                 } else {
                                     cumulativeMoney[idx, default: 0] -= paid
@@ -3173,7 +3186,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                 }
                             }
                         } else {
-                            cumulativeSkinsWon[winner, default: 0] += 1
+                            cumulativeSkinsWon[winner, default: 0] += skinsPot
                         }
                     }
 
