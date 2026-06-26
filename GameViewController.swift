@@ -1437,7 +1437,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         let isTournament = g.resolvedGameType == .tournament
+        let baseHC = activeSeats.compactMap { $0 < g.hcPlayers.count ? g.hcPlayers[$0] : nil }.min() ?? 0
         let sortedNameLabels = playerNameLabels.sorted(by: { $0.tag < $1.tag })
+
+        let nameGreen = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
 
         for (i, label) in sortedNameLabels.enumerated() {
             // Slot 4 in tournament mode = Team row
@@ -1456,12 +1459,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 ? !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 : (seat < g.playerActivated.count && g.playerActivated[seat] &&
                    !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            var strokePops = 0
+
+            var redPops   = 0
+            var greenPops = 0
             if isActive {
-                let baseHC    = activeSeats.compactMap { $0 < g.hcPlayers.count ? g.hcPlayers[$0] : nil }.min() ?? 0
-                let playerHC  = seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0
-                let delta     = max(0, playerHC - baseHC)
-                strokePops    = GameManager.shared.absoluteStrokesGiven(playerHC: delta, strokeIndex: si)
+                let playerHC = seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0
+                let delta    = max(0, playerHC - baseHC)
+                redPops      = GameManager.shared.absoluteStrokesGiven(playerHC: delta, strokeIndex: si)
+                if isTournament {
+                    greenPops = GameManager.shared.absoluteStrokesGiven(playerHC: playerHC, strokeIndex: si)
+                }
             }
 
             label.lineBreakMode = .byTruncatingTail
@@ -1483,22 +1490,31 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 return pt
             }
 
-            if strokePops > 0 {
-                let dotsStr = " " + String(repeating: "•", count: strokePops)
+            let redDotsStr   = redPops   > 0 ? " " + String(repeating: "•", count: redPops)   : ""
+            let greenDotsStr = greenPops > 0 ? " " + String(repeating: "•", count: greenPops) : ""
+
+            if !redDotsStr.isEmpty || !greenDotsStr.isEmpty {
                 // Truncate name so name+dots always fits — dots can never be clipped
                 let truncName = name.count > 13 ? String(name.prefix(12)) + "…" : name
-                let pt = fittingPt(truncName + dotsStr, weight: .bold)
-                let boldFont = UIFont.boldSystemFont(ofSize: pt)
-                let nameAttr = NSAttributedString(string: truncName, attributes: [
-                    .font: boldFont,
-                    .foregroundColor: UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+                let pt = fittingPt(truncName + redDotsStr + greenDotsStr, weight: .bold)
+                let dotFont = UIFont.systemFont(ofSize: pt + 2)
+
+                let combined = NSMutableAttributedString(string: truncName, attributes: [
+                    .font: UIFont.boldSystemFont(ofSize: pt),
+                    .foregroundColor: nameGreen
                 ])
-                let badgeAttr = NSAttributedString(string: dotsStr, attributes: [
-                    .font: UIFont.systemFont(ofSize: pt + 2),
-                    .foregroundColor: UIColor.systemRed
-                ])
-                let combined = NSMutableAttributedString(attributedString: nameAttr)
-                combined.append(badgeAttr)
+                if !redDotsStr.isEmpty {
+                    combined.append(NSAttributedString(string: redDotsStr, attributes: [
+                        .font: dotFont,
+                        .foregroundColor: UIColor.systemRed
+                    ]))
+                }
+                if !greenDotsStr.isEmpty {
+                    combined.append(NSAttributedString(string: greenDotsStr, attributes: [
+                        .font: dotFont,
+                        .foregroundColor: nameGreen
+                    ]))
+                }
                 label.attributedText = combined
             } else {
                 let pt = fittingPt(name)
