@@ -1548,7 +1548,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
 
         for (slot, b) in wolfButtons.enumerated() {
-            if isTournament && slot == 4 {
+            if isTournament && g.tournamentGameType == "stableford" && slot == 4 {
                 b.isHidden = true
                 continue
             }
@@ -2158,7 +2158,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
         let slots = min(scoreFields.count, MAX_PLAYERS)
         for s in 0..<slots {
-            if isTournament && s == 4 {
+            if isTournament && g.tournamentGameType == "stableford" && s == 4 {
                 scoreFields[s].text = ""
                 scoreFields[s].isEnabled = false
                 scoreFields[s].backgroundColor = UIColor.systemGray6
@@ -4171,7 +4171,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
 
         for (slot, b) in proxButtons.enumerated() {
-            if isTournament && slot == 4 {
+            if isTournament && g.tournamentGameType == "stableford" && slot == 4 {
                 b.isHidden = true
                 continue
             }
