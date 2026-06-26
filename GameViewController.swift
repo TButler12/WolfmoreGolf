@@ -1492,12 +1492,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
             let redDotsStr   = redPops   > 0 ? " " + String(repeating: "•", count: redPops)   : ""
             let greenDotsStr = greenPops > 0 ? " " + String(repeating: "•", count: greenPops) : ""
+            let needsTwoLines = !greenDotsStr.isEmpty
 
-            if !redDotsStr.isEmpty || !greenDotsStr.isEmpty {
-                // Truncate name so name+dots always fits — dots can never be clipped
+            if !redDotsStr.isEmpty || needsTwoLines {
+                // Truncate name so line 1 (name + red dots) always fits — dots can never be clipped.
+                // Size the font against line 1 only; the green dots line is always shorter.
                 let truncName = name.count > 13 ? String(name.prefix(12)) + "…" : name
-                let pt = fittingPt(truncName + redDotsStr + greenDotsStr, weight: .bold)
+                let pt = fittingPt(truncName + redDotsStr, weight: .bold)
                 let dotFont = UIFont.systemFont(ofSize: pt + 2)
+
+                label.numberOfLines = needsTwoLines ? 2 : 1
 
                 let combined = NSMutableAttributedString(string: truncName, attributes: [
                     .font: UIFont.boldSystemFont(ofSize: pt),
@@ -1509,14 +1513,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         .foregroundColor: UIColor.systemRed
                     ]))
                 }
-                if !greenDotsStr.isEmpty {
-                    combined.append(NSAttributedString(string: greenDotsStr, attributes: [
+                if needsTwoLines {
+                    combined.append(NSAttributedString(string: "\n" + greenDotsStr, attributes: [
                         .font: dotFont,
                         .foregroundColor: nameGreen
                     ]))
                 }
                 label.attributedText = combined
             } else {
+                label.numberOfLines = 1
                 let pt = fittingPt(name)
                 label.attributedText = nil
                 label.text = name
