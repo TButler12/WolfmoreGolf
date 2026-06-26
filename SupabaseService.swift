@@ -619,6 +619,24 @@ final class SupabaseService {
         return response.value
     }
 
+    func updateTournamentSettings(
+        code: String,
+        carryTies: Bool,
+        potAmount: Double?,
+        stake: Double?
+    ) async throws {
+        var payload: [String: AnyJSON] = [
+            "carry_ties": .bool(carryTies)
+        ]
+        payload["pot_amount"] = potAmount.map { .double($0) } ?? .null
+        payload["stake"]      = stake.map      { .double($0) } ?? .null
+        try await client
+            .from("tournaments")
+            .update(payload)
+            .eq("code", value: code)
+            .execute()
+    }
+
     func advanceTournamentDay(code: String) async throws {
         let records: [TournamentRecord] = try await client
             .from("tournaments")

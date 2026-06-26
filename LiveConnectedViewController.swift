@@ -245,8 +245,18 @@ final class LiveConnectedViewController: UITableViewController {
         sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
             self?.advanceDay()
         })
+        if GameManager.shared.currentGame?.tournamentIsOrganizer == true {
+            sheet.addAction(UIAlertAction(title: "Edit Settings", style: .default) { [weak self] _ in
+                self?.editTournamentSettings()
+            })
+        }
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet)
+    }
+
+    private func editTournamentSettings() {
+        let vc = TournamentSettingsViewController()
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func viewOrganizerResults() {

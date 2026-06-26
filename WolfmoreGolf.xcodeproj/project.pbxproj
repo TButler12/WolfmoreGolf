@@ -95,6 +95,7 @@
 		F6E007F92F80D19B00763694 /* HoleStatsEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */; };
 		F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FA2F81913500763694 /* StatsContainerViewController.swift */; };
 		F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */; };
+		F6E008102F90AA1400763694 /* TournamentSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008112F90AA1400763694 /* TournamentSettingsViewController.swift */; };
 		F6E007FE2F80182400763694 /* ReviewPrompter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FF2F80182400763694 /* ReviewPrompter.swift */; };
 		F6E008032F884A6500763694 /* SharedRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008022F884A6500763694 /* SharedRound.swift */; };
 		F6E008052F884A9D00763694 /* RemoteRoundCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */; };
@@ -205,6 +206,7 @@
 		F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsEntryViewController.swift; sourceTree = "<group>"; };
 		F6E007FA2F81913500763694 /* StatsContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsContainerViewController.swift; sourceTree = "<group>"; };
 		F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsSettingsViewController.swift; sourceTree = "<group>"; };
+		F6E008112F90AA1400763694 /* TournamentSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentSettingsViewController.swift; sourceTree = "<group>"; };
 		F6E007FF2F80182400763694 /* ReviewPrompter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPrompter.swift; sourceTree = "<group>"; };
 		F6E008022F884A6500763694 /* SharedRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRound.swift; sourceTree = "<group>"; };
 		F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteRoundCodec.swift; sourceTree = "<group>"; };
@@ -276,6 +278,7 @@
 				F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */,
 				F6E007F62F80182400763694 /* SkinsViewController.swift */,
 				F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */,
+				F6E008112F90AA1400763694 /* TournamentSettingsViewController.swift */,
 				F6E007FF2F80182400763694 /* ReviewPrompter.swift */,
 				1D7D681FBEA3C05DBD4C6D7E /* UpdateChecker.swift */,
 				F6E007F42F8017F300763694 /* SkinsEngine.swift */,
@@ -575,6 +578,7 @@
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
 				F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */,
 				F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */,
+				F6E008102F90AA1400763694 /* TournamentSettingsViewController.swift in Sources */,
 				F6E007FE2F80182400763694 /* ReviewPrompter.swift in Sources */,
 				EB1C7A593448F2323213FB7F /* UpdateChecker.swift in Sources */,
 				F688C7812F3906C400A4B094 /* SummaryFormatter.swift in Sources */,
