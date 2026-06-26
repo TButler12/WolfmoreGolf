@@ -56,8 +56,9 @@ final class SkinsViewController: UIViewController {
         settingsTapped()
     }
     private func loadGame() {
-        if gameData == nil {
-            gameData = GameManager.shared.currentGame
+        // Always pull the freshest game so HC changes and committed scores are reflected.
+        if let live = GameManager.shared.currentGame {
+            gameData = live
         }
 
         guard var data = gameData else { return }

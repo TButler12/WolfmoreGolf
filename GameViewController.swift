@@ -2916,6 +2916,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
+        // 2b) recalculate local skins so live bar and results stay current
+        if GameManager.shared.currentGame?.tournamentCode == nil {
+            GameManager.shared.update { g in
+                if var ss = g.skinsState, ss.settings.isEnabled {
+                    SkinsEngine.recalculate(state: &ss, gameData: g)
+                    g.skinsState = ss
+                }
+            }
+        }
+
         // 3) press carry-forward
         if pressOnThisHole {
             GameManager.shared.update { g in
