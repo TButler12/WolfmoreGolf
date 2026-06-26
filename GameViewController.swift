@@ -3094,11 +3094,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     }
                 }
 
-                // 5e-skins) Skins tournament backfill — parallel write for groups running Skins
-                var tourneySkinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
-                tourneySkinsState.settings.carryoversEnabled = false
-                tourneySkinsState.settings.scoringMode = g.tournamentScoringType == "gross" ? .gross : .net
-                SkinsEngine.recalculate(state: &tourneySkinsState, gameData: g)
+                // 5e-skins) Skins tournament backfill — absolute HC winner determination.
+                // SkinsEngine.recalculate() is NOT called here; winners are determined inline
+                // using absoluteStrokesGiven so tournament skins always use absolute HC.
+                let tourneySkinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
+                let skinsUseGross = g.tournamentScoringType == "gross"
                 let activeIndexes = SkinsEngine.activePlayerIndexes(from: g, state: tourneySkinsState)
                 guard activeIndexes.count >= 2 else { return }
 
@@ -3106,6 +3106,28 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 let potAmount   = g.tournamentPotAmount
                 let isPotMode   = (potAmount ?? 0) > 0
                 let activeCount = activeIndexes.count
+
+                // Pre-compute absolute-HC winner per committed hole (no carryovers in tournament).
+                // A hole has a winner only if exactly one player posts the lowest absolute-net score.
+                var absWinnerByHole: [Int: Int] = [:]  // hole index -> winning player index
+                for h in 0..<STANDARD_HOLES {
+                    guard g.holeCommitted[safe: h] == true else { continue }
+                    let holeHc = g.course.holeHandicaps[safe: h] ?? (h + 1)
+                    var scored: [(idx: Int, net: Int)] = []
+                    var complete = true
+                    for idx in activeIndexes {
+                        guard idx < g.scores.count,
+                              h < g.scores[idx].count,
+                              let gross = g.scores[idx][h] else { complete = false; break }
+                        let playerHc = g.hcPlayers[safe: idx] ?? 0
+                        let net = skinsUseGross ? gross
+                            : gross - GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                        scored.append((idx, net))
+                    }
+                    guard complete, let low = scored.map(\.net).min() else { continue }
+                    let winners = scored.filter { $0.net == low }
+                    if winners.count == 1 { absWinnerByHole[h] = winners[0].idx }
+                }
 
                 for backfillHole in backfillRange {
                     guard g.holeCommitted[safe: backfillHole] == true else { continue }
@@ -3115,16 +3137,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     var cumulativeSkinsWon: [Int: Int] = [:]
 
                     for h in 0...backfillHole {
-                        guard let result = tourneySkinsState.resultsByHole[safe: h],
-                              !result.winningPlayerIndexes.isEmpty else { continue }
-                        let skinsCount = Double(result.awardedSkinCount)
+                        guard let winner = absWinnerByHole[h] else { continue }
                         if !isPotMode {
-                            let earned = skinsCount * Double(activeCount - 1) * skinValue
-                            let paid   = skinsCount * skinValue
+                            let earned = Double(activeCount - 1) * skinValue
+                            let paid   = skinValue
                             for idx in activeIndexes {
-                                if result.winningPlayerIndexes.contains(idx) {
+                                if idx == winner {
                                     cumulativeMoney[idx, default: 0] += earned
-                                    cumulativeSkinsWon[idx, default: 0] += result.awardedSkinCount
+                                    cumulativeSkinsWon[idx, default: 0] += 1
                                     if h == backfillHole { holeMoneyBySeat[idx] = earned }
                                 } else {
                                     cumulativeMoney[idx, default: 0] -= paid
@@ -3132,9 +3152,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                 }
                             }
                         } else {
-                            for idx in activeIndexes where result.winningPlayerIndexes.contains(idx) {
-                                cumulativeSkinsWon[idx, default: 0] += result.awardedSkinCount
-                            }
+                            cumulativeSkinsWon[winner, default: 0] += 1
                         }
                     }
 
@@ -3154,10 +3172,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         guard !name.isEmpty else { continue }
                         let gross   = (seat < g.scores.count && backfillHole < g.scores[seat].count)
                                           ? (g.scores[seat][backfillHole] ?? 0) : 0
-                        let holeHc  = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
+                        let holeHc   = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
                         let playerHc = g.hcPlayers[safe: seat] ?? 0
-                        let pops    = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
-                        let net     = gross - pops
+                        let pops     = skinsUseGross ? 0 : GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                        let net      = gross - pops
                         let holeMoney  = holeMoneyBySeat[seat] ?? 0
                         let totalMoney = cumulativeMoney[seat] ?? 0
                         let skinsWon   = cumulativeSkinsWon[seat] ?? 0
