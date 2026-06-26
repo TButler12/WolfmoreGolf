@@ -1436,7 +1436,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             g.playerActivated[$0] &&
             !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
-        let isTournament = g.resolvedGameType == .tournament
+        let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
         let baseHC = activeSeats.compactMap { $0 < g.hcPlayers.count ? g.hcPlayers[$0] : nil }.min() ?? 0
         let sortedNameLabels = playerNameLabels.sorted(by: { $0.tag < $1.tag })
 
