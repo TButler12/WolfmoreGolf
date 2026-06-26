@@ -503,18 +503,25 @@ final class LiveConnectedViewController: UITableViewController {
     }
 
     private func shareOrganizerAccess() {
-        guard let code = GameManager.shared.currentGame?.tournamentCode,
+        guard let tournamentCode = GameManager.shared.currentGame?.tournamentCode,
               GameManager.shared.currentGame?.tournamentIsCreator == true else { return }
 
-        let spinner = UIAlertController(title: nil, message: "Generating code…", preferredStyle: .alert)
+        let spinner = UIAlertController(title: nil, message: "Preparing code…", preferredStyle: .alert)
         present(spinner, animated: true)
         Task {
             do {
-                let orgCode = try await SupabaseService.shared.generateCoOrgCode(tournamentCode: code)
-                let name = GameManager.shared.currentGame?.tournamentName ?? "the tournament"
+                // Reuse existing co-organizer code if one was already generated; create one otherwise.
+                let record = try await SupabaseService.shared.fetchTournament(code: tournamentCode)
+                let orgCode: String
+                if let existing = record.coOrganizerCode, !existing.isEmpty {
+                    orgCode = existing
+                } else {
+                    orgCode = try await SupabaseService.shared.generateCoOrgCode(tournamentCode: tournamentCode)
+                }
+                let name = record.name
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
-                        let shareText = "Join \"\(name)\" as a co-organizer. Enter this code in Live & Connected → Enter Co-Organizer Code:\n\n\(orgCode)"
+                        let shareText = "You've been invited to co-manage \(name). Enter this code in WolfMore → Live & Connected → Enter Co-Organizer Code: \(orgCode)"
                         let vc = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
                         if let pop = vc.popoverPresentationController {
                             pop.sourceView = self.view
@@ -526,7 +533,7 @@ final class LiveConnectedViewController: UITableViewController {
             } catch {
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
-                        self.showError("Could not generate code: \(error.localizedDescription)")
+                        self.showError("Could not prepare code: \(error.localizedDescription)")
                     }
                 }
             }
