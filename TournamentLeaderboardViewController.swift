@@ -290,11 +290,21 @@ final class TournamentLeaderboardViewController: UIViewController {
         }
 
         // ── Skins ──
+        // Mirror the drill-down's delta-tracking on allRows (no dedup, no day filter) so
+        // both views always agree — avoids stale latest.skinsWon from dedup dropping newer records.
         var skinTotals: [String: Int] = [:]
-        for (player, playerRows) in grouped {
-            if let latest = playerRows.max(by: { $0.hole < $1.hole }) {
-                skinTotals[player] = latest.skinsWon ?? 0
+        let allSkinRows = allRows
+            .filter { ($0.gameType ?? "wolf") == "skins" }
+            .sorted { $0.hole < $1.hole }
+        for player in Set(allSkinRows.map { $0.playerName }) {
+            let playerRows = allSkinRows.filter { $0.playerName == player }
+            var prev = 0, total = 0
+            for r in playerRows {
+                let current = r.skinsWon ?? 0
+                if current > prev { total += (current - prev) }
+                prev = current
             }
+            skinTotals[player] = total
         }
         let totalSkinsForPot = skinTotals.values.reduce(0, +)
         let pot = record?.potAmount

@@ -22,10 +22,9 @@
 		C4D5E6F7A8B9C4D5E6F70002 /* LiveNassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70004 /* NassauScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70006 /* WolfSpectatorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */; };
-		DV1C2D3E4F506071829304AA /* DeviceID.swift in Sources */ = {isa = PBXBuildFile; fileRef = DV1C2D3E4F506071829304AB /* DeviceID.swift */; };
-		RS1A2B3C4D5E6F70819203AA /* ResetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */; };
 		D64B14586458493690DECE2E /* TournamentSummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132A36A89650472DA654B343 /* TournamentSummaryViewController.swift */; };
 		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
+		DV1C2D3E4F506071829304AA /* DeviceID.swift in Sources */ = {isa = PBXBuildFile; fileRef = DV1C2D3E4F506071829304AB /* DeviceID.swift */; };
 		E8C1A3F72B9D4E6A8F5C2D71 /* TournamentScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */; };
 		EB1C7A593448F2323213FB7F /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D7D681FBEA3C05DBD4C6D7E /* UpdateChecker.swift */; };
 		F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1702F3691E6009EEB12 /* ServiceContact.swift */; };
@@ -111,6 +110,7 @@
 		F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */; };
 		F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */; };
 		LC01B2C3D4E5F607182930AA /* LiveConnectedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */; };
+		RS1A2B3C4D5E6F70819203AA /* ResetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -132,7 +132,6 @@
 		C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauScorecardViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfSpectatorViewController.swift; sourceTree = "<group>"; };
 		DV1C2D3E4F506071829304AB /* DeviceID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceID.swift; sourceTree = "<group>"; };
-		RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetSnapshotStore.swift; sourceTree = "<group>"; };
 		EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameManager+Tournament.swift"; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
@@ -223,6 +222,7 @@
 		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
 		F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardViewController.swift; sourceTree = "<group>"; };
 		LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveConnectedViewController.swift; sourceTree = "<group>"; };
+		RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetSnapshotStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -616,7 +616,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40;
+				CURRENT_PROJECT_VERSION = 41;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -631,7 +631,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.3;
+				MARKETING_VERSION = 2.3.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -657,7 +657,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 40;
+				CURRENT_PROJECT_VERSION = 41;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -672,7 +672,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.3;
+				MARKETING_VERSION = 2.3.4;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

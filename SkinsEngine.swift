@@ -240,18 +240,23 @@ enum SkinsEngine {
         guard playerIndex < gameData.hcPlayers.count,
               hole < gameData.courseHCToPass.count else { return 0 }
 
-        let activeIndexes = activePlayerIndexes(from: gameData, state: state)
-        let activeCaps = activeIndexes.compactMap { idx -> Int? in
-            guard idx < gameData.hcPlayers.count else { return nil }
-            return gameData.hcPlayers[idx]
-        }
-        guard let lowCap = activeCaps.min() else { return 0 }
-
         let playerCap = gameData.hcPlayers[playerIndex]
-        let delta     = max(0, playerCap - lowCap)
         let siRaw     = gameData.courseHCToPass[hole]
         let si        = max(1, min(STANDARD_HOLES, siRaw == 0 ? STANDARD_HOLES : siRaw))
 
+        // Tournament: absolute HC so all players are consistent regardless of group
+        if gameData.tournamentCode != nil {
+            return pops(for: playerCap, strokeIndex: si)
+        }
+
+        // Local game: relative HC (delta from lowest activated player in the group,
+        // not just skins participants — a non-skins player's low HC still sets the group baseline)
+        let groupCaps = (0..<min(MAX_PLAYERS, gameData.playerActivated.count)).compactMap { idx -> Int? in
+            guard gameData.playerActivated[idx], idx < gameData.hcPlayers.count else { return nil }
+            return gameData.hcPlayers[idx]
+        }
+        guard let lowCap = groupCaps.min() else { return 0 }
+        let delta = max(0, playerCap - lowCap)
         return pops(for: delta, strokeIndex: si)
     }
 
