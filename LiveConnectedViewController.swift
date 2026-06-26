@@ -519,15 +519,28 @@ final class LiveConnectedViewController: UITableViewController {
                     orgCode = try await SupabaseService.shared.generateCoOrgCode(tournamentCode: tournamentCode)
                 }
                 let name = record.name
+                let shareText = "Your WolfMore co-organizer code for \(name): \(orgCode)"
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
-                        let shareText = "You've been invited to co-manage \(name). Enter this code in WolfMore → Live & Connected → Enter Co-Organizer Code: \(orgCode)"
-                        let vc = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
-                        if let pop = vc.popoverPresentationController {
-                            pop.sourceView = self.view
-                            pop.sourceRect = CGRect(x: self.view.bounds.midX, y: 100, width: 1, height: 1)
-                        }
-                        self.present(vc, animated: true)
+                        let ac = UIAlertController(
+                            title: "Co-Organizer Code",
+                            message: "\(orgCode)",
+                            preferredStyle: .alert
+                        )
+                        ac.addAction(UIAlertAction(title: "Copy", style: .default) { _ in
+                            UIPasteboard.general.string = orgCode
+                        })
+                        ac.addAction(UIAlertAction(title: "Share…", style: .default) { [weak self] _ in
+                            guard let self else { return }
+                            let vc = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
+                            if let pop = vc.popoverPresentationController {
+                                pop.sourceView = self.view
+                                pop.sourceRect = CGRect(x: self.view.bounds.midX, y: 100, width: 1, height: 1)
+                            }
+                            self.present(vc, animated: true)
+                        })
+                        ac.addAction(UIAlertAction(title: "Done", style: .cancel))
+                        self.present(ac, animated: true)
                     }
                 }
             } catch {
