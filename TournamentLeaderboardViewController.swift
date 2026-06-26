@@ -615,10 +615,11 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                     message = "No skins won yet"
                 } else {
                     let totalSkins = wonHoles.reduce(0) { $0 + $1.count }
+                    let carryoversAllowed = record?.carryTies == true
                     let lines = wonHoles.map { hole, count -> String in
-                        let carryovers = count - 1
                         let skinWord = count == 1 ? "skin" : "skins"
-                        if carryovers > 0 {
+                        let carryovers = count - 1
+                        if carryoversAllowed && carryovers > 0 {
                             let cWord = carryovers == 1 ? "carryover" : "carryovers"
                             return "Hole \(hole): \(count) \(skinWord) (included \(carryovers) \(cWord))"
                         }
