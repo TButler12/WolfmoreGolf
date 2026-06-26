@@ -702,6 +702,42 @@ final class SupabaseService {
             .execute()
     }
 
+    // MARK: - Co-organizer
+
+    /// Generates a unique "ORG-XXXX" code, writes it to co_organizer_code, returns the code.
+    func generateCoOrgCode(tournamentCode: String) async throws -> String {
+        let code = "ORG-" + String((0..<4).map { _ in "ABCDEFGHJKLMNPQRSTUVWXYZ23456789".randomElement()! })
+        try await client
+            .from("tournaments")
+            .update(["co_organizer_code": AnyJSON.string(code)])
+            .eq("code", value: tournamentCode)
+            .execute()
+        return code
+    }
+
+    /// Looks up a tournament by co_organizer_code, appends DeviceID.id to co_organizer_devices,
+    /// and returns the updated record.
+    func claimCoOrganizerAccess(coOrgCode: String) async throws -> TournamentRecord {
+        let record: TournamentRecord = try await client
+            .from("tournaments")
+            .select()
+            .eq("co_organizer_code", value: coOrgCode.uppercased())
+            .single()
+            .execute()
+            .value
+
+        var devices = record.coOrganizerDevices ?? []
+        if !devices.contains(DeviceID.id) {
+            devices.append(DeviceID.id)
+            try await client
+                .from("tournaments")
+                .update(["co_organizer_devices": AnyJSON.array(devices.map { .string($0) })])
+                .eq("code", value: record.code)
+                .execute()
+        }
+        return record
+    }
+
     // MARK: - Helpers
     private func generateCode() -> String {
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"

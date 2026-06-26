@@ -215,7 +215,9 @@ final class TeeGamesViewController: UIViewController {
             g.tournamentGameType     = record.gameType
             g.tournamentScoringType  = record.scoring
             g.tournamentDay          = record.currentDay ?? 1
-            g.tournamentIsOrganizer  = (record.createdBy == DeviceID.id)
+            g.tournamentIsCreator    = (record.createdBy == DeviceID.id)
+            g.tournamentIsOrganizer  = g.tournamentIsCreator
+                || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
             g.tournamentPotAmount    = record.potAmount
             g.tournamentCarryTies    = record.carryTies
             if record.gameType == "skins", let stake = record.stake {
@@ -310,7 +312,9 @@ final class TeeGamesViewController: UIViewController {
                     g.tournamentGameType    = record.gameType
                     g.tournamentScoringType = record.scoring
                     g.tournamentDay         = liveDay
-                    g.tournamentIsOrganizer = (record.createdBy == DeviceID.id)
+                    g.tournamentIsCreator   = (record.createdBy == DeviceID.id)
+                    g.tournamentIsOrganizer = g.tournamentIsCreator
+                        || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
                     g.tournamentPotAmount   = record.potAmount
                     g.tournamentCarryTies   = record.carryTies
                     if record.gameType == "skins", let stake = record.stake {

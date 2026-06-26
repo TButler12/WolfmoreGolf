@@ -216,16 +216,20 @@ struct TournamentRecord: Codable {
     let createdAt: String?
     let courseName: String?
     let currentDay: Int?
+    let coOrganizerCode: String?
+    let coOrganizerDevices: [String]?
 
     enum CodingKeys: String, CodingKey {
         case id, code, name, stake, scoring
-        case potAmount  = "pot_amount"
-        case gameType   = "game_type"
-        case carryTies  = "carry_ties"
-        case createdBy  = "created_by"
-        case createdAt  = "created_at"
-        case courseName = "course_name"
-        case currentDay = "current_day"
+        case potAmount         = "pot_amount"
+        case gameType          = "game_type"
+        case carryTies         = "carry_ties"
+        case createdBy         = "created_by"
+        case createdAt         = "created_at"
+        case courseName        = "course_name"
+        case currentDay        = "current_day"
+        case coOrganizerCode    = "co_organizer_code"
+        case coOrganizerDevices = "co_organizer_devices"
     }
 }
 

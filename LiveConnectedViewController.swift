@@ -44,6 +44,10 @@ final class LiveConnectedViewController: UITableViewController {
                 subtitle: "Enter a code to join an existing tournament") { [weak self] in
                 self?.joinTournamentTapped()
             },
+            Row(title: "Enter Co-Organizer Code",
+                subtitle: "Claim organizer access with a code from the tournament creator") { [weak self] in
+                self?.enterCoOrgCodeTapped()
+            },
             Row(title: "Join Nassau Match",
                 subtitle: "Import an invite to join a live Nassau match") { [weak self] in
                 guard let self else { return }
@@ -218,7 +222,9 @@ final class LiveConnectedViewController: UITableViewController {
             g.tournamentGameType     = record.gameType
             g.tournamentScoringType  = record.scoring
             g.tournamentDay          = record.currentDay ?? 1
-            g.tournamentIsOrganizer  = (record.createdBy == DeviceID.id)
+            g.tournamentIsCreator    = (record.createdBy == DeviceID.id)
+            g.tournamentIsOrganizer  = g.tournamentIsCreator
+                || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
             g.tournamentPotAmount    = record.potAmount
             g.tournamentCarryTies    = record.carryTies
         }
@@ -248,6 +254,11 @@ final class LiveConnectedViewController: UITableViewController {
         if GameManager.shared.currentGame?.tournamentIsOrganizer == true {
             sheet.addAction(UIAlertAction(title: "Edit Settings", style: .default) { [weak self] _ in
                 self?.editTournamentSettings()
+            })
+        }
+        if GameManager.shared.currentGame?.tournamentIsCreator == true {
+            sheet.addAction(UIAlertAction(title: "Share Organizer Access", style: .default) { [weak self] _ in
+                self?.shareOrganizerAccess()
             })
         }
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -381,6 +392,142 @@ final class LiveConnectedViewController: UITableViewController {
                     )
                     alert.addAction(UIAlertAction(title: "OK", style: .default))
                     self.present(alert, animated: true)
+                }
+            }
+        }
+    }
+
+    // MARK: - Co-Organizer
+
+    private func enterCoOrgCodeTapped() {
+        let alert = UIAlertController(
+            title: "Co-Organizer Code",
+            message: "Enter the code shared by the tournament creator.",
+            preferredStyle: .alert
+        )
+        alert.addTextField { tf in
+            tf.placeholder = "ORG-XXXX"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType = .no
+            tf.returnKeyType = .go
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Claim Access", style: .default) { [weak self, weak alert] _ in
+            let raw = (alert?.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .uppercased()
+            guard raw.hasPrefix("ORG-") && raw.count == 8 else {
+                self?.showError("Enter a valid co-organizer code (e.g. ORG-ABCD).")
+                return
+            }
+            self?.claimCoOrgAccess(code: raw)
+        })
+        present(alert, animated: true)
+    }
+
+    private func claimCoOrgAccess(code: String) {
+        let spinner = UIAlertController(title: nil, message: "Verifying code…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                let record = try await SupabaseService.shared.claimCoOrganizerAccess(coOrgCode: code)
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let current = GameManager.shared.currentGame
+                        if current?.tournamentCode == record.code {
+                            // Already in this tournament — just elevate access.
+                            GameManager.shared.update { g in
+                                g.tournamentIsOrganizer = true
+                            }
+                            GameManager.shared.saveCurrent()
+                            NotificationCenter.default.post(name: .reloadUI, object: nil)
+                            self.buildSections()
+                            self.tableView.reloadData()
+                            let ac = UIAlertController(
+                                title: "Co-Organizer Access Granted",
+                                message: "You now have organizer access to \(record.name).",
+                                preferredStyle: .alert
+                            )
+                            ac.addAction(UIAlertAction(title: "OK", style: .default))
+                            self.present(ac, animated: true)
+                        } else {
+                            // Not yet in this tournament — apply full join + organizer.
+                            self.applyCoOrgJoin(record: record)
+                        }
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Code not found. Check it and try again.\n\n\(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+    }
+
+    private func applyCoOrgJoin(record: TournamentRecord) {
+        if GameManager.shared.currentGame == nil {
+            _ = GameManager.shared.loadLastOpened(notify: false)
+        }
+        if GameManager.shared.currentGame == nil {
+            GameManager.shared.startNewGame()
+        }
+        let groupCode = UUID().uuidString
+        let matchId   = UUID().uuidString
+        GameManager.shared.update { g in
+            g.tournamentCode        = record.code
+            g.groupCode             = groupCode
+            g.tournamentMatchId     = matchId
+            g.tournamentName        = record.name
+            g.tournamentGameType    = record.gameType
+            g.tournamentScoringType = record.scoring
+            g.tournamentDay         = record.currentDay ?? 1
+            g.tournamentIsCreator   = false
+            g.tournamentIsOrganizer = true
+            g.tournamentPotAmount   = record.potAmount
+            g.tournamentCarryTies   = record.carryTies
+        }
+        UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
+        GameManager.shared.saveCurrent()
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+        buildSections()
+        tableView.reloadData()
+        let ac = UIAlertController(
+            title: "Joined as Co-Organizer",
+            message: "You've joined \"\(record.name)\" with full organizer access.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+
+    private func shareOrganizerAccess() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode,
+              GameManager.shared.currentGame?.tournamentIsCreator == true else { return }
+
+        let spinner = UIAlertController(title: nil, message: "Generating code…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                let orgCode = try await SupabaseService.shared.generateCoOrgCode(tournamentCode: code)
+                let name = GameManager.shared.currentGame?.tournamentName ?? "the tournament"
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let shareText = "Join \"\(name)\" as a co-organizer. Enter this code in Live & Connected → Enter Co-Organizer Code:\n\n\(orgCode)"
+                        let vc = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
+                        if let pop = vc.popoverPresentationController {
+                            pop.sourceView = self.view
+                            pop.sourceRect = CGRect(x: self.view.bounds.midX, y: 100, width: 1, height: 1)
+                        }
+                        self.present(vc, animated: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Could not generate code: \(error.localizedDescription)")
+                    }
                 }
             }
         }

@@ -39,6 +39,7 @@ struct GameData: Codable {
     var tournamentScoringType: String? = nil   // "gross", "net"
     var tournamentDay: Int = 1
     var tournamentIsOrganizer: Bool = false
+    var tournamentIsCreator: Bool   = false
     // Tournament pot — separate from skinsState.settings.potAmount (which is the LOCAL pot).
     // Written at join/rejoin time; read by the tournament batch calc in GameViewController.
     var tournamentPotAmount: Double? = nil
