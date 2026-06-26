@@ -217,6 +217,7 @@ final class TeeGamesViewController: UIViewController {
             g.tournamentDay          = record.currentDay ?? 1
             g.tournamentIsOrganizer  = (record.createdBy == DeviceID.id)
             g.tournamentPotAmount    = record.potAmount
+            g.tournamentCarryTies    = record.carryTies
             if record.gameType == "skins", let stake = record.stake {
                 var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                 skins.settings.skinValue = stake
@@ -311,6 +312,7 @@ final class TeeGamesViewController: UIViewController {
                     g.tournamentDay         = liveDay
                     g.tournamentIsOrganizer = (record.createdBy == DeviceID.id)
                     g.tournamentPotAmount   = record.potAmount
+                    g.tournamentCarryTies   = record.carryTies
                     if record.gameType == "skins", let stake = record.stake {
                         var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                         skins.settings.skinValue = stake

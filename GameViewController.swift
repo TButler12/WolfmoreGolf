@@ -1545,7 +1545,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let hole = max(0, min(17, g.hole))
         let order = displayOrder
-        let isTournament = g.resolvedGameType == .tournament
+        let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
 
         for (slot, b) in wolfButtons.enumerated() {
             if isTournament && slot == 4 {
@@ -2155,7 +2155,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let h = g.hole
         let order = displayOrder
-        let isTournament = g.resolvedGameType == .tournament
+        let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
         let slots = min(scoreFields.count, MAX_PLAYERS)
         for s in 0..<slots {
             if isTournament && s == 4 {
@@ -3120,7 +3120,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 // using absoluteStrokesGiven so tournament skins always use absolute HC.
                 let tourneySkinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
                 let skinsUseGross = g.tournamentScoringType == "gross"
-                let activeIndexes = SkinsEngine.activePlayerIndexes(from: g, state: tourneySkinsState)
+                let activeIndexes = (0..<min(MAX_PLAYERS, g.playerActivated.count)).filter { g.playerActivated[$0] }
                 guard activeIndexes.count >= 2 else { return }
 
                 let skinValue   = tourneySkinsState.settings.skinValue
@@ -4168,7 +4168,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let hole = max(0, min(17, g.hole))
         let winner = (0..<g.proxWinnerPerHole.count).contains(hole) ? g.proxWinnerPerHole[hole] : nil
         let order = displayOrder
-        let isTournament = g.resolvedGameType == .tournament
+        let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
 
         for (slot, b) in proxButtons.enumerated() {
             if isTournament && slot == 4 {
