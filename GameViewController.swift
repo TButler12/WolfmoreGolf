@@ -3155,7 +3155,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         let gross   = (seat < g.scores.count && backfillHole < g.scores[seat].count)
                                           ? (g.scores[seat][backfillHole] ?? 0) : 0
                         let holeHc  = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
-                        let pops    = SkinsEngine.popsForPlayer(seat, hole: backfillHole, gameData: g, state: tourneySkinsState)
+                        let playerHc = g.hcPlayers[safe: seat] ?? 0
+                        let pops    = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
                         let net     = gross - pops
                         let holeMoney  = holeMoneyBySeat[seat] ?? 0
                         let totalMoney = cumulativeMoney[seat] ?? 0

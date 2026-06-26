@@ -244,13 +244,8 @@ enum SkinsEngine {
         let siRaw     = gameData.courseHCToPass[hole]
         let si        = max(1, min(STANDARD_HOLES, siRaw == 0 ? STANDARD_HOLES : siRaw))
 
-        // Tournament: absolute HC so all players are consistent regardless of group
-        if gameData.tournamentCode != nil {
-            return pops(for: playerCap, strokeIndex: si)
-        }
-
-        // Local game: relative HC (delta from lowest activated player in the group,
-        // not just skins participants — a non-skins player's low HC still sets the group baseline)
+        // Always relative HC — delta from the lowest activated player in the group.
+        // The Supabase tournament write path uses absoluteStrokesGiven() directly instead.
         let groupCaps = (0..<min(MAX_PLAYERS, gameData.playerActivated.count)).compactMap { idx -> Int? in
             guard gameData.playerActivated[idx], idx < gameData.hcPlayers.count else { return nil }
             return gameData.hcPlayers[idx]
