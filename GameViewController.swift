@@ -1443,8 +1443,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let nameGreen = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
 
         for (i, label) in sortedNameLabels.enumerated() {
-            // Slot 4 in tournament mode = Team row
-            if isTournament && i == 4 {
+            // Slot 4 = Team row, but only for Stableford tournaments (top-3 team score)
+            if isTournament && i == 4 && g.tournamentGameType == "stableford" {
                 label.attributedText = nil
                 label.text = "Team"
                 label.font = UIFont.boldSystemFont(ofSize: label.font.pointSize)
