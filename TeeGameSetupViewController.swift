@@ -285,7 +285,6 @@ final class TeeGameSetupViewController: UIViewController {
                 stake = s
             }
             carryTies = (carryIdx == 1)
-            print("🃏 carryIdx=\(carryIdx) → carryTies=\(carryTies!)")
         }
 
         let spinner = UIAlertController(title: nil, message: "Creating tournament…", preferredStyle: .alert)

@@ -15,6 +15,7 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
     var existingGIR: Bool?
     var existingPutts: Int?
     var existingScore: Int?
+    var par: Int = 4
     private let scoreLabel = UILabel()
     private let scoreField = UITextField()
     private var selectedFairway: Bool? = nil
@@ -74,6 +75,8 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
 
         if let existingScore {
             scoreField.text = "\(existingScore)"
+        } else {
+            scoreField.text = "\(par)"
         }
     }
     private func makeNumberPadToolbar() -> UIToolbar {
@@ -275,18 +278,36 @@ final class HoleStatsEntryViewController: UIViewController, UITextFieldDelegate 
         button.layer.borderWidth = selected ? 2 : 1
         button.setTitleColor(selected ? tint : .label, for: .normal)
     }
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-        cardCenterYConstraint.constant = -50
-        UIView.animate(withDuration: 0.25) {
-            self.view.layoutIfNeeded()
-        }
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)),
+                                               name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)),
+                                               name: UIResponder.keyboardWillHideNotification, object: nil)
     }
 
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        cardCenterYConstraint.constant = 0
-        UIView.animate(withDuration: 0.25) {
-            self.view.layoutIfNeeded()
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+
+    @objc private func keyboardWillShow(_ note: Notification) {
+        guard let kbFrame = note.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect,
+              let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+        let keyboardTop = view.bounds.height - kbFrame.height
+        let puttsBottom = puttsField.convert(puttsField.bounds, to: view).maxY
+        let overlap = puttsBottom - keyboardTop
+        if overlap > 0 {
+            cardCenterYConstraint.constant = -(overlap + 16)
         }
+        UIView.animate(withDuration: duration) { self.view.layoutIfNeeded() }
+    }
+
+    @objc private func keyboardWillHide(_ note: Notification) {
+        guard let duration = note.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
+        cardCenterYConstraint.constant = 0
+        UIView.animate(withDuration: duration) { self.view.layoutIfNeeded() }
     }
     private func updateSelectionUI() {
         styleChoiceButton(fairwayHitButton, selected: selectedFairway == true, tint: .systemGreen)

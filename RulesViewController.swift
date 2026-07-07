@@ -235,6 +235,8 @@ private extension RulesViewController {
 
         W = Wolf partners
         P = Prox (closest to pin)
+
+        • To mute a player mid-round (e.g. they leave early), long press their name on the scoring page. Their scores from holes already played are kept.
         """)
 
         header("WAGERS")

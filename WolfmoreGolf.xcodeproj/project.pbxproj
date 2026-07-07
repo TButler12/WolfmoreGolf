@@ -95,13 +95,13 @@
 		F6E007F92F80D19B00763694 /* HoleStatsEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */; };
 		F6E007FB2F81913500763694 /* StatsContainerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FA2F81913500763694 /* StatsContainerViewController.swift */; };
 		F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */; };
-		F6E008102F90AA1400763694 /* TournamentSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008112F90AA1400763694 /* TournamentSettingsViewController.swift */; };
 		F6E007FE2F80182400763694 /* ReviewPrompter.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E007FF2F80182400763694 /* ReviewPrompter.swift */; };
 		F6E008032F884A6500763694 /* SharedRound.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008022F884A6500763694 /* SharedRound.swift */; };
 		F6E008052F884A9D00763694 /* RemoteRoundCodec.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */; };
 		F6E008072F89403800763694 /* SharedRoundBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008062F89403800763694 /* SharedRoundBuilder.swift */; };
 		F6E008092F89408500763694 /* RemoteNassauScorer.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008082F89408500763694 /* RemoteNassauScorer.swift */; };
 		F6E0080B2F8965B600763694 /* RemoteNassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E0080A2F8965B600763694 /* RemoteNassauViewController.swift */; };
+		F6E008102F90AA1400763694 /* TournamentSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008112F90AA1400763694 /* TournamentSettingsViewController.swift */; };
 		F6E008132F8D269F00763694 /* RemoteMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008122F8D269F00763694 /* RemoteMatch.swift */; };
 		F6E008152F8D26FC00763694 /* RemoteMatchStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008142F8D26FC00763694 /* RemoteMatchStore.swift */; };
 		F6E008172F8D273200763694 /* RemoteMatchInvite.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008162F8D273200763694 /* RemoteMatchInvite.swift */; };
@@ -206,13 +206,13 @@
 		F6E007F82F80D19B00763694 /* HoleStatsEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HoleStatsEntryViewController.swift; sourceTree = "<group>"; };
 		F6E007FA2F81913500763694 /* StatsContainerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatsContainerViewController.swift; sourceTree = "<group>"; };
 		F6E007FC2F80182400763694 /* SkinsSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SkinsSettingsViewController.swift; sourceTree = "<group>"; };
-		F6E008112F90AA1400763694 /* TournamentSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentSettingsViewController.swift; sourceTree = "<group>"; };
 		F6E007FF2F80182400763694 /* ReviewPrompter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReviewPrompter.swift; sourceTree = "<group>"; };
 		F6E008022F884A6500763694 /* SharedRound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRound.swift; sourceTree = "<group>"; };
 		F6E008042F884A9D00763694 /* RemoteRoundCodec.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteRoundCodec.swift; sourceTree = "<group>"; };
 		F6E008062F89403800763694 /* SharedRoundBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SharedRoundBuilder.swift; sourceTree = "<group>"; };
 		F6E008082F89408500763694 /* RemoteNassauScorer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauScorer.swift; sourceTree = "<group>"; };
 		F6E0080A2F8965B600763694 /* RemoteNassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauViewController.swift; sourceTree = "<group>"; };
+		F6E008112F90AA1400763694 /* TournamentSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentSettingsViewController.swift; sourceTree = "<group>"; };
 		F6E008122F8D269F00763694 /* RemoteMatch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatch.swift; sourceTree = "<group>"; };
 		F6E008142F8D26FC00763694 /* RemoteMatchStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchStore.swift; sourceTree = "<group>"; };
 		F6E008162F8D273200763694 /* RemoteMatchInvite.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchInvite.swift; sourceTree = "<group>"; };
@@ -620,7 +620,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 41;
+				CURRENT_PROJECT_VERSION = 44;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -635,7 +635,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.4;
+				MARKETING_VERSION = 2.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -661,7 +661,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 41;
+				CURRENT_PROJECT_VERSION = 44;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -676,7 +676,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.3.4;
+				MARKETING_VERSION = 2.4.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

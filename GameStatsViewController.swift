@@ -23,6 +23,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         let totalScore: Int
         let totalMoney: Double
         let proxCount: Int
+        let isActive: Bool
     }
 
     // MARK: - UI
@@ -307,14 +308,14 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         var built: [Row] = []
         for seat in 0..<seats {
             let name = names[seat].trimmingCharacters(in: .whitespacesAndNewlines)
-            guard actives[seat], !name.isEmpty else { continue }
+            guard !name.isEmpty else { continue }
 
             let total = totalScoreForSeat(seat, in: g) ?? 0
             let front9 = front9ScoreForSeat(seat, in: g) ?? 0
             let money = totalMoneyForSeat(seat, in: g)
             let prox  = proxWinsForSeat(seat, in: g)
 
-            built.append(Row(seat: seat, name: name, front9Score: front9, totalScore: total, totalMoney: money, proxCount: prox))
+            built.append(Row(seat: seat, name: name, front9Score: front9, totalScore: total, totalMoney: money, proxCount: prox, isActive: actives[seat]))
         }
 
         rows = built
@@ -415,7 +416,10 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
                                 : (a.proxCount, a.name) > (b.proxCount, b.name) }
         }
 
-        rows.sort(by: cmp)
+        rows.sort { a, b in
+            if a.isActive != b.isActive { return a.isActive }
+            return cmp(a, b)
+        }
         header.indicate(sortKey: key, ascending: asc)
         tableView.reloadData()
     }
@@ -460,7 +464,8 @@ extension GameStatsViewController: UITableViewDataSource, UITableViewDelegate {
             totalScore: r.totalScore,
             totalMoneyText: currency0.string(from: NSNumber(value: r.totalMoney)) ?? "\(Int(r.totalMoney.rounded()))",
             proxCount: r.proxCount,
-            moneyIsNegative: r.totalMoney < 0
+            moneyIsNegative: r.totalMoney < 0,
+            isMuted: !r.isActive
         )
         return cell
     }
@@ -592,16 +597,18 @@ final class StatsCell: UITableViewCell {
         totalScore: Int,
         totalMoneyText: String,
         proxCount: Int,
-        moneyIsNegative: Bool
+        moneyIsNegative: Bool,
+        isMuted: Bool = false
     ) {
-        nameLabel.text   = name
-        front9Label.text = "\(front9Score)"
-        scoreLabel.text  = "\(totalScore)"
+        nameLabel.text   = isMuted ? "\(name) (muted)" : name
+        front9Label.text = front9Score > 0 ? "\(front9Score)" : "–"
+        scoreLabel.text  = totalScore > 0  ? "\(totalScore)"  : "–"
         moneyLabel.text  = totalMoneyText
         proxLabel.text   = "\(proxCount)"
         moneyLabel.textColor = moneyIsNegative
             ? .systemRed
             : UIColor(red: 0.10, green: 0.45, blue: 0.25, alpha: 1.0)
+        contentView.alpha = isMuted ? 0.55 : 1.0
     }
 
     private static func makeLabel(

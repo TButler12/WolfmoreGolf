@@ -4,6 +4,7 @@ final class WolfSpectatorViewController: UIViewController {
 
     // MARK: - External input
     var sessionCode: String = ""
+    var isEmbedded: Bool = false
 
     // MARK: - Multi-session state
     private var sessions: [WolfSession] = []
@@ -25,6 +26,10 @@ final class WolfSpectatorViewController: UIViewController {
     private var tabContainerHeightConstraint: NSLayoutConstraint?
     private var tabButtons: [UIButton] = []
     private var addSessionBarButton: UIBarButtonItem?
+    private var embeddedToolbar: UIToolbar?
+    private var embeddedAddButton: UIBarButtonItem?
+    private var tabTopToSafeArea: NSLayoutConstraint?
+    private var tabTopToToolbar: NSLayoutConstraint?
     private let statusBanner     = UILabel()
     private let namesHeaderView  = UIView()
     private let cachedHeaderCell = WolfHoleCell(style: .default, reuseIdentifier: nil)
@@ -46,6 +51,7 @@ final class WolfSpectatorViewController: UIViewController {
         setupNamesHeader()
         setupTableView()
         setupLoadingView()
+        setupEmbeddedToolbar()
         loadInitialSessions()
         let trashButton = UIBarButtonItem(
             image: UIImage(systemName: "trash"),
@@ -102,8 +108,10 @@ final class WolfSpectatorViewController: UIViewController {
 
         let hConstraint = tabContainerView.heightAnchor.constraint(equalToConstant: 44)
         tabContainerHeightConstraint = hConstraint
+        let topC = tabContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor)
+        tabTopToSafeArea = topC
         NSLayoutConstraint.activate([
-            tabContainerView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            topC,
             tabContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tabContainerView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             hConstraint,
@@ -203,6 +211,52 @@ final class WolfSpectatorViewController: UIViewController {
         loadingView.startAnimating()
     }
 
+    private func setupEmbeddedToolbar() {
+        let toolbar = UIToolbar()
+        toolbar.translatesAutoresizingMaskIntoConstraints = false
+        toolbar.isHidden = true
+        view.addSubview(toolbar)
+
+        let trash = UIBarButtonItem(image: UIImage(systemName: "trash"), style: .plain,
+                                    target: self, action: #selector(clearAllTapped))
+        trash.tintColor = .systemRed
+        let refresh = UIBarButtonItem(image: UIImage(systemName: "arrow.clockwise"), style: .plain,
+                                      target: self, action: #selector(refreshTapped))
+        let add = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addSessionTapped))
+        embeddedAddButton = add
+        toolbar.items = [add, UIBarButtonItem(barButtonSystemItem: .flexibleSpace, target: nil, action: nil), refresh, trash]
+
+        NSLayoutConstraint.activate([
+            toolbar.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            toolbar.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            toolbar.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+        ])
+        tabTopToToolbar = tabContainerView.topAnchor.constraint(equalTo: toolbar.bottomAnchor)
+        embeddedToolbar = toolbar
+    }
+
+    override func didMove(toParent parent: UIViewController?) {
+        super.didMove(toParent: parent)
+        if parent != nil { applyEmbeddedLayout() }
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        applyEmbeddedLayout()
+    }
+
+    private func applyEmbeddedLayout() {
+        embeddedToolbar?.isHidden = !isEmbedded
+        if isEmbedded {
+            tabTopToSafeArea?.isActive = false
+            tabTopToToolbar?.isActive = true
+        } else {
+            tabTopToToolbar?.isActive = false
+            tabTopToSafeArea?.isActive = true
+        }
+        if isEmbedded { embeddedToolbar.map { view.bringSubviewToFront($0) } }
+    }
+
     // MARK: - Tab bar
 
     private func rebuildTabBar() {
@@ -228,6 +282,7 @@ final class WolfSpectatorViewController: UIViewController {
         }
 
         addSessionBarButton?.isEnabled = sessions.count < maxSessions
+        embeddedAddButton?.isEnabled   = sessions.count < maxSessions
 
         updateTabHighlight()
     }

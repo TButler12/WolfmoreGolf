@@ -184,6 +184,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var playerRowCardViews: [UIView] = []
     private var playerRowCardsInstalled = false
 
+    // One-time mute tip tooltip
+    private static let muteTipShownKey = "com.wolfmore.muteLongPressTipShown.v2"
+
     // Storyboard subview upward shift to close gap below dynamic header
     private var ibSubviews: [UIView] = []
     private var storyboardContentShifted = false
@@ -194,6 +197,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // Dark green header
     private var gameHeaderView: UIView?
     private var gameHeaderInstalled = false
+    private weak var scoringInfoButton: UIButton?
 
     private weak var liveNassauButton: UIButton?
     private var liveNassauInstalled = false
@@ -212,13 +216,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private var displayOrder: [Int] {
         let all = Array(0..<MAX_PLAYERS)
-        guard isSortedByDollarGame,
-              let g = GameManager.shared.currentGame else { return all }
+        guard let g = GameManager.shared.currentGame else { return all }
         let active = all.filter { i in
             (g.playerActivated[safe: i] ?? false) &&
             !(g.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         let inactive = all.filter { !active.contains($0) }
+        guard isSortedByDollarGame else {
+            // Always put inactive/muted players at the bottom regardless of sort state
+            return active + inactive
+        }
         let current = max(0, min(17, g.hole))
         let start   = max(0, min(17, g.startHole ?? current))
         let holes: [Int] = start <= current
@@ -303,7 +310,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         for (i, b) in wolfButtons.enumerated() { b.tag = i }
         for (i, b) in proxButtons.enumerated() { b.tag = i }
         styleWolfButtons()
-        
+
+        // --- Player row long-press (mute/unmute mid-round) ---
+        setupPlayerRowLongPress()
+
         // --- Initial paint ---
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
@@ -408,6 +418,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         if !showedOnboarding {
             showLiveCodePromptIfNeeded()
         }
+        showMuteTipBannerIfNeeded()
     }
 
     override func viewDidLayoutSubviews() {
@@ -420,11 +431,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         layoutBottomControls()
         applyStoryboardShiftIfNeeded()
         refreshPlayerRowCards()
-        // Keep live container above bottom stack (bringSubviewToFront order, not zPosition, governs hit testing)
+        // Z-order: gameHeader first so liveContentContainer lands above it; bar and nassau stay at front.
+        if let header = gameHeaderView { view.bringSubviewToFront(header) }
         if let container = liveContentContainer { view.bringSubviewToFront(container) }
         if let bar = liveTabBar { view.bringSubviewToFront(bar) }
         if let btn = liveNassauButton { view.bringSubviewToFront(btn) }
-        if let header = gameHeaderView { view.bringSubviewToFront(header) }
     }
 
     // MARK: - Dark green game header
@@ -467,6 +478,25 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             backBtn.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
             backBtn.widthAnchor.constraint(equalToConstant: 36),
             backBtn.heightAnchor.constraint(equalToConstant: 36),
+        ])
+
+        // Info button (top-right, mirrors back button)
+        let infoBtn = UIButton(type: .system)
+        scoringInfoButton = infoBtn
+        infoBtn.translatesAutoresizingMaskIntoConstraints = false
+        infoBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        infoBtn.layer.cornerRadius = 18
+        infoBtn.clipsToBounds = true
+        infoBtn.tintColor = .white
+        let infoCfg = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+        infoBtn.setImage(UIImage(systemName: "info.circle", withConfiguration: infoCfg), for: .normal)
+        infoBtn.addTarget(self, action: #selector(scoringPageInfoTapped), for: .touchUpInside)
+        header.addSubview(infoBtn)
+        NSLayoutConstraint.activate([
+            infoBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            infoBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
+            infoBtn.widthAnchor.constraint(equalToConstant: 36),
+            infoBtn.heightAnchor.constraint(equalToConstant: 36),
         ])
 
         // Hole info label (centered, white, bold 17)
@@ -1063,7 +1093,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         container.translatesAutoresizingMaskIntoConstraints = false
         container.backgroundColor = .systemBackground
         container.layer.zPosition = 999
+        // Insert below bar, then push gameHeader behind so live content and its toolbar receive touches.
         self.view.insertSubview(container, belowSubview: bar)
+        if let header = gameHeaderView { view.insertSubview(header, belowSubview: container) }
 
         NSLayoutConstraint.activate([
             container.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -1074,6 +1106,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         let vc = WolfSpectatorViewController()
         vc.sessionCode = code
+        vc.isEmbedded = true
         addChild(vc)
         vc.view.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(vc.view)
@@ -1250,6 +1283,58 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         dismiss(animated: true)
     }
 
+    @objc private func scoringPageInfoTapped() {
+        let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(title: "Scoring Tips", style: .default) { [weak self] _ in
+            self?.showScoringTips()
+        })
+        sheet.addAction(UIAlertAction(title: "Pass Game to Another Phone", style: .default) { [weak self] _ in
+            self?.passGame()
+        })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(sheet, from: scoringInfoButton)
+    }
+
+    private func showScoringTips() {
+        let ac = UIAlertController(title: "Scoring Tips", message: """
+        Long press a player name to mute them mid-round (e.g. they leave early). Their scores from holes already played are kept.
+
+        W = Wolf partner buttons
+        P = Prox (closest to pin)
+
+        Roll / Re-Roll — doubles the hole stake
+        Alone — Lone Wolf, also doubles the stake
+        Press — adds the base stake to all remaining holes in the half
+        Hammer — adds the base stake to the current hole bet
+
+        Bet formats and stakes can be customized in Settings.
+
+        Long press most buttons for a full description.
+        """, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "Got It", style: .default))
+        present(ac, animated: true)
+    }
+
+    private func passGame() {
+        guard let game = GameManager.shared.currentGame else { return }
+        do {
+            let data = try JSONEncoder().encode(game)
+            let tmpURL = FileManager.default.temporaryDirectory
+                .appendingPathComponent("WolfmoreGame.wolfmore")
+            try data.write(to: tmpURL, options: .atomic)
+
+            let av = UIActivityViewController(activityItems: [tmpURL], applicationActivities: nil)
+            av.popoverPresentationController?.sourceView = scoringInfoButton ?? view
+            present(av, animated: true)
+        } catch {
+            let ac = UIAlertController(title: "Export Failed",
+                                       message: error.localizedDescription,
+                                       preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+        }
+    }
+
     private func setRejectHammerEnabled(_ on: Bool) { /* replaced by hammer stepper */ }
 
     
@@ -1295,7 +1380,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let seatsToPaint = min(totalMoneyLabels.count, totals.count)
         for i in 0..<seatsToPaint {
             let seat = order[safe: i] ?? i
+            let isActive = g.playerActivated[safe: seat] ?? true
             setTotalMoneyLabel(totalMoneyLabels[i], seat < totals.count ? totals[seat] : 0)
+            totalMoneyLabels[i].alpha = isActive ? 1.0 : 0.4
         }
         refreshLiveSummaryStrip()
     }
@@ -1424,6 +1511,92 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
     }
 
+    private func setupPlayerRowLongPress() {
+        for label in playerNameLabels {
+            label.isUserInteractionEnabled = true
+            let lp = UILongPressGestureRecognizer(target: self, action: #selector(playerRowLongPressed(_:)))
+            lp.minimumPressDuration = 0.6
+            label.addGestureRecognizer(lp)
+        }
+    }
+
+    // MARK: - One-time mute tip banner
+
+    private func showMuteTipBannerIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: Self.muteTipShownKey) else { return }
+        UserDefaults.standard.set(true, forKey: Self.muteTipShownKey)
+
+        let banner = UIView()
+        banner.backgroundColor = UIColor.systemGray5
+        banner.layer.cornerRadius = 10
+        banner.layer.shadowColor = UIColor.black.cgColor
+        banner.layer.shadowOpacity = 0.12
+        banner.layer.shadowRadius = 6
+        banner.layer.shadowOffset = CGSize(width: 0, height: 2)
+        banner.alpha = 0
+        banner.translatesAutoresizingMaskIntoConstraints = false
+
+        let label = UILabel()
+        label.text = "Tip: Long press a player name to mute them mid-round"
+        label.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        label.textColor = UIColor.secondaryLabel
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        banner.addSubview(label)
+        view.addSubview(banner)
+        view.bringSubviewToFront(banner)
+
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: banner.topAnchor, constant: 10),
+            label.bottomAnchor.constraint(equalTo: banner.bottomAnchor, constant: -10),
+            label.leadingAnchor.constraint(equalTo: banner.leadingAnchor, constant: 14),
+            label.trailingAnchor.constraint(equalTo: banner.trailingAnchor, constant: -14),
+
+            banner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            banner.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -40),
+            banner.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            UIView.animate(withDuration: 0.3) { banner.alpha = 1 }
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            UIView.animate(withDuration: 0.4, animations: { banner.alpha = 0 }) { _ in
+                banner.removeFromSuperview()
+            }
+        }
+    }
+
+    @objc private func playerRowLongPressed(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began,
+              let pressedLabel = gesture.view as? UILabel,
+              let g = GameManager.shared.currentGame else { return }
+        // Determine slot by vertical position — reliable regardless of storyboard tag values
+        let sortedByY = playerNameLabels.sorted { $0.frame.origin.y < $1.frame.origin.y }
+        guard let slot = sortedByY.firstIndex(where: { $0 === pressedLabel }) else { return }
+        let seat = displayOrder[safe: slot] ?? slot
+        let name = (seat < g.playerNames.count)
+            ? g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
+            : ""
+        guard !name.isEmpty else { return }
+        let isActive = g.playerActivated[safe: seat] ?? false
+        let action = isActive ? "Mute" : "Unmute"
+        let message = isActive
+            ? "Mute \(name) for the rest of the round. Their scores from holes already played are kept."
+            : "Unmute \(name) — they'll rejoin scoring from the current hole."
+        let sheet = UIAlertController(title: "\(action) \(name)?", message: message, preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(title: action, style: isActive ? .destructive : .default) { [weak self] _ in
+            GameManager.shared.update { g in g.playerActivated[seat].toggle() }
+            self?.paintEverythingForCurrentHole()
+            self?.refreshTotalMoneyLabels()
+        })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(sheet, from: gesture.view ?? view)
+    }
+
     private func refreshPlayerNameLabels() {
         guard let g = GameManager.shared.currentGame else { return }
         let order = displayOrder
@@ -1459,6 +1632,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 ? !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 : (seat < g.playerActivated.count && g.playerActivated[seat] &&
                    !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+            label.alpha = isActive ? 1.0 : 0.4
 
             var redPops   = 0
             var greenPops = 0
@@ -1555,6 +1730,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             b.isHidden = false
             let seat = order[safe: slot] ?? slot
             b.tag = seat
+            let isSeatActive = g.playerActivated[safe: seat] ?? true
+            b.alpha = isSeatActive ? 1.0 : 0.4
             guard (0..<MAX_PLAYERS).contains(seat),
                   g.wolfButtonStatus.count == MAX_PLAYERS,
                   g.wolfButtonStatus[seat].count == STANDARD_HOLES else { continue }
@@ -2166,12 +2343,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
             let seat = order[safe: s] ?? s
             let v = (seat < g.scores.count && h < g.scores[seat].count) ? g.scores[seat][h] : nil
+            let isActive = g.playerActivated[safe: seat] ?? true
             scoreFields[s].text = v.map(String.init) ?? ""
+            scoreFields[s].isEnabled = isActive
+            scoreFields[s].alpha = isActive ? 1.0 : 0.4
             scoreFields[s].tag = seat
         }
     }
 
-       
+
     @IBAction private func updateDollarsTapped(_ sender: UIButton) {
         // quick flash
         let oldColor = sender.backgroundColor
@@ -3432,6 +3612,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         vc.existingGIR = game.girHit[safe: playerIndex]?[safe: hole] ?? nil
         vc.existingPutts = game.puttsPerHole[safe: playerIndex]?[safe: hole] ?? nil
         vc.existingScore = game.scores[safe: playerIndex]?[safe: hole] ?? nil
+        vc.par = game.courseParToPass[safe: hole] ?? 4
 
         vc.onSave = { fairwayHit, girHit, putts, score in
             GameManager.shared.update { g in
@@ -3788,7 +3969,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let seat = order[safe: s] ?? s
             let raw: Double = (seat < g.playerMoney.count && h < g.playerMoney[seat].count) ? g.playerMoney[seat][h] : 0.0
             let whole = Int(raw.rounded())
+            let isActive = g.playerActivated[safe: seat] ?? true
             setMoneyField(playerMoneyFields[s], to: whole)
+            playerMoneyFields[s].isEnabled = isActive
+            playerMoneyFields[s].alpha = isActive ? 1.0 : 0.4
             playerMoneyFields[s].tag = seat
         }
     }
@@ -4191,11 +4375,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             b.isHidden = false
             let seat = order[safe: slot] ?? slot
             b.tag = seat
+            let isSeatActive = g.playerActivated[safe: seat] ?? true
             let isOn = (winner == seat)
             b.backgroundColor = isOn ? .label : UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
             b.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
             b.layer.cornerRadius = 10
             b.layer.masksToBounds = true
+            b.alpha = isSeatActive ? 1.0 : 0.4
         }
     }
     // MARK: - Debug Tests

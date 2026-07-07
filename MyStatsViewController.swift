@@ -188,8 +188,16 @@ final class MyStatsViewController: UIViewController {
     private func attributedLastRoundByHole(_ r: RoundSummary) -> NSAttributedString {
         let result = NSMutableAttributedString()
 
+        let pars: [Int] = {
+            if let uuid = UUID(uuidString: r.courseID),
+               let course = CourseLibrary.shared.get(id: uuid) {
+                return Array(course.pars.prefix(STANDARD_HOLES))
+            }
+            return Array(repeating: 4, count: STANDARD_HOLES)
+        }()
+
         result.append(NSAttributedString(
-            string: "Hole\tScore\tFW\tGIR\tPutts\n",
+            string: "Hole\tPar\tScore\tFW\tGIR\tPutts\n",
             attributes: rowAttrs(font: bodyFont, color: .secondaryLabel)
         ))
         for h in 0..<STANDARD_HOLES {
@@ -198,6 +206,8 @@ final class MyStatsViewController: UIViewController {
 
             let fw = statSymbol(for: fwValue)
             let gir = statSymbol(for: girValue)
+
+            let parStr = "\(pars[safe: h] ?? 4)"
 
             let score: String = {
                 guard h < r.scorePerHole.count else { return "–" }
@@ -213,6 +223,11 @@ final class MyStatsViewController: UIViewController {
 
             result.append(NSAttributedString(
                 string: "\(h + 1)\t",
+                attributes: rowAttrs(font: bodyFont, color: .secondaryLabel)
+            ))
+
+            result.append(NSAttributedString(
+                string: "\(parStr)\t",
                 attributes: rowAttrs(font: bodyFont, color: .secondaryLabel)
             ))
 
@@ -675,41 +690,61 @@ final class MyStatsViewController: UIViewController {
     
     private func formatLastRoundByHole(_ r: RoundSummary) -> String {
         var lines: [String] = []
-        
+
+        let pars: [Int] = {
+            if let uuid = UUID(uuidString: r.courseID),
+               let course = CourseLibrary.shared.get(id: uuid) {
+                return Array(course.pars.prefix(STANDARD_HOLES))
+            }
+            return Array(repeating: 4, count: STANDARD_HOLES)
+        }()
+
         lines.append(
             col("Hole", width: 4) + " " +
+            col("Par", width: 4) + " " +
+            col("Score", width: 5) + " " +
             col("FW", width: 4) + " " +
             col("GIR", width: 4) + " " +
             col("Putts", width: 5)
         )
-        
+
         for h in 0..<STANDARD_HOLES {
+            let parStr = col("\(pars[safe: h] ?? 4)", width: 4)
+
+            let score: String = {
+                guard h < r.scorePerHole.count else { return "-" }
+                guard let value = r.scorePerHole[h] else { return "-" }
+                return "\(value)"
+            }()
+
             let fw: String = {
                 guard h < r.fairwayHitPerHole.count else { return "-" }
                 guard let value = r.fairwayHitPerHole[h] else { return "-" }
                 return value ? "✓" : "-"
             }()
-            
+
             let gir: String = {
                 guard h < r.girPerHole.count else { return "-" }
                 guard let value = r.girPerHole[h] else { return "-" }
                 return value ? "✓" : "-"
             }()
-            
+
             let putts: String = {
                 guard h < r.puttsPerHole.count else { return "-" }
                 guard let value = r.puttsPerHole[h] else { return "-" }
                 return "\(value)"
             }()
-            
+
             lines.append(
                 col("\(h + 1)", width: 4) + " " +
+                parStr + " " +
+                col(score, width: 5) + " " +
                 col(fw, width: 4) + " " +
                 col(gir, width: 4) + " " +
                 col(putts, width: 5)
             )
         }
-        
+
         return lines.joined(separator: "\n")
     }
     

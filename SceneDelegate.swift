@@ -28,17 +28,76 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             ReviewPrompter.maybeRequest(in: windowScene)
         }
 
-        // Handle deep links on cold launch — storyboard isn't wired until next run loop turn
+        // Handle deep links / file opens on cold launch
         if let url = connectionOptions.urlContexts.first?.url {
             DispatchQueue.main.async { [weak self] in
-                self?.handleURL(url)
+                if url.isFileURL && url.pathExtension.lowercased() == "wolfmore" {
+                    self?.handleWolfmoreFile(url)
+                } else {
+                    self?.handleURL(url)
+                }
             }
         }
     }
 
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
-        handleURL(url)
+        if url.isFileURL && url.pathExtension.lowercased() == "wolfmore" {
+            handleWolfmoreFile(url)
+        } else {
+            handleURL(url)
+        }
+    }
+
+    // MARK: - Pass Game import
+
+    private func handleWolfmoreFile(_ url: URL) {
+        guard let data = try? Data(contentsOf: url),
+              var game = try? JSONDecoder().decode(GameData.self, from: data) else {
+            showFileError()
+            return
+        }
+
+        GameManager.shared.currentGame = game
+        GameManager.shared.normalizeCurrentIfNeeded()
+        GameManager.shared.saveCurrent()
+
+        let hole = (game.hole) + 1
+        let activePlayers = zip(game.playerNames, game.playerActivated)
+            .filter { !$0.0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.1 }
+            .count
+
+        guard let root = window?.rootViewController else { return }
+
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let roundNav = sb.instantiateViewController(withIdentifier: "RoundNav") as? UINavigationController else { return }
+
+        let presentGame = {
+            root.present(roundNav, animated: true) {
+                let ac = UIAlertController(
+                    title: "Game Received",
+                    message: "Continuing from hole \(hole) with \(activePlayers) player\(activePlayers == 1 ? "" : "s").",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "Let's Play", style: .default))
+                roundNav.present(ac, animated: true)
+            }
+        }
+
+        if root.presentedViewController != nil {
+            root.dismiss(animated: false, completion: presentGame)
+        } else {
+            presentGame()
+        }
+    }
+
+    private func showFileError() {
+        guard let root = window?.rootViewController else { return }
+        let ac = UIAlertController(title: "Couldn't Open Game",
+                                   message: "The .wolfmore file could not be read. Make sure it was exported from WolfMore.",
+                                   preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        root.present(ac, animated: true)
     }
 
     // MARK: - URL routing
