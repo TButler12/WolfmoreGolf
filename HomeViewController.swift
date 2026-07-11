@@ -452,6 +452,15 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         tagline.translatesAutoresizingMaskIntoConstraints = false
         section.addSubview(tagline)
 
+        let tournamentBtn = buildSecondaryButton(
+            title: "Stableford",
+            systemImage: "rosette",
+            tintColor: .systemPurple
+        )
+        tournamentBtn.addTarget(self, action: #selector(tournamentTapped), for: .touchUpInside)
+        section.addSubview(tournamentBtn)
+        tournamentButton = tournamentBtn
+
         let liveBtn = buildSecondaryButton(
             title: "Live & Connected",
             systemImage: "antenna.radiowaves.left.and.right",
@@ -474,7 +483,11 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             tagline.leadingAnchor.constraint(equalTo: section.leadingAnchor, constant: 4),
             tagline.trailingAnchor.constraint(equalTo: section.trailingAnchor, constant: -4),
 
-            liveBtn.topAnchor.constraint(equalTo: tagline.bottomAnchor, constant: 12),
+            tournamentBtn.topAnchor.constraint(equalTo: tagline.bottomAnchor, constant: 12),
+            tournamentBtn.leadingAnchor.constraint(equalTo: section.leadingAnchor),
+            tournamentBtn.trailingAnchor.constraint(equalTo: section.trailingAnchor),
+
+            liveBtn.topAnchor.constraint(equalTo: tournamentBtn.bottomAnchor, constant: 8),
             liveBtn.leadingAnchor.constraint(equalTo: section.leadingAnchor),
             liveBtn.trailingAnchor.constraint(equalTo: section.trailingAnchor),
             liveBtn.bottomAnchor.constraint(equalTo: section.bottomAnchor)
@@ -1362,7 +1375,10 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         } else {
             GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
         }
-        GameManager.shared.update { g in g.gameType = .tournament }
+        GameManager.shared.update { g in
+            g.gameType = .tournament
+            g.tournamentGameType = "stableford"
+        }
         presentManagePlayers()
     }
 

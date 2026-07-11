@@ -1,0 +1,737 @@
+import UIKit
+import MessageUI
+
+// MARK: - Summary Style
+
+enum SummaryStyle: Int, CaseIterable {
+    case sportscaster, lockerRoom, trashTalk, statistical, irish
+
+    var emoji: String {
+        switch self {
+        case .sportscaster: return "🎙️"
+        case .lockerRoom:   return "🍺"
+        case .trashTalk:    return "😂"
+        case .statistical:  return "📊"
+        case .irish:        return "☘️"
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .sportscaster: return "Sportscaster"
+        case .lockerRoom:   return "Locker Room"
+        case .trashTalk:    return "Trash Talk"
+        case .statistical:  return "Statistical"
+        case .irish:        return "Irish"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .sportscaster: return "Dramatic play-by-play, like an ESPN broadcast"
+        case .lockerRoom:   return "Casual & fun — how the guys actually talk after a round"
+        case .trashTalk:    return "Roast the loser, brutal but funny"
+        case .statistical:  return "Data-focused performance breakdown"
+        case .irish:        return "Warm storytelling over a pint at the 19th hole"
+        }
+    }
+
+    func systemPrompt(isStableford: Bool = false) -> String {
+        let stablefordNote = isStableford ? """
+            IMPORTANT: This is a Stableford round — individual points-based scoring. \
+            Focus on points earned per hole, standout individual performances, and the final leaderboard. \
+            Do NOT mention Wolf, Lone Wolf, Nassau, Skins, Hammers, or money — none of those apply here.\n
+            """ : ""
+        switch self {
+        case .sportscaster:
+            return stablefordNote + """
+            You are an ESPN golf analyst and play-by-play broadcaster delivering a round recap. \
+            Write dramatically, like you're on SportsCenter — vivid sports language, suspense, big moments. \
+            Call out Lone Wolf bids, massive Hammer holes, Skins streaks, clutch Nassau swings, and prox winners. \
+            Reference players by name. Keep it punchy and exciting — like a tight 3-minute highlight reel. \
+            Do NOT use generic filler. Every sentence should reference something that actually happened.
+            """
+        case .lockerRoom:
+            return stablefordNote + """
+            You're one of the golf group texting the post-round recap to the group chat. \
+            Keep it casual, funny, and exactly how golfers talk to each other after 18. \
+            Use golf slang naturally. Give everyone a hard time — celebrate the winner, \
+            rag on the guy who lost the most money. Don't be formal. Write it like a voice note \
+            you'd leave in the group chat on the drive home. Reference specific holes and decisions.
+            """
+        case .trashTalk:
+            return stablefordNote + """
+            You are a savage but funny roaster. Your job is to roast the biggest points loser \
+            and celebrate the winner. Be specific — reference their worst holes, missed point opportunities, \
+            and final standings. Make it something people will actually screenshot and send to the group. \
+            Funny, not mean-spirited. Think Comedy Central Roast energy. \
+            Always end with the winner getting genuine credit.
+            """
+        case .statistical:
+            return stablefordNote + """
+            You are a golf data analyst. Write a clean, data-forward performance breakdown. \
+            Use specific numbers — points per nine, best and worst holes, scoring average vs par, \
+            net score efficiency. Find the most interesting patterns and outliers. \
+            Professional tone, efficient sentences. Think ESPN Stats & Info meets Golf Digest analytics.
+            """
+        case .irish:
+            return stablefordNote + """
+            You are a wise old Irish golfer spinning yarns over a pint at the 19th hole. \
+            Use Irish expressions naturally and with character — 'Jaysus', 'your man', \
+            'fierce altogether', 'played a blinder', 'God love him', 'a pure howler', \
+            'not a bother on him', 'took the heart clean out of him'. \
+            Write with warmth and storytelling rhythm, like you're holding court at the bar. \
+            Reference specific moments as if you witnessed them personally. Keep it entertaining \
+            and full of personality — something people would actually read aloud to the group.
+            """
+        }
+    }
+}
+
+// MARK: - Game Context Builder
+
+private enum GameContextBuilder {
+
+    static func isStableford(_ g: GameData) -> Bool {
+        g.resolvedGameType == .tournament &&
+        (g.tournamentGameType == "stableford" || g.tournamentGameType == nil)
+    }
+
+    static func build(from g: GameData) -> String {
+        isStableford(g) ? buildStableford(from: g) : buildWolf(from: g)
+    }
+
+    // MARK: - Stableford context
+
+    private static func buildStableford(from g: GameData) -> String {
+        var lines: [String] = []
+        let courseName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let df = DateFormatter(); df.dateStyle = .long; df.timeStyle = .none
+
+        lines.append("GAME FORMAT: Stableford (individual points-based scoring)")
+        lines.append("COURSE: \(courseName.isEmpty ? "Unknown Course" : courseName)")
+        lines.append("DATE: \(df.string(from: Date()))")
+
+        let activePlayers: [(seat: Int, name: String, hc: Int)] = (0..<MAX_PLAYERS).compactMap { i in
+            guard i < g.playerNames.count, i < g.playerActivated.count, g.playerActivated[i] else { return nil }
+            let name = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { return nil }
+            return (i, name, i < g.hcPlayers.count ? g.hcPlayers[i] : 0)
+        }
+        let playerList = activePlayers.map { "\($0.name) (HC \($0.hc))" }.joined(separator: ", ")
+        lines.append("PLAYERS (\(activePlayers.count)): \(playerList)")
+        lines.append("")
+        lines.append("POINTS: Net eagle=4, Net birdie=3, Net par=2, Net bogey=1, Net double+=0")
+        lines.append("")
+
+        let hasFifthPlayer = activePlayers.count >= 5
+        let committed = g.holeCommitted
+        let gm = GameManager.shared
+
+        lines.append("HOLE-BY-HOLE:")
+        for hole in 0..<STANDARD_HOLES {
+            guard hole < committed.count, committed[hole] else { continue }
+            let par = g.courseParToPass[safe: hole] ?? 4
+            let si  = g.courseHCToPass[safe: hole]  ?? (hole + 1)
+
+            var holeParts: [String] = []
+            var allPts: [Int] = []
+            for (seat, name, hc) in activePlayers {
+                let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
+                let strokes = gm.absoluteStrokesGiven(playerHC: hc, strokeIndex: si)
+                let pts = gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si) ?? 0
+                allPts.append(pts)
+                let grossStr = gross.map(String.init) ?? "–"
+                let netStr   = gross.map { "\($0 - strokes)" } ?? "–"
+                holeParts.append("\(name): \(grossStr) gross / \(netStr) net / \(pts)pt")
+            }
+
+            var holeLine = "  Hole \(hole + 1) (Par \(par), SI \(si)): " + holeParts.joined(separator: " | ")
+            if !hasFifthPlayer {
+                let teamPts = allPts.sorted(by: >).prefix(3).reduce(0, +)
+                holeLine += " | TEAM TOP-3: \(teamPts)pt"
+            }
+            lines.append(holeLine)
+        }
+        lines.append("")
+
+        lines.append("STABLEFORD TOTALS:")
+        for (seat, name, _) in activePlayers {
+            let total = gm.totalStablefordPoints(playerIndex: seat, game: g)
+            lines.append("  \(name): \(total) pts")
+        }
+        if !hasFifthPlayer {
+            let teamTotal = gm.runningTeamStablefordTotal(game: g)
+            lines.append("  TEAM TOTAL: \(teamTotal) pts")
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    // MARK: - Wolf context (original)
+
+    private static func buildWolf(from g: GameData) -> String {
+        var lines: [String] = []
+
+        let courseName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let df = DateFormatter(); df.dateStyle = .long; df.timeStyle = .none
+        lines.append("COURSE: \(courseName.isEmpty ? "Unknown Course" : courseName)")
+        lines.append("DATE: \(df.string(from: Date()))")
+
+        let activePlayers: [(seat: Int, name: String)] = (0..<MAX_PLAYERS).compactMap { i in
+            guard i < g.playerNames.count, i < g.playerActivated.count,
+                  g.playerActivated[i] else { return nil }
+            let name = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { return nil }
+            return (i, name)
+        }
+        let playerList = activePlayers.map(\.name).joined(separator: ", ")
+        lines.append("PLAYERS (\(activePlayers.count)): \(playerList)")
+        lines.append("")
+
+        // Wolf hole-by-hole
+        lines.append("WOLF RESULTS:")
+        let pars = g.course.pars
+        let committed = g.holeCommitted
+        let hammers = g.hammerCountPerHole ?? Array(repeating: 0, count: STANDARD_HOLES)
+        let wolfPlayers = g.wolfPlayerPerHole ?? []
+        let wolfAlone = g.wolfWentAlonePerHole ?? Array(repeating: false, count: STANDARD_HOLES)
+        let wolfTeamWon = g.wolfTeamWonPerHole
+        let holeDollars = g.gameHoleDollarsArray
+
+        for hole in 0..<STANDARD_HOLES {
+            guard hole < committed.count, committed[hole] else { continue }
+            let par = hole < pars.count ? pars[hole] : 4
+            let dollars = hole < holeDollars.count ? holeDollars[hole] : 2.0
+            let hammerCount = hole < hammers.count ? hammers[hole] : 0
+
+            var wolfName = "?"
+            if hole < wolfPlayers.count, let ws = wolfPlayers[hole],
+               let player = activePlayers.first(where: { $0.seat == ws }) {
+                wolfName = player.name
+            }
+            let alone = hole < wolfAlone.count ? wolfAlone[hole] : false
+            let teamWon = hole < wolfTeamWon.count ? wolfTeamWon[hole] : false
+
+            var holeLine = "  Hole \(hole + 1) (Par \(par), $\(Int(dollars)))"
+            if hammerCount > 0 { holeLine += " [×\(hammerCount) hammers]" }
+            holeLine += ": Wolf=\(wolfName)\(alone ? " LONE" : "")"
+            holeLine += " → \(teamWon ? "Wolf team WON" : "Pack WON")"
+
+            // Scores & per-hole money
+            var moneyParts: [String] = []
+            for (seat, name) in activePlayers {
+                var score = "–"
+                if seat < g.scores.count {
+                    let row = g.scores[seat]
+                    if hole < row.count, let s = row[hole] { score = "\(s)" }
+                }
+                var money = ""
+                if seat < g.playerMoney.count {
+                    let m = g.playerMoney[seat]
+                    if hole < m.count {
+                        let v = m[hole]
+                        if v != 0 { money = " (\(v > 0 ? "+" : "")\(Int(v)))" }
+                    }
+                }
+                moneyParts.append("\(name):\(score)\(money)")
+            }
+            holeLine += " | " + moneyParts.joined(separator: ", ")
+            lines.append(holeLine)
+        }
+        lines.append("")
+
+        // Prox
+        let proxWinners = g.proxWinnerPerHole
+        var proxByPlayer: [Int: [Int]] = [:]
+        for (hole, winner) in proxWinners.enumerated() {
+            guard let w = winner else { continue }
+            proxByPlayer[w, default: []].append(hole + 1)
+        }
+        if !proxByPlayer.isEmpty {
+            lines.append("PROX WINNERS:")
+            for (seat, holes) in proxByPlayer.sorted(by: { $0.key < $1.key }) {
+                if let name = activePlayers.first(where: { $0.seat == seat })?.name {
+                    lines.append("  \(name): holes \(holes.map(String.init).joined(separator: ", "))")
+                }
+            }
+            lines.append("")
+        }
+
+        // Skins
+        if let skins = g.skinsState {
+            let skinResults = skins.resultsByHole.filter { !$0.winningPlayerIndexes.isEmpty }
+            if !skinResults.isEmpty {
+                lines.append("SKINS:")
+                for result in skinResults {
+                    let winners = result.winningPlayerIndexes.compactMap { idx in
+                        activePlayers.first(where: { $0.seat == idx })?.name
+                    }
+                    if !winners.isEmpty {
+                        lines.append("  Hole \(result.holeIndex + 1): \(winners.joined(separator: "/")) won \(result.awardedSkinCount) skin(s) ($\(Int(skins.settings.skinValue * Double(result.awardedSkinCount))))")
+                    }
+                }
+                lines.append("")
+                lines.append("Skins totals:")
+                for (seat, name) in activePlayers {
+                    let skinsWon = seat < skins.skinsWonByPlayer.count ? skins.skinsWonByPlayer[seat] : 0
+                    let moneyWon = seat < skins.moneyWonByPlayer.count ? skins.moneyWonByPlayer[seat] : 0
+                    if skinsWon > 0 { lines.append("  \(name): \(skinsWon) skin(s), +$\(Int(moneyWon))") }
+                }
+                lines.append("")
+            }
+        }
+
+        // Nassau
+        if let nassau = g.nassauState, nassau.settings.isEnabled {
+            let allMatches = nassau.oneVsOneMatches + nassau.twoVsTwoMatches
+            if !allMatches.isEmpty {
+                lines.append("NASSAU MATCHES:")
+                for match in allMatches {
+                    lines.append("  \(match.summaryLine(playerNames: g.playerNames))")
+                }
+                lines.append("")
+            }
+        }
+
+        // Money totals
+        lines.append("FINAL MONEY:")
+        var totalsByPlayer: [(name: String, total: Double)] = []
+        for (seat, name) in activePlayers {
+            var total = 0.0
+            if seat < g.playerMoney.count {
+                total = g.playerMoney[seat].prefix(STANDARD_HOLES).reduce(0, +)
+            }
+            totalsByPlayer.append((name, total))
+        }
+        for (name, total) in totalsByPlayer.sorted(by: { $0.total > $1.total }) {
+            let sign = total >= 0 ? "+" : ""
+            lines.append("  \(name): \(sign)$\(Int(total.rounded()))")
+        }
+
+        return lines.joined(separator: "\n")
+    }
+}
+
+// MARK: - NassauMatch summary helper
+
+private extension NassauMatch {
+    func summaryLine(playerNames: [String]) -> String {
+        func name(_ idx: Int) -> String {
+            guard idx >= 0, idx < playerNames.count else { return "Player \(idx + 1)" }
+            let n = playerNames[idx].trimmingCharacters(in: .whitespacesAndNewlines)
+            return n.isEmpty ? "Player \(idx + 1)" : n
+        }
+        let side1 = team1PlayerIndexes.map(name).joined(separator: "/")
+        let side2 = team2PlayerIndexes.map(name).joined(separator: "/")
+        return "\(side1) vs \(side2) ($\(Int(stake))/side)"
+    }
+}
+
+// MARK: - AISummaryViewController
+
+final class AISummaryViewController: UIViewController, MFMessageComposeViewControllerDelegate {
+
+    private enum State { case picker, loading, result(String, SummaryStyle) }
+    private var state: State = .picker { didSet { applyState() } }
+
+    // Picker
+    private let tableView = UITableView(frame: .zero, style: .insetGrouped)
+    private let noteField = UITextField()
+
+    // Loading
+    private let spinner   = UIActivityIndicatorView(style: .large)
+    private let loadLabel = UILabel()
+
+    // Result
+    private let scrollView  = UIScrollView()
+    private let summaryLabel = UILabel()
+    private let shareGroupBtn  = UIButton(type: .system)
+    private let shareOrgBtn    = UIButton(type: .system)
+    private let bottomStack    = UIStackView()
+
+    // MARK: - Lifecycle
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        title = "AI Summary"
+        view.backgroundColor = .systemGroupedBackground
+
+        setupPicker()
+        setupLoading()
+        setupResult()
+        applyState()
+    }
+
+    // MARK: - Setup
+
+    private func setupPicker() {
+        tableView.dataSource = self
+        tableView.delegate   = self
+        tableView.register(StyleCell.self, forCellReuseIdentifier: StyleCell.reuseID)
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "NoteCell")
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.backgroundColor = .systemGroupedBackground
+        view.addSubview(tableView)
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+    }
+
+    private func setupLoading() {
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        loadLabel.translatesAutoresizingMaskIntoConstraints = false
+        loadLabel.text = "Generating your round recap…"
+        loadLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        loadLabel.textColor = .secondaryLabel
+        loadLabel.textAlignment = .center
+        view.addSubview(spinner)
+        view.addSubview(loadLabel)
+        NSLayoutConstraint.activate([
+            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
+            loadLabel.topAnchor.constraint(equalTo: spinner.bottomAnchor, constant: 16),
+            loadLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+        ])
+    }
+
+    private func setupResult() {
+        summaryLabel.numberOfLines = 0
+        summaryLabel.font = .systemFont(ofSize: 16)
+        summaryLabel.textColor = .label
+        summaryLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.alwaysBounceVertical = true
+        scrollView.addSubview(summaryLabel)
+        view.addSubview(scrollView)
+
+        // Share buttons
+        configureShareButton(shareGroupBtn, title: "Share with Group", isPrimary: true)
+        configureShareButton(shareOrgBtn,   title: "Copy Organizer",   isPrimary: false)
+        shareGroupBtn.addTarget(self, action: #selector(shareGroupTapped), for: .touchUpInside)
+        shareOrgBtn.addTarget(self, action: #selector(shareOrgTapped),   for: .touchUpInside)
+
+        bottomStack.axis = .vertical
+        bottomStack.spacing = 10
+        bottomStack.translatesAutoresizingMaskIntoConstraints = false
+        bottomStack.addArrangedSubview(shareGroupBtn)
+        bottomStack.addArrangedSubview(shareOrgBtn)
+        view.addSubview(bottomStack)
+
+        let guide = view.safeAreaLayoutGuide
+        NSLayoutConstraint.activate([
+            bottomStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            bottomStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            bottomStack.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -14),
+            shareGroupBtn.heightAnchor.constraint(equalToConstant: 50),
+            shareOrgBtn.heightAnchor.constraint(equalToConstant: 50),
+
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: bottomStack.topAnchor, constant: -12),
+
+            summaryLabel.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 16),
+            summaryLabel.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 16),
+            summaryLabel.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -16),
+            summaryLabel.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -16),
+            summaryLabel.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -32),
+        ])
+    }
+
+    private func configureShareButton(_ btn: UIButton, title: String, isPrimary: Bool) {
+        btn.setTitle(title, for: .normal)
+        btn.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        btn.layer.cornerRadius = 12
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        if isPrimary {
+            btn.backgroundColor = UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1)
+            btn.setTitleColor(.white, for: .normal)
+        } else {
+            btn.backgroundColor = .secondarySystemBackground
+            btn.setTitleColor(UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1), for: .normal)
+            btn.layer.borderWidth = 1.5
+            btn.layer.borderColor = UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1).cgColor
+        }
+    }
+
+    // MARK: - State
+
+    private func applyState() {
+        switch state {
+        case .picker:
+            tableView.isHidden   = false
+            spinner.isHidden     = true
+            spinner.stopAnimating()
+            loadLabel.isHidden   = true
+            scrollView.isHidden  = true
+            bottomStack.isHidden = true
+            navigationItem.rightBarButtonItem = nil
+
+        case .loading:
+            tableView.isHidden   = true
+            spinner.isHidden     = false
+            spinner.startAnimating()
+            loadLabel.isHidden   = false
+            scrollView.isHidden  = true
+            bottomStack.isHidden = true
+            navigationItem.rightBarButtonItem = nil
+
+        case .result(let text, _):
+            tableView.isHidden   = true
+            spinner.isHidden     = true
+            spinner.stopAnimating()
+            loadLabel.isHidden   = true
+            scrollView.isHidden  = false
+            bottomStack.isHidden = false
+            summaryLabel.text    = text
+            navigationItem.rightBarButtonItem = UIBarButtonItem(
+                title: "Try Again", style: .plain,
+                target: self, action: #selector(tryAgainTapped)
+            )
+        }
+    }
+
+    // MARK: - Generation
+
+    private func generate(style: SummaryStyle) {
+        guard let game = GameManager.shared.currentGame else { return }
+        noteField.resignFirstResponder()
+        state = .loading
+
+        var context = GameContextBuilder.build(from: game)
+        let note = noteField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if !note.isEmpty {
+            context += "\n\nAdditional context from the scorer: \(note)"
+        }
+        let systemPrompt = style.systemPrompt(isStableford: GameContextBuilder.isStableford(game))
+
+        Task {
+            do {
+                let text = try await ClaudeService.generate(
+                    systemPrompt: systemPrompt,
+                    userMessage: "Here is the golf round data. Write your recap:\n\n\(context)"
+                )
+                await MainActor.run { self.state = .result(text, style) }
+            } catch {
+                await MainActor.run {
+                    self.state = .picker
+                    self.showError(error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    // MARK: - Actions
+
+    @objc private func tryAgainTapped() {
+        state = .picker
+    }
+
+    @objc private func shareGroupTapped() {
+        guard case .result(let text, _) = state else { return }
+        let vc = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        if let pop = vc.popoverPresentationController {
+            pop.sourceView = shareGroupBtn; pop.sourceRect = shareGroupBtn.bounds
+        }
+        present(vc, animated: true)
+    }
+
+    @objc private func shareOrgTapped() {
+        guard case .result(let text, _) = state else { return }
+        let stripped = stripMoney(from: text)
+
+        let orgName  = ProfileStore.organizerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let orgPhone = ProfileStore.organizerPhone.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if orgPhone.isEmpty {
+            promptSetOrganizer { [weak self] in self?.shareOrgTapped() }
+            return
+        }
+
+        if MFMessageComposeViewController.canSendText() {
+            let mc = MFMessageComposeViewController()
+            mc.messageComposeDelegate = self
+            mc.recipients = [orgPhone]
+            mc.body = stripped
+            present(mc, animated: true)
+        } else {
+            let shareText = orgName.isEmpty ? stripped : "For \(orgName):\n\(stripped)"
+            let vc = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
+            if let pop = vc.popoverPresentationController {
+                pop.sourceView = shareOrgBtn; pop.sourceRect = shareOrgBtn.bounds
+            }
+            present(vc, animated: true)
+        }
+    }
+
+    private func promptSetOrganizer(completion: (() -> Void)? = nil) {
+        let ac = UIAlertController(
+            title: "Set Organizer Contact",
+            message: "Save a name and phone number for your group organizer. Used for 'Copy Organizer' shares.",
+            preferredStyle: .alert
+        )
+        ac.addTextField { tf in
+            tf.placeholder = "Name (e.g. Pete)"
+            tf.autocapitalizationType = .words
+            tf.text = ProfileStore.organizerName
+        }
+        ac.addTextField { tf in
+            tf.placeholder = "Phone number"
+            tf.keyboardType = .phonePad
+            tf.text = ProfileStore.organizerPhone
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak ac] _ in
+            let name  = ac?.textFields?[0].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let phone = ac?.textFields?[1].text?.filter(\.isNumber) ?? ""
+            ProfileStore.organizerName  = name
+            ProfileStore.organizerPhone = phone
+            completion?()
+        })
+        present(ac, animated: true)
+    }
+
+    // MFMessageComposeViewControllerDelegate
+    func messageComposeViewController(_ controller: MFMessageComposeViewController,
+                                      didFinishWith result: MessageComposeResult) {
+        controller.dismiss(animated: true)
+    }
+
+    // MARK: - Helpers
+
+    private func stripMoney(from text: String) -> String {
+        // Remove dollar amounts ($12, +$32, -$8, $1.50, etc.)
+        var result = text
+        let pattern = "[+-]?\\$\\d+(\\.\\d{1,2})?"
+        if let regex = try? NSRegularExpression(pattern: pattern) {
+            let range = NSRange(result.startIndex..., in: result)
+            result = regex.stringByReplacingMatches(in: result, range: range, withTemplate: "")
+        }
+        // Collapse double spaces
+        while result.contains("  ") { result = result.replacingOccurrences(of: "  ", with: " ") }
+        return result.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func showError(_ message: String) {
+        let ac = UIAlertController(title: "Couldn't Generate Summary",
+                                   message: message, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+}
+
+// MARK: - UITableViewDataSource / Delegate
+
+extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
+
+    func numberOfSections(in tableView: UITableView) -> Int { 2 }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        section == 0 ? 1 : SummaryStyle.allCases.count
+    }
+
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        section == 0 ? "Add a personal note (optional)" : "Choose a voice for your round recap"
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        if indexPath.section == 0 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath)
+            if noteField.superview == nil {
+                noteField.placeholder = "Any moments or inside jokes to include?"
+                noteField.font = .systemFont(ofSize: 15)
+                noteField.returnKeyType = .done
+                noteField.delegate = self
+                noteField.translatesAutoresizingMaskIntoConstraints = false
+                cell.contentView.addSubview(noteField)
+                NSLayoutConstraint.activate([
+                    noteField.leadingAnchor.constraint(equalTo: cell.contentView.leadingAnchor, constant: 16),
+                    noteField.trailingAnchor.constraint(equalTo: cell.contentView.trailingAnchor, constant: -16),
+                    noteField.topAnchor.constraint(equalTo: cell.contentView.topAnchor),
+                    noteField.bottomAnchor.constraint(equalTo: cell.contentView.bottomAnchor),
+                ])
+            }
+            cell.selectionStyle = .none
+            return cell
+        }
+        let style = SummaryStyle.allCases[indexPath.row]
+        let cell = tableView.dequeueReusableCell(withIdentifier: StyleCell.reuseID, for: indexPath) as! StyleCell
+        cell.configure(style: style)
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        indexPath.section == 0 ? 50 : 72
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        guard indexPath.section == 1 else { return }
+        tableView.deselectRow(at: indexPath, animated: true)
+        let style = SummaryStyle.allCases[indexPath.row]
+        generate(style: style)
+    }
+}
+
+// MARK: - UITextFieldDelegate
+
+extension AISummaryViewController: UITextFieldDelegate {
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+}
+
+// MARK: - StyleCell
+
+private final class StyleCell: UITableViewCell {
+    static let reuseID = "StyleCell"
+
+    private let emojiLabel    = UILabel()
+    private let titleLabel    = UILabel()
+    private let subtitleLabel = UILabel()
+
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
+        accessoryType = .disclosureIndicator
+
+        emojiLabel.font = .systemFont(ofSize: 28)
+        emojiLabel.textAlignment = .center
+        emojiLabel.translatesAutoresizingMaskIntoConstraints = false
+        emojiLabel.widthAnchor.constraint(equalToConstant: 44).isActive = true
+
+        titleLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        subtitleLabel.font = .systemFont(ofSize: 13)
+        subtitleLabel.textColor = .secondaryLabel
+        subtitleLabel.numberOfLines = 2
+
+        let textStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
+        textStack.axis = .vertical
+        textStack.spacing = 3
+
+        let row = UIStackView(arrangedSubviews: [emojiLabel, textStack])
+        row.axis = .horizontal
+        row.spacing = 10
+        row.alignment = .center
+        row.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(row)
+        NSLayoutConstraint.activate([
+            row.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            row.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -8),
+            row.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            row.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
+        ])
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    func configure(style: SummaryStyle) {
+        emojiLabel.text    = style.emoji
+        titleLabel.text    = style.title
+        subtitleLabel.text = style.subtitle
+    }
+}

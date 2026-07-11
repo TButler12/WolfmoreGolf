@@ -1015,7 +1015,7 @@ let CASTLEGREGORY_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",   yardage: 2330, rating: 34.0)
 ]
 
-// MARK: Castlecomer Golf Club — Castlecomer, Co. Kilkenny, Ireland
+// MARK: Castlecomer Golf Club — Castlecomer, Co. Kilkenny, Ireland (Pat Ruddy)
 private let CASTLECOMER_ID = UUID(uuidString: "D101A001-0000-0000-0000-00000000003B")!
 
 let CASTLECOMER_PARS: [Int] = [
@@ -3219,6 +3219,31 @@ let CONWAY_FARMS_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold",      yardage: 5146, rating: nil,  slope: nil)
 ]
 
+// MARK: - River Forest Country Club — Elmhurst, IL
+// Par 72 | Est. 1926 | Architect: Frank P. McDonald / A.W. Tillinghast (1935)
+// Type: Private
+
+private let RIVER_FOREST_CC_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1004")!
+
+let RIVER_FOREST_CC_PARS: [Int] = [
+    4,4,3,5,4,4,3,5,4,
+    4,3,4,5,4,4,3,5,4
+]
+
+let RIVER_FOREST_CC_HCS: [Int] = [
+    13,7,17,3,5,9,15,1,11,
+    10,18,4,2,6,12,16,8,14
+]
+
+let RIVER_FOREST_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",      yardage: 6831, rating: 74.0, slope: 139),
+    TeeInfo(teeName: "Member",    yardage: 6657, rating: 73.2, slope: 137),
+    TeeInfo(teeName: "Gold",      yardage: 6481, rating: 72.4, slope: 135),
+    TeeInfo(teeName: "Member II", yardage: 6245, rating: 71.2, slope: 133),
+    TeeInfo(teeName: "White",     yardage: 6082, rating: 70.5, slope: 131),
+    TeeInfo(teeName: "Red",       yardage: 5692, rating: 74.0, slope: 133)
+]
+
 // MARK: The Links at Spanish Bay — Pebble Beach, CA
 private let SPANISH_BAY_ID = UUID(uuidString: "F2010001-0000-0000-0000-000000000004")!
 
@@ -3306,6 +3331,29 @@ private let WARREN_GC_ND_ID = UUID(uuidString: "C1B0A9E8-F2D3-4C4B-A5D6-E7F8A9B0
 let WARREN_GC_ND_PARS: [Int] = [4,4,4,3,5,4,4,4,3, 5,3,4,4,3,4,4,5,4]
 let WARREN_GC_ND_HCS: [Int]  = [11,3,9,17,1,5,13,7,15, 4,14,6,10,18,16,12,2,8]
 let WARREN_GC_ND_TEES: [TeeInfo] = [TeeInfo(teeName: "Championship", yardage: 7020, rating: 74.6, slope: 135)]
+
+// MARK: - Harrison Lake Country Club — Columbus, IN
+// Par 71 | Architect: Gary Kern | Private
+// Official rating/slope not published on club website
+
+private let HARRISON_LAKE_CC_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1003")!
+
+let HARRISON_LAKE_CC_PARS: [Int] = [
+    5,3,4,4,4,3,5,3,4,
+    4,5,4,3,4,4,4,3,5
+]
+
+let HARRISON_LAKE_CC_HCS: [Int] = [
+    9,3,1,5,7,15,13,13,17,
+    2,6,4,16,10,18,14,12,8
+]
+
+let HARRISON_LAKE_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Harrison",   yardage: 6503, rating: nil, slope: nil),
+    TeeInfo(teeName: "Grandview",  yardage: 6117, rating: nil, slope: nil),
+    TeeInfo(teeName: "Sweetwater", yardage: 5627, rating: nil, slope: nil),
+    TeeInfo(teeName: "Tipton",     yardage: 4753, rating: nil, slope: nil)
+]
 
 // =======================================================
 // MARK: - Built-in: Silvies Valley Resort & Links – Craddock
@@ -3718,6 +3766,64 @@ let PRAIRIE_CLUB_DUNES_HCS: [Int] = [
     5,7,9,17,13,11,15,1,3,
     4,18,10,8,16,12,14,6,2
 ]
+
+let PRAIRIE_CLUB_DUNES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 7562, rating: 75.5, slope: 133),
+    TeeInfo(teeName: "Blue",       yardage: 6981, rating: 72.6, slope: 127),
+    TeeInfo(teeName: "Blue/White", yardage: 6663, rating: 71.0, slope: 123),
+    TeeInfo(teeName: "White",      yardage: 6184, rating: 68.9, slope: 116),
+    TeeInfo(teeName: "White/Green",yardage: 5905, rating: 67.7, slope: 113),
+    TeeInfo(teeName: "Green",      yardage: 5260, rating: 69.3, slope: 116)
+]
+
+// MARK: - The Prairie Club - Pines Course — Valentine, NE
+// Par 73 | Architect: Graham Marsh | Resort
+
+private let PRAIRIE_CLUB_PINES_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1006")!
+
+let PRAIRIE_CLUB_PINES_PARS: [Int] = [
+    4,5,3,4,4,3,5,4,4,
+    3,5,4,4,4,5,4,3,5
+]
+
+let PRAIRIE_CLUB_PINES_HCS: [Int] = [
+    3,7,17,5,11,13,9,1,15,
+    16,6,2,10,18,12,4,14,8
+]
+
+let PRAIRIE_CLUB_PINES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 7385, rating: 74.6, slope: 129),
+    TeeInfo(teeName: "Blue",       yardage: 6792, rating: 71.9, slope: 123),
+    TeeInfo(teeName: "Blue/White", yardage: 6386, rating: 69.8, slope: 115),
+    TeeInfo(teeName: "White",      yardage: 6032, rating: 68.4, slope: 111),
+    TeeInfo(teeName: "White/Green",yardage: 5588, rating: 66.1, slope: 106),
+    TeeInfo(teeName: "Green",      yardage: 5293, rating: 69.7, slope: 116)
+]
+
+// MARK: - Rustic Canyon Golf Course — Moorpark, CA
+// Par 71 | Daily-Fee | Architects: Gil Hanse, Geoff Shackelford & Jim Wagner (2002)
+// Note: par/HCP derived from yardages; scorecard did not display those rows
+
+private let RUSTIC_CANYON_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1007")!
+
+let RUSTIC_CANYON_PARS: [Int] = [
+    5,4,4,3,5,3,4,3,4,
+    5,4,4,5,4,3,4,3,4
+]
+
+let RUSTIC_CANYON_HCS: [Int] = [
+    5,8,13,16,3,14,11,18,4,
+    2,10,12,1,6,17,7,15,9
+]
+
+let RUSTIC_CANYON_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7044, rating: 73.9, slope: 135),
+    TeeInfo(teeName: "Blue",  yardage: 6634, rating: 72.0, slope: 130),
+    TeeInfo(teeName: "Hanse", yardage: 6441, rating: 71.1, slope: 128),
+    TeeInfo(teeName: "White", yardage: 6049, rating: 69.3, slope: 124),
+    TeeInfo(teeName: "Red",   yardage: 5275, rating: 70.5, slope: 120)
+]
+
 // MARK: - The Loop - Black Course
 
 private let LOOP_BLACK_ID = UUID(uuidString: "A1F0C7D2-3C4A-4D69-9F12-100000000003")!
@@ -6903,6 +7009,25 @@ let TRUMP_NATIONAL_HUDSON_VALLEY_TEES: [TeeInfo] = [
     )
 ]
 
+// MARK: - Wildhorse Golf Course — Davis, CA
+// Par 72 | Daily-Fee | Architect: Jeffrey Brauer
+
+private let WILDHORSE_GC_DAVIS_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1005")!
+
+let WILDHORSE_GC_DAVIS_PARS: [Int] = [
+    4,4,4,3,5,3,5,4,4,
+    4,4,3,5,3,4,4,5,4
+]
+
+let WILDHORSE_GC_DAVIS_HCS: [Int] = [
+    9,15,1,7,3,17,11,5,13,
+    18,16,10,8,14,4,12,6,2
+]
+
+let WILDHORSE_GC_DAVIS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Red", yardage: 6793, rating: 72.8, slope: 134)
+]
+
 private let TRUMP_NATIONAL_LOS_ANGELES_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000207")!
 
 let TRUMP_NATIONAL_LOS_ANGELES_PARS: [Int] = [
@@ -7901,6 +8026,26 @@ let AMERICAN_DUNES_TEES: [TeeInfo] = [
         slope: 116
     )
 ]
+// MARK: - Lost Dunes Golf Club — Bridgman, MI
+// Par 71 | 6928 yds | Rating 73.9 | Slope 140
+// Type: Private | Architect: Tom Doak
+
+private let LOST_DUNES_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1002")!
+
+let LOST_DUNES_PARS: [Int] = [
+    4,4,3,5,3,4,4,5,3,
+    5,4,4,3,4,5,3,4,4
+]
+
+let LOST_DUNES_HCS: [Int] = [
+    13,5,17,9,11,3,7,1,15,
+    10,4,12,18,14,6,16,2,8
+]
+
+let LOST_DUNES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6928, rating: 73.9, slope: 140)
+]
+
 private let GOLDEN_HORSESHOE_GOLD_ID = UUID(uuidString: "D34B7E90-2C51-4C98-8B42-3D9E8A6F2002")!
 
 let GOLDEN_HORSESHOE_GOLD_PARS: [Int] = [
@@ -10407,6 +10552,22 @@ private enum BuiltIns {
           address: "2616 S York Road, Oak Brook, IL 60523"),
 
         c(
+            RIVER_FOREST_CC_ID,
+            "River Forest Country Club",
+            RIVER_FOREST_CC_PARS,
+            RIVER_FOREST_CC_HCS,
+            RIVER_FOREST_CC_TEES,
+            country: "USA",
+            state: "IL",
+            region: "Elmhurst",
+            architect: "Frank P. McDonald / A.W. Tillinghast",
+            type: "Private",
+            phone: "(630) 279-5444",
+            website: "https://www.riverforestcc.org",
+            address: "15 W 468 Grand Avenue, Elmhurst, IL 60126"
+        ),
+
+        c(
             MEDINAH_CC_3_ID,
             "Medinah CC (Course #3)",
             MEDINAH_CC_3_PARS,
@@ -12101,6 +12262,7 @@ private enum BuiltIns {
             country: "Ireland",
             state: nil,
             region: "Kilkenny",
+            architect: "Pat Ruddy",
             type: "Public",
             phone: "+353 56 444 1139",
             website: "https://www.castlecomergolf.ie",
@@ -12593,6 +12755,21 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
+            HARRISON_LAKE_CC_ID,
+            "Harrison Lake Country Club",
+            HARRISON_LAKE_CC_PARS,
+            HARRISON_LAKE_CC_HCS,
+            HARRISON_LAKE_CC_TEES,
+            country: "USA",
+            state: "IN",
+            region: "Columbus",
+            architect: "Gary Kern",
+            type: "Private",
+            phone: "(812) 342-4457",
+            website: "https://www.harrisonlakeclub.com",
+            address: "588 S. Country Club Rd, Columbus, IN 47201"
+        ),
+        c(
             SILVIES_CRADDOCK_ID,
             "Silvies Valley Resort & Links – Craddock",
             SILVIES_CRADDOCK_PARS,
@@ -12838,13 +13015,28 @@ private enum BuiltIns {
             "The Prairie Club - Dunes Course",
             PRAIRIE_CLUB_DUNES_PARS,
             PRAIRIE_CLUB_DUNES_HCS,
-            nil,
+            PRAIRIE_CLUB_DUNES_TEES,
             country: "USA",
             state: "NE",
             architect: "Tom Lehman / Chris Brands",
             type: "Resort",
             phone: "(888) 402-1101",
             website: "https://theprairieclub.com/golf/dunes-course/",
+            address: "88897 State Hwy. 97, Valentine, NE 69201",
+            isWolfApproved: true
+        ),
+        c(
+            PRAIRIE_CLUB_PINES_ID,
+            "The Prairie Club - Pines Course",
+            PRAIRIE_CLUB_PINES_PARS,
+            PRAIRIE_CLUB_PINES_HCS,
+            PRAIRIE_CLUB_PINES_TEES,
+            country: "USA",
+            state: "NE",
+            architect: "Graham Marsh",
+            type: "Resort",
+            phone: "(888) 402-1101",
+            website: "https://theprairieclub.com/golf/pines-course/",
             address: "88897 State Hwy. 97, Valentine, NE 69201",
             isWolfApproved: true
         ),
@@ -13979,7 +14171,7 @@ private enum BuiltIns {
             ARROWHEAD_SOUTH_WEST_TEES,
             country: "USA",
             state: "IL",
-            architect: "Not listed",
+            architect: "Ken Killian / Greg Martin (2012)",
             type: "Public",
             phone: "(630) 653-5800",
             website: "https://arrowheadgolfclub.org",
@@ -13996,7 +14188,7 @@ private enum BuiltIns {
             ARROWHEAD_WEST_EAST_TEES,
             country: "USA",
             state: "IL",
-            architect: "Not listed",
+            architect: "Ken Killian / Greg Martin (2012)",
             type: "Public",
             phone: "(630) 653-5800",
             website: "https://arrowheadgolfclub.org",
@@ -15695,6 +15887,34 @@ private enum BuiltIns {
             promo: nil
         ),
         c(
+            WILDHORSE_GC_DAVIS_ID,
+            "Wildhorse Golf Course",
+            WILDHORSE_GC_DAVIS_PARS,
+            WILDHORSE_GC_DAVIS_HCS,
+            WILDHORSE_GC_DAVIS_TEES,
+            country: "USA",
+            state: "CA",
+            region: "Sacramento",
+            architect: "Jeffrey Brauer",
+            type: "Daily-Fee"
+        ),
+        c(
+            RUSTIC_CANYON_ID,
+            "Rustic Canyon Golf Course",
+            RUSTIC_CANYON_PARS,
+            RUSTIC_CANYON_HCS,
+            RUSTIC_CANYON_TEES,
+            country: "USA",
+            state: "CA",
+            region: "SoCal",
+            architect: "Gil Hanse / Geoff Shackelford / Jim Wagner",
+            type: "Daily-Fee",
+            phone: "(805) 530-0221",
+            website: "https://www.rusticcanyongolfcourse.com",
+            address: "15100 Happy Camp Canyon Rd, Moorpark, CA 93021",
+            isWolfApproved: true
+        ),
+        c(
             TRUMP_NATIONAL_CHARLOTTE_ID,
             "Trump National Golf Club (Charlotte)",
             TRUMP_NATIONAL_CHARLOTTE_PARS,
@@ -16285,6 +16505,23 @@ private enum BuiltIns {
             phone: "(616) 842-4040",
             website: "https://americandunesgolfclub.com/",
             address: "17000 Lincoln Street, Grand Haven, MI 49417",
+            isWolfApproved: true,
+            resortBrand: nil,
+            promo: nil
+        ),
+        c(
+            LOST_DUNES_ID,
+            "Lost Dunes Golf Club",
+            LOST_DUNES_PARS,
+            LOST_DUNES_HCS,
+            LOST_DUNES_TEES,
+            country: "USA",
+            state: "MI",
+            architect: "Tom Doak",
+            type: "Private",
+            phone: "(269) 465-9300",
+            website: "https://www.lostdunes.com",
+            address: "9300 Red Arrow Highway, Bridgman, MI 49106",
             isWolfApproved: true,
             resortBrand: nil,
             promo: nil

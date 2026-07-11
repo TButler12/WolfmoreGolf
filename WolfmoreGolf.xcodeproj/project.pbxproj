@@ -18,10 +18,15 @@
 		A4B5C6D7E8F90A2131526B7C /* UIViewController+ActionSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4B5C6D7E8F90A2131526B7D /* UIViewController+ActionSheet.swift */; };
 		A6B7C8D9EA0B1C2D3E4F5067 /* TournamentLeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */; };
 		A7B8C9D0EB1C2D3E4F506179 /* GroupDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */; };
+		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
+		AP01B2C3D4E5F607182930A8 /* ArchitectProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */; };
+		AL01B2C3D4E5F607182930AA /* ArchitectLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */; };
 		B66C2E5033A842F5A84999BE /* PastGameDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70002 /* LiveNassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70004 /* NassauScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70006 /* WolfSpectatorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */; };
+		CC01B2C3D4E5F607182930A6 /* ClaudeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */; };
+		CS01B2C3D4E5F607182930A4 /* ClaudeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */; };
 		D64B14586458493690DECE2E /* TournamentSummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132A36A89650472DA654B343 /* TournamentSummaryViewController.swift */; };
 		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
 		DV1C2D3E4F506071829304AA /* DeviceID.swift in Sources */ = {isa = PBXBuildFile; fileRef = DV1C2D3E4F506071829304AB /* DeviceID.swift */; };
@@ -128,10 +133,15 @@
 		A4B5C6D7E8F90A2131526B7D /* UIViewController+ActionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIViewController+ActionSheet.swift"; sourceTree = "<group>"; };
 		A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentLeaderboardViewController.swift; sourceTree = "<group>"; };
 		A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailViewController.swift; sourceTree = "<group>"; };
+		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
+		AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectProfileViewController.swift; sourceTree = "<group>"; };
+		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
 		B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardRenderer.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNassauViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauScorecardViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfSpectatorViewController.swift; sourceTree = "<group>"; };
+		CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeConfig.swift; sourceTree = "<group>"; };
+		CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeService.swift; sourceTree = "<group>"; };
 		DV1C2D3E4F506071829304AB /* DeviceID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceID.swift; sourceTree = "<group>"; };
 		EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameManager+Tournament.swift"; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
@@ -271,6 +281,11 @@
 				LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */,
 				DV1C2D3E4F506071829304AB /* DeviceID.swift */,
 				RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */,
+				AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */,
+				AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */,
+				AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */,
+				CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */,
+				CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */,
 				A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */,
 				A4B5C6D7E8F90A2131526B7D /* UIViewController+ActionSheet.swift */,
 				A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */,
@@ -543,6 +558,11 @@
 				C4D5E6F7A8B9C4D5E6F70006 /* WolfSpectatorViewController.swift in Sources */,
 				DV1C2D3E4F506071829304AA /* DeviceID.swift in Sources */,
 				RS1A2B3C4D5E6F70819203AA /* ResetSnapshotStore.swift in Sources */,
+				AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */,
+				AP01B2C3D4E5F607182930A8 /* ArchitectProfileViewController.swift in Sources */,
+				AL01B2C3D4E5F607182930AA /* ArchitectLibrary.swift in Sources */,
+				CS01B2C3D4E5F607182930A4 /* ClaudeService.swift in Sources */,
+				CC01B2C3D4E5F607182930A6 /* ClaudeConfig.swift in Sources */,
 				F6D5417C2F7498740020588F /* TextGroupStore.swift in Sources */,
 				F639606D2F60D62500EC0C30 /* GameModels.swift in Sources */,
 				F639606E2F60D62500EC0C30 /* GameStatsViewController.swift in Sources */,
@@ -620,7 +640,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 45;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -635,7 +655,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.4.0;
+				MARKETING_VERSION = 2.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -661,7 +681,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 44;
+				CURRENT_PROJECT_VERSION = 45;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -676,7 +696,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.4.0;
+				MARKETING_VERSION = 2.5.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

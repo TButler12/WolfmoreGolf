@@ -63,4 +63,16 @@ enum ProfileStore {
         get { UserDefaults.standard.bool(forKey: didPromptHomeCourseKey) }
         set { UserDefaults.standard.set(newValue, forKey: didPromptHomeCourseKey) }
     }
+
+    // MARK: - Organizer Contact (used by AI Summary "Copy Organizer" share)
+
+    static var organizerName: String {
+        get { UserDefaults.standard.string(forKey: "profile.organizerName") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "profile.organizerName") }
+    }
+
+    static var organizerPhone: String {
+        get { UserDefaults.standard.string(forKey: "profile.organizerPhone") ?? "" }
+        set { UserDefaults.standard.set(newValue, forKey: "profile.organizerPhone") }
+    }
 }

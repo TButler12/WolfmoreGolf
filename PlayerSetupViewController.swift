@@ -1069,10 +1069,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
         if GameManager.shared.currentGame?.resolvedGameType == .tournament {
             let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
-            if activeCount != 4 {
+            if activeCount < 4 || activeCount > 5 {
                 let ac = UIAlertController(
-                    title: "Tournament Requires 4 Players",
-                    message: "Please activate exactly 4 players to start a tournament round.",
+                    title: "Tournament Requires 4 or 5 Players",
+                    message: "Please activate 4 or 5 players to start a Stableford round.",
                     preferredStyle: .alert
                 )
                 ac.addAction(UIAlertAction(title: "OK", style: .default))

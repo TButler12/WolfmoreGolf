@@ -578,6 +578,25 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         header.addSubview(label)
         header.addSubview(count)
 
+        var trailingAnchor = header.trailingAnchor
+
+        if sortMode == .groupedArchitect {
+            let infoBtn = UIButton(type: .system)
+            infoBtn.setImage(UIImage(systemName: "person.text.rectangle"), for: .normal)
+            infoBtn.tintColor = .systemBlue
+            infoBtn.tag = section
+            infoBtn.addTarget(self, action: #selector(architectHeaderInfoTapped(_:)), for: .touchUpInside)
+            infoBtn.translatesAutoresizingMaskIntoConstraints = false
+            header.addSubview(infoBtn)
+            NSLayoutConstraint.activate([
+                infoBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -12),
+                infoBtn.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+                infoBtn.widthAnchor.constraint(equalToConstant: 28),
+                infoBtn.heightAnchor.constraint(equalToConstant: 28),
+            ])
+            trailingAnchor = infoBtn.leadingAnchor
+        }
+
         NSLayoutConstraint.activate([
             chevron.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
             chevron.centerYAnchor.constraint(equalTo: header.centerYAnchor),
@@ -586,6 +605,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
             label.leadingAnchor.constraint(equalTo: chevron.trailingAnchor, constant: 6),
             label.centerYAnchor.constraint(equalTo: header.centerYAnchor),
+            label.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -6),
 
             count.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 6),
             count.centerYAnchor.constraint(equalTo: header.centerYAnchor),
@@ -597,6 +617,13 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         header.isUserInteractionEnabled = true
 
         return header
+    }
+
+    @objc private func architectHeaderInfoTapped(_ sender: UIButton) {
+        let title = sections[sender.tag].title
+        let courses = ArchitectLibrary.coursesForSection(primaryName: title)
+        let profile = ArchitectLibrary.profile(name: title, courses: courses)
+        navigationController?.pushViewController(ArchitectProfileViewController(profile: profile), animated: true)
     }
 
     override func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { 32 }
@@ -873,6 +900,15 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
                    UIApplication.shared.canOpenURL(url) {
                     UIApplication.shared.open(url)
                 }
+            })
+        }
+
+        if let architect = c.architect, !architect.isEmpty {
+            ac.addAction(UIAlertAction(title: "View Architect Profile", style: .default) { [weak self] _ in
+                let courses = ArchitectLibrary.coursesForExact(name: architect)
+                let profile = ArchitectLibrary.profile(name: architect, courses: courses)
+                self?.navigationController?.pushViewController(
+                    ArchitectProfileViewController(profile: profile), animated: true)
             })
         }
 

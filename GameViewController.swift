@@ -1616,8 +1616,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let nameGreen = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
 
         for (i, label) in sortedNameLabels.enumerated() {
-            // Slot 4 = Team row, but only for Stableford tournaments (top-3 team score)
-            if isTournament && i == 4 && g.tournamentGameType == "stableford" {
+            // Slot 4 = Team row for Stableford, unless a 5th player is active
+            if isTournament && i == 4 && (g.tournamentGameType == "stableford" || g.tournamentGameType == nil)
+                && !hasActiveFifthStablefordPlayer(g) {
                 label.attributedText = nil
                 label.text = "Team"
                 label.font = UIFont.boldSystemFont(ofSize: label.font.pointSize)
@@ -1723,7 +1724,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
 
         for (slot, b) in wolfButtons.enumerated() {
-            if isTournament && g.tournamentGameType == "stableford" && slot == 4 {
+            if isTournament && (g.tournamentGameType == "stableford" || g.tournamentGameType == nil) && slot == 4
+                && !hasActiveFifthStablefordPlayer(g) {
                 b.isHidden = true
                 continue
             }
@@ -2335,7 +2337,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
         let slots = min(scoreFields.count, MAX_PLAYERS)
         for s in 0..<slots {
-            if isTournament && g.tournamentGameType == "stableford" && s == 4 {
+            if isTournament && (g.tournamentGameType == "stableford" || g.tournamentGameType == nil) && s == 4
+                && !hasActiveFifthStablefordPlayer(g) {
                 scoreFields[s].text = ""
                 scoreFields[s].isEnabled = false
                 scoreFields[s].backgroundColor = UIColor.systemGray6
@@ -3977,9 +3980,20 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
     }
 
+    // Returns true when a 5th player is active in a Stableford round,
+    // in which case slot 4 shows their individual score instead of the team total.
+    // Handles both standalone Stableford (tournamentGameType nil) and connected Tee Games ("stableford").
+    private func hasActiveFifthStablefordPlayer(_ g: GameData) -> Bool {
+        guard g.resolvedGameType == .tournament else { return false }
+        if let t = g.tournamentGameType, t != "stableford" { return false }
+        let name = (g.playerNames[safe: 4] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        return !name.isEmpty && (g.playerActivated[safe: 4] ?? false)
+    }
+
     private func refreshTournamentHolePoints(g: GameData, hole: Int) {
         let order = displayOrder
-        let playerSlots = min(4, playerMoneyFields.count, MAX_PLAYERS)
+        let fifthActive = hasActiveFifthStablefordPlayer(g)
+        let playerSlots = min(fifthActive ? 5 : 4, playerMoneyFields.count, MAX_PLAYERS)
         for s in 0..<playerSlots {
             let seat = order[safe: s] ?? s
             let hc   = g.hcPlayers[safe: seat] ?? 0
@@ -3991,9 +4005,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             ) ?? 0
             setMoneyField(playerMoneyFields[s], to: pts)
             playerMoneyFields[s].tag = seat
+            playerMoneyFields[s].isUserInteractionEnabled = true
         }
-        // Slot 4 = Team row: top-3 Stableford sum for this hole
-        if playerMoneyFields.count > 4 {
+        // Slot 4 = Team row only when no 5th player is active
+        if !fifthActive && playerMoneyFields.count > 4 {
             let teamPts = GameManager.shared.teamHoleScore(hole: hole, game: g)
             setMoneyField(playerMoneyFields[4], to: teamPts)
             playerMoneyFields[4].isUserInteractionEnabled = false
@@ -4002,14 +4017,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func refreshTournamentTotalPoints(g: GameData) {
         let order = displayOrder
-        let playerSlots = min(4, totalMoneyLabels.count, MAX_PLAYERS)
+        let fifthActive = hasActiveFifthStablefordPlayer(g)
+        let playerSlots = min(fifthActive ? 5 : 4, totalMoneyLabels.count, MAX_PLAYERS)
         for i in 0..<playerSlots {
             let seat = order[safe: i] ?? i
             let pts = GameManager.shared.totalStablefordPoints(playerIndex: seat, game: g)
             setTotalMoneyLabel(totalMoneyLabels[i], Double(pts))
         }
-        // Slot 4 = Team row: running team total
-        if totalMoneyLabels.count > 4 {
+        // Slot 4 = Team total only when no 5th player is active
+        if !fifthActive && totalMoneyLabels.count > 4 {
             let teamTotal = GameManager.shared.runningTeamStablefordTotal(game: g)
             setTotalMoneyLabel(totalMoneyLabels[4], Double(teamTotal))
         }
@@ -4368,7 +4384,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
 
         for (slot, b) in proxButtons.enumerated() {
-            if isTournament && g.tournamentGameType == "stableford" && slot == 4 {
+            if isTournament && (g.tournamentGameType == "stableford" || g.tournamentGameType == nil) && slot == 4
+                && !hasActiveFifthStablefordPlayer(g) {
                 b.isHidden = true
                 continue
             }

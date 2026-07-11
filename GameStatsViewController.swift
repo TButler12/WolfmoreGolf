@@ -33,6 +33,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
 
     private let sendBtn      = UIButton(type: .system)
     private let historyBtn   = UIButton(type: .system)
+    private let aiSummaryBtn = UIButton(type: .system)
     private let lastRoundLabel = UILabel()
     // MARK: - State
 
@@ -90,6 +91,15 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         historyBtn.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(historyBtn)
 
+        aiSummaryBtn.setTitle("✨ AI Round Summary", for: .normal)
+        aiSummaryBtn.setTitleColor(.white, for: .normal)
+        aiSummaryBtn.backgroundColor = UIColor(red: 0.38, green: 0.20, blue: 0.62, alpha: 1.0)
+        aiSummaryBtn.layer.cornerRadius = 14
+        aiSummaryBtn.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+        aiSummaryBtn.addTarget(self, action: #selector(aiSummaryTapped), for: .touchUpInside)
+        aiSummaryBtn.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(aiSummaryBtn)
+
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
@@ -110,10 +120,15 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             sendBtn.bottomAnchor.constraint(equalTo: historyBtn.topAnchor, constant: -10),
             sendBtn.heightAnchor.constraint(equalToConstant: 52),
 
+            aiSummaryBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            aiSummaryBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            aiSummaryBtn.bottomAnchor.constraint(equalTo: sendBtn.topAnchor, constant: -10),
+            aiSummaryBtn.heightAnchor.constraint(equalToConstant: 52),
+
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: sendBtn.topAnchor, constant: -10),
+            tableView.bottomAnchor.constraint(equalTo: aiSummaryBtn.topAnchor, constant: -10),
         ])
     }
   
@@ -161,6 +176,11 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             sender.setTitle("Saved ✓", for: .disabled)
         })
         present(ac, animated: true)
+    }
+
+    @objc private func aiSummaryTapped() {
+        let vc = AISummaryViewController()
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     @objc private func sendSummaryTapped(_ sender: UIButton) {

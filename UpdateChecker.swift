@@ -82,13 +82,17 @@ final class UpdateChecker {
 
     private func fetchAppStoreInfo(completion: @escaping (AppStoreInfo?) -> Void) {
         guard let bundleID = Bundle.main.bundleIdentifier,
-              let url = URL(string: "https://itunes.apple.com/lookup?bundleId=\(bundleID)") else {
+              let url = URL(string: "https://itunes.apple.com/lookup?bundleId=\(bundleID)&country=us") else {
             completion(nil)
             return
         }
 
-        let task = URLSession.shared.dataTask(with: url) { data, _, _ in
+        var request = URLRequest(url: url)
+        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+
+        let task = URLSession.shared.dataTask(with: request) { data, response, _ in
             guard let data,
+                  (response as? HTTPURLResponse)?.statusCode == 200,
                   let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let results = json["results"] as? [[String: Any]],
                   let first = results.first,

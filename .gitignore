@@ -19,3 +19,6 @@ build/
 # Supabase credentials — never commit
 SupabaseConfig.swift
 .claude/
+
+# Claude API key — never commit
+ClaudeConfig.swift
