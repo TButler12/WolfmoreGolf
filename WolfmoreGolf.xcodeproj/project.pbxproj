@@ -21,6 +21,9 @@
 		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
 		AP01B2C3D4E5F607182930A8 /* ArchitectProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */; };
 		AL01B2C3D4E5F607182930AA /* ArchitectLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */; };
+		PM01B2C3D4E5F607182930AB /* PremiumManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PM01B2C3D4E5F607182930AC /* PremiumManager.swift */; };
+		PW01B2C3D4E5F607182930AD /* PaywallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */; };
+		LP01B2C3D4E5F607182930AF /* LocationPromptViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */; };
 		B66C2E5033A842F5A84999BE /* PastGameDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70002 /* LiveNassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70004 /* NassauScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */; };
@@ -136,6 +139,9 @@
 		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
 		AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectProfileViewController.swift; sourceTree = "<group>"; };
 		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
+		PM01B2C3D4E5F607182930AC /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumManager.swift; sourceTree = "<group>"; };
+		PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewController.swift; sourceTree = "<group>"; };
+		LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPromptViewController.swift; sourceTree = "<group>"; };
 		B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardRenderer.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNassauViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauScorecardViewController.swift; sourceTree = "<group>"; };
@@ -284,6 +290,9 @@
 				AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */,
 				AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */,
 				AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */,
+				PM01B2C3D4E5F607182930AC /* PremiumManager.swift */,
+				PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */,
+				LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */,
 				CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */,
 				CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */,
 				A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */,
@@ -561,6 +570,9 @@
 				AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */,
 				AP01B2C3D4E5F607182930A8 /* ArchitectProfileViewController.swift in Sources */,
 				AL01B2C3D4E5F607182930AA /* ArchitectLibrary.swift in Sources */,
+				PM01B2C3D4E5F607182930AB /* PremiumManager.swift in Sources */,
+				PW01B2C3D4E5F607182930AD /* PaywallViewController.swift in Sources */,
+				LP01B2C3D4E5F607182930AF /* LocationPromptViewController.swift in Sources */,
 				CS01B2C3D4E5F607182930A4 /* ClaudeService.swift in Sources */,
 				CC01B2C3D4E5F607182930A6 /* ClaudeConfig.swift in Sources */,
 				F6D5417C2F7498740020588F /* TextGroupStore.swift in Sources */,

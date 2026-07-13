@@ -1496,6 +1496,45 @@ let ROYAL_ST_GEORGES_TEES: [TeeInfo] = [
     )
 ]
 
+// MARK: Royal Birkdale Golf Club — Southport, England
+
+private let ROYAL_BIRKDALE_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1008")!
+
+let ROYAL_BIRKDALE_PARS: [Int] = [
+    4,4,4,3,4,4,3,4,4,
+    4,4,3,4,3,5,4,5,4
+]
+
+let ROYAL_BIRKDALE_HCS: [Int] = [
+    11,3,7,15,13,1,17,9,5,
+    14,8,16,4,18,2,12,6,10
+]
+
+let ROYAL_BIRKDALE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 7170, rating: 70.0, slope: 110),
+    TeeInfo(teeName: "White",  yardage: 6817),
+    TeeInfo(teeName: "Yellow", yardage: 6381),
+    TeeInfo(teeName: "Red",    yardage: 5793)
+]
+
+// MARK: The Renaissance Club — North Berwick, Scotland
+
+private let RENAISSANCE_CLUB_ID = UUID(uuidString: "D23B7E9F-2055-4C8E-AF42-3B9D8A6E2110")!
+
+let RENAISSANCE_CLUB_PARS: [Int] = [
+    4,4,5,4,3,4,5,4,3,
+    4,4,5,4,4,3,5,3,4
+]
+
+let RENAISSANCE_CLUB_HCS: [Int] = [
+    7,3,5,13,15,17,9,1,11,
+    10,18,6,14,2,8,16,12,4
+]
+
+let RENAISSANCE_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Scottish Open", yardage: 7303, rating: 70.0, slope: 113)
+]
+
 // MARK: Geneva National – Player
 private let GENEVA_NATIONAL_PLAYER_ID = UUID(uuidString: "D101A001-0000-0000-0000-000000000017")!
 let GENEVA_NATIONAL_PLAYER_PARS: [Int] = [
@@ -12614,6 +12653,33 @@ private enum BuiltIns {
             type: "Private",
             website: "https://www.royalstgeorges.com",
             address: "Golf Rd, Sandwich CT13 9PB, England, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            ROYAL_BIRKDALE_ID,
+            "Royal Birkdale Golf Club",
+            ROYAL_BIRKDALE_PARS,
+            ROYAL_BIRKDALE_HCS,
+            ROYAL_BIRKDALE_TEES,
+            country: "England",
+            state: nil,
+            architect: "Frederick G. Hawtree / J.H. Taylor",
+            type: "Private",
+            phone: "+44 (0) 1704 552020",
+            address: "Waterloo Road, Southport, PR8 2LX, England, United Kingdom",
+            isWolfApproved: true
+        ),
+        c(
+            RENAISSANCE_CLUB_ID,
+            "The Renaissance Club",
+            RENAISSANCE_CLUB_PARS,
+            RENAISSANCE_CLUB_HCS,
+            RENAISSANCE_CLUB_TEES,
+            country: "Scotland",
+            state: nil,
+            architect: "Tom Doak",
+            type: "Private",
+            address: "Archerfield Estate, Dirleton, North Berwick EH39 5HQ, Scotland, United Kingdom",
             isWolfApproved: true
         ),
 

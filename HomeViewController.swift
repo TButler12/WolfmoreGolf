@@ -26,6 +26,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private weak var tournamentButton: UIButton?
     private weak var liveConnectedButton: UIButton?
     private weak var quickStartButton: UIButton?
+    private weak var premiumBadgeItem: UIBarButtonItem?
 
     // MARK: - State
     private var shouldPromptForName = false
@@ -64,6 +65,16 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         styleNavigationBar()
         buildLayout()
 
+        setupPremiumBadge()
+        #if DEBUG
+        setupDebugButton()
+        #endif
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(refreshPremiumBadge),
+            name: .premiumStatusChanged,
+            object: nil
+        )
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(noop),
@@ -90,6 +101,11 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         refreshHomeUI()
         UpdateChecker.shared.check(from: self)
         animateResetBannerIfNeeded()
+        // Slight delay so other first-launch prompts settle first
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self, self.presentedViewController == nil else { return }
+            LocationPromptViewController.showIfNeeded(from: self)
+        }
     }
 
     private func animateResetBannerIfNeeded() {
@@ -1494,6 +1510,94 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             present(wrap, animated: true)
         }
     }
+
+    // MARK: - Premium Badge
+
+    private func setupPremiumBadge() {
+        let btn = UIButton(type: .system)
+        btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
+        btn.addTarget(self, action: #selector(premiumBadgeTapped), for: .touchUpInside)
+        let item = UIBarButtonItem(customView: btn)
+        navigationItem.leftBarButtonItem = item
+        premiumBadgeItem = item
+        refreshPremiumBadge()
+    }
+
+    @objc private func refreshPremiumBadge() {
+        guard let item = premiumBadgeItem,
+              let btn = item.customView as? UIButton else { return }
+        let pm = PremiumManager.shared
+        if pm.isPremium {
+            btn.setTitle("👑 Premium", for: .normal)
+            btn.setTitleColor(goldColor, for: .normal)
+        } else {
+            let minRemaining = [
+                pm.remainingFreeUses(for: .aiSummary),
+                pm.remainingFreeUses(for: .remoteNassau),
+                pm.remainingFreeUses(for: .liveWolf)
+            ].min() ?? 0
+            btn.setTitle("👑 \(minRemaining) free", for: .normal)
+            btn.setTitleColor(goldColor.withAlphaComponent(0.7), for: .normal)
+        }
+    }
+
+    @objc private func premiumBadgeTapped() {
+        let pm = PremiumManager.shared
+        if pm.isPremium {
+            let ac = UIAlertController(title: "👑 WolfMore Premium",
+                                       message: "Premium is active. Enjoy unlimited AI Summaries, Remote Nassau, and Live Wolf.",
+                                       preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+        } else {
+            let lowestFeature: PremiumManager.Feature = [.aiSummary, .remoteNassau, .liveWolf]
+                .min(by: { pm.remainingFreeUses(for: $0) < pm.remainingFreeUses(for: $1) }) ?? .aiSummary
+            present(PaywallViewController(feature: lowestFeature), animated: true)
+        }
+    }
+
+    // MARK: - Debug
+
+    #if DEBUG
+    private func setupDebugButton() {
+        let btn = UIBarButtonItem(title: "🧪", style: .plain, target: self, action: #selector(debugTapped))
+        navigationItem.rightBarButtonItem = btn
+    }
+
+    @objc private func debugTapped() {
+        let ac = UIAlertController(title: "🧪 Debug", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Trigger location prompt (25-round rule)", style: .default) { _ in
+            let currentRounds = Set(RoundStore.shared.rounds.map(\.gameID)).count
+            let fakeRoundsAtDismissal = max(0, currentRounds - 25)
+            UserDefaults.standard.set(fakeRoundsAtDismissal, forKey: "locationPrompt_roundsAtLastDismissal")
+            // Ensure shownCount > 0 so the first-time trigger doesn't fire (we're testing the 25-round path)
+            if UserDefaults.standard.integer(forKey: "locationPrompt_shownCount") == 0 {
+                UserDefaults.standard.set(1, forKey: "locationPrompt_shownCount")
+            }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                LocationPromptViewController.showIfNeeded(from: self)
+            }
+        })
+
+        ac.addAction(UIAlertAction(title: "Reset location prompt (show as first-time)", style: .destructive) { _ in
+            UserDefaults.standard.removeObject(forKey: "locationPrompt_shownCount")
+            UserDefaults.standard.removeObject(forKey: "locationPrompt_roundsAtLastDismissal")
+            UserDefaults.standard.removeObject(forKey: "locationPrompt_lastDismissedVersion")
+            UserDefaults.standard.removeObject(forKey: "locationPrompt_cleanupV2Done")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                LocationPromptViewController.showIfNeeded(from: self)
+            }
+        })
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if let pop = ac.popoverPresentationController {
+            pop.barButtonItem = navigationItem.rightBarButtonItem
+        }
+        present(ac, animated: true)
+    }
+    #endif
 
     // MARK: - Colors
 

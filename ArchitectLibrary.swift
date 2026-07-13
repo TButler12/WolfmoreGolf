@@ -158,6 +158,9 @@ enum ArchitectLibrary {
         "Fred Morris":
             "Scottish architect known for Western Gailes Golf Club, a classic links on the Ayrshire coast of Scotland.",
 
+        "Frederick G. Hawtree / J.H. Taylor":
+            "Frederick Hawtree and five-time Open Champion J.H. Taylor collaborated on Royal Birkdale's 1932 redesign, creating one of England's premier championship links. Birkdale has since hosted ten Open Championships and is celebrated for its flat fairways set between sandhills.",
+
         "Gary Kern":
             "Regional architect known for Harrison Lake Country Club.",
 

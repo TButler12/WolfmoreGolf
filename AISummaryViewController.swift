@@ -4,35 +4,38 @@ import MessageUI
 // MARK: - Summary Style
 
 enum SummaryStyle: Int, CaseIterable {
-    case sportscaster, lockerRoom, trashTalk, statistical, irish
+    case lockerRoom, trashTalk, statistical, punchline, prizeFighter, highlights
 
     var emoji: String {
         switch self {
-        case .sportscaster: return "🎙️"
         case .lockerRoom:   return "🍺"
         case .trashTalk:    return "😂"
         case .statistical:  return "📊"
-        case .irish:        return "☘️"
+        case .punchline:    return "💀"
+        case .prizeFighter: return "🥊"
+        case .highlights:   return "⭐️"
         }
     }
 
     var title: String {
         switch self {
-        case .sportscaster: return "Sportscaster"
         case .lockerRoom:   return "Locker Room"
         case .trashTalk:    return "Trash Talk"
         case .statistical:  return "Statistical"
-        case .irish:        return "Irish"
+        case .punchline:    return "Punch Line"
+        case .prizeFighter: return "Prize Fighter"
+        case .highlights:   return "Highlights"
         }
     }
 
     var subtitle: String {
         switch self {
-        case .sportscaster: return "Dramatic play-by-play, like an ESPN broadcast"
         case .lockerRoom:   return "Casual & fun — how the guys actually talk after a round"
         case .trashTalk:    return "Roast the loser, brutal but funny"
         case .statistical:  return "Data-focused performance breakdown"
-        case .irish:        return "Warm storytelling over a pint at the 19th hole"
+        case .punchline:    return "Short, savage, funny — 5 lines max, no mercy"
+        case .prizeFighter: return "Ali vs Frazier — someone's getting knocked out"
+        case .highlights:   return "Key moments — birdies, blow-ups, and clutch shots"
         }
     }
 
@@ -42,47 +45,61 @@ enum SummaryStyle: Int, CaseIterable {
             Focus on points earned per hole, standout individual performances, and the final leaderboard. \
             Do NOT mention Wolf, Lone Wolf, Nassau, Skins, Hammers, or money — none of those apply here.\n
             """ : ""
+        // Applied to every style: birdie always means a natural gross birdie (scored below par before handicap)
+        let birdieNote = "IMPORTANT: When mentioning birdies, only reference natural gross birdies — a score of one under par on the hole before any handicap strokes. Do not call a net birdie a birdie.\n"
+        let prefix = birdieNote + stablefordNote
         switch self {
-        case .sportscaster:
-            return stablefordNote + """
-            You are an ESPN golf analyst and play-by-play broadcaster delivering a round recap. \
-            Write dramatically, like you're on SportsCenter — vivid sports language, suspense, big moments. \
-            Call out Lone Wolf bids, massive Hammer holes, Skins streaks, clutch Nassau swings, and prox winners. \
-            Reference players by name. Keep it punchy and exciting — like a tight 3-minute highlight reel. \
-            Do NOT use generic filler. Every sentence should reference something that actually happened.
-            """
         case .lockerRoom:
-            return stablefordNote + """
+            return prefix + """
             You're one of the golf group texting the post-round recap to the group chat. \
-            Keep it casual, funny, and exactly how golfers talk to each other after 18. \
-            Use golf slang naturally. Give everyone a hard time — celebrate the winner, \
-            rag on the guy who lost the most money. Don't be formal. Write it like a voice note \
-            you'd leave in the group chat on the drive home. Reference specific holes and decisions.
+            Casual, funny, exactly how golfers talk after 18. Name names, give everyone grief. \
+            Reference specific holes and decisions — celebrate the winner, rag on the loser. \
+            Format: write in short bursts separated by blank lines, like messages in a group chat. \
+            Each burst is 1-2 sentences. Keep it loose, not polished.
             """
         case .trashTalk:
-            return stablefordNote + """
-            You are a savage but funny roaster. Your job is to roast the biggest points loser \
-            and celebrate the winner. Be specific — reference their worst holes, missed point opportunities, \
-            and final standings. Make it something people will actually screenshot and send to the group. \
-            Funny, not mean-spirited. Think Comedy Central Roast energy. \
-            Always end with the winner getting genuine credit.
+            return prefix + """
+            You are a savage but funny roaster. Roast the biggest loser, celebrate the winner. \
+            Be specific — their worst holes, collapses, bad decisions, final standings. \
+            Think Comedy Central Roast energy. Funny, not mean-spirited. \
+            Format: each roast target gets their own paragraph separated by a blank line. \
+            End with a standalone closing line that gives the winner genuine, slightly smug credit.
             """
         case .statistical:
-            return stablefordNote + """
+            return prefix + """
             You are a golf data analyst. Write a clean, data-forward performance breakdown. \
-            Use specific numbers — points per nine, best and worst holes, scoring average vs par, \
-            net score efficiency. Find the most interesting patterns and outliers. \
-            Professional tone, efficient sentences. Think ESPN Stats & Info meets Golf Digest analytics.
+            Use specific numbers — front/back split, best and worst holes, scoring vs par, key differentials. \
+            Find the most interesting patterns and outliers. Professional tone, tight sentences. \
+            Format: use short paragraphs separated by blank lines — one paragraph per player or theme. \
+            Think ESPN Stats & Info meets Golf Digest analytics.
             """
-        case .irish:
-            return stablefordNote + """
-            You are a wise old Irish golfer spinning yarns over a pint at the 19th hole. \
-            Use Irish expressions naturally and with character — 'Jaysus', 'your man', \
-            'fierce altogether', 'played a blinder', 'God love him', 'a pure howler', \
-            'not a bother on him', 'took the heart clean out of him'. \
-            Write with warmth and storytelling rhythm, like you're holding court at the bar. \
-            Reference specific moments as if you witnessed them personally. Keep it entertaining \
-            and full of personality — something people would actually read aloud to the group.
+        case .prizeFighter:
+            return prefix + """
+            You are a trash-talking boxing announcer calling this golf round like it's Ali vs Frazier. \
+            Keep it short — 3 punchy paragraphs separated by blank lines: front nine, back nine, final verdict. \
+            Every bad hole is a knockdown. Every collapse is a TKO. Every double bogey is a glass jaw exposed. \
+            Drop Ali-era language hard: 'down goes Frazier', 'punch drunk', 'corner threw in the towel', \
+            'took a standing eight count', 'the ref should've stopped it', 'floated like a butterfly stung like a bee'. \
+            Name every player. The worst performer got destroyed in the early rounds and never recovered — say so brutally. \
+            The winner is the undisputed heavyweight champion. Make it savage, funny, and short. Ding ding.
+            """
+        case .punchline:
+            return prefix + """
+            You are a savage deadpan comedian. Write 6 punches — one sentence each. \
+            Name every player. Bury the bad ones with a specific, funny line about their worst moment. \
+            The bigger the disaster, the harder you go. Anyone who played well gets one backhanded line. \
+            Last line belongs to the winner: short, cold, devastating to everyone else. \
+            Be funny first, brutal second. Think: mean tweet that gets screenshotted. \
+            Format: each punch on its own line with a blank line between them — no paragraphs, no emojis.
+            """
+        case .highlights:
+            return prefix + """
+            No intro. No "ladies and gentlemen." Jump straight into the highlights. \
+            Write one punchy line per highlight — almost like bullets but in plain sentences, no dashes or symbols. \
+            Cover the best moments: natural gross birdies, eagles, prox wins, clutch saves. \
+            Also call out the most brutal moments — a blow-up hole, a collapse, a shocking double. \
+            Name names on every line. Be direct and specific — hole number, what happened, who did it. \
+            6 to 8 lines total. Blank line between each. No warmup, no summary, no sign-off.
             """
         }
     }
@@ -465,6 +482,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
         switch state {
         case .picker:
             tableView.isHidden   = false
+            tableView.reloadData()
             spinner.isHidden     = true
             spinner.stopAnimating()
             loadLabel.isHidden   = true
@@ -500,6 +518,11 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
 
     private func generate(style: SummaryStyle) {
         guard let game = GameManager.shared.currentGame else { return }
+        let pm = PremiumManager.shared
+        guard pm.canUse(.aiSummary) else {
+            present(PaywallViewController(feature: .aiSummary), animated: true)
+            return
+        }
         noteField.resignFirstResponder()
         state = .loading
 
@@ -516,7 +539,10 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
                     systemPrompt: systemPrompt,
                     userMessage: "Here is the golf round data. Write your recap:\n\n\(context)"
                 )
-                await MainActor.run { self.state = .result(text, style) }
+                await MainActor.run {
+                    pm.recordUse(.aiSummary)
+                    self.state = .result(text, style)
+                }
             } catch {
                 await MainActor.run {
                     self.state = .picker
@@ -639,6 +665,16 @@ extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
         section == 0 ? "Add a personal note (optional)" : "Choose a voice for your round recap"
     }
 
+    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        guard section == 1 else { return nil }
+        let pm = PremiumManager.shared
+        if pm.isPremium { return nil }
+        let remaining = pm.remainingFreeUses(for: .aiSummary)
+        if remaining == 0 { return "You've used your \(PremiumManager.Feature.aiSummary.freeLimit) free AI Summary sessions. Upgrade to continue." }
+        if remaining < PremiumManager.Feature.aiSummary.freeLimit { return "\(remaining) free AI \(remaining == 1 ? "summary" : "summaries") remaining." }
+        return nil
+    }
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         if indexPath.section == 0 {
             let cell = tableView.dequeueReusableCell(withIdentifier: "NoteCell", for: indexPath)
@@ -662,6 +698,9 @@ extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
         let style = SummaryStyle.allCases[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: StyleCell.reuseID, for: indexPath) as! StyleCell
         cell.configure(style: style)
+        let locked = !PremiumManager.shared.canUse(.aiSummary)
+        cell.alpha = locked ? 0.4 : 1.0
+        cell.selectionStyle = locked ? .none : .default
         return cell
     }
 

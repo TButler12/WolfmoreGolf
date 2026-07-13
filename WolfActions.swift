@@ -5,6 +5,12 @@ enum WolfActions {
     // MARK: - Remote Nassau
 
     static func presentRemoteNassau(from presenter: UIViewController) {
+        let pm = PremiumManager.shared
+        guard pm.canUse(.remoteNassau) else {
+            presenter.present(PaywallViewController(feature: .remoteNassau), animated: true)
+            return
+        }
+        pm.recordUse(.remoteNassau)
         let ac = UIAlertController(title: "Remote Nassau", message: nil, preferredStyle: .actionSheet)
 
         ac.addAction(UIAlertAction(title: "▶ Start Live Match", style: .default) { [weak presenter] _ in
@@ -214,6 +220,16 @@ enum WolfActions {
 
     static func presentGoLive(from presenter: UIViewController) {
         guard let g = GameManager.shared.currentGame else { return }
+
+        // Gate only when starting a new session; managing an existing one is always allowed
+        if g.liveSessionId == nil {
+            let pm = PremiumManager.shared
+            guard pm.canUse(.liveWolf) else {
+                presenter.present(PaywallViewController(feature: .liveWolf), animated: true)
+                return
+            }
+            pm.recordUse(.liveWolf)
+        }
 
         if let sessionId = g.liveSessionId {
             let code = g.liveSessionCode ?? ""

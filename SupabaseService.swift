@@ -738,6 +738,31 @@ final class SupabaseService {
         return record
     }
 
+    // MARK: - Usage Telemetry
+
+    func submitLocationTelemetry(country: String, region: String? = nil, state: String? = nil, zipCode: String?) async throws {
+        struct Payload: Encodable {
+            let country: String
+            let region: String?
+            let state: String?
+            let zip_code: String?
+            let app_version: String
+            let submitted_at: String
+        }
+        let version = (Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String) ?? "unknown"
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        let payload = Payload(
+            country: country,
+            region: region,
+            state: state,
+            zip_code: zipCode,
+            app_version: version,
+            submitted_at: formatter.string(from: Date())
+        )
+        try await client.from("usage_telemetry").insert(payload).execute()
+    }
+
     // MARK: - Helpers
     private func generateCode() -> String {
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
