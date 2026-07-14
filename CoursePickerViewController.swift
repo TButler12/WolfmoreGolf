@@ -435,7 +435,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         let titles = grouped.keys.sorted { lhs, rhs in
             if lhs == unknown { return false }
             if rhs == unknown { return true }
-            return lhs.localizedCaseInsensitiveCompare(rhs) == .orderedAscending
+            return lastName(of: lhs).localizedCaseInsensitiveCompare(lastName(of: rhs)) == .orderedAscending
         }
 
         sections = titles.map { title in
@@ -455,6 +455,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             .first?
             .trimmingCharacters(in: .whitespacesAndNewlines) ?? raw
         return primary.isEmpty ? "Unknown Architect" : primary
+    }
+
+    private func lastName(of name: String) -> String {
+        name.components(separatedBy: " ").last ?? name
     }
 
     // MARK: - Helpers
