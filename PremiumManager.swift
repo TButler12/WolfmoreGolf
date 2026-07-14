@@ -14,18 +14,32 @@ final class PremiumManager {
 
         var freeLimit: Int {
             switch self {
-            case .aiSummary:    return 20
+            case .aiSummary:    return 5
             case .remoteNassau: return 5
             case .liveWolf:     return 5
             }
         }
 
-        var usageKey: String {
+        // When true, usageKey is scoped to the current calendar month (YYYY-MM).
+        // The key changes each month, so the counter resets automatically with no manual logic.
+        var resetsMonthly: Bool {
             switch self {
-            case .aiSummary:    return "aiSummaryUsageCount"
-            case .remoteNassau: return "remoteNassauUsageCount"
-            case .liveWolf:     return "liveWolfUsageCount"
+            case .aiSummary: return true
+            default:         return false
             }
+        }
+
+        var usageKey: String {
+            let base: String
+            switch self {
+            case .aiSummary:    base = "aiSummaryUsageCount"
+            case .remoteNassau: base = "remoteNassauUsageCount"
+            case .liveWolf:     base = "liveWolfUsageCount"
+            }
+            guard resetsMonthly else { return base }
+            let fmt = DateFormatter()
+            fmt.dateFormat = "yyyy-MM"
+            return "\(base)_\(fmt.string(from: Date()))"
         }
 
         var displayName: String {
@@ -33,6 +47,16 @@ final class PremiumManager {
             case .aiSummary:    return "AI Summary"
             case .remoteNassau: return "Remote Nassau"
             case .liveWolf:     return "Live Wolf"
+            }
+        }
+
+        // Used by PaywallViewController limit label.
+        var limitMessage: String {
+            switch self {
+            case .aiSummary:
+                return "You've used your \(freeLimit) free AI Summary sessions this month."
+            default:
+                return "You've used your \(freeLimit) free \(displayName) sessions."
             }
         }
     }

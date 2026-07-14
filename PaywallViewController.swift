@@ -70,7 +70,7 @@ final class PaywallViewController: UIViewController {
 
         // Limit message
         let limitLabel = UILabel()
-        limitLabel.text = "You've used your \(feature.freeLimit) free \(feature.displayName) sessions."
+        limitLabel.text = feature.limitMessage
         limitLabel.font = .systemFont(ofSize: 16, weight: .medium)
         limitLabel.textColor = .secondaryLabel
         limitLabel.textAlignment = .center

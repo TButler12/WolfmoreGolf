@@ -520,7 +520,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
         guard let game = GameManager.shared.currentGame else { return }
         let pm = PremiumManager.shared
         guard pm.canUse(.aiSummary) else {
-            present(PaywallViewController(feature: .aiSummary), animated: true)
+            showMonthlyLimitReached()
             return
         }
         noteField.resignFirstResponder()
@@ -550,6 +550,23 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
                 }
             }
         }
+    }
+
+    private func showMonthlyLimitReached() {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "MMMM"
+        let monthName = fmt.string(from: Date())
+        let ac = UIAlertController(
+            title: "Monthly Limit Reached",
+            message: "You've used your 5 free AI summaries for \(monthName). Upgrade to WolfMore Premium for unlimited summaries.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Upgrade to Premium", style: .default) { [weak self] in
+            guard let self else { return }
+            self.present(PaywallViewController(feature: .aiSummary), animated: true)
+        })
+        ac.addAction(UIAlertAction(title: "Maybe Next Month", style: .cancel))
+        present(ac, animated: true)
     }
 
     // MARK: - Actions
@@ -670,8 +687,14 @@ extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
         let pm = PremiumManager.shared
         if pm.isPremium { return nil }
         let remaining = pm.remainingFreeUses(for: .aiSummary)
-        if remaining == 0 { return "You've used your \(PremiumManager.Feature.aiSummary.freeLimit) free AI Summary sessions. Upgrade to continue." }
-        if remaining < PremiumManager.Feature.aiSummary.freeLimit { return "\(remaining) free AI \(remaining == 1 ? "summary" : "summaries") remaining." }
+        if remaining == 0 {
+            let fmt = DateFormatter()
+            fmt.dateFormat = "MMMM"
+            return "You've used all 5 free AI summaries for \(fmt.string(from: Date())). Tap to upgrade."
+        }
+        if remaining <= 2 {
+            return "\(remaining) AI \(remaining == 1 ? "summary" : "summaries") left this month."
+        }
         return nil
     }
 
@@ -698,9 +721,6 @@ extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
         let style = SummaryStyle.allCases[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: StyleCell.reuseID, for: indexPath) as! StyleCell
         cell.configure(style: style)
-        let locked = !PremiumManager.shared.canUse(.aiSummary)
-        cell.alpha = locked ? 0.4 : 1.0
-        cell.selectionStyle = locked ? .none : .default
         return cell
     }
 
