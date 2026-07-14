@@ -64,7 +64,24 @@ final class PremiumManager {
     // MARK: - Status
 
     private(set) var isPremium = false {
-        didSet { NotificationCenter.default.post(name: .premiumStatusChanged, object: nil) }
+        didSet {
+            if isPremium { markPremiumThisMonth() }
+            NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+        }
+    }
+
+    // Persists a month-keyed flag so was_premium_this_month can be read reliably
+    // even after a downgrade, without inferring from usage counts.
+    private func markPremiumThisMonth() {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM"
+        UserDefaults.standard.set(true, forKey: "wasPremiumInMonth_\(fmt.string(from: Date()))")
+    }
+
+    static func wasPremiumThisMonth() -> Bool {
+        let fmt = DateFormatter()
+        fmt.dateFormat = "yyyy-MM"
+        return UserDefaults.standard.bool(forKey: "wasPremiumInMonth_\(fmt.string(from: Date()))")
     }
 
     private(set) var products: [Product] = []

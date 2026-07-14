@@ -565,8 +565,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
 
         let usageCount = pm.usageCount(for: .aiSummary)
         let freeLimit = PremiumManager.Feature.aiSummary.freeLimit
-        // usageCount > freeLimit only if they generated summaries while Premium before downgrading
-        let wasPremiumThisMonth = usageCount > freeLimit
+        let wasPremiumThisMonth = PremiumManager.wasPremiumThisMonth()
 
         AnalyticsService.track("ai_summary_limit_hit", properties: [
             "user_id": DeviceID.id,
