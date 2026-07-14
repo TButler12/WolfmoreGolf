@@ -6,7 +6,6 @@ final class PremiumManager {
     private init() {}
 
     static let monthlyProductID   = "com.wolfmoregolf.pro.monthly"
-    static let yearlyProductID    = "com.wolfmoregolf.pro.yearly"
     static let legacyProProductID = "com.wolfmoregolf.pro"
     // MARK: - Feature
 
@@ -86,7 +85,7 @@ final class PremiumManager {
 
     func loadProducts() async {
         do {
-            products = try await Product.products(for: [Self.monthlyProductID, Self.yearlyProductID])
+            products = try await Product.products(for: [Self.monthlyProductID])
                 .sorted { $0.price < $1.price }
         } catch {
             // Products unavailable in this environment (e.g. simulator without StoreKit config)
@@ -116,7 +115,6 @@ final class PremiumManager {
     func refreshPremiumStatus() async {
         let premiumIDs: Set<String> = [
             Self.monthlyProductID,
-            Self.yearlyProductID,
             Self.legacyProProductID,
         ]
         var found = false

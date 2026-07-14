@@ -20,7 +20,6 @@ final class PaywallViewController: UIViewController {
     private let scrollView  = UIScrollView()
     private let stack       = UIStackView()
     private var monthlyBtn  = UIButton(type: .system)
-    private var yearlyBtn   = UIButton(type: .system)
     private let spinner     = UIActivityIndicatorView(style: .medium)
 
     private let green = UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1)
@@ -99,12 +98,8 @@ final class PaywallViewController: UIViewController {
 
         let spacer = UIView()
 
-        // Yearly button (primary)
-        yearlyBtn = makeButton(title: "Upgrade — $41.99/year · Save 30%", primary: true)
-        yearlyBtn.addTarget(self, action: #selector(yearlyTapped), for: .touchUpInside)
-
-        // Monthly button
-        monthlyBtn = makeButton(title: "Upgrade — $4.99/month", primary: false)
+        // Monthly button (primary — only subscription option)
+        monthlyBtn = makeButton(title: "Upgrade — $4.99/month", primary: true)
         monthlyBtn.addTarget(self, action: #selector(monthlyTapped), for: .touchUpInside)
 
         // Restore
@@ -126,14 +121,13 @@ final class PaywallViewController: UIViewController {
 
         // Add all views to the stack FIRST, then activate cross-view constraints
         [crownLabel, titleLabel, limitLabel, descLabel, divider, featuresLabel,
-         spacer, yearlyBtn, monthlyBtn, restoreBtn, spinner, laterBtn]
+         spacer, monthlyBtn, restoreBtn, spinner, laterBtn]
             .forEach { stack.addArrangedSubview($0) }
 
         NSLayoutConstraint.activate([
             divider.heightAnchor.constraint(equalToConstant: 1),
             divider.widthAnchor.constraint(equalTo: stack.widthAnchor),
             spacer.heightAnchor.constraint(equalToConstant: 4),
-            yearlyBtn.widthAnchor.constraint(equalTo: stack.widthAnchor),
             monthlyBtn.widthAnchor.constraint(equalTo: stack.widthAnchor),
         ])
     }
@@ -163,15 +157,12 @@ final class PaywallViewController: UIViewController {
         for product in PremiumManager.shared.products {
             if product.id == PremiumManager.monthlyProductID {
                 monthlyBtn.setTitle("Upgrade — \(product.displayPrice)/month", for: .normal)
-            } else if product.id == PremiumManager.yearlyProductID {
-                yearlyBtn.setTitle("Upgrade — \(product.displayPrice)/year · Save 30%", for: .normal)
             }
         }
     }
 
     // MARK: - Actions
 
-    @objc private func yearlyTapped()  { purchase(id: PremiumManager.yearlyProductID) }
     @objc private func monthlyTapped() { purchase(id: PremiumManager.monthlyProductID) }
 
     private func purchase(id: String) {
@@ -217,7 +208,6 @@ final class PaywallViewController: UIViewController {
     private func setLoading(_ on: Bool) {
         on ? spinner.startAnimating() : spinner.stopAnimating()
         monthlyBtn.isEnabled = !on
-        yearlyBtn.isEnabled  = !on
     }
 
     private func alert(_ title: String, _ message: String) {

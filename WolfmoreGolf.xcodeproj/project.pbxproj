@@ -19,11 +19,8 @@
 		A6B7C8D9EA0B1C2D3E4F5067 /* TournamentLeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */; };
 		A7B8C9D0EB1C2D3E4F506179 /* GroupDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */; };
 		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
-		AP01B2C3D4E5F607182930A8 /* ArchitectProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */; };
 		AL01B2C3D4E5F607182930AA /* ArchitectLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */; };
-		PM01B2C3D4E5F607182930AB /* PremiumManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PM01B2C3D4E5F607182930AC /* PremiumManager.swift */; };
-		PW01B2C3D4E5F607182930AD /* PaywallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */; };
-		LP01B2C3D4E5F607182930AF /* LocationPromptViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */; };
+		AP01B2C3D4E5F607182930A8 /* ArchitectProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */; };
 		B66C2E5033A842F5A84999BE /* PastGameDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70002 /* LiveNassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70004 /* NassauScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */; };
@@ -119,6 +116,9 @@
 		F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */; };
 		F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */; };
 		LC01B2C3D4E5F607182930AA /* LiveConnectedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */; };
+		LP01B2C3D4E5F607182930AF /* LocationPromptViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */; };
+		PM01B2C3D4E5F607182930AB /* PremiumManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PM01B2C3D4E5F607182930AC /* PremiumManager.swift */; };
+		PW01B2C3D4E5F607182930AD /* PaywallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */; };
 		RS1A2B3C4D5E6F70819203AA /* ResetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */; };
 /* End PBXBuildFile section */
 
@@ -137,11 +137,8 @@
 		A6B7C8D9EA0B1C2D3E4F5068 /* TournamentLeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentLeaderboardViewController.swift; sourceTree = "<group>"; };
 		A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailViewController.swift; sourceTree = "<group>"; };
 		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
-		AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectProfileViewController.swift; sourceTree = "<group>"; };
 		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
-		PM01B2C3D4E5F607182930AC /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumManager.swift; sourceTree = "<group>"; };
-		PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewController.swift; sourceTree = "<group>"; };
-		LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPromptViewController.swift; sourceTree = "<group>"; };
+		AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectProfileViewController.swift; sourceTree = "<group>"; };
 		B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardRenderer.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNassauViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauScorecardViewController.swift; sourceTree = "<group>"; };
@@ -240,6 +237,9 @@
 		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
 		F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardViewController.swift; sourceTree = "<group>"; };
 		LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveConnectedViewController.swift; sourceTree = "<group>"; };
+		LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPromptViewController.swift; sourceTree = "<group>"; };
+		PM01B2C3D4E5F607182930AC /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumManager.swift; sourceTree = "<group>"; };
+		PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewController.swift; sourceTree = "<group>"; };
 		RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetSnapshotStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -652,7 +652,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 46;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -667,7 +667,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.5.0;
+				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -693,7 +693,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 45;
+				CURRENT_PROJECT_VERSION = 46;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -708,7 +708,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.5.0;
+				MARKETING_VERSION = 2.6.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
