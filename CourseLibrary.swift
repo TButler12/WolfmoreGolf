@@ -3395,6 +3395,28 @@ let HARRISON_LAKE_CC_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
+// MARK: Briar Ridge Country Club — Schererville, IN
+// Par 72 | Architect: Dick Nugent | Opened: 1980 | Private
+private let BRIAR_RIDGE_CC_ID = UUID(uuidString: "B8E4F2A1-3C7D-4E9F-B5A2-6D1E8C4F7B3A")!
+
+let BRIAR_RIDGE_CC_PARS: [Int] = [
+    4,5,3,4,4,5,4,3,4,
+    4,3,5,4,4,3,4,4,5
+]
+
+let BRIAR_RIDGE_CC_HCS: [Int] = [
+    13,11,15,5,9,7,3,17,1,
+    2,18,10,4,16,14,8,6,12
+]
+
+let BRIAR_RIDGE_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6772),
+    TeeInfo(teeName: "Powers", yardage: 6580),
+    TeeInfo(teeName: "White",  yardage: 6341),
+    TeeInfo(teeName: "Gold",   yardage: 6006),
+    TeeInfo(teeName: "Red",    yardage: 5316),
+]
+
 // MARK: - Built-in: Silvies Valley Resort & Links – Craddock
 // Seneca, OR • Resort
 // Challenge: Par 72 | 7,170 yds | 73.8 / 132
@@ -12834,6 +12856,20 @@ private enum BuiltIns {
             phone: "(812) 342-4457",
             website: "https://www.harrisonlakeclub.com",
             address: "588 S. Country Club Rd, Columbus, IN 47201"
+        ),
+        c(
+            BRIAR_RIDGE_CC_ID,
+            "Briar Ridge Country Club",
+            BRIAR_RIDGE_CC_PARS,
+            BRIAR_RIDGE_CC_HCS,
+            BRIAR_RIDGE_CC_TEES,
+            country: "USA",
+            state: "IN",
+            region: "Schererville",
+            architect: "Dick Nugent",
+            type: "Private",
+            phone: "(219) 322-3660",
+            address: "123 Country Club Dr., Schererville, IN 46375"
         ),
         c(
             SILVIES_CRADDOCK_ID,
