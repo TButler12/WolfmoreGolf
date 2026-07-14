@@ -351,6 +351,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
 
     private enum State { case picker, loading, result(String, SummaryStyle) }
     private var state: State = .picker { didSet { applyState() } }
+    private var limitWarningSentThisSession = false
 
     // Picker
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -553,9 +554,28 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
     }
 
     private func showMonthlyLimitReached() {
-        let fmt = DateFormatter()
-        fmt.dateFormat = "MMMM"
-        let monthName = fmt.string(from: Date())
+        let pm = PremiumManager.shared
+        let monthFmt = DateFormatter()
+        monthFmt.dateFormat = "yyyy-MM"
+        let month = monthFmt.string(from: Date())
+
+        let displayFmt = DateFormatter()
+        displayFmt.dateFormat = "MMMM"
+        let monthName = displayFmt.string(from: Date())
+
+        let usageCount = pm.usageCount(for: .aiSummary)
+        let freeLimit = PremiumManager.Feature.aiSummary.freeLimit
+        // usageCount > freeLimit only if they generated summaries while Premium before downgrading
+        let wasPremiumThisMonth = usageCount > freeLimit
+
+        AnalyticsService.track("ai_summary_limit_hit", properties: [
+            "user_id": DeviceID.id,
+            "usage_count": usageCount,
+            "free_limit": freeLimit,
+            "month": month,
+            "was_premium_this_month": wasPremiumThisMonth,
+        ])
+
         let ac = UIAlertController(
             title: "Monthly Limit Reached",
             message: "You've used your 5 free AI summaries for \(monthName). Upgrade to WolfMore Premium for unlimited summaries.",
@@ -563,9 +583,21 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
         )
         ac.addAction(UIAlertAction(title: "Upgrade to Premium", style: .default) { [weak self] in
             guard let self else { return }
+            AnalyticsService.track("ai_summary_upgrade_tapped", properties: [
+                "user_id": DeviceID.id,
+                "source": "ai_summary_limit_alert",
+                "usage_count": usageCount,
+                "month": month,
+            ])
             self.present(PaywallViewController(feature: .aiSummary), animated: true)
         })
-        ac.addAction(UIAlertAction(title: "Maybe Next Month", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Maybe Next Month", style: .cancel) { _ in
+            AnalyticsService.track("ai_summary_upgrade_dismissed", properties: [
+                "user_id": DeviceID.id,
+                "usage_count": usageCount,
+                "month": month,
+            ])
+        })
         present(ac, animated: true)
     }
 
@@ -693,6 +725,16 @@ extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
             return "You've used all 5 free AI summaries for \(fmt.string(from: Date())). Tap to upgrade."
         }
         if remaining <= 2 {
+            if !limitWarningSentThisSession {
+                limitWarningSentThisSession = true
+                let keyFmt = DateFormatter()
+                keyFmt.dateFormat = "yyyy-MM"
+                AnalyticsService.track("ai_summary_limit_warning_shown", properties: [
+                    "user_id": DeviceID.id,
+                    "remaining_count": remaining,
+                    "month": keyFmt.string(from: Date()),
+                ])
+            }
             return "\(remaining) AI \(remaining == 1 ? "summary" : "summaries") left this month."
         }
         return nil

@@ -26,6 +26,7 @@
 		C4D5E6F7A8B9C4D5E6F70004 /* NassauScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70006 /* WolfSpectatorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */; };
 		CC01B2C3D4E5F607182930A6 /* ClaudeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */; };
+		AN01B2C3D4E5F607182930A4 /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */; };
 		CS01B2C3D4E5F607182930A4 /* ClaudeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */; };
 		D64B14586458493690DECE2E /* TournamentSummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132A36A89650472DA654B343 /* TournamentSummaryViewController.swift */; };
 		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
@@ -144,6 +145,7 @@
 		C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauScorecardViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfSpectatorViewController.swift; sourceTree = "<group>"; };
 		CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeConfig.swift; sourceTree = "<group>"; };
+		AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeService.swift; sourceTree = "<group>"; };
 		DV1C2D3E4F506071829304AB /* DeviceID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceID.swift; sourceTree = "<group>"; };
 		EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameManager+Tournament.swift"; sourceTree = "<group>"; };
@@ -293,6 +295,7 @@
 				PM01B2C3D4E5F607182930AC /* PremiumManager.swift */,
 				PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */,
 				LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */,
+				AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */,
 				CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */,
 				CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */,
 				A3B4C5D6E7F8092030415A6D /* TeeGameSetupViewController.swift */,
@@ -573,6 +576,7 @@
 				PM01B2C3D4E5F607182930AB /* PremiumManager.swift in Sources */,
 				PW01B2C3D4E5F607182930AD /* PaywallViewController.swift in Sources */,
 				LP01B2C3D4E5F607182930AF /* LocationPromptViewController.swift in Sources */,
+				AN01B2C3D4E5F607182930A4 /* AnalyticsService.swift in Sources */,
 				CS01B2C3D4E5F607182930A4 /* ClaudeService.swift in Sources */,
 				CC01B2C3D4E5F607182930A6 /* ClaudeConfig.swift in Sources */,
 				F6D5417C2F7498740020588F /* TextGroupStore.swift in Sources */,
