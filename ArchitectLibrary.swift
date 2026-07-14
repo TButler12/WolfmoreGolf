@@ -170,6 +170,9 @@ enum ArchitectLibrary {
         "Gary Player":
             "South African major champion and prolific course designer. Known for dramatic layouts emphasizing fitness and challenge. Designed Geneva National Player Course in Wisconsin.",
 
+        "Gary Roger Baird":
+            "Midwest architect who collaborated with Larry Packard on the White nine and independently designed the Red nine at Briar Ridge Country Club in Schererville, Indiana.",
+
         "Gene Bates":
             "Florida-based architect known for resort and destination designs including Salish Cliffs Golf Club in Washington state.",
 
@@ -298,6 +301,9 @@ enum ArchitectLibrary {
 
         "Kyle Phillips":
             "American architect known for European-style links designs. Designed Kingsbarns Golf Links in Scotland, widely considered one of the world's finest modern links courses.",
+
+        "Larry Packard":
+            "Prolific Midwest architect active from the 1950s through the 1980s. Designed hundreds of courses across Illinois and the broader Midwest. Collaborated with Gary Roger Baird on the White nine at Briar Ridge Country Club.",
 
         "Larry Nelson":
             "Two-time PGA Champion turned architect. Known for Gaylord Springs Golf Links in Tennessee.",

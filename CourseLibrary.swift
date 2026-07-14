@@ -3397,7 +3397,8 @@ let HARRISON_LAKE_CC_TEES: [TeeInfo] = [
 
 // =======================================================
 // MARK: Briar Ridge Country Club — Schererville, IN
-// Par 72 | Architect: Dick Nugent | Opened: 1980 | Private
+// Par 72 | Opened: 1980 | Private
+// Blue nine: Dick Nugent | Red nine: Gary Roger Baird | White nine: Larry Packard & Gary Roger Baird
 // Three 9-hole nines: Red, Blue, White — three 18-hole combos below.
 
 // Course 2 — Red nine (front) + White nine (back)
@@ -12912,7 +12913,7 @@ private enum BuiltIns {
             country: "USA",
             state: "IN",
             region: "Schererville",
-            architect: "Dick Nugent",
+            architect: "Dick Nugent & Larry Packard & Gary Roger Baird",
             type: "Private",
             phone: "(219) 322-3660",
             address: "123 Country Club Dr., Schererville, IN 46375"
@@ -12926,7 +12927,7 @@ private enum BuiltIns {
             country: "USA",
             state: "IN",
             region: "Schererville",
-            architect: "Dick Nugent",
+            architect: "Gary Roger Baird & Larry Packard",
             type: "Private",
             phone: "(219) 322-3660",
             address: "123 Country Club Dr., Schererville, IN 46375"
@@ -12940,7 +12941,7 @@ private enum BuiltIns {
             country: "USA",
             state: "IN",
             region: "Schererville",
-            architect: "Dick Nugent",
+            architect: "Dick Nugent & Gary Roger Baird",
             type: "Private",
             phone: "(219) 322-3660",
             address: "123 Country Club Dr., Schererville, IN 46375"
