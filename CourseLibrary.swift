@@ -3283,28 +3283,6 @@ let RIVER_FOREST_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",       yardage: 5692, rating: 74.0, slope: 133)
 ]
 
-// MARK: Kemper Lakes Golf Club — Kildeer, IL
-// Par 72 | Architects: Ken Killian & Dick Nugent | Opened: 1978 | Private
-// Site of the 1989 PGA Championship (Payne Stewart). "Stewart" tee commemorates that win.
-private let KEMPER_LAKES_ID = UUID(uuidString: "4E2F7B1A-9C3D-4A8E-B5F6-2D1C8A3E7B4F")!
-
-let KEMPER_LAKES_PARS: [Int] = [
-    4,4,3,5,4,3,5,4,4,
-    4,5,4,3,4,5,4,3,4
-]
-
-let KEMPER_LAKES_HCS: [Int] = [
-    13,11,17,7,3,15,5,9,1,
-    10,6,12,18,16,4,2,14,8
-]
-
-let KEMPER_LAKES_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Gold",    yardage: 7217, rating: 75.2, slope: 143),
-    TeeInfo(teeName: "Blue",    yardage: 6680, rating: 72.8, slope: 137),
-    TeeInfo(teeName: "Stewart", yardage: 6427, rating: 71.6, slope: 135),
-    TeeInfo(teeName: "White",   yardage: 6265, rating: 70.9, slope: 133),
-    TeeInfo(teeName: "Black",   yardage: 5638, rating: 68.0, slope: 126),
-]
 
 // MARK: The Links at Spanish Bay — Pebble Beach, CA
 private let SPANISH_BAY_ID = UUID(uuidString: "F2010001-0000-0000-0000-000000000004")!
@@ -12807,15 +12785,6 @@ private enum BuiltIns {
           phone: "847-234-7160",
           website: "https://www.conwayfarmsgolfclub.org",
           address: "425 S. Conway Farms Drive, Lake Forest, IL 60045"),
-
-        c(KEMPER_LAKES_ID, "Kemper Lakes Golf Club", KEMPER_LAKES_PARS, KEMPER_LAKES_HCS, KEMPER_LAKES_TEES,
-          country: "USA",
-          state: "IL",
-          region: "Kildeer",
-          architect: "Ken Killian / Dick Nugent",
-          type: "Private",
-          phone: "(847) 540-3100",
-          address: "24000 N. Old McHenry Rd., Kildeer, IL 60047"),
 
         c(SPANISH_BAY_ID, "The Links at Spanish Bay", SPANISH_BAY_PARS, SPANISH_BAY_HCS, SPANISH_BAY_TEES,
           country: "USA",
