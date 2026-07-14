@@ -3420,11 +3420,14 @@ let HARRISON_LAKE_CC_TEES: [TeeInfo] = [
 // =======================================================
 // MARK: Briar Ridge Country Club — Schererville, IN
 // Par 72 | Architect: Dick Nugent | Opened: 1980 | Private
+// Three 9-hole nines: Red, Blue, White — three 18-hole combos below.
+
+// Course 2 — Red nine (front) + White nine (back)
 private let BRIAR_RIDGE_CC_ID = UUID(uuidString: "B8E4F2A1-3C7D-4E9F-B5A2-6D1E8C4F7B3A")!
 
 let BRIAR_RIDGE_CC_PARS: [Int] = [
-    4,5,3,4,4,5,4,3,4,
-    4,3,5,4,4,3,4,4,5
+    4,5,3,4,4,5,4,3,4,   // Red nine
+    4,3,5,4,4,3,4,4,5    // White nine
 ]
 
 let BRIAR_RIDGE_CC_HCS: [Int] = [
@@ -3438,6 +3441,48 @@ let BRIAR_RIDGE_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "White",  yardage: 6341),
     TeeInfo(teeName: "Gold",   yardage: 6006),
     TeeInfo(teeName: "Red",    yardage: 5316),
+]
+
+// Course 1 — Blue nine (front) + White nine (back)
+private let BRIAR_RIDGE_BW_ID = UUID(uuidString: "B8E4F2A2-3C7D-4E9F-B5A2-6D1E8C4F7B3A")!
+
+let BRIAR_RIDGE_BW_PARS: [Int] = [
+    4,4,5,3,4,5,3,4,4,   // Blue nine
+    4,3,5,4,4,3,4,4,5    // White nine
+]
+
+let BRIAR_RIDGE_BW_HCS: [Int] = [
+    3,13,11,9,15,7,17,5,1,
+    2,18,10,4,16,14,8,6,12
+]
+
+let BRIAR_RIDGE_BW_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6815),
+    TeeInfo(teeName: "Powers", yardage: 6621),
+    TeeInfo(teeName: "White",  yardage: 6409),
+    TeeInfo(teeName: "Gold",   yardage: 6058),
+    TeeInfo(teeName: "Red",    yardage: 5309),
+]
+
+// Course 3 — Red nine (front) + Blue nine (back)
+private let BRIAR_RIDGE_RB_ID = UUID(uuidString: "B8E4F2A3-3C7D-4E9F-B5A2-6D1E8C4F7B3A")!
+
+let BRIAR_RIDGE_RB_PARS: [Int] = [
+    4,5,3,4,4,5,4,3,4,   // Red nine
+    4,4,5,3,4,5,3,4,4    // Blue nine
+]
+
+let BRIAR_RIDGE_RB_HCS: [Int] = [
+    13,11,15,5,9,7,3,17,1,
+    4,14,12,10,16,8,18,6,2
+]
+
+let BRIAR_RIDGE_RB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6815),
+    TeeInfo(teeName: "Powers", yardage: 6627),
+    TeeInfo(teeName: "White",  yardage: 6460),
+    TeeInfo(teeName: "Gold",   yardage: 6122),
+    TeeInfo(teeName: "Red",    yardage: 5475),
 ]
 
 // MARK: - Built-in: Silvies Valley Resort & Links – Craddock
@@ -12890,11 +12935,39 @@ private enum BuiltIns {
             address: "588 S. Country Club Rd, Columbus, IN 47201"
         ),
         c(
+            BRIAR_RIDGE_BW_ID,
+            "Briar Ridge CC — Blue/White",
+            BRIAR_RIDGE_BW_PARS,
+            BRIAR_RIDGE_BW_HCS,
+            BRIAR_RIDGE_BW_TEES,
+            country: "USA",
+            state: "IN",
+            region: "Schererville",
+            architect: "Dick Nugent",
+            type: "Private",
+            phone: "(219) 322-3660",
+            address: "123 Country Club Dr., Schererville, IN 46375"
+        ),
+        c(
             BRIAR_RIDGE_CC_ID,
-            "Briar Ridge Country Club",
+            "Briar Ridge CC — Red/White",
             BRIAR_RIDGE_CC_PARS,
             BRIAR_RIDGE_CC_HCS,
             BRIAR_RIDGE_CC_TEES,
+            country: "USA",
+            state: "IN",
+            region: "Schererville",
+            architect: "Dick Nugent",
+            type: "Private",
+            phone: "(219) 322-3660",
+            address: "123 Country Club Dr., Schererville, IN 46375"
+        ),
+        c(
+            BRIAR_RIDGE_RB_ID,
+            "Briar Ridge CC — Red/Blue",
+            BRIAR_RIDGE_RB_PARS,
+            BRIAR_RIDGE_RB_HCS,
+            BRIAR_RIDGE_RB_TEES,
             country: "USA",
             state: "IN",
             region: "Schererville",
