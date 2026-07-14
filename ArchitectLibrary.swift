@@ -509,8 +509,8 @@ enum ArchitectLibrary {
         "Tommy Pegram":
             "Michigan architect known for Crooked Tree Golf Course.",
 
-        "William B. Langford":
-            "Chicago-area architect active in the 1920s–1940s known for strategic designs across the Midwest. Known for Wakonda Club in Iowa.",
+        "William Langford":
+            "Chicago-area architect active in the 1920s–1940s known for strategic designs across the Midwest. Known for Wakonda Club in Iowa and Lawsonia Links in Wisconsin (with Theodore Moreau).",
 
         "William C. Pickeman & George Coburn (1894)":
             "Scottish architects responsible for Portmarnock Golf Club in Dublin, one of Ireland's most celebrated links courses, founded in 1894.",

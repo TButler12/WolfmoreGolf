@@ -11221,7 +11221,7 @@ private enum BuiltIns {
           country: "USA",
           state: "IA",
           region: "Des Moines",
-          architect: "William B. Langford",
+          architect: "William Langford",
           type: "Private",
           address: "3915 Fleur Drive, Des Moines, IA 50321"),
         c(BLUE_TOP_RIDGE_ID, "Blue Top Ridge", BLUE_TOP_RIDGE_PARS, BLUE_TOP_RIDGE_HCS, BLUE_TOP_RIDGE_TEES,
