@@ -580,7 +580,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
             message: "You've used your 5 free AI summaries for \(monthName). Upgrade to WolfMore Premium for unlimited summaries.",
             preferredStyle: .alert
         )
-        ac.addAction(UIAlertAction(title: "Upgrade to Premium", style: .default) { [weak self] in
+        ac.addAction(UIAlertAction(title: "Upgrade to Premium", style: .default) { [weak self] _ in
             guard let self else { return }
             AnalyticsService.track("ai_summary_upgrade_tapped", properties: [
                 "user_id": DeviceID.id,
