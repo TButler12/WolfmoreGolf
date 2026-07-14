@@ -7666,6 +7666,290 @@ let KAROO_STREAMSONG_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 7562, rating: 75.2, slope: 140)
 ]
 
+// MARK: - Tiburón Golf Club (Black Course)
+
+private let TIBURON_BLACK_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000001")!
+
+let TIBURON_BLACK_PARS: [Int] = [
+    4,4,4,3,4,5,3,4,5,
+    3,4,4,3,4,5,4,4,5
+]
+
+let TIBURON_BLACK_HCS: [Int] = [
+    5,1,9,15,7,17,11,3,13,
+    16,14,8,18,6,12,2,4,10
+]
+
+let TIBURON_BLACK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6649),
+    TeeInfo(teeName: "Black", yardage: 6465),
+    TeeInfo(teeName: "White", yardage: 6197),
+    TeeInfo(teeName: "Blue", yardage: 5590),
+    TeeInfo(teeName: "Lavender", yardage: 4878),
+    TeeInfo(teeName: "Family", yardage: 3975)
+]
+
+// MARK: - Tiburón Golf Club (Gold Course)
+
+private let TIBURON_GOLD_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000002")!
+
+let TIBURON_GOLD_PARS: [Int] = [
+    5,4,4,4,3,5,4,3,4,
+    4,4,3,4,5,4,3,4,5
+]
+
+let TIBURON_GOLD_HCS: [Int] = [
+    11,9,7,5,13,1,15,17,3,
+    18,8,12,16,6,2,14,10,4
+]
+
+let TIBURON_GOLD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7382),
+    TeeInfo(teeName: "Black", yardage: 6790),
+    TeeInfo(teeName: "White", yardage: 6127),
+    TeeInfo(teeName: "Blue", yardage: 5692),
+    TeeInfo(teeName: "Lavender", yardage: 5112)
+]
+
+// MARK: - Naples Beach Club (Four Seasons)
+
+private let NAPLES_BEACH_CLUB_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000003")!
+
+let NAPLES_BEACH_CLUB_PARS: [Int] = [
+    4,4,5,3,4,4,4,3,4,
+    4,5,3,4,5,4,3,4,4
+]
+
+let NAPLES_BEACH_CLUB_HCS: [Int] = [
+    11,13,1,17,7,5,9,15,3,
+    12,10,18,14,2,4,16,8,6
+]
+
+let NAPLES_BEACH_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 6884, rating: 73.1, slope: 135)
+]
+
+// MARK: - Lely Resort (Mustang Course)
+
+private let LELY_MUSTANG_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000004")!
+
+let LELY_MUSTANG_PARS: [Int] = [
+    5,4,4,4,3,4,5,3,4,
+    5,4,3,4,5,4,3,4,4
+]
+
+let LELY_MUSTANG_HCS: [Int] = [
+    11,9,7,1,17,5,13,15,3,
+    10,4,14,6,8,2,16,12,18
+]
+
+let LELY_MUSTANG_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7230, rating: 75.1, slope: 134),
+    TeeInfo(teeName: "Back", yardage: 6627, rating: 72.4, slope: 128),
+    TeeInfo(teeName: "Mustang", yardage: 6242, rating: 70.6, slope: 123),
+    TeeInfo(teeName: "Middle", yardage: 6018),
+    TeeInfo(teeName: "White/Aqua", yardage: 5567, rating: 68.0, slope: 119),
+    TeeInfo(teeName: "Forward", yardage: 5249),
+    TeeInfo(teeName: "Family", yardage: 4491)
+]
+
+// MARK: - Lely Resort (Flamingo Island Course)
+
+private let LELY_FLAMINGO_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000005")!
+
+let LELY_FLAMINGO_PARS: [Int] = [
+    4,5,3,4,3,4,4,5,4,
+    4,3,5,4,4,3,5,4,4
+]
+
+let LELY_FLAMINGO_HCS: [Int] = [
+    9,7,17,1,11,15,13,3,5,
+    16,14,2,12,10,18,6,4,8
+]
+
+let LELY_FLAMINGO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7095, rating: 75.3, slope: 140),
+    TeeInfo(teeName: "Back", yardage: 6454, rating: 71.9, slope: 137),
+    TeeInfo(teeName: "Flamingo", yardage: 6180, rating: 70.3, slope: 131),
+    TeeInfo(teeName: "Middle", yardage: 5996),
+    TeeInfo(teeName: "White/Aqua", yardage: 5515, rating: 68.5, slope: 125),
+    TeeInfo(teeName: "Forward", yardage: 5313),
+    TeeInfo(teeName: "Family", yardage: 4477)
+]
+
+// MARK: - Lely Resort (Classics Course)
+
+private let LELY_CLASSICS_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000006")!
+
+let LELY_CLASSICS_PARS: [Int] = [
+    4,4,5,3,4,3,5,4,4,
+    4,5,3,4,4,4,3,5,4
+]
+
+let LELY_CLASSICS_HCS: [Int] = [
+    13,9,1,11,7,17,5,15,3,
+    6,8,16,18,4,12,14,10,2
+]
+
+let LELY_CLASSICS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6714, rating: 72.7, slope: 134),
+    TeeInfo(teeName: "Green", yardage: 6239, rating: 70.0, slope: 128),
+    TeeInfo(teeName: "Green/White", yardage: 5896, rating: 69.0, slope: 124),
+    TeeInfo(teeName: "White", yardage: 5750, rating: 68.0, slope: 122),
+    TeeInfo(teeName: "Red", yardage: 5209, rating: 66.2, slope: 114)
+]
+
+// MARK: - King & Bear (World Golf Village)
+
+private let KING_BEAR_WGV_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000007")!
+
+let KING_BEAR_WGV_PARS: [Int] = [
+    4,3,4,5,3,4,4,4,5,
+    4,4,3,4,5,3,5,4,4
+]
+
+let KING_BEAR_WGV_HCS: [Int] = [
+    3,11,5,9,17,7,1,15,13,
+    6,14,12,8,18,16,4,10,2
+]
+
+let KING_BEAR_WGV_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Stone", yardage: 7279, rating: 74.6, slope: 141),
+    TeeInfo(teeName: "Black", yardage: 6855, rating: 72.5, slope: 138),
+    TeeInfo(teeName: "Blue", yardage: 6506, rating: 70.6, slope: 133),
+    TeeInfo(teeName: "White", yardage: 5987),
+    TeeInfo(teeName: "Green", yardage: 5119)
+]
+
+// MARK: - Slammer & Squire (World Golf Village)
+
+private let SLAMMER_SQUIRE_WGV_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000008")!
+
+let SLAMMER_SQUIRE_WGV_PARS: [Int] = [
+    4,3,4,5,4,4,3,5,4,
+    4,5,4,3,4,3,5,4,4
+]
+
+let SLAMMER_SQUIRE_WGV_HCS: [Int] = [
+    9,15,13,3,1,5,17,11,7,
+    14,12,2,16,18,10,6,4,8
+]
+
+let SLAMMER_SQUIRE_WGV_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Stone", yardage: 6939, rating: 72.8, slope: 132),
+    TeeInfo(teeName: "Black", yardage: 6660, rating: 71.2, slope: 129),
+    TeeInfo(teeName: "Blue", yardage: 6132, rating: 68.9, slope: 124),
+    TeeInfo(teeName: "White", yardage: 5711),
+    TeeInfo(teeName: "Green", yardage: 4996)
+]
+
+// MARK: - Crandon Golf at Key Biscayne
+
+private let CRANDON_KEY_BISCAYNE_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000009")!
+
+let CRANDON_KEY_BISCAYNE_PARS: [Int] = [
+    5,4,3,5,4,3,4,3,4,
+    5,4,3,4,5,4,4,3,5
+]
+
+let CRANDON_KEY_BISCAYNE_HCS: [Int] = [
+    8,6,12,4,10,16,2,18,14,
+    5,1,9,7,11,3,17,15,13
+]
+
+let CRANDON_KEY_BISCAYNE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7182, rating: 75.1, slope: 146),
+    TeeInfo(teeName: "Blue", yardage: 6866, rating: 73.7, slope: 142),
+    TeeInfo(teeName: "White", yardage: 6424, rating: 71.8, slope: 135),
+    TeeInfo(teeName: "Green", yardage: 5788, rating: 69.0, slope: 126),
+    TeeInfo(teeName: "Yellow", yardage: 5342),
+    TeeInfo(teeName: "Junior", yardage: 3786)
+]
+
+// MARK: - Trump National Doral (Red Tiger Course)
+
+private let TRUMP_DORAL_RED_TIGER_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000102")!
+
+let TRUMP_DORAL_RED_TIGER_PARS: [Int] = [
+    5,3,5,4,5,3,4,3,4,
+    5,3,5,4,3,4,3,4,5
+]
+
+let TRUMP_DORAL_RED_TIGER_HCS: [Int] = [
+    3,13,9,5,1,17,7,15,11,
+    4,16,2,12,18,8,10,14,6
+]
+
+let TRUMP_DORAL_RED_TIGER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6395, rating: 71.8, slope: 136),
+    TeeInfo(teeName: "Gold", yardage: 5918, rating: 69.6, slope: 132),
+    TeeInfo(teeName: "Blue", yardage: 5660, rating: 68.6, slope: 127),
+    TeeInfo(teeName: "White", yardage: 5229, rating: 66.2, slope: 120),
+    TeeInfo(teeName: "Red", yardage: 4525)
+]
+
+// MARK: - Trump National Doral (Silver Fox Course)
+
+private let TRUMP_DORAL_SILVER_FOX_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000103")!
+
+let TRUMP_DORAL_SILVER_FOX_PARS: [Int] = [
+    4,4,5,3,4,4,3,4,4,
+    4,5,4,4,4,3,5,3,4
+]
+
+let TRUMP_DORAL_SILVER_FOX_HCS: [Int] = [
+    10,12,14,8,18,2,4,6,16,
+    5,3,1,15,11,13,17,7,9
+]
+
+let TRUMP_DORAL_SILVER_FOX_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7006, rating: 74.9, slope: 148),
+    TeeInfo(teeName: "Gold", yardage: 6398, rating: 72.6, slope: 143),
+    TeeInfo(teeName: "Blue", yardage: 5861, rating: 69.8, slope: 135),
+    TeeInfo(teeName: "White", yardage: 5462, rating: 67.6, slope: 128),
+    TeeInfo(teeName: "Red", yardage: 4478)
+]
+
+// MARK: - Trump National Doral (Golden Palm Course)
+
+private let TRUMP_DORAL_GOLDEN_PALM_ID = UUID(uuidString: "C8D20000-0000-0000-0000-000000000104")!
+
+let TRUMP_DORAL_GOLDEN_PALM_PARS: [Int] = [
+    4,5,4,5,4,4,3,4,3,
+    4,5,3,4,4,3,5,3,4
+]
+
+let TRUMP_DORAL_GOLDEN_PALM_HCS: [Int] = [
+    11,7,9,1,3,13,15,5,17,
+    10,2,18,12,4,16,6,14,8
+]
+
+let TRUMP_DORAL_GOLDEN_PALM_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7012, rating: 74.2, slope: 139),
+    TeeInfo(teeName: "Gold", yardage: 6324, rating: 72.0, slope: 134),
+    TeeInfo(teeName: "Blue", yardage: 6002, rating: 69.9, slope: 133),
+    TeeInfo(teeName: "White", yardage: 5653, rating: 68.6, slope: 128),
+    TeeInfo(teeName: "Red", yardage: 4858)
+]
+
+// MARK: - Ritz-Carlton Golf Club Orlando (Grande Lakes)
+
+private let RITZ_CARLTON_ORLANDO_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000010")!
+
+let RITZ_CARLTON_ORLANDO_PARS: [Int] = [
+    4,4,5,3,5,4,4,3,4,
+    4,4,3,4,5,4,4,3,5
+]
+
+let RITZ_CARLTON_ORLANDO_HCS: [Int] = [
+    10,6,8,18,4,12,14,16,2,
+    11,13,17,15,3,1,7,9,5
+]
+
+let RITZ_CARLTON_ORLANDO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7066, rating: 73.7, slope: 134)
+]
+
 // MARK: - TPC Scottsdale (Stadium Course)
 
 private let TPC_SCOTTSDALE_STADIUM_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000202")!
@@ -16461,6 +16745,194 @@ private enum BuiltIns {
             type: "Resort",
             address: "Brooksville, FL 34601",
             resortBrand: "Streamsong"
+        ),
+        c(
+            TIBURON_BLACK_ID,
+            "Tiburón Golf Club (Black Course)",
+            TIBURON_BLACK_PARS,
+            TIBURON_BLACK_HCS,
+            TIBURON_BLACK_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Naples",
+            architect: "Greg Norman",
+            type: "Private",
+            phone: "(239) 593-2200",
+            address: "2620 Tiburón Dr, Naples, FL 34109"
+        ),
+        c(
+            TIBURON_GOLD_ID,
+            "Tiburón Golf Club (Gold Course)",
+            TIBURON_GOLD_PARS,
+            TIBURON_GOLD_HCS,
+            TIBURON_GOLD_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Naples",
+            architect: "Greg Norman",
+            type: "Private",
+            phone: "(239) 593-2200",
+            address: "2620 Tiburón Dr, Naples, FL 34109"
+        ),
+        c(
+            NAPLES_BEACH_CLUB_ID,
+            "Naples Beach Club",
+            NAPLES_BEACH_CLUB_PARS,
+            NAPLES_BEACH_CLUB_HCS,
+            NAPLES_BEACH_CLUB_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Naples",
+            architect: "Hart Howerton",
+            type: "Resort",
+            phone: "(239) 944-7600",
+            address: "801 Gulf Shore Blvd N, Naples, FL 34102",
+            resortBrand: "Four Seasons"
+        ),
+        c(
+            LELY_MUSTANG_ID,
+            "Lely Resort (Mustang Course)",
+            LELY_MUSTANG_PARS,
+            LELY_MUSTANG_HCS,
+            LELY_MUSTANG_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Naples",
+            architect: "Lee Trevino",
+            type: "Public",
+            phone: "(239) 793-2600",
+            address: "8004 Lely Resort Blvd, Naples, FL 34113"
+        ),
+        c(
+            LELY_FLAMINGO_ID,
+            "Lely Resort (Flamingo Island Course)",
+            LELY_FLAMINGO_PARS,
+            LELY_FLAMINGO_HCS,
+            LELY_FLAMINGO_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Naples",
+            architect: "Robert Trent Jones, Sr.",
+            type: "Public",
+            phone: "(239) 793-2600",
+            address: "8004 Lely Resort Blvd, Naples, FL 34113"
+        ),
+        c(
+            LELY_CLASSICS_ID,
+            "Lely Resort (Classics Course)",
+            LELY_CLASSICS_PARS,
+            LELY_CLASSICS_HCS,
+            LELY_CLASSICS_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Naples",
+            architect: "Gary Player",
+            type: "Private",
+            phone: "(239) 732-1220",
+            address: "7989 Grand Lely Dr, Naples, FL 34113"
+        ),
+        c(
+            KING_BEAR_WGV_ID,
+            "King & Bear (World Golf Village)",
+            KING_BEAR_WGV_PARS,
+            KING_BEAR_WGV_HCS,
+            KING_BEAR_WGV_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Jacksonville",
+            architect: "Arnold Palmer & Jack Nicklaus",
+            type: "Public",
+            website: "https://www.golfwgv.com",
+            address: "World Golf Village, St. Augustine, FL 32092"
+        ),
+        c(
+            SLAMMER_SQUIRE_WGV_ID,
+            "Slammer & Squire (World Golf Village)",
+            SLAMMER_SQUIRE_WGV_PARS,
+            SLAMMER_SQUIRE_WGV_HCS,
+            SLAMMER_SQUIRE_WGV_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Jacksonville",
+            architect: "Sam Snead & Gene Sarazen",
+            type: "Public",
+            website: "https://www.golfwgv.com",
+            address: "World Golf Village, St. Augustine, FL 32092"
+        ),
+        c(
+            CRANDON_KEY_BISCAYNE_ID,
+            "Crandon Golf at Key Biscayne",
+            CRANDON_KEY_BISCAYNE_PARS,
+            CRANDON_KEY_BISCAYNE_HCS,
+            CRANDON_KEY_BISCAYNE_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Miami",
+            architect: "Bruce Devlin & Robert Von Hagge",
+            type: "Public",
+            phone: "(305) 361-9129",
+            website: "https://www.golfcrandon.com",
+            address: "6700 Crandon Blvd, Key Biscayne, FL 33149"
+        ),
+        c(
+            TRUMP_DORAL_RED_TIGER_ID,
+            "Trump National Doral (Red Tiger)",
+            TRUMP_DORAL_RED_TIGER_PARS,
+            TRUMP_DORAL_RED_TIGER_HCS,
+            TRUMP_DORAL_RED_TIGER_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Miami",
+            architect: "Dick Wilson & Gil Hanse",
+            type: "Resort",
+            phone: "(305) 592-2000",
+            website: "https://www.trumphotels.com/miami/golf",
+            address: "4400 NW 87th Ave, Miami, FL 33178"
+        ),
+        c(
+            TRUMP_DORAL_SILVER_FOX_ID,
+            "Trump National Doral (Silver Fox)",
+            TRUMP_DORAL_SILVER_FOX_PARS,
+            TRUMP_DORAL_SILVER_FOX_HCS,
+            TRUMP_DORAL_SILVER_FOX_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Miami",
+            architect: "Robert Von Hagge",
+            type: "Resort",
+            phone: "(305) 592-2000",
+            website: "https://www.trumphotels.com/miami/golf",
+            address: "4400 NW 87th Ave, Miami, FL 33178"
+        ),
+        c(
+            TRUMP_DORAL_GOLDEN_PALM_ID,
+            "Trump National Doral (Golden Palm)",
+            TRUMP_DORAL_GOLDEN_PALM_PARS,
+            TRUMP_DORAL_GOLDEN_PALM_HCS,
+            TRUMP_DORAL_GOLDEN_PALM_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Miami",
+            architect: "Robert Von Hagge & Bruce Devlin",
+            type: "Resort",
+            phone: "(305) 592-2000",
+            website: "https://www.trumphotels.com/miami/golf",
+            address: "4400 NW 87th Ave, Miami, FL 33178"
+        ),
+        c(
+            RITZ_CARLTON_ORLANDO_ID,
+            "Ritz-Carlton Golf Club Orlando",
+            RITZ_CARLTON_ORLANDO_PARS,
+            RITZ_CARLTON_ORLANDO_HCS,
+            RITZ_CARLTON_ORLANDO_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Orlando",
+            architect: "Greg Norman",
+            type: "Resort",
+            phone: "(407) 393-4200",
+            address: "4012 Central Florida Pkwy, Orlando, FL 32837",
+            resortBrand: "Ritz-Carlton"
         ),
         c(
             TPC_SCOTTSDALE_CHAMPIONS_ID,

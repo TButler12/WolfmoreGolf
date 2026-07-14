@@ -122,6 +122,9 @@ enum ArchitectLibrary {
         "Dick Nugent":
             "Chicago-area architect known for numerous Midwest designs including Kemper Lakes and White Deer Run. Long-time collaborator with Ken Killian.",
 
+        "Dick Wilson":
+            "Florida-based golden age architect who shaped post-war American design. Best known for Doral's Blue Monster and Red Tiger in Miami, and Bay Hill Club in Orlando.",
+
         "Donald Ross":
             "Scottish-born architect who became America's most prolific golden age designer with over 400 courses. Signature style features crowned greens that deflect errant approaches, natural bunkering, and strategic routing. Designed Pinehurst No. 2, Aronimink, and Pine Needles.",
 
@@ -176,6 +179,9 @@ enum ArchitectLibrary {
         "Gene Bates":
             "Florida-based architect known for resort and destination designs including Salish Cliffs Golf Club in Washington state.",
 
+        "Gene Sarazen":
+            "One of golf's grand slam legends — the first player to win all four majors. Co-designed Slammer & Squire at World Golf Village in St. Augustine, Florida, alongside Sam Snead.",
+
         "Geoffrey Cornish":
             "Prolific New England architect who designed hundreds of courses across the Northeast. Known for Sterling Farms Golf Course in Connecticut.",
 
@@ -217,6 +223,9 @@ enum ArchitectLibrary {
 
         "Harry Bowers / Arthur Hills":
             "Collaboration producing Crooked Tree Golf Club in Michigan.",
+
+        "Hart Howerton":
+            "Architecture and planning firm known for luxury resort and residential communities. Lead master planner and architect for the Naples Beach Club golf course at the Four Seasons Naples.",
 
         "Hugh Moore":
             "Regional architect known for Dothan Country Club in Alabama.",
@@ -404,6 +413,9 @@ enum ArchitectLibrary {
         "Robert Turnbull / Gunnar Bauer / Peter Nordwall / Peter Chamberlain":
             "Design team behind Falsterbo Golf Club in Sweden, one of Scandinavia's finest links courses.",
 
+        "Robert Von Hagge":
+            "American architect with a dramatic, water-heavy design style. Known for Silver Fox and Golden Palm courses at Trump National Doral in Miami, and Crandon Golf at Key Biscayne, widely regarded as one of Florida's finest public layouts.",
+
         "Ron Fream & Gene Bates":
             "Collaboration at Sentosa Golf Club's Tanjong Course in Singapore.",
 
@@ -415,6 +427,9 @@ enum ArchitectLibrary {
 
         "Roy Case":
             "Houston-area architect known for Wildcat Golf Club's Lakes Course.",
+
+        "Sam Snead":
+            "Hall of Fame player with 82 PGA Tour wins. Co-designed Slammer & Squire at World Golf Village in St. Augustine, Florida, alongside Gene Sarazen.",
 
         "Schmidt & Curley":
             "International design firm known for resort layouts worldwide including Bali Hai Golf Club in Las Vegas.",
