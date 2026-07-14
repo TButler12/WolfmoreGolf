@@ -7950,6 +7950,108 @@ let RITZ_CARLTON_ORLANDO_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 7066, rating: 73.7, slope: 134)
 ]
 
+// MARK: - Disney's Magnolia Golf Course
+
+private let DISNEY_MAGNOLIA_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000011")!
+
+let DISNEY_MAGNOLIA_PARS: [Int] = [
+    4,4,3,5,4,3,4,5,4,
+    5,4,3,4,4,5,4,3,4
+]
+
+let DISNEY_MAGNOLIA_HCS: [Int] = [
+    3,13,15,17,1,11,7,9,5,
+    6,14,18,16,2,12,4,10,8
+]
+
+let DISNEY_MAGNOLIA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Classic", yardage: 7505, rating: 76.6, slope: 142),
+    TeeInfo(teeName: "Green", yardage: 6965, rating: 74.1, slope: 137),
+    TeeInfo(teeName: "White", yardage: 6574, rating: 72.3, slope: 133),
+    TeeInfo(teeName: "Yellow", yardage: 6146, rating: 70.2, slope: 129),
+    TeeInfo(teeName: "Red", yardage: 5200)
+]
+
+// MARK: - Disney's Palm Golf Course
+
+private let DISNEY_PALM_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000012")!
+
+let DISNEY_PALM_PARS: [Int] = [
+    5,4,3,4,4,4,5,3,4,
+    4,5,3,4,5,4,3,4,4
+]
+
+let DISNEY_PALM_HCS: [Int] = [
+    11,3,13,17,7,1,5,9,15,
+    4,10,18,6,8,12,16,14,2
+]
+
+let DISNEY_PALM_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Classic", yardage: 6925, rating: 73.7, slope: 137)
+]
+
+// MARK: - Disney's Osprey Ridge Golf Course
+
+private let DISNEY_OSPREY_RIDGE_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000013")!
+
+let DISNEY_OSPREY_RIDGE_PARS: [Int] = [
+    4,4,4,3,4,3,4,5,4,
+    5,4,4,5,3,4,4,5,3
+]
+
+let DISNEY_OSPREY_RIDGE_HCS: [Int] = [
+    15,11,9,17,3,13,7,1,5,
+    6,12,14,8,18,2,16,4,10
+]
+
+let DISNEY_OSPREY_RIDGE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Talon", yardage: 6968, rating: 73.5, slope: 126)
+]
+
+// MARK: - Waldorf Astoria Golf Club Orlando
+
+private let WALDORF_ASTORIA_ORLANDO_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000014")!
+
+let WALDORF_ASTORIA_ORLANDO_PARS: [Int] = [
+    4,3,4,5,4,4,3,5,4,
+    4,3,5,4,4,4,3,5,4
+]
+
+let WALDORF_ASTORIA_ORLANDO_HCS: [Int] = [
+    17,15,3,11,7,1,13,9,5,
+    12,8,4,18,2,10,16,14,6
+]
+
+let WALDORF_ASTORIA_ORLANDO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7104, rating: 74.5, slope: 145),
+    TeeInfo(teeName: "Blue", yardage: 6638, rating: 72.4, slope: 140),
+    TeeInfo(teeName: "White", yardage: 6257, rating: 70.7, slope: 135),
+    TeeInfo(teeName: "Green", yardage: 5761, rating: 68.3, slope: 128),
+    TeeInfo(teeName: "Silver", yardage: 4986, rating: 69.0, slope: 127)
+]
+
+// MARK: - TPC San Antonio (AT&T Canyons Course)
+
+private let TPC_SAN_ANTONIO_CANYONS_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000015")!
+
+let TPC_SAN_ANTONIO_CANYONS_PARS: [Int] = [
+    4,5,4,3,4,5,4,3,4,
+    4,4,5,3,4,5,3,4,4
+]
+
+let TPC_SAN_ANTONIO_CANYONS_HCS: [Int] = [
+    15,5,17,11,1,7,9,13,3,
+    14,4,10,12,2,18,8,16,6
+]
+
+let TPC_SAN_ANTONIO_CANYONS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Cibolo", yardage: 7106, rating: 73.6, slope: 129),
+    TeeInfo(teeName: "Tournament", yardage: 6622),
+    TeeInfo(teeName: "Players", yardage: 6142, rating: 69.6, slope: 127),
+    TeeInfo(teeName: "Club", yardage: 5609, rating: 67.5, slope: 120),
+    TeeInfo(teeName: "Forward", yardage: 4968)
+]
+
 // MARK: - TPC Scottsdale (Stadium Course)
 
 private let TPC_SCOTTSDALE_STADIUM_ID = UUID(uuidString: "A5D1F0C2-3101-4D22-8A11-100000000202")!
@@ -16933,6 +17035,84 @@ private enum BuiltIns {
             phone: "(407) 393-4200",
             address: "4012 Central Florida Pkwy, Orlando, FL 32837",
             resortBrand: "Ritz-Carlton"
+        ),
+        c(
+            DISNEY_MAGNOLIA_ID,
+            "Disney's Magnolia Golf Course",
+            DISNEY_MAGNOLIA_PARS,
+            DISNEY_MAGNOLIA_HCS,
+            DISNEY_MAGNOLIA_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Orlando",
+            architect: "Joe Lee & Ken Baker",
+            type: "Resort",
+            phone: "(407) 939-4653",
+            website: "https://www.golfwdw.com",
+            address: "1950 W Magnolia-Palm Dr, Lake Buena Vista, FL 32830",
+            resortBrand: "Disney"
+        ),
+        c(
+            DISNEY_PALM_ID,
+            "Disney's Palm Golf Course",
+            DISNEY_PALM_PARS,
+            DISNEY_PALM_HCS,
+            DISNEY_PALM_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Orlando",
+            architect: "Joe Lee",
+            type: "Resort",
+            phone: "(407) 939-4653",
+            website: "https://www.golfwdw.com",
+            address: "1950 W Magnolia-Palm Dr, Lake Buena Vista, FL 32830",
+            resortBrand: "Disney"
+        ),
+        c(
+            DISNEY_OSPREY_RIDGE_ID,
+            "Disney's Osprey Ridge Golf Course",
+            DISNEY_OSPREY_RIDGE_PARS,
+            DISNEY_OSPREY_RIDGE_HCS,
+            DISNEY_OSPREY_RIDGE_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Orlando",
+            architect: "Tom Fazio",
+            type: "Resort",
+            phone: "(407) 939-4653",
+            website: "https://www.golfwdw.com",
+            address: "3451 Golf View Blvd, Lake Buena Vista, FL 32830",
+            resortBrand: "Disney"
+        ),
+        c(
+            WALDORF_ASTORIA_ORLANDO_ID,
+            "Waldorf Astoria Golf Club",
+            WALDORF_ASTORIA_ORLANDO_PARS,
+            WALDORF_ASTORIA_ORLANDO_HCS,
+            WALDORF_ASTORIA_ORLANDO_TEES,
+            country: "USA",
+            state: "FL",
+            region: "Orlando",
+            architect: "Rees Jones",
+            type: "Resort",
+            phone: "(407) 597-3780",
+            website: "https://www.waldorfastoriaorlando.com",
+            address: "14224 Bonnet Creek Resort Ln, Orlando, FL 32821",
+            resortBrand: "Waldorf Astoria"
+        ),
+        c(
+            TPC_SAN_ANTONIO_CANYONS_ID,
+            "TPC San Antonio (AT&T Canyons Course)",
+            TPC_SAN_ANTONIO_CANYONS_PARS,
+            TPC_SAN_ANTONIO_CANYONS_HCS,
+            TPC_SAN_ANTONIO_CANYONS_TEES,
+            country: "USA",
+            state: "TX",
+            region: "San Antonio",
+            architect: "Pete Dye",
+            type: "Private",
+            website: "https://www.tpc.com/tpcsanantonio",
+            address: "23808 Resort Pkwy, San Antonio, TX 78261"
         ),
         c(
             TPC_SCOTTSDALE_CHAMPIONS_ID,

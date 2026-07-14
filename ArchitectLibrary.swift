@@ -269,6 +269,12 @@ enum ArchitectLibrary {
         "Jim Fazio":
             "Member of the Fazio design family. Known for Trump International Golf Club Championship Course in West Palm Beach.",
 
+        "Joe Lee":
+            "Florida-based architect who designed three of Walt Disney World's original golf courses — Magnolia, Palm, and Lake Buena Vista — opening in 1971.",
+
+        "Joe Lee & Ken Baker":
+            "Original Joe Lee design (1971) re-imagined by Ken Baker in 2022, giving Disney's Magnolia Golf Course a modern renovation while honoring its classic layout.",
+
         "Joe Salemi":
             "Nevada architect known for Boulder Creek Golf Club.",
 
@@ -289,6 +295,9 @@ enum ArchitectLibrary {
 
         "Kelby Hughes":
             "Nevada architect known for Falcon Ridge Golf Course.",
+
+        "Ken Baker":
+            "Florida-based architect known for sensitive renovations of historic courses. Re-imagined Disney's Magnolia Golf Course in 2022, modernizing the Joe Lee original while preserving its character.",
 
         "Ken Kavanaugh":
             "Colorado architect known for Murphy Creek Golf Course in Aurora.",
