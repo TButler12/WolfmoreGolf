@@ -150,7 +150,13 @@ final class PremiumManager {
     }
 
     func restorePurchases() async throws {
+        #if DEBUG
+        print("[PremiumManager] AppStore.sync() starting…")
+        #endif
         try await AppStore.sync()
+        #if DEBUG
+        print("[PremiumManager] AppStore.sync() completed successfully")
+        #endif
         await refreshPremiumStatus()
     }
 
@@ -162,13 +168,24 @@ final class PremiumManager {
         ]
         var found = false
         for await result in Transaction.currentEntitlements {
-            if case .verified(let tx) = result,
-               premiumIDs.contains(tx.productID),
-               tx.revocationDate == nil {
-                found = true
-                break
+            switch result {
+            case .verified(let tx):
+                #if DEBUG
+                print("[PremiumManager] entitlement: \(tx.productID) revoked=\(tx.revocationDate != nil) expires=\(String(describing: tx.expirationDate))")
+                #endif
+                if premiumIDs.contains(tx.productID), tx.revocationDate == nil {
+                    found = true
+                    break
+                }
+            case .unverified(let tx, let error):
+                #if DEBUG
+                print("[PremiumManager] UNVERIFIED entitlement: \(tx.productID) error=\(error)")
+                #endif
             }
         }
+        #if DEBUG
+        print("[PremiumManager] refreshPremiumStatus complete — isPremium=\(found)")
+        #endif
         isPremium = found
     }
 }
