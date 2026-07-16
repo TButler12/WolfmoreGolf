@@ -6,7 +6,8 @@ final class PremiumManager {
     private init() {}
 
     static let monthlyProductID   = "com.wolfmoregolf.pro.monthly"
-    static let legacyProProductID = "com.wolfmoregolf.pro"
+    static let yearlyProductID    = "com.wolfmoregolf.pro.yearly"
+    static let legacyProProductID = "com.wolfmoregolf.pro"        // bare ID kept for historical receipts
     // MARK: - Feature
 
     enum Feature {
@@ -148,14 +149,15 @@ final class PremiumManager {
         }
     }
 
-    func restorePurchases() async {
-        try? await AppStore.sync()
+    func restorePurchases() async throws {
+        try await AppStore.sync()
         await refreshPremiumStatus()
     }
 
     func refreshPremiumStatus() async {
         let premiumIDs: Set<String> = [
             Self.monthlyProductID,
+            Self.yearlyProductID,
             Self.legacyProProductID,
         ]
         var found = false

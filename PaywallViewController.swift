@@ -190,14 +190,22 @@ final class PaywallViewController: UIViewController {
     @objc private func restoreTapped() {
         setLoading(true)
         Task {
-            await PremiumManager.shared.restorePurchases()
-            await MainActor.run {
-                self.setLoading(false)
-                if PremiumManager.shared.isPremium {
-                    self.dismiss(animated: true)
-                } else {
-                    self.alert("No Purchases Found",
-                               "No active WolfMore Premium subscription or previous Pro purchase was found for this Apple ID.")
+            do {
+                try await PremiumManager.shared.restorePurchases()
+                await MainActor.run {
+                    self.setLoading(false)
+                    if PremiumManager.shared.isPremium {
+                        self.dismiss(animated: true)
+                    } else {
+                        self.alert("No Purchases Found",
+                                   "No active WolfMore Premium subscription or previous Pro purchase was found for this Apple ID.")
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.setLoading(false)
+                    self.alert("Couldn't Connect to App Store",
+                               "A network error prevented us from verifying your purchases. Please check your connection and try again.")
                 }
             }
         }
