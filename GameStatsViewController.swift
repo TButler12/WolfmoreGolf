@@ -14,7 +14,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
 
     // MARK: - Types
 
-    enum SortKey { case name, score, money, prox }
+    enum SortKey { case name, score, money }
 
     private struct Row {
         let seat: Int
@@ -22,7 +22,6 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         let front9Score: Int
         let totalScore: Int
         let totalMoney: Double
-        let proxCount: Int
         let isActive: Bool
     }
 
@@ -34,6 +33,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     private let sendBtn      = UIButton(type: .system)
     private let historyBtn   = UIButton(type: .system)
     private let aiSummaryBtn = UIButton(type: .system)
+    private let scorecardBtn = UIButton(type: .system)
     private let lastRoundLabel = UILabel()
     // MARK: - State
 
@@ -100,6 +100,15 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         aiSummaryBtn.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(aiSummaryBtn)
 
+        scorecardBtn.setTitle("📋 Scorecard", for: .normal)
+        scorecardBtn.setTitleColor(.white, for: .normal)
+        scorecardBtn.backgroundColor = UIColor(red: 0.08, green: 0.24, blue: 0.50, alpha: 1)
+        scorecardBtn.layer.cornerRadius = 14
+        scorecardBtn.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+        scorecardBtn.addTarget(self, action: #selector(scorecardTapped), for: .touchUpInside)
+        scorecardBtn.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scorecardBtn)
+
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.dataSource = self
         tableView.delegate = self
@@ -125,10 +134,15 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             aiSummaryBtn.bottomAnchor.constraint(equalTo: sendBtn.topAnchor, constant: -10),
             aiSummaryBtn.heightAnchor.constraint(equalToConstant: 52),
 
+            scorecardBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            scorecardBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            scorecardBtn.bottomAnchor.constraint(equalTo: aiSummaryBtn.topAnchor, constant: -10),
+            scorecardBtn.heightAnchor.constraint(equalToConstant: 52),
+
             tableView.topAnchor.constraint(equalTo: view.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: aiSummaryBtn.topAnchor, constant: -10),
+            tableView.bottomAnchor.constraint(equalTo: scorecardBtn.topAnchor, constant: -10),
         ])
     }
   
@@ -139,7 +153,6 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         header.onTapName  = { [weak self] in self?.setSort(.name)  }
         header.onTapScore = { [weak self] in self?.setSort(.score) }
         header.onTapMoney = { [weak self] in self?.setSort(.money) }
-        header.onTapProx  = { [weak self] in self?.setSort(.prox)  }
     }
 
     private func setupObservers() {
@@ -181,6 +194,13 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
     @objc private func aiSummaryTapped() {
         let vc = AISummaryViewController()
         navigationController?.pushViewController(vc, animated: true)
+    }
+
+    @objc private func scorecardTapped() {
+        guard let game = GameManager.shared.currentGame else { return }
+        let image = WolfScorecardRenderer(game: game).render()
+        let preview = WolfScorecardPreviewViewController(image: image)
+        present(preview, animated: true)
     }
 
     @objc private func sendSummaryTapped(_ sender: UIButton) {
@@ -245,7 +265,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         lines.append("")
 
         for r in sorted {
-            lines.append("\(r.name): \(moneyString(r.totalMoney)) • \(r.totalScore) • Prox \(r.proxCount)")
+            lines.append("\(r.name): \(moneyString(r.totalMoney)) • \(r.totalScore)")
         }
 
         lines.append("")
@@ -333,9 +353,8 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             let total = totalScoreForSeat(seat, in: g) ?? 0
             let front9 = front9ScoreForSeat(seat, in: g) ?? 0
             let money = totalMoneyForSeat(seat, in: g)
-            let prox  = proxWinsForSeat(seat, in: g)
 
-            built.append(Row(seat: seat, name: name, front9Score: front9, totalScore: total, totalMoney: money, proxCount: prox, isActive: actives[seat]))
+            built.append(Row(seat: seat, name: name, front9Score: front9, totalScore: total, totalMoney: money, isActive: actives[seat]))
         }
 
         rows = built
@@ -431,9 +450,6 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         case .money:
             cmp = { a, b in asc ? (a.totalMoney, a.name) < (b.totalMoney, b.name)
                                 : (a.totalMoney, a.name) > (b.totalMoney, b.name) }
-        case .prox:
-            cmp = { a, b in asc ? (a.proxCount, a.name) < (b.proxCount, b.name)
-                                : (a.proxCount, a.name) > (b.proxCount, b.name) }
         }
 
         rows.sort { a, b in
@@ -483,7 +499,6 @@ extension GameStatsViewController: UITableViewDataSource, UITableViewDelegate {
             front9Score: r.front9Score,
             totalScore: r.totalScore,
             totalMoneyText: currency0.string(from: NSNumber(value: r.totalMoney)) ?? "\(Int(r.totalMoney.rounded()))",
-            proxCount: r.proxCount,
             moneyIsNegative: r.totalMoney < 0,
             isMuted: !r.isActive
         )
@@ -496,13 +511,11 @@ final class HeaderView: UIView {
     var onTapName:  (() -> Void)?
     var onTapScore: (() -> Void)?
     var onTapMoney: (() -> Void)?
-    var onTapProx:  (() -> Void)?
 
     private let nameBtn   = UIButton(type: .system)
     private let front9Lbl = UILabel()
     private let scoreBtn  = UIButton(type: .system)
     private let moneyBtn  = UIButton(type: .system)
-    private let proxBtn   = UIButton(type: .system)
 
     private let stack = UIStackView()
 
@@ -512,7 +525,7 @@ final class HeaderView: UIView {
     private func setup() {
         backgroundColor = .secondarySystemBackground
 
-        [nameBtn, scoreBtn, moneyBtn, proxBtn].forEach {
+        [nameBtn, scoreBtn, moneyBtn].forEach {
             $0.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
             $0.contentHorizontalAlignment = .center
             $0.setTitleColor(.label, for: .normal)
@@ -522,12 +535,10 @@ final class HeaderView: UIView {
         nameBtn.setTitle("Player ⬍", for: .normal)
         scoreBtn.setTitle("Score ⬍", for: .normal)
         moneyBtn.setTitle("Money ⬍", for: .normal)
-        proxBtn.setTitle("Prox ⬍", for: .normal)
 
         nameBtn.addTarget(self, action: #selector(tapName),  for: .touchUpInside)
         scoreBtn.addTarget(self, action: #selector(tapScore), for: .touchUpInside)
         moneyBtn.addTarget(self, action: #selector(tapMoney), for: .touchUpInside)
-        proxBtn.addTarget(self, action: #selector(tapProx),   for: .touchUpInside)
 
         front9Lbl.text = "Front 9"
         front9Lbl.font = .systemFont(ofSize: 14, weight: .semibold)
@@ -542,7 +553,7 @@ final class HeaderView: UIView {
         stack.isLayoutMarginsRelativeArrangement = true
         stack.layoutMargins = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
 
-        [nameBtn, front9Lbl, scoreBtn, moneyBtn, proxBtn].forEach { stack.addArrangedSubview($0) }
+        [nameBtn, front9Lbl, scoreBtn, moneyBtn].forEach { stack.addArrangedSubview($0) }
         addSubview(stack)
 
         NSLayoutConstraint.activate([
@@ -558,13 +569,11 @@ final class HeaderView: UIView {
         nameBtn.setTitle("Player \(sortKey == .name  ? arrow : "⬍")", for: .normal)
         scoreBtn.setTitle("Score \(sortKey == .score ? arrow : "⬍")", for: .normal)
         moneyBtn.setTitle("Money \(sortKey == .money ? arrow : "⬍")", for: .normal)
-        proxBtn.setTitle("Prox \(sortKey == .prox ? arrow : "⬍")", for: .normal)
     }
 
     @objc private func tapName()  { onTapName?()  }
     @objc private func tapScore() { onTapScore?() }
     @objc private func tapMoney() { onTapMoney?() }
-    @objc private func tapProx()  { onTapProx?()  }
 }
 
 
@@ -577,7 +586,6 @@ final class StatsCell: UITableViewCell {
     private let front9Label = StatsCell.makeLabel()
     private let scoreLabel  = StatsCell.makeLabel(weight: .semibold)
     private let moneyLabel  = StatsCell.makeLabel(weight: .semibold)
-    private let proxLabel   = StatsCell.makeLabel()
 
     private let stack = UIStackView()
 
@@ -599,7 +607,7 @@ final class StatsCell: UITableViewCell {
         stack.layoutMargins = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 12)
         contentView.addSubview(stack)
 
-        [nameLabel, front9Label, scoreLabel, moneyLabel, proxLabel].forEach {
+        [nameLabel, front9Label, scoreLabel, moneyLabel].forEach {
             stack.addArrangedSubview($0)
         }
 
@@ -616,7 +624,6 @@ final class StatsCell: UITableViewCell {
         front9Score: Int,
         totalScore: Int,
         totalMoneyText: String,
-        proxCount: Int,
         moneyIsNegative: Bool,
         isMuted: Bool = false
     ) {
@@ -624,7 +631,6 @@ final class StatsCell: UITableViewCell {
         front9Label.text = front9Score > 0 ? "\(front9Score)" : "–"
         scoreLabel.text  = totalScore > 0  ? "\(totalScore)"  : "–"
         moneyLabel.text  = totalMoneyText
-        proxLabel.text   = "\(proxCount)"
         moneyLabel.textColor = moneyIsNegative
             ? .systemRed
             : UIColor(red: 0.10, green: 0.45, blue: 0.25, alpha: 1.0)

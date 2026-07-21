@@ -52,6 +52,18 @@ final class TeeGamesViewController: UIViewController {
         manageBtn.isHidden = true
         manageButton = manageBtn
 
+        let calcuttaSeparator = UILabel()
+        calcuttaSeparator.text = "CALCUTTA"
+        calcuttaSeparator.font = .systemFont(ofSize: 12, weight: .semibold)
+        calcuttaSeparator.textColor = .secondaryLabel
+        calcuttaSeparator.textAlignment = .center
+
+        let calcuttaBtn = makeButton(
+            title: "Calcutta Pools",
+            subtitle: "Organizer setup, bids, payouts & results",
+            color: UIColor(red: 0.52, green: 0.32, blue: 0.06, alpha: 1.0))
+        calcuttaBtn.addTarget(self, action: #selector(calcuttaTapped), for: .touchUpInside)
+
         stackView.axis = .vertical
         stackView.spacing = 16
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -60,6 +72,8 @@ final class TeeGamesViewController: UIViewController {
         stackView.addArrangedSubview(rejoinBtn)
         stackView.addArrangedSubview(leaderboardBtn)
         stackView.addArrangedSubview(manageBtn)
+        stackView.addArrangedSubview(calcuttaSeparator)
+        stackView.addArrangedSubview(calcuttaBtn)
         view.addSubview(stackView)
 
         NSLayoutConstraint.activate([
@@ -110,6 +124,11 @@ final class TeeGamesViewController: UIViewController {
 
     @objc private func closeTapped() {
         dismiss(animated: true)
+    }
+
+    @objc private func calcuttaTapped() {
+        let vc = CalcuttaListViewController()
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     @objc private func createTapped() {

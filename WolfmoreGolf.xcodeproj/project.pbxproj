@@ -20,19 +20,25 @@
 		A7B8C9D0EB1C2D3E4F506179 /* GroupDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */; };
 		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
 		AL01B2C3D4E5F607182930AA /* ArchitectLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */; };
+		AN01B2C3D4E5F607182930A4 /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */; };
 		AP01B2C3D4E5F607182930A8 /* ArchitectProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */; };
 		B66C2E5033A842F5A84999BE /* PastGameDetailViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70002 /* LiveNassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70004 /* NassauScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */; };
 		C4D5E6F7A8B9C4D5E6F70006 /* WolfSpectatorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */; };
 		CC01B2C3D4E5F607182930A6 /* ClaudeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */; };
-		AN01B2C3D4E5F607182930A4 /* AnalyticsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */; };
 		CS01B2C3D4E5F607182930A4 /* ClaudeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */; };
+		D4E5F607182941C6D8E9F0A1 /* WolfScorecardRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3D4E5F607182940B5C6D7E8 /* WolfScorecardRenderer.swift */; };
 		D64B14586458493690DECE2E /* TournamentSummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 132A36A89650472DA654B343 /* TournamentSummaryViewController.swift */; };
 		D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9402F93CD28E4C029E042DFC /* Constants.swift */; };
 		DV1C2D3E4F506071829304AA /* DeviceID.swift in Sources */ = {isa = PBXBuildFile; fileRef = DV1C2D3E4F506071829304AB /* DeviceID.swift */; };
 		E8C1A3F72B9D4E6A8F5C2D71 /* TournamentScorecardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */; };
 		EB1C7A593448F2323213FB7F /* UpdateChecker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D7D681FBEA3C05DBD4C6D7E /* UpdateChecker.swift */; };
+		F607182943E8F9A1B2C3D4E5 /* WolfScorecardPreviewViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F607182942D7E8F9A0B1C2 /* WolfScorecardPreviewViewController.swift */; };
+		BB02CC03DD04EE05FF06AA07 /* CalcuttaModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA01BB02CC03DD04EE05FF06 /* CalcuttaModels.swift */; };
+		DD04EE05FF06AA07BB08CC09 /* CalcuttaListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC03DD04EE05FF06AA07BB08 /* CalcuttaListViewController.swift */; };
+		FF06AA07BB08CC09DD10EE11 /* CalcuttaManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE05FF06AA07BB08CC09DD10 /* CalcuttaManagerViewController.swift */; };
+		BB08CC09DD10EE11FF12AA13 /* CalcuttaTeamEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA07BB08CC09DD10EE11FF12 /* CalcuttaTeamEditorViewController.swift */; };
 		F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1702F3691E6009EEB12 /* ServiceContact.swift */; };
 		F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1722F369228009EEB12 /* ServiceContactStore.swift */; };
 		F63960632F60D62500EC0C30 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960472F60D62500EC0C30 /* AppNotifications.swift */; };
@@ -139,15 +145,21 @@
 		A7B8C9D0EB1C2D3E4F50617A /* GroupDetailViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupDetailViewController.swift; sourceTree = "<group>"; };
 		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
 		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
+		AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
 		AP01B2C3D4E5F607182930A7 /* ArchitectProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectProfileViewController.swift; sourceTree = "<group>"; };
 		B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardRenderer.swift; sourceTree = "<group>"; };
+		C3D4E5F607182940B5C6D7E8 /* WolfScorecardRenderer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfScorecardRenderer.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70001 /* LiveNassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveNassauViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70003 /* NassauScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauScorecardViewController.swift; sourceTree = "<group>"; };
 		C4D5E6F7A8B9C4D5E6F70005 /* WolfSpectatorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfSpectatorViewController.swift; sourceTree = "<group>"; };
 		CC01B2C3D4E5F607182930A5 /* ClaudeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeConfig.swift; sourceTree = "<group>"; };
-		AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
+		AA01BB02CC03DD04EE05FF06 /* CalcuttaModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalcuttaModels.swift; sourceTree = "<group>"; };
+		CC03DD04EE05FF06AA07BB08 /* CalcuttaListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalcuttaListViewController.swift; sourceTree = "<group>"; };
+		EE05FF06AA07BB08CC09DD10 /* CalcuttaManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalcuttaManagerViewController.swift; sourceTree = "<group>"; };
+		AA07BB08CC09DD10EE11FF12 /* CalcuttaTeamEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalcuttaTeamEditorViewController.swift; sourceTree = "<group>"; };
 		CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeService.swift; sourceTree = "<group>"; };
 		DV1C2D3E4F506071829304AB /* DeviceID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceID.swift; sourceTree = "<group>"; };
+		E5F607182942D7E8F9A0B1C2 /* WolfScorecardPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfScorecardPreviewViewController.swift; sourceTree = "<group>"; };
 		EB64F4195EB94B1F820D171F /* GameManager+Tournament.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "GameManager+Tournament.swift"; sourceTree = "<group>"; };
 		F618A1702F3691E6009EEB12 /* ServiceContact.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContact.swift; sourceTree = "<group>"; };
 		F618A1722F369228009EEB12 /* ServiceContactStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServiceContactStore.swift; sourceTree = "<group>"; };
@@ -353,6 +365,12 @@
 				132A36A89650472DA654B343 /* TournamentSummaryViewController.swift */,
 				F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */,
 				B2C3D4E5F6071829A3B4C5D6 /* TournamentScorecardRenderer.swift */,
+				C3D4E5F607182940B5C6D7E8 /* WolfScorecardRenderer.swift */,
+				E5F607182942D7E8F9A0B1C2 /* WolfScorecardPreviewViewController.swift */,
+				AA01BB02CC03DD04EE05FF06 /* CalcuttaModels.swift */,
+				CC03DD04EE05FF06AA07BB08 /* CalcuttaListViewController.swift */,
+				EE05FF06AA07BB08CC09DD10 /* CalcuttaManagerViewController.swift */,
+				AA07BB08CC09DD10EE11FF12 /* CalcuttaTeamEditorViewController.swift */,
 				7298A503BD3F427C807DB30C /* SupabaseService.swift */,
 				2E5EC0551DDE495DBC914610 /* SupabaseModels.swift */,
 				30D556E2E1A2444F9E91213A /* SupabaseConfig.swift */,
@@ -562,6 +580,12 @@
 				D64B14586458493690DECE2E /* TournamentSummaryViewController.swift in Sources */,
 				E8C1A3F72B9D4E6A8F5C2D71 /* TournamentScorecardViewController.swift in Sources */,
 				A1B2C3D4E5F60718293A4B5C /* TournamentScorecardRenderer.swift in Sources */,
+				D4E5F607182941C6D8E9F0A1 /* WolfScorecardRenderer.swift in Sources */,
+				F607182943E8F9A1B2C3D4E5 /* WolfScorecardPreviewViewController.swift in Sources */,
+				BB02CC03DD04EE05FF06AA07 /* CalcuttaModels.swift in Sources */,
+				DD04EE05FF06AA07BB08CC09 /* CalcuttaListViewController.swift in Sources */,
+				FF06AA07BB08CC09DD10EE11 /* CalcuttaManagerViewController.swift in Sources */,
+				BB08CC09DD10EE11FF12AA13 /* CalcuttaTeamEditorViewController.swift in Sources */,
 				7B4E1A3D0EBE4811A681DE64 /* SupabaseService.swift in Sources */,
 				249133D5DF2043B8BC34834D /* SupabaseModels.swift in Sources */,
 				43718BCECA3E4E7EBF3C92BF /* SupabaseConfig.swift in Sources */,
@@ -656,7 +680,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -671,7 +695,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.6.0;
+				MARKETING_VERSION = 2.6.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -697,7 +721,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 46;
+				CURRENT_PROJECT_VERSION = 48;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -712,7 +736,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 2.6.0;
+				MARKETING_VERSION = 2.6.2;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
