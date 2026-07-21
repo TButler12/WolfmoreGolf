@@ -10770,6 +10770,281 @@ let FALSTERBO_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "White", yardage: 6650, rating: 72.1, slope: 121)
 ]
 
+// MARK: Essex County Club — Manchester-By-The-Sea, MA  (par 70)
+private let ESSEX_COUNTY_CLUB_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000215")!
+let ESSEX_COUNTY_CLUB_PARS: [Int] = [4,4,5,3,5,4,3,4,4, 4,3,4,4,3,4,4,4,4]
+let ESSEX_COUNTY_CLUB_HCS:  [Int] = [5,13,1,11,15,9,17,3,7, 12,14,6,2,18,10,4,16,8]
+let ESSEX_COUNTY_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6505, rating: 72.2, slope: 134),
+]
+
+// MARK: The Country Club (Main Course) — Brookline, MA  (par 70)
+private let THE_COUNTRY_CLUB_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000214")!
+let THE_COUNTRY_CLUB_PARS: [Int] = [4,3,4,4,4,4,3,4,4, 4,5,3,4,5,4,3,4,4]
+let THE_COUNTRY_CLUB_HCS:  [Int] = [7,11,1,9,3,17,15,13,5, 16,12,18,2,8,6,14,10,4]
+let THE_COUNTRY_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6840, rating: 74.5, slope: 148),
+]
+
+// MARK: Old Sandwich Golf Club — Plymouth, MA  (par 71)
+private let OLD_SANDWICH_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000213")!
+let OLD_SANDWICH_GC_PARS: [Int] = [5,4,4,3,4,5,4,4,3, 5,3,4,5,4,3,4,3,4]
+let OLD_SANDWICH_GC_HCS:  [Int] = [9,3,7,15,11,1,5,13,17, 14,12,10,4,8,18,6,16,2]
+let OLD_SANDWICH_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back", yardage: 6908, rating: 74.7, slope: 146),
+]
+
+// MARK: Eastward Ho! Country Club — Chatham, MA  (par 71)
+private let EASTWARD_HO_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000212")!
+let EASTWARD_HO_PARS: [Int] = [4,4,4,3,5,4,3,4,4, 3,5,4,4,4,3,4,5,4]
+let EASTWARD_HO_HCS:  [Int] = [7,9,11,17,3,1,15,13,5, 16,2,8,12,14,18,4,10,6]
+let EASTWARD_HO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6437),
+    TeeInfo(teeName: "Blue",  yardage: 6168),
+    TeeInfo(teeName: "Gold",  yardage: 5843),
+    TeeInfo(teeName: "White", yardage: 5378),
+    TeeInfo(teeName: "Green", yardage: 4468),
+]
+
+// MARK: Myopia Hunt Club — S. Hamilton, MA
+private let MYOPIA_HUNT_CLUB_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000211")!
+let MYOPIA_HUNT_CLUB_PARS: [Int] = [4,5,3,4,4,4,4,5,3, 4,4,4,4,4,5,3,4,4]
+let MYOPIA_HUNT_CLUB_HCS:  [Int] = [16,14,8,4,2,12,6,10,18, 3,15,1,5,11,13,17,9,7]
+let MYOPIA_HUNT_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Red",    yardage: 6539),
+    TeeInfo(teeName: "White",  yardage: 6128),
+    TeeInfo(teeName: "Yellow", yardage: 5525),
+]
+
+// MARK: South Shore Country Club — Hingham, MA
+private let SOUTH_SHORE_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000201")!
+let SOUTH_SHORE_CC_PARS: [Int] = [4,3,5,4,4,4,4,3,5, 4,3,4,4,4,5,4,3,5]
+let SOUTH_SHORE_CC_HCS:  [Int] = [13,17,1,15,5,7,3,11,9, 14,18,8,4,6,2,12,16,10]
+let SOUTH_SHORE_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6270, rating: 70.6, slope: 132),
+    TeeInfo(teeName: "White", yardage: 6003, rating: 68.9, slope: 131),
+    TeeInfo(teeName: "Gold",  yardage: 5033, rating: 66.1, slope: 125),
+]
+
+// MARK: Pinehills Golf Club (Jones Course) — Plymouth, MA
+private let PINEHILLS_JONES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000202")!
+let PINEHILLS_JONES_PARS: [Int] = [4,5,4,4,3,5,4,3,4, 4,4,5,3,4,4,3,4,5]
+let PINEHILLS_JONES_HCS:  [Int] = [17,3,1,15,7,5,9,11,13, 14,10,12,16,2,18,8,4,6]
+let PINEHILLS_JONES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 7175, rating: 75.4, slope: 137),
+    TeeInfo(teeName: "Blue",   yardage: 6762, rating: 72.4, slope: 133),
+    TeeInfo(teeName: "White",  yardage: 6201, rating: 69.8, slope: 127),
+    TeeInfo(teeName: "Silver", yardage: 5776, rating: 68.1, slope: 125),
+    TeeInfo(teeName: "Red",    yardage: 5347, rating: 71.3, slope: 127),
+]
+
+// MARK: Pinehills Golf Club (Nicklaus Course) — Plymouth, MA
+private let PINEHILLS_NICKLAUS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000203")!
+let PINEHILLS_NICKLAUS_PARS: [Int] = [4,5,3,4,4,5,3,4,4, 4,5,4,3,4,4,3,4,5]
+let PINEHILLS_NICKLAUS_HCS:  [Int] = [13,3,7,1,11,9,17,15,5, 8,6,4,18,14,16,10,12,2]
+let PINEHILLS_NICKLAUS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 7243, rating: 75.7, slope: 141),
+    TeeInfo(teeName: "Blue",   yardage: 6640, rating: 72.5, slope: 134),
+    TeeInfo(teeName: "White",  yardage: 6129, rating: 70.0, slope: 131),
+    TeeInfo(teeName: "Silver", yardage: 5760, rating: 68.3, slope: 126),
+    TeeInfo(teeName: "Red",    yardage: 5185, rating: 70.3, slope: 124),
+]
+
+// MARK: Miacomet Golf Course — Nantucket, MA
+private let MIACOMET_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000204")!
+let MIACOMET_GC_PARS: [Int] = [4,4,3,5,5,4,4,3,4, 4,4,3,4,5,3,4,4,5]
+let MIACOMET_GC_HCS:  [Int] = [3,11,15,5,9,13,1,7,17, 6,16,14,8,12,18,2,4,10]
+let MIACOMET_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 6890, rating: 73.6, slope: 128),
+    TeeInfo(teeName: "Blue",  yardage: 6393, rating: 71.5, slope: 125),
+    TeeInfo(teeName: "B/W",   yardage: 6169, rating: 70.6, slope: 124),
+    TeeInfo(teeName: "White", yardage: 5928, rating: 70.0, slope: 124),
+    TeeInfo(teeName: "R/W",   yardage: 5451, rating: 69.2, slope: 123),
+    TeeInfo(teeName: "Red",   yardage: 5145, rating: 70.6, slope: 121),
+]
+
+// MARK: Crumpin-Fox Club — Bernardston, MA
+private let CRUMPIN_FOX_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000205")!
+let CRUMPIN_FOX_PARS: [Int] = [4,4,3,4,5,4,4,5,3, 4,3,4,4,5,3,4,5,4]
+let CRUMPIN_FOX_HCS:  [Int] = [5,13,17,11,7,3,9,1,15, 4,18,12,10,14,16,2,6,8]
+let CRUMPIN_FOX_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7023, rating: 75.1, slope: 147),
+    TeeInfo(teeName: "Blue",  yardage: 6508, rating: 72.3, slope: 144),
+    TeeInfo(teeName: "Gold",  yardage: 6095, rating: 70.4, slope: 138),
+    TeeInfo(teeName: "Green", yardage: 5432, rating: 65.6, slope: 128),
+    TeeInfo(teeName: "Red",   yardage: 5068, rating: 70.3, slope: 126),
+]
+
+// MARK: Cranberry Valley Golf Course — Harwich, MA
+private let CRANBERRY_VALLEY_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000206")!
+let CRANBERRY_VALLEY_PARS: [Int] = [4,5,4,3,4,4,3,5,4, 4,4,4,3,5,4,4,3,5]
+let CRANBERRY_VALLEY_HCS:  [Int] = [9,17,5,7,1,13,11,15,3, 8,10,4,6,18,16,2,12,14]
+let CRANBERRY_VALLEY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6482),
+    TeeInfo(teeName: "White",  yardage: 6142),
+    TeeInfo(teeName: "Silver", yardage: 5686),
+    TeeInfo(teeName: "Red",    yardage: 5568),
+    TeeInfo(teeName: "Green",  yardage: 5060),
+]
+
+// MARK: The Ranch Golf Club — Southwick, MA
+private let RANCH_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000207")!
+let RANCH_GC_PARS: [Int] = [5,4,4,4,3,4,4,3,5, 4,4,3,5,4,4,5,3,4]
+let RANCH_GC_HCS:  [Int] = [15,11,3,1,17,9,13,7,5, 12,6,16,2,4,14,8,18,10]
+let RANCH_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7129, rating: 74.8, slope: 142),
+    TeeInfo(teeName: "Pine",         yardage: 6747, rating: 72.8, slope: 134),
+    TeeInfo(teeName: "Evergreen",    yardage: 6553, rating: 71.6, slope: 132),
+    TeeInfo(teeName: "Spruce",       yardage: 6344, rating: 70.5, slope: 130),
+    TeeInfo(teeName: "Hardwood",     yardage: 6107, rating: 69.1, slope: 124),
+    TeeInfo(teeName: "Oak",          yardage: 5869, rating: 68.0, slope: 120),
+    TeeInfo(teeName: "Broadleaf",    yardage: 5447, rating: 65.8, slope: 117),
+    TeeInfo(teeName: "Maple",        yardage: 4896, rating: 63.2, slope: 114),
+]
+
+// MARK: Acushnet River Valley Golf Course — Acushnet, MA
+private let ACUSHNET_RV_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000208")!
+let ACUSHNET_RV_PARS: [Int] = [4,4,4,5,4,3,4,3,5, 4,3,5,4,5,4,3,4,4]
+let ACUSHNET_RV_HCS:  [Int] = [5,7,15,9,13,17,3,11,1, 14,18,10,2,4,16,8,12,6]
+let ACUSHNET_RV_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 6807, rating: 72.9, slope: 125),
+    TeeInfo(teeName: "Blue",  yardage: 6302, rating: 70.3, slope: 121),
+    TeeInfo(teeName: "White", yardage: 5735, rating: 67.3, slope: 118),
+    TeeInfo(teeName: "Green", yardage: 5099, rating: 65.0, slope: 111),
+]
+
+// MARK: The Cape Club — East Falmouth, MA
+private let CAPE_CLUB_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000209")!
+let CAPE_CLUB_PARS: [Int] = [4,3,5,4,3,4,4,4,5, 5,3,4,4,4,4,3,4,5]
+let CAPE_CLUB_HCS:  [Int] = [13,17,5,15,11,1,7,3,9, 10,18,4,2,8,14,16,6,12]
+let CAPE_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6743, rating: 73.8, slope: 143),
+]
+
+// MARK: Ledgemont Country Club — Seekonk, MA  (par 71)
+private let LEDGEMONT_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000210")!
+let LEDGEMONT_CC_PARS: [Int] = [5,4,4,3,4,3,4,5,4, 4,5,3,4,4,3,4,4,4]
+let LEDGEMONT_CC_HCS:  [Int] = [9,15,3,11,13,17,1,7,5, 12,2,18,6,14,16,4,8,10]
+let LEDGEMONT_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6801, rating: 73.4, slope: 134),
+    TeeInfo(teeName: "White",  yardage: 6492, rating: 72.1, slope: 131),
+    TeeInfo(teeName: "Red",    yardage: 5846, rating: 74.3, slope: 130),
+    TeeInfo(teeName: "Yellow", yardage: 5069, rating: 74.3, slope: 126),
+]
+
+// MARK: Shelter Harbor Golf Club — Charlestown, RI  (par 71)
+private let SHELTER_HARBOR_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000216")!
+let SHELTER_HARBOR_GC_PARS: [Int] = [5,4,4,3,4,3,4,4,5, 4,3,5,4,4,3,5,3,4]
+let SHELTER_HARBOR_GC_HCS:  [Int] = [3,9,1,15,11,17,13,5,7, 2,14,12,10,4,18,8,16,6]
+let SHELTER_HARBOR_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7028, rating: 74.3, slope: 135),
+]
+
+// MARK: Manchester Country Club — Manchester, CT  (par 72)
+private let MANCHESTER_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000217")!
+let MANCHESTER_CC_PARS: [Int] = [4,4,5,5,3,4,4,3,4, 4,4,3,4,5,5,4,4,3]
+let MANCHESTER_CC_HCS:  [Int] = [13,11,3,9,17,1,7,15,5, 16,12,18,6,10,4,2,8,14]
+let MANCHESTER_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6298, rating: 71.0, slope: 133),
+]
+
+// MARK: Wintonbury Hills Golf Course — Bloomfield, CT  (par 70)
+private let WINTONBURY_HILLS_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000218")!
+let WINTONBURY_HILLS_GC_PARS: [Int] = [4,4,3,5,4,4,3,5,3, 4,4,3,5,4,4,4,3,4]
+let WINTONBURY_HILLS_GC_HCS:  [Int] = [10,8,18,2,12,4,14,6,16, 11,7,17,9,1,3,13,15,5]
+let WINTONBURY_HILLS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6711, rating: 72.4, slope: 129),
+]
+
+// MARK: Lyman Orchards Golf Club (Jones Course) — Middlefield, CT  (par 72)
+private let LYMAN_ORCHARDS_JONES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000219")!
+let LYMAN_ORCHARDS_JONES_PARS: [Int] = [4,3,4,5,4,4,3,4,5, 4,3,5,4,4,4,4,3,5]
+let LYMAN_ORCHARDS_JONES_HCS:  [Int] = [3,17,1,9,5,13,15,11,7, 8,18,14,10,4,6,2,16,12]
+let LYMAN_ORCHARDS_JONES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Macoun",   yardage: 7011, rating: 74.0, slope: 134),
+    TeeInfo(teeName: "Empire",   yardage: 6614, rating: 72.0, slope: 129),
+    TeeInfo(teeName: "McIntosh", yardage: 6200, rating: 70.3, slope: 128),
+    TeeInfo(teeName: "Cortland", yardage: 5812, rating: 73.9, slope: 126),
+]
+
+// MARK: Gillette Ridge Golf Club — Bloomfield, CT  (par 72)
+private let GILLETTE_RIDGE_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000220")!
+let GILLETTE_RIDGE_GC_PARS: [Int] = [4,5,4,3,4,4,5,3,4, 4,3,5,4,4,3,4,5,4]
+let GILLETTE_RIDGE_GC_HCS:  [Int] = [18,4,6,12,10,8,2,16,14, 11,7,9,17,15,13,5,3,1]
+let GILLETTE_RIDGE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 7191, rating: 74.5, slope: 140),
+    TeeInfo(teeName: "Blue",       yardage: 6569, rating: 71.3, slope: 133),
+    TeeInfo(teeName: "Blue/White", yardage: 6047, rating: 68.9, slope: 128),
+    TeeInfo(teeName: "White",      yardage: 5695, rating: 67.3, slope: 123),
+    TeeInfo(teeName: "Green",      yardage: 4847, rating: 69.8, slope: 130),
+]
+
+// MARK: Connecticut National Golf Club — Putnam, CT  (par 71)
+private let CT_NATIONAL_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000221")!
+let CT_NATIONAL_GC_PARS: [Int] = [5,4,4,3,4,5,3,4,3, 4,3,5,4,4,3,4,4,5]
+let CT_NATIONAL_GC_HCS:  [Int] = [9,5,1,7,11,3,15,13,17, 6,18,10,14,4,16,8,2,12]
+let CT_NATIONAL_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6936),
+    TeeInfo(teeName: "Blue",  yardage: 6275),
+    TeeInfo(teeName: "White", yardage: 5938),
+    TeeInfo(teeName: "Gold",  yardage: 5002),
+    TeeInfo(teeName: "Red",   yardage: 4815),
+]
+
+// MARK: Southington Country Club — Southington, CT  (par 71)
+private let SOUTHINGTON_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000222")!
+let SOUTHINGTON_CC_PARS: [Int] = [4,4,3,5,4,5,3,4,4, 4,4,3,4,5,3,4,3,5]
+let SOUTHINGTON_CC_HCS:  [Int] = [7,11,17,3,5,1,15,9,13, 14,12,18,6,2,10,8,16,4]
+let SOUTHINGTON_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 5932, rating: 67.8, slope: 124),
+    TeeInfo(teeName: "White", yardage: 5685, rating: 67.6, slope: 122),
+    TeeInfo(teeName: "Gold",  yardage: 5037, rating: 64.1, slope: 111),
+    TeeInfo(teeName: "Red",   yardage: 4898, rating: 69.3, slope: 123),
+]
+
+// MARK: Oak Hills Park Golf Club — Norwalk, CT  (par 71)
+private let OAK_HILLS_PARK_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000223")!
+let OAK_HILLS_PARK_GC_PARS: [Int] = [4,4,3,4,3,4,4,5,4, 5,4,5,3,4,3,4,4,4]
+let OAK_HILLS_PARK_GC_HCS:  [Int] = [3,9,17,5,15,13,7,11,1, 4,10,8,18,2,12,6,14,16]
+let OAK_HILLS_PARK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6317, rating: 70.4, slope: 132),
+]
+
+// MARK: Bretwood Golf Course — Keene, NH  (par 72)
+private let BRETWOOD_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000224")!
+let BRETWOOD_GC_PARS: [Int] = [4,5,3,4,5,4,5,3,4, 4,4,4,3,4,4,3,5,4]
+let BRETWOOD_GC_HCS:  [Int] = [9,1,15,13,11,3,7,17,5, 2,12,10,16,4,6,18,8,14]
+let BRETWOOD_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 6974),
+    TeeInfo(teeName: "Blue",  yardage: 6434),
+    TeeInfo(teeName: "White", yardage: 5822),
+]
+
+// MARK: The Maplewood Golf Club — Bethlehem, NH  (par 72, includes par-6 hole 16)
+private let MAPLEWOOD_GC_NH_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000225")!
+let MAPLEWOOD_GC_NH_PARS: [Int] = [5,4,4,4,4,4,4,3,4, 4,3,3,4,4,5,6,4,3]
+let MAPLEWOOD_GC_NH_HCS:  [Int] = [11,1,9,7,5,3,15,17,13, 4,12,14,8,10,2,6,18,16]
+let MAPLEWOOD_GC_NH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6167, rating: 69.0, slope: 121),
+    TeeInfo(teeName: "White",  yardage: 6001, rating: 67.7, slope: 119),
+    TeeInfo(teeName: "Green",  yardage: 5480, rating: 64.8, slope: 113),
+    TeeInfo(teeName: "Yellow", yardage: 5080, rating: 64.8, slope: 108),
+]
+
+// MARK: Breakfast Hill Golf Club — Greenland, NH  (par 71)
+private let BREAKFAST_HILL_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000226")!
+let BREAKFAST_HILL_GC_PARS: [Int] = [4,5,4,3,5,3,4,4,4, 4,4,5,4,3,4,4,3,4]
+let BREAKFAST_HILL_GC_HCS:  [Int] = [14,12,4,16,8,18,2,6,10, 15,1,5,17,9,13,7,11,3]
+let BREAKFAST_HILL_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Maroon",       yardage: 6501, rating: 71.4, slope: 134),
+    TeeInfo(teeName: "Maroon/Black", yardage: 6232, rating: 70.0, slope: 130),
+    TeeInfo(teeName: "Black",        yardage: 5930, rating: 68.5, slope: 127),
+    TeeInfo(teeName: "Black/Silver", yardage: 5686, rating: 67.6, slope: 122),
+    TeeInfo(teeName: "Silver",       yardage: 5379, rating: 66.3, slope: 117),
+    TeeInfo(teeName: "Silver/Gold",  yardage: 5049, rating: 64.6, slope: 108),
+    TeeInfo(teeName: "Gold",         yardage: 4871, rating: 63.7, slope: 105),
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -19334,6 +19609,245 @@ private enum BuiltIns {
             website: "https://www.falsterbogk.se",
             address: "Fyrvägen 34, 239 40, Falsterbo, Sweden",
             isWolfApproved: true
+        ),
+
+        // -------------------------
+        // Massachusetts
+        // -------------------------
+        c(ESSEX_COUNTY_CLUB_ID, "Essex County Club",
+          ESSEX_COUNTY_CLUB_PARS, ESSEX_COUNTY_CLUB_HCS, ESSEX_COUNTY_CLUB_TEES,
+          country: "USA", state: "MA",
+          architect: "Donald Ross",
+          type: "Private",
+          phone: "978-526-7311",
+          address: "153 School Street, Manchester, MA 01944"
+        ),
+        c(THE_COUNTRY_CLUB_ID, "The Country Club",
+          THE_COUNTRY_CLUB_PARS, THE_COUNTRY_CLUB_HCS, THE_COUNTRY_CLUB_TEES,
+          country: "USA", state: "MA",
+          architect: "Willie Campbell / William Flynn / Gil Hanse & Jim Wagner",
+          type: "Private",
+          phone: "617-566-0244",
+          website: "https://www.tcclub.org",
+          address: "191 Clyde Street, Brookline, MA 02467"
+        ),
+        c(OLD_SANDWICH_GC_ID, "Old Sandwich Golf Club",
+          OLD_SANDWICH_GC_PARS, OLD_SANDWICH_GC_HCS, OLD_SANDWICH_GC_TEES,
+          country: "USA", state: "MA",
+          architect: "Bill Coore & Ben Crenshaw",
+          type: "Private",
+          address: "Plymouth, MA"
+        ),
+        c(EASTWARD_HO_ID, "Eastward Ho! Country Club",
+          EASTWARD_HO_PARS, EASTWARD_HO_HCS, EASTWARD_HO_TEES,
+          country: "USA", state: "MA",
+          architect: "William Herbert Fowler",
+          type: "Private",
+          phone: "(508) 945-0003",
+          website: "https://www.eastwardho.org",
+          address: "325 Fox Hill Road, Chatham, MA 02633"
+        ),
+        c(MYOPIA_HUNT_CLUB_ID, "Myopia Hunt Club",
+          MYOPIA_HUNT_CLUB_PARS, MYOPIA_HUNT_CLUB_HCS, MYOPIA_HUNT_CLUB_TEES,
+          country: "USA", state: "MA",
+          architect: "Herbert C. Leeds / Gil Hanse",
+          type: "Private",
+          phone: "(978) 468-4433",
+          address: "435 Bay Road, S. Hamilton, MA 01982"
+        ),
+        c(SOUTH_SHORE_CC_ID, "South Shore Country Club",
+          SOUTH_SHORE_CC_PARS, SOUTH_SHORE_CC_HCS, SOUTH_SHORE_CC_TEES,
+          country: "USA", state: "MA",
+          architect: "Wayne Stiles",
+          type: "Private",
+          phone: "781-749-1747",
+          website: "https://www.southshorecc.com",
+          address: "274 South Street, Hingham, MA 02043"
+        ),
+        c(PINEHILLS_JONES_ID, "Pinehills Golf Club (Jones Course)",
+          PINEHILLS_JONES_PARS, PINEHILLS_JONES_HCS, PINEHILLS_JONES_TEES,
+          country: "USA", state: "MA",
+          architect: "Rees Jones",
+          type: "Public",
+          phone: "508-209-3000",
+          website: "https://www.pinehillsgolf.com",
+          address: "54 Clubhouse Dr., Plymouth, MA 02360"
+        ),
+        c(PINEHILLS_NICKLAUS_ID, "Pinehills Golf Club (Nicklaus Course)",
+          PINEHILLS_NICKLAUS_PARS, PINEHILLS_NICKLAUS_HCS, PINEHILLS_NICKLAUS_TEES,
+          country: "USA", state: "MA",
+          architect: "Nicklaus Design",
+          type: "Public",
+          phone: "508-209-3000",
+          website: "https://www.pinehillsgolf.com",
+          address: "54 Clubhouse Dr., Plymouth, MA 02360"
+        ),
+        c(MIACOMET_GC_ID, "Miacomet Golf Course",
+          MIACOMET_GC_PARS, MIACOMET_GC_HCS, MIACOMET_GC_TEES,
+          country: "USA", state: "MA",
+          architect: "Howard Maurer",
+          type: "Public",
+          phone: "(508) 325-0333",
+          website: "https://www.miacometgolf.com",
+          address: "12 W. Miacomet Rd., Nantucket, MA 02554"
+        ),
+        c(CRUMPIN_FOX_ID, "Crumpin-Fox Club",
+          CRUMPIN_FOX_PARS, CRUMPIN_FOX_HCS, CRUMPIN_FOX_TEES,
+          country: "USA", state: "MA",
+          architect: "Roger Rulewich",
+          type: "Semi-Private",
+          phone: "(800) 943-1901",
+          website: "https://www.crumpinfox.com",
+          address: "87 Parmenter Road, Bernardston, MA 01137"
+        ),
+        c(CRANBERRY_VALLEY_GC_ID, "Cranberry Valley Golf Course",
+          CRANBERRY_VALLEY_PARS, CRANBERRY_VALLEY_HCS, CRANBERRY_VALLEY_TEES,
+          country: "USA", state: "MA",
+          architect: "Geoffrey Cornish & Bill Robinson",
+          type: "Public",
+          phone: "508-430-5234",
+          website: "https://www.cranberryvalley.golf"
+        ),
+        c(RANCH_GC_ID, "The Ranch Golf Club",
+          RANCH_GC_PARS, RANCH_GC_HCS, RANCH_GC_TEES,
+          country: "USA", state: "MA",
+          architect: "Damian Pascuzzo",
+          type: "Public",
+          phone: "413-569-9333",
+          website: "https://www.theranchgolfclub.com",
+          address: "65 Sunnyside Rd, Southwick, MA 01077"
+        ),
+        c(ACUSHNET_RV_ID, "Acushnet River Valley Golf Course",
+          ACUSHNET_RV_PARS, ACUSHNET_RV_HCS, ACUSHNET_RV_TEES,
+          country: "USA", state: "MA",
+          architect: "Brian Silva",
+          type: "Public",
+          phone: "(508) 998-7777",
+          website: "https://www.golfacushnet.com",
+          address: "685 Main Street, Acushnet, MA 02743"
+        ),
+        c(CAPE_CLUB_ID, "The Cape Club",
+          CAPE_CLUB_PARS, CAPE_CLUB_HCS, CAPE_CLUB_TEES,
+          country: "USA", state: "MA",
+          type: "Semi-Private",
+          phone: "(508) 540-4005",
+          website: "https://www.capeclubresort.com",
+          address: "125 Falmouth Woods Road, East Falmouth, MA 02536"
+        ),
+        c(LEDGEMONT_CC_ID, "Ledgemont Country Club",
+          LEDGEMONT_CC_PARS, LEDGEMONT_CC_HCS, LEDGEMONT_CC_TEES,
+          country: "USA", state: "MA",
+          architect: "Alfred Tull",
+          type: "Private",
+          phone: "(508) 761-6600",
+          website: "https://www.ledgemontcc.com",
+          address: "131 Brown Avenue, Seekonk, MA 02771"
+        ),
+
+        // -------------------------
+        // Rhode Island
+        // -------------------------
+        c(SHELTER_HARBOR_GC_ID, "Shelter Harbor Golf Club",
+          SHELTER_HARBOR_GC_PARS, SHELTER_HARBOR_GC_HCS, SHELTER_HARBOR_GC_TEES,
+          country: "USA", state: "RI",
+          architect: "Hurdzan/Fry Environmental Golf Design",
+          type: "Private",
+          phone: "(401) 322-0600",
+          website: "https://www.shgcri.com",
+          address: "1 Golf Club Drive, Charlestown, RI 02813"
+        ),
+
+        // -------------------------
+        // Connecticut
+        // -------------------------
+        c(MANCHESTER_CC_ID, "Manchester Country Club",
+          MANCHESTER_CC_PARS, MANCHESTER_CC_HCS, MANCHESTER_CC_TEES,
+          country: "USA", state: "CT",
+          architect: "Tom Bendelow / Deveroux Emmet",
+          type: "Semi-Private",
+          phone: "(860) 646-0226",
+          address: "305 South Main Street, Manchester, CT 06040"
+        ),
+        c(WINTONBURY_HILLS_GC_ID, "Wintonbury Hills Golf Course",
+          WINTONBURY_HILLS_GC_PARS, WINTONBURY_HILLS_GC_HCS, WINTONBURY_HILLS_GC_TEES,
+          country: "USA", state: "CT",
+          architect: "Pete Dye",
+          type: "Semi-Private",
+          phone: "860.242.1401",
+          website: "https://www.wintonburyhillsgolf.com",
+          address: "206 Terry Plains Road, Bloomfield, CT 06002"
+        ),
+        c(LYMAN_ORCHARDS_JONES_ID, "Lyman Orchards Golf Club (Jones Course)",
+          LYMAN_ORCHARDS_JONES_PARS, LYMAN_ORCHARDS_JONES_HCS, LYMAN_ORCHARDS_JONES_TEES,
+          country: "USA", state: "CT",
+          architect: "Robert Trent Jones, Sr.",
+          type: "Public",
+          phone: "(860) 349-6031",
+          website: "https://www.lymangolf.com",
+          address: "70 Lyman Road, Middlefield, CT 06455"
+        ),
+        c(GILLETTE_RIDGE_GC_ID, "Gillette Ridge Golf Club",
+          GILLETTE_RIDGE_GC_PARS, GILLETTE_RIDGE_GC_HCS, GILLETTE_RIDGE_GC_TEES,
+          country: "USA", state: "CT",
+          architect: "Arnold Palmer",
+          type: "Public",
+          phone: "(860) 726-1430",
+          website: "https://www.gilletteridgegolf.com"
+        ),
+        c(CT_NATIONAL_GC_ID, "Connecticut National Golf Club",
+          CT_NATIONAL_GC_PARS, CT_NATIONAL_GC_HCS, CT_NATIONAL_GC_TEES,
+          country: "USA", state: "CT",
+          architect: "Mike & Sally Donovan",
+          type: "Public",
+          phone: "(860) 928-7748",
+          website: "https://www.ctnationalgolf.com",
+          address: "136 Chase Road, Putnam, CT 06260"
+        ),
+        c(SOUTHINGTON_CC_ID, "Southington Country Club",
+          SOUTHINGTON_CC_PARS, SOUTHINGTON_CC_HCS, SOUTHINGTON_CC_TEES,
+          country: "USA", state: "CT",
+          architect: "Geoffrey Cornish",
+          type: "Semi-Private",
+          website: "https://www.southingtoncountryclub.com"
+        ),
+        c(OAK_HILLS_PARK_GC_ID, "Oak Hills Park Golf Club",
+          OAK_HILLS_PARK_GC_PARS, OAK_HILLS_PARK_GC_HCS, OAK_HILLS_PARK_GC_TEES,
+          country: "USA", state: "CT",
+          architect: "Alfred H. Tull",
+          type: "Public",
+          phone: "203.838.0303",
+          address: "165 Fillow Street, Norwalk, CT 06850"
+        ),
+
+        // -------------------------
+        // New Hampshire
+        // -------------------------
+        c(BRETWOOD_GC_ID, "Bretwood Golf Course",
+          BRETWOOD_GC_PARS, BRETWOOD_GC_HCS, BRETWOOD_GC_TEES,
+          country: "USA", state: "NH",
+          architect: "Geoffrey Cornish / Hugh Barrett",
+          type: "Public",
+          phone: "603.352.7626",
+          website: "https://www.bretwoodgc.com",
+          address: "365 East Surry Road, Keene, NH 03431"
+        ),
+        c(MAPLEWOOD_GC_NH_ID, "The Maplewood Golf Club",
+          MAPLEWOOD_GC_NH_PARS, MAPLEWOOD_GC_NH_HCS, MAPLEWOOD_GC_NH_TEES,
+          country: "USA", state: "NH",
+          architect: "Donald Ross",
+          type: "Resort",
+          phone: "(603) 869-3335",
+          website: "https://www.maplewoodgolfresort.com",
+          address: "2691 Main Street, Bethlehem, NH 03574"
+        ),
+        c(BREAKFAST_HILL_GC_ID, "Breakfast Hill Golf Club",
+          BREAKFAST_HILL_GC_PARS, BREAKFAST_HILL_GC_HCS, BREAKFAST_HILL_GC_TEES,
+          country: "USA", state: "NH",
+          architect: "Brian Silva",
+          type: "Public",
+          phone: "(603) 436-5001",
+          website: "https://www.breakfasthill.com",
+          address: "339 Breakfast Hill Road, Greenland, NH 03840"
         ),
         ]
 

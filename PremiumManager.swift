@@ -64,6 +64,9 @@ final class PremiumManager {
 
     // MARK: - Status
 
+    // All product IDs returned by Transaction.currentEntitlements on last refresh (for diagnostics)
+    private(set) var lastSeenEntitlementIDs: [String] = []
+
     private(set) var isPremium = false {
         didSet {
             if isPremium { markPremiumThisMonth() }
@@ -127,7 +130,7 @@ final class PremiumManager {
 
     func loadProducts() async {
         do {
-            products = try await Product.products(for: [Self.monthlyProductID])
+            products = try await Product.products(for: [Self.monthlyProductID, Self.yearlyProductID])
                 .sorted { $0.price < $1.price }
         } catch {
             // Products unavailable in this environment (e.g. simulator without StoreKit config)
@@ -167,24 +170,27 @@ final class PremiumManager {
             Self.legacyProProductID,
         ]
         var found = false
+        var seenIDs: [String] = []
         for await result in Transaction.currentEntitlements {
             switch result {
             case .verified(let tx):
+                seenIDs.append(tx.productID)
                 #if DEBUG
                 print("[PremiumManager] entitlement: \(tx.productID) revoked=\(tx.revocationDate != nil) expires=\(String(describing: tx.expirationDate))")
                 #endif
                 if premiumIDs.contains(tx.productID), tx.revocationDate == nil {
                     found = true
-                    break
                 }
             case .unverified(let tx, let error):
+                seenIDs.append("UNVERIFIED:\(tx.productID)")
                 #if DEBUG
                 print("[PremiumManager] UNVERIFIED entitlement: \(tx.productID) error=\(error)")
                 #endif
             }
         }
+        lastSeenEntitlementIDs = seenIDs
         #if DEBUG
-        print("[PremiumManager] refreshPremiumStatus complete — isPremium=\(found)")
+        print("[PremiumManager] refreshPremiumStatus complete — isPremium=\(found), seenIDs=\(seenIDs)")
         #endif
         isPremium = found
     }

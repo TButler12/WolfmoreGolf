@@ -254,7 +254,9 @@ final class TeeGamesViewController: UIViewController {
             code: record.code, name: record.name,
             gameType: record.gameType, day: joinDay, isOrganizer: isOrg)
         NotificationCenter.default.post(name: .reloadUI, object: nil)
+        #if DEBUG
         print("🏆 joined tournament: code=\(record.code) groupCode=\(groupCode) matchId=\(tournamentMatchId)")
+        #endif
         dismiss(animated: true)
     }
 
@@ -355,7 +357,9 @@ final class TeeGamesViewController: UIViewController {
                     code: record.code, name: record.name,
                     gameType: record.gameType, day: liveDay, isOrganizer: rejoinIsOrg)
                 NotificationCenter.default.post(name: .reloadUI, object: nil)
+                #if DEBUG
                 print("🏆 rejoined tournament: code=\(record.code) matchId=\(matchId) day=\(liveDay)")
+                #endif
                 await MainActor.run {
                     spinner.dismiss(animated: false) { self.dismiss(animated: true) }
                 }

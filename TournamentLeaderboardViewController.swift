@@ -248,7 +248,9 @@ final class TournamentLeaderboardViewController: UIViewController {
                 allDayOffsets = allOffsets
             }
 
+            #if DEBUG
             print("🗓 distinct days in allRows: \(Set(allRows.compactMap { $0.day }).sorted())")
+            #endif
             recompute()
             updateDayPicker()
             applyHeader()
@@ -717,7 +719,9 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                             playerName: row.name,
                             amount: amount
                         )
+                        #if DEBUG
                         print("✅ upsertPlayerOffset succeeded")
+                        #endif
                         await self.loadData(refetchRecord: false)
                     } catch {
                         print("❌ upsertPlayerOffset failed: \(error)")

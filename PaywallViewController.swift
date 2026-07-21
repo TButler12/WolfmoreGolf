@@ -197,8 +197,11 @@ final class PaywallViewController: UIViewController {
                     if PremiumManager.shared.isPremium {
                         self.dismiss(animated: true)
                     } else {
-                        self.alert("No Purchases Found",
-                                   "No active WolfMore Premium subscription or previous Pro purchase was found for this Apple ID.")
+                        let found = PremiumManager.shared.lastSeenEntitlementIDs
+                        let detail = found.isEmpty
+                            ? "No entitlements were returned by the App Store for this Apple ID."
+                            : "Entitlements found but none matched a known product ID:\n\(found.joined(separator: "\n"))"
+                        self.alert("No Purchases Found", detail)
                     }
                 }
             } catch {

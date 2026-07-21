@@ -14,7 +14,9 @@ final class SupabaseService {
             supabaseURL: SUPABASE_URL,
             supabaseKey: SUPABASE_ANON_KEY
         )
+        #if DEBUG
         print("DEBUG supabase URL: \(SUPABASE_URL)")
+        #endif
     }
 
     // MARK: - Match creation
@@ -200,7 +202,9 @@ final class SupabaseService {
             return
         }
         let storedHole = hole + 1   // caller passes 0-based index; store as 1-based
+        #if DEBUG
         print("🏆 submitTournamentHoleScore matchId=\(matchId) player=\(playerName) hole=\(storedHole) gross=\(grossScore) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney) game_type=\(game_type)")
+        #endif
         var payload: [String: AnyJSON] = [
             "match_id":        .string(matchId),
             "player_slot":     .string(String(playerSlot)),
@@ -447,8 +451,10 @@ final class SupabaseService {
             tournament_code: g?.tournamentCode,
             group_code: g?.groupCode
         )
+        #if DEBUG
         print("🏆 submitWolfHole tournament_code=\(g?.tournamentCode ?? "nil") group_code=\(g?.groupCode ?? "nil")")
         print("DEBUG upsert payload: session=\(sessionId) hole=\(hole) scores=\(scores) wolfSlot=\(String(describing: wolfSlot)) partnerSlot=\(String(describing: partnerSlot)) wentAlone=\(wentAlone) teamWon=\(teamWon) moneyDeltas=\(payouts)")
+        #endif
         try await client.from("wolf_hole_results")
             .upsert(payload, onConflict: "session_id,hole")
             .execute()
@@ -517,7 +523,9 @@ final class SupabaseService {
         Task {
             do {
                 try await channel.subscribeWithError()
+                #if DEBUG
                 print("DEBUG wolf INSERT channel subscribed for session \(sessionId)")
+                #endif
             } catch {
                 print("DEBUG wolf INSERT channel error: \(error)")
             }
@@ -538,7 +546,9 @@ final class SupabaseService {
             table: "wolf_hole_results",
             filter: "session_id=eq.\(sessionId)"
         ) { action in
+            #if DEBUG
             print("DEBUG wolf UPDATE event received raw")
+            #endif
             do {
                 let record = try action.decodeRecord(as: WolfHoleResult.self, decoder: JSONDecoder())
                 DispatchQueue.main.async { onResult(record) }
@@ -550,7 +560,9 @@ final class SupabaseService {
         Task {
             do {
                 try await channel.subscribeWithError()
+                #if DEBUG
                 print("DEBUG wolf UPDATE channel subscribed for session \(sessionId)")
+                #endif
             } catch {
                 print("DEBUG wolf UPDATE channel error: \(error)")
             }
