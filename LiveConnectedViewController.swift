@@ -84,6 +84,25 @@ final class LiveConnectedViewController: UITableViewController {
             },
         ]))
 
+        let history = TournamentHistoryStore.shared.all()
+        if !history.isEmpty {
+            let rows: [Row] = history.prefix(5).map { entry in
+                let gameLabel: String
+                switch entry.gameType {
+                case "skins": gameLabel = "Skins"
+                case "wolf":  gameLabel = "Wolf"
+                default:      gameLabel = entry.gameType.capitalized
+                }
+                return Row(
+                    title: entry.name,
+                    subtitle: "Day \(entry.lastDay) · \(gameLabel) · \(entry.code)"
+                ) { [weak self] in
+                    self?.historyEntryTapped(entry)
+                }
+            }
+            result.append(Section(header: "RECENT TOURNAMENTS", rows: rows))
+        }
+
         let isOrganizer = GameManager.shared.currentGame?.tournamentIsOrganizer == true
             && GameManager.shared.currentGame?.tournamentCode != nil
         if isOrganizer {
@@ -196,10 +215,15 @@ final class LiveConnectedViewController: UITableViewController {
         default:
             gameDesc = "Stableford · \(scoringLabel)"
         }
-        let msg = "\"\(record.name)\"\n\(gameDesc)\nCreated by: \(record.createdBy)"
+        let msg = "\"\(record.name)\"\n\(gameDesc)"
         let ac = UIAlertController(title: "Join This Tournament?", message: msg, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
+        ac.addAction(UIAlertAction(title: "Watch as Spectator", style: .default) { [weak self] _ in
+            guard let self else { return }
+            let vc = TournamentLeaderboardViewController(code: record.code)
+            self.navigationController?.pushViewController(vc, animated: true)
+        })
+        ac.addAction(UIAlertAction(title: "Join as Scorer", style: .default) { [weak self] _ in
             self?.applyJoinedTournament(record: record)
         })
         present(ac, animated: true)
@@ -228,10 +252,34 @@ final class LiveConnectedViewController: UITableViewController {
             g.tournamentPotAmount    = record.potAmount
             g.tournamentCarryTies    = record.carryTies
         }
-        UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
+        let joinDay = record.currentDay ?? 1
+        UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
         GameManager.shared.saveCurrent()
+        let isOrg = GameManager.shared.currentGame?.tournamentIsOrganizer == true
+        TournamentHistoryStore.shared.record(
+            code: record.code, name: record.name,
+            gameType: record.gameType, day: joinDay, isOrganizer: isOrg)
         NotificationCenter.default.post(name: .reloadUI, object: nil)
-        dismiss(animated: true)
+
+        // After joining as a scorer, surface ManagePlayersVC with the roster picker
+        // already opening — so group setup is immediate, not three menus deep.
+        let day = record.currentDay ?? 1
+        let successMsg = "Joined: \(record.name) · Day \(day)"
+        let presenter = self.navigationController?.presentingViewController ?? presentingViewController
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        dismiss(animated: true) {
+            guard let presenter,
+                  let manageVC = sb.instantiateViewController(withIdentifier: "ManagePlayersVC")
+                      as? ManagePlayersViewController else { return }
+            manageVC.joinSuccessMessage = successMsg
+            let nav = UINavigationController(rootViewController: manageVC)
+            nav.modalPresentationStyle = .pageSheet
+            if let sheet = nav.sheetPresentationController {
+                sheet.detents = [.large()]
+                sheet.prefersGrabberVisible = true
+            }
+            presenter.present(nav, animated: true)
+        }
     }
 
     // MARK: - Create Tournament
@@ -248,6 +296,9 @@ final class LiveConnectedViewController: UITableViewController {
         sheet.addAction(UIAlertAction(title: "View Results", style: .default) { [weak self] _ in
             self?.viewOrganizerResults()
         })
+        sheet.addAction(UIAlertAction(title: "Edit Roster", style: .default) { [weak self] _ in
+            self?.editRosterTapped()
+        })
         sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
             self?.advanceDay()
         })
@@ -263,6 +314,13 @@ final class LiveConnectedViewController: UITableViewController {
         }
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet)
+    }
+
+    private func editRosterTapped() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode,
+              let name = GameManager.shared.currentGame?.tournamentName else { return }
+        let vc = TournamentRosterViewController(code: code, name: name)
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func editTournamentSettings() {
@@ -488,8 +546,12 @@ final class LiveConnectedViewController: UITableViewController {
             g.tournamentPotAmount   = record.potAmount
             g.tournamentCarryTies   = record.carryTies
         }
-        UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
+        let coOrgDay = record.currentDay ?? 1
+        UserDefaults.standard.set(coOrgDay, forKey: "lastTournamentDay_\(record.code)")
         GameManager.shared.saveCurrent()
+        TournamentHistoryStore.shared.record(
+            code: record.code, name: record.name,
+            gameType: record.gameType, day: coOrgDay, isOrganizer: true)
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         buildSections()
         tableView.reloadData()
@@ -547,6 +609,49 @@ final class LiveConnectedViewController: UITableViewController {
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
                         self.showError("Could not prepare code: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Tournament History
+
+    private func historyEntryTapped(_ entry: TournamentHistoryEntry) {
+        let sheet = UIAlertController(title: entry.name,
+                                      message: "Day \(entry.lastDay) · \(entry.code)",
+                                      preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(title: "View Leaderboard", style: .default) { [weak self] _ in
+            let vc = TournamentLeaderboardViewController(code: entry.code)
+            self?.navigationController?.pushViewController(vc, animated: true)
+        })
+        sheet.addAction(UIAlertAction(title: "Rejoin Tournament", style: .default) { [weak self] _ in
+            self?.rejoinFromHistory(entry)
+        })
+        sheet.addAction(UIAlertAction(title: "Remove from History", style: .destructive) { [weak self] _ in
+            TournamentHistoryStore.shared.remove(code: entry.code)
+            self?.buildSections()
+            self?.tableView.reloadData()
+        })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(sheet)
+    }
+
+    private func rejoinFromHistory(_ entry: TournamentHistoryEntry) {
+        let spinner = UIAlertController(title: nil, message: "Rejoining…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                let record = try await SupabaseService.shared.fetchTournament(code: entry.code)
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.applyJoinedTournament(record: record)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Tournament not found. It may have ended.\n\n\(error.localizedDescription)")
                     }
                 }
             }

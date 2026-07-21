@@ -18,6 +18,10 @@ final class ManagePlayersViewController: UIViewController,
     // MARK: - Outlets
     @IBOutlet private weak var tableView: UITableView!
 
+    // Set by LiveConnectedViewController when presenting immediately after a scorer joins.
+    // Triggers a success banner + auto-opens the roster picker on first appearance.
+    var joinSuccessMessage: String? = nil
+
     // MARK: - Data
     private var friends: [Friend] { FriendStore.shared.friends }
 
@@ -25,6 +29,7 @@ final class ManagePlayersViewController: UIViewController,
     private weak var addUIButton: UIButton?
     private weak var startRoundButton: UIButton?
     private weak var quickStartButton: UIButton?
+    private weak var rosterPickerButton: UIButton?
     private var groupsBarItem: UIBarButtonItem?
 
     // MARK: - Lifecycle
@@ -49,6 +54,17 @@ final class ManagePlayersViewController: UIViewController,
         buildTableHeader()
         tableView.reloadData()
         refreshStartButton()
+        refreshRosterPickerButton()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard let msg = joinSuccessMessage else { return }
+        joinSuccessMessage = nil   // one-shot: clears so returning here later doesn't re-fire
+        flashNavPrompt(msg, seconds: 3.0)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+            self?.rosterPickerTapped()
+        }
     }
 
     // MARK: - Setup
@@ -617,6 +633,90 @@ final class ManagePlayersViewController: UIViewController,
         return search(view)
     }
 
+    // MARK: - Tournament Roster Picker Button
+
+    private func refreshRosterPickerButton() {
+        let code = GameManager.shared.currentGame?.tournamentCode
+        if let code, !code.isEmpty {
+            if rosterPickerButton == nil { buildRosterPickerButton(code: code) }
+            rosterPickerButton?.isHidden = false
+        } else {
+            rosterPickerButton?.isHidden = true
+        }
+    }
+
+    private func buildRosterPickerButton(code: String) {
+        var cfg = UIButton.Configuration.tinted()
+        cfg.title = "Pick from Tournament Roster"
+        cfg.image = UIImage(systemName: "list.bullet")
+        cfg.imagePadding = 8
+        cfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        cfg.baseForegroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        cfg.cornerStyle = .large
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 15, weight: .semibold); return a
+        }
+        let btn = UIButton(configuration: cfg)
+        btn.addTarget(self, action: #selector(rosterPickerTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        rosterPickerButton = btn
+        view.addSubview(btn)
+
+        guard let quickBtn = quickStartButton,
+              let homeBtn = button(forAction: #selector(closeTapped(_:))) else { return }
+        NSLayoutConstraint.activate([
+            btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            btn.topAnchor.constraint(equalTo: quickBtn.bottomAnchor, constant: 10),
+            btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
+            btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
+            btn.heightAnchor.constraint(equalToConstant: 60),
+            btn.bottomAnchor.constraint(equalTo: homeBtn.topAnchor, constant: -12),
+        ])
+    }
+
+    @objc private func rosterPickerTapped() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
+        let picker = TournamentRosterPickerViewController(tournamentCode: code)
+        picker.maxSelections = max(0, maxActivePlayers - selectedCount)
+        picker.onSelect = { [weak self] name, hc in
+            guard let self else { return }
+            self.assignNextOpenSlot(name: name, hc: hc)
+        }
+        let nav = UINavigationController(rootViewController: picker)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
+    }
+
+    private func assignNextOpenSlot(name: String, hc: Int) {
+        guard selectedCount < maxActivePlayers else {
+            showActiveLimitAlert()
+            return
+        }
+        if let existing = FriendStore.shared.friends.first(where: {
+            $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                .caseInsensitiveCompare(name) == .orderedSame
+        }) {
+            FriendStore.shared.update(friendID: existing.id, defaultHC: hc)
+            FriendStore.shared.update(friendID: existing.id, preselectForRound: true)
+        } else {
+            let friend = Friend(name: name, defaultHC: hc)
+            FriendStore.shared.upsert(friend)
+            if let saved = FriendStore.shared.friends.first(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .caseInsensitiveCompare(name) == .orderedSame
+            }) {
+                FriendStore.shared.update(friendID: saved.id, preselectForRound: true)
+            }
+        }
+        tableView.reloadData()
+        refreshStartButton()
+    }
+
     // MARK: - Quick Start
 
     private func buildQuickStartFooter() {
@@ -645,19 +745,14 @@ final class ManagePlayersViewController: UIViewController,
         // The storyboard Start Round button sits at y≈630 and the Home button at y≈762,
         // so this centreX + midpoint placement lands in that gap on all device sizes.
         guard let startBtn = startRoundButton else { return }
-        let closeBtn = button(forAction: #selector(closeTapped(_:)))
 
-        var constraints: [NSLayoutConstraint] = [
+        NSLayoutConstraint.activate([
             btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             btn.topAnchor.constraint(equalTo: startBtn.bottomAnchor, constant: 14),
             btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
             btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             btn.heightAnchor.constraint(equalToConstant: 60),
-        ]
-        if let closeBtn {
-            constraints.append(btn.bottomAnchor.constraint(equalTo: closeBtn.topAnchor, constant: -12))
-        }
-        NSLayoutConstraint.activate(constraints)
+        ])
     }
 
     // Replaces storyboard fixed frames with safe-area-relative constraints so the

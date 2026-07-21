@@ -286,6 +286,24 @@ struct TournamentHoleScoreRow: Codable {
     }
 }
 
+// Shared tournament roster — one row per player, keyed by tournament_code.
+// Table: tournament_roster — upsert key: id
+struct TournamentRosterEntry: Codable, Identifiable {
+    let id: UUID
+    let tournamentCode: String
+    let canonicalName: String
+    let handicap: Int
+    let addedBy: String   // "organizer" | "scorer"
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case tournamentCode = "tournament_code"
+        case canonicalName  = "canonical_name"
+        case handicap
+        case addedBy        = "added_by"
+    }
+}
+
 // Player money offsets per day (manual adjustments by organizer).
 // Table: player_offsets — upsert key: (tournament_code, day, player_name)
 struct PlayerOffsetRow: Codable {

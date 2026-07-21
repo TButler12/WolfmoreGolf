@@ -245,8 +245,14 @@ final class TeeGamesViewController: UIViewController {
                 g.skinsState = skins
             }
         }
-        UserDefaults.standard.set(record.currentDay ?? 1, forKey: "lastTournamentDay_\(record.code)")
+        let joinDay = record.currentDay ?? 1
+        UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
         GameManager.shared.saveCurrent()
+        let isOrg = (record.createdBy == DeviceID.id)
+            || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
+        TournamentHistoryStore.shared.record(
+            code: record.code, name: record.name,
+            gameType: record.gameType, day: joinDay, isOrganizer: isOrg)
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         print("🏆 joined tournament: code=\(record.code) groupCode=\(groupCode) matchId=\(tournamentMatchId)")
         dismiss(animated: true)
@@ -343,6 +349,11 @@ final class TeeGamesViewController: UIViewController {
                     }
                 }
                 GameManager.shared.saveCurrent()
+                let rejoinIsOrg = (record.createdBy == DeviceID.id)
+                    || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
+                TournamentHistoryStore.shared.record(
+                    code: record.code, name: record.name,
+                    gameType: record.gameType, day: liveDay, isOrganizer: rejoinIsOrg)
                 NotificationCenter.default.post(name: .reloadUI, object: nil)
                 print("🏆 rejoined tournament: code=\(record.code) matchId=\(matchId) day=\(liveDay)")
                 await MainActor.run {

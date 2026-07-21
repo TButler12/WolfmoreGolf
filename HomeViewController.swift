@@ -22,6 +22,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private weak var resetBannerCard: UIView?
     private weak var resetBannerLabel: UILabel?
     private var resetBannerDismissedThisVisit = false
+    private weak var tournamentInfoCard: UIView?
+    private weak var tournamentInfoNameLabel: UILabel?
+    private weak var tournamentInfoSubtitleLabel: UILabel?
     private weak var editCourseButton: UIButton?
     private weak var tournamentButton: UIButton?
     private weak var liveConnectedButton: UIButton?
@@ -172,11 +175,13 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         inProgressCard = card
         let resetBanner = buildResetBannerView()
         resetBannerCard = resetBanner
+        let tCard = buildTournamentInfoCard()
+        tournamentInfoCard = tCard
         let newRound = buildNewRoundSection()
         let utils = buildUtilityRow()
 
         // Stack collapses hidden views to zero height automatically
-        let mainStack = UIStackView(arrangedSubviews: [card, resetBanner, newRound])
+        let mainStack = UIStackView(arrangedSubviews: [card, resetBanner, tCard, newRound])
         mainStack.axis = .vertical
         mainStack.spacing = 16
         mainStack.translatesAutoresizingMaskIntoConstraints = false
@@ -427,6 +432,99 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         return banner
     }
 
+    private func buildTournamentInfoCard() -> UIView {
+        let card = UIView()
+        card.translatesAutoresizingMaskIntoConstraints = false
+        card.backgroundColor = forestGreen
+        card.layer.cornerRadius = 16
+        card.layer.masksToBounds = true
+        card.isHidden = true
+
+        let pad: CGFloat = 16
+
+        let badge = UILabel()
+        badge.text = "🏆  ACTIVE TOURNAMENT"
+        badge.font = .systemFont(ofSize: 10, weight: .semibold)
+        badge.textColor = goldColor
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(badge)
+
+        let nameLbl = UILabel()
+        nameLbl.font = .systemFont(ofSize: 20, weight: .bold)
+        nameLbl.textColor = .white
+        nameLbl.adjustsFontSizeToFitWidth = true
+        nameLbl.minimumScaleFactor = 0.8
+        nameLbl.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(nameLbl)
+        tournamentInfoNameLabel = nameLbl
+
+        let subtitleLbl = UILabel()
+        subtitleLbl.font = .systemFont(ofSize: 13, weight: .regular)
+        subtitleLbl.textColor = UIColor.white.withAlphaComponent(0.75)
+        subtitleLbl.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(subtitleLbl)
+        tournamentInfoSubtitleLabel = subtitleLbl
+
+        let lbBtn = UIButton(type: .system)
+        lbBtn.setTitle("Leaderboard", for: .normal)
+        lbBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        lbBtn.tintColor = goldColor
+        lbBtn.addTarget(self, action: #selector(tournamentCardLeaderboardTapped), for: .touchUpInside)
+        lbBtn.translatesAutoresizingMaskIntoConstraints = false
+
+        let groupBtn = UIButton(type: .system)
+        groupBtn.setTitle("Set Up Group", for: .normal)
+        groupBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        groupBtn.tintColor = UIColor.white.withAlphaComponent(0.85)
+        groupBtn.addTarget(self, action: #selector(tournamentCardGroupTapped), for: .touchUpInside)
+        groupBtn.translatesAutoresizingMaskIntoConstraints = false
+
+        let btnRow = UIStackView(arrangedSubviews: [lbBtn, groupBtn])
+        btnRow.axis = .horizontal
+        btnRow.spacing = 20
+        btnRow.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(btnRow)
+
+        NSLayoutConstraint.activate([
+            badge.topAnchor.constraint(equalTo: card.topAnchor, constant: pad),
+            badge.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
+            badge.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -pad),
+
+            nameLbl.topAnchor.constraint(equalTo: badge.bottomAnchor, constant: 4),
+            nameLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
+            nameLbl.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -pad),
+
+            subtitleLbl.topAnchor.constraint(equalTo: nameLbl.bottomAnchor, constant: 2),
+            subtitleLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
+            subtitleLbl.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -pad),
+
+            btnRow.topAnchor.constraint(equalTo: subtitleLbl.bottomAnchor, constant: 14),
+            btnRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
+            btnRow.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -pad),
+        ])
+
+        return card
+    }
+
+    @objc private func tournamentCardLeaderboardTapped() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
+        let vc = TournamentLeaderboardViewController(code: code)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    @objc private func tournamentCardGroupTapped() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let manageVC = sb.instantiateViewController(withIdentifier: "ManagePlayersVC")
+                as? ManagePlayersViewController else { return }
+        let nav = UINavigationController(rootViewController: manageVC)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
+    }
+
     private func buildNewRoundSection() -> UIView {
         let section = UIView()
         section.translatesAutoresizingMaskIntoConstraints = false
@@ -444,7 +542,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         quickStartButton = quickBtn
 
         let contactsBtn = buildActionCard(
-            title: "From Contacts",
+            title: "Play from Loaded Contacts",
             subtitle: "Load saved players",
             systemImage: "person.2.fill",
             accentColor: wolfPrimaryGreen
@@ -474,8 +572,8 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             tintColor: .systemPurple
         )
         tournamentBtn.addTarget(self, action: #selector(tournamentTapped), for: .touchUpInside)
-        section.addSubview(tournamentBtn)
         tournamentButton = tournamentBtn
+        tournamentBtn.isHidden = true  // Hidden pending release; remove this line to re-enable
 
         let liveBtn = buildSecondaryButton(
             title: "Live & Connected",
@@ -483,8 +581,14 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             tintColor: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)
         )
         liveBtn.addTarget(self, action: #selector(liveConnectedTapped), for: .touchUpInside)
-        section.addSubview(liveBtn)
         liveConnectedButton = liveBtn
+
+        // Stack collapses Stableford's space automatically when it's hidden.
+        let secondaryStack = UIStackView(arrangedSubviews: [tournamentBtn, liveBtn])
+        secondaryStack.axis = .vertical
+        secondaryStack.spacing = 8
+        secondaryStack.translatesAutoresizingMaskIntoConstraints = false
+        section.addSubview(secondaryStack)
 
         NSLayoutConstraint.activate([
             sectionHeader.topAnchor.constraint(equalTo: section.topAnchor),
@@ -499,14 +603,10 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             tagline.leadingAnchor.constraint(equalTo: section.leadingAnchor, constant: 4),
             tagline.trailingAnchor.constraint(equalTo: section.trailingAnchor, constant: -4),
 
-            tournamentBtn.topAnchor.constraint(equalTo: tagline.bottomAnchor, constant: 12),
-            tournamentBtn.leadingAnchor.constraint(equalTo: section.leadingAnchor),
-            tournamentBtn.trailingAnchor.constraint(equalTo: section.trailingAnchor),
-
-            liveBtn.topAnchor.constraint(equalTo: tournamentBtn.bottomAnchor, constant: 8),
-            liveBtn.leadingAnchor.constraint(equalTo: section.leadingAnchor),
-            liveBtn.trailingAnchor.constraint(equalTo: section.trailingAnchor),
-            liveBtn.bottomAnchor.constraint(equalTo: section.bottomAnchor)
+            secondaryStack.topAnchor.constraint(equalTo: tagline.bottomAnchor, constant: 12),
+            secondaryStack.leadingAnchor.constraint(equalTo: section.leadingAnchor),
+            secondaryStack.trailingAnchor.constraint(equalTo: section.trailingAnchor),
+            secondaryStack.bottomAnchor.constraint(equalTo: section.bottomAnchor),
         ])
 
         return section
@@ -617,6 +717,23 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         refreshHeaderDisplay()
         refreshInProgressCard()
         refreshResetBanner()
+        refreshTournamentInfoCard()
+    }
+
+    private func refreshTournamentInfoCard() {
+        guard let card = tournamentInfoCard else { return }
+        if GameManager.shared.currentGame == nil {
+            _ = GameManager.shared.loadLastOpened(notify: false)
+        }
+        guard let g = GameManager.shared.currentGame,
+              let code = g.tournamentCode, !code.isEmpty else {
+            card.isHidden = true
+            return
+        }
+        tournamentInfoNameLabel?.text = g.tournamentName ?? "Tournament"
+        let day = g.tournamentDay ?? 1
+        tournamentInfoSubtitleLabel?.text = "Day \(day) · Code: \(code)"
+        card.isHidden = false
     }
 
     private func refreshResetBanner() {

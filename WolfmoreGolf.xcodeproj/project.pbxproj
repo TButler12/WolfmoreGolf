@@ -39,6 +39,9 @@
 		DD04EE05FF06AA07BB08CC09 /* CalcuttaListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC03DD04EE05FF06AA07BB08 /* CalcuttaListViewController.swift */; };
 		FF06AA07BB08CC09DD10EE11 /* CalcuttaManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE05FF06AA07BB08CC09DD10 /* CalcuttaManagerViewController.swift */; };
 		BB08CC09DD10EE11FF12AA13 /* CalcuttaTeamEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA07BB08CC09DD10EE11FF12 /* CalcuttaTeamEditorViewController.swift */; };
+		AB01CD02EF03AB04CD05EF06 /* TournamentRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F007 /* TournamentRosterViewController.swift */; };
+		CD03EF04A005CD06EF07A008 /* TournamentRosterPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE04F005B006DE07F008B009 /* TournamentRosterPickerViewController.swift */; };
+		6B931B92D5F4447E8542C98E /* TournamentHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1D952574EAF40A784964DFF /* TournamentHistoryStore.swift */; };
 		F618A1712F3691E6009EEB12 /* ServiceContact.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1702F3691E6009EEB12 /* ServiceContact.swift */; };
 		F618A1732F369228009EEB12 /* ServiceContactStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F618A1722F369228009EEB12 /* ServiceContactStore.swift */; };
 		F63960632F60D62500EC0C30 /* AppNotifications.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960472F60D62500EC0C30 /* AppNotifications.swift */; };
@@ -157,6 +160,9 @@
 		CC03DD04EE05FF06AA07BB08 /* CalcuttaListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalcuttaListViewController.swift; sourceTree = "<group>"; };
 		EE05FF06AA07BB08CC09DD10 /* CalcuttaManagerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalcuttaManagerViewController.swift; sourceTree = "<group>"; };
 		AA07BB08CC09DD10EE11FF12 /* CalcuttaTeamEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CalcuttaTeamEditorViewController.swift; sourceTree = "<group>"; };
+		BC02DE03F004BC05DE06F007 /* TournamentRosterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentRosterViewController.swift; sourceTree = "<group>"; };
+		DE04F005B006DE07F008B009 /* TournamentRosterPickerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentRosterPickerViewController.swift; sourceTree = "<group>"; };
+		F1D952574EAF40A784964DFF /* TournamentHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentHistoryStore.swift; sourceTree = "<group>"; };
 		CS01B2C3D4E5F607182930A3 /* ClaudeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeService.swift; sourceTree = "<group>"; };
 		DV1C2D3E4F506071829304AB /* DeviceID.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceID.swift; sourceTree = "<group>"; };
 		E5F607182942D7E8F9A0B1C2 /* WolfScorecardPreviewViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WolfScorecardPreviewViewController.swift; sourceTree = "<group>"; };
@@ -371,6 +377,9 @@
 				CC03DD04EE05FF06AA07BB08 /* CalcuttaListViewController.swift */,
 				EE05FF06AA07BB08CC09DD10 /* CalcuttaManagerViewController.swift */,
 				AA07BB08CC09DD10EE11FF12 /* CalcuttaTeamEditorViewController.swift */,
+				BC02DE03F004BC05DE06F007 /* TournamentRosterViewController.swift */,
+				DE04F005B006DE07F008B009 /* TournamentRosterPickerViewController.swift */,
+				F1D952574EAF40A784964DFF /* TournamentHistoryStore.swift */,
 				7298A503BD3F427C807DB30C /* SupabaseService.swift */,
 				2E5EC0551DDE495DBC914610 /* SupabaseModels.swift */,
 				30D556E2E1A2444F9E91213A /* SupabaseConfig.swift */,
@@ -586,6 +595,9 @@
 				DD04EE05FF06AA07BB08CC09 /* CalcuttaListViewController.swift in Sources */,
 				FF06AA07BB08CC09DD10EE11 /* CalcuttaManagerViewController.swift in Sources */,
 				BB08CC09DD10EE11FF12AA13 /* CalcuttaTeamEditorViewController.swift in Sources */,
+				AB01CD02EF03AB04CD05EF06 /* TournamentRosterViewController.swift in Sources */,
+				CD03EF04A005CD06EF07A008 /* TournamentRosterPickerViewController.swift in Sources */,
+				6B931B92D5F4447E8542C98E /* TournamentHistoryStore.swift in Sources */,
 				7B4E1A3D0EBE4811A681DE64 /* SupabaseService.swift in Sources */,
 				249133D5DF2043B8BC34834D /* SupabaseModels.swift in Sources */,
 				43718BCECA3E4E7EBF3C92BF /* SupabaseConfig.swift in Sources */,

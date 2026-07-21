@@ -124,8 +124,20 @@ final class GameManager {
         fresh.hcPlayers          = keepHCs
         fresh.playerActivated    = keepActives
         fresh.rosterNames        = keepRosterList
-        // Tournament linkage is intentionally NOT carried over — starting a new round
-        // means leaving the tournament context. Rejoin via Live & Connected if needed.
+        // Preserve tournament linkage when scorer is mid-tournament (multi-day support).
+        if let code = old.tournamentCode {
+            fresh.tournamentCode        = code
+            fresh.tournamentName        = old.tournamentName
+            fresh.tournamentGameType    = old.tournamentGameType
+            fresh.tournamentScoringType = old.tournamentScoringType
+            fresh.tournamentDay         = old.tournamentDay
+            fresh.tournamentIsOrganizer = old.tournamentIsOrganizer
+            fresh.tournamentIsCreator   = old.tournamentIsCreator
+            fresh.groupCode             = old.groupCode
+            fresh.tournamentMatchId     = old.tournamentMatchId
+            fresh.tournamentPotAmount   = old.tournamentPotAmount
+            fresh.tournamentCarryTies   = old.tournamentCarryTies
+        }
         // If you want to keep the existing per-hole stakes, uncomment:
         // fresh.gameHoleDollarsArray = old.gameHoleDollarsArray
         

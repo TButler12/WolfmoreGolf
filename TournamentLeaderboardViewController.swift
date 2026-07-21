@@ -24,6 +24,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private var availableDays: [Int] = []
     private var selectedDay: Int? = nil
     private var playerOffsets: [String: Double] = [:]
+    private var allDayOffsets: [String: Double] = [:]
     private var selectedGameType: String = "wolf"
 
     private var currentUserName: String? {
@@ -228,19 +229,23 @@ final class TournamentLeaderboardViewController: UIViewController {
 
         do {
             if refetchRecord || record == nil {
-                async let recFetch     = SupabaseService.shared.fetchTournament(code: tournamentCode)
-                async let rowsFetch    = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
-                async let offsetsFetch = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: day)
-                let (rec, rows, offsets) = try await (recFetch, rowsFetch, offsetsFetch)
+                async let recFetch        = SupabaseService.shared.fetchTournament(code: tournamentCode)
+                async let rowsFetch       = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
+                async let offsetsFetch    = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: day)
+                async let allOffsetsFetch = SupabaseService.shared.fetchAllPlayerOffsets(code: tournamentCode)
+                let (rec, rows, offsets, allOffsets) = try await (recFetch, rowsFetch, offsetsFetch, allOffsetsFetch)
                 record        = rec
                 allRows       = rows
                 playerOffsets = offsets
+                allDayOffsets = allOffsets
             } else {
-                async let rowsFetch    = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
-                async let offsetsFetch = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: day)
-                let (rows, offsets) = try await (rowsFetch, offsetsFetch)
+                async let rowsFetch       = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
+                async let offsetsFetch    = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: day)
+                async let allOffsetsFetch = SupabaseService.shared.fetchAllPlayerOffsets(code: tournamentCode)
+                let (rows, offsets, allOffsets) = try await (rowsFetch, offsetsFetch, allOffsetsFetch)
                 allRows       = rows
                 playerOffsets = offsets
+                allDayOffsets = allOffsets
             }
 
             print("🗓 distinct days in allRows: \(Set(allRows.compactMap { $0.day }).sorted())")
@@ -274,9 +279,18 @@ final class TournamentLeaderboardViewController: UIViewController {
 
         let grouped = Dictionary(grouping: rows, by: { $0.playerName })
 
+        // Full tournament field — every player with any data under this code, any day.
+        // Used to ensure all players appear on every day tab, even if that day's data
+        // is missing (e.g. scores not yet submitted, or submitted without tournament linkage).
+        let fieldPlayers = Set(allRows.map { $0.playerName })
+
         // ── Money ──
         var dayTotals: [String: Double] = [:]
         var pHoles:    [String: Int]    = [:]
+
+        // Seed all field players so they appear even when the selected day has no data.
+        for player in fieldPlayers { dayTotals[player] = 0; pHoles[player] = 0 }
+
         for (player, playerRows) in grouped {
             if let latest = playerRows.max(by: { $0.hole < $1.hole }) {
                 dayTotals[player] = latest.totalMoney ?? 0
@@ -284,7 +298,14 @@ final class TournamentLeaderboardViewController: UIViewController {
             pHoles[player] = playerRows.count
         }
 
-        moneyData = dayTotals.sorted { $0.value > $1.value }.enumerated().map { i, kv in
+        // Players with data for this day sort by money descending; no-data players go last.
+        moneyData = dayTotals.sorted {
+            let aHoles = pHoles[$0.key] ?? 0
+            let bHoles = pHoles[$1.key] ?? 0
+            if aHoles > 0 && bHoles == 0 { return true }
+            if aHoles == 0 && bHoles > 0 { return false }
+            return $0.value > $1.value
+        }.enumerated().map { i, kv in
             MoneyRow(rank: i+1, name: kv.key, dayTotal: kv.value, total: kv.value,
                      holesPlayed: pHoles[kv.key] ?? 0, offset: playerOffsets[kv.key])
         }
@@ -293,6 +314,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         // Mirror the drill-down's delta-tracking on allRows (no dedup, no day filter) so
         // both views always agree — avoids stale latest.skinsWon from dedup dropping newer records.
         var skinTotals: [String: Int] = [:]
+        for player in fieldPlayers { skinTotals[player] = 0 }
         let allSkinRows = allRows
             .filter { ($0.gameType ?? "wolf") == "skins" }
             .sorted { $0.hole < $1.hole }
@@ -319,25 +341,60 @@ final class TournamentLeaderboardViewController: UIViewController {
                             holesPlayed: pHoles[kv.key] ?? 0, potPayout: potPayout)
         }
 
-        tournamentData = moneyData.map { row in
-            let agg = row.dayTotal + (playerOffsets[row.name] ?? 0)
-            return MoneyRow(rank: 0, name: row.name, dayTotal: row.dayTotal, total: agg,
-                            holesPlayed: row.holesPlayed, offset: playerOffsets[row.name])
-        }.sorted { $0.total > $1.total }
-         .enumerated().map { i, r in
-            MoneyRow(rank: i+1, name: r.name, dayTotal: r.dayTotal, total: r.total,
-                     holesPlayed: r.holesPlayed, offset: r.offset)
+        // Tournament: automatic cross-day sum — take the max-hole (latest) row per
+        // (player, day) pair and add up totalMoney across all days, then apply any
+        // manually-entered allDayOffsets as an optional correction on top.
+        let allGameRows = deduped.filter { ($0.gameType ?? "wolf") == selectedGameType }
+        var tourneyTotals: [String: Double] = [:]
+        var tourneyHoles:  [String: Int]    = [:]
+        for player in fieldPlayers { tourneyTotals[player] = 0; tourneyHoles[player] = 0 }
+
+        let byDay = Dictionary(grouping: allGameRows, by: { $0.day ?? 1 })
+        for (_, dayRows) in byDay {
+            let byPlayer = Dictionary(grouping: dayRows, by: { $0.playerName })
+            for (player, pRows) in byPlayer {
+                if let latest = pRows.max(by: { $0.hole < $1.hole }) {
+                    tourneyTotals[player, default: 0] += latest.totalMoney ?? 0
+                }
+                tourneyHoles[player, default: 0] += pRows.count
+            }
+        }
+
+        let currentDayMoneyByPlayer = Dictionary(uniqueKeysWithValues: moneyData.map { ($0.name, $0.dayTotal) })
+
+        tournamentData = tourneyTotals.sorted {
+            let aHoles = tourneyHoles[$0.key] ?? 0
+            let bHoles = tourneyHoles[$1.key] ?? 0
+            if aHoles > 0 && bHoles == 0 { return true }
+            if aHoles == 0 && bHoles > 0 { return false }
+            let aTotal = $0.value + (allDayOffsets[$0.key] ?? 0)
+            let bTotal = $1.value + (allDayOffsets[$1.key] ?? 0)
+            return aTotal > bTotal
+        }.enumerated().map { i, kv in
+            let allDayTotal  = kv.value + (allDayOffsets[kv.key] ?? 0)
+            let currentDayMoney = currentDayMoneyByPlayer[kv.key] ?? 0
+            return MoneyRow(rank: i+1, name: kv.key, dayTotal: currentDayMoney,
+                            total: allDayTotal, holesPlayed: tourneyHoles[kv.key] ?? 0,
+                            offset: allDayOffsets[kv.key])
         }
 
         // ── Score ──
         let useNet = record?.scoring == "net"
         var sums:   [String: Int] = [:]
         var sHoles: [String: Int] = [:]
+        for player in fieldPlayers { sums[player] = 0; sHoles[player] = 0 }
         for (player, playerRows) in grouped {
             sums[player]   = playerRows.reduce(0) { $0 + (useNet ? ($1.netScore ?? $1.grossScore) : $1.grossScore) }
             sHoles[player] = playerRows.count
         }
-        scoreData = sums.sorted { $0.value < $1.value }.enumerated().map { i, kv in
+        // Players with data sort ascending (lower score wins); no-data players go last.
+        scoreData = sums.sorted {
+            let aHoles = sHoles[$0.key] ?? 0
+            let bHoles = sHoles[$1.key] ?? 0
+            if aHoles > 0 && bHoles == 0 { return true }
+            if aHoles == 0 && bHoles > 0 { return false }
+            return $0.value < $1.value
+        }.enumerated().map { i, kv in
             ScoreRow(rank: i+1, name: kv.key, total: kv.value, holesPlayed: sHoles[kv.key] ?? 0)
         }
 
@@ -496,7 +553,9 @@ final class TournamentLeaderboardViewController: UIViewController {
         let playerCount    = Set(allRows.map { $0.playerName }).count
         let groupCount     = groupData.count
         let holesCompleted = Set(allRows.filter { ($0.day ?? 1) == currentDay }.map { $0.hole }).count
-        statsLabel.text = "· \(playerCount) player\(playerCount == 1 ? "" : "s") · \(groupCount) group\(groupCount == 1 ? "" : "s") · \(holesCompleted)h"
+        let dayPlayerCount = Set(allRows.filter { ($0.day ?? 1) == currentDay }.map { $0.playerName }).count
+        let missingNote    = dayPlayerCount < playerCount ? " (\(dayPlayerCount) scored)" : ""
+        statsLabel.text = "· \(playerCount) player\(playerCount == 1 ? "" : "s")\(missingNote) · \(groupCount) group\(groupCount == 1 ? "" : "s") · \(holesCompleted)h"
 
         if let pot = rec.potAmount, pot > 0 {
             let totalSkins = skinsData.reduce(0) { $0 + $1.skinsWon }

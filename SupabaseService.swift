@@ -683,6 +683,20 @@ final class SupabaseService {
         return Dictionary(uniqueKeysWithValues: rows.map { ($0.playerName, $0.offsetAmount) })
     }
 
+    // Fetches all offsets for a tournament across every day and sums them per player.
+    // Used by the Tournament tab for all-days combined totals with manual overrides.
+    func fetchAllPlayerOffsets(code: String) async throws -> [String: Double] {
+        let rows: [PlayerOffsetRow] = try await client
+            .from("player_offsets")
+            .select()
+            .eq("tournament_code", value: code)
+            .execute()
+            .value
+        var result: [String: Double] = [:]
+        for row in rows { result[row.playerName, default: 0] += row.offsetAmount }
+        return result
+    }
+
     func upsertPlayerOffset(code: String, day: Int, playerName: String, amount: Double) async throws {
         print("🟡 upsertPlayerOffset called: code=\(code) day=\(day) player=\(playerName) amount=\(amount)")
         struct PlayerOffsetInsert: Encodable {
@@ -699,6 +713,47 @@ final class SupabaseService {
                 player_name: playerName,
                 offset_amount: amount
             ))
+            .execute()
+    }
+
+    // MARK: - Tournament Roster
+
+    func fetchRoster(code: String) async throws -> [TournamentRosterEntry] {
+        let rows: [TournamentRosterEntry] = try await client
+            .from("tournament_roster")
+            .select()
+            .eq("tournament_code", value: code.uppercased())
+            .order("canonical_name")
+            .execute()
+            .value
+        return rows
+    }
+
+    func upsertRosterEntry(_ entry: TournamentRosterEntry) async throws {
+        struct Payload: Encodable {
+            let id: String
+            let tournament_code: String
+            let canonical_name: String
+            let handicap: Int
+            let added_by: String
+        }
+        let payload = Payload(
+            id: entry.id.uuidString,
+            tournament_code: entry.tournamentCode.uppercased(),
+            canonical_name: entry.canonicalName,
+            handicap: entry.handicap,
+            added_by: entry.addedBy)
+        try await client
+            .from("tournament_roster")
+            .upsert(payload, onConflict: "id")
+            .execute()
+    }
+
+    func deleteRosterEntry(id: UUID) async throws {
+        try await client
+            .from("tournament_roster")
+            .delete()
+            .eq("id", value: id.uuidString)
             .execute()
     }
 

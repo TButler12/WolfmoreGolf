@@ -321,6 +321,9 @@ final class TeeGameSetupViewController: UIViewController {
                             }
                         }
                         GameManager.shared.saveCurrent()
+                        TournamentHistoryStore.shared.record(
+                            code: record.code, name: record.name,
+                            gameType: record.gameType, day: 1, isOrganizer: true)
                         NotificationCenter.default.post(name: .reloadUI, object: nil)
                         self.showSuccess(code: record.code)
                     }
