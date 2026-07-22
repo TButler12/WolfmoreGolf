@@ -37,7 +37,7 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
 
         buildScrollLayout()
 
-        let settings = gameData.nassauState!.settings
+        guard let settings = gameData.nassauState?.settings else { return }
         baseStakeField.text = String(format: "%.2f", settings.baseStake)
         triggerField.text = String(settings.autoPressTriggerDown)
         pressModeSegmentedControl.selectedSegmentIndex = (settings.pressMode == .auto) ? 0 : 1
