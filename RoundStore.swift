@@ -19,6 +19,7 @@ struct RoundSummary: Codable, Identifiable {
     /// Course this round was played on.
     /// For new rounds, this should be ProfileStore.homeCourseID (UUID string).
     var courseID: String
+    var courseName: String
 
     var playerName: String
     var totalMoney: Int
@@ -48,7 +49,7 @@ struct RoundSummary: Codable, Identifiable {
     var isComplete: Bool
 
     enum CodingKeys: String, CodingKey {
-        case id, gameID, date, courseID, playerName, totalMoney, totalProx, totalScore,
+        case id, gameID, date, courseID, courseName, playerName, totalMoney, totalProx, totalScore,
              holesPlayed, moneyPerHole, proxPerHole, scorePerHole,
              wolfCalledPerHole, wolfTeamWonPerHole, umbieWonPerHole,
              gameTypePerHole, fairwayHitPerHole, girPerHole, puttsPerHole,
@@ -64,6 +65,7 @@ struct RoundSummary: Codable, Identifiable {
 
         date        = try c.decode(Date.self, forKey: .date)
         courseID    = try c.decodeIfPresent(String.self, forKey: .courseID) ?? ""
+        courseName  = try c.decodeIfPresent(String.self, forKey: .courseName) ?? ""
         playerName  = try c.decode(String.self, forKey: .playerName)
         totalMoney  = try c.decode(Int.self, forKey: .totalMoney)
         totalProx   = try c.decode(Int.self, forKey: .totalProx)
@@ -102,6 +104,7 @@ struct RoundSummary: Codable, Identifiable {
         gameID: UUID = UUID(),
         date: Date,
         courseID: String,
+        courseName: String = "",
         playerName: String,
         totalMoney: Int,
         totalProx: Int,
@@ -123,6 +126,7 @@ struct RoundSummary: Codable, Identifiable {
         self.gameID = gameID
         self.date = date
         self.courseID = courseID
+        self.courseName = courseName
         self.playerName = playerName
         self.totalMoney = totalMoney
         self.totalProx = totalProx
@@ -459,8 +463,9 @@ extension RoundStore {
             return "Me"
         }()
 
-        // ---------- CourseID ----------
+        // ---------- CourseID / CourseName ----------
         let courseIDForRound: String = g.course.id.uuidString
+        let courseNameForRound: String = g.course.name
 
         let isComplete = holesPlayed == STANDARD_HOLES
 
@@ -469,6 +474,7 @@ extension RoundStore {
             gameID: sharedGameID,
             date: date,
             courseID: courseIDForRound,
+            courseName: courseNameForRound,
             playerName: finalName,
             totalMoney: totalMoney,
             totalProx: totalProx,

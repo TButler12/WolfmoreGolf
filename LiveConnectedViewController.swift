@@ -21,7 +21,7 @@ final class LiveConnectedViewController: UITableViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Live & Connected"
+        title = "Live & Tournaments"
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
         )
@@ -84,6 +84,18 @@ final class LiveConnectedViewController: UITableViewController {
             },
         ]))
 
+        let isOrganizer = GameManager.shared.currentGame?.tournamentIsOrganizer == true
+            && GameManager.shared.currentGame?.tournamentCode != nil
+        if isOrganizer {
+            let day = GameManager.shared.currentGame?.tournamentDay ?? 1
+            result.append(Section(header: "MANAGE", rows: [
+                Row(title: "Manage Tournament",
+                    subtitle: "Currently Day \(day)") { [weak self] in
+                    self?.manageTournamentTapped()
+                },
+            ]))
+        }
+
         let history = TournamentHistoryStore.shared.all()
         if !history.isEmpty {
             let rows: [Row] = history.prefix(5).map { entry in
@@ -101,18 +113,6 @@ final class LiveConnectedViewController: UITableViewController {
                 }
             }
             result.append(Section(header: "RECENT TOURNAMENTS", rows: rows))
-        }
-
-        let isOrganizer = GameManager.shared.currentGame?.tournamentIsOrganizer == true
-            && GameManager.shared.currentGame?.tournamentCode != nil
-        if isOrganizer {
-            let day = GameManager.shared.currentGame?.tournamentDay ?? 1
-            result.append(Section(header: "MANAGE", rows: [
-                Row(title: "Manage Tournament",
-                    subtitle: "Currently Day \(day)") { [weak self] in
-                    self?.manageTournamentTapped()
-                },
-            ]))
         }
 
         sections = result

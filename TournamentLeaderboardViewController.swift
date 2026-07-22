@@ -44,7 +44,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let potBannerLabel = UILabel()
     private let segment       = UISegmentedControl(items: ["Money", "Net Score", "Groups", "Tournament"])
     private let dayPicker     = UISegmentedControl()
-    private let gameTypePicker = UISegmentedControl(items: ["Wolf", "Skins"])
+    private let gameTypePicker = UISegmentedControl(items: ["Wolf", "Net Skins", "Gross Skins"])
     private let tableView     = UITableView(frame: .zero, style: .plain)
     private let spinner       = UIActivityIndicatorView(style: .medium)
 
@@ -313,28 +313,75 @@ final class TournamentLeaderboardViewController: UIViewController {
         }
 
         // ── Skins ──
-        // Mirror the drill-down's delta-tracking on allRows (no dedup, no day filter) so
-        // both views always agree — avoids stale latest.skinsWon from dedup dropping newer records.
-        var skinTotals: [String: Int] = [:]
-        for player in fieldPlayers { skinTotals[player] = 0 }
-        let allSkinRows = allRows
-            .filter { ($0.gameType ?? "wolf") == "skins" }
-            .sorted { $0.hole < $1.hole }
-        for player in Set(allSkinRows.map { $0.playerName }) {
-            let playerRows = allSkinRows.filter { $0.playerName == player }
-            var prev = 0, total = 0
-            for r in playerRows {
-                let current = r.skinsWon ?? 0
-                if current > prev { total += (current - prev) }
-                prev = current
+        // Delta-track on allRows (no dedup) to avoid stale skinsWon from dedup dropping newer records.
+        // Filtered to currentDay and selectedGameType so each day/type tab is independent.
+        let skinGameType    = (selectedGameType == "gross_skins") ? "gross_skins" : "skins"
+        let fullPot         = record?.potAmount
+        let scoringStr      = record?.scoring ?? "net"
+        let isCombinedPool  = scoringStr == "both_combined"
+
+        // Helper: count skins per player for a given game_type on currentDay.
+        func countSkins(gameType: String) -> [String: Int] {
+            var totals: [String: Int] = [:]
+            for player in fieldPlayers { totals[player] = 0 }
+            let rows = allRows
+                .filter { $0.gameType == gameType && ($0.day ?? 1) == currentDay }
+                .sorted { $0.hole < $1.hole }
+            for player in Set(rows.map { $0.playerName }) {
+                let pRows = rows.filter { $0.playerName == player }
+                var prev = 0, total = 0
+                for r in pRows {
+                    let cur = r.skinsWon ?? 0
+                    if cur > prev { total += (cur - prev) }
+                    prev = cur
+                }
+                totals[player] = total
             }
-            skinTotals[player] = total
+            return totals
         }
-        let totalSkinsForPot = skinTotals.values.reduce(0, +)
-        let pot = record?.potAmount
+
+        let skinTotals = countSkins(gameType: skinGameType)
+
+        // Effective pot for this tab:
+        // - combined_pool: full pot ÷ combined net+gross skins, so each skin has equal value.
+        // - both:NN custom split: the per-type pot is baked into totalMoney rows by GameVC; use it.
+        // - both (50/50) or single type: full pot for single type, half for each 50/50 type.
+        let effectiveSkinsPot: Double?
+        let totalSkinsForPot: Int
+        if isCombinedPool, let pot = fullPot, pot > 0 {
+            let netSkins   = countSkins(gameType: "skins")
+            let grossSkins = countSkins(gameType: "gross_skins")
+            let combined   = netSkins.values.reduce(0, +) + grossSkins.values.reduce(0, +)
+            totalSkinsForPot  = skinTotals.values.reduce(0, +)
+            effectiveSkinsPot = combined > 0 ? pot / Double(combined) * 1.0 : nil
+            // perSkin already baked; potPayout = playerSkins × (pot / combinedTotal)
+        } else {
+            let isBothHalf = scoringStr == "both"
+            let isCustom   = scoringStr.hasPrefix("both:") && !scoringStr.hasPrefix("both_")
+            let effectivePot: Double?
+            if let p = fullPot, p > 0 {
+                if isBothHalf    { effectivePot = p / 2.0 }
+                else if isCustom {
+                    // Custom split is already encoded in the written totalMoney.
+                    // For leaderboard banner, compute the effective pot for this tab.
+                    if let grossPct = Double(scoringStr.dropFirst("both:".count)) {
+                        let frac = min(0.99, max(0.01, grossPct / 100.0))
+                        effectivePot = skinGameType == "gross_skins" ? p * frac : p * (1.0 - frac)
+                    } else {
+                        effectivePot = p / 2.0
+                    }
+                }
+                else             { effectivePot = p }
+            } else { effectivePot = nil }
+            effectiveSkinsPot = effectivePot
+            totalSkinsForPot  = skinTotals.values.reduce(0, +)
+        }
+
         skinsData = skinTotals.sorted { $0.value > $1.value }.enumerated().map { i, kv in
             let potPayout: Double?
-            if let pot, pot > 0, totalSkinsForPot > 0, kv.value > 0 {
+            if isCombinedPool, let perSkin = effectiveSkinsPot, kv.value > 0 {
+                potPayout = Double(kv.value) * perSkin
+            } else if let pot = effectiveSkinsPot, totalSkinsForPot > 0, kv.value > 0 {
                 potPayout = (Double(kv.value) / Double(totalSkinsForPot)) * pot
             } else {
                 potPayout = nil
@@ -435,7 +482,11 @@ final class TournamentLeaderboardViewController: UIViewController {
     }
 
     @objc private func gameTypePickerChanged() {
-        selectedGameType = gameTypePicker.selectedSegmentIndex == 1 ? "skins" : "wolf"
+        switch gameTypePicker.selectedSegmentIndex {
+        case 1:  selectedGameType = "skins"
+        case 2:  selectedGameType = "gross_skins"
+        default: selectedGameType = "wolf"
+        }
         recompute()
         tableView.reloadData()
     }
@@ -560,10 +611,31 @@ final class TournamentLeaderboardViewController: UIViewController {
         statsLabel.text = "· \(playerCount) player\(playerCount == 1 ? "" : "s")\(missingNote) · \(groupCount) group\(groupCount == 1 ? "" : "s") · \(holesCompleted)h"
 
         if let pot = rec.potAmount, pot > 0 {
+            let scoring    = rec.scoring
             let totalSkins = skinsData.reduce(0) { $0 + $1.skinsWon }
-            let perSkin    = totalSkins > 0 ? pot / Double(totalSkins) : 0
+
+            // Determine display pot and label for this tab.
+            let displayPot: Double
+            let potLabel: String
+            if scoring == "both_combined" {
+                displayPot = pot
+                potLabel   = "Combined Skins Pot"
+            } else if scoring == "both" {
+                displayPot = pot / 2.0
+                potLabel   = selectedGameType == "gross_skins" ? "Gross Skins Pot" : "Net Skins Pot"
+            } else if scoring.hasPrefix("both:"), let grossPct = Double(scoring.dropFirst("both:".count)) {
+                let frac   = min(0.99, max(0.01, grossPct / 100.0))
+                displayPot = selectedGameType == "gross_skins" ? pot * frac : pot * (1.0 - frac)
+                potLabel   = selectedGameType == "gross_skins" ? "Gross Skins Pot" : "Net Skins Pot"
+            } else {
+                displayPot = pot
+                potLabel   = selectedGameType == "gross_skins" ? "Gross Skins Pot" : "Skins Pot"
+            }
+
+            let perSkin    = totalSkins > 0 ? displayPot / Double(totalSkins) : 0
             let perSkinStr = perSkin == floor(perSkin) ? "$\(Int(perSkin))" : String(format: "$%.2f", perSkin)
-            potBannerLabel.text   = "Skins Pot: $\(Int(pot)) · \(totalSkins) skins won · \(perSkinStr) per skin"
+            let potStr     = displayPot == floor(displayPot) ? "$\(Int(displayPot))" : String(format: "$%.2f", displayPot)
+            potBannerLabel.text    = "\(potLabel): \(potStr) · \(totalSkins) skins won · \(perSkinStr) per skin"
             potBannerLabel.isHidden = false
         } else {
             potBannerLabel.isHidden = true
@@ -659,10 +731,10 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
         if segment.selectedSegmentIndex == 0 {
             tableView.deselectRow(at: indexPath, animated: true)
 
-            if selectedGameType == "skins" {
+            if selectedGameType == "skins" || selectedGameType == "gross_skins" {
                 let row = skinsData[indexPath.row]
                 let playerRows = allRows
-                    .filter { $0.playerName == row.name && ($0.gameType ?? "wolf") == "skins" }
+                    .filter { $0.playerName == row.name && $0.gameType == selectedGameType }
                     .sorted { $0.hole < $1.hole }
                 var prev = 0
                 var wonHoles: [(hole: Int, count: Int)] = []

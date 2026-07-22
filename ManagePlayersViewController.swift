@@ -986,7 +986,8 @@ final class ManagePlayersViewController: UIViewController,
             }()
 
             if let profile = resolvedProfile {
-                g.course = Course(name: profile.name,
+                g.course = Course(id: profile.id,
+                                  name: profile.name,
                                   pars: Array(profile.pars.prefix(STANDARD_HOLES)),
                                   holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)))
             }

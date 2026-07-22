@@ -6,6 +6,7 @@ private struct GameSummary {
     let gameID: UUID
     let date: Date
     let courseID: String
+    let courseName: String
     let playerCount: Int
     let userMoney: Int
     let gameType: GameType?
@@ -64,6 +65,8 @@ private final class PastGameCell: UITableViewCell {
         if let uid = UUID(uuidString: summary.courseID),
            let profile = CourseLibrary.shared.get(id: uid) {
             courseLabel.text = profile.name
+        } else if !summary.courseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            courseLabel.text = summary.courseName
         } else {
             courseLabel.text = "Unknown Course"
         }
@@ -218,6 +221,7 @@ final class PastGamesViewController: UIViewController {
                 gameID:       first.gameID,
                 date:         first.date,
                 courseID:     first.courseID,
+                courseName:   first.courseName,
                 playerCount:  playerRows.count,
                 userMoney:    gameType == .tournament ? 0 : (userRow?.totalMoney ?? 0),
                 gameType:     gameType,

@@ -635,10 +635,12 @@ final class SupabaseService {
         code: String,
         carryTies: Bool,
         potAmount: Double?,
-        stake: Double?
+        stake: Double?,
+        scoring: String = "net"
     ) async throws {
         var payload: [String: AnyJSON] = [
-            "carry_ties": .bool(carryTies)
+            "carry_ties": .bool(carryTies),
+            "scoring":    .string(scoring),
         ]
         payload["pot_amount"] = potAmount.map { .double($0) } ?? .null
         payload["stake"]      = stake.map      { .double($0) } ?? .null
@@ -828,6 +830,37 @@ final class SupabaseService {
             submitted_at: formatter.string(from: Date())
         )
         try await client.from("usage_telemetry").insert(payload).execute()
+    }
+
+    // MARK: - Pass Game (shared_games table)
+
+    func uploadSharedGame(_ game: GameData) async throws -> String {
+        let code = generateCode()
+        let json = try JSONEncoder().encode(game)
+        guard let jsonString = String(data: json, encoding: .utf8) else {
+            throw NSError(domain: "WolfmoreGolf", code: 500,
+                          userInfo: [NSLocalizedDescriptionKey: "Failed to encode game"])
+        }
+        try await client
+            .from("shared_games")
+            .insert(["code": AnyJSON.string(code), "game_data": AnyJSON.string(jsonString)])
+            .execute()
+        return code
+    }
+
+    func fetchSharedGame(code: String) async throws -> GameData {
+        struct Row: Decodable { let game_data: String }
+        let response: PostgrestResponse<Row> = try await client
+            .from("shared_games")
+            .select("game_data")
+            .eq("code", value: code.uppercased())
+            .single()
+            .execute()
+        guard let data = response.value.game_data.data(using: .utf8) else {
+            throw NSError(domain: "WolfmoreGolf", code: 500,
+                          userInfo: [NSLocalizedDescriptionKey: "Invalid game data"])
+        }
+        return try JSONDecoder().decode(GameData.self, from: data)
     }
 
     // MARK: - Helpers

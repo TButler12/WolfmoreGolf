@@ -266,8 +266,8 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             // Logo: centered, sits at top with small padding
             logoView.topAnchor.constraint(equalTo: header.topAnchor, constant: 12),
             logoView.centerXAnchor.constraint(equalTo: header.centerXAnchor),
-            logoView.heightAnchor.constraint(equalToConstant: 56),
-            logoView.widthAnchor.constraint(equalToConstant: 56),
+            logoView.heightAnchor.constraint(equalToConstant: 68),
+            logoView.widthAnchor.constraint(equalToConstant: 68),
 
             // Edit pencil: vertically centered with course button row, pinned right
             editBtn.topAnchor.constraint(equalTo: courseBtn.topAnchor),
@@ -559,7 +559,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         // Tagline
         let tagline = UILabel()
         tagline.text = "Every round automatically tracks Wolf · Skins · Nassau — no extra setup"
-        tagline.font = .systemFont(ofSize: 11.5, weight: .regular)
+        tagline.font = .systemFont(ofSize: 14, weight: .regular)
         tagline.textColor = sageColor
         tagline.textAlignment = .center
         tagline.numberOfLines = 0
@@ -576,7 +576,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         tournamentBtn.isHidden = true  // Hidden pending release; remove this line to re-enable
 
         let liveBtn = buildSecondaryButton(
-            title: "Live & Connected",
+            title: "Live & Tournaments",
             systemImage: "antenna.radiowaves.left.and.right",
             tintColor: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)
         )
@@ -1369,34 +1369,24 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     @objc private func moreTapped(_ sender: UIButton) {
         let ac = UIAlertController(title: "More", message: nil, preferredStyle: .actionSheet)
-        ac.addAction(UIAlertAction(title: "Calcutta Pools", style: .default) { [weak self] _ in
-            self?.openCalcutta()
-        })
-        ac.addAction(UIAlertAction(title: "Manage Players", style: .default) { [weak self] _ in
-            self?.presentManagePlayers()
-        })
-        ac.addAction(UIAlertAction(title: "Past Games", style: .default) { [weak self] _ in
-            self?.openPastGames()
-        })
-        ac.addAction(UIAlertAction(title: "Explore the Rules", style: .default) { [weak self] _ in
-            self?.openRules()
-        })
-        ac.addAction(UIAlertAction(title: "Delete History", style: .destructive) { [weak self] _ in
-            guard let self = self else { return }
+        ac.addAction(UIAlertAction(title: "Calcutta Pools",    style: .default) { [weak self] _ in self?.openCalcutta() })
+        ac.addAction(UIAlertAction(title: "Manage Players",    style: .default) { [weak self] _ in self?.presentManagePlayers() })
+        ac.addAction(UIAlertAction(title: "Past Games",        style: .default) { [weak self] _ in self?.openPastGames() })
+        ac.addAction(UIAlertAction(title: "Explore the Rules", style: .default) { [weak self] _ in self?.openRules() })
+        ac.addAction(UIAlertAction(title: "Delete History",    style: .destructive) { [weak self] _ in
+            guard let self else { return }
             self.deleteHistoryTapped(sender)
         })
         ac.addAction(UIAlertAction(title: "Check for Updates", style: .default) { [weak self] _ in
             guard let self else { return }
             UpdateChecker.shared.checkManually(from: self)
         })
-        ac.addAction(UIAlertAction(title: "Rate WolfMore ★", style: .default) { _ in
+        ac.addAction(UIAlertAction(title: "Rate WolfMore ★",   style: .default) { _ in
             if let url = URL(string: "itms-apps://itunes.apple.com/app/id6755116882?action=write-review") {
                 UIApplication.shared.open(url)
             }
         })
-        ac.addAction(UIAlertAction(title: "Send Feedback", style: .default) { [weak self] _ in
-            self?.sendFeedbackEmail()
-        })
+        ac.addAction(UIAlertAction(title: "Send Feedback",     style: .default) { [weak self] _ in self?.sendFeedbackEmail() })
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         if let pop = ac.popoverPresentationController {
             pop.sourceView = sender
@@ -1641,8 +1631,11 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     // MARK: - Premium Badge
 
     private func setupPremiumBadge() {
-        let btn = UIButton(type: .system)
-        btn.titleLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
+        var cfg = UIButton.Configuration.filled()
+        cfg.cornerStyle = .capsule
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 5, leading: 10, bottom: 5, trailing: 10)
+        cfg.baseBackgroundColor = UIColor.white.withAlphaComponent(0.18)
+        let btn = UIButton(configuration: cfg)
         btn.addTarget(self, action: #selector(premiumBadgeTapped), for: .touchUpInside)
         let item = UIBarButtonItem(customView: btn)
         navigationItem.leftBarButtonItem = item
@@ -1654,18 +1647,24 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         guard let item = premiumBadgeItem,
               let btn = item.customView as? UIButton else { return }
         let pm = PremiumManager.shared
+        var cfg = btn.configuration ?? UIButton.Configuration.filled()
         if pm.isPremium {
-            btn.setTitle("👑 Premium", for: .normal)
-            btn.setTitleColor(goldColor, for: .normal)
+            cfg.attributedTitle = AttributedString("👑 Premium", attributes: AttributeContainer([
+                .font: UIFont.systemFont(ofSize: 15, weight: .bold),
+                .foregroundColor: goldColor
+            ]))
         } else {
             let minRemaining = [
                 pm.remainingFreeUses(for: .aiSummary),
                 pm.remainingFreeUses(for: .remoteNassau),
                 pm.remainingFreeUses(for: .liveWolf)
             ].min() ?? 0
-            btn.setTitle("👑 \(minRemaining) free", for: .normal)
-            btn.setTitleColor(goldColor.withAlphaComponent(0.7), for: .normal)
+            cfg.attributedTitle = AttributedString("👑 \(minRemaining) free", attributes: AttributeContainer([
+                .font: UIFont.systemFont(ofSize: 15, weight: .bold),
+                .foregroundColor: goldColor.withAlphaComponent(0.85)
+            ]))
         }
+        btn.configuration = cfg
     }
 
     @objc private func premiumBadgeTapped() {

@@ -52,6 +52,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     // MARK: - Pass Game import
 
     private func handleWolfmoreFile(_ url: URL) {
+        // Files from iMessage/Files app arrive as security-scoped URLs.
+        // Must bracket the read with start/stop or Data(contentsOf:) silently returns nil.
+        let accessing = url.startAccessingSecurityScopedResource()
+        defer { if accessing { url.stopAccessingSecurityScopedResource() } }
+
         guard let data = try? Data(contentsOf: url),
               var game = try? JSONDecoder().decode(GameData.self, from: data) else {
             showFileError()
@@ -112,7 +117,53 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let root = window?.rootViewController else { return }
         let nav = (root as? UINavigationController) ?? root.navigationController
 
-        if host == "watch" {
+        if host == "game" {
+            Task {
+                do {
+                    let game = try await SupabaseService.shared.fetchSharedGame(code: code)
+                    GameManager.shared.currentGame = game
+                    GameManager.shared.normalizeCurrentIfNeeded()
+                    GameManager.shared.saveCurrent()
+
+                    let hole = game.hole + 1
+                    let activePlayers = zip(game.playerNames, game.playerActivated)
+                        .filter { !$0.0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty && $0.1 }
+                        .count
+
+                    await MainActor.run {
+                        let sb = UIStoryboard(name: "Main", bundle: nil)
+                        guard let roundNav = sb.instantiateViewController(withIdentifier: "RoundNav") as? UINavigationController else { return }
+
+                        let presentGame = {
+                            root.present(roundNav, animated: true) {
+                                let ac = UIAlertController(
+                                    title: "Game Received",
+                                    message: "Continuing from hole \(hole) with \(activePlayers) player\(activePlayers == 1 ? "" : "s").",
+                                    preferredStyle: .alert
+                                )
+                                ac.addAction(UIAlertAction(title: "Let's Play", style: .default))
+                                roundNav.present(ac, animated: true)
+                            }
+                        }
+
+                        if root.presentedViewController != nil {
+                            root.dismiss(animated: false, completion: presentGame)
+                        } else {
+                            presentGame()
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        let ac = UIAlertController(title: "Couldn't Open Game",
+                                                   message: "The shared game could not be loaded. Make sure you have an internet connection.",
+                                                   preferredStyle: .alert)
+                        ac.addAction(UIAlertAction(title: "OK", style: .default))
+                        root.present(ac, animated: true)
+                    }
+                }
+            }
+
+        } else if host == "watch" {
             let vc = WolfSpectatorViewController()
             vc.sessionCode = code
             nav?.pushViewController(vc, animated: true)

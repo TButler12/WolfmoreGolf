@@ -1317,21 +1317,40 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func passGame() {
         guard let game = GameManager.shared.currentGame else { return }
-        do {
-            let data = try JSONEncoder().encode(game)
-            let tmpURL = FileManager.default.temporaryDirectory
-                .appendingPathComponent("WolfmoreGame.wolfmore")
-            try data.write(to: tmpURL, options: .atomic)
 
-            let av = UIActivityViewController(activityItems: [tmpURL], applicationActivities: nil)
-            av.popoverPresentationController?.sourceView = scoringInfoButton ?? view
-            present(av, animated: true)
-        } catch {
-            let ac = UIAlertController(title: "Export Failed",
-                                       message: error.localizedDescription,
-                                       preferredStyle: .alert)
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            present(ac, animated: true)
+        let spinner = UIActivityIndicatorView(style: .large)
+        spinner.translatesAutoresizingMaskIntoConstraints = false
+        spinner.startAnimating()
+        view.addSubview(spinner)
+        NSLayoutConstraint.activate([
+            spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor)
+        ])
+
+        Task {
+            defer { spinner.removeFromSuperview() }
+            do {
+                let code = try await SupabaseService.shared.uploadSharedGame(game)
+                var comps = URLComponents()
+                comps.scheme = "wolfmore"
+                comps.host   = "game"
+                comps.queryItems = [URLQueryItem(name: "code", value: code)]
+                guard let url = comps.url else { return }
+
+                await MainActor.run {
+                    let av = UIActivityViewController(activityItems: [url], applicationActivities: nil)
+                    av.popoverPresentationController?.sourceView = self.scoringInfoButton ?? self.view
+                    self.present(av, animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    let ac = UIAlertController(title: "Share Failed",
+                                               message: error.localizedDescription,
+                                               preferredStyle: .alert)
+                    ac.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(ac, animated: true)
+                }
+            }
         }
     }
 
@@ -3301,120 +3320,148 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 // 5e-skins) Skins tournament backfill — absolute HC winner determination.
                 // SkinsEngine.recalculate() is NOT called here; winners are determined inline
                 // using absoluteStrokesGiven so tournament skins always use absolute HC.
+                // When scoring = "both", runs twice: net → game_type "skins", gross → "gross_skins",
+                // each using half the pot so the total payout equals the configured amount per day.
                 let tourneySkinsState = g.skinsState ?? SkinsEngine.makeDefaultState()
-                let skinsUseGross = g.tournamentScoringType == "gross"
                 let activeIndexes = (0..<min(MAX_PLAYERS, g.playerActivated.count)).filter { g.playerActivated[$0] }
                 guard activeIndexes.count >= 2 else { return }
 
                 let skinValue   = tourneySkinsState.settings.skinValue
-                let potAmount   = g.tournamentPotAmount
-                let isPotMode   = (potAmount ?? 0) > 0
+                let basePot     = g.tournamentPotAmount
                 let activeCount = activeIndexes.count
+                let carryTies   = g.tournamentCarryTies == true
 
-                // Pre-compute absolute-HC winner per committed hole, respecting carryovers.
-                // A hole has a winner only if exactly one player posts the lowest absolute-net score.
-                let carryTies = g.tournamentCarryTies == true
-                var absWinnerByHole: [Int: Int] = [:]  // hole index -> winning player index
-                var potByHole:       [Int: Int] = [:]  // hole index -> skin pot value at that hole
-                var currentPot = 1
-
-                for h in 0..<STANDARD_HOLES {
-                    guard g.holeCommitted[safe: h] == true else { continue }
-                    let holeHc = g.course.holeHandicaps[safe: h] ?? (h + 1)
-                    var scored: [(idx: Int, net: Int)] = []
-                    var complete = true
-                    for idx in activeIndexes {
-                        guard idx < g.scores.count,
-                              h < g.scores[idx].count,
-                              let gross = g.scores[idx][h] else { complete = false; break }
-                        let playerHc = g.hcPlayers[safe: idx] ?? 0
-                        let net = skinsUseGross ? gross
-                            : gross - GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
-                        scored.append((idx, net))
-                    }
-                    guard complete, let low = scored.map(\.net).min() else { continue }
-                    let winners = scored.filter { $0.net == low }
-                    potByHole[h] = currentPot
-                    if winners.count == 1 {
-                        absWinnerByHole[h] = winners[0].idx
-                        currentPot = 1
-                    } else if carryTies {
-                        currentPot += 1
-                    } else {
-                        currentPot = 1
-                    }
+                let scoringMode = g.tournamentScoringType ?? "net"
+                let skinPasses: [(useGross: Bool, gameType: String, effectivePot: Double?)]
+                if scoringMode == "gross" {
+                    skinPasses = [(true,  "gross_skins", basePot)]
+                } else if scoringMode == "both_combined" {
+                    // Combined Pool: pot allocated by leaderboard based on total skins across both types.
+                    // Write both passes with no effectivePot so totalMoney rows are omitted;
+                    // the leaderboard reads skinsWon and divides the full pot itself.
+                    skinPasses = [(false, "skins",       nil),
+                                  (true,  "gross_skins", nil)]
+                } else if scoringMode.hasPrefix("both:"),
+                          let grossPct = Double(scoringMode.dropFirst("both:".count)) {
+                    // Custom split: "both:NN" where NN is the integer % to gross.
+                    let grossFrac = min(0.99, max(0.01, grossPct / 100.0))
+                    skinPasses = [(false, "skins",       basePot.map { $0 * (1.0 - grossFrac) }),
+                                  (true,  "gross_skins", basePot.map { $0 * grossFrac })]
+                } else if scoringMode.hasPrefix("both") {
+                    // Default "both" = 50/50 split
+                    let half = basePot.map { $0 / 2.0 }
+                    skinPasses = [(false, "skins",       half),
+                                  (true,  "gross_skins", half)]
+                } else {
+                    // "net" (default)
+                    skinPasses = [(false, "skins",       basePot)]
                 }
 
-                for backfillHole in backfillRange {
-                    guard g.holeCommitted[safe: backfillHole] == true else { continue }
+                for pass in skinPasses {
+                    let isPotMode = (pass.effectivePot ?? 0) > 0
 
-                    var cumulativeMoney: [Int: Double] = [:]
-                    var holeMoneyBySeat: [Int: Double] = [:]
-                    var cumulativeSkinsWon: [Int: Int] = [:]
+                    // Pre-compute winner per committed hole for this pass's scoring method.
+                    var absWinnerByHole: [Int: Int] = [:]
+                    var potByHole:       [Int: Int] = [:]
+                    var currentPot = 1
 
-                    for h in 0...backfillHole {
-                        guard let winner = absWinnerByHole[h] else { continue }
-                        let skinsPot = potByHole[h] ?? 1
-                        if !isPotMode {
-                            let earned = Double(activeCount - 1) * skinValue * Double(skinsPot)
-                            let paid   = skinValue * Double(skinsPot)
-                            for idx in activeIndexes {
-                                if idx == winner {
-                                    cumulativeMoney[idx, default: 0] += earned
-                                    cumulativeSkinsWon[idx, default: 0] += skinsPot
-                                    if h == backfillHole { holeMoneyBySeat[idx] = earned }
-                                } else {
-                                    cumulativeMoney[idx, default: 0] -= paid
-                                    if h == backfillHole { holeMoneyBySeat[idx] = -paid }
-                                }
-                            }
-                        } else {
-                            cumulativeSkinsWon[winner, default: 0] += skinsPot
-                        }
-                    }
-
-                    // Pot mode: compute running money estimate after accumulating skins
-                    if isPotMode, let pot = potAmount {
-                        let totalSkins = cumulativeSkinsWon.values.reduce(0, +)
+                    for h in 0..<STANDARD_HOLES {
+                        guard g.holeCommitted[safe: h] == true else { continue }
+                        let holeHc = g.course.holeHandicaps[safe: h] ?? (h + 1)
+                        var scored: [(idx: Int, net: Int)] = []
+                        var complete = true
                         for idx in activeIndexes {
-                            let won = cumulativeSkinsWon[idx] ?? 0
-                            cumulativeMoney[idx] = totalSkins > 0 ? (Double(won) / Double(totalSkins)) * pot : 0
-                            holeMoneyBySeat[idx] = 0 // marginal per-hole undefined in pot mode
+                            guard idx < g.scores.count,
+                                  h < g.scores[idx].count,
+                                  let gross = g.scores[idx][h] else { complete = false; break }
+                            let playerHc = g.hcPlayers[safe: idx] ?? 0
+                            let net = pass.useGross ? gross
+                                : gross - GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                            scored.append((idx, net))
+                        }
+                        guard complete, let low = scored.map(\.net).min() else { continue }
+                        let winners = scored.filter { $0.net == low }
+                        potByHole[h] = currentPot
+                        if winners.count == 1 {
+                            absWinnerByHole[h] = winners[0].idx
+                            currentPot = 1
+                        } else if carryTies {
+                            currentPot += 1
+                        } else {
+                            currentPot = 1
                         }
                     }
 
-                    for seat in activeIndexes {
-                        guard let tCode = g.tournamentCode, !tCode.isEmpty else { continue }
-                        let name = g.playerNames[safe: seat] ?? ""
-                        guard !name.isEmpty else { continue }
-                        let gross   = (seat < g.scores.count && backfillHole < g.scores[seat].count)
-                                          ? (g.scores[seat][backfillHole] ?? 0) : 0
-                        let holeHc   = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
-                        let playerHc = g.hcPlayers[safe: seat] ?? 0
-                        let pops     = skinsUseGross ? 0 : GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
-                        let net      = gross - pops
-                        let holeMoney  = holeMoneyBySeat[seat] ?? 0
-                        let totalMoney = cumulativeMoney[seat] ?? 0
-                        let skinsWon   = cumulativeSkinsWon[seat] ?? 0
+                    for backfillHole in backfillRange {
+                        guard g.holeCommitted[safe: backfillHole] == true else { continue }
 
-                        do {
-                            try await SupabaseService.shared.submitTournamentHoleScore(
-                                playerSlot:     seat,
-                                playerName:     name,
-                                hole:           backfillHole,
-                                grossScore:     gross,
-                                netScore:       net,
-                                holeMoney:      holeMoney,
-                                totalMoney:     totalMoney,
-                                holeHc:         holeHc,
-                                tournamentCode: tCode,
-                                groupCode:      gCode,
-                                day:            g.tournamentDay,
-                                game_type:      "skins",
-                                skins_won:      skinsWon
-                            )
-                        } catch {
-                            print("ERROR 5e-skins write failed seat=\(seat) name=\(name) hole=\(backfillHole+1): \(error)")
+                        var cumulativeMoney: [Int: Double] = [:]
+                        var holeMoneyBySeat: [Int: Double] = [:]
+                        var cumulativeSkinsWon: [Int: Int] = [:]
+
+                        for h in 0...backfillHole {
+                            guard let winner = absWinnerByHole[h] else { continue }
+                            let skinsPot = potByHole[h] ?? 1
+                            if !isPotMode {
+                                let earned = Double(activeCount - 1) * skinValue * Double(skinsPot)
+                                let paid   = skinValue * Double(skinsPot)
+                                for idx in activeIndexes {
+                                    if idx == winner {
+                                        cumulativeMoney[idx, default: 0] += earned
+                                        cumulativeSkinsWon[idx, default: 0] += skinsPot
+                                        if h == backfillHole { holeMoneyBySeat[idx] = earned }
+                                    } else {
+                                        cumulativeMoney[idx, default: 0] -= paid
+                                        if h == backfillHole { holeMoneyBySeat[idx] = -paid }
+                                    }
+                                }
+                            } else {
+                                cumulativeSkinsWon[winner, default: 0] += skinsPot
+                            }
+                        }
+
+                        if isPotMode, let pot = pass.effectivePot {
+                            let totalSkins = cumulativeSkinsWon.values.reduce(0, +)
+                            for idx in activeIndexes {
+                                let won = cumulativeSkinsWon[idx] ?? 0
+                                cumulativeMoney[idx] = totalSkins > 0 ? (Double(won) / Double(totalSkins)) * pot : 0
+                                holeMoneyBySeat[idx] = 0
+                            }
+                        }
+
+                        for seat in activeIndexes {
+                            guard let tCode = g.tournamentCode, !tCode.isEmpty else { continue }
+                            let name = g.playerNames[safe: seat] ?? ""
+                            guard !name.isEmpty else { continue }
+                            let gross    = (seat < g.scores.count && backfillHole < g.scores[seat].count)
+                                               ? (g.scores[seat][backfillHole] ?? 0) : 0
+                            let holeHc   = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
+                            let playerHc = g.hcPlayers[safe: seat] ?? 0
+                            let pops     = pass.useGross ? 0 : GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                            let net      = gross - pops
+                            let holeMoney  = holeMoneyBySeat[seat] ?? 0
+                            let totalMoney = cumulativeMoney[seat] ?? 0
+                            let skinsWon   = cumulativeSkinsWon[seat] ?? 0
+
+                            do {
+                                try await SupabaseService.shared.submitTournamentHoleScore(
+                                    playerSlot:     seat,
+                                    playerName:     name,
+                                    hole:           backfillHole,
+                                    grossScore:     gross,
+                                    netScore:       net,
+                                    holeMoney:      holeMoney,
+                                    totalMoney:     totalMoney,
+                                    holeHc:         holeHc,
+                                    tournamentCode: tCode,
+                                    groupCode:      gCode,
+                                    day:            g.tournamentDay,
+                                    game_type:      pass.gameType,
+                                    skins_won:      skinsWon
+                                )
+                            } catch {
+                                print("ERROR 5e-skins write failed seat=\(seat) name=\(name) hole=\(backfillHole+1) type=\(pass.gameType): \(error)")
+                            }
                         }
                     }
                 }
