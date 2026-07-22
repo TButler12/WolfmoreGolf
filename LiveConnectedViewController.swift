@@ -303,6 +303,13 @@ final class LiveConnectedViewController: UITableViewController {
             self?.advanceDay()
         })
         if GameManager.shared.currentGame?.tournamentIsOrganizer == true {
+            let currentCode = GameManager.shared.currentGame?.tournamentCode ?? ""
+            let past = TournamentHistoryStore.shared.all().filter { $0.code != currentCode }
+            if !past.isEmpty {
+                sheet.addAction(UIAlertAction(title: "Load Roster from Past Tournament", style: .default) { [weak self] _ in
+                    self?.showPastRosterImportSheet(past, into: currentCode)
+                })
+            }
             sheet.addAction(UIAlertAction(title: "Edit Settings", style: .default) { [weak self] _ in
                 self?.editTournamentSettings()
             })
@@ -314,6 +321,71 @@ final class LiveConnectedViewController: UITableViewController {
         }
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet)
+    }
+
+    private func showPastRosterImportSheet(_ entries: [TournamentHistoryEntry], into currentCode: String) {
+        let ac = UIAlertController(
+            title: "Load Roster from Past Tournament",
+            message: "All players from that tournament will be added to this roster.",
+            preferredStyle: .actionSheet)
+        for entry in entries {
+            ac.addAction(UIAlertAction(title: "\(entry.name)  ·  Day \(entry.lastDay)", style: .default) { [weak self] _ in
+                self?.importRosterFromPastTournament(code: entry.code, name: entry.name, into: currentCode)
+            })
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(ac)
+    }
+
+    private func importRosterFromPastTournament(code: String, name: String, into currentCode: String) {
+        let spinner = UIAlertController(title: nil, message: "Importing players from \(name)…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                let entries = try await SupabaseService.shared.fetchRoster(code: code)
+                for entry in entries {
+                    // Preserve existing FriendStore HC — only set preselectForRound.
+                    if let existing = FriendStore.shared.friends.first(where: {
+                        $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                            .caseInsensitiveCompare(entry.canonicalName) == .orderedSame
+                    }) {
+                        FriendStore.shared.update(friendID: existing.id, preselectForRound: true)
+                    } else {
+                        let friend = Friend(name: entry.canonicalName, defaultHC: entry.handicap)
+                        FriendStore.shared.upsert(friend)
+                        if let saved = FriendStore.shared.friends.first(where: {
+                            $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                                .caseInsensitiveCompare(entry.canonicalName) == .orderedSame
+                        }) {
+                            FriendStore.shared.update(friendID: saved.id, preselectForRound: true)
+                        }
+                    }
+                    let rosterEntry = TournamentRosterEntry(
+                        id: UUID(),
+                        tournamentCode: currentCode,
+                        canonicalName: entry.canonicalName,
+                        handicap: entry.handicap,
+                        addedBy: "organizer")
+                    try? await SupabaseService.shared.upsertRosterEntry(rosterEntry)
+                }
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let ac = UIAlertController(
+                            title: "Roster Loaded",
+                            message: "\(entries.count) player\(entries.count == 1 ? "" : "s") imported from \(name).",
+                            preferredStyle: .alert)
+                        ac.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(ac, animated: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Could not load players from that tournament.")
+                    }
+                }
+            }
+        }
     }
 
     private func editRosterTapped() {

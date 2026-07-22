@@ -6,17 +6,22 @@ import UIKit
 // Presented modally from ManagePlayersViewController when in a tournament context.
 final class TournamentRosterPickerViewController: UIViewController {
 
-    // Called each time a player is tapped; sheet stays open for more picks.
+    // Called each time a NEW player is tapped; pre-checked players do not fire this.
     var onSelect: ((String, Int) -> Void)?
-    // Set by presenter to (maxActivePlayers - currentSelectedCount) before presenting.
-    var maxSelections: Int = 4
+    // Called when a checked player is tapped to deselect them.
+    var onDeselect: ((String) -> Void)?
+    // Absolute player ceiling — set by presenter.
+    var maxPlayers: Int = 5
+    // Names already in FriendStore with preselectForRound = true (device owner excluded).
+    // Picker pre-checks the intersection with the loaded roster; non-roster names are silently omitted.
+    var preSelectedNames: Set<String> = []
 
     private let tournamentCode: String
     private var allEntries: [TournamentRosterEntry] = []
     private var filtered: [TournamentRosterEntry] = []
     private var isLoading = true
     private var selectedNames: Set<String> = []
-    private var remainingSelections: Int = 4
+    private var remainingSelections: Int = 0
 
     private let searchBar = UISearchBar()
     private let tableView = UITableView(frame: .zero, style: .plain)
@@ -33,7 +38,7 @@ final class TournamentRosterPickerViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        remainingSelections = maxSelections
+        remainingSelections = maxPlayers   // recalculated in loadRoster() once pre-checks are known
         view.backgroundColor = .systemGroupedBackground
 
         navigationItem.leftBarButtonItem = UIBarButtonItem(
@@ -118,8 +123,14 @@ final class TournamentRosterPickerViewController: UIViewController {
                 await MainActor.run {
                     self.allEntries = entries.sorted { $0.canonicalName < $1.canonicalName }
                     self.filtered = self.allEntries
+                    // Pre-check the intersection of caller-supplied names and the loaded roster.
+                    // Non-roster names in preSelectedNames are silently omitted — not shown, not checked.
+                    let rosterNames = Set(self.allEntries.map { $0.canonicalName })
+                    self.selectedNames = self.preSelectedNames.intersection(rosterNames)
+                    self.remainingSelections = self.maxPlayers - self.selectedNames.count
                     self.isLoading = false
                     self.spinner.stopAnimating()
+                    self.updateTitle()
                     self.tableView.reloadData()
                 }
             } catch {
@@ -196,6 +207,15 @@ final class TournamentRosterPickerViewController: UIViewController {
             }
         }
     }
+
+    private func deselect(name: String) {
+        guard selectedNames.contains(name) else { return }
+        selectedNames.remove(name)
+        remainingSelections += 1
+        onDeselect?(name)
+        updateTitle()
+        tableView.reloadData()
+    }
 }
 
 // MARK: - UITableViewDataSource / Delegate
@@ -228,7 +248,7 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
         c.textProperties.color = alreadyPicked ? .secondaryLabel : .label
         cell.contentConfiguration = c
         cell.accessoryType = alreadyPicked ? .checkmark : .none
-        cell.selectionStyle = alreadyPicked ? .none : .default
+        cell.selectionStyle = .default
         cell.tintColor = .systemGreen
         return cell
     }
@@ -237,8 +257,11 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
         tableView.deselectRow(at: indexPath, animated: true)
         guard !filtered.isEmpty else { return }
         let entry = filtered[indexPath.row]
-        guard !selectedNames.contains(entry.canonicalName) else { return }
-        select(name: entry.canonicalName, hc: entry.handicap)
+        if selectedNames.contains(entry.canonicalName) {
+            deselect(name: entry.canonicalName)
+        } else {
+            select(name: entry.canonicalName, hc: entry.handicap)
+        }
     }
 }
 

@@ -538,17 +538,40 @@ final class ManagePlayersViewController: UIViewController,
         dismiss(animated: true)
     }
 
-    // MARK: - Start Round (unchanged)
+    // MARK: - Start Round
     @IBAction func startRoundTapped(_ sender: Any) {
         var selected = FriendStore.shared.friends.filter { $0.preselectForRound }
-        if ProfileStore.myPreselectForRound,
-           let myName = ProfileStore.name,
-           !myName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-           myName != "Player 1" {
-            let me = Friend(name: myName, defaultHC: ProfileStore.myHC)
-            selected.insert(me, at: 0)
+
+        if let code = GameManager.shared.currentGame?.tournamentCode {
+            // Tournament path: filter selected against the live roster so stale
+            // preselectForRound entries from unrelated rounds can't leak through.
+            // Device owner is never auto-inserted here.
+            Task {
+                do {
+                    let entries = try await SupabaseService.shared.fetchRoster(code: code)
+                    let rosterNames = Set(entries.map { $0.canonicalName })
+                    let active = Array(selected.filter { rosterNames.contains($0.name) }.prefix(MAX_PLAYERS))
+                    await MainActor.run { self.proceedWithStart(active: active) }
+                } catch {
+                    // Roster fetch failed — proceed unfiltered rather than blocking the round
+                    await MainActor.run { self.proceedWithStart(active: Array(selected.prefix(MAX_PLAYERS))) }
+                }
+            }
+        } else {
+            // Non-tournament path: include device owner if preselected
+            if ProfileStore.myPreselectForRound,
+               let myName = ProfileStore.name,
+               !myName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               myName != "Player 1" {
+                let me = Friend(name: myName, defaultHC: ProfileStore.myHC)
+                selected.insert(me, at: 0)
+            }
+            proceedWithStart(active: Array(selected.prefix(MAX_PLAYERS)))
         }
-        guard !selected.isEmpty else {
+    }
+
+    private func proceedWithStart(active: [Friend]) {
+        guard !active.isEmpty else {
             let ac = UIAlertController(
                 title: "No Players Selected",
                 message: "Tap at least one player row to add them to the round.",
@@ -558,9 +581,6 @@ final class ManagePlayersViewController: UIViewController,
             present(ac, animated: true)
             return
         }
-
-        let active = Array(selected.prefix(MAX_PLAYERS))
-
         if hasInProgressRound() {
             let ac = UIAlertController(
                 title: "Start New Round?",
@@ -575,11 +595,21 @@ final class ManagePlayersViewController: UIViewController,
                 } else {
                     GameManager.shared.startNewGame(name: "New Game")
                 }
+                self?.clearStaleTournamentPreselects(keeping: active)
                 self?.configureGameRosterAndPresentRoundNav(with: active)
             })
             present(ac, animated: true)
         } else {
+            clearStaleTournamentPreselects(keeping: active)
             configureGameRosterAndPresentRoundNav(with: active)
+        }
+    }
+
+    private func clearStaleTournamentPreselects(keeping active: [Friend]) {
+        guard GameManager.shared.currentGame?.tournamentCode != nil else { return }
+        let activeNames = Set(active.map { $0.name })
+        for friend in FriendStore.shared.friends where !activeNames.contains(friend.name) {
+            FriendStore.shared.update(friendID: friend.id, preselectForRound: false)
         }
     }
 
@@ -594,7 +624,10 @@ final class ManagePlayersViewController: UIViewController,
     // MARK: - Start button helpers
 
     private var selectedCount: Int {
-        FriendStore.shared.preselectedCount + (ProfileStore.myPreselectForRound ? 1 : 0)
+        let ownerCount = (GameManager.shared.currentGame?.tournamentCode != nil)
+            ? 0
+            : (ProfileStore.myPreselectForRound ? 1 : 0)
+        return FriendStore.shared.preselectedCount + ownerCount
     }
 
     private func styleStartButton(_ btn: UIButton) {
@@ -677,11 +710,44 @@ final class ManagePlayersViewController: UIViewController,
 
     @objc private func rosterPickerTapped() {
         guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
+        let isOrganizer = GameManager.shared.currentGame?.tournamentIsOrganizer == true
+        let past = TournamentHistoryStore.shared.all().filter { $0.code != code }
+
+        if isOrganizer && !past.isEmpty {
+            let ac = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+            ac.addAction(UIAlertAction(title: "Pick from This Tournament's Roster", style: .default) { [weak self] _ in
+                self?.openRosterPicker(code: code)
+            })
+            ac.addAction(UIAlertAction(title: "Load from Past Tournament", style: .default) { [weak self] _ in
+                self?.showPastTournamentPicker(past, currentCode: code)
+            })
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            present(ac, animated: true)
+        } else {
+            openRosterPicker(code: code)
+        }
+    }
+
+    private func openRosterPicker(code: String) {
         let picker = TournamentRosterPickerViewController(tournamentCode: code)
-        picker.maxSelections = max(0, maxActivePlayers - selectedCount)
+        picker.maxPlayers = maxActivePlayers
+        picker.preSelectedNames = Set(FriendStore.shared.friends
+            .filter { $0.preselectForRound }
+            .map { $0.name })
         picker.onSelect = { [weak self] name, hc in
             guard let self else { return }
             self.assignNextOpenSlot(name: name, hc: hc)
+        }
+        picker.onDeselect = { [weak self] name in
+            guard let self else { return }
+            if let friend = FriendStore.shared.friends.first(where: {
+                $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .caseInsensitiveCompare(name) == .orderedSame
+            }) {
+                FriendStore.shared.update(friendID: friend.id, preselectForRound: false)
+                self.tableView.reloadData()
+                self.refreshStartButton()
+            }
         }
         let nav = UINavigationController(rootViewController: picker)
         nav.modalPresentationStyle = .pageSheet
@@ -692,10 +758,82 @@ final class ManagePlayersViewController: UIViewController,
         present(nav, animated: true)
     }
 
+    private func showPastTournamentPicker(_ entries: [TournamentHistoryEntry], currentCode: String) {
+        let ac = UIAlertController(
+            title: "Load from Past Tournament",
+            message: "All players from that tournament will be added to this roster and pre-selected.",
+            preferredStyle: .actionSheet)
+        for entry in entries {
+            ac.addAction(UIAlertAction(title: "\(entry.name)  ·  Day \(entry.lastDay)", style: .default) { [weak self] _ in
+                self?.importPlayersFromPastTournament(code: entry.code, name: entry.name, into: currentCode)
+            })
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(ac, animated: true)
+    }
+
+    private func importPlayersFromPastTournament(code: String, name: String, into currentCode: String) {
+        let spinner = UIAlertController(title: nil, message: "Importing players from \(name)…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                let entries = try await SupabaseService.shared.fetchRoster(code: code)
+                for entry in entries {
+                    // Preserve existing FriendStore HC — only set preselectForRound.
+                    if let existing = FriendStore.shared.friends.first(where: {
+                        $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                            .caseInsensitiveCompare(entry.canonicalName) == .orderedSame
+                    }) {
+                        FriendStore.shared.update(friendID: existing.id, preselectForRound: true)
+                    } else {
+                        let friend = Friend(name: entry.canonicalName, defaultHC: entry.handicap)
+                        FriendStore.shared.upsert(friend)
+                        if let saved = FriendStore.shared.friends.first(where: {
+                            $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                                .caseInsensitiveCompare(entry.canonicalName) == .orderedSame
+                        }) {
+                            FriendStore.shared.update(friendID: saved.id, preselectForRound: true)
+                        }
+                    }
+                    // Also add each player to the current tournament's roster so they appear
+                    // pre-checked when the roster picker is opened.
+                    let rosterEntry = TournamentRosterEntry(
+                        id: UUID(),
+                        tournamentCode: currentCode,
+                        canonicalName: entry.canonicalName,
+                        handicap: entry.handicap,
+                        addedBy: "organizer")
+                    try? await SupabaseService.shared.upsertRosterEntry(rosterEntry)
+                }
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.tableView.reloadData()
+                        self.refreshStartButton()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let ac = UIAlertController(
+                            title: "Import Failed",
+                            message: "Could not load players from that tournament.",
+                            preferredStyle: .alert)
+                        ac.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(ac, animated: true)
+                    }
+                }
+            }
+        }
+    }
+
     private func assignNextOpenSlot(name: String, hc: Int) {
-        guard selectedCount < maxActivePlayers else {
-            showActiveLimitAlert()
-            return
+        // In tournament context the picker's remainingSelections already enforces the cap;
+        // selectedCount incorrectly includes stale non-roster preselects so must not be used.
+        if GameManager.shared.currentGame?.tournamentCode == nil {
+            guard selectedCount < maxActivePlayers else {
+                showActiveLimitAlert()
+                return
+            }
         }
         if let existing = FriendStore.shared.friends.first(where: {
             $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
