@@ -24,6 +24,8 @@ final class ManagePlayersViewController: UIViewController,
 
     // MARK: - Data
     private var friends: [Friend] { FriendStore.shared.friends }
+    // Cached roster names for tournament mode — used to filter selectedCount correctly.
+    private var tournamentRosterNames: Set<String> = []
 
     // MARK: - UI refs
     private weak var addUIButton: UIButton?
@@ -55,6 +57,7 @@ final class ManagePlayersViewController: UIViewController,
         tableView.reloadData()
         refreshStartButton()
         refreshRosterPickerButton()
+        loadTournamentRosterNamesIfNeeded()
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -624,10 +627,31 @@ final class ManagePlayersViewController: UIViewController,
     // MARK: - Start button helpers
 
     private var selectedCount: Int {
-        let ownerCount = (GameManager.shared.currentGame?.tournamentCode != nil)
-            ? 0
-            : (ProfileStore.myPreselectForRound ? 1 : 0)
+        if GameManager.shared.currentGame?.tournamentCode != nil {
+            // In tournament mode only count preselected friends who are in this tournament's roster.
+            if tournamentRosterNames.isEmpty {
+                return 0
+            }
+            return FriendStore.shared.friends.filter {
+                $0.preselectForRound && tournamentRosterNames.contains($0.name)
+            }.count
+        }
+        let ownerCount = ProfileStore.myPreselectForRound ? 1 : 0
         return FriendStore.shared.preselectedCount + ownerCount
+    }
+
+    private func loadTournamentRosterNamesIfNeeded() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode else {
+            tournamentRosterNames = []
+            return
+        }
+        Task {
+            guard let entries = try? await SupabaseService.shared.fetchRoster(code: code) else { return }
+            await MainActor.run {
+                self.tournamentRosterNames = Set(entries.map { $0.canonicalName })
+                self.refreshStartButton()
+            }
+        }
     }
 
     private func styleStartButton(_ btn: UIButton) {
@@ -830,7 +854,8 @@ final class ManagePlayersViewController: UIViewController,
 
     private func assignNextOpenSlot(name: String, hc: Int) {
         // In tournament context the picker's remainingSelections already enforces the cap;
-        // selectedCount incorrectly includes stale non-roster preselects so must not be used.
+        // selectedCount only counts roster members so it stays accurate.
+        tournamentRosterNames.insert(name)
         if GameManager.shared.currentGame?.tournamentCode == nil {
             guard selectedCount < maxActivePlayers else {
                 showActiveLimitAlert()
