@@ -803,7 +803,8 @@ final class ManagePlayersViewController: UIViewController,
                         tournamentCode: currentCode,
                         canonicalName: entry.canonicalName,
                         handicap: entry.handicap,
-                        addedBy: "organizer")
+                        addedBy: "organizer",
+                        groupCode: nil)
                     try? await SupabaseService.shared.upsertRosterEntry(rosterEntry)
                 }
                 await MainActor.run {

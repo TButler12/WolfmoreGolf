@@ -160,7 +160,8 @@ final class TournamentRosterViewController: UITableViewController {
                 tournamentCode: self.tournamentCode,
                 canonicalName: name,
                 handicap: hc,
-                addedBy: entry?.addedBy ?? "organizer")
+                addedBy: entry?.addedBy ?? "organizer",
+                groupCode: entry?.groupCode)
             self.saveEntry(updated)
         })
 

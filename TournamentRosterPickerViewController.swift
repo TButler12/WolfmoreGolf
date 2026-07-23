@@ -175,7 +175,8 @@ final class TournamentRosterPickerViewController: UIViewController {
                 tournamentCode: self.tournamentCode,
                 canonicalName: name,
                 handicap: hc,
-                addedBy: "scorer")
+                addedBy: "scorer",
+                groupCode: nil)
             Task {
                 try? await SupabaseService.shared.upsertRosterEntry(entry)
             }
