@@ -524,17 +524,17 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private func makeEditStakeLink() -> UIButton {
         var cfg = UIButton.Configuration.plain()
         cfg.image = UIImage(systemName: "pencil")?
-            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 12, weight: .medium))
-        cfg.imagePadding = 5
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 15, weight: .medium))
+        cfg.imagePadding = 6
         cfg.imagePlacement = .leading
         cfg.baseForegroundColor = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
         cfg.attributedTitle = AttributedString("Edit stake & format", attributes: AttributeContainer([
-            .font: UIFont.systemFont(ofSize: 13, weight: .medium),
+            .font: UIFont.systemFont(ofSize: 17, weight: .medium),
             .foregroundColor: UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
         ]))
         cfg.contentInsets = .zero
         let btn = UIButton(configuration: cfg)
-        btn.contentHorizontalAlignment = .trailing
+        btn.contentHorizontalAlignment = .center
         btn.addTarget(self, action: #selector(settingsTapped), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
         btn.heightAnchor.constraint(greaterThanOrEqualToConstant: 36).isActive = true

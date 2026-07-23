@@ -4282,18 +4282,20 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             pressStepperContainer = pc; pressTitleLabel = ptlbl; pressLevelLabel = plbl
             pressMinusButton = pminus; pressPlusButton = pplus
             addHelp(to: pc, title: "Press", message: "__press__") // message built dynamically in handleHelpLongPress
-            paintPressStepperView(pressLevel: 0)
+            let _initHole = max(0, min(17, GameManager.shared.currentGame?.hole ?? 0))
+            let _initPressLevel = GameManager.shared.currentGame?.pressLevel[safe: _initHole] ?? 0
+            paintPressStepperView(pressLevel: _initPressLevel)
             pressedPushed2.isHidden = true
 
             let (hc, htlbl, hlbl, hminus, hplus) = makeStepperView(
-                title: "Hammer",
+                title: "Hammer / Dice Roll",
                 minusAction: #selector(hammerStepperMinusTapped),
                 plusAction:  #selector(hammerStepperPlusTapped)
             )
             hammerStepperContainer = hc; hammerTitleLabel = htlbl; hammerLevelLabel = hlbl
             hammerMinusButton = hminus; hammerPlusButton = hplus
             addHelp(to: hc, title: "Hammer", message: "__hammer__") // message built dynamically in handleHelpLongPress
-            paintHammerStepperView(count: 0)
+            paintHammerUIForCurrentHole()
             hammerButton.isHidden = true; rejectHammerButton.isHidden = true
 
             let row2 = UIStackView(arrangedSubviews: [pc, hc])
