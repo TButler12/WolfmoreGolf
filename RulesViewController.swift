@@ -433,9 +433,7 @@ private extension RulesViewController {
         • Skins leaderboard ranks by skins won, not dollars, so group size does not affect standings
         • Tap any player row on the skins leaderboard to see exactly which holes they won
 
-        Important:
         • Player names must be entered consistently across all groups for the leaderboard to aggregate correctly
-        • Each scorer controls their own group's settings — coordinate skin value and scoring mode before teeing off
         """)
 
         header("TRACKING")
