@@ -55,6 +55,11 @@ final class TournamentRosterPickerViewController: UIViewController {
         loadRoster()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        refreshClaims()
+    }
+
     // MARK: - Layout
 
     private func buildLayout() {
@@ -118,6 +123,27 @@ final class TournamentRosterPickerViewController: UIViewController {
     }
 
     // MARK: - Load
+
+    // Re-fetch only group_code values so new claims from other scorers become visible
+    // without resetting the current scorer's selections.
+    private func refreshClaims() {
+        guard !isLoading else { return }
+        Task {
+            guard let fresh = try? await SupabaseService.shared.fetchRoster(code: tournamentCode) else { return }
+            await MainActor.run {
+                let byName = Dictionary(uniqueKeysWithValues: fresh.map { ($0.canonicalName, $0) })
+                self.allEntries = self.allEntries.map { entry in
+                    guard let updated = byName[entry.canonicalName] else { return entry }
+                    return updated
+                }
+                let q = (self.searchBar.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                self.filtered = q.isEmpty ? self.allEntries : self.allEntries.filter {
+                    $0.canonicalName.localizedCaseInsensitiveContains(q)
+                }
+                self.tableView.reloadData()
+            }
+        }
+    }
 
     private func loadRoster() {
         spinner.startAnimating()
