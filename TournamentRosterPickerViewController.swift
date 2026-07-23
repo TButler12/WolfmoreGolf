@@ -289,6 +289,7 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
         let entry = filtered[indexPath.row]
         let alreadyPicked = selectedNames.contains(entry.canonicalName)
         let takenByOther: Bool = {
+            if alreadyPicked { return false }   // own selection — never block or label as taken
             guard let gc = entry.groupCode, !gc.isEmpty else { return false }
             return gc != myClaimID
         }()
@@ -314,8 +315,9 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
         tableView.deselectRow(at: indexPath, animated: true)
         guard !filtered.isEmpty else { return }
         let entry = filtered[indexPath.row]
-        // Block taps on players claimed by another group
-        if let gc = entry.groupCode, !gc.isEmpty, gc != myClaimID { return }
+        // Block taps on players claimed by another group — but always allow deselecting own picks
+        if !selectedNames.contains(entry.canonicalName),
+           let gc = entry.groupCode, !gc.isEmpty, gc != myClaimID { return }
         if selectedNames.contains(entry.canonicalName) {
             deselect(name: entry.canonicalName, entryID: entry.id)
         } else {
