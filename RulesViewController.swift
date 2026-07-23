@@ -162,10 +162,10 @@ private extension RulesViewController {
         header("WOLFMORE — HOW TO PLAY")
         body("""
         Scoring and bet tracking made easy!
-        
-        Play multiple games at the same time, including Remote Nassau. 
-        
-        Remote Nassau allows play between players at different courses! 
+
+        Play multiple games at the same time, including Remote Nassau.
+
+        Remote Nassau allows play between players at different courses!
 
         Hover or long press over most buttons for a description of that button.
 
@@ -239,6 +239,15 @@ private extension RulesViewController {
         P = Prox (closest to pin)
 
         • To mute a player mid-round (e.g. they leave early), long press their name on the scoring page. Their scores from holes already played are kept.
+        """)
+
+        header("PASS GAME TO ANOTHER PHONE")
+        body("""
+        Hand off the scorecard mid-round so someone else can keep score.
+
+        • Tap "Scoring Tips" on the scoring screen, then "Pass Game to Another Phone"
+        • Share via AirDrop or iMessage — the recipient taps the link and WolfMore opens directly with the game loaded and ready to continue
+        • The game transfers at the current hole so no scores are lost
         """)
 
         header("WAGERS")
@@ -346,8 +355,8 @@ private extension RulesViewController {
         header("REMOTE NASSAU")
         body("""
         Challenge a friend to Nassau even when you're at different courses.
-        Remote Nassau runs independently from but alongside your regular round.
-        Results include both players' course names, compare mode, and hole-by-hole breakdown"
+        Remote Nassau runs separately from your regular round, so both can be played at once.
+        Results include both players' course names, compare mode, and hole-by-hole breakdown.
 
         How it works:
         - Tap Remote Nassau from the scoring screen
@@ -371,7 +380,7 @@ private extension RulesViewController {
         body("""
         Wolf Live lets spectators watch a Wolf game in real time from their own phone.
         • Scorer taps 'Go Live' in Game Settings to start a live session and get a 6-character code
-        • Spectators open Watch Live from the home screen and enter the code
+        • Spectators tap Live & Tournaments → Watch Live and enter the code
         • Scores, wolf assignments, press indicators, money, and roll decisions update in real time
         • Tap the refresh button to manually sync the latest scores
         • Watch up to 10 live matches simultaneously in the spectator view
@@ -379,26 +388,29 @@ private extension RulesViewController {
         • Boxed hole numbers = press is active on that hole
         """)
 
-        header("TEE GAMES — LIVE TOURNAMENT MODE")
+        header("LIVE & TOURNAMENTS")
         body("""
-        Tee Games lets you run a live tournament across multiple groups with a real-time leaderboard. Both Wolf and Skins are fully tracked in tournament style — all groups submit scores to a shared live leaderboard in real time.
+        Run a live tournament across multiple groups with a real-time leaderboard. Both Wolf and Skins are fully tracked — all groups submit scores to a shared live leaderboard in real time.
 
-        How it works:
-        • One player creates a tournament via Tee Games → Create Tee Game
-        • Set tournament name and format (Wolf or Skins)
+        Quick start:
+        • Organizer creates a tournament via Live & Tournaments → Create Tournament
         • Share the 6-character code with all groups
-        • Each group joins via Tee Games → Join Tee Game and enters the code
-        • Scores submit to the live leaderboard automatically every time Update Scores is pressed
+        • Each group joins via Live & Tournaments → Join Tournament and enters the code
+        • Scores appear on the leaderboard automatically every time Update Scores is pressed
 
-        Leaderboard:
-        • Money tab — Wolf money standings for the current day
-        • Score tab — cumulative net score
-        • Groups tab — view each group's hole-by-hole breakdown
-        • Tournament tab — multi-day aggregate including carry-over amounts
-        • Skins tab — skins won across all groups (tap a player to see which holes)
+        Leaderboard tabs:
+        • Money — Wolf money standings for the current day
+        • Score — cumulative net score
+        • Groups — each group's hole-by-hole breakdown
+        • Tournament — multi-day aggregate including carry-over amounts
+        • Net Skins / Gross Skins — skins won across all groups (tap a player to see which holes)
+
+        Full setup:
+        • Set tournament name and format (Wolf or Skins) when creating
+        • The organizer can edit scoring mode and pot settings any time via Live & Tournaments → Manage Tournament → Edit Settings
 
         Multi-day tournaments:
-        • The organizer advances to the next day via Tee Games → Manage Tournament
+        • The organizer advances to the next day via Live & Tournaments → Manage Tournament
         • Each day's standings are preserved and accessible via the day picker on the leaderboard
         • The organizer can enter carry-over dollar amounts for each player on the Tournament tab
 
@@ -420,10 +432,6 @@ private extension RulesViewController {
         • Tournament Skins always plays without carryovers regardless of your in-game Skins settings — each hole stands alone for fair cross-group comparison
         • Skins leaderboard ranks by skins won, not dollars, so group size does not affect standings
         • Tap any player row on the skins leaderboard to see exactly which holes they won
-
-        Pass Game to Another Phone:
-        • Tap "Pass Game" from the scoring screen to hand off the scorecard mid-round
-        • Works via AirDrop or iMessage — the recipient taps the link and WolfMore opens directly with the game loaded
 
         Important:
         • Player names must be entered consistently across all groups for the leaderboard to aggregate correctly
