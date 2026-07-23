@@ -245,7 +245,7 @@ private extension RulesViewController {
         body("""
         Hand off the scorecard mid-round so someone else can keep score.
 
-        • Tap "Scoring Tips" on the scoring screen, then "Pass Game to Another Phone"
+        • Tap the ⓘ info button on the scoring screen and choose "Pass Game to Another Phone"
         • Share via AirDrop or iMessage — the recipient taps the link and WolfMore opens directly with the game loaded and ready to continue
         • The game transfers at the current hole so no scores are lost
         """)
