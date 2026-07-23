@@ -16,7 +16,9 @@ final class TournamentRosterPickerViewController: UIViewController {
     // Picker pre-checks the intersection with the loaded roster; non-roster names are silently omitted.
     var preSelectedNames: Set<String> = []
     // The current scorer's group code — entries claimed by a different group are shown as taken.
+    // Falls back to DeviceID so claiming always fires even before a groupCode is assigned.
     var myGroupCode: String? = nil
+    private var myClaimID: String { myGroupCode ?? DeviceID.id }
 
     private let tournamentCode: String
     private var allEntries: [TournamentRosterEntry] = []
@@ -204,8 +206,8 @@ final class TournamentRosterPickerViewController: UIViewController {
         onSelect?(name, hc)
         updateTitle()
         tableView.reloadData()
-        if let id = entryID, let gc = myGroupCode {
-            Task { try? await SupabaseService.shared.claimRosterEntry(id: id, groupCode: gc) }
+        if let id = entryID {
+            Task { try? await SupabaseService.shared.claimRosterEntry(id: id, groupCode: myClaimID) }
         }
         if remainingSelections == 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
@@ -252,7 +254,7 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
         let alreadyPicked = selectedNames.contains(entry.canonicalName)
         let takenByOther: Bool = {
             guard let gc = entry.groupCode, !gc.isEmpty else { return false }
-            return gc != (myGroupCode ?? "")
+            return gc != myClaimID
         }()
         var c = cell.defaultContentConfiguration()
         c.text = entry.canonicalName
@@ -277,7 +279,7 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
         guard !filtered.isEmpty else { return }
         let entry = filtered[indexPath.row]
         // Block taps on players claimed by another group
-        if let gc = entry.groupCode, !gc.isEmpty, gc != (myGroupCode ?? "") { return }
+        if let gc = entry.groupCode, !gc.isEmpty, gc != myClaimID { return }
         if selectedNames.contains(entry.canonicalName) {
             deselect(name: entry.canonicalName, entryID: entry.id)
         } else {
