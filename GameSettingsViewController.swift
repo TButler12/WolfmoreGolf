@@ -302,7 +302,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         segment.layer.borderColor = UIColor.systemGray4.cgColor
         segment.layer.borderWidth = 1
 
-        let style = GameManager.shared.currentGame?.pressStyle ?? .additive
+        let style = GameManager.shared.currentGame?.pressStyle ?? .doubling
         segment.selectedSegmentIndex = (style == .additive) ? 1 : 0
 
         let note = UILabel()
@@ -344,7 +344,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         segment.layer.borderColor = UIColor.systemGray4.cgColor
         segment.layer.borderWidth = 1
 
-        let style = GameManager.shared.currentGame?.hammerStyle ?? .additive
+        let style = GameManager.shared.currentGame?.hammerStyle ?? .doubling
         segment.selectedSegmentIndex = (style == .additive) ? 1 : 0
 
         let note = UILabel()
