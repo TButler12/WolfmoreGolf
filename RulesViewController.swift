@@ -175,6 +175,8 @@ private extension RulesViewController {
 
         Supports Wolf, Six-Point Scotch, Hammer, Nassau, and Skins — all running together.
 
+        Live & Tournaments lets you run live tournaments, spectate Wolf games in real time, and challenge friends to Remote Nassau.
+
         WolfMore is perfect for competing on your home course, tracking stats with friends, playing away-course games, and even indoor simulator golf.
 
         Enter scores once. Play every game.
@@ -401,13 +403,31 @@ private extension RulesViewController {
         • The organizer can enter carry-over dollar amounts for each player on the Tournament tab
 
         Skins in tournament mode:
-        • Skins are scored on net score using each player's full course handicap — strokes are given on the hardest holes based on your handicap index
+        • The organizer chooses a skins scoring mode in Edit Tournament Settings:
+          • Net — skins awarded on handicap-adjusted score (default)
+          • Gross — skins awarded on raw score, no handicap
+          • Both — pot is split between net and gross skins each day
+
+        • When "Both" is selected the organizer can configure how the pot is divided:
+          • 50/50 Split — half the pot to net, half to gross
+          • Custom % — e.g. 75% gross / 25% net
+          • Combined Pool — every skin (net or gross) has equal value; the full pot is divided by the total number of skins won across both types
+
+        • The leaderboard has two skins tabs: Net Skins and Gross Skins
+        • Each day tab shows only that day's skins with its own independent pot
+        • The Tournament tab shows the cumulative total across all days
+
         • Tournament Skins always plays without carryovers regardless of your in-game Skins settings — each hole stands alone for fair cross-group comparison
         • Skins leaderboard ranks by skins won, not dollars, so group size does not affect standings
+        • Tap any player row on the skins leaderboard to see exactly which holes they won
+
+        Pass Game to Another Phone:
+        • Tap "Pass Game" from the scoring screen to hand off the scorecard mid-round
+        • Works via AirDrop or iMessage — the recipient taps the link and WolfMore opens directly with the game loaded
 
         Important:
         • Player names must be entered consistently across all groups for the leaderboard to aggregate correctly
-        • Each scorer controls their own group's settings — coordinate skin value before teeing off
+        • Each scorer controls their own group's settings — coordinate skin value and scoring mode before teeing off
         """)
 
         header("TRACKING")
