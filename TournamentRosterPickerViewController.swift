@@ -31,6 +31,7 @@ final class TournamentRosterPickerViewController: UIViewController {
     private let tableView = UITableView(frame: .zero, style: .plain)
     private let addManuallyButton = UIButton(type: .system)
     private let spinner = UIActivityIndicatorView(style: .medium)
+    private var pollTimer: Timer?
 
     init(tournamentCode: String) {
         self.tournamentCode = tournamentCode
@@ -58,6 +59,15 @@ final class TournamentRosterPickerViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         refreshClaims()
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 4, repeats: true) { [weak self] _ in
+            self?.refreshClaims()
+        }
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        pollTimer?.invalidate()
+        pollTimer = nil
     }
 
     // MARK: - Layout
