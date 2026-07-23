@@ -731,6 +731,7 @@ final class ManagePlayersViewController: UIViewController,
     private func openRosterPicker(code: String) {
         let picker = TournamentRosterPickerViewController(tournamentCode: code)
         picker.maxPlayers = maxActivePlayers
+        picker.myGroupCode = GameManager.shared.currentGame?.groupCode
         picker.preSelectedNames = Set(FriendStore.shared.friends
             .filter { $0.preselectForRound }
             .map { $0.name })

@@ -294,6 +294,7 @@ struct TournamentRosterEntry: Codable, Identifiable {
     let canonicalName: String
     let handicap: Int
     let addedBy: String   // "organizer" | "scorer"
+    let groupCode: String?  // non-nil when claimed by a scorer group
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -301,6 +302,7 @@ struct TournamentRosterEntry: Codable, Identifiable {
         case canonicalName  = "canonical_name"
         case handicap
         case addedBy        = "added_by"
+        case groupCode      = "group_code"
     }
 }
 

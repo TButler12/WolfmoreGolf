@@ -15,6 +15,8 @@ final class TournamentRosterPickerViewController: UIViewController {
     // Names already in FriendStore with preselectForRound = true (device owner excluded).
     // Picker pre-checks the intersection with the loaded roster; non-roster names are silently omitted.
     var preSelectedNames: Set<String> = []
+    // The current scorer's group code — entries claimed by a different group are shown as taken.
+    var myGroupCode: String? = nil
 
     private let tournamentCode: String
     private var allEntries: [TournamentRosterEntry] = []
@@ -194,13 +196,16 @@ final class TournamentRosterPickerViewController: UIViewController {
         present(ac, animated: true)
     }
 
-    private func select(name: String, hc: Int) {
+    private func select(name: String, hc: Int, entryID: UUID? = nil) {
         guard !selectedNames.contains(name), remainingSelections > 0 else { return }
         selectedNames.insert(name)
         remainingSelections -= 1
         onSelect?(name, hc)
         updateTitle()
         tableView.reloadData()
+        if let id = entryID, let gc = myGroupCode {
+            Task { try? await SupabaseService.shared.claimRosterEntry(id: id, groupCode: gc) }
+        }
         if remainingSelections == 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
                 self?.dismiss(animated: true)
@@ -208,13 +213,16 @@ final class TournamentRosterPickerViewController: UIViewController {
         }
     }
 
-    private func deselect(name: String) {
+    private func deselect(name: String, entryID: UUID? = nil) {
         guard selectedNames.contains(name) else { return }
         selectedNames.remove(name)
         remainingSelections += 1
         onDeselect?(name)
         updateTitle()
         tableView.reloadData()
+        if let id = entryID {
+            Task { try? await SupabaseService.shared.unclaimRosterEntry(id: id) }
+        }
     }
 }
 
@@ -241,14 +249,24 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
         }
         let entry = filtered[indexPath.row]
         let alreadyPicked = selectedNames.contains(entry.canonicalName)
+        let takenByOther: Bool = {
+            guard let gc = entry.groupCode, !gc.isEmpty else { return false }
+            return gc != (myGroupCode ?? "")
+        }()
         var c = cell.defaultContentConfiguration()
         c.text = entry.canonicalName
-        c.secondaryText = entry.handicap == 0 ? "Scratch" : "HC \(entry.handicap)"
-        if entry.addedBy == "scorer" { c.secondaryText = (c.secondaryText ?? "") + "  •  walk-on" }
-        c.textProperties.color = alreadyPicked ? .secondaryLabel : .label
+        if takenByOther {
+            c.secondaryText = "Taken"
+            c.textProperties.color = .tertiaryLabel
+            c.secondaryTextProperties.color = .tertiaryLabel
+        } else {
+            c.secondaryText = entry.handicap == 0 ? "Scratch" : "HC \(entry.handicap)"
+            if entry.addedBy == "scorer" { c.secondaryText = (c.secondaryText ?? "") + "  •  walk-on" }
+            c.textProperties.color = alreadyPicked ? .secondaryLabel : .label
+        }
         cell.contentConfiguration = c
         cell.accessoryType = alreadyPicked ? .checkmark : .none
-        cell.selectionStyle = .default
+        cell.selectionStyle = takenByOther ? .none : .default
         cell.tintColor = .systemGreen
         return cell
     }
@@ -257,10 +275,12 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
         tableView.deselectRow(at: indexPath, animated: true)
         guard !filtered.isEmpty else { return }
         let entry = filtered[indexPath.row]
+        // Block taps on players claimed by another group
+        if let gc = entry.groupCode, !gc.isEmpty, gc != (myGroupCode ?? "") { return }
         if selectedNames.contains(entry.canonicalName) {
-            deselect(name: entry.canonicalName)
+            deselect(name: entry.canonicalName, entryID: entry.id)
         } else {
-            select(name: entry.canonicalName, hc: entry.handicap)
+            select(name: entry.canonicalName, hc: entry.handicap, entryID: entry.id)
         }
     }
 }

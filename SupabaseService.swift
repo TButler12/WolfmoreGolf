@@ -750,16 +750,34 @@ final class SupabaseService {
             let canonical_name: String
             let handicap: Int
             let added_by: String
+            let group_code: String?
         }
         let payload = Payload(
             id: entry.id.uuidString,
             tournament_code: entry.tournamentCode.uppercased(),
             canonical_name: entry.canonicalName,
             handicap: entry.handicap,
-            added_by: entry.addedBy)
+            added_by: entry.addedBy,
+            group_code: entry.groupCode)
         try await client
             .from("tournament_roster")
             .upsert(payload, onConflict: "id")
+            .execute()
+    }
+
+    func claimRosterEntry(id: UUID, groupCode: String) async throws {
+        try await client
+            .from("tournament_roster")
+            .update(["group_code": AnyJSON.string(groupCode)])
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    func unclaimRosterEntry(id: UUID) async throws {
+        try await client
+            .from("tournament_roster")
+            .update(["group_code": AnyJSON.null])
+            .eq("id", value: id.uuidString)
             .execute()
     }
 
