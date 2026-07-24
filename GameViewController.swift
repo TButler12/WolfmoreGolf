@@ -207,6 +207,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var liveTabBarInstalled = false
     private var activeTabIndex = 0
     private static var shownLiveCodePromptForSession: String?
+
+    // Tournament new-day polling
+    private var newDayPollTimer: Timer?
+    private var newDayAlertShown = false
     private var liveTabScoreButton: UIButton?
     private var liveTabLiveButton: UIButton?
     private weak var liveTabLeaderboardButton: UIButton?
@@ -410,6 +414,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+        newDayPollTimer?.invalidate()
+        newDayPollTimer = nil
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -419,6 +425,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             showLiveCodePromptIfNeeded()
         }
         showMuteTipBannerIfNeeded()
+        startNewDayPollingIfNeeded()
     }
 
     override func viewDidLayoutSubviews() {
@@ -4162,6 +4169,51 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         present(ac, animated: true)
         return true
+    }
+
+    // MARK: - New-day detection
+
+    private func startNewDayPollingIfNeeded() {
+        guard GameManager.shared.currentGame?.tournamentCode != nil else { return }
+        newDayAlertShown = false
+        newDayPollTimer?.invalidate()
+        newDayPollTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            self?.checkForTournamentDayAdvance()
+        }
+        // Check immediately as well
+        checkForTournamentDayAdvance()
+    }
+
+    private func checkForTournamentDayAdvance() {
+        guard !newDayAlertShown,
+              let g = GameManager.shared.currentGame,
+              let code = g.tournamentCode else { return }
+        let knownDay = g.tournamentDay ?? 1
+        Task { [weak self] in
+            guard let self,
+                  let liveDay = try? await SupabaseService.shared.fetchTournament(code: code).currentDay,
+                  liveDay > knownDay else { return }
+            await MainActor.run {
+                guard !self.newDayAlertShown, self.presentedViewController == nil else { return }
+                self.newDayAlertShown = true
+                self.newDayPollTimer?.invalidate()
+                self.newDayPollTimer = nil
+                GameManager.shared.update { g in g.tournamentDay = liveDay }
+                UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
+                let ac = UIAlertController(
+                    title: "Day \(liveDay) is Ready",
+                    message: "The organizer has advanced to Day \(liveDay). Tap below to set up your group.",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "Set Up Group", style: .default) { [weak self] _ in
+                    self?.dismiss(animated: true) {
+                        NotificationCenter.default.post(name: .reloadUI, object: nil)
+                    }
+                })
+                ac.addAction(UIAlertAction(title: "Later", style: .cancel))
+                self.present(ac, animated: true)
+            }
+        }
     }
 
     private func showLiveCodePromptIfNeeded() {

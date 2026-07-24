@@ -313,29 +313,39 @@ final class TournamentLeaderboardViewController: UIViewController {
         }
 
         // ── Skins ──
-        // Delta-track on allRows (no dedup) to avoid stale skinsWon from dedup dropping newer records.
+        // Computed field-wide from raw scores so all groups compete against each other.
         // Filtered to currentDay and selectedGameType so each day/type tab is independent.
         let skinGameType    = (selectedGameType == "gross_skins") ? "gross_skins" : "skins"
         let fullPot         = record?.potAmount
         let scoringStr      = record?.scoring ?? "net"
         let isCombinedPool  = scoringStr == "both_combined"
 
-        // Helper: count skins per player for a given game_type on currentDay.
-        func countSkins(gameType: String) -> [String: Int] {
+        // Recompute skins field-wide from raw scores so all groups compete against each other.
+        // Per-group skinsWon values written by individual scorers are intentionally ignored here.
+        let carryTies = record?.carryTies ?? false
+        func countSkins(gameType: String, forDay: Int? = nil) -> [String: Int] {
             var totals: [String: Int] = [:]
             for player in fieldPlayers { totals[player] = 0 }
+            let useGross = (gameType == "gross_skins")
             let rows = allRows
-                .filter { $0.gameType == gameType && ($0.day ?? 1) == currentDay }
-                .sorted { $0.hole < $1.hole }
-            for player in Set(rows.map { $0.playerName }) {
-                let pRows = rows.filter { $0.playerName == player }
-                var prev = 0, total = 0
-                for r in pRows {
-                    let cur = r.skinsWon ?? 0
-                    if cur > prev { total += (cur - prev) }
-                    prev = cur
+                .filter { $0.gameType == gameType && ($0.day ?? 1) == (forDay ?? currentDay) }
+            let byHole = Dictionary(grouping: rows, by: { $0.hole })
+            var carried = 0
+            for hole in 1...18 {
+                let holeRows = byHole[hole] ?? []
+                guard !holeRows.isEmpty else { carried += carryTies ? 1 : 0; continue }
+                let scores: [(name: String, score: Int)] = holeRows.compactMap { r in
+                    let s = useGross ? r.grossScore : (r.netScore ?? r.grossScore)
+                    return (r.playerName, s)
                 }
-                totals[player] = total
+                guard let low = scores.map(\.score).min() else { continue }
+                let winners = scores.filter { $0.score == low }
+                if winners.count == 1 {
+                    totals[winners[0].name, default: 0] += 1 + carried
+                    carried = 0
+                } else {
+                    if carryTies { carried += 1 }
+                }
             }
             return totals
         }
@@ -390,26 +400,80 @@ final class TournamentLeaderboardViewController: UIViewController {
                             holesPlayed: pHoles[kv.key] ?? 0, potPayout: potPayout)
         }
 
-        // Tournament: automatic cross-day sum — take the max-hole (latest) row per
-        // (player, day) pair and add up totalMoney across all days, then apply any
-        // manually-entered allDayOffsets as an optional correction on top.
+        // Tournament: cross-day sum. Skins uses field-wide countSkins per day (same logic
+        // as the Money tab) to avoid per-group totalMoney values being summed incorrectly.
+        // Wolf sums the latest totalMoney row per (player, day) from submitted data.
         let allGameRows = deduped.filter { ($0.gameType ?? "wolf") == selectedGameType }
         var tourneyTotals: [String: Double] = [:]
         var tourneyHoles:  [String: Int]    = [:]
         for player in fieldPlayers { tourneyTotals[player] = 0; tourneyHoles[player] = 0 }
 
-        let byDay = Dictionary(grouping: allGameRows, by: { $0.day ?? 1 })
-        for (_, dayRows) in byDay {
-            let byPlayer = Dictionary(grouping: dayRows, by: { $0.playerName })
-            for (player, pRows) in byPlayer {
-                if let latest = pRows.max(by: { $0.hole < $1.hole }) {
-                    tourneyTotals[player, default: 0] += latest.totalMoney ?? 0
-                }
-                tourneyHoles[player, default: 0] += pRows.count
-            }
-        }
+        let isSkinType = (selectedGameType == "skins" || selectedGameType == "gross_skins")
+        var currentDayMoneyByPlayer: [String: Double]
 
-        let currentDayMoneyByPlayer = Dictionary(uniqueKeysWithValues: moneyData.map { ($0.name, $0.dayTotal) })
+        if isSkinType {
+            let useGrossT  = (selectedGameType == "gross_skins")
+            let fullPotT   = record?.potAmount
+            let scoringT   = record?.scoring ?? "net"
+            let isCombT    = scoringT == "both_combined"
+            let isBothT    = scoringT == "both"
+            let isCustomT  = scoringT.hasPrefix("both:") && !scoringT.hasPrefix("both_")
+            var currentDaySkinsPayoutByPlayer: [String: Double] = [:]
+
+            for day in availableDays {
+                let daySkins      = countSkins(gameType: selectedGameType, forDay: day)
+                let totalDaySkins = daySkins.values.reduce(0, +)
+
+                let perSkinT: Double?
+                if let pot = fullPotT, pot > 0, totalDaySkins > 0 {
+                    if isCombT {
+                        let otherGT    = useGrossT ? "skins" : "gross_skins"
+                        let otherSkins = countSkins(gameType: otherGT, forDay: day)
+                        let combined   = totalDaySkins + otherSkins.values.reduce(0, +)
+                        perSkinT = combined > 0 ? pot / Double(combined) : nil
+                    } else {
+                        let effectivePotT: Double
+                        if isBothT {
+                            effectivePotT = pot / 2.0
+                        } else if isCustomT, let grossPct = Double(scoringT.dropFirst("both:".count)) {
+                            let frac = min(0.99, max(0.01, grossPct / 100.0))
+                            effectivePotT = useGrossT ? pot * frac : pot * (1.0 - frac)
+                        } else {
+                            effectivePotT = pot
+                        }
+                        perSkinT = effectivePotT / Double(totalDaySkins)
+                    }
+                } else {
+                    perSkinT = nil
+                }
+
+                for (player, skins) in daySkins where skins > 0 {
+                    if let ps = perSkinT {
+                        let payout = Double(skins) * ps
+                        tourneyTotals[player, default: 0] += payout
+                        if day == currentDay { currentDaySkinsPayoutByPlayer[player] = payout }
+                    }
+                }
+                let dayTypeRows = allRows.filter { $0.gameType == selectedGameType && ($0.day ?? 1) == day }
+                for (player, pRows) in Dictionary(grouping: dayTypeRows, by: { $0.playerName }) {
+                    tourneyHoles[player, default: 0] += pRows.count
+                }
+            }
+            currentDayMoneyByPlayer = currentDaySkinsPayoutByPlayer
+        } else {
+            let byDay = Dictionary(grouping: allGameRows, by: { $0.day ?? 1 })
+            for (_, dayRows) in byDay {
+                let byPlayer = Dictionary(grouping: dayRows, by: { $0.playerName })
+                for (player, pRows) in byPlayer {
+                    if let latest = pRows.max(by: { $0.hole < $1.hole }) {
+                        tourneyTotals[player, default: 0] += latest.totalMoney ?? 0
+                    }
+                    tourneyHoles[player, default: 0] += pRows.count
+                }
+            }
+            currentDayMoneyByPlayer = Dictionary(moneyData.map { ($0.name, $0.dayTotal) },
+                                                 uniquingKeysWith: { _, last in last })
+        }
 
         tournamentData = tourneyTotals.sorted {
             let aHoles = tourneyHoles[$0.key] ?? 0
@@ -488,6 +552,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         default: selectedGameType = "wolf"
         }
         recompute()
+        applyHeader()
         tableView.reloadData()
     }
 
@@ -665,7 +730,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         switch segment.selectedSegmentIndex {
-        case 0: return selectedGameType == "skins" ? skinsData.count : moneyData.count
+        case 0: return (selectedGameType == "skins" || selectedGameType == "gross_skins") ? skinsData.count : moneyData.count
         case 1: return scoreData.count
         case 2: return groupData.count
         case 3: return tournamentData.count
@@ -682,7 +747,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
         case 0:
             let cell = tableView.dequeueReusableCell(withIdentifier: "money",
                                                      for: indexPath) as! LeaderboardMoneyCell
-            if selectedGameType == "skins" {
+            if selectedGameType == "skins" || selectedGameType == "gross_skins" {
                 let r = skinsData[i]
                 cell.configureSkins(rank: r.rank, name: r.name, skinsWon: r.skinsWon,
                                     potPayout: r.potPayout,
@@ -733,22 +798,36 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
 
             if selectedGameType == "skins" || selectedGameType == "gross_skins" {
                 let row = skinsData[indexPath.row]
-                let playerRows = allRows
-                    .filter { $0.playerName == row.name && $0.gameType == selectedGameType }
-                    .sorted { $0.hole < $1.hole }
-                var prev = 0
+                // Recompute field-wide per-hole to get exact holes and carry amounts for this player.
+                let useGross2 = (selectedGameType == "gross_skins")
+                let detailDay = selectedDay ?? availableDays.last ?? 1
+                let allDayRows = allRows.filter { $0.gameType == selectedGameType && ($0.day ?? 1) == detailDay }
+                let byHole2 = Dictionary(grouping: allDayRows, by: { $0.hole })
+                let carryoversAllowed = record?.carryTies == true
                 var wonHoles: [(hole: Int, count: Int)] = []
-                for r in playerRows {
-                    let current = r.skinsWon ?? 0
-                    if current > prev { wonHoles.append((r.hole, current - prev)) }
-                    prev = current
+                var carried2 = 0
+                for hole in 1...18 {
+                    let holeRows = byHole2[hole] ?? []
+                    guard !holeRows.isEmpty else { carried2 += carryoversAllowed ? 1 : 0; continue }
+                    let scores = holeRows.map { r -> (name: String, score: Int) in
+                        (r.playerName, useGross2 ? r.grossScore : (r.netScore ?? r.grossScore))
+                    }
+                    guard let low = scores.map(\.score).min() else { continue }
+                    let winners = scores.filter { $0.score == low }
+                    if winners.count == 1 {
+                        let winner = winners[0].name
+                        let earned = 1 + carried2
+                        if winner == row.name { wonHoles.append((hole, earned)) }
+                        carried2 = 0
+                    } else if carryoversAllowed {
+                        carried2 += 1
+                    }
                 }
                 let message: String
                 if wonHoles.isEmpty {
                     message = "No skins won yet"
                 } else {
                     let totalSkins = wonHoles.reduce(0) { $0 + $1.count }
-                    let carryoversAllowed = record?.carryTies == true
                     let lines = wonHoles.map { hole, count -> String in
                         let skinWord = count == 1 ? "skin" : "skins"
                         let carryovers = count - 1

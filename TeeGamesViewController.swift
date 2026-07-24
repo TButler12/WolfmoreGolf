@@ -26,6 +26,7 @@ final class TeeGamesViewController: UIViewController {
         super.viewWillAppear(animated)
         refreshRejoinButton()
         refreshManageButton()
+        checkForNewDay()
     }
 
     // MARK: - Setup
@@ -83,16 +84,38 @@ final class TeeGamesViewController: UIViewController {
         ])
     }
 
-    private func refreshRejoinButton() {
+    private func refreshRejoinButton(newDayAvailable: Int? = nil) {
         let ud = UserDefaults.standard
         let savedCode = ud.string(forKey: "lastTournamentCode")
         let savedName = ud.string(forKey: "lastTournamentName") ?? "Tournament"
         let currentCode = GameManager.shared.currentGame?.tournamentCode
         let shouldShow = savedCode != nil && currentCode == nil
         rejoinButton?.isHidden = !shouldShow
-        if shouldShow, let code = savedCode {
+        if shouldShow {
             rejoinButton?.configuration?.title = "Rejoin \(savedName)"
-            rejoinButton?.configuration?.subtitle = "Code: \(code)"
+            if let day = newDayAvailable {
+                rejoinButton?.configuration?.subtitle = "Day \(day) is ready — tap to start!"
+                rejoinButton?.configuration?.baseBackgroundColor = UIColor(red: 0.85, green: 0.35, blue: 0.10, alpha: 1.0)
+            } else if let code = savedCode {
+                rejoinButton?.configuration?.subtitle = "Code: \(code)"
+                rejoinButton?.configuration?.baseBackgroundColor = UIColor(red: 0.72, green: 0.45, blue: 0.08, alpha: 1.0)
+            }
+        }
+    }
+
+    private func checkForNewDay() {
+        let ud = UserDefaults.standard
+        guard let code = ud.string(forKey: "lastTournamentCode"),
+              GameManager.shared.currentGame?.tournamentCode == nil else { return }
+        let savedDay = ud.integer(forKey: "lastTournamentDay_\(code)")
+        Task {
+            guard let record = try? await SupabaseService.shared.fetchTournament(code: code) else { return }
+            let liveDay = record.currentDay ?? 1
+            await MainActor.run {
+                if liveDay > savedDay {
+                    self.refreshRejoinButton(newDayAvailable: liveDay)
+                }
+            }
         }
     }
 
@@ -243,6 +266,9 @@ final class TeeGamesViewController: UIViewController {
                 var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                 skins.settings.skinValue = stake
                 g.skinsState = skins
+            } else if record.gameType == "wolf", let wolfStake = record.wolfStake {
+                g.wolfStake = wolfStake
+                g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
             }
         }
         let joinDay = record.currentDay ?? 1
@@ -321,9 +347,17 @@ final class TeeGamesViewController: UIViewController {
                 ud.set(liveDay, forKey: "lastTournamentDay_\(code)")
 
                 // New day → new matchId so Day 2 rows don't collide with Day 1
-                let matchId = (liveDay > savedDay && savedDay > 0)
+                let isNewDay = liveDay > savedDay && savedDay > 0
+                let matchId = isNewDay
                     ? UUID().uuidString
                     : (savedMatchId ?? UUID().uuidString)
+
+                // Organizer clears all roster claims so everyone is available on the new day
+                let isOrg = (record.createdBy == DeviceID.id)
+                    || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
+                if isNewDay && isOrg {
+                    try? await SupabaseService.shared.clearRosterClaims(code: record.code)
+                }
 
                 if GameManager.shared.currentGame == nil {
                     _ = GameManager.shared.loadLastOpened(notify: false)
@@ -348,6 +382,9 @@ final class TeeGamesViewController: UIViewController {
                         var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                         skins.settings.skinValue = stake
                         g.skinsState = skins
+                    } else if record.gameType == "wolf", let wolfStake = record.wolfStake {
+                        g.wolfStake = wolfStake
+                        g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
                     }
                 }
                 GameManager.shared.saveCurrent()

@@ -22,6 +22,9 @@ final class ManagePlayersViewController: UIViewController,
     // Triggers a success banner + auto-opens the roster picker on first appearance.
     var joinSuccessMessage: String? = nil
 
+    // Set by HomeViewController "Set Up Group" to skip straight to the roster picker.
+    var autoOpenRosterPicker: Bool = false
+
     // MARK: - Data
     private var friends: [Friend] { FriendStore.shared.friends }
     // Cached roster names for tournament mode — used to filter selectedCount correctly.
@@ -47,6 +50,10 @@ final class ManagePlayersViewController: UIViewController,
         }
 
         buildQuickStartFooter()
+        // Hide Quick Start when in tournament context — players must come from the roster
+        if GameManager.shared.currentGame?.tournamentCode != nil {
+            quickStartButton?.isHidden = true
+        }
         applyAdaptiveConstraints()
     }
 
@@ -62,11 +69,17 @@ final class ManagePlayersViewController: UIViewController,
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        guard let msg = joinSuccessMessage else { return }
-        joinSuccessMessage = nil   // one-shot: clears so returning here later doesn't re-fire
-        flashNavPrompt(msg, seconds: 3.0)
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
-            self?.rosterPickerTapped()
+        if let msg = joinSuccessMessage {
+            joinSuccessMessage = nil
+            flashNavPrompt(msg, seconds: 3.0)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in
+                self?.rosterPickerTapped()
+            }
+        } else if autoOpenRosterPicker {
+            autoOpenRosterPicker = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+                self?.rosterPickerTapped()
+            }
         }
     }
 
@@ -734,22 +747,7 @@ final class ManagePlayersViewController: UIViewController,
 
     @objc private func rosterPickerTapped() {
         guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
-        let isOrganizer = GameManager.shared.currentGame?.tournamentIsOrganizer == true
-        let past = TournamentHistoryStore.shared.all().filter { $0.code != code }
-
-        if isOrganizer && !past.isEmpty {
-            let ac = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
-            ac.addAction(UIAlertAction(title: "Pick from This Tournament's Roster", style: .default) { [weak self] _ in
-                self?.openRosterPicker(code: code)
-            })
-            ac.addAction(UIAlertAction(title: "Load from Past Tournament", style: .default) { [weak self] _ in
-                self?.showPastTournamentPicker(past, currentCode: code)
-            })
-            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            present(ac, animated: true)
-        } else {
-            openRosterPicker(code: code)
-        }
+        openRosterPicker(code: code)
     }
 
     private func openRosterPicker(code: String) {
@@ -929,6 +927,11 @@ final class ManagePlayersViewController: UIViewController,
         tableView.translatesAutoresizingMaskIntoConstraints = false
         startBtn.translatesAutoresizingMaskIntoConstraints = false
         homeBtn.translatesAutoresizingMaskIntoConstraints  = false
+
+        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        homeBtn.tintColor = wolfGreen
+        homeBtn.setTitleColor(wolfGreen, for: .normal)
+        homeBtn.setTitleColor(wolfGreen.withAlphaComponent(0.5), for: .highlighted)
 
         let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([

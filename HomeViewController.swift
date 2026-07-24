@@ -513,16 +513,57 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     @objc private func tournamentCardGroupTapped() {
-        let sb = UIStoryboard(name: "Main", bundle: nil)
-        guard let manageVC = sb.instantiateViewController(withIdentifier: "ManagePlayersVC")
-                as? ManagePlayersViewController else { return }
-        let nav = UINavigationController(rootViewController: manageVC)
-        nav.modalPresentationStyle = .pageSheet
-        if let sheet = nav.sheetPresentationController {
-            sheet.detents = [.large()]
-            sheet.prefersGrabberVisible = true
+        guard let g = GameManager.shared.currentGame,
+              let code = g.tournamentCode else { return }
+
+        let spinner = UIAlertController(title: nil, message: "Setting up…", preferredStyle: .alert)
+        present(spinner, animated: true)
+
+        Task { [weak self] in
+            guard let self else { return }
+            let record = try? await SupabaseService.shared.fetchTournament(code: code)
+            let liveDay = record?.currentDay ?? (g.tournamentDay ?? 1)
+            let savedDay = g.tournamentDay ?? 1
+            let isNewDay = liveDay > savedDay
+
+            // New day → new matchId so scores don't collide with previous day
+            let newMatchId = isNewDay ? UUID().uuidString : (g.tournamentMatchId ?? UUID().uuidString)
+
+            // Organizer clears all roster claims so everyone is available on the new day
+            if isNewDay {
+                let isOrg = (record?.createdBy == DeviceID.id)
+                    || (record?.coOrganizerDevices?.contains(DeviceID.id) == true)
+                if isOrg { try? await SupabaseService.shared.clearRosterClaims(code: code) }
+            }
+
+            GameManager.shared.update { g in
+                g.tournamentDay     = liveDay
+                g.tournamentMatchId = newMatchId
+                if let r = record {
+                    g.tournamentScoringType = r.scoring
+                    g.tournamentPotAmount   = r.potAmount
+                    g.tournamentCarryTies   = r.carryTies
+                }
+            }
+            UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
+            GameManager.shared.saveCurrent()
+
+            await MainActor.run {
+                spinner.dismiss(animated: false) {
+                    let sb = UIStoryboard(name: "Main", bundle: nil)
+                    guard let manageVC = sb.instantiateViewController(withIdentifier: "ManagePlayersVC")
+                            as? ManagePlayersViewController else { return }
+                    manageVC.autoOpenRosterPicker = true
+                    let nav = UINavigationController(rootViewController: manageVC)
+                    nav.modalPresentationStyle = .pageSheet
+                    if let sheet = nav.sheetPresentationController {
+                        sheet.detents = [.large()]
+                        sheet.prefersGrabberVisible = true
+                    }
+                    self.present(nav, animated: true)
+                }
+            }
         }
-        present(nav, animated: true)
     }
 
     private func buildNewRoundSection() -> UIView {
@@ -734,6 +775,17 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         let day = g.tournamentDay ?? 1
         tournamentInfoSubtitleLabel?.text = "Day \(day) · Code: \(code)"
         card.isHidden = false
+
+        // Background fetch to catch stale day (e.g. day advanced while app was idle)
+        Task { [weak self] in
+            guard let liveDay = try? await SupabaseService.shared.fetchTournament(code: code).currentDay,
+                  liveDay != day else { return }
+            GameManager.shared.update { g in g.tournamentDay = liveDay }
+            UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
+            await MainActor.run {
+                self?.tournamentInfoSubtitleLabel?.text = "Day \(liveDay) · Code: \(code)"
+            }
+        }
     }
 
     private func refreshResetBanner() {

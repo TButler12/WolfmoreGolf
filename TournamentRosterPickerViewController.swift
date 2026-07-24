@@ -141,7 +141,7 @@ final class TournamentRosterPickerViewController: UIViewController {
         Task {
             guard let fresh = try? await SupabaseService.shared.fetchRoster(code: tournamentCode) else { return }
             await MainActor.run {
-                let byName = Dictionary(uniqueKeysWithValues: fresh.map { ($0.canonicalName, $0) })
+                let byName = Dictionary(fresh.map { ($0.canonicalName, $0) }, uniquingKeysWith: { _, last in last })
                 self.allEntries = self.allEntries.map { entry in
                     guard let updated = byName[entry.canonicalName] else { return entry }
                     return updated
@@ -243,7 +243,34 @@ final class TournamentRosterPickerViewController: UIViewController {
         updateTitle()
         tableView.reloadData()
         if let id = entryID {
-            Task { try? await SupabaseService.shared.claimRosterEntry(id: id, groupCode: myClaimID) }
+            Task { [weak self] in
+                guard let self else { return }
+                try? await SupabaseService.shared.claimRosterEntry(id: id, groupCode: myClaimID)
+                // Verify claim succeeded — another device may have won the race
+                guard let fresh = try? await SupabaseService.shared.fetchRoster(code: tournamentCode),
+                      let entry = fresh.first(where: { $0.id == id }) else { return }
+                await MainActor.run {
+                    // Update local entries with latest group_code values
+                    let byID = Dictionary(fresh.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
+                    self.allEntries = self.allEntries.map { byID[$0.id] ?? $0 }
+                    self.filtered   = self.filtered.map   { byID[$0.id] ?? $0 }
+                    // If our claim didn't stick, roll it back locally
+                    if let winner = entry.groupCode, !winner.isEmpty, winner != self.myClaimID {
+                        self.selectedNames.remove(name)
+                        self.remainingSelections += 1
+                        self.onDeselect?(name)
+                        self.updateTitle()
+                        let ac = UIAlertController(
+                            title: "Player Taken",
+                            message: "\(name) was just claimed by another group.",
+                            preferredStyle: .alert
+                        )
+                        ac.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(ac, animated: true)
+                    }
+                    self.tableView.reloadData()
+                }
+            }
         }
         if remainingSelections == 0 {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { [weak self] in

@@ -636,6 +636,7 @@ final class SupabaseService {
         carryTies: Bool,
         potAmount: Double?,
         stake: Double?,
+        wolfStake: Double? = nil,
         scoring: String = "net"
     ) async throws {
         var payload: [String: AnyJSON] = [
@@ -644,6 +645,7 @@ final class SupabaseService {
         ]
         payload["pot_amount"] = potAmount.map { .double($0) } ?? .null
         payload["stake"]      = stake.map      { .double($0) } ?? .null
+        payload["wolf_stake"] = wolfStake.map  { .double($0) } ?? .null
         try await client
             .from("tournaments")
             .update(payload)
@@ -663,6 +665,12 @@ final class SupabaseService {
             .from("tournaments")
             .update(["current_day": current + 1])
             .eq("code", value: code)
+            .execute()
+        // Clear all roster claims so players are available to be re-claimed on the new day
+        try await client
+            .from("tournament_roster")
+            .update(["group_code": AnyJSON.null])
+            .eq("tournament_code", value: code)
             .execute()
     }
 
@@ -762,6 +770,14 @@ final class SupabaseService {
         try await client
             .from("tournament_roster")
             .upsert(payload, onConflict: "id")
+            .execute()
+    }
+
+    func clearRosterClaims(code: String) async throws {
+        try await client
+            .from("tournament_roster")
+            .update(["group_code": AnyJSON.null])
+            .eq("tournament_code", value: code)
             .execute()
     }
 

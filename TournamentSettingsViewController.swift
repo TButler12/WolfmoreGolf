@@ -8,8 +8,17 @@ import UIKit
 //   "both_combined"  — both, equal value per skin (combined pool ÷ total skins)
 final class TournamentSettingsViewController: UIViewController {
 
+    private var isWolfTournament: Bool {
+        GameManager.shared.currentGame?.tournamentGameType == "wolf"
+    }
+
     // MARK: - Controls
 
+    // Wolf-only stake (hidden for skins/stableford tournaments)
+    private let wolfStakeLabel  = UILabel()
+    private let wolfStakeField  = UITextField()
+
+    // Skins settings (shown for all tournament types)
     private let stakeLabel        = UILabel()
     private let stakeField        = UITextField()
     private let potAmountLabel    = UILabel()
@@ -24,11 +33,11 @@ final class TournamentSettingsViewController: UIViewController {
     private let splitLabel        = UILabel()
     private let splitSegment      = UISegmentedControl(items: ["50/50", "Custom %", "Combined Pool"])
     private let grossPctLabel     = UILabel()
-    private let grossPctField     = UITextField()  // shown only when Custom %
+    private let grossPctField     = UITextField()
 
     private let saveButton        = UIButton(type: .system)
 
-    // Constraint pair — only one active at a time depending on "Both" visibility
+    // Save button top anchor — only one active at a time
     private var saveTopToScoring:   NSLayoutConstraint!
     private var saveTopToSplit:     NSLayoutConstraint!
     private var saveTopToCustomPct: NSLayoutConstraint!
@@ -57,6 +66,18 @@ final class TournamentSettingsViewController: UIViewController {
             UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(dismissKeyboard))
         ]
 
+        // Wolf stake row
+        configureLabel(wolfStakeLabel, text: "Wolf Game Stake ($)")
+        wolfStakeField.borderStyle   = .roundedRect
+        wolfStakeField.keyboardType  = .decimalPad
+        wolfStakeField.textAlignment = .center
+        wolfStakeField.font          = UIFont.preferredFont(forTextStyle: .body)
+        wolfStakeField.placeholder   = "0.00"
+        wolfStakeField.inputAccessoryView = bar
+        wolfStakeLabel.isHidden = !isWolfTournament
+        wolfStakeField.isHidden = !isWolfTournament
+
+        // Skins rows
         configureLabel(stakeLabel,      text: "Stake Per Skin ($)")
         configureLabel(potAmountLabel,  text: "Skins Pot ($)  —  optional")
         configureLabel(carryoversLabel, text: "Carryovers")
@@ -99,6 +120,7 @@ final class TournamentSettingsViewController: UIViewController {
         saveButton.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)
 
         let allViews: [UIView] = [
+            wolfStakeLabel, wolfStakeField,
             stakeLabel, stakeField,
             potAmountLabel, potAmountField, potNoteLabel,
             carryoversLabel, carryoversSegment,
@@ -114,14 +136,28 @@ final class TournamentSettingsViewController: UIViewController {
 
         let guide = view.safeAreaLayoutGuide
 
-        // Three mutually exclusive saveButton top anchors; exactly one is active at a time.
+        // Wolf stake sits at top; skins stack anchors off it when visible, off top when not.
+        let skinsTopAnchor: NSLayoutYAxisAnchor = isWolfTournament
+            ? wolfStakeField.bottomAnchor
+            : guide.topAnchor
+        let skinsTopConstant: CGFloat = isWolfTournament ? 32 : 32
+
         saveTopToScoring   = saveButton.topAnchor.constraint(equalTo: scoringSegment.bottomAnchor,  constant: 40)
         saveTopToSplit     = saveButton.topAnchor.constraint(equalTo: splitSegment.bottomAnchor,    constant: 40)
         saveTopToCustomPct = saveButton.topAnchor.constraint(equalTo: grossPctField.bottomAnchor,   constant: 40)
-        saveTopToScoring.isActive = true  // default until "Both" is chosen
+        saveTopToScoring.isActive = true
 
         NSLayoutConstraint.activate([
-            stakeLabel.topAnchor.constraint(equalTo: guide.topAnchor, constant: 32),
+            // Wolf stake (only rendered when wolf tournament)
+            wolfStakeLabel.topAnchor.constraint(equalTo: guide.topAnchor, constant: 32),
+            wolfStakeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            wolfStakeField.topAnchor.constraint(equalTo: wolfStakeLabel.bottomAnchor, constant: 8),
+            wolfStakeField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            wolfStakeField.widthAnchor.constraint(equalToConstant: 120),
+            wolfStakeField.heightAnchor.constraint(equalToConstant: 34),
+
+            // Skins section
+            stakeLabel.topAnchor.constraint(equalTo: skinsTopAnchor, constant: skinsTopConstant),
             stakeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
             stakeField.topAnchor.constraint(equalTo: stakeLabel.bottomAnchor, constant: 8),
@@ -155,7 +191,6 @@ final class TournamentSettingsViewController: UIViewController {
             scoringSegment.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
             scoringSegment.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
 
-            // Split sub-section (hidden until "Both" selected)
             splitLabel.topAnchor.constraint(equalTo: scoringSegment.bottomAnchor, constant: 28),
             splitLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
@@ -163,7 +198,6 @@ final class TournamentSettingsViewController: UIViewController {
             splitSegment.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
             splitSegment.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
 
-            // Custom % sub-section (hidden until "Custom %" selected within Both)
             grossPctLabel.topAnchor.constraint(equalTo: splitSegment.bottomAnchor, constant: 20),
             grossPctLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
 
@@ -185,36 +219,35 @@ final class TournamentSettingsViewController: UIViewController {
 
     // MARK: - Visibility
 
-    @objc private func scoringChanged() {
-        updateSplitVisibility()
-    }
-
-    @objc private func splitChanged() {
-        updateSplitVisibility()
-    }
+    @objc private func scoringChanged() { updateSplitVisibility() }
+    @objc private func splitChanged()   { updateSplitVisibility() }
 
     private func updateSplitVisibility() {
-        let isBoth     = scoringSegment.selectedSegmentIndex == 2
-        let isCustom   = isBoth && splitSegment.selectedSegmentIndex == 1
-        let isCombined = isBoth && splitSegment.selectedSegmentIndex == 2
+        let isBoth   = scoringSegment.selectedSegmentIndex == 2
+        let isCustom = isBoth && splitSegment.selectedSegmentIndex == 1
 
-        splitLabel.isHidden   = !isBoth
-        splitSegment.isHidden = !isBoth
+        splitLabel.isHidden    = !isBoth
+        splitSegment.isHidden  = !isBoth
         grossPctLabel.isHidden = !isCustom
         grossPctField.isHidden = !isCustom
 
         saveTopToScoring.isActive   = !isBoth
         saveTopToSplit.isActive     = isBoth && !isCustom
         saveTopToCustomPct.isActive = isCustom
-
-        // Combined Pool note: stake field becomes the fallback per-skin value
-        _ = isCombined  // reserved for future note label if needed
     }
 
     // MARK: - Data
 
     private func loadSettings() {
         guard let g = GameManager.shared.currentGame else { return }
+
+        // Wolf stake
+        if isWolfTournament {
+            let ws = g.wolfStake ?? (g.gameHoleDollarsArray.first ?? 0)
+            if ws > 0 { wolfStakeField.text = String(format: "%.2f", ws) }
+        }
+
+        // Skins settings
         carryoversSegment.selectedSegmentIndex = (g.tournamentCarryTies == true) ? 0 : 1
 
         let scoring = g.tournamentScoringType ?? "net"
@@ -260,11 +293,19 @@ final class TournamentSettingsViewController: UIViewController {
               let code = g.tournamentCode,
               g.tournamentIsOrganizer else { return }
 
+        // Wolf stake (nil for non-wolf tournaments)
+        let wolfStakeText = wolfStakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let wolfStake: Double? = isWolfTournament
+            ? Double(wolfStakeText).flatMap { $0 > 0 ? $0 : nil }
+            : nil
+
+        // Skins stake
+        let stakeText = stakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let skinsStake: Double? = Double(stakeText).flatMap { $0 > 0 ? $0 : nil }
+
         let carryTies = (carryoversSegment.selectedSegmentIndex == 0)
         let potText   = potAmountField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let potAmount: Double? = Double(potText).flatMap { $0 > 0 ? $0 : nil }
-        let stakeText = stakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let stake: Double? = Double(stakeText).flatMap { $0 > 0 ? $0 : nil }
 
         let scoring: String
         switch scoringSegment.selectedSegmentIndex {
@@ -287,17 +328,22 @@ final class TournamentSettingsViewController: UIViewController {
         Task {
             do {
                 try await SupabaseService.shared.updateTournamentSettings(
-                    code: code,
+                    code:      code,
                     carryTies: carryTies,
                     potAmount: potAmount,
-                    stake: stake,
-                    scoring: scoring
+                    stake:     skinsStake,
+                    wolfStake: wolfStake,
+                    scoring:   scoring
                 )
                 GameManager.shared.update { g in
                     g.tournamentCarryTies   = carryTies
                     g.tournamentPotAmount   = potAmount
                     g.tournamentScoringType = scoring
-                    if let s = stake {
+                    if let ws = wolfStake {
+                        g.wolfStake = ws
+                        g.gameHoleDollarsArray = Array(repeating: ws, count: STANDARD_HOLES)
+                    }
+                    if let s = skinsStake {
                         var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                         skins.settings.skinValue = s
                         g.skinsState = skins

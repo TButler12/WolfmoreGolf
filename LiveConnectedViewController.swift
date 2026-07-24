@@ -28,10 +28,34 @@ final class LiveConnectedViewController: UITableViewController {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
     }
 
+    // Tracks which tournament codes have a new day available (populated async)
+    private var newDayAvailable: Set<String> = []
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        newDayAvailable = []
         buildSections()
         tableView.reloadData()
+        checkRecentTournamentsForNewDay()
+    }
+
+    private func checkRecentTournamentsForNewDay() {
+        let history = TournamentHistoryStore.shared.all()
+        guard !history.isEmpty else { return }
+        Task {
+            var found: Set<String> = []
+            for entry in history.prefix(5) {
+                let savedDay = UserDefaults.standard.integer(forKey: "lastTournamentDay_\(entry.code)")
+                let liveDay  = (try? await SupabaseService.shared.fetchTournament(code: entry.code))?.currentDay ?? 0
+                if liveDay > max(savedDay, entry.lastDay) { found.insert(entry.code) }
+            }
+            guard !found.isEmpty else { return }
+            await MainActor.run {
+                self.newDayAvailable = found
+                self.buildSections()
+                self.tableView.reloadData()
+            }
+        }
     }
 
     // MARK: - Build
@@ -105,9 +129,13 @@ final class LiveConnectedViewController: UITableViewController {
                 case "wolf":  gameLabel = "Wolf"
                 default:      gameLabel = entry.gameType.capitalized
                 }
+                let hasNewDay = self.newDayAvailable.contains(entry.code)
+                let subtitle = hasNewDay
+                    ? "⚑ New day ready — tap to start"
+                    : "Day \(entry.lastDay) · \(gameLabel) · \(entry.code)"
                 return Row(
                     title: entry.name,
-                    subtitle: "Day \(entry.lastDay) · \(gameLabel) · \(entry.code)"
+                    subtitle: subtitle
                 ) { [weak self] in
                     self?.historyEntryTapped(entry)
                 }
@@ -251,6 +279,14 @@ final class LiveConnectedViewController: UITableViewController {
                 || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
             g.tournamentPotAmount    = record.potAmount
             g.tournamentCarryTies    = record.carryTies
+            if record.gameType == "skins", let stake = record.stake {
+                var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
+                skins.settings.skinValue = stake
+                g.skinsState = skins
+            } else if record.gameType == "wolf", let wolfStake = record.wolfStake {
+                g.wolfStake = wolfStake
+                g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
+            }
         }
         let joinDay = record.currentDay ?? 1
         UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
@@ -691,14 +727,15 @@ final class LiveConnectedViewController: UITableViewController {
     // MARK: - Tournament History
 
     private func historyEntryTapped(_ entry: TournamentHistoryEntry) {
-        let sheet = UIAlertController(title: entry.name,
-                                      message: "Day \(entry.lastDay) · \(entry.code)",
-                                      preferredStyle: .actionSheet)
+        let hasNewDay = newDayAvailable.contains(entry.code)
+        let msg = hasNewDay ? "New day available — no code needed" : "Day \(entry.lastDay) · \(entry.code)"
+        let sheet = UIAlertController(title: entry.name, message: msg, preferredStyle: .actionSheet)
         sheet.addAction(UIAlertAction(title: "View Leaderboard", style: .default) { [weak self] _ in
             let vc = TournamentLeaderboardViewController(code: entry.code)
             self?.navigationController?.pushViewController(vc, animated: true)
         })
-        sheet.addAction(UIAlertAction(title: "Rejoin Tournament", style: .default) { [weak self] _ in
+        let rejoinLabel = hasNewDay ? "Start New Day (no code needed)" : "Rejoin Tournament"
+        sheet.addAction(UIAlertAction(title: rejoinLabel, style: .default) { [weak self] _ in
             self?.rejoinFromHistory(entry)
         })
         sheet.addAction(UIAlertAction(title: "Remove from History", style: .destructive) { [weak self] _ in
@@ -716,6 +753,14 @@ final class LiveConnectedViewController: UITableViewController {
         Task {
             do {
                 let record = try await SupabaseService.shared.fetchTournament(code: entry.code)
+                let liveDay = record.currentDay ?? 1
+                let savedDay = UserDefaults.standard.integer(forKey: "lastTournamentDay_\(entry.code)")
+                let isNewDay = liveDay > savedDay && savedDay > 0
+                let isOrg = (record.createdBy == DeviceID.id)
+                    || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
+                if isNewDay && isOrg {
+                    try? await SupabaseService.shared.clearRosterClaims(code: record.code)
+                }
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
                         self.applyJoinedTournament(record: record)
