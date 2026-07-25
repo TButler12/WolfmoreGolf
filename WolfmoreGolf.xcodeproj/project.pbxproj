@@ -61,6 +61,8 @@
 		F63960732F60D62500EC0C30 /* Notification.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960582F60D62500EC0C30 /* Notification.swift */; };
 		F63960742F60D62500EC0C30 /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = F63960592F60D62500EC0C30 /* Player.swift */; };
 		F63960752F60D62500EC0C30 /* PlayerSetupStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605A2F60D62500EC0C30 /* PlayerSetupStore.swift */; };
+		3CA14C74C54A4445BB0208B4 /* PermanentRosterStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4099B5A4CB1849638C49D82F /* PermanentRosterStore.swift */; };
+		959FB9F3C8AC46B3A1A08B24 /* PermanentRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E57883BB48434BF48D592404 /* PermanentRosterViewController.swift */; };
 		F63960772F60D62500EC0C30 /* ProfileStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605C2F60D62500EC0C30 /* ProfileStore.swift */; };
 		F63960782F60D62500EC0C30 /* RoundStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605D2F60D62500EC0C30 /* RoundStore.swift */; };
 		F63960792F60D62500EC0C30 /* RoundSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = F639605E2F60D62500EC0C30 /* RoundSummary.swift */; };
@@ -187,6 +189,8 @@
 		F63960582F60D62500EC0C30 /* Notification.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Notification.swift; sourceTree = "<group>"; };
 		F63960592F60D62500EC0C30 /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 		F639605A2F60D62500EC0C30 /* PlayerSetupStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSetupStore.swift; sourceTree = "<group>"; };
+		4099B5A4CB1849638C49D82F /* PermanentRosterStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermanentRosterStore.swift; sourceTree = "<group>"; };
+		E57883BB48434BF48D592404 /* PermanentRosterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PermanentRosterViewController.swift; sourceTree = "<group>"; };
 		F639605B2F60D62500EC0C30 /* PlayerSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerSetupViewController.swift; sourceTree = "<group>"; };
 		F639605C2F60D62500EC0C30 /* ProfileStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileStore.swift; sourceTree = "<group>"; };
 		F639605D2F60D62500EC0C30 /* RoundStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RoundStore.swift; sourceTree = "<group>"; };
@@ -396,6 +400,8 @@
 				F63960582F60D62500EC0C30 /* Notification.swift */,
 				F63960592F60D62500EC0C30 /* Player.swift */,
 				F639605A2F60D62500EC0C30 /* PlayerSetupStore.swift */,
+				4099B5A4CB1849638C49D82F /* PermanentRosterStore.swift */,
+				E57883BB48434BF48D592404 /* PermanentRosterViewController.swift */,
 				F639604B2F60D62500EC0C30 /* Game.swift */,
 				F639605B2F60D62500EC0C30 /* PlayerSetupViewController.swift */,
 				F63960602F60D62500EC0C30 /* ScoreStyle.swift */,
@@ -631,6 +637,8 @@
 				F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */,
 				F6E008232F8E62C600763694 /* RoundHistoryStore.swift in Sources */,
 				F63960752F60D62500EC0C30 /* PlayerSetupStore.swift in Sources */,
+				3CA14C74C54A4445BB0208B4 /* PermanentRosterStore.swift in Sources */,
+				959FB9F3C8AC46B3A1A08B24 /* PermanentRosterViewController.swift in Sources */,
 				F6750D002F785E24001828D2 /* GameSettingsViewController.swift in Sources */,
 				F6E0080B2F8965B600763694 /* RemoteNassauViewController.swift in Sources */,
 				F6A010012FA0000000000AE1 /* WolfActions.swift in Sources */,
