@@ -1295,11 +1295,34 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         sheet.addAction(UIAlertAction(title: "Scoring Tips", style: .default) { [weak self] _ in
             self?.showScoringTips()
         })
+        sheet.addAction(UIAlertAction(title: "Change Course", style: .default) { [weak self] _ in
+            self?.changeCourse()
+        })
         sheet.addAction(UIAlertAction(title: "Pass Game to Another Phone", style: .default) { [weak self] _ in
             self?.passGame()
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet, from: scoringInfoButton)
+    }
+
+    private func changeCourse() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let vc = sb.instantiateViewController(withIdentifier: "CoursePickerVC") as? CoursePickerViewController else { return }
+        vc.onPickCourse = { [weak self] courseID in
+            guard let self,
+                  let picked = CourseLibrary.shared.courses.first(where: { $0.id == courseID }) else { return }
+            GameManager.shared.update { g in
+                g.course.pars          = picked.pars
+                g.course.holeHandicaps = picked.hcs
+                g.course.name          = picked.name
+                g.course.id            = picked.id
+            }
+            CourseLibrary.shared.selectedCourseID = picked.id
+            GameManager.shared.saveCurrent()
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
+            self.navigationController?.popViewController(animated: true)
+        }
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func showScoringTips() {
