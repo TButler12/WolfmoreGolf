@@ -191,7 +191,7 @@ final class WolfSpectatorViewController: UIViewController {
         tableView.estimatedRowHeight = 44
         tableView.contentInsetAdjustmentBehavior = .automatic
         tableView.contentInset          = UIEdgeInsets(top: 0, left: 0, bottom: 83, right: 0)
-        tableView.scrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 83, right: 0)
+        tableView.verticalScrollIndicatorInsets = UIEdgeInsets(top: 0, left: 0, bottom: 83, right: 0)
         view.addSubview(tableView)
         NSLayoutConstraint.activate([
             tableView.topAnchor.constraint(equalTo: namesHeaderView.bottomAnchor),

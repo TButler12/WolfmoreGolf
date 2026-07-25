@@ -176,7 +176,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         }
 
         tableView.contentInset.bottom = 44
-        tableView.scrollIndicatorInsets.bottom = 44
+        tableView.verticalScrollIndicatorInsets.bottom = 44
     }
 
     @objc private func tabScoreTapped() {

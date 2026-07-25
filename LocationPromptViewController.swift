@@ -94,7 +94,8 @@ final class LocationPromptViewController: UIViewController {
     private let spinner       = UIActivityIndicatorView(style: .medium)
 
     private let countries: [String] = {
-        var list = Locale.isoRegionCodes
+        var list = Locale.Region.isoRegions
+            .map(\.identifier)
             .compactMap { Locale.current.localizedString(forRegionCode: $0) }
             .sorted()
         list.removeAll { $0 == "United States" }
