@@ -335,9 +335,6 @@ final class LiveConnectedViewController: UITableViewController {
         sheet.addAction(UIAlertAction(title: "Edit Roster", style: .default) { [weak self] _ in
             self?.editRosterTapped()
         })
-        sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
-            self?.advanceDay()
-        })
         if GameManager.shared.currentGame?.tournamentIsOrganizer == true {
             let currentCode = GameManager.shared.currentGame?.tournamentCode ?? ""
             let past = TournamentHistoryStore.shared.all().filter { $0.code != currentCode }
@@ -350,6 +347,9 @@ final class LiveConnectedViewController: UITableViewController {
                 self?.editTournamentSettings()
             })
         }
+        sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
+            self?.advanceDay()
+        })
         if GameManager.shared.currentGame?.tournamentIsCreator == true {
             sheet.addAction(UIAlertAction(title: "Share Organizer Access", style: .default) { [weak self] _ in
                 self?.shareOrganizerAccess()
