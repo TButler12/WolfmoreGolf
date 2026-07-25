@@ -1298,11 +1298,48 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         sheet.addAction(UIAlertAction(title: "Change Course", style: .default) { [weak self] _ in
             self?.changeCourse()
         })
+        sheet.addAction(UIAlertAction(title: "Change Handicap", style: .default) { [weak self] _ in
+            self?.changeHandicap()
+        })
         sheet.addAction(UIAlertAction(title: "Pass Game to Another Phone", style: .default) { [weak self] _ in
             self?.passGame()
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet, from: scoringInfoButton)
+    }
+
+    private func changeHandicap() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let sheet = UIAlertController(title: "Change Handicap", message: "Select a player", preferredStyle: .actionSheet)
+        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count, g.hcPlayers.count))
+        for seat in seats where g.playerActivated[seat] {
+            let name = g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { continue }
+            let currentHC = g.hcPlayers[seat]
+            sheet.addAction(UIAlertAction(title: "\(name)  (HC \(currentHC))", style: .default) { [weak self] _ in
+                self?.editHandicap(for: seat, name: name, currentHC: currentHC)
+            })
+        }
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(sheet, from: scoringInfoButton)
+    }
+
+    private func editHandicap(for seat: Int, name: String, currentHC: Int) {
+        let ac = UIAlertController(title: name, message: "Enter course handicap", preferredStyle: .alert)
+        ac.addTextField { tf in
+            tf.keyboardType = .numberPad
+            tf.text = "\(currentHC)"
+            tf.placeholder = "Course handicap (0 = scratch)"
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak ac] _ in
+            let text = ac?.textFields?.first?.text ?? ""
+            let hc = max(0, Int(text) ?? currentHC)
+            GameManager.shared.update { g in g.hcPlayers[seat] = hc }
+            GameManager.shared.saveCurrent()
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
+        })
+        present(ac, animated: true)
     }
 
     private func changeCourse() {
