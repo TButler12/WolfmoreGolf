@@ -72,7 +72,7 @@ final class LiveConnectedViewController: UITableViewController {
                 subtitle: "Claim organizer access with a code from the tournament creator") { [weak self] in
                 self?.enterCoOrgCodeTapped()
             },
-            Row(title: "Join Nassau Match",
+            Row(title: "Join Remote Nassau",
                 subtitle: "Import an invite to join a live Nassau match") { [weak self] in
                 guard let self else { return }
                 WolfActions.joinLiveMatch(from: self)
