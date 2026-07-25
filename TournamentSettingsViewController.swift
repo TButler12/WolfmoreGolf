@@ -14,46 +14,40 @@ final class TournamentSettingsViewController: UIViewController {
 
     // MARK: - Controls
 
-    // Wolf-only stake (hidden for skins/stableford tournaments)
-    private let wolfStakeLabel  = UILabel()
     private let wolfStakeField  = UITextField()
 
-    // Skins settings (shown for all tournament types)
-    private let stakeLabel        = UILabel()
-    private let stakeField        = UITextField()
-    private let potAmountLabel    = UILabel()
-    private let potAmountField    = UITextField()
-    private let potNoteLabel      = UILabel()
-    private let carryoversLabel   = UILabel()
+    private let skinsModeSegment = UISegmentedControl(items: ["Stake Per Skin", "Pot"])
+    private let stakeField       = UITextField()
+    private let potAmountField   = UITextField()
+    private let potNoteLabel     = UILabel()
     private let carryoversSegment = UISegmentedControl(items: ["On", "Off"])
-    private let scoringLabel      = UILabel()
-    private let scoringSegment    = UISegmentedControl(items: ["Net (Handicap)", "Gross", "Both"])
+    private let scoringSegment   = UISegmentedControl(items: ["Net (Handicap)", "Gross", "Both"])
 
     // Sub-section shown only when scoring = "Both"
-    private let splitLabel        = UILabel()
-    private let splitSegment      = UISegmentedControl(items: ["50/50", "Custom %", "Combined Pool"])
-    private let grossPctLabel     = UILabel()
-    private let grossPctField     = UITextField()
+    private let splitSegment     = UISegmentedControl(items: ["50/50", "Custom %", "Combined Pool"])
+    private let grossPctField    = UITextField()
 
-    private let saveButton        = UIButton(type: .system)
+    private let saveButton = UIButton(type: .system)
 
-    // Save button top anchor — only one active at a time
-    private var saveTopToScoring:   NSLayoutConstraint!
-    private var saveTopToSplit:     NSLayoutConstraint!
-    private var saveTopToCustomPct: NSLayoutConstraint!
+    // Stack rows that toggle visibility
+    private var stakeRow:       UIView!
+    private var potLabeledRow:  UIView!
+    private var splitRow:       UIView!
+    private var grossPctRow:    UIView!
 
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Edit Tournament Settings"
-        view.backgroundColor = .systemBackground
-        setupUI()
-        loadSettings()
+        view.backgroundColor = .systemGroupedBackground
 
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         tap.cancelsTouchesInView = false
         view.addGestureRecognizer(tap)
+
+        setupUI()
+        loadSettings()
     }
 
     // MARK: - UI
@@ -66,174 +60,236 @@ final class TournamentSettingsViewController: UIViewController {
             UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(dismissKeyboard))
         ]
 
-        // Wolf stake row
-        configureLabel(wolfStakeLabel, text: "Wolf Game Stake ($)")
-        wolfStakeField.borderStyle   = .roundedRect
+        for tf in [wolfStakeField, stakeField, potAmountField, grossPctField] {
+            tf.borderStyle   = .roundedRect
+            tf.textAlignment = .center
+            tf.font          = .systemFont(ofSize: 17)
+            tf.inputAccessoryView = bar
+        }
         wolfStakeField.keyboardType  = .decimalPad
-        wolfStakeField.textAlignment = .center
-        wolfStakeField.font          = UIFont.preferredFont(forTextStyle: .body)
         wolfStakeField.placeholder   = "0.00"
-        wolfStakeField.inputAccessoryView = bar
-        wolfStakeLabel.isHidden = !isWolfTournament
-        wolfStakeField.isHidden = !isWolfTournament
-
-        // Skins rows
-        configureLabel(stakeLabel,      text: "Stake Per Skin ($)")
-        configureLabel(potAmountLabel,  text: "Skins Pot ($)  —  optional")
-        configureLabel(carryoversLabel, text: "Carryovers")
-        configureLabel(scoringLabel,    text: "Skins Scoring")
-        configureLabel(splitLabel,      text: "Pot Distribution")
-        configureLabel(grossPctLabel,   text: "% to Gross Skins")
-
-        stakeField.borderStyle   = .roundedRect
-        stakeField.keyboardType  = .decimalPad
-        stakeField.textAlignment = .center
-        stakeField.font          = UIFont.preferredFont(forTextStyle: .body)
-        stakeField.placeholder   = "0.00"
-        stakeField.inputAccessoryView = bar
-
-        potAmountField.borderStyle   = .roundedRect
+        stakeField.keyboardType      = .decimalPad
+        stakeField.placeholder       = "0.00"
         potAmountField.keyboardType  = .decimalPad
-        potAmountField.textAlignment = .center
-        potAmountField.font          = UIFont.preferredFont(forTextStyle: .body)
         potAmountField.placeholder   = "e.g. 100"
-        potAmountField.inputAccessoryView = bar
-        potAmountField.addTarget(self, action: #selector(potFieldChanged), for: .editingChanged)
+        potAmountField.heightAnchor.constraint(equalToConstant: 38).isActive = true
+        grossPctField.keyboardType   = .numberPad
+        grossPctField.placeholder    = "e.g. 75"
 
-        potNoteLabel.text          = "If set, total pot is split by skins won. Overrides per-skin stake."
-        potNoteLabel.font          = UIFont.preferredFont(forTextStyle: .caption1)
+        potNoteLabel.text          = "Total pot is split among all skins won."
+        potNoteLabel.font          = .systemFont(ofSize: 13)
         potNoteLabel.textColor     = .secondaryLabel
         potNoteLabel.numberOfLines = 0
         potNoteLabel.textAlignment = .center
 
-        grossPctField.borderStyle   = .roundedRect
-        grossPctField.keyboardType  = .numberPad
-        grossPctField.textAlignment = .center
-        grossPctField.font          = UIFont.preferredFont(forTextStyle: .body)
-        grossPctField.placeholder   = "e.g. 75"
-        grossPctField.inputAccessoryView = bar
-
+        skinsModeSegment.addTarget(self, action: #selector(skinsModeChanged), for: .valueChanged)
+        carryoversSegment.addTarget(self, action: #selector(scoringChanged), for: .valueChanged)
         scoringSegment.addTarget(self, action: #selector(scoringChanged), for: .valueChanged)
-        splitSegment.addTarget(self, action: #selector(splitChanged), for: .valueChanged)
+        splitSegment.addTarget(self, action: #selector(scoringChanged), for: .valueChanged)
 
         saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
         saveButton.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)
 
-        let allViews: [UIView] = [
-            wolfStakeLabel, wolfStakeField,
-            stakeLabel, stakeField,
-            potAmountLabel, potAmountField, potNoteLabel,
-            carryoversLabel, carryoversSegment,
-            scoringLabel, scoringSegment,
-            splitLabel, splitSegment,
-            grossPctLabel, grossPctField,
-            saveButton
-        ]
-        allViews.forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview($0)
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+
+        let outerStack = UIStackView()
+        outerStack.axis    = .vertical
+        outerStack.spacing = 20
+        outerStack.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(outerStack)
+        NSLayoutConstraint.activate([
+            outerStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 24),
+            outerStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 16),
+            outerStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -16),
+            outerStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -32),
+            outerStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -32),
+        ])
+
+        // Wolf card
+        if isWolfTournament {
+            let wolfCard = makeCard(header: "WOLF GAME", tint: wolfGreen)
+            let wolfInner = wolfCard.viewWithTag(99)!
+            let wolfContent = makeFieldRow(label: "Wolf Game Stake ($)", field: wolfStakeField)
+            wolfInner.addSubview(wolfContent)
+            wolfContent.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                wolfContent.topAnchor.constraint(equalTo: wolfInner.topAnchor),
+                wolfContent.leadingAnchor.constraint(equalTo: wolfInner.leadingAnchor),
+                wolfContent.trailingAnchor.constraint(equalTo: wolfInner.trailingAnchor),
+                wolfContent.bottomAnchor.constraint(equalTo: wolfInner.bottomAnchor),
+            ])
+            outerStack.addArrangedSubview(wolfCard)
         }
 
-        let guide = view.safeAreaLayoutGuide
+        // Skins card
+        let skinsCard  = makeCard(header: "SKINS", tint: UIColor(red: 0.20, green: 0.50, blue: 0.85, alpha: 1.0))
+        let skinsInner = skinsCard.viewWithTag(99)!
 
-        // Wolf stake sits at top; skins stack anchors off it when visible, off top when not.
-        let skinsTopAnchor: NSLayoutYAxisAnchor = isWolfTournament
-            ? wolfStakeField.bottomAnchor
-            : guide.topAnchor
-        let skinsTopConstant: CGFloat = isWolfTournament ? 32 : 32
+        // Skins mode toggle
+        let modeLabel = makeFieldLabel("Skins Mode")
+        stakeRow      = makeFieldRow(label: "Amount Per Skin ($)", field: stakeField)
+        let potContent = makeVStack([potAmountField, potNoteLabel], spacing: 6)
+        potLabeledRow  = makeLabeledRow(label: "Total Pot ($)", content: potContent)
 
-        saveTopToScoring   = saveButton.topAnchor.constraint(equalTo: scoringSegment.bottomAnchor,  constant: 40)
-        saveTopToSplit     = saveButton.topAnchor.constraint(equalTo: splitSegment.bottomAnchor,    constant: 40)
-        saveTopToCustomPct = saveButton.topAnchor.constraint(equalTo: grossPctField.bottomAnchor,   constant: 40)
-        saveTopToScoring.isActive = true
+        splitRow   = makeLabeledRow(label: "Pot Distribution", content: splitSegment)
+        grossPctRow = makeFieldRow(label: "% to Gross Skins", field: grossPctField)
 
-        NSLayoutConstraint.activate([
-            // Wolf stake (only rendered when wolf tournament)
-            wolfStakeLabel.topAnchor.constraint(equalTo: guide.topAnchor, constant: 32),
-            wolfStakeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            wolfStakeField.topAnchor.constraint(equalTo: wolfStakeLabel.bottomAnchor, constant: 8),
-            wolfStakeField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            wolfStakeField.widthAnchor.constraint(equalToConstant: 120),
-            wolfStakeField.heightAnchor.constraint(equalToConstant: 34),
+        let carryRow   = makeLabeledRow(label: "Carryovers", content: carryoversSegment)
+        let scoringRow = makeLabeledRow(label: "Skins Scoring", content: scoringSegment)
 
-            // Skins section
-            stakeLabel.topAnchor.constraint(equalTo: skinsTopAnchor, constant: skinsTopConstant),
-            stakeLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            stakeField.topAnchor.constraint(equalTo: stakeLabel.bottomAnchor, constant: 8),
-            stakeField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            stakeField.widthAnchor.constraint(equalToConstant: 120),
-            stakeField.heightAnchor.constraint(equalToConstant: 34),
-
-            potAmountLabel.topAnchor.constraint(equalTo: stakeField.bottomAnchor, constant: 28),
-            potAmountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            potAmountField.topAnchor.constraint(equalTo: potAmountLabel.bottomAnchor, constant: 8),
-            potAmountField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            potAmountField.widthAnchor.constraint(equalToConstant: 120),
-            potAmountField.heightAnchor.constraint(equalToConstant: 34),
-
-            potNoteLabel.topAnchor.constraint(equalTo: potAmountField.bottomAnchor, constant: 6),
-            potNoteLabel.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            potNoteLabel.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-
-            carryoversLabel.topAnchor.constraint(equalTo: potNoteLabel.bottomAnchor, constant: 28),
-            carryoversLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            carryoversSegment.topAnchor.constraint(equalTo: carryoversLabel.bottomAnchor, constant: 8),
-            carryoversSegment.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            carryoversSegment.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-
-            scoringLabel.topAnchor.constraint(equalTo: carryoversSegment.bottomAnchor, constant: 28),
-            scoringLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            scoringSegment.topAnchor.constraint(equalTo: scoringLabel.bottomAnchor, constant: 8),
-            scoringSegment.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            scoringSegment.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-
-            splitLabel.topAnchor.constraint(equalTo: scoringSegment.bottomAnchor, constant: 28),
-            splitLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            splitSegment.topAnchor.constraint(equalTo: splitLabel.bottomAnchor, constant: 8),
-            splitSegment.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            splitSegment.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-
-            grossPctLabel.topAnchor.constraint(equalTo: splitSegment.bottomAnchor, constant: 20),
-            grossPctLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-
-            grossPctField.topAnchor.constraint(equalTo: grossPctLabel.bottomAnchor, constant: 8),
-            grossPctField.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            grossPctField.widthAnchor.constraint(equalToConstant: 120),
-            grossPctField.heightAnchor.constraint(equalToConstant: 34),
-
-            saveButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+        let skinsStack = UIStackView(arrangedSubviews: [
+            modeLabel,
+            skinsModeSegment,
+            stakeRow,
+            potLabeledRow,
+            makeSeparator(),
+            carryRow,
+            scoringRow,
+            splitRow,
+            grossPctRow,
         ])
+        skinsStack.axis    = .vertical
+        skinsStack.spacing = 16
+        skinsStack.translatesAutoresizingMaskIntoConstraints = false
+        skinsInner.addSubview(skinsStack)
+        NSLayoutConstraint.activate([
+            skinsStack.topAnchor.constraint(equalTo: skinsInner.topAnchor),
+            skinsStack.leadingAnchor.constraint(equalTo: skinsInner.leadingAnchor),
+            skinsStack.trailingAnchor.constraint(equalTo: skinsInner.trailingAnchor),
+            skinsStack.bottomAnchor.constraint(equalTo: skinsInner.bottomAnchor),
+        ])
+        outerStack.addArrangedSubview(skinsCard)
+
+        // Save
+        saveButton.translatesAutoresizingMaskIntoConstraints = false
+        outerStack.addArrangedSubview(saveButton)
     }
 
-    private func configureLabel(_ label: UILabel, text: String) {
-        label.text          = text
-        label.font          = UIFont.preferredFont(forTextStyle: .headline)
-        label.textColor     = .label
-        label.textAlignment = .center
+    // MARK: - Card builder
+
+    private var wolfGreen: UIColor { UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0) }
+
+    private func makeCard(header: String, tint: UIColor) -> UIView {
+        let card = UIView()
+        card.backgroundColor    = .secondarySystemGroupedBackground
+        card.layer.cornerRadius = 14
+        card.layer.shadowColor  = UIColor.black.cgColor
+        card.layer.shadowOpacity = 0.06
+        card.layer.shadowOffset  = CGSize(width: 0, height: 2)
+        card.layer.shadowRadius  = 6
+
+        // Header bar
+        let headerBg = UIView()
+        headerBg.backgroundColor    = tint.withAlphaComponent(0.12)
+        headerBg.layer.cornerRadius = 14
+        headerBg.layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        headerBg.translatesAutoresizingMaskIntoConstraints = false
+
+        let headerLabel = UILabel()
+        headerLabel.text      = header
+        headerLabel.font      = .systemFont(ofSize: 12, weight: .bold)
+        headerLabel.textColor = tint
+        headerLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let sep = UIView()
+        sep.backgroundColor = tint.withAlphaComponent(0.25)
+        sep.translatesAutoresizingMaskIntoConstraints = false
+
+        // Content container (tagged so we can find it)
+        let content = UIView()
+        content.tag = 99
+        content.translatesAutoresizingMaskIntoConstraints = false
+
+        card.addSubview(headerBg)
+        headerBg.addSubview(headerLabel)
+        card.addSubview(sep)
+        card.addSubview(content)
+
+        NSLayoutConstraint.activate([
+            headerBg.topAnchor.constraint(equalTo: card.topAnchor),
+            headerBg.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            headerBg.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+
+            headerLabel.topAnchor.constraint(equalTo: headerBg.topAnchor, constant: 10),
+            headerLabel.bottomAnchor.constraint(equalTo: headerBg.bottomAnchor, constant: -10),
+            headerLabel.leadingAnchor.constraint(equalTo: headerBg.leadingAnchor, constant: 16),
+
+            sep.topAnchor.constraint(equalTo: headerBg.bottomAnchor),
+            sep.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+            sep.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            sep.heightAnchor.constraint(equalToConstant: 1),
+
+            content.topAnchor.constraint(equalTo: sep.bottomAnchor, constant: 20),
+            content.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 16),
+            content.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -16),
+            content.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -20),
+        ])
+        return card
+    }
+
+    private func makeFieldLabel(_ text: String) -> UILabel {
+        let l = UILabel()
+        l.text      = text
+        l.font      = .systemFont(ofSize: 15, weight: .semibold)
+        l.textColor = .label
+        return l
+    }
+
+    private func makeFieldRow(label: String, field: UITextField) -> UIView {
+        let lbl = makeFieldLabel(label)
+        field.translatesAutoresizingMaskIntoConstraints = false
+        let stack = UIStackView(arrangedSubviews: [lbl, field])
+        stack.axis    = .vertical
+        stack.spacing = 8
+        field.heightAnchor.constraint(equalToConstant: 38).isActive = true
+        return stack
+    }
+
+    private func makeLabeledRow(label: String, content: UIView) -> UIView {
+        let lbl = makeFieldLabel(label)
+        let stack = UIStackView(arrangedSubviews: [lbl, content])
+        stack.axis    = .vertical
+        stack.spacing = 8
+        return stack
+    }
+
+    private func makeVStack(_ views: [UIView], spacing: CGFloat) -> UIView {
+        let stack = UIStackView(arrangedSubviews: views)
+        stack.axis    = .vertical
+        stack.spacing = spacing
+        return stack
+    }
+
+    private func makeSeparator() -> UIView {
+        let v = UIView()
+        v.backgroundColor = .separator
+        v.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        return v
     }
 
     // MARK: - Visibility
 
-    @objc private func scoringChanged() { updateSplitVisibility() }
-    @objc private func splitChanged()   { updateSplitVisibility() }
+    @objc private func skinsModeChanged() { updateVisibility() }
+    @objc private func scoringChanged()   { updateVisibility() }
 
-    private func updateSplitVisibility() {
+    private func updateVisibility() {
+        let isPot    = skinsModeSegment.selectedSegmentIndex == 1
         let isBoth   = scoringSegment.selectedSegmentIndex == 2
         let isCustom = isBoth && splitSegment.selectedSegmentIndex == 1
 
-        splitLabel.isHidden    = !isBoth
-        splitSegment.isHidden  = !isBoth
-        grossPctLabel.isHidden = !isCustom
-        grossPctField.isHidden = !isCustom
+        stakeRow.isHidden      = isPot
+        potLabeledRow.isHidden = !isPot
 
-        saveTopToScoring.isActive   = !isBoth
-        saveTopToSplit.isActive     = isBoth && !isCustom
-        saveTopToCustomPct.isActive = isCustom
+        splitRow.isHidden    = !isBoth
+        grossPctRow.isHidden = !isCustom
     }
 
     // MARK: - Data
@@ -241,13 +297,11 @@ final class TournamentSettingsViewController: UIViewController {
     private func loadSettings() {
         guard let g = GameManager.shared.currentGame else { return }
 
-        // Wolf stake
         if isWolfTournament {
             let ws = g.wolfStake ?? (g.gameHoleDollarsArray.first ?? 0)
             if ws > 0 { wolfStakeField.text = String(format: "%.2f", ws) }
         }
 
-        // Skins settings
         carryoversSegment.selectedSegmentIndex = (g.tournamentCarryTies == true) ? 0 : 1
 
         let scoring = g.tournamentScoringType ?? "net"
@@ -267,22 +321,18 @@ final class TournamentSettingsViewController: UIViewController {
         default:
             scoringSegment.selectedSegmentIndex = 0
         }
-        updateSplitVisibility()
 
         if let pot = g.tournamentPotAmount, pot > 0 {
-            potAmountField.text  = String(format: "%.2f", pot)
-            stakeField.isEnabled = false
-            stakeField.alpha     = 0.35
+            potAmountField.text = String(format: "%.2f", pot)
+            skinsModeSegment.selectedSegmentIndex = 1
+        } else {
+            skinsModeSegment.selectedSegmentIndex = 0
+            if let skinValue = g.skinsState?.settings.skinValue, skinValue > 0 {
+                stakeField.text = String(format: "%.2f", skinValue)
+            }
         }
-        if let skinValue = g.skinsState?.settings.skinValue, skinValue > 0 {
-            stakeField.text = String(format: "%.2f", skinValue)
-        }
-    }
 
-    @objc private func potFieldChanged() {
-        let hasPot = !(potAmountField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
-        stakeField.isEnabled = !hasPot
-        stakeField.alpha     = hasPot ? 0.35 : 1.0
+        updateVisibility()
     }
 
     // MARK: - Save
@@ -293,19 +343,18 @@ final class TournamentSettingsViewController: UIViewController {
               let code = g.tournamentCode,
               g.tournamentIsOrganizer else { return }
 
-        // Wolf stake (nil for non-wolf tournaments)
         let wolfStakeText = wolfStakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let wolfStake: Double? = isWolfTournament
             ? Double(wolfStakeText).flatMap { $0 > 0 ? $0 : nil }
             : nil
 
-        // Skins stake
+        let isPot = skinsModeSegment.selectedSegmentIndex == 1
         let stakeText = stakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let skinsStake: Double? = Double(stakeText).flatMap { $0 > 0 ? $0 : nil }
+        let skinsStake: Double? = isPot ? nil : Double(stakeText).flatMap { $0 > 0 ? $0 : nil }
+        let potText = potAmountField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let potAmount: Double? = isPot ? Double(potText).flatMap { $0 > 0 ? $0 : nil } : nil
 
         let carryTies = (carryoversSegment.selectedSegmentIndex == 0)
-        let potText   = potAmountField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let potAmount: Double? = Double(potText).flatMap { $0 > 0 ? $0 : nil }
 
         let scoring: String
         switch scoringSegment.selectedSegmentIndex {
