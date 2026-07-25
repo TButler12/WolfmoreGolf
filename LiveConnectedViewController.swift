@@ -335,6 +335,9 @@ final class LiveConnectedViewController: UITableViewController {
         sheet.addAction(UIAlertAction(title: "Edit Roster", style: .default) { [weak self] _ in
             self?.editRosterTapped()
         })
+        sheet.addAction(UIAlertAction(title: "Permanent Roster", style: .default) { [weak self] _ in
+            self?.openPermanentRoster()
+        })
         if GameManager.shared.currentGame?.tournamentIsOrganizer == true {
             let currentCode = GameManager.shared.currentGame?.tournamentCode ?? ""
             let past = TournamentHistoryStore.shared.all().filter { $0.code != currentCode }
@@ -429,6 +432,12 @@ final class LiveConnectedViewController: UITableViewController {
         guard let code = GameManager.shared.currentGame?.tournamentCode,
               let name = GameManager.shared.currentGame?.tournamentName else { return }
         let vc = TournamentRosterViewController(code: code, name: name)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func openPermanentRoster() {
+        let vc = PermanentRosterViewController()
+        vc.tournamentCode = GameManager.shared.currentGame?.tournamentCode
         navigationController?.pushViewController(vc, animated: true)
     }
 
