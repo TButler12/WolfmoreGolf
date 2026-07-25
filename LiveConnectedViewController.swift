@@ -448,33 +448,42 @@ final class LiveConnectedViewController: UITableViewController {
 
     private func advanceDay() {
         guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
-        let spinner = UIAlertController(title: nil, message: "Advancing day…", preferredStyle: .alert)
-        present(spinner, animated: true)
-        Task {
-            do {
-                try await SupabaseService.shared.advanceTournamentDay(code: code)
-                let record = try await SupabaseService.shared.fetchTournament(code: code)
-                let newDay = record.currentDay ?? 1
-                GameManager.shared.update { g in g.tournamentDay = newDay }
-                UserDefaults.standard.set(newDay, forKey: "lastTournamentDay_\(code)")
-                await MainActor.run {
-                    spinner.dismiss(animated: false) {
-                        self.buildSections()
-                        self.tableView.reloadData()
-                        let ac = UIAlertController(title: "Advanced to Day \(newDay)",
-                                                   message: nil, preferredStyle: .alert)
-                        ac.addAction(UIAlertAction(title: "OK", style: .default))
-                        self.present(ac, animated: true)
+        let confirm = UIAlertController(
+            title: "Advance to Next Day?",
+            message: "This will clear all roster claims so scorers can re-pick players for the new day.",
+            preferredStyle: .alert)
+        confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        confirm.addAction(UIAlertAction(title: "Advance", style: .destructive) { [weak self] _ in
+            guard let self else { return }
+            let spinner = UIAlertController(title: nil, message: "Advancing day…", preferredStyle: .alert)
+            self.present(spinner, animated: true)
+            Task {
+                do {
+                    try await SupabaseService.shared.advanceTournamentDay(code: code)
+                    let record = try await SupabaseService.shared.fetchTournament(code: code)
+                    let newDay = record.currentDay ?? 1
+                    GameManager.shared.update { g in g.tournamentDay = newDay }
+                    UserDefaults.standard.set(newDay, forKey: "lastTournamentDay_\(code)")
+                    await MainActor.run {
+                        spinner.dismiss(animated: false) {
+                            self.buildSections()
+                            self.tableView.reloadData()
+                            let ac = UIAlertController(title: "Advanced to Day \(newDay)",
+                                                       message: nil, preferredStyle: .alert)
+                            ac.addAction(UIAlertAction(title: "OK", style: .default))
+                            self.present(ac, animated: true)
+                        }
                     }
-                }
-            } catch {
-                await MainActor.run {
-                    spinner.dismiss(animated: false) {
-                        self.showError("Failed to advance day: \(error.localizedDescription)")
+                } catch {
+                    await MainActor.run {
+                        spinner.dismiss(animated: false) {
+                            self.showError("Failed to advance day: \(error.localizedDescription)")
+                        }
                     }
                 }
             }
-        }
+        })
+        present(confirm, animated: true)
     }
 
     // MARK: - Watch Live
