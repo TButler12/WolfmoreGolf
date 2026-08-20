@@ -195,6 +195,7 @@ final class ManagePlayersViewController: UIViewController,
     private func configureTable() {
         tableView.dataSource = self
         tableView.delegate = self
+        tableView.allowsSelection = true
     }
 
     private func configureKeyboardDismissTap() {
@@ -567,6 +568,40 @@ final class ManagePlayersViewController: UIViewController,
                     let entries = try await SupabaseService.shared.fetchRoster(code: code)
                     let rosterNames = Set(entries.map { $0.canonicalName })
                     let active = Array(selected.filter { rosterNames.contains($0.name) }.prefix(MAX_PLAYERS))
+
+                    // Final gate: confirm none of our selected players were claimed by a
+                    // different group between picker dismissal and round start.
+                    let myClaimID = GameManager.shared.currentGame?.groupCode ?? DeviceID.id
+                    let byName    = Dictionary(entries.map { ($0.canonicalName, $0) },
+                                              uniquingKeysWith: { _, last in last })
+                    let conflicted = active.filter { player in
+                        guard let gc = byName[player.name]?.groupCode, !gc.isEmpty else { return false }
+                        return gc != myClaimID
+                    }
+                    if !conflicted.isEmpty {
+                        await MainActor.run {
+                            let names = conflicted.map { $0.name }
+                            let nameList: String
+                            if names.count == 1 {
+                                nameList = names[0]
+                            } else if names.count == 2 {
+                                nameList = "\(names[0]) and \(names[1])"
+                            } else {
+                                nameList = names.dropLast().joined(separator: ", ") + ", and " + names.last!
+                            }
+                            let verb  = conflicted.count == 1 ? "has" : "have"
+                            let noun  = conflicted.count == 1 ? "them" : "them"
+                            let ac = UIAlertController(
+                                title: conflicted.count == 1 ? "Player Already Taken" : "Players Already Taken",
+                                message: "\(nameList) \(verb) been claimed by another group. Open the player picker to swap \(noun) out before starting.",
+                                preferredStyle: .alert
+                            )
+                            ac.addAction(UIAlertAction(title: "OK", style: .default))
+                            self.present(ac, animated: true)
+                        }
+                        return
+                    }
+
                     await MainActor.run { self.proceedWithStart(active: active) }
                 } catch {
                     // Roster fetch failed — proceed unfiltered rather than blocking the round
@@ -662,6 +697,16 @@ final class ManagePlayersViewController: UIViewController,
             guard let entries = try? await SupabaseService.shared.fetchRoster(code: code) else { return }
             await MainActor.run {
                 self.tournamentRosterNames = Set(entries.map { $0.canonicalName })
+                // Trim stale over-preselections so the user isn't immediately at the cap.
+                let overselected = FriendStore.shared.friends.filter {
+                    $0.preselectForRound && self.tournamentRosterNames.contains($0.name)
+                }
+                if overselected.count > self.maxActivePlayers {
+                    for friend in overselected.dropFirst(self.maxActivePlayers) {
+                        FriendStore.shared.update(friendID: friend.id, preselectForRound: false)
+                    }
+                    self.tableView.reloadData()
+                }
                 self.refreshStartButton()
             }
         }
@@ -904,14 +949,10 @@ final class ManagePlayersViewController: UIViewController,
 
         view.addSubview(btn)
 
-        // Anchor between the Start Round button and the Home/Close button.
-        // The storyboard Start Round button sits at y≈630 and the Home button at y≈762,
-        // so this centreX + midpoint placement lands in that gap on all device sizes.
-        guard let startBtn = startRoundButton else { return }
-
+        // Horizontal sizing only — vertical position is wired up in applyAdaptiveConstraints()
+        // once the Home button is also known, so the three-button chain is consistent.
         NSLayoutConstraint.activate([
             btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            btn.topAnchor.constraint(equalTo: startBtn.bottomAnchor, constant: 14),
             btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
             btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             btn.heightAnchor.constraint(equalToConstant: 60),
@@ -953,6 +994,16 @@ final class ManagePlayersViewController: UIViewController,
             homeBtn.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -16),
             homeBtn.heightAnchor.constraint(equalToConstant: 44),
         ])
+
+        // Vertical chain: tableView → startBtn → (quickStart →) homeBtn
+        if let quickBtn = quickStartButton {
+            NSLayoutConstraint.activate([
+                startBtn.bottomAnchor.constraint(equalTo: quickBtn.topAnchor, constant: -14),
+                quickBtn.bottomAnchor.constraint(equalTo: homeBtn.topAnchor, constant: -8),
+            ])
+        } else {
+            startBtn.bottomAnchor.constraint(equalTo: homeBtn.topAnchor, constant: -16).isActive = true
+        }
     }
 
     @objc private func quickStartTapped() {

@@ -129,15 +129,20 @@ private final class GroupHoleCell: UITableViewCell {
 
         let parts: [String] = playerNames.compactMap { name in
             guard let r = holeData[name] else { return nil }
-            let m    = r.holeMoney ?? 0.0
-            let sign = m >= 0 ? "+" : ""
-            let moneyStr: String
-            if m == Double(Int(m)) {
-                moneyStr = "\(sign)$\(Int(abs(m)))"
+            let m = r.holeMoney ?? 0.0
+            let valueStr: String
+            if r.gameType == "stableford" {
+                let pts = Int(m.rounded())
+                valueStr = "\(pts) pt\(pts == 1 ? "" : "s")"
             } else {
-                moneyStr = "\(sign)$\(String(format: "%.2f", abs(m)))"
+                let sign = m >= 0 ? "+" : ""
+                if m == Double(Int(m)) {
+                    valueStr = "\(sign)$\(Int(abs(m)))"
+                } else {
+                    valueStr = "\(sign)$\(String(format: "%.2f", abs(m)))"
+                }
             }
-            return "\(name): \(r.grossScore)  \(moneyStr)"
+            return "\(name): \(r.grossScore)  \(valueStr)"
         }
         detailLabel.text = parts.joined(separator: "\n")
     }

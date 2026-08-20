@@ -198,6 +198,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var gameHeaderView: UIView?
     private var gameHeaderInstalled = false
     private weak var scoringInfoButton: UIButton?
+    private weak var standingsHeaderButton: UIButton?
+
+    // $ Money / Pts toggle (Stableford mode only)
+    private weak var stablefordToggle: UISegmentedControl?
+    private var navRowTopHidden:  NSLayoutConstraint?   // prevBtn pinned to courseLabel
+    private var navRowTopVisible: NSLayoutConstraint?   // prevBtn pinned to toggle
+    private var showingStablefordPoints = false
 
     private weak var liveNassauButton: UIButton?
     private var liveNassauInstalled = false
@@ -506,6 +513,23 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             infoBtn.heightAnchor.constraint(equalToConstant: 36),
         ])
 
+        // Standings button (top-right, left of info button — only shown for local Stableford)
+        let standingsBtn = UIButton(type: .system)
+        standingsBtn.translatesAutoresizingMaskIntoConstraints = false
+        standingsBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        standingsBtn.layer.cornerRadius = 14
+        standingsBtn.clipsToBounds = true
+        standingsBtn.tintColor = .white
+        standingsBtn.setTitle("Stableford", for: .normal)
+        standingsBtn.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+        standingsBtn.contentEdgeInsets = UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10)
+        standingsBtn.addTarget(self, action: #selector(standingsTapped), for: .touchUpInside)
+        standingsBtn.isHidden = true
+        header.addSubview(standingsBtn)
+        standingsHeaderButton = standingsBtn
+        // Positioned below the course name label, trailing — clear of the title and ⓘ button.
+        // Constraints referencing courseLabel are set after courseLabel is created below.
+
         // Hole info label (centered, white, bold 17)
         let infoLabel = UILabel()
         infoLabel.textAlignment = .center
@@ -540,6 +564,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         ])
         courseHeaderLabel = courseLabel
 
+        // Standings pill: sits right of the course label, vertically centred on it.
+        NSLayoutConstraint.activate([
+            standingsBtn.centerYAnchor.constraint(equalTo: courseLabel.centerYAnchor),
+            standingsBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
+        ])
+
         // Hole navigation row (Prev pill | dots | Next pill)
         let ghostPillBG = UIColor.white.withAlphaComponent(0.15)
 
@@ -573,14 +603,34 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         dotsContainer.backgroundColor = .clear
         header.addSubview(dotsContainer)
 
+        // $ Money / Pts segmented toggle — hidden unless tournament (Stableford) mode is active
+        let toggle = UISegmentedControl(items: ["$ Money", "Pts"])
+        toggle.selectedSegmentIndex = 0
+        toggle.translatesAutoresizingMaskIntoConstraints = false
+        toggle.addTarget(self, action: #selector(stablefordDisplayToggled(_:)), for: .valueChanged)
+        toggle.isHidden = true
+        header.addSubview(toggle)
+        stablefordToggle = toggle
+
+        NSLayoutConstraint.activate([
+            toggle.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 8),
+            toggle.centerXAnchor.constraint(equalTo: header.centerXAnchor),
+            toggle.widthAnchor.constraint(equalToConstant: 180),
+        ])
+
+        // Two competing top constraints for the nav row — only one active at a time
+        let navHidden  = prevBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 10)
+        let navVisible = prevBtn.topAnchor.constraint(equalTo: toggle.bottomAnchor, constant: 8)
+        navHidden.isActive = true
+        navRowTopHidden  = navHidden
+        navRowTopVisible = navVisible
+
         NSLayoutConstraint.activate([
             prevBtn.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
-            // Pin nav row directly below course label (no dead space within header)
-            prevBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 10),
             prevBtn.heightAnchor.constraint(equalToConstant: 32),
 
             nextBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
-            nextBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 10),
+            nextBtn.centerYAnchor.constraint(equalTo: prevBtn.centerYAnchor),
             nextBtn.heightAnchor.constraint(equalToConstant: 32),
 
             dotsContainer.leadingAnchor.constraint(equalTo: prevBtn.trailingAnchor, constant: 6),
@@ -634,6 +684,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
 
         buildTournamentBanner()
+        updateStablefordToggleVisibility()
         refreshHoleInfoHeader()
     }
 
@@ -1070,7 +1121,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     @objc private func liveTabLeaderboardTapped() {
         guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
-        let vc = TournamentLeaderboardViewController(code: code)
+        let gameType = GameManager.shared.currentGame?.tournamentGameType
+        let sfEnabled = GameManager.shared.currentGame?.tournamentStablefordEnabled ?? false
+        let vc = TournamentLeaderboardViewController(code: code, gameType: gameType, stablefordEnabled: sfEnabled)
         navigationController?.pushViewController(vc, animated: true)
     }
 
@@ -1435,10 +1488,35 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func refreshTotalMoneyLabels() {
         guard let g = GameManager.shared.currentGame else { return }
         if g.resolvedGameType == .tournament {
+            if showingStablefordPoints {
+                refreshTournamentTotalPoints(g: g)
+            } else {
+                let current = max(0, min(17, g.hole))
+                let start   = max(0, min(17, g.startHole ?? current))
+                let holesToSum: [Int] = start <= current
+                    ? Array(start...current)
+                    : Array(start..<STANDARD_HOLES) + Array(0...current)
+                var totals = Array(repeating: 0.0, count: MAX_PLAYERS)
+                for hole in holesToSum {
+                    let p = GameManager.shared.computeHolePayout(
+                        hole: hole, umbePressed: g.isUmbrella, modeOverride: .sixPointScotch)
+                    for i in 0..<min(totals.count, p.count) { totals[i] += p[i] }
+                }
+                let order = displayOrder
+                for i in 0..<min(totalMoneyLabels.count, MAX_PLAYERS) {
+                    let seat = order[safe: i] ?? i
+                    let isActive = g.playerActivated[safe: seat] ?? true
+                    setTotalMoneyLabel(totalMoneyLabels[i], seat < totals.count ? totals[seat] : 0)
+                    totalMoneyLabels[i].alpha = isActive ? 1.0 : 0.4
+                }
+            }
+            return
+        }
+        // Hybrid Wolf+Stableford: show Stableford running totals when Pts tab is active
+        if g.tournamentStablefordEnabled == true && showingStablefordPoints {
             refreshTournamentTotalPoints(g: g)
             return
         }
-     
 
         let current = max(0, min(17, g.hole))
         // If not set yet, treat current hole as the start (so hole 10 shows only hole 10)
@@ -1588,6 +1666,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             amount = (amount * 2.0).rounded() / 2.0
 
             g.gameHoleDollarsArray[h] = amount
+            // Track the pure base when no multipliers are distorting the displayed value
+            let noHoleMultipliers = !(g.rollApplied[safe: h] ?? false)
+                                 && !(g.rerollApplied[safe: h] ?? false)
+                                 && !(g.aloneApplied[safe: h] ?? false)
+            let noPressOnHole = (g.pressLevel[safe: h] ?? 0) == 0
+            if noHoleMultipliers && noPressOnHole {
+                if g.holeBaseAmount.count != STANDARD_HOLES { g.holeBaseAmount = Array(repeating: 2.0, count: STANDARD_HOLES) }
+                g.holeBaseAmount[h] = amount
+            }
         }
 
         // ✅ Repaint everything that shows dollars
@@ -1701,10 +1788,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         let nameGreen = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
 
+        let teamSlot = stablefordTeamSlotIndex(for: g)
         for (i, label) in sortedNameLabels.enumerated() {
-            // Slot 4 = Team row for Stableford, unless a 5th player is active
-            if isTournament && i == 4 && (g.tournamentGameType == "stableford" || g.tournamentGameType == nil)
-                && !hasActiveFifthStablefordPlayer(g) {
+            if let ts = teamSlot, i == ts {
                 label.attributedText = nil
                 label.text = "Team"
                 label.font = UIFont.boldSystemFont(ofSize: label.font.pointSize)
@@ -1728,7 +1814,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 let playerHC = seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0
                 let delta    = max(0, playerHC - baseHC)
                 redPops      = GameManager.shared.absoluteStrokesGiven(playerHC: delta, strokeIndex: si)
-                if isTournament {
+                if isTournament || g.tournamentStablefordEnabled == true {
                     greenPops = GameManager.shared.absoluteStrokesGiven(playerHC: playerHC, strokeIndex: si)
                 }
             }
@@ -1752,35 +1838,53 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 return pt
             }
 
-            let redDotsStr   = redPops   > 0 ? " " + String(repeating: "•", count: redPops)   : ""
-            let greenDotsStr = greenPops > 0 ? " " + String(repeating: "•", count: greenPops) : ""
-            let needsTwoLines = !greenDotsStr.isEmpty
+            // Pts tab: show absolute strokes (blue) that feed the Stableford net score calculation.
+            // Money tab: show delta strokes (red) for the Wolf/Scotch pops system.
+            let hasStablefordComponent = g.resolvedGameType == .tournament || g.tournamentStablefordEnabled == true
+            let popsToShow = (hasStablefordComponent && showingStablefordPoints) ? greenPops : redPops
+            let dotColor: UIColor = (hasStablefordComponent && showingStablefordPoints) ? .systemBlue : .systemRed
+            let redDotsStr = popsToShow > 0 ? " " + String(repeating: "•", count: popsToShow) : ""
 
-            if !redDotsStr.isEmpty || needsTwoLines {
-                // Truncate name so line 1 (name + red dots) always fits — dots can never be clipped.
-                // Size the font against line 1 only; the green dots line is always shorter.
-                let truncName = name.count > 13 ? String(name.prefix(12)) + "…" : name
-                let pt = fittingPt(truncName + redDotsStr, weight: .bold)
-                let dotFont = UIFont.systemFont(ofSize: pt + 2)
+            if !redDotsStr.isEmpty {
+                // Reserve space for dots at a fixed size, then shrink/truncate name into what's left.
+                // This guarantees dots are always fully visible regardless of name length.
+                let dotPt   = nominalPt * 1.4
+                let dotFont = UIFont.systemFont(ofSize: dotPt)
+                let dotW    = (redDotsStr as NSString).size(withAttributes: [.font: dotFont]).width
+                let nameW   = max(20, colWidth - dotW)
 
-                label.numberOfLines = needsTwoLines ? 2 : 1
+                var pt = nominalPt
+                let minPt = (nominalPt * 0.6).rounded(.down)
+                var truncName = name
+                // Shrink font to fit name in reserved width
+                while pt > minPt {
+                    let w = (truncName as NSString)
+                        .size(withAttributes: [.font: UIFont.boldSystemFont(ofSize: pt)]).width
+                    if w <= nameW { break }
+                    pt -= 0.5
+                }
+                // If still too wide at minimum font, truncate characters
+                let boldMin = UIFont.boldSystemFont(ofSize: pt)
+                if (truncName as NSString).size(withAttributes: [.font: boldMin]).width > nameW {
+                    while truncName.count > 1 {
+                        let candidate = String(truncName.dropLast()) + "…"
+                        if (candidate as NSString).size(withAttributes: [.font: boldMin]).width <= nameW {
+                            truncName = candidate
+                            break
+                        }
+                        truncName = String(truncName.dropLast())
+                    }
+                }
 
+                label.numberOfLines = 1
                 let combined = NSMutableAttributedString(string: truncName, attributes: [
-                    .font: UIFont.boldSystemFont(ofSize: pt),
+                    .font: boldMin,
                     .foregroundColor: nameGreen
                 ])
-                if !redDotsStr.isEmpty {
-                    combined.append(NSAttributedString(string: redDotsStr, attributes: [
-                        .font: dotFont,
-                        .foregroundColor: UIColor.systemRed
-                    ]))
-                }
-                if needsTwoLines {
-                    combined.append(NSAttributedString(string: "\n" + greenDotsStr, attributes: [
-                        .font: dotFont,
-                        .foregroundColor: nameGreen
-                    ]))
-                }
+                combined.append(NSAttributedString(string: redDotsStr, attributes: [
+                    .font: dotFont,
+                    .foregroundColor: dotColor
+                ]))
                 label.attributedText = combined
             } else {
                 label.numberOfLines = 1
@@ -1809,9 +1913,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let order = displayOrder
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
 
+        let teamSlot = stablefordTeamSlotIndex(for: g)
         for (slot, b) in wolfButtons.enumerated() {
-            if isTournament && (g.tournamentGameType == "stableford" || g.tournamentGameType == nil) && slot == 4
-                && !hasActiveFifthStablefordPlayer(g) {
+            if let ts = teamSlot, slot == ts {
                 b.isHidden = true
                 continue
             }
@@ -2020,7 +2124,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let t = g.resolvedGameType
 
         wolfControlsStack.isHidden   = !t.isWolf
-        scotchControlsStack.isHidden = !t.isScotch
+        let showScotchControls = t.isScotch || (t == .tournament && !showingStablefordPoints)
+        scotchControlsStack.isHidden = !showScotchControls
 
         // Umbrella is 6-point only
         if !t.isScotch, g.isUmbrella {
@@ -2036,15 +2141,39 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         case .tournament:     break
         }
 
-        // Tournament-only: scorecard shortcut in the nav bar
-        if t == .tournament {
-            navigationItem.rightBarButtonItem = UIBarButtonItem(
-                title: "Scorecard", style: .plain,
-                target: self, action: #selector(scorecardTapped)
-            )
-        } else {
-            navigationItem.rightBarButtonItem = nil
+        // Standings header button: show for pure Stableford rounds and hybrid Wolf+Stableford rounds.
+        let isStablefordTournament = (t == .tournament
+            && (GameManager.shared.currentGame?.tournamentGameType == "stableford"
+                || GameManager.shared.currentGame?.tournamentGameType == nil))
+            || GameManager.shared.currentGame?.tournamentStablefordEnabled == true
+        standingsHeaderButton?.isHidden = !isStablefordTournament
+
+        updateStablefordToggleVisibility()
+    }
+
+    private func updateStablefordToggleVisibility() {
+        guard let g = GameManager.shared.currentGame else { return }
+        guard let toggle = stablefordToggle else { return }
+        let showToggle = g.resolvedGameType == .tournament
+            || g.tournamentStablefordEnabled == true
+        if showToggle && toggle.isHidden {
+            toggle.isHidden = false
+            navRowTopHidden?.isActive  = false
+            navRowTopVisible?.isActive = true
+        } else if !showToggle && !toggle.isHidden {
+            toggle.isHidden = true
+            navRowTopVisible?.isActive = false
+            navRowTopHidden?.isActive  = true
+            showingStablefordPoints = false
+            toggle.selectedSegmentIndex = 0
         }
+    }
+
+    @objc private func stablefordDisplayToggled(_ sender: UISegmentedControl) {
+        showingStablefordPoints = (sender.selectedSegmentIndex == 1)
+        applyGameTypeUI()
+        paintEverythingForCurrentHole()
+        refreshTotalMoneyLabels()
     }
 
     @objc private func scorecardTapped() {
@@ -2053,6 +2182,29 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
+    }
+
+    @objc private func standingsTapped() {
+        guard let g = GameManager.shared.currentGame else { return }
+        // Hybrid Wolf+Stableford always shows the local summary (scorecard, share, etc.).
+        // Pure tournament Stableford uses the tournament leaderboard when online.
+        if g.tournamentStablefordEnabled == true || g.resolvedGameType != .tournament {
+            let vc = TournamentSummaryViewController(game: g)
+            let nav = UINavigationController(rootViewController: vc)
+            nav.modalPresentationStyle = .fullScreen
+            present(nav, animated: true)
+        } else {
+            if let code = g.tournamentCode, !code.isEmpty {
+                let sfEnabled = g.tournamentStablefordEnabled ?? false
+                let vc = TournamentLeaderboardViewController(code: code, gameType: g.tournamentGameType, stablefordEnabled: sfEnabled)
+                navigationController?.pushViewController(vc, animated: true)
+            } else {
+                let vc = TournamentSummaryViewController(game: g)
+                let nav = UINavigationController(rootViewController: vc)
+                nav.modalPresentationStyle = .fullScreen
+                present(nav, animated: true)
+            }
+        }
     }
     
     private func roundToHalf(_ x: Double) -> Double {
@@ -2141,44 +2293,29 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     
     @IBAction private func rerollPushedTapped(_ sender: UIButton) {
         GameManager.shared.update { g in
-            // (Ideally migrate/sanitize sizes once at load, but keeping your guards)
-            if g.rerollApplied.count != STANDARD_HOLES     { g.rerollApplied     = Array(repeating: false, count: STANDARD_HOLES) }
-            if g.rerollBaseAmount.count != STANDARD_HOLES  { g.rerollBaseAmount  = Array(repeating: 0.0,  count: STANDARD_HOLES) }
+            if g.rerollApplied.count != STANDARD_HOLES { g.rerollApplied = Array(repeating: false, count: STANDARD_HOLES) }
             if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
 
             let h = max(0, min(g.hole, 17))
 
             // Re-roll is only valid if Roll is ON
-            guard g.rollApplied[h] else {
-                // ensure the persisted state is OFF if roll is off
-                if g.rerollApplied[h] {
-                    // optional: restore dollars back to reroll base if you want strict coupling
-                    let base = (g.rerollBaseAmount[h] == 0 ? g.gameHoleDollarsArray[h] : g.rerollBaseAmount[h])
-                    g.gameHoleDollarsArray[h] = roundToHalf(max(1.0, base))
-                }
+            guard g.rollApplied[safe: h] ?? false else {
                 g.rerollApplied[h] = false
                 return
             }
 
-            // Compute new state FROM MODEL (not from sender)
-            let turningOn = !g.rerollApplied[h]
-
-            if turningOn {
-                // TURN ON: remember base, then double once
-                let current = (g.gameHoleDollarsArray[h] == 0 ? 2.0 : g.gameHoleDollarsArray[h])
-                g.rerollBaseAmount[h] = current
+            if g.rerollApplied[h] {
+                // TURN OFF: clear flag and recompute from pure base + remaining active flags
+                g.rerollApplied[h] = false
+                g.recomputeHoleAmount(hole: h)
+            } else {
+                // TURN ON: double the current displayed value
+                let current = max(2.0, g.gameHoleDollarsArray[h])
                 g.gameHoleDollarsArray[h] = roundToHalf(max(1.0, current * 2.0))
                 g.rerollApplied[h] = true
-            } else {
-                // TURN OFF: restore to saved base
-                let base = (g.rerollBaseAmount[h] == 0 ? g.gameHoleDollarsArray[h] : g.rerollBaseAmount[h])
-                g.gameHoleDollarsArray[h] = roundToHalf(max(1.0, base))
-                g.rerollApplied[h] = false
             }
         }
 
-        // Repaint strictly from persisted model
-      
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
     }
@@ -2197,25 +2334,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let hole = max(0, min(g.hole, 17))
 
             if sender.isSelected {
+                // TURN ON: double the current displayed value
                 if !g.rollApplied[hole] {
-                    let current = (g.gameHoleDollarsArray[hole] == 0 ? 2.0 : g.gameHoleDollarsArray[hole])
-                    g.rollBaseAmount[hole] = current
-                    let doubled = roundToHalf(max(1.0, current * 2.0))
-                    g.gameHoleDollarsArray[hole] = doubled
+                    let current = max(2.0, g.gameHoleDollarsArray[hole])
+                    g.gameHoleDollarsArray[hole] = roundToHalf(max(1.0, current * 2.0))
                     g.rollApplied[hole] = true
                 }
             } else {
-                // Turning Roll OFF: restore to base and also clear Re-Roll
+                // TURN OFF: clear roll (and reroll which requires roll), then recompute from pure base
                 if g.rollApplied[hole] {
-                    let base = (g.rollBaseAmount[hole] == 0 ? g.gameHoleDollarsArray[hole] : g.rollBaseAmount[hole])
-                    g.gameHoleDollarsArray[hole] = roundToHalf(max(1.0, base))
                     g.rollApplied[hole] = false
-
-                    // Clear Re-Roll if it was on
-                    if g.rerollApplied[hole] {
-                        g.rerollApplied[hole] = false
-                        g.rerollBaseAmount[hole] = 0.0
-                    }
+                    g.rerollApplied[hole] = false
+                    g.recomputeHoleAmount(hole: hole)
                 }
             }
         }
@@ -2421,10 +2551,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let h = g.hole
         let order = displayOrder
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
+        let teamSlot = stablefordTeamSlotIndex(for: g)
         let slots = min(scoreFields.count, MAX_PLAYERS)
         for s in 0..<slots {
-            if isTournament && (g.tournamentGameType == "stableford" || g.tournamentGameType == nil) && s == 4
-                && !hasActiveFifthStablefordPlayer(g) {
+            if let ts = teamSlot, s == ts {
                 scoreFields[s].text = ""
                 scoreFields[s].isEnabled = false
                 scoreFields[s].backgroundColor = UIColor.systemGray6
@@ -2457,6 +2587,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             amount = max(1.0, amount)                   // minimum 1.0
             amount = (amount * 2.0).rounded() / 2.0     // snap to 0.50
             g.gameHoleDollarsArray = Array(repeating: amount, count: STANDARD_HOLES)
+            g.holeBaseAmount = Array(repeating: amount, count: STANDARD_HOLES)
         }
         
         // repaint label
@@ -2590,20 +2721,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let hole = max(0, min(g.hole, 17))
 
             if sender.isSelected {
-                // TURN ON: double once (no stacking). Remember base so OFF can restore.
+                // TURN ON: double the current displayed value
                 if !g.aloneApplied[hole] {
-                    let base = (g.gameHoleDollarsArray[hole] == 0 ? 2.0 : g.gameHoleDollarsArray[hole])
-                    g.aloneBaseAmount[hole] = base
-                    let doubled = roundToHalf(max(1.0, base * 2.0))
-                    g.gameHoleDollarsArray[hole] = doubled
+                    let current = max(2.0, g.gameHoleDollarsArray[hole])
+                    g.gameHoleDollarsArray[hole] = roundToHalf(max(1.0, current * 2.0))
                     g.aloneApplied[hole] = true
                 }
             } else {
-                // TURN OFF: restore to base (no double)
+                // TURN OFF: clear flag and recompute from pure base + remaining active flags
                 if g.aloneApplied[hole] {
-                    let base = (g.aloneBaseAmount[hole] == 0 ? g.gameHoleDollarsArray[hole] : g.aloneBaseAmount[hole])
-                    g.gameHoleDollarsArray[hole] = roundToHalf(max(1.0, base))
                     g.aloneApplied[hole] = false
+                    g.recomputeHoleAmount(hole: hole)
                 }
             }
         }
@@ -2700,7 +2828,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // Exclusive prox winner per hole
     @IBAction private func proxButtonTapped(_ sender: UIButton) {
         guard let g = GameManager.shared.currentGame else { return }
-        guard g.resolvedGameType == .sixPointScotch else { return } // ✅ block in Wolf
+        let allowProx = g.resolvedGameType == .sixPointScotch ||
+                        (g.resolvedGameType == .tournament && !showingStablefordPoints)
+        guard allowProx else { return }
 
         let player = sender.tag
         guard (0..<MAX_PLAYERS).contains(player) else { return }
@@ -3217,19 +3347,34 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
 
         // 3) press carry-forward
+        // Use the pure pressed amount (holeBaseAmount × pressMultiplier), not gameHoleDollarsArray
+        // which may include roll/alone from this hole. Those are per-hole and must not leak forward.
         if pressOnThisHole {
             GameManager.shared.update { g in
                 guard hole < g.gameHoleDollarsArray.count,
                       hole < g.pressedPushedToggleArray.count else { return }
+                if g.holeBaseAmount.count != STANDARD_HOLES { g.holeBaseAmount = Array(repeating: 2.0, count: STANDARD_HOLES) }
 
                 let end = (hole < 9) ? 9 : STANDARD_HOLES
-                let base = g.gameHoleDollarsArray[hole]
+                let pureBase = g.holeBaseAmount[hole] <= 0 ? 2.0 : g.holeBaseAmount[hole]
+                let pl = g.pressLevel[safe: hole] ?? 0
+                let pressedBase: Double
+                if pl > 0 {
+                    pressedBase = g.pressStyle == .additive
+                        ? pureBase * Double(pl + 1)
+                        : pureBase * Double(1 << pl)
+                } else {
+                    pressedBase = pureBase
+                }
+                let carryAmount = max(1.0, (pressedBase * 2).rounded() / 2.0)
 
                 for idx in hole..<min(end, g.gameHoleDollarsArray.count) {
                     if idx < g.pressedPushedToggleArray.count {
                         g.pressedPushedToggleArray[idx] = true
                     }
-                    g.gameHoleDollarsArray[idx] = base
+                    g.gameHoleDollarsArray[idx] = carryAmount
+                    // Sync holeBaseAmount for future holes so recomputeHoleAmount stays correct
+                    if idx > hole { g.holeBaseAmount[idx] = pureBase }
                 }
             }
         }
@@ -3337,49 +3482,141 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 : Array(startH..<STANDARD_HOLES) + Array(0...endH)
 
             Task {
-                for backfillHole in backfillRange {
-                    let holeHc = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
+                // Re-check tournament day against server at submission time to avoid stale cached value.
+                let effectiveDay: Int
+                if let liveDay = (try? await SupabaseService.shared.fetchTournament(code: tCode))?.currentDay {
+                    if liveDay > g.tournamentDay {
+                        GameManager.shared.update { $0.tournamentDay = liveDay }
+                    }
+                    effectiveDay = liveDay
+                } else {
+                    effectiveDay = g.tournamentDay
+                }
 
-                    for seat in 0..<min(MAX_PLAYERS, g.playerActivated.count) {
-                        guard g.playerActivated[seat],
-                              seat < g.scores.count,
-                              let gross = g.scores[seat][backfillHole] else { continue }
-                        let name = g.playerNames[safe: seat] ?? ""
-                        guard !name.isEmpty else { continue }
+                let isPureStableford = g.tournamentGameType == "stableford"
 
-                        let playerHc = g.hcPlayers[safe: seat] ?? 0
-                        let holeMoney = seat < g.playerMoney.count
-                            ? (g.playerMoney[seat][safe: backfillHole] ?? 0.0) : 0.0
-                        // totalMoney = running sum from startHole through backfillHole
-                        let totalRange: [Int] = startH <= backfillHole
+                // Wolf/Skins money submission — skipped for pure Stableford tournaments.
+                if !isPureStableford {
+                    for backfillHole in backfillRange {
+                        let holeHc = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
+
+                        for seat in 0..<min(MAX_PLAYERS, g.playerActivated.count) {
+                            guard g.playerActivated[seat],
+                                  seat < g.scores.count,
+                                  let gross = g.scores[seat][backfillHole] else { continue }
+                            let name = g.playerNames[safe: seat] ?? ""
+                            guard !name.isEmpty else { continue }
+
+                            let playerHc = g.hcPlayers[safe: seat] ?? 0
+                            let holeMoney = seat < g.playerMoney.count
+                                ? (g.playerMoney[seat][safe: backfillHole] ?? 0.0) : 0.0
+                            // totalMoney = running sum from startHole through backfillHole
+                            let totalRange: [Int] = startH <= backfillHole
+                                ? Array(startH...backfillHole)
+                                : Array(startH..<STANDARD_HOLES) + Array(0...backfillHole)
+                            let totalMoney = seat < g.playerMoney.count
+                                ? totalRange.reduce(0.0) { $0 + (g.playerMoney[seat][safe: $1] ?? 0.0) }
+                                : 0.0
+                            let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                            let netScore = gross - strokes
+
+                            do {
+                                print("🏆 5e tournament write seat=\(seat) name=\(name) hole=\(backfillHole+1) gross=\(gross) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney)")
+                                try await SupabaseService.shared.submitTournamentHoleScore(
+                                    playerSlot:     seat,
+                                    playerName:     name,
+                                    hole:           backfillHole,
+                                    grossScore:     gross,
+                                    netScore:       netScore,
+                                    holeMoney:      holeMoney,
+                                    totalMoney:     totalMoney,
+                                    holeHc:         holeHc,
+                                    playerHc:       playerHc,
+                                    tournamentCode: tCode,
+                                    groupCode:      gCode,
+                                    day:            effectiveDay,
+                                    game_type:      "wolf"
+                                )
+                            } catch {
+                                print("ERROR 5e tournament write failed seat=\(seat) name=\(name) hole=\(backfillHole+1): \(error)")
+                            }
+                        }
+                    }
+                }
+
+                // 5e-stableford) Individual pts per player + one team row per hole.
+                // Runs for pure Stableford AND for hybrid Wolf/Skins + stableford_enabled tournaments.
+                if isPureStableford || (g.tournamentStablefordEnabled == true) {
+                    for backfillHole in backfillRange {
+                        let holeHc = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
+                        let par    = g.courseParToPass[safe: backfillHole] ?? 4
+                        let range: [Int] = startH <= backfillHole
                             ? Array(startH...backfillHole)
                             : Array(startH..<STANDARD_HOLES) + Array(0...backfillHole)
-                        let totalMoney = seat < g.playerMoney.count
-                            ? totalRange.reduce(0.0) { $0 + (g.playerMoney[seat][safe: $1] ?? 0.0) }
-                            : 0.0
-                        let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
-                        let netScore = gross - strokes
 
+                        for seat in 0..<min(MAX_PLAYERS, g.playerActivated.count) {
+                            guard g.playerActivated[seat],
+                                  seat < g.scores.count,
+                                  let gross = g.scores[seat][backfillHole] else { continue }
+                            let name = g.playerNames[safe: seat] ?? ""
+                            guard !name.isEmpty else { continue }
+                            let playerHc = g.hcPlayers[safe: seat] ?? 0
+                            let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+
+                            let holePts = GameManager.shared.stablefordPoints(
+                                grossScore: gross, par: par, playerHC: playerHc,
+                                strokeIndex: holeHc, baseline: g.stablefordBaseline) ?? 0
+                            let totalPts = range.reduce(0) { sum, h in
+                                guard h < g.scores[seat].count, let sc = g.scores[seat][h],
+                                      let p  = g.courseParToPass[safe: h],
+                                      let si = g.courseHCToPass[safe: h] else { return sum }
+                                return sum + (GameManager.shared.stablefordPoints(
+                                    grossScore: sc, par: p, playerHC: playerHc,
+                                    strokeIndex: si, baseline: g.stablefordBaseline) ?? 0)
+                            }
+
+                            do {
+                                try await SupabaseService.shared.submitTournamentHoleScore(
+                                    playerSlot:     seat,
+                                    playerName:     name,
+                                    hole:           backfillHole,
+                                    grossScore:     gross,
+                                    netScore:       gross - strokes,
+                                    holeMoney:      Double(holePts),
+                                    totalMoney:     Double(totalPts),
+                                    holeHc:         holeHc,
+                                    playerHc:       playerHc,
+                                    tournamentCode: tCode,
+                                    groupCode:      gCode,
+                                    day:            effectiveDay,
+                                    game_type:      "stableford"
+                                )
+                            } catch {
+                                print("ERROR 5e-stableford write seat=\(seat) hole=\(backfillHole+1): \(error)")
+                            }
+                        }
+
+                        // One team row per hole — best-N pts aggregated from active players.
+                        let teamHolePts  = GameManager.shared.teamHoleScore(hole: backfillHole, game: g)
+                        let teamTotalPts = range.reduce(0) { $0 + GameManager.shared.teamHoleScore(hole: $1, game: g) }
                         do {
-                            print("🏆 5e tournament write seat=\(seat) name=\(name) hole=\(backfillHole+1) gross=\(gross) net=\(netScore) holeMoney=\(holeMoney) totalMoney=\(totalMoney)")
-                            print("🗓 writing hole \(backfillHole) for \(name) as day \(g.tournamentDay)")
                             try await SupabaseService.shared.submitTournamentHoleScore(
-                                playerSlot:     seat,
-                                playerName:     name,
+                                playerSlot:     0,
+                                playerName:     "Team",
                                 hole:           backfillHole,
-                                grossScore:     gross,
-                                netScore:       netScore,
-                                holeMoney:      holeMoney,
-                                totalMoney:     totalMoney,
+                                grossScore:     0,
+                                netScore:       0,
+                                holeMoney:      Double(teamHolePts),
+                                totalMoney:     Double(teamTotalPts),
                                 holeHc:         holeHc,
-                                playerHc:       playerHc,
+                                playerHc:       0,
                                 tournamentCode: tCode,
                                 groupCode:      gCode,
-                                day:            g.tournamentDay,
-                                game_type:      "wolf"
+                                day:            effectiveDay,
+                                game_type:      "stableford_team"
                             )
                         } catch {
-                            print("ERROR 5e tournament write failed seat=\(seat) name=\(name) hole=\(backfillHole+1): \(error)")
+                            print("ERROR 5e-stableford team write hole=\(backfillHole+1): \(error)")
                         }
                     }
                 }
@@ -3522,7 +3759,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                     holeHc:         holeHc,
                                     tournamentCode: tCode,
                                     groupCode:      gCode,
-                                    day:            g.tournamentDay,
+                                    day:            effectiveDay,
                                     game_type:      pass.gameType,
                                     skins_won:      skinsWon
                                 )
@@ -3561,6 +3798,51 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     let decision: String? = wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
                     let holeHammer    = Int(g.hammerMultiplier(for: backfillHole))
 
+                    // Skin winner/value/count/tied seats for this hole
+                    let holeSkinResult = g.skinsState?.resultsByHole[safe: backfillHole]
+                    let holeSkinWinner: String? = holeSkinResult.flatMap { r in
+                        guard let idx = r.winningPlayerIndexes.first else { return nil }
+                        return g.playerNames[safe: idx]
+                    }
+                    let holeSkinValue: Double? = holeSkinResult.flatMap { r -> Double? in
+                        guard !r.winningPlayerIndexes.isEmpty, let ss = g.skinsState else { return nil }
+                        if ss.settings.potAmount ?? 0 > 0 { return nil }
+                        let activeCount = (0..<MAX_PLAYERS).filter {
+                            g.playerActivated[safe: $0] == true && ss.playerIncluded[safe: $0] == true
+                        }.count
+                        guard activeCount > 1 else { return nil }
+                        return Double(r.awardedSkinCount) * Double(activeCount - 1) * ss.settings.skinValue
+                    }
+                    // N for "{N}S": awardedSkinCount when there's a winner (accounts for carryover)
+                    let holeSkinCount: Int? = holeSkinResult.flatMap { r in
+                        r.winningPlayerIndexes.isEmpty ? nil : r.awardedSkinCount
+                    }
+                    // Tied seats: comma-separated seat indices who tied — only set when carryover is on
+                    let holeSkinTiedSeats: String? = holeSkinResult.flatMap { r in
+                        guard r.carriedToNextHole, !r.tiedPlayerIndexes.isEmpty else { return nil }
+                        return r.tiedPlayerIndexes.map(String.init).joined(separator: ",")
+                    }
+                    // Nassau net standing per player across ALL matches as of this hole.
+                    // overallStatusByHole[h] is positive when team-1 leads; we flip sign for team-2 players.
+                    let holeNassauStatus: String? = {
+                        guard let ns = g.nassauState, ns.isEnabled else { return nil }
+                        let allMatches = ns.oneVsOneMatches + ns.twoVsTwoMatches
+                        guard !allMatches.isEmpty else { return nil }
+                        var netByPlayer: [Int: Int] = [:]
+                        for match in allMatches {
+                            let statusAtHole = match.overallStatusByHole.prefix(backfillHole + 1).last ?? 0
+                            for idx in match.team1PlayerIndexes { netByPlayer[idx, default: 0] += statusAtHole }
+                            for idx in match.team2PlayerIndexes { netByPlayer[idx, default: 0] -= statusAtHole }
+                        }
+                        let parts = netByPlayer.sorted { $0.key < $1.key }.compactMap { (idx, net) -> String? in
+                            guard let name = g.playerNames[safe: idx] else { return nil }
+                            let first = name.components(separatedBy: " ").first ?? name
+                            if net == 0 { return "\(first) AS" }
+                            return net > 0 ? "\(first) +\(net)" : "\(first) \(net)"
+                        }
+                        return parts.isEmpty ? nil : parts.joined(separator: " · ")
+                    }()
+
                     do {
                         try await SupabaseService.shared.submitWolfHole(
                             sessionId: sessionId,
@@ -3573,7 +3855,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                             payouts: holePayouts,
                             decision: decision,
                             hammerMultiplier: holeHammer,
-                            pressed: pressLevel
+                            pressed: pressLevel,
+                            skinWinner: holeSkinWinner,
+                            skinValue: holeSkinValue,
+                            nassauStatus: holeNassauStatus,
+                            skinCount: holeSkinCount,
+                            skinTiedSeats: holeSkinTiedSeats
                         )
                     } catch let pgError as PostgrestError {
                         print("ERROR submitWolfHole hole=\(backfillHole+1) Postgrest \(pgError.code ?? "") \(pgError.message)")
@@ -3896,6 +4183,26 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         guard liveSummaryWolfLabel != nil else { return }
 
+        // When in Pts mode and all 5 player slots are occupied by real players,
+        // there's no table row for the team total — show it here instead.
+        if showingStablefordPoints {
+            let capacity = min(g.playerNames.count, g.playerActivated.count)
+            let activeCount = (0..<capacity).filter {
+                g.playerActivated[$0] &&
+                !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }.count
+            if activeCount >= MAX_PLAYERS {
+                let hole     = max(0, min(17, g.hole))
+                let holePts  = GameManager.shared.teamHoleScore(hole: hole, game: g)
+                let totalPts = GameManager.shared.runningTeamStablefordTotal(game: g, upThrough: g.hole)
+                liveSummaryPlayerLabel?.text = "Team"
+                liveSummaryWolfLabel?.text   = "Hole: \(holePts) pt\(holePts == 1 ? "" : "s")"
+                liveSummarySkinsLabel?.text  = "Total: \(totalPts) pt\(totalPts == 1 ? "" : "s")"
+                liveSummaryNassauLabel?.text = nil
+                return
+            }
+        }
+
         // Wolf: scorekeeper's seat running net through committed holes
         let mySeat = myPlayerIndex(in: g) ?? 0
         let current = max(0, min(17, g.hole))
@@ -4077,6 +4384,27 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         let h = g.hole
         if g.resolvedGameType == .tournament {
+            if showingStablefordPoints {
+                refreshTournamentHolePoints(g: g, hole: h)
+            } else {
+                let payouts = GameManager.shared.computeHolePayout(
+                    hole: h, umbePressed: g.isUmbrella, modeOverride: .sixPointScotch)
+                let order = displayOrder
+                let slots = min(playerMoneyFields.count, MAX_PLAYERS)
+                for s in 0..<slots {
+                    let seat = order[safe: s] ?? s
+                    let val = seat < payouts.count ? Int(payouts[seat].rounded()) : 0
+                    let isActive = g.playerActivated[safe: seat] ?? true
+                    setMoneyField(playerMoneyFields[s], to: val)
+                    playerMoneyFields[s].isEnabled = isActive
+                    playerMoneyFields[s].alpha = isActive ? 1.0 : 0.4
+                    playerMoneyFields[s].tag = seat
+                }
+            }
+            return
+        }
+        // Hybrid Wolf+Stableford: show Stableford hole points when Pts tab is active
+        if g.tournamentStablefordEnabled == true && showingStablefordPoints {
             refreshTournamentHolePoints(g: g, hole: h)
             return
         }
@@ -4097,17 +4425,30 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // Returns true when a 5th player is active in a Stableford round,
     // in which case slot 4 shows their individual score instead of the team total.
     // Handles both standalone Stableford (tournamentGameType nil) and connected Tee Games ("stableford").
-    private func hasActiveFifthStablefordPlayer(_ g: GameData) -> Bool {
-        guard g.resolvedGameType == .tournament else { return false }
-        if let t = g.tournamentGameType, t != "stableford" { return false }
-        let name = (g.playerNames[safe: 4] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        return !name.isEmpty && (g.playerActivated[safe: 4] ?? false)
+    /// Slot index that should display the Stableford team-aggregate row, or nil when
+    /// all slots are occupied by real players or the context isn't Stableford.
+    /// Pure Stableford tournaments always expose the team slot; hybrid Wolf+Stableford
+    /// tournaments expose it only when the Pts tab is active.
+    private func stablefordTeamSlotIndex(for g: GameData) -> Int? {
+        let isPureStableford = g.resolvedGameType == .tournament
+        let isHybridPts = g.tournamentStablefordEnabled == true && showingStablefordPoints
+        guard isPureStableford || isHybridPts else { return nil }
+        let capacity = min(g.playerNames.count, g.playerActivated.count)
+        let activeCount = (0..<capacity).filter {
+            g.playerActivated[$0] &&
+            !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+        return activeCount < MAX_PLAYERS ? activeCount : nil
     }
 
     private func refreshTournamentHolePoints(g: GameData, hole: Int) {
         let order = displayOrder
-        let fifthActive = hasActiveFifthStablefordPlayer(g)
-        let playerSlots = min(fifthActive ? 5 : 4, playerMoneyFields.count, MAX_PLAYERS)
+        let capacity = min(g.playerNames.count, g.playerActivated.count)
+        let activeCount = (0..<capacity).filter {
+            g.playerActivated[$0] &&
+            !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+        let playerSlots = min(activeCount, playerMoneyFields.count, MAX_PLAYERS)
         for s in 0..<playerSlots {
             let seat = order[safe: s] ?? s
             let hc   = g.hcPlayers[safe: seat] ?? 0
@@ -4115,33 +4456,51 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let si   = g.courseHCToPass[safe: hole] ?? (hole + 1)
             let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
             let pts = GameManager.shared.stablefordPoints(
-                grossScore: gross, par: par, playerHC: hc, strokeIndex: si
+                grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
+                baseline: g.stablefordBaseline
             ) ?? 0
             setMoneyField(playerMoneyFields[s], to: pts)
             playerMoneyFields[s].tag = seat
             playerMoneyFields[s].isUserInteractionEnabled = true
         }
-        // Slot 4 = Team row only when no 5th player is active
-        if !fifthActive && playerMoneyFields.count > 4 {
+        // Team row appended immediately after all real players (if space remains)
+        let teamSlot = playerSlots
+        if teamSlot < playerMoneyFields.count {
             let teamPts = GameManager.shared.teamHoleScore(hole: hole, game: g)
-            setMoneyField(playerMoneyFields[4], to: teamPts)
-            playerMoneyFields[4].isUserInteractionEnabled = false
+            setMoneyField(playerMoneyFields[teamSlot], to: teamPts)
+            playerMoneyFields[teamSlot].isUserInteractionEnabled = false
+        }
+        // Clear any extra slots beyond the team row (clamp start so lowerBound <= upperBound)
+        let clearEnd = min(playerMoneyFields.count, MAX_PLAYERS)
+        for s in min(teamSlot + 1, clearEnd)..<clearEnd {
+            setMoneyField(playerMoneyFields[s], to: 0)
+            playerMoneyFields[s].isUserInteractionEnabled = false
         }
     }
 
     private func refreshTournamentTotalPoints(g: GameData) {
         let order = displayOrder
-        let fifthActive = hasActiveFifthStablefordPlayer(g)
-        let playerSlots = min(fifthActive ? 5 : 4, totalMoneyLabels.count, MAX_PLAYERS)
+        let capacity = min(g.playerNames.count, g.playerActivated.count)
+        let activeCount = (0..<capacity).filter {
+            g.playerActivated[$0] &&
+            !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+        let playerSlots = min(activeCount, totalMoneyLabels.count, MAX_PLAYERS)
         for i in 0..<playerSlots {
             let seat = order[safe: i] ?? i
-            let pts = GameManager.shared.totalStablefordPoints(playerIndex: seat, game: g)
+            let pts = GameManager.shared.totalStablefordPoints(playerIndex: seat, game: g, upThrough: g.hole)
             setTotalMoneyLabel(totalMoneyLabels[i], Double(pts))
         }
-        // Slot 4 = Team total only when no 5th player is active
-        if !fifthActive && totalMoneyLabels.count > 4 {
-            let teamTotal = GameManager.shared.runningTeamStablefordTotal(game: g)
-            setTotalMoneyLabel(totalMoneyLabels[4], Double(teamTotal))
+        // Team total appended immediately after all real players (if space remains)
+        let teamSlot = playerSlots
+        if teamSlot < totalMoneyLabels.count {
+            let teamTotal = GameManager.shared.runningTeamStablefordTotal(game: g, upThrough: g.hole)
+            setTotalMoneyLabel(totalMoneyLabels[teamSlot], Double(teamTotal))
+        }
+        // Clear any extra slots beyond the team row (clamp start so lowerBound <= upperBound)
+        let clearEnd = min(totalMoneyLabels.count, MAX_PLAYERS)
+        for i in min(teamSlot + 1, clearEnd)..<clearEnd {
+            setTotalMoneyLabel(totalMoneyLabels[i], 0)
         }
     }
 
@@ -4488,6 +4847,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             if g.pressLevel.count != STANDARD_HOLES       { g.pressLevel       = Array(repeating: 0,   count: STANDARD_HOLES) }
             if g.pressBaseDollars.count != STANDARD_HOLES { g.pressBaseDollars = Array(repeating: 0.0, count: STANDARD_HOLES) }
             if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
+            if g.holeBaseAmount.count != STANDARD_HOLES   { g.holeBaseAmount   = Array(repeating: 2.0, count: STANDARD_HOLES) }
             func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
             let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
             let h     = max(0, min(g.hole, count - 1))
@@ -4495,15 +4855,21 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let isAdditive = g.pressStyle == .additive
             for i in h..<end {
                 if g.pressLevel[i] == 0 {
-                    let base = g.gameHoleDollarsArray[i] == 0 ? 2.0 : g.gameHoleDollarsArray[i]
-                    g.pressBaseDollars[i] = base
+                    // Capture the pure base (holeBaseAmount is never contaminated by multipliers)
+                    let pb = g.holeBaseAmount[i]
+                    g.pressBaseDollars[i] = pb <= 0 ? 2.0 : pb
                 }
                 g.pressLevel[i] += 1
                 let origBase = g.pressBaseDollars[i] == 0 ? 2.0 : g.pressBaseDollars[i]
                 let newStake = isAdditive
                     ? origBase * Double(g.pressLevel[i] + 1)
                     : origBase * Double(1 << g.pressLevel[i])
-                g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, newStake))
+                if i == h {
+                    // Use recompute so hole-scoped multipliers stack on top correctly
+                    g.recomputeHoleAmount(hole: i)
+                } else {
+                    g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, newStake))
+                }
             }
             g.pressInitiatedHole = h
         }
@@ -4516,6 +4882,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             if g.pressLevel.count != STANDARD_HOLES       { g.pressLevel       = Array(repeating: 0,   count: STANDARD_HOLES) }
             if g.pressBaseDollars.count != STANDARD_HOLES { g.pressBaseDollars = Array(repeating: 0.0, count: STANDARD_HOLES) }
             if g.gameHoleDollarsArray.count != STANDARD_HOLES { g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
+            if g.holeBaseAmount.count != STANDARD_HOLES   { g.holeBaseAmount   = Array(repeating: 2.0, count: STANDARD_HOLES) }
             func roundToHalf(_ x: Double) -> Double { (x * 2).rounded() / 2.0 }
             let count = min(STANDARD_HOLES, g.gameHoleDollarsArray.count)
             let h     = max(0, min(g.hole, count - 1))
@@ -4528,7 +4895,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 let newStake = isAdditive
                     ? origBase * Double(g.pressLevel[i] + 1)
                     : (g.pressLevel[i] == 0 ? origBase : origBase * Double(1 << g.pressLevel[i]))
-                g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, newStake))
+                if i == h {
+                    g.recomputeHoleAmount(hole: i)
+                } else {
+                    g.gameHoleDollarsArray[i] = roundToHalf(max(1.0, newStake))
+                }
             }
             g.pressInitiatedHole = nil
         }
@@ -4544,9 +4915,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let order = displayOrder
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
 
+        let teamSlot = stablefordTeamSlotIndex(for: g)
         for (slot, b) in proxButtons.enumerated() {
-            if isTournament && (g.tournamentGameType == "stableford" || g.tournamentGameType == nil) && slot == 4
-                && !hasActiveFifthStablefordPlayer(g) {
+            if let ts = teamSlot, slot == ts {
                 b.isHidden = true
                 continue
             }

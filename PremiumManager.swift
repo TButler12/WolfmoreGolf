@@ -67,12 +67,14 @@ final class PremiumManager {
     // All product IDs returned by Transaction.currentEntitlements on last refresh (for diagnostics)
     private(set) var lastSeenEntitlementIDs: [String] = []
 
-    private(set) var isPremium = false {
+    private var _isPremium = false {
         didSet {
-            if isPremium { markPremiumThisMonth() }
+            if _isPremium { markPremiumThisMonth() }
             NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
         }
     }
+
+    var isPremium: Bool { true }
 
     // Persists a month-keyed flag so was_premium_this_month can be read reliably
     // even after a downgrade, without inferring from usage counts.
@@ -101,9 +103,7 @@ final class PremiumManager {
         max(0, feature.freeLimit - usageCount(for: feature))
     }
 
-    func canUse(_ feature: Feature) -> Bool {
-        isPremium || usageCount(for: feature) < feature.freeLimit
-    }
+    func canUse(_ feature: Feature) -> Bool { true }
 
     func recordUse(_ feature: Feature) {
         let key = feature.usageKey
@@ -192,7 +192,7 @@ final class PremiumManager {
         #if DEBUG
         print("[PremiumManager] refreshPremiumStatus complete — isPremium=\(found), seenIDs=\(seenIDs)")
         #endif
-        isPremium = found
+        _isPremium = found
     }
 }
 

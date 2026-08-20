@@ -29,7 +29,6 @@ final class TournamentRosterPickerViewController: UIViewController {
 
     private let searchBar = UISearchBar()
     private let tableView = UITableView(frame: .zero, style: .plain)
-    private let addManuallyButton = UIButton(type: .system)
     private let spinner = UIActivityIndicatorView(style: .medium)
     private var pollTimer: Timer?
 
@@ -84,21 +83,11 @@ final class TournamentRosterPickerViewController: UIViewController {
         tableView.keyboardDismissMode = .onDrag
         tableView.translatesAutoresizingMaskIntoConstraints = false
 
-        // "Player not listed?" footer button — deliberate secondary action
-        var cfg = UIButton.Configuration.plain()
-        cfg.title = "Player not listed?  Add manually"
-        cfg.baseForegroundColor = .secondaryLabel
-        cfg.contentInsets = NSDirectionalEdgeInsets(top: 16, leading: 0, bottom: 16, trailing: 0)
-        addManuallyButton.configuration = cfg
-        addManuallyButton.addTarget(self, action: #selector(addManuallyTapped), for: .touchUpInside)
-        addManuallyButton.translatesAutoresizingMaskIntoConstraints = false
-
         spinner.hidesWhenStopped = true
         spinner.translatesAutoresizingMaskIntoConstraints = false
 
         view.addSubview(searchBar)
         view.addSubview(tableView)
-        view.addSubview(addManuallyButton)
         view.addSubview(spinner)
 
         NSLayoutConstraint.activate([
@@ -109,11 +98,7 @@ final class TournamentRosterPickerViewController: UIViewController {
             tableView.topAnchor.constraint(equalTo: searchBar.bottomAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: addManuallyButton.topAnchor),
-
-            addManuallyButton.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            addManuallyButton.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            addManuallyButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
 
             spinner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             spinner.centerYAnchor.constraint(equalTo: view.centerYAnchor),
@@ -188,53 +173,6 @@ final class TournamentRosterPickerViewController: UIViewController {
     @objc private func cancelTapped() { dismiss(animated: true) }
     @objc private func doneTapped()   { dismiss(animated: true) }
 
-    @objc private func addManuallyTapped() {
-        let ac = UIAlertController(
-            title: "Add Player Manually",
-            message: "This player will be added to the tournament roster as a walk-on.",
-            preferredStyle: .alert)
-        ac.addTextField { tf in
-            tf.placeholder = "Name"
-            tf.autocapitalizationType = .words
-            tf.autocorrectionType = .no
-        }
-        ac.addTextField { tf in
-            tf.placeholder = "Handicap (0 = scratch)"
-            tf.keyboardType = .numberPad
-        }
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Add & Select", style: .default) { [weak self, weak ac] _ in
-            guard let self else { return }
-            let name = (ac?.textFields?[0].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            let hc = Int(ac?.textFields?[1].text ?? "") ?? 0
-            guard !name.isEmpty else { return }
-            let entry = TournamentRosterEntry(
-                id: UUID(),
-                tournamentCode: self.tournamentCode,
-                canonicalName: name,
-                handicap: hc,
-                addedBy: "scorer",
-                groupCode: nil)
-            Task {
-                try? await SupabaseService.shared.upsertRosterEntry(entry)
-            }
-            // Add to local list so the checkmark shows
-            if !self.allEntries.contains(where: { $0.canonicalName == name }) {
-                self.allEntries.append(entry)
-                self.allEntries.sort { $0.canonicalName < $1.canonicalName }
-                if let q = self.searchBar.text, !q.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    self.filtered = self.allEntries.filter {
-                        $0.canonicalName.localizedCaseInsensitiveContains(q)
-                    }
-                } else {
-                    self.filtered = self.allEntries
-                }
-            }
-            self.select(name: name, hc: hc)
-        })
-        present(ac, animated: true)
-    }
-
     private func select(name: String, hc: Int, entryID: UUID? = nil) {
         guard !selectedNames.contains(name), remainingSelections > 0 else { return }
         selectedNames.insert(name)
@@ -243,19 +181,24 @@ final class TournamentRosterPickerViewController: UIViewController {
         updateTitle()
         tableView.reloadData()
         if let id = entryID {
+            // Snapshot value types so the claim fires even if self is released before
+            // the Task executes (e.g. the view auto-dismisses when all slots fill).
+            let claimID = myClaimID
+            let tCode   = tournamentCode
             Task { [weak self] in
-                guard let self else { return }
-                try? await SupabaseService.shared.claimRosterEntry(id: id, groupCode: myClaimID)
-                // Verify claim succeeded — another device may have won the race
-                guard let fresh = try? await SupabaseService.shared.fetchRoster(code: tournamentCode),
+                // claimRosterEntry uses only value-type captures — no self needed.
+                try? await SupabaseService.shared.claimRosterEntry(id: id, groupCode: claimID)
+                // Verify claim succeeded — another device may have won the race.
+                guard let fresh = try? await SupabaseService.shared.fetchRoster(code: tCode),
                       let entry = fresh.first(where: { $0.id == id }) else { return }
                 await MainActor.run {
+                    guard let self else { return }
                     // Update local entries with latest group_code values
                     let byID = Dictionary(fresh.map { ($0.id, $0) }, uniquingKeysWith: { _, last in last })
                     self.allEntries = self.allEntries.map { byID[$0.id] ?? $0 }
                     self.filtered   = self.filtered.map   { byID[$0.id] ?? $0 }
                     // If our claim didn't stick, roll it back locally
-                    if let winner = entry.groupCode, !winner.isEmpty, winner != self.myClaimID {
+                    if let winner = entry.groupCode, !winner.isEmpty, winner != claimID {
                         self.selectedNames.remove(name)
                         self.remainingSelections += 1
                         self.onDeselect?(name)

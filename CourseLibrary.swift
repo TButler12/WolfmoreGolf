@@ -147,6 +147,17 @@ private let BARRINGTON_HILLS_WHITE_ID = UUID(uuidString: "33333333-3333-3333-333
 let BARRINGTON_HILLS_WHITE_PARS: [Int] = [5,4,4,4,4,4,4,3,4, 4,3,4,4,5,3,4,4,4]
 let BARRINGTON_HILLS_WHITE_HCS:  [Int] = [9,17,7,5,11,1,13,15,3, 6,16,4,18,8,14,2,10,12]
 
+// MARK: Stonehenge Golf Club — Barrington, IL
+private let STONEHENGE_GC_ID = UUID(uuidString: "60010001-0001-0001-0001-000000000001")!
+let STONEHENGE_GC_PARS: [Int] = [4,4,3,5,4,4,4,3,5, 4,4,4,5,3,4,4,3,5]   // par 72
+let STONEHENGE_GC_HCS:  [Int] = [8,12,16,6,10,4,14,18,2, 7,9,1,3,11,5,13,15,17]
+let STONEHENGE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6848, rating: 72.8, slope: 135),
+    TeeInfo(teeName: "Blue",  yardage: 6350, rating: 70.5, slope: 130),
+    TeeInfo(teeName: "White", yardage: 5951, rating: 68.7, slope: 126),
+    TeeInfo(teeName: "Red",   yardage: 5380, rating: 66.1, slope: 120),
+]
+
 // MARK: Crane's Landing GC (Blue)
 private let CRANES_LANDING_BLUE_ID = UUID(uuidString: "44444444-4444-4444-4444-444444444444")!
 let CRANES_LANDING_BLUE_PARS: [Int] = [4,4,4,4,4,3,5,4,3, 4,4,3,4,4,4,3,5,4]
@@ -7547,12 +7558,12 @@ private let INVERNESS_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-00000000
 
 let INVERNESS_GC_PARS: [Int] = [
     4,4,4,4,4,4,3,5,3,
-    4,4,4,4,4,4,4,4,4
+    4,4,4,4,4,3,5,5,4
 ]
 
 let INVERNESS_GC_HCS: [Int] = [
     12,4,10,2,6,16,14,8,18,
-    11,3,7,15,1,17,5,13,9
+    1,17,3,11,13,15,5,9,7
 ]
 
 let INVERNESS_GC_TEES: [TeeInfo] = [
@@ -10206,6 +10217,17 @@ let WORTHINGTON_MANOR_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Silver",       yardage: 5086, rating: 69.7, slope: 128)
 ]
 
+// MARK: Back Creek Golf Club — Middletown, DE
+private let BACK_CREEK_GC_ID = UUID(uuidString: "19709001-0001-0001-0001-000000000001")!
+let BACK_CREEK_GC_PARS: [Int] = [4,3,4,4,5,4,4,3,4, 4,5,4,4,3,4,5,3,4]   // par 71
+let BACK_CREEK_GC_HCS:  [Int] = [7,13,1,11,5,17,9,15,3, 10,12,4,2,14,8,16,18,6]
+let BACK_CREEK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6957, rating: 71.6, slope: 138),
+    TeeInfo(teeName: "Blue",  yardage: 6503, rating: 69.5, slope: 134),
+    TeeInfo(teeName: "White", yardage: 6062, rating: 67.8, slope: 129),
+    TeeInfo(teeName: "Red",   yardage: 5175, rating: 65.4, slope: 122),
+]
+
 // MARK: Philadelphia Cricket Club — Wissahickon — Flourtown, PA
 private let PCC_WISSAHICKON_ID = UUID(uuidString: "C3D4E5F6-A7B8-4C9D-0E1F-2A3B4C5D6E7F")!
 
@@ -11045,6 +11067,48 @@ let BREAKFAST_HILL_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold",         yardage: 4871, rating: 63.7, slope: 105),
 ]
 
+// MARK: - Merit Club
+private let MERIT_CLUB_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000227")!
+let MERIT_CLUB_PARS: [Int] = [4,3,5,4,4,4,3,5,4, 4,3,5,4,4,4,3,4,5]
+let MERIT_CLUB_HCS:  [Int] = [11,15,1,5,9,13,17,3,7, 14,18,2,10,4,12,16,8,6]
+let MERIT_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 7236, rating: 75.4, slope: 140),
+]
+
+// MARK: - Carolina Golf Club
+private let CAROLINA_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000228")!
+let CAROLINA_GC_PARS: [Int] = [5,4,3,4,4,4,4,5,3, 4,4,3,5,4,4,3,4,4]
+let CAROLINA_GC_HCS:  [Int] = [9,13,15,1,3,7,5,11,17, 2,8,18,10,14,4,16,12,6]
+let CAROLINA_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7019, rating: 74.8, slope: 144),
+]
+
+// MARK: - The Carolina Country Club (RB submission)
+private let CAROLINA_CC_RB_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000231")!
+let CAROLINA_CC_RB_PARS: [Int] = [4,4,3,5,4,5,4,3,4, 4,4,3,5,4,3,4,4,5]
+let CAROLINA_CC_RB_HCS:  [Int] = [4,12,18,8,10,6,14,16,2, 13,7,17,11,5,15,1,3,9]
+
+// MARK: - Paganica Golf Course
+private let PAGANICA_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000230")!
+let PAGANICA_GC_PARS: [Int] = [4,5,4,5,3,4,3,4,4, 4,4,3,4,3,5,4,5,4]
+let PAGANICA_GC_HCS:  [Int] = [7,5,9,3,15,11,17,13,1, 14,10,16,2,18,4,6,8,12]
+let PAGANICA_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6576, rating: 71.7, slope: 123),
+]
+
+// MARK: - The Carolina Country Club
+private let CAROLINA_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000229")!
+let CAROLINA_CC_PARS: [Int] = [4,4,3,5,4,3,4,4,5, 4,4,3,5,4,5,4,3,4]
+let CAROLINA_CC_HCS:  [Int] = [13,7,17,11,5,15,1,3,9, 4,12,18,8,10,6,14,16,2]
+let CAROLINA_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6929, rating: 73.5, slope: 155),
+    TeeInfo(teeName: "Gold",  yardage: 6607, rating: 72.0, slope: 153),
+    TeeInfo(teeName: "Blue",  yardage: 6165, rating: 70.5, slope: 136),
+    TeeInfo(teeName: "White", yardage: 5724, rating: 68.9, slope: 127),
+    TeeInfo(teeName: "Green", yardage: 5236, rating: 66.4, slope: 116),
+    TeeInfo(teeName: "Red",   yardage: 4740, rating: 64.2, slope: 113),
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -11249,6 +11313,16 @@ private enum BuiltIns {
           phone: "(847) 381-4200",
           website: "https://www.barringtonhillscc.com",
           address: "300 W. County Line Road, Barrington Hills, IL 60010"),
+
+        c(STONEHENGE_GC_ID, "Stonehenge Golf Club", STONEHENGE_GC_PARS, STONEHENGE_GC_HCS,
+          STONEHENGE_GC_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Public",
+          phone: "(847) 381-8600",
+          website: "https://www.stonehengegolfclubil.com",
+          address: "27250 W IL-22, Barrington, IL 60010",
+          isWolfApproved: true),
 
         c(CRANES_LANDING_BLUE_ID, "Crane's Landing", CRANES_LANDING_BLUE_PARS, CRANES_LANDING_BLUE_HCS,
           country: "USA",
@@ -16689,6 +16763,19 @@ private enum BuiltIns {
             address: "Dickerson, MD 20842"
         ),
         c(
+            BACK_CREEK_GC_ID,
+            "Back Creek Golf Club",
+            BACK_CREEK_GC_PARS,
+            BACK_CREEK_GC_HCS,
+            BACK_CREEK_GC_TEES,
+            country: "USA",
+            state: "DE",
+            type: "Daily-Fee",
+            phone: "(302) 378-6499",
+            website: "https://www.backcreekgc.com",
+            address: "101 Back Creek Drive, Middletown, DE 19709"
+        ),
+        c(
             TRUMP_NATIONAL_HUDSON_VALLEY_ID,
             "Trump National Golf Club (Hudson Valley)",
             TRUMP_NATIONAL_HUDSON_VALLEY_PARS,
@@ -19848,6 +19935,56 @@ private enum BuiltIns {
           phone: "(603) 436-5001",
           website: "https://www.breakfasthill.com",
           address: "339 Breakfast Hill Road, Greenland, NH 03840"
+        ),
+        c(MERIT_CLUB_ID, "Merit Club",
+          MERIT_CLUB_PARS, MERIT_CLUB_HCS, MERIT_CLUB_TEES,
+          country: "USA", state: "IL",
+          architect: "Bob Lohmann",
+          type: "Private",
+          phone: "(847) 918-8800",
+          website: "https://www.meritclub.org",
+          address: "1500 Merit Club Lane, Libertyville, IL 60048",
+          isWolfApproved: true
+        ),
+        c(CAROLINA_GC_ID, "Carolina Golf Club",
+          CAROLINA_GC_PARS, CAROLINA_GC_HCS, CAROLINA_GC_TEES,
+          country: "USA", state: "NC",
+          architect: "Donald Ross",
+          type: "Private",
+          phone: "(704) 392-6366",
+          website: "https://www.carolinagolfclub.org",
+          address: "2415 Old Steele Creek Road, Charlotte, NC 28208",
+          isWolfApproved: true
+        ),
+        c(CAROLINA_CC_ID, "The Carolina Country Club",
+          CAROLINA_CC_PARS, CAROLINA_CC_HCS, CAROLINA_CC_TEES,
+          country: "USA", state: "SC",
+          architect: "Tom Jackson",
+          type: "Private",
+          phone: "(864) 583-1246",
+          website: "https://www.thecarolinacountryclub.com",
+          address: "2355 Carolina Country Club Rd, Spartanburg, SC 29306",
+          isWolfApproved: true
+        ),
+        c(CAROLINA_CC_RB_ID, "The Carolina Country Club_RB",
+          CAROLINA_CC_RB_PARS, CAROLINA_CC_RB_HCS, CAROLINA_CC_TEES,
+          country: "USA", state: "SC",
+          architect: "Tom Jackson",
+          type: "Private",
+          phone: "(864) 583-1246",
+          website: "https://www.thecarolinacountryclub.com",
+          address: "2355 Carolina Country Club Rd, Spartanburg, SC 29306",
+          isWolfApproved: true
+        ),
+        c(PAGANICA_GC_ID, "Paganica Golf Course",
+          PAGANICA_GC_PARS, PAGANICA_GC_HCS, PAGANICA_GC_TEES,
+          country: "USA", state: "WI",
+          architect: "Luke Frye",
+          type: "Semi-Private",
+          phone: "(262) 567-0171",
+          website: "https://www.paganicagolf.com",
+          address: "1335 Silver Lake St, Oconomowoc, WI",
+          isWolfApproved: true
         ),
         ]
 

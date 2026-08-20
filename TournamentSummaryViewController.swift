@@ -130,6 +130,7 @@ final class TournamentSummaryViewController: UIViewController {
 
     private func buildResults() {
         let gm = GameManager.shared
+        let committed = game.holeCommitted
         let activeSeats = (0..<min(MAX_PLAYERS, game.playerActivated.count)).filter {
             game.playerActivated[$0] &&
             !(game.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -143,11 +144,13 @@ final class TournamentSummaryViewController: UIViewController {
             var pointsPerHole = [Int?](repeating: nil, count: STANDARD_HOLES)
             var total = 0
             for hole in 0..<STANDARD_HOLES {
+                guard hole < committed.count && committed[hole] else { continue }
                 let par   = game.courseParToPass[safe: hole] ?? 4
                 let si    = game.courseHCToPass[safe: hole] ?? (hole + 1)
                 let gross = (seat < game.scores.count) ? game.scores[seat][hole] : nil
                 if let pts = gm.stablefordPoints(
-                    grossScore: gross, par: par, playerHC: hc, strokeIndex: si
+                    grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
+                    baseline: game.stablefordBaseline
                 ) {
                     pointsPerHole[hole] = pts
                     total += pts
@@ -174,6 +177,11 @@ final class TournamentSummaryViewController: UIViewController {
         tableView.estimatedRowHeight = 56
         tableView.isScrollEnabled = false
         tableView.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        // UITableView inside UIStackView doesn't report intrinsic height reliably;
+        // pin height explicitly so Auto Layout doesn't collapse the table to zero.
+        tableView.heightAnchor.constraint(
+            equalToConstant: CGFloat(max(1, results.count)) * 64
+        ).isActive = true
 
         // Button bar
         let saveBtn      = makeButton(title: "Save to History", tint: .systemGreen,  action: #selector(saveTapped))
@@ -201,7 +209,15 @@ final class TournamentSummaryViewController: UIViewController {
     }
 
     private func buildTeamScoreCard() -> UIView {
-        let teamTotal = GameManager.shared.runningTeamStablefordTotal(game: game)
+        // Sum only committed holes; stale prior-round scores exist in game.scores
+        // but game.holeCommitted is reset each round.
+        let committed = game.holeCommitted
+        var teamTotal = 0
+        for h in 0..<min(committed.count, STANDARD_HOLES) {
+            if committed[h] {
+                teamTotal += GameManager.shared.teamHoleScore(hole: h, game: game)
+            }
+        }
 
         let titleLabel = UILabel()
         titleLabel.text = "Team Score"
@@ -216,7 +232,9 @@ final class TournamentSummaryViewController: UIViewController {
         totalLabel.textColor = .label
 
         let subtitleLabel = UILabel()
-        subtitleLabel.text = "Top 3 scores per hole"
+        let n = game.stablefordCountingPlayers
+        subtitleLabel.text = n == 4 ? "All scores count per hole"
+                           : "Top \(n) scores per hole"
         subtitleLabel.font = UIFont.preferredFont(forTextStyle: .caption1)
         subtitleLabel.textColor = .secondaryLabel
         subtitleLabel.textAlignment = .center
@@ -318,8 +336,29 @@ final class TournamentSummaryViewController: UIViewController {
         present(ac, animated: true)
     }
 
+    private func computePlayedHoles() -> Range<Int> {
+        let committed = game.holeCommitted
+        if !committed.isEmpty {
+            var maxCommitted = -1
+            for h in 0..<min(committed.count, STANDARD_HOLES) {
+                if committed[h] { maxCommitted = h }
+            }
+            if maxCommitted >= 0 { return 0..<(maxCommitted + 1) }
+        }
+        // Fallback: scan score arrays
+        let cap = min(game.playerNames.count, game.playerActivated.count)
+        var maxFilled = -1
+        for seat in 0..<cap {
+            guard game.playerActivated[seat], seat < game.scores.count else { continue }
+            for h in 0..<STANDARD_HOLES where h < game.scores[seat].count {
+                if game.scores[seat][h] != nil { maxFilled = max(maxFilled, h) }
+            }
+        }
+        return maxFilled >= 0 ? 0..<(maxFilled + 1) : 0..<0
+    }
+
     @objc private func shareTapped() {
-        let image = TournamentScorecardRenderer(game: game, filledHoles: 0..<18).render()
+        let image = TournamentScorecardRenderer(game: game, filledHoles: computePlayedHoles()).render()
         let av = UIActivityViewController(activityItems: [image], applicationActivities: nil)
         if let pop = av.popoverPresentationController {
             pop.sourceView = view
@@ -412,7 +451,8 @@ extension RoundStore {
                 let par   = g.courseParToPass[safe: hole] ?? 4
                 let si    = g.courseHCToPass[safe: hole] ?? (hole + 1)
                 let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
-                let pts   = gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si) ?? 0
+                let pts   = gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
+                                                baseline: g.stablefordBaseline) ?? 0
                 ptsPerHole[hole] = pts
                 total += pts
             }

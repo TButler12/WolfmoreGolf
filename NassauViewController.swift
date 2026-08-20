@@ -4,7 +4,10 @@ final class NassauViewController: UIViewController {
 
     var gameData: GameData?
 
-    private let textView = UITextView()
+    private let scrollView = UIScrollView()
+    private let contentStack = UIStackView()
+
+    private let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -15,47 +18,127 @@ final class NassauViewController: UIViewController {
         setupUI()
         loadGame()
         updateNavButtons()
-        renderSummary()
+        renderUI()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         loadGame()
         updateNavButtons()
-        renderSummary()
+        renderUI()
     }
 
     private func setupUI() {
-        textView.translatesAutoresizingMaskIntoConstraints = false
-        textView.isEditable = false
-        textView.isSelectable = false
-        textView.isScrollEnabled = true
-
-        textView.backgroundColor = .secondarySystemBackground
-        textView.layer.cornerRadius = 16
-        textView.clipsToBounds = true
-
-        textView.font = .systemFont(ofSize: 18, weight: .semibold)
-        textView.textColor = .label
-        textView.textContainerInset = UIEdgeInsets(top: 20, left: 16, bottom: 30, right: 16)
-
-        view.addSubview(textView)
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
 
         NSLayoutConstraint.activate([
-            textView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            textView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
-            textView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            textView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -12)
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
+        ])
+
+        contentStack.axis = .vertical
+        contentStack.spacing = 12
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentStack)
+
+        NSLayoutConstraint.activate([
+            contentStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 16),
+            contentStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -24),
+            contentStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 16),
+            contentStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -16),
+            contentStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -32)
         ])
     }
-    private func loadGame() {
-        gameData = GameManager.shared.currentGame
+
+    // MARK: - Helpers
+
+    private func wrapInCard(_ content: UIView) -> UIView {
+        let card = UIView()
+        card.backgroundColor = .secondarySystemBackground
+        card.layer.cornerRadius = 12
+        content.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: card.topAnchor, constant: 14),
+            content.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -14),
+            content.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            content.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14)
+        ])
+        return card
     }
 
-    private func renderSummary() {
-        print("DEBUG renderSummary - playerIncluded: \(GameManager.shared.currentGame?.nassauState?.playerIncluded ?? [])")
+    private func makeInfoGrid(_ pairs: [(label: String, value: String)]) -> UIView {
+        let outerStack = UIStackView()
+        outerStack.axis = .vertical
+        outerStack.spacing = 12
+
+        // Layout pairs in rows of 2
+        var index = 0
+        while index < pairs.count {
+            let rowStack = UIStackView()
+            rowStack.axis = .horizontal
+            rowStack.distribution = .fillEqually
+            rowStack.spacing = 8
+
+            let left = makeInfoCell(label: pairs[index].label, value: pairs[index].value)
+            rowStack.addArrangedSubview(left)
+
+            if index + 1 < pairs.count {
+                let right = makeInfoCell(label: pairs[index + 1].label, value: pairs[index + 1].value)
+                rowStack.addArrangedSubview(right)
+            }
+
+            outerStack.addArrangedSubview(rowStack)
+            index += 2
+        }
+
+        return outerStack
+    }
+
+    private func makeInfoCell(label: String, value: String) -> UIView {
+        let container = UIStackView()
+        container.axis = .vertical
+        container.spacing = 2
+
+        let labelView = UILabel()
+        labelView.text = label.uppercased()
+        labelView.font = .systemFont(ofSize: 10, weight: .semibold)
+        labelView.textColor = .secondaryLabel
+
+        let valueView = UILabel()
+        valueView.text = value
+        valueView.font = .systemFont(ofSize: 16, weight: .bold)
+        valueView.textColor = .label
+
+        container.addArrangedSubview(labelView)
+        container.addArrangedSubview(valueView)
+
+        return container
+    }
+
+    private func makeSectionHeader(_ title: String) -> UILabel {
+        let label = UILabel()
+        label.text = title.uppercased()
+        label.font = .systemFont(ofSize: 11, weight: .semibold)
+        label.textColor = .secondaryLabel
+        return label
+    }
+
+    // MARK: - Main render
+
+    private func renderUI() {
+        print("DEBUG renderUI - playerIncluded: \(GameManager.shared.currentGame?.nassauState?.playerIncluded ?? [])")
+        contentStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
         guard var workingGame = gameData ?? GameManager.shared.currentGame else {
-            textView.text = "No game data available."
+            let empty = UILabel()
+            empty.text = "No game data available."
+            empty.textColor = .secondaryLabel
+            empty.textAlignment = .center
+            contentStack.addArrangedSubview(empty)
             return
         }
 
@@ -129,77 +212,261 @@ final class NassauViewController: UIViewController {
         }
 
         guard let nassau = workingGame.nassauState else {
-            textView.text = "Nassau is not enabled for this round."
+            let label = UILabel()
+            label.text = "Nassau is not enabled for this round."
+            label.textColor = .secondaryLabel
+            label.textAlignment = .center
+            contentStack.addArrangedSubview(label)
+            gameData = workingGame
             return
         }
 
-        var lines: [String] = []
-
-        lines.append("NASSAU")
-        lines.append("Stake: $\(formatStake(nassau.defaultStake))")
-        lines.append("Press Mode: \(pressModeText(nassau.settings.pressMode))")
-        lines.append("Trigger: \(nassau.autoPressTriggerDown) down")
-
+        // Settings card
+        let currentHoleDisplay: String
         if let lastHole = NassauEngine.lastCommittedHoleNumber(gameData: workingGame) {
-            lines.append("Through Hole: \(lastHole)")
+            currentHoleDisplay = "\(lastHole)"
         } else {
-            lines.append("Current Hole: \(workingGame.hole + 1)")
+            currentHoleDisplay = "\(workingGame.hole + 1)"
         }
 
-        lines.append("")
+        let triggerText = "\(nassau.settings.autoPressTriggerDown) Down"
+        let settingsGrid = makeInfoGrid([
+            (label: "STAKE", value: "$\(formatStake(nassau.settings.baseStake))"),
+            (label: "PRESS MODE", value: pressModeText(nassau.settings.pressMode)),
+            (label: "TRIGGER", value: triggerText),
+            (label: "CURRENT HOLE", value: currentHoleDisplay)
+        ])
+        contentStack.addArrangedSubview(wrapInCard(settingsGrid))
 
+        // 1 vs 1 matches section
         if !nassau.oneVsOneMatches.isEmpty {
-            lines.append("1 vs 1 MATCHES")
-            lines.append("------------------------------")
+            let header = makeSectionHeader("1 VS 1 MATCHES")
+            let headerWrapper = UIView()
+            headerWrapper.translatesAutoresizingMaskIntoConstraints = false
+            headerWrapper.addSubview(header)
+            header.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                header.topAnchor.constraint(equalTo: headerWrapper.topAnchor, constant: 4),
+                header.bottomAnchor.constraint(equalTo: headerWrapper.bottomAnchor),
+                header.leadingAnchor.constraint(equalTo: headerWrapper.leadingAnchor),
+                header.trailingAnchor.constraint(equalTo: headerWrapper.trailingAnchor)
+            ])
+            contentStack.addArrangedSubview(headerWrapper)
+
             for match in nassau.oneVsOneMatches {
-                lines.append(matchBlock(for: match, game: workingGame))
-                lines.append("")
+                contentStack.addArrangedSubview(makeMatchCard(for: match, game: workingGame))
             }
         }
 
+        // 2 vs 2 matches section
         if !nassau.twoVsTwoMatches.isEmpty {
-            lines.append("2 vs 2 MATCHES")
-            lines.append("------------------------------")
+            let header = makeSectionHeader("2 VS 2 MATCHES")
+            let headerWrapper = UIView()
+            headerWrapper.translatesAutoresizingMaskIntoConstraints = false
+            headerWrapper.addSubview(header)
+            header.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                header.topAnchor.constraint(equalTo: headerWrapper.topAnchor, constant: 4),
+                header.bottomAnchor.constraint(equalTo: headerWrapper.bottomAnchor),
+                header.leadingAnchor.constraint(equalTo: headerWrapper.leadingAnchor),
+                header.trailingAnchor.constraint(equalTo: headerWrapper.trailingAnchor)
+            ])
+            contentStack.addArrangedSubview(headerWrapper)
+
             for match in nassau.twoVsTwoMatches {
-                lines.append(matchBlock(for: match, game: workingGame))
-                lines.append("")
+                contentStack.addArrangedSubview(makeMatchCard(for: match, game: workingGame))
             }
         }
 
+        // Empty state
         if nassau.oneVsOneMatches.isEmpty && nassau.twoVsTwoMatches.isEmpty {
-            lines.append("No Nassau matches configured.")
+            let label = UILabel()
+            label.text = "No Nassau matches configured."
+            label.textColor = .secondaryLabel
+            label.textAlignment = .center
+            label.font = .systemFont(ofSize: 15, weight: .regular)
+            contentStack.addArrangedSubview(label)
         }
 
-        textView.text = lines.joined(separator: "\n")
         gameData = workingGame
     }
 
-    private func cleanResult(_ text: String, label: String) -> String {
-        let lower = text.lowercased()
+    // MARK: - Match card builder
 
-        if lower.contains("halved") {
-            return "\(label): Halved"
+    private func makeMatchCard(for match: NassauMatch, game: GameData) -> UIView {
+        let inner = UIStackView()
+        inner.axis = .vertical
+        inner.spacing = 10
+
+        // Title row
+        let titleLabel = UILabel()
+        titleLabel.text = match.title
+        titleLabel.font = .systemFont(ofSize: 16, weight: .bold)
+        titleLabel.textColor = .label
+        inner.addArrangedSubview(titleLabel)
+
+        // Pills row (FRONT 9, BACK 9, 18)
+        let pillsStack = UIStackView()
+        pillsStack.axis = .horizontal
+        pillsStack.distribution = .fillEqually
+        pillsStack.spacing = 8
+
+        let frontPill = makeSegmentPill(
+            name: "FRONT 9",
+            resultText: NassauEngine.frontResultText(for: match, playerNames: game.playerNames, gameData: game),
+            statusByHole: match.frontStatusByHole
+        )
+        let backPill = makeSegmentPill(
+            name: "BACK 9",
+            resultText: NassauEngine.backResultText(for: match, playerNames: game.playerNames, gameData: game),
+            statusByHole: match.backStatusByHole
+        )
+        let overallPill = makeSegmentPill(
+            name: "18",
+            resultText: NassauEngine.overallResultText(for: match, playerNames: game.playerNames, gameData: game),
+            statusByHole: match.overallStatusByHole
+        )
+
+        pillsStack.addArrangedSubview(frontPill)
+        pillsStack.addArrangedSubview(backPill)
+        pillsStack.addArrangedSubview(overallPill)
+        inner.addArrangedSubview(pillsStack)
+
+        // Presses row (only if any)
+        if match.presses.count > 0 {
+            let pressLabel = UILabel()
+            pressLabel.text = "Presses: \(match.presses.count)"
+            pressLabel.font = .systemFont(ofSize: 12, weight: .regular)
+            pressLabel.textColor = .secondaryLabel
+            inner.addArrangedSubview(pressLabel)
         }
 
-        if lower.contains("all square") {
-            return "\(label): All Square"
-        }
+        // Separator
+        let sep = UIView()
+        sep.backgroundColor = .separator
+        sep.translatesAutoresizingMaskIntoConstraints = false
+        inner.addArrangedSubview(sep)
+        sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
 
-        if let range = text.range(of: " won ") {
-            let winner = String(text[..<range.lowerBound])
-            return "\(label): \(winner) won \(label)"
-        }
+        // NET row
+        let netRow = UIStackView()
+        netRow.axis = .horizontal
+        netRow.spacing = 8
 
-        return "\(label): \(text)"
+        let netLabel = UILabel()
+        netLabel.text = "NET"
+        netLabel.font = .systemFont(ofSize: 12, weight: .semibold)
+        netLabel.textColor = .secondaryLabel
+
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let netValue = UILabel()
+        let last = match.overallStatusByHole.last
+        if let last = last {
+            let raw = NassauEngine.runningStatusText(match.overallStatusByHole)
+            let displayText = (raw == "All Square") ? "Even" : raw
+            netValue.text = displayText
+            if last > 0 {
+                netValue.textColor = .systemGreen
+            } else if last < 0 {
+                netValue.textColor = .systemRed
+            } else {
+                netValue.textColor = .secondaryLabel
+            }
+        } else {
+            netValue.text = "Even"
+            netValue.textColor = .secondaryLabel
+        }
+        netValue.font = .systemFont(ofSize: 14, weight: .semibold)
+
+        netRow.addArrangedSubview(netLabel)
+        netRow.addArrangedSubview(spacer)
+        netRow.addArrangedSubview(netValue)
+        inner.addArrangedSubview(netRow)
+
+        return wrapInCard(inner)
     }
 
-    private func cleanPressStatus(_ text: String) -> String {
-        if text == "AS" || text.lowercased().contains("square") {
-            return "All Square"
-        }
+    private func makeSegmentPill(name: String, resultText: String, statusByHole: [Int]) -> UIView {
+        let container = UIView()
+        container.backgroundColor = .tertiarySystemBackground
+        container.layer.cornerRadius = 8
 
-        return text
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 2
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+            stack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -8),
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 6),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -6)
+        ])
+
+        let nameLabel = UILabel()
+        nameLabel.text = name
+        nameLabel.font = .systemFont(ofSize: 10, weight: .semibold)
+        nameLabel.textColor = .secondaryLabel
+        nameLabel.textAlignment = .center
+
+        let statusLabel = UILabel()
+        statusLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        statusLabel.textAlignment = .center
+        statusLabel.numberOfLines = 2
+        statusLabel.adjustsFontSizeToFitWidth = true
+        statusLabel.minimumScaleFactor = 0.7
+
+        // Determine status text and color
+        let (text, color) = segmentDisplay(resultText: resultText, statusByHole: statusByHole)
+        statusLabel.text = text
+        statusLabel.textColor = color
+
+        stack.addArrangedSubview(nameLabel)
+        stack.addArrangedSubview(statusLabel)
+
+        return container
     }
+
+    private func segmentDisplay(resultText: String, statusByHole: [Int]) -> (String, UIColor) {
+        if resultText == "In Progress" {
+            guard let last = statusByHole.last else {
+                return ("Not Started", .secondaryLabel)
+            }
+            let running = NassauEngine.runningStatusText(statusByHole)
+            if last > 0 {
+                return (running, .systemGreen)
+            } else if last < 0 {
+                return (running, .systemRed)
+            } else {
+                return (running, .secondaryLabel)
+            }
+        } else if resultText == "Halved" {
+            return ("Halved", .secondaryLabel)
+        } else {
+            // Settled win
+            let running = NassauEngine.runningStatusText(statusByHole)
+            if let last = statusByHole.last {
+                if last > 0 {
+                    return (running, .systemGreen)
+                } else if last < 0 {
+                    return (running, .systemRed)
+                } else {
+                    return (running, .secondaryLabel)
+                }
+            }
+            return (running, .secondaryLabel)
+        }
+    }
+
+    // MARK: - Game loading
+
+    private func loadGame() {
+        gameData = GameManager.shared.currentGame
+    }
+
     private func updateNavButtons() {
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             title: "Matches",
@@ -210,6 +477,8 @@ final class NassauViewController: UIViewController {
 
         navigationItem.rightBarButtonItem = nil
     }
+
+    // MARK: - Actions
 
     @objc private func editMatchesTapped() {
         let ac = UIAlertController(
@@ -236,7 +505,7 @@ final class NassauViewController: UIViewController {
             }
             self?.loadGame()
             self?.updateNavButtons()
-            self?.renderSummary()
+            self?.renderUI()
         })
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -247,7 +516,7 @@ final class NassauViewController: UIViewController {
 
         present(ac, animated: true)
     }
-    
+
     private func showOneVsOnePicker() {
         guard let game = GameManager.shared.currentGame,
               let state = game.nassauState else { return }
@@ -292,7 +561,7 @@ final class NassauViewController: UIViewController {
                 }
 
                 self?.loadGame()
-                self?.renderSummary()
+                self?.renderUI()
 
                 DispatchQueue.main.async {
                     self?.showOneVsOnePicker()
@@ -353,7 +622,7 @@ final class NassauViewController: UIViewController {
                 }
 
                 self?.loadGame()
-                self?.renderSummary()
+                self?.renderUI()
 
                 DispatchQueue.main.async {
                     self?.showTwoVsTwoPicker()
@@ -369,7 +638,7 @@ final class NassauViewController: UIViewController {
 
         present(ac, animated: true)
     }
-    
+
     func presentSettingsFromContainer() {
         guard let game = GameManager.shared.currentGame,
               let state = game.nassauState else { return }
@@ -421,7 +690,7 @@ final class NassauViewController: UIViewController {
             }
             self?.loadGame()
             self?.updateNavButtons()
-            self?.renderSummary()
+            self?.renderUI()
         })
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -433,6 +702,7 @@ final class NassauViewController: UIViewController {
 
         present(ac, animated: true)
     }
+
     private func promptForStake() {
         guard let game = GameManager.shared.currentGame,
               let state = game.nassauState else { return }
@@ -472,7 +742,7 @@ final class NassauViewController: UIViewController {
 
             self?.loadGame()
             self?.updateNavButtons()
-            self?.renderSummary()
+            self?.renderUI()
         })
 
         present(ac, animated: true)
@@ -512,7 +782,7 @@ final class NassauViewController: UIViewController {
 
         loadGame()
         updateNavButtons()
-        renderSummary()
+        renderUI()
     }
 
     private func promptForTrigger() {
@@ -540,11 +810,12 @@ final class NassauViewController: UIViewController {
 
             self?.loadGame()
             self?.updateNavButtons()
-            self?.renderSummary()
+            self?.renderUI()
         })
 
         present(ac, animated: true)
     }
+
     private func showSegmentPicker(matchIndex: Int, isTwoVsTwo: Bool) {
         guard let game = GameManager.shared.currentGame,
               let state = game.nassauState else { return }
@@ -628,8 +899,10 @@ final class NassauViewController: UIViewController {
 
         loadGame()
         updateNavButtons()
-        renderSummary()
+        renderUI()
     }
+
+    // MARK: - Formatting helpers
 
     private func pressModeText(_ mode: NassauPressMode) -> String {
         switch mode {
@@ -645,55 +918,5 @@ final class NassauViewController: UIViewController {
         } else {
             return String(format: "%.2f", value)
         }
-    }
-    private func matchBlock(for match: NassauMatch, game: GameData) -> String {
-        let playerNames = game.playerNames
-
-        let frontResult = NassauEngine.frontResultText(
-            for: match,
-            playerNames: playerNames,
-            gameData: game
-        )
-
-        let backResult = NassauEngine.backResultText(
-            for: match,
-            playerNames: playerNames,
-            gameData: game
-        )
-
-        let overallResult = NassauEngine.overallResultText(
-            for: match,
-            playerNames: playerNames,
-            gameData: game
-        )
-
-        let netMoney = NassauEngine.netNassauMoneyText(
-            for: match,
-            playerNames: playerNames,
-            gameData: game
-        )
-
-        var lines: [String] = []
-
-        lines.append(match.title)
-        lines.append("  \(cleanResult(frontResult, label: "Front 9"))")
-        lines.append("  \(cleanResult(backResult, label: "Back 9"))")
-        lines.append("  \(cleanResult(overallResult, label: "18"))")
-
-        if !match.presses.isEmpty {
-            lines.append("")
-            lines.append("  Presses: \(match.presses.count)")
-
-            for (index, press) in match.presses.enumerated() {
-                let pressStatus = NassauEngine.runningStatusText(press.runningStatus)
-                lines.append("    \(index + 1). H\(press.startHole)-\(press.endHole)  \(cleanPressStatus(pressStatus))")
-            }
-        }
-
-        lines.append("")
-        lines.append("  NET: \(netMoney)")
-        lines.append("  -------------------------")
-
-        return lines.joined(separator: "\n")
     }
 }

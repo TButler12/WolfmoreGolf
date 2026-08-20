@@ -156,7 +156,8 @@ private enum GameContextBuilder {
             for (seat, name, hc) in activePlayers {
                 let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
                 let strokes = gm.absoluteStrokesGiven(playerHC: hc, strokeIndex: si)
-                let pts = gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si) ?? 0
+                let pts = gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
+                                              baseline: g.stablefordBaseline) ?? 0
                 allPts.append(pts)
                 let grossStr = gross.map(String.init) ?? "–"
                 let netStr   = gross.map { "\($0 - strokes)" } ?? "–"
@@ -165,8 +166,9 @@ private enum GameContextBuilder {
 
             var holeLine = "  Hole \(hole + 1) (Par \(par), SI \(si)): " + holeParts.joined(separator: " | ")
             if !hasFifthPlayer {
-                let teamPts = allPts.sorted(by: >).prefix(3).reduce(0, +)
-                holeLine += " | TEAM TOP-3: \(teamPts)pt"
+                let n = g.stablefordCountingPlayers
+                let teamPts = allPts.sorted(by: >).prefix(n).reduce(0, +)
+                holeLine += " | TEAM BEST-\(n): \(teamPts)pt"
             }
             lines.append(holeLine)
         }

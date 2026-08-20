@@ -90,7 +90,8 @@ final class TournamentScorecardRenderer {
                 let par   = game.courseParToPass[safe: h] ?? 4
                 let si    = game.courseHCToPass[safe: h] ?? (h + 1)
                 let gross = (seat < game.scores.count) ? game.scores[seat][h] : nil
-                return gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si)
+                return gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
+                                           baseline: game.stablefordBaseline)
             }
             let gross: [Int?] = (0..<STANDARD_HOLES).map { h in
                 guard filledHoles.contains(h) else { return nil }
@@ -109,7 +110,8 @@ final class TournamentScorecardRenderer {
         (0..<STANDARD_HOLES).map { h in
             guard filledHoles.contains(h) else { return nil }
             let vals = players.compactMap { $0.pts[h] }
-            return vals.isEmpty ? nil : vals.sorted(by: >).prefix(3).reduce(0, +)
+            let n = max(1, min(game.stablefordCountingPlayers, vals.count))
+            return vals.isEmpty ? nil : vals.sorted(by: >).prefix(n).reduce(0, +)
         }
     }
 
@@ -239,9 +241,56 @@ final class TournamentScorecardRenderer {
         }
         ry += parH
 
-        // ── Player rows ───────────────────────────────────────
+        // ── Player rows ── order: Score (gross) → Points → Strokes ──────────
         for (pi, player) in players.enumerated() {
             let rowBg: UIColor = pi % 2 == 1 ? altBg : .white
+
+            // Score (gross) row — directly under Par
+            let (frontGross, hasFrontGross) = rangeSum(player.gross, front)
+            let (backGross,  hasBackGross)  = rangeSum(player.gross, back)
+            let summaryGrayFont = UIFont.systemFont(ofSize: 11, weight: .semibold)
+            let summaryGrayClr  = UIColor(white: 0.38, alpha: 1)
+
+            for ci in 0..<22 {
+                fill(x: colXs[ci], y: ry, w: colW(ci), h: grsH,
+                     color: isSumm(ci) ? summBg : rowBg)
+                if ci == 0 {
+                    cell("Score",
+                         x: colXs[ci], y: ry, w: colW(ci), h: grsH,
+                         font: .systemFont(ofSize: 10, weight: .regular),
+                         color: UIColor(white: 0.50, alpha: 1), leftAlign: true)
+                } else {
+                    let (text, clr, fnt): (String, UIColor, UIFont)
+                    switch ci {
+                    case 10:
+                        let t = hasFrontGross ? "\(frontGross)" : "—"
+                        (text, clr, fnt) = (t, summaryGrayClr, summaryGrayFont)
+                    case 20:
+                        let t = hasBackGross ? "\(backGross)" : "—"
+                        (text, clr, fnt) = (t, summaryGrayClr, summaryGrayFont)
+                    case 21:
+                        let tot: String
+                        switch (hasFrontGross, hasBackGross) {
+                        case (true, true):   tot = "\(frontGross + backGross)"
+                        case (true, false):  tot = "\(frontGross)"
+                        case (false, true):  tot = "\(backGross)"
+                        default:             tot = "—"
+                        }
+                        (text, clr, fnt) = (tot, summaryGrayClr, summaryGrayFont)
+                    default:
+                        if let h = hIdx(ci), let g = player.gross[h] {
+                            (text, clr, fnt) = ("\(g)", UIColor(white: 0.42, alpha: 1),
+                                                .systemFont(ofSize: 11, weight: .regular))
+                        } else {
+                            (text, clr, fnt) = ("·", dotGray,
+                                                .systemFont(ofSize: 11, weight: .regular))
+                        }
+                    }
+                    cell(text, x: colXs[ci], y: ry, w: colW(ci), h: grsH, font: fnt, color: clr)
+                }
+            }
+            ry += grsH
+
             let (frontSum, hasFront) = rangeSum(player.pts, front)
             let (backSum,  hasBack)  = rangeSum(player.pts, back)
 
@@ -291,53 +340,6 @@ final class TournamentScorecardRenderer {
                 }
             }
             ry += ptsH
-
-            // Gross row — subtotals in OUT/IN/TOT
-            let (frontGross, hasFrontGross) = rangeSum(player.gross, front)
-            let (backGross,  hasBackGross)  = rangeSum(player.gross, back)
-            let summaryGrayFont = UIFont.systemFont(ofSize: 11, weight: .semibold)
-            let summaryGrayClr  = UIColor(white: 0.38, alpha: 1)
-
-            for ci in 0..<22 {
-                fill(x: colXs[ci], y: ry, w: colW(ci), h: grsH,
-                     color: isSumm(ci) ? summBg : rowBg)
-                if ci == 0 {
-                    cell("HC=\(player.hc)",
-                         x: colXs[ci], y: ry, w: colW(ci), h: grsH,
-                         font: .systemFont(ofSize: 10, weight: .regular),
-                         color: UIColor(white: 0.50, alpha: 1), leftAlign: true)
-                } else if ci > 0 {
-                    let (text, clr, fnt): (String, UIColor, UIFont)
-                    switch ci {
-                    case 10:
-                        let t = hasFrontGross ? "\(frontGross)" : "—"
-                        (text, clr, fnt) = (t, summaryGrayClr, summaryGrayFont)
-                    case 20:
-                        let t = hasBackGross ? "\(backGross)" : "—"
-                        (text, clr, fnt) = (t, summaryGrayClr, summaryGrayFont)
-                    case 21:
-                        let tot: String
-                        switch (hasFrontGross, hasBackGross) {
-                        case (true, true):   tot = "\(frontGross + backGross)"
-                        case (true, false):  tot = "\(frontGross)"
-                        case (false, true):  tot = "\(backGross)"
-                        default:             tot = "—"
-                        }
-                        (text, clr, fnt) = (tot, summaryGrayClr, summaryGrayFont)
-                    default:
-                        if let h = hIdx(ci), let g = player.gross[h] {
-                            (text, clr, fnt) = ("\(g)", UIColor(white: 0.42, alpha: 1),
-                                                .systemFont(ofSize: 11, weight: .regular))
-                        } else {
-                            (text, clr, fnt) = ("·", dotGray,
-                                                .systemFont(ofSize: 11, weight: .regular))
-                        }
-                    }
-                    cell(text, x: colXs[ci], y: ry, w: colW(ci), h: grsH,
-                         font: fnt, color: clr)
-                }
-            }
-            ry += grsH
 
             // Strokes/pops dots row
             let strkBlue = UIColor(red: 0.20, green: 0.45, blue: 0.80, alpha: 0.80)

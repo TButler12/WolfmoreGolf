@@ -270,6 +270,9 @@ final class TeeGamesViewController: UIViewController {
                 g.wolfStake = wolfStake
                 g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
             }
+            g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+            g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
+            g.tournamentStablefordEnabled = record.stablefordEnabled
         }
         let joinDay = record.currentDay ?? 1
         UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
@@ -386,6 +389,9 @@ final class TeeGamesViewController: UIViewController {
                         g.wolfStake = wolfStake
                         g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
                     }
+                    g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+                    g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
+                    g.tournamentStablefordEnabled = record.stablefordEnabled
                 }
                 GameManager.shared.saveCurrent()
                 let rejoinIsOrg = (record.createdBy == DeviceID.id)

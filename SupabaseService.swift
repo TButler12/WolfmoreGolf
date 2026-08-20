@@ -418,7 +418,12 @@ final class SupabaseService {
         payouts: [Double],
         decision: String? = nil,
         hammerMultiplier: Int = 1,
-        pressed: Int = 0
+        pressed: Int = 0,
+        skinWinner: String? = nil,
+        skinValue: Double? = nil,
+        nassauStatus: String? = nil,
+        skinCount: Int? = nil,
+        skinTiedSeats: String? = nil
     ) async throws {
         let g = GameManager.shared.currentGame
         struct Payload: Encodable {
@@ -435,6 +440,11 @@ final class SupabaseService {
             var wolf_player: Int  // repurposed: press active (1) / inactive (0); column is integer in DB
             var tournament_code: String?
             var group_code: String?
+            var skin_winner: String?
+            var skin_value: Double?
+            var nassau_status: String?
+            var skin_count: Int?
+            var skin_tied_seats: String?
         }
         let payload = Payload(
             session_id: sessionId,
@@ -449,7 +459,12 @@ final class SupabaseService {
             hammer_multiplier: hammerMultiplier,
             wolf_player: pressed,
             tournament_code: g?.tournamentCode,
-            group_code: g?.groupCode
+            group_code: g?.groupCode,
+            skin_winner: skinWinner,
+            skin_value: skinValue,
+            nassau_status: nassauStatus,
+            skin_count: skinCount,
+            skin_tied_seats: skinTiedSeats
         )
         #if DEBUG
         print("🏆 submitWolfHole tournament_code=\(g?.tournamentCode ?? "nil") group_code=\(g?.groupCode ?? "nil")")
@@ -607,7 +622,10 @@ final class SupabaseService {
         stake: Double?,
         potAmount: Double?,
         carryTies: Bool?,
-        courseName: String
+        courseName: String,
+        stablefordBaseline: String? = nil,
+        stablefordTeamCount: Int? = nil,
+        stablefordEnabled: Bool? = nil
     ) async throws -> TournamentRecord {
         let code = generateCode()
         var payload: [String: AnyJSON] = [
@@ -621,6 +639,9 @@ final class SupabaseService {
         if let s = stake { payload["stake"] = AnyJSON.double(s) }
         if let p = potAmount { payload["pot_amount"] = AnyJSON.double(p) }
         if let c = carryTies { payload["carry_ties"] = AnyJSON.bool(c) }
+        if let b = stablefordBaseline { payload["stableford_baseline"] = AnyJSON.string(b) }
+        if let t = stablefordTeamCount { payload["stableford_team_count"] = AnyJSON.double(Double(t)) }
+        if let se = stablefordEnabled, se { payload["stableford_enabled"] = AnyJSON.bool(true) }
 
         let response: PostgrestResponse<TournamentRecord> = try await client
             .from("tournaments")
@@ -637,7 +658,9 @@ final class SupabaseService {
         potAmount: Double?,
         stake: Double?,
         wolfStake: Double? = nil,
-        scoring: String = "net"
+        scoring: String = "net",
+        stablefordBaseline: StablefordBaseline? = nil,
+        stablefordTeamCount: Int? = nil
     ) async throws {
         var payload: [String: AnyJSON] = [
             "carry_ties": .bool(carryTies),
@@ -646,6 +669,12 @@ final class SupabaseService {
         payload["pot_amount"] = potAmount.map { .double($0) } ?? .null
         payload["stake"]      = stake.map      { .double($0) } ?? .null
         payload["wolf_stake"] = wolfStake.map  { .double($0) } ?? .null
+        if let baseline = stablefordBaseline {
+            payload["stableford_baseline"] = .string(baseline.rawValue)
+        }
+        if let teamCount = stablefordTeamCount {
+            payload["stableford_team_count"] = .integer(teamCount)
+        }
         try await client
             .from("tournaments")
             .update(payload)

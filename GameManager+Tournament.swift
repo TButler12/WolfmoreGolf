@@ -19,38 +19,51 @@ extension GameManager {
 
     /// Returns Stableford points for one player on one hole.
     /// Returns nil if gross score is nil (hole not yet played).
+    /// Par mode: eagle=3, birdie=2, par=1, bogey+=0.
+    /// Bogey mode: birdie+=3, par=2, bogey=1, double+=0. Both modes cap at 3.
     func stablefordPoints(
         grossScore: Int?,
         par: Int,
         playerHC: Int,
-        strokeIndex: Int
+        strokeIndex: Int,
+        baseline: StablefordBaseline = .par
     ) -> Int? {
         guard let gross = grossScore else { return nil }
         let strokes = absoluteStrokesGiven(playerHC: playerHC, strokeIndex: strokeIndex)
         let net = gross - strokes
-        return max(0, 1 - (net - par))
+        let offset = baseline == .bogey ? 1 : 0
+        return min(3, max(0, 1 + offset - (net - par)))
     }
 
     /// Returns total Stableford points for a player across all played holes.
     /// Unplayed holes (nil score) are excluded.
-    func totalStablefordPoints(playerIndex: Int, game: GameData) -> Int {
+    func totalStablefordPoints(playerIndex: Int, game: GameData, upThrough: Int? = nil) -> Int {
+        let holesToSum = committedHoles(game: game, upThrough: upThrough)
         var total = 0
-        for hole in 0..<STANDARD_HOLES {
-            let par = game.courseParToPass[safe: hole] ?? 4
-            let si  = game.courseHCToPass[safe: hole] ?? (hole + 1)
-            let hc  = game.hcPlayers[safe: playerIndex] ?? 0
+        for hole in holesToSum {
+            let par   = game.courseParToPass[safe: hole] ?? 4
+            let si    = game.courseHCToPass[safe: hole] ?? (hole + 1)
+            let hc    = game.hcPlayers[safe: playerIndex] ?? 0
             let gross = (playerIndex < game.scores.count) ? game.scores[playerIndex][hole] : nil
-            if let pts = stablefordPoints(
-                grossScore: gross,
-                par: par,
-                playerHC: hc,
-                strokeIndex: si
-            ) { total += pts }
+            if let pts = stablefordPoints(grossScore: gross, par: par, playerHC: hc,
+                                          strokeIndex: si, baseline: game.stablefordBaseline) {
+                total += pts
+            }
         }
         return total
     }
 
-    /// Top-3 Stableford points for one hole across all active players.
+    /// Holes from startHole through upThrough (or through the last hole if nil), wrapping for back-9 starts.
+    private func committedHoles(game: GameData, upThrough: Int?) -> [Int] {
+        let end     = max(0, min(17, upThrough ?? (STANDARD_HOLES - 1)))
+        let start   = max(0, min(17, game.startHole ?? end))
+        return start <= end
+            ? Array(start...end)
+            : Array(start..<STANDARD_HOLES) + Array(0...end)
+    }
+
+    /// Best-N Stableford points for one hole across all active players.
+    /// N is set by game.stablefordCountingPlayers (2, 3, or 4).
     func teamHoleScore(hole: Int, game: GameData) -> Int {
         let capacity = min(game.playerNames.count, game.playerActivated.count)
         let activeSeats = (0..<capacity).filter {
@@ -62,13 +75,15 @@ extension GameManager {
             let si    = game.courseHCToPass[safe: hole] ?? (hole + 1)
             let hc    = game.hcPlayers[safe: seat] ?? 0
             let gross = (seat < game.scores.count) ? game.scores[seat][hole] : nil
-            return stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si)
+            return stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
+                                    baseline: game.stablefordBaseline)
         }
-        return pts.sorted(by: >).prefix(3).reduce(0, +)
+        let n = max(1, min(game.stablefordCountingPlayers, pts.count))
+        return pts.sorted(by: >).prefix(n).reduce(0, +)
     }
 
-    /// Sum of teamHoleScore across all 18 holes (only scored holes contribute).
-    func runningTeamStablefordTotal(game: GameData) -> Int {
-        (0..<STANDARD_HOLES).reduce(0) { $0 + teamHoleScore(hole: $1, game: game) }
+    /// Sum of teamHoleScore across committed holes (start through upThrough, or all holes if nil).
+    func runningTeamStablefordTotal(game: GameData, upThrough: Int? = nil) -> Int {
+        committedHoles(game: game, upThrough: upThrough).reduce(0) { $0 + teamHoleScore(hole: $1, game: game) }
     }
 }

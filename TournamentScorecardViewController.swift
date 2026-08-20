@@ -47,6 +47,17 @@ final class TournamentScorecardViewController: UIViewController {
     }
 
     private func computeFilledHoles() -> Range<Int> {
+        // holeCommitted is the authoritative record of holes the user has advanced through.
+        // Fall back to non-nil score check for games without holeCommitted data.
+        let committed = game.holeCommitted
+        if !committed.isEmpty {
+            var maxCommitted = -1
+            for h in 0..<min(committed.count, STANDARD_HOLES) {
+                if committed[h] { maxCommitted = h }
+            }
+            if maxCommitted >= 0 { return 0..<(maxCommitted + 1) }
+        }
+        // Fallback: scan score arrays
         let cap = min(game.playerNames.count, game.playerActivated.count)
         var maxFilled = -1
         for seat in 0..<cap {
@@ -157,19 +168,22 @@ final class TournamentScorecardViewController: UIViewController {
                 let par   = game.courseParToPass[safe: h] ?? 4
                 let si    = game.courseHCToPass[safe: h] ?? (h + 1)
                 let gross = (seat < game.scores.count) ? game.scores[seat][h] : nil
-                return gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si)
+                return gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
+                                           baseline: game.stablefordBaseline)
             }
         }
 
-        // Team pts per hole: top-3 sum, nil if no scores yet
+        // Team pts per hole: best-N sum, nil if no scores yet
         let teamPts: [Int?] = (0..<STANDARD_HOLES).map { h in
             let pts = playerPts.compactMap { $0[h] }
-            return pts.isEmpty ? nil : pts.sorted(by: >).prefix(3).reduce(0, +)
+            let n = game.stablefordCountingPlayers
+            return pts.isEmpty ? nil : pts.sorted(by: >).prefix(n).reduce(0, +)
         }
 
         let pars = (0..<STANDARD_HOLES).map { game.courseParToPass[safe: $0] ?? 4 }
-        let front = Array(0..<9)
-        let back  = Array(9..<18)
+        let playedRange = computeFilledHoles()
+        let front = Array(0..<9).filter { playedRange.contains($0) }
+        let back  = Array(9..<18).filter { playedRange.contains($0) }
 
         func rangeSum(_ vals: [Int?], _ range: [Int]) -> Int? {
             let v = range.compactMap { vals[$0] }
@@ -205,7 +219,7 @@ final class TournamentScorecardViewController: UIViewController {
         }
 
         var cols: [Col] = []
-        for h in 0..<9 {
+        for h in front {
             cols.append(Col(header: "\(h+1)", width: holeW, isSummary: false,
                 parText: "\(pars[h])",
                 playerVals: playerPts.map { $0[h] },
@@ -213,13 +227,15 @@ final class TournamentScorecardViewController: UIViewController {
                 playerStrokesVals: playerStrokes.map { $0[h] },
                 teamVal: teamPts[h]))
         }
-        cols.append(Col(header: "OUT", width: summW, isSummary: true,
-            parText: "\(front.reduce(0){$0+pars[$1]})",
-            playerVals: playerPts.map { rangeSum($0, front) },
-            playerGrossVals: Array(repeating: nil, count: players.count),
-            playerStrokesVals: Array(repeating: 0, count: players.count),
-            teamVal: rangeSum(teamPts, front)))
-        for h in 9..<18 {
+        if !front.isEmpty {
+            cols.append(Col(header: "OUT", width: summW, isSummary: true,
+                parText: "\(front.reduce(0){$0+pars[$1]})",
+                playerVals: playerPts.map { rangeSum($0, front) },
+                playerGrossVals: Array(repeating: nil, count: players.count),
+                playerStrokesVals: Array(repeating: 0, count: players.count),
+                teamVal: rangeSum(teamPts, front)))
+        }
+        for h in back {
             cols.append(Col(header: "\(h+1)", width: holeW, isSummary: false,
                 parText: "\(pars[h])",
                 playerVals: playerPts.map { $0[h] },
@@ -227,13 +243,16 @@ final class TournamentScorecardViewController: UIViewController {
                 playerStrokesVals: playerStrokes.map { $0[h] },
                 teamVal: teamPts[h]))
         }
-        cols.append(Col(header: "IN", width: summW, isSummary: true,
-            parText: "\(back.reduce(0){$0+pars[$1]})",
-            playerVals: playerPts.map { rangeSum($0, back) },
-            playerGrossVals: Array(repeating: nil, count: players.count),
-            playerStrokesVals: Array(repeating: 0, count: players.count),
-            teamVal: rangeSum(teamPts, back)))
+        if !back.isEmpty {
+            cols.append(Col(header: "IN", width: summW, isSummary: true,
+                parText: "\(back.reduce(0){$0+pars[$1]})",
+                playerVals: playerPts.map { rangeSum($0, back) },
+                playerGrossVals: Array(repeating: nil, count: players.count),
+                playerStrokesVals: Array(repeating: 0, count: players.count),
+                teamVal: rangeSum(teamPts, back)))
+        }
 
+        let allPlayed = front + back
         let totPlayerVals: [Int?] = playerPts.map { row in
             let f = rangeSum(row, front), b = rangeSum(row, back)
             return (f == nil && b == nil) ? nil : (f ?? 0) + (b ?? 0)
@@ -242,12 +261,14 @@ final class TournamentScorecardViewController: UIViewController {
             let f = rangeSum(teamPts, front), b = rangeSum(teamPts, back)
             return (f == nil && b == nil) ? nil : (f ?? 0) + (b ?? 0)
         }()
-        cols.append(Col(header: "TOT", width: summW + 4, isSummary: true,
-            parText: "\(pars.reduce(0,+))",
-            playerVals: totPlayerVals,
-            playerGrossVals: Array(repeating: nil, count: players.count),
-            playerStrokesVals: Array(repeating: 0, count: players.count),
-            teamVal: totTeam))
+        if !allPlayed.isEmpty {
+            cols.append(Col(header: "TOT", width: summW + 4, isSummary: true,
+                parText: "\(allPlayed.reduce(0){$0+pars[$1]})",
+                playerVals: totPlayerVals,
+                playerGrossVals: Array(repeating: nil, count: players.count),
+                playerStrokesVals: Array(repeating: 0, count: players.count),
+                teamVal: totTeam))
+        }
 
         // ── Names column (fixed, non-scrolling) ──────────────────────
         // Layout: header, par, [pts row, gross row, strokes row] × N, team
@@ -306,9 +327,9 @@ final class TournamentScorecardViewController: UIViewController {
         addNameLabel("Par", kind: .par)
         for (pi, p) in players.enumerated() {
             let alt = pi % 2 == 0
-            addNameLabel(p.name,         kind: .player,        altRow: alt, subtitle: "Points")
-            addNameLabel("HC=\(p.hc)",   kind: .playerGross,   altRow: alt)
-            addNameLabel("Strokes",      kind: .playerStrokes, altRow: alt, height: strkCellH)
+            addNameLabel("Score",   kind: .playerGross,   altRow: alt)
+            addNameLabel(p.name,    kind: .player,        altRow: alt, subtitle: "Points")
+            addNameLabel("Strokes", kind: .playerStrokes, altRow: alt, height: strkCellH)
         }
         addNameLabel("Team", kind: .team)
 
@@ -330,21 +351,21 @@ final class TournamentScorecardViewController: UIViewController {
             // Par
             colStack.addArrangedSubview(makeLabel(
                 text: col.parText, width: col.width, kind: .par, isSummary: col.isSummary))
-            // Players: points row + gross row + strokes row
+            // Players: Score (gross) row directly under Par, then Points row, then Strokes row
             for (pi, pv) in col.playerVals.enumerated() {
                 let alt = pi % 2 == 0
-                // Stableford points row
-                colStack.addArrangedSubview(makeLabel(
-                    text: pv.map(String.init) ?? "·",
-                    width: col.width, kind: .player,
-                    altRow: alt, pts: pv, isSummary: col.isSummary))
-                // Gross score row
+                // Gross score row — right below Par
                 let gv = pi < col.playerGrossVals.count ? col.playerGrossVals[pi] : nil
                 let grossText = col.isSummary ? "—" : (gv.map(String.init) ?? "·")
                 colStack.addArrangedSubview(makeLabel(
                     text: grossText,
                     width: col.width, kind: .playerGross,
                     altRow: alt, isSummary: col.isSummary))
+                // Stableford points row
+                colStack.addArrangedSubview(makeLabel(
+                    text: pv.map(String.init) ?? "·",
+                    width: col.width, kind: .player,
+                    altRow: alt, pts: pv, isSummary: col.isSummary))
                 // Strokes/pops row
                 let sv = pi < col.playerStrokesVals.count ? col.playerStrokesVals[pi] : 0
                 let dotsText = col.isSummary ? "" : (sv > 0 ? String(repeating: "•", count: sv) : "")

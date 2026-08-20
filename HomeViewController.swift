@@ -508,7 +508,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     @objc private func tournamentCardLeaderboardTapped() {
         guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
-        let vc = TournamentLeaderboardViewController(code: code)
+        let gameType  = GameManager.shared.currentGame?.tournamentGameType
+        let sfEnabled = GameManager.shared.currentGame?.tournamentStablefordEnabled ?? false
+        let vc = TournamentLeaderboardViewController(code: code, gameType: gameType, stablefordEnabled: sfEnabled)
         navigationController?.pushViewController(vc, animated: true)
     }
 
@@ -521,8 +523,25 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
         Task { [weak self] in
             guard let self else { return }
-            let record = try? await SupabaseService.shared.fetchTournament(code: code)
-            let liveDay = record?.currentDay ?? (g.tournamentDay ?? 1)
+
+            let record: TournamentRecord
+            do {
+                record = try await SupabaseService.shared.fetchTournament(code: code)
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let alert = UIAlertController(
+                            title: "Connection Error",
+                            message: "Couldn't reach the server. Check your connection and try again.",
+                            preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(alert, animated: true)
+                    }
+                }
+                return
+            }
+
+            let liveDay = record.currentDay ?? (g.tournamentDay ?? 1)
             let savedDay = g.tournamentDay ?? 1
             let isNewDay = liveDay > savedDay
 
@@ -531,19 +550,21 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
             // Organizer clears all roster claims so everyone is available on the new day
             if isNewDay {
-                let isOrg = (record?.createdBy == DeviceID.id)
-                    || (record?.coOrganizerDevices?.contains(DeviceID.id) == true)
-                if isOrg { try? await SupabaseService.shared.clearRosterClaims(code: code) }
+                let isOrg = (record.createdBy == DeviceID.id)
+                    || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
+                if isOrg { try? await SupabaseService.shared.clearRosterClaims(code: record.code) }
             }
 
             GameManager.shared.update { g in
-                g.tournamentDay     = liveDay
-                g.tournamentMatchId = newMatchId
-                if let r = record {
-                    g.tournamentScoringType = r.scoring
-                    g.tournamentPotAmount   = r.potAmount
-                    g.tournamentCarryTies   = r.carryTies
-                }
+                g.tournamentDay         = liveDay
+                g.tournamentMatchId     = newMatchId
+                g.tournamentScoringType = record.scoring
+                g.tournamentPotAmount   = record.potAmount
+                g.tournamentCarryTies   = record.carryTies
+                g.tournamentGameType    = record.gameType
+                g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+                g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
+                g.tournamentStablefordEnabled = record.stablefordEnabled
             }
             UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
             GameManager.shared.saveCurrent()
@@ -607,15 +628,6 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         tagline.translatesAutoresizingMaskIntoConstraints = false
         section.addSubview(tagline)
 
-        let tournamentBtn = buildSecondaryButton(
-            title: "Stableford",
-            systemImage: "rosette",
-            tintColor: .systemPurple
-        )
-        tournamentBtn.addTarget(self, action: #selector(tournamentTapped), for: .touchUpInside)
-        tournamentButton = tournamentBtn
-        tournamentBtn.isHidden = true  // Hidden pending release; remove this line to re-enable
-
         let liveBtn = buildSecondaryButton(
             title: "Live & Tournaments",
             systemImage: "antenna.radiowaves.left.and.right",
@@ -624,8 +636,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         liveBtn.addTarget(self, action: #selector(liveConnectedTapped), for: .touchUpInside)
         liveConnectedButton = liveBtn
 
-        // Stack collapses Stableford's space automatically when it's hidden.
-        let secondaryStack = UIStackView(arrangedSubviews: [tournamentBtn, liveBtn])
+        let secondaryStack = UIStackView(arrangedSubviews: [liveBtn])
         secondaryStack.axis = .vertical
         secondaryStack.spacing = 8
         secondaryStack.translatesAutoresizingMaskIntoConstraints = false
@@ -1267,9 +1278,35 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     @objc private func restoreSnapshotTapped() {
-        ResetSnapshotStore.shared.restore()
-        refreshResetBanner()
-        performSegue(withIdentifier: "showPlayerSetup", sender: self)
+        guard let entry = ResetSnapshotStore.shared.load() else { return }
+        let g = entry.gameData
+        let course = g.course.name
+        let df = DateFormatter()
+        df.dateStyle = .medium; df.timeStyle = .none
+        let date = df.string(from: entry.savedAt)
+        let players = (0..<min(MAX_PLAYERS, g.playerActivated.count)).compactMap { i -> String? in
+            guard g.playerActivated[i] else { return nil }
+            let name = (g.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return name.isEmpty ? nil : name
+        }.joined(separator: ", ")
+        let detail = [course, date, players].filter { !$0.isEmpty }.joined(separator: "\n")
+        let ac = UIAlertController(
+            title: "Swap to Previous Round?",
+            message: "\(detail)\n\nYour current round will be saved — you can swap back anytime from More.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Swap Rounds", style: .default) { [weak self] _ in
+            guard let self else { return }
+            // Circular swap: save current first so it becomes available to restore next time
+            ResetSnapshotStore.shared.saveFromCurrentGame()
+            ResetSnapshotStore.shared.restore(entry: entry)
+            self.refreshResetBanner()
+            DispatchQueue.main.async {
+                self.performSegue(withIdentifier: "showPlayerSetup", sender: self)
+            }
+        })
+        present(ac, animated: true)
     }
 
     @objc private func dismissResetBannerTapped() {
@@ -1296,6 +1333,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
             let ids = GameManager.shared.currentGame?.remoteMatchIds ?? []
             Task { for id in ids { try? await SupabaseService.shared.archiveMatch(id: id) } }
+            ResetSnapshotStore.shared.saveFromCurrentGame()
             GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
             self?.presentManagePlayers()
         })
@@ -1316,6 +1354,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
             let idsToArchive = GameManager.shared.currentGame?.remoteMatchIds ?? []
             Task { for id in idsToArchive { try? await SupabaseService.shared.archiveMatch(id: id) } }
+            ResetSnapshotStore.shared.saveFromCurrentGame()
             GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
             self?.presentManagePlayers()
         })
@@ -1439,6 +1478,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             }
         })
         ac.addAction(UIAlertAction(title: "Send Feedback",     style: .default) { [weak self] _ in self?.sendFeedbackEmail() })
+        if ResetSnapshotStore.shared.hasSnapshots {
+            ac.addAction(UIAlertAction(title: "Swap to Previous Round", style: .default) { [weak self] _ in self?.openRestorePastRound() })
+        }
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         if let pop = ac.popoverPresentationController {
             pop.sourceView = sender
@@ -1460,6 +1502,38 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         let nav = UINavigationController(rootViewController: vc)
         nav.modalPresentationStyle = .fullScreen
         present(nav, animated: true)
+    }
+
+    private func openRestorePastRound() {
+        guard let entry = ResetSnapshotStore.shared.load() else { return }
+        let g = entry.gameData
+        let course = g.course.name
+        let df = DateFormatter()
+        df.dateStyle = .medium
+        df.timeStyle = .short
+        let date = df.string(from: entry.savedAt)
+        let players = (0..<min(MAX_PLAYERS, g.playerActivated.count)).compactMap { i -> String? in
+            guard g.playerActivated[i] else { return nil }
+            let name = (g.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            return name.isEmpty ? nil : name
+        }.joined(separator: ", ")
+        let detail = [course, date, players].filter { !$0.isEmpty }.joined(separator: "\n")
+        let ac = UIAlertController(
+            title: "Swap to Previous Round?",
+            message: "\(detail)\n\nYour current round will be saved — you can swap back anytime from More.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Swap Rounds", style: .default) { [weak self] _ in
+            guard let self else { return }
+            // Circular swap: save current before restoring so neither round is lost
+            ResetSnapshotStore.shared.saveFromCurrentGame()
+            ResetSnapshotStore.shared.restore(entry: entry)
+            DispatchQueue.main.async {
+                self.performSegue(withIdentifier: "showPlayerSetup", sender: self)
+            }
+        })
+        present(ac, animated: true)
     }
 
     private func openRules() {
@@ -1523,7 +1597,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
                 }
                 present(ac, animated: true)
             } else {
-                performSegue(withIdentifier: "showPlayerSetup", sender: self)
+                launchTournament()
             }
         } else if GameManager.shared.hasSavedGame {
             let ac = UIAlertController(
@@ -1563,8 +1637,19 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         GameManager.shared.update { g in
             g.gameType = .tournament
             g.tournamentGameType = "stableford"
+            // Clear any stale online-tournament state so ManagePlayersVC treats this
+            // as a local game (no roster fetch, no tournament-code gating).
+            g.tournamentCode        = nil
+            g.groupCode             = nil
+            g.tournamentMatchId     = nil
+            g.tournamentIsOrganizer = false
+            g.tournamentIsCreator   = false
         }
-        presentManagePlayers()
+        let rulesVC = StablefordRulesSetupViewController()
+        rulesVC.onStart = { [weak self] in self?.presentManagePlayers() }
+        let nav = UINavigationController(rootViewController: rulesVC)
+        nav.modalPresentationStyle = .formSheet
+        present(nav, animated: true)
     }
 
     // MARK: - Quick Start
@@ -1662,6 +1747,16 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     // MARK: - Helpers
 
     private func presentManagePlayers() {
+        // Local-game path — clear any stale live-tournament state so ManagePlayersVC
+        // shows the normal contacts roster (not the tournament roster picker).
+        // Live Wolf tournament sessions go through LiveConnectedViewController instead.
+        GameManager.shared.update { g in
+            g.tournamentCode        = nil
+            g.groupCode             = nil
+            g.tournamentMatchId     = nil
+            g.tournamentIsOrganizer = false
+            g.tournamentIsCreator   = false
+        }
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let manage = sb.instantiateViewController(withIdentifier: "ManagePlayersVC") as! ManagePlayersViewController
         let nav = UINavigationController(rootViewController: manage)

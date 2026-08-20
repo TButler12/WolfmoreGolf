@@ -11,6 +11,10 @@ final class TournamentSettingsViewController: UIViewController {
     private var isWolfTournament: Bool {
         GameManager.shared.currentGame?.tournamentGameType == "wolf"
     }
+    private var isStablefordTournament: Bool {
+        GameManager.shared.currentGame?.tournamentGameType == "stableford"
+            || GameManager.shared.currentGame?.tournamentGameType == nil
+    }
 
     // MARK: - Controls
 
@@ -27,6 +31,10 @@ final class TournamentSettingsViewController: UIViewController {
     private let splitSegment     = UISegmentedControl(items: ["50/50", "Custom %", "Combined Pool"])
     private let grossPctField    = UITextField()
 
+    // Stableford-specific controls
+    private let baselineSegment   = UISegmentedControl(items: ["Par", "Bogey"])
+    private let teamCountSegment  = UISegmentedControl(items: ["Best 2", "Best 3", "All 4"])
+
     private let saveButton = UIButton(type: .system)
 
     // Stack rows that toggle visibility
@@ -34,6 +42,7 @@ final class TournamentSettingsViewController: UIViewController {
     private var potLabeledRow:  UIView!
     private var splitRow:       UIView!
     private var grossPctRow:    UIView!
+    private var stablefordCard: UIView!
 
     // MARK: - Lifecycle
 
@@ -167,6 +176,29 @@ final class TournamentSettingsViewController: UIViewController {
             skinsStack.bottomAnchor.constraint(equalTo: skinsInner.bottomAnchor),
         ])
         outerStack.addArrangedSubview(skinsCard)
+
+        // Stableford card (organizer rules — only shown for stableford tournaments)
+        stablefordCard = makeCard(
+            header: "STABLEFORD RULES",
+            tint: UIColor(red: 0.60, green: 0.35, blue: 0.00, alpha: 1.0)
+        )
+        let sfInner = stablefordCard.viewWithTag(99)!
+        let sfStack = UIStackView(arrangedSubviews: [
+            makeLabeledRow(label: "Scoring Baseline", content: baselineSegment),
+            makeLabeledRow(label: "Scores That Count Per Hole", content: teamCountSegment),
+        ])
+        sfStack.axis    = .vertical
+        sfStack.spacing = 16
+        sfStack.translatesAutoresizingMaskIntoConstraints = false
+        sfInner.addSubview(sfStack)
+        NSLayoutConstraint.activate([
+            sfStack.topAnchor.constraint(equalTo: sfInner.topAnchor),
+            sfStack.leadingAnchor.constraint(equalTo: sfInner.leadingAnchor),
+            sfStack.trailingAnchor.constraint(equalTo: sfInner.trailingAnchor),
+            sfStack.bottomAnchor.constraint(equalTo: sfInner.bottomAnchor),
+        ])
+        stablefordCard.isHidden = !isStablefordTournament
+        outerStack.addArrangedSubview(stablefordCard)
 
         // Save
         saveButton.translatesAutoresizingMaskIntoConstraints = false
@@ -332,6 +364,14 @@ final class TournamentSettingsViewController: UIViewController {
             }
         }
 
+        // Stableford rules
+        baselineSegment.selectedSegmentIndex = (g.stablefordBaseline == .bogey) ? 1 : 0
+        switch g.stablefordCountingPlayers {
+        case 2:  teamCountSegment.selectedSegmentIndex = 0
+        case 4:  teamCountSegment.selectedSegmentIndex = 2
+        default: teamCountSegment.selectedSegmentIndex = 1  // 3 (default)
+        }
+
         updateVisibility()
     }
 
@@ -371,18 +411,28 @@ final class TournamentSettingsViewController: UIViewController {
         default: scoring = "net"
         }
 
+        let sfBaseline: StablefordBaseline = (baselineSegment.selectedSegmentIndex == 1) ? .bogey : .par
+        let sfTeamCount: Int
+        switch teamCountSegment.selectedSegmentIndex {
+        case 0:  sfTeamCount = 2
+        case 2:  sfTeamCount = 4
+        default: sfTeamCount = 3
+        }
+
         let spinner = UIAlertController(title: nil, message: "Saving…", preferredStyle: .alert)
         present(spinner, animated: true)
 
         Task {
             do {
                 try await SupabaseService.shared.updateTournamentSettings(
-                    code:      code,
-                    carryTies: carryTies,
-                    potAmount: potAmount,
-                    stake:     skinsStake,
-                    wolfStake: wolfStake,
-                    scoring:   scoring
+                    code:                code,
+                    carryTies:           carryTies,
+                    potAmount:           potAmount,
+                    stake:               skinsStake,
+                    wolfStake:           wolfStake,
+                    scoring:             scoring,
+                    stablefordBaseline:  isStablefordTournament ? sfBaseline  : nil,
+                    stablefordTeamCount: isStablefordTournament ? sfTeamCount : nil
                 )
                 GameManager.shared.update { g in
                     g.tournamentCarryTies   = carryTies
@@ -396,6 +446,10 @@ final class TournamentSettingsViewController: UIViewController {
                         var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                         skins.settings.skinValue = s
                         g.skinsState = skins
+                    }
+                    if self.isStablefordTournament {
+                        g.stablefordBaseline        = sfBaseline
+                        g.stablefordCountingPlayers = sfTeamCount
                     }
                 }
                 GameManager.shared.saveCurrent()

@@ -3,10 +3,13 @@ import UIKit
 final class LiveConnectedViewController: UITableViewController {
 
     private let watchedSessionsKey = "watchedWolfSessions"
+    private let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
 
     private struct Row {
         let title: String
         let subtitle: String
+        let icon: String        // SF Symbol name
+        let tint: UIColor       // icon tint color
         let action: () -> Void
     }
 
@@ -65,31 +68,43 @@ final class LiveConnectedViewController: UITableViewController {
 
         result.append(Section(header: "JOIN", rows: [
             Row(title: "Join Tournament",
-                subtitle: "Enter a code to join an existing tournament") { [weak self] in
+                subtitle: "Enter a code to join an existing tournament",
+                icon: "trophy.fill",
+                tint: wolfGreen) { [weak self] in
                 self?.joinTournamentTapped()
             },
-            Row(title: "Enter Co-Organizer Code",
-                subtitle: "Claim organizer access with a code from the tournament creator") { [weak self] in
-                self?.enterCoOrgCodeTapped()
-            },
-            Row(title: "Join Remote Nassau",
-                subtitle: "Import an invite to join a live Nassau match") { [weak self] in
+            Row(title: "Join Remote Nassau Match",
+                subtitle: "Import an invite to join a live Nassau match",
+                icon: "flag.2.crossed.fill",
+                tint: .systemBlue) { [weak self] in
                 guard let self else { return }
                 WolfActions.joinLiveMatch(from: self)
             },
-            Row(title: "Watch Live",
-                subtitle: "Watch a friend's round in real time") { [weak self] in
+            Row(title: "Spectate Live Wolf",
+                subtitle: "Watch a friend's round in real time",
+                icon: "eye.fill",
+                tint: .secondaryLabel) { [weak self] in
                 self?.watchLiveTapped()
+            },
+            Row(title: "Enter Co-Organizer Code",
+                subtitle: "Claim organizer access with a code from the tournament creator",
+                icon: "key.fill",
+                tint: .secondaryLabel) { [weak self] in
+                self?.enterCoOrgCodeTapped()
             },
         ]))
 
         result.append(Section(header: "CREATE", rows: [
             Row(title: "Create Tournament",
-                subtitle: "Set up a new tournament and share a join code") { [weak self] in
+                subtitle: "Set up a new tournament and share a join code",
+                icon: "trophy.fill",
+                tint: wolfGreen) { [weak self] in
                 self?.createTournamentTapped()
             },
-            Row(title: "Create Nassau Match",
-                subtitle: "Start a live match and send an invite") { [weak self] in
+            Row(title: "Create Remote Nassau Match",
+                subtitle: "Start a live match and send an invite",
+                icon: "flag.2.crossed.fill",
+                tint: .systemBlue) { [weak self] in
                 guard let self else { return }
                 guard GameManager.shared.currentGame != nil else {
                     self.showError("Start a game first before creating a Nassau match.")
@@ -97,8 +112,10 @@ final class LiveConnectedViewController: UITableViewController {
                 }
                 WolfActions.startLiveMatch(from: self)
             },
-            Row(title: "Start Live Wolf",
-                subtitle: "Broadcast your scores to spectators") { [weak self] in
+            Row(title: "Share Live Wolf",
+                subtitle: "Broadcast your scores to spectators",
+                icon: "antenna.radiowaves.left.and.right",
+                tint: .secondaryLabel) { [weak self] in
                 guard let self else { return }
                 guard GameManager.shared.currentGame != nil else {
                     self.showError("Start a game first before going Live Wolf.")
@@ -114,7 +131,9 @@ final class LiveConnectedViewController: UITableViewController {
             let day = GameManager.shared.currentGame?.tournamentDay ?? 1
             result.append(Section(header: "MANAGE", rows: [
                 Row(title: "Manage Tournament",
-                    subtitle: "Currently Day \(day)") { [weak self] in
+                    subtitle: "Currently Day \(day)",
+                    icon: "chart.bar.fill",
+                    tint: wolfGreen) { [weak self] in
                     self?.manageTournamentTapped()
                 },
             ]))
@@ -135,7 +154,9 @@ final class LiveConnectedViewController: UITableViewController {
                     : "Day \(entry.lastDay) · \(gameLabel) · \(entry.code)"
                 return Row(
                     title: entry.name,
-                    subtitle: subtitle
+                    subtitle: subtitle,
+                    icon: "clock.fill",
+                    tint: .secondaryLabel
                 ) { [weak self] in
                     self?.historyEntryTapped(entry)
                 }
@@ -165,6 +186,9 @@ final class LiveConnectedViewController: UITableViewController {
         var content = cell.defaultContentConfiguration()
         content.text = row.title
         content.secondaryText = row.subtitle
+        content.image = UIImage(systemName: row.icon)
+        content.imageProperties.tintColor = row.tint
+        content.imageProperties.maximumSize = CGSize(width: 24, height: 24)
         cell.contentConfiguration = content
         cell.accessoryType = .disclosureIndicator
         return cell
@@ -287,6 +311,9 @@ final class LiveConnectedViewController: UITableViewController {
                 g.wolfStake = wolfStake
                 g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
             }
+            g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+            g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
+            g.tournamentStablefordEnabled = record.stablefordEnabled
         }
         let joinDay = record.currentDay ?? 1
         UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
@@ -531,7 +558,7 @@ final class LiveConnectedViewController: UITableViewController {
 
     private func showWatchLiveAlert() {
         let alert = UIAlertController(
-            title: "Watch Live",
+            title: "Spectate Live Wolf",
             message: "Enter the 6-character code shared by the scorekeeper",
             preferredStyle: .alert
         )
@@ -668,10 +695,13 @@ final class LiveConnectedViewController: UITableViewController {
             g.tournamentGameType    = record.gameType
             g.tournamentScoringType = record.scoring
             g.tournamentDay         = record.currentDay ?? 1
-            g.tournamentIsCreator   = false
-            g.tournamentIsOrganizer = true
-            g.tournamentPotAmount   = record.potAmount
-            g.tournamentCarryTies   = record.carryTies
+            g.tournamentIsCreator        = false
+            g.tournamentIsOrganizer      = true
+            g.tournamentPotAmount        = record.potAmount
+            g.tournamentCarryTies        = record.carryTies
+            g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+            g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
+            g.tournamentStablefordEnabled = record.stablefordEnabled
         }
         let coOrgDay = record.currentDay ?? 1
         UserDefaults.standard.set(coOrgDay, forKey: "lastTournamentDay_\(record.code)")

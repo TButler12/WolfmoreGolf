@@ -26,12 +26,12 @@ extension GameManager {
     /// - Parameters:
     ///   - hole: 0…17
     ///   - umbePressed: true if Umbrella is pressed (disables doubling at ≥6)
-    func computeHolePayout(hole: Int, umbePressed: Bool) -> [Double] {
+    func computeHolePayout(hole: Int, umbePressed: Bool, modeOverride: GameType? = nil) -> [Double] {
         guard let g = currentGame, (0..<STANDARD_HOLES).contains(hole) else {
             return Array(repeating: 0.0, count: MAX_PLAYERS)
         }
 
-        let mode = g.resolvedGameType
+        let mode = modeOverride ?? g.resolvedGameType
 
         // Seats shown on the Game screen
         let seatsRange = 0..<min(MAX_PLAYERS, min(g.playerActivated.count, g.hcPlayers.count, g.playerNames.count))
@@ -229,23 +229,17 @@ extension GameManager {
         let basePerWolf = totalDollars / numWolf
         let remainder   = totalDollars % numWolf
 
-        // Determine who receives the odd dollar (when remainder > 0 and wolf team has 2+ players).
-        // Alternates fairly across holes: the player who did NOT receive it last time gets it next.
-        // Uses lastOddDollarHole to avoid re-advancing the tracker on repeated calls for the same hole.
+        // The calling wolf (primary) always gets the larger absolute share of an odd split.
+        // On hole h the calling wolf is activeSeats[h % count] — the standard rotation.
         let sortedWolfTeam = wolfTeam.sorted()
         let oddRecipient: Int? = {
-            guard remainder > 0, sortedWolfTeam.count > 1 else { return sortedWolfTeam.first }
-            let recipient: Int
-            if let last = lastOddDollarRecipient, sortedWolfTeam.contains(last) {
-                recipient = sortedWolfTeam.first(where: { $0 != last }) ?? sortedWolfTeam[0]
-            } else {
-                recipient = sortedWolfTeam[0]
-            }
-            if hole != lastOddDollarHole {
-                lastOddDollarRecipient = recipient
-                lastOddDollarHole = hole
-            }
-            return recipient
+            guard remainder > 0 else { return sortedWolfTeam.first }
+            guard sortedWolfTeam.count > 1 else { return sortedWolfTeam.first }
+            let callingWolfSeat = activeSeats[hole % activeSeats.count]
+            if sortedWolfTeam.contains(callingWolfSeat) { return callingWolfSeat }
+            // Calling wolf is always on the wolf team — if not, that is a separate bug.
+            print("⚠️ computeHolePayout: calling wolf seat \(callingWolfSeat) not in wolfTeam \(sortedWolfTeam) on hole \(hole + 1)")
+            return sortedWolfTeam.first
         }()
 
         if wolfTeamScore > nonTeamScore {

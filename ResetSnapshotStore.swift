@@ -3,38 +3,58 @@ import Foundation
 final class ResetSnapshotStore {
     static let shared = ResetSnapshotStore()
 
-    private let key = "resetGameSnapshot_v1"
-    private let expirySeconds: TimeInterval = 86_400 // 24 hours
+    private let key = "resetGameSnapshots_v2"
+    private let maxEntries = 5
 
     private init() {}
 
-    struct Entry: Codable {
+    struct Entry: Codable, Identifiable {
+        let id: UUID
         let gameData: GameData
         let savedAt: Date
-    }
-
-    func save(_ gameData: GameData) {
-        let entry = Entry(gameData: gameData, savedAt: Date())
-        guard let data = try? JSONEncoder().encode(entry) else { return }
-        UserDefaults.standard.set(data, forKey: key)
     }
 
     /// Set after a successful save so the home screen can animate the banner in on next appearance.
     var needsAttentionOnNextAppearance = false
 
+    // MARK: - Persistence
+
+    private func loadAll() -> [Entry] {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let entries = try? JSONDecoder().decode([Entry].self, from: data)
+        else { return [] }
+        return entries
+    }
+
+    private func saveAll(_ entries: [Entry]) {
+        guard let data = try? JSONEncoder().encode(entries) else { return }
+        UserDefaults.standard.set(data, forKey: key)
+    }
+
+    // MARK: - Public API
+
+    var hasSnapshots: Bool { !loadAll().isEmpty }
+
+    func allEntries() -> [Entry] { loadAll() }
+
+    func save(_ gameData: GameData) {
+        let entry = Entry(id: UUID(), gameData: gameData, savedAt: Date())
+        var entries = loadAll()
+        entries.insert(entry, at: 0)
+        if entries.count > maxEntries { entries = Array(entries.prefix(maxEntries)) }
+        saveAll(entries)
+    }
+
     /// Saves a snapshot using the best available source of current game data.
     /// Call this from any confirmation handler before wiping the game.
     func saveFromCurrentGame() {
-        // 1. In-memory game — fastest path
         if let g = GameManager.shared.currentGame {
             save(g); notifySnapshot(); return
         }
-        // 2. Not in memory — try loading from disk first
         if GameManager.shared.loadLastOpened(notify: false),
            let g = GameManager.shared.currentGame {
             save(g); notifySnapshot(); return
         }
-        // 3. Final fallback: deserialize currentGame_v1 directly
         if let data = UserDefaults.standard.data(forKey: "currentGame_v1"),
            let g = try? JSONDecoder().decode(GameData.self, from: data) {
             save(g); notifySnapshot()
@@ -46,26 +66,31 @@ final class ResetSnapshotStore {
         NotificationCenter.default.post(name: .snapshotSaved, object: nil)
     }
 
-    func load() -> Entry? {
-        guard
-            let data = UserDefaults.standard.data(forKey: key),
-            let entry = try? JSONDecoder().decode(Entry.self, from: data)
-        else { return nil }
-        if Date().timeIntervalSince(entry.savedAt) > expirySeconds {
-            discard()
-            return nil
-        }
-        return entry
+    /// Returns the most recent entry; used by the existing banner restore flow.
+    func load() -> Entry? { loadAll().first }
+
+    func remove(_ entry: Entry) {
+        var entries = loadAll()
+        entries.removeAll { $0.id == entry.id }
+        saveAll(entries)
     }
 
+    /// Removes the most recent entry; preserves existing banner/discard semantics.
     func discard() {
-        UserDefaults.standard.removeObject(forKey: key)
+        var entries = loadAll()
+        if !entries.isEmpty { entries.removeFirst() }
+        saveAll(entries)
     }
 
+    /// Restores the most recent snapshot; preserves existing banner restore flow.
     func restore() {
         guard let entry = load() else { return }
+        restore(entry: entry)
+    }
+
+    func restore(entry: Entry) {
         GameManager.shared.currentGame = entry.gameData
         GameManager.shared.saveCurrent()
-        discard()
+        remove(entry)
     }
 }

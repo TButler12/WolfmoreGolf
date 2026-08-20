@@ -148,6 +148,7 @@ enum SkinsEngine {
                 winningPlayerIndexes: [],
                 awardedSkinCount: 0,
                 carriedToNextHole: carryoversEnabled,
+                tiedPlayerIndexes: carryoversEnabled ? winners : [],
                 note: carryoversEnabled ? "Tie - carryover" : "Tie - no skin"
             )
         }

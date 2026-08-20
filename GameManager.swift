@@ -16,11 +16,6 @@ final class GameManager {
     var canRandomizeTeams = false   // Only true right after a Reset
     var randomizeUnlocked: Bool = false   // locked by default
 
-    // Tracks which wolf team player last received an odd dollar, for fair alternation.
-    // Reset each new game; updated by computeHolePayout when a remainder occurs.
-    var lastOddDollarRecipient: Int? = nil
-    var lastOddDollarHole: Int = -1
-
     private init() {}
     
     // Single save slot (no external store, no ids)
@@ -39,8 +34,6 @@ final class GameManager {
         if let sessionId = currentGame?.liveSessionId {
             Task { try? await SupabaseService.shared.archiveWolfSession(id: sessionId) }
         }
-        lastOddDollarRecipient = nil
-        lastOddDollarHole = -1
         var g = baselineNewGame(named: name)
         currentGame = g
         saveCurrent()
@@ -135,8 +128,11 @@ final class GameManager {
             fresh.tournamentIsCreator   = old.tournamentIsCreator
             fresh.groupCode             = old.groupCode
             fresh.tournamentMatchId     = old.tournamentMatchId
-            fresh.tournamentPotAmount   = old.tournamentPotAmount
-            fresh.tournamentCarryTies   = old.tournamentCarryTies
+            fresh.tournamentPotAmount          = old.tournamentPotAmount
+            fresh.tournamentCarryTies          = old.tournamentCarryTies
+            fresh.tournamentStablefordEnabled  = old.tournamentStablefordEnabled
+            fresh.stablefordBaselineOpt        = old.stablefordBaselineOpt
+            fresh.stablefordCountingPlayersOpt = old.stablefordCountingPlayersOpt
         }
         // If you want to keep the existing per-hole stakes, uncomment:
         // fresh.gameHoleDollarsArray = old.gameHoleDollarsArray

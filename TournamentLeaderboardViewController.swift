@@ -9,6 +9,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private struct ScoreRow  { let rank: Int; let name: String; let total: Int;    let holesPlayed: Int }
     private struct GroupRow  { let matchId: String; let playerNames: [String];     let holesPlayed: Int }
     private struct SkinsRow  { let rank: Int; let name: String; let skinsWon: Int; let holesPlayed: Int; let potPayout: Double? }
+    private struct PtsRow    { let rank: Int; let name: String; let dayPts: Int;   let holesPlayed: Int }
 
     // MARK: - State
     let tournamentCode: String
@@ -19,6 +20,32 @@ final class TournamentLeaderboardViewController: UIViewController {
     private var scoreData:      [ScoreRow]  = []
     private var groupData:      [GroupRow]  = []
     private var skinsData:      [SkinsRow]  = []
+    private var stablefordIndividualData: [PtsRow] = []
+    private var stablefordTeamData:       [PtsRow] = []
+
+    // Local overrides — set at init from GameData so server record mismatches don't break display.
+    private let localGameType: String?
+    private let localStablefordEnabled: Bool
+    // Detected from actual hole_scores rows (fallback for tournaments created before Stableford support).
+    private var rowsDetectedStableford = false
+
+    // Whether this tournament has a money format (Wolf/Skins) active.
+    private var hasMoneyFormat: Bool {
+        let gt = record?.gameType ?? localGameType ?? "wolf"
+        return gt != "stableford"
+    }
+    // Whether this tournament has Stableford points tracking active.
+    private var hasStablefordFormat: Bool {
+        localStablefordEnabled
+            || localGameType == "stableford"
+            || record?.gameType == "stableford"
+            || record?.stablefordEnabled == true
+            || rowsDetectedStableford
+    }
+
+    // Current view mode: true = $ Money tabs, false = Pts tabs.
+    private var showingMoneyView: Bool = true
+
     private var refreshTimer: Timer?
     private var isRefreshing = false
     private var availableDays: [Int] = []
@@ -41,17 +68,20 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let liveDot        = UIView()
     private let liveLabel      = UILabel()
     private let statsLabel     = UILabel()
-    private let potBannerLabel = UILabel()
-    private let segment       = UISegmentedControl(items: ["Money", "Net Score", "Groups", "Tournament"])
-    private let dayPicker     = UISegmentedControl()
-    private let gameTypePicker = UISegmentedControl(items: ["Wolf", "Net Skins", "Gross Skins"])
-    private let tableView     = UITableView(frame: .zero, style: .plain)
-    private let spinner       = UIActivityIndicatorView(style: .medium)
+    private let potBannerLabel  = UILabel()
+    private let moneyPtsToggle  = UISegmentedControl(items: ["$ Money", "Pts"])
+    private let segment         = UISegmentedControl(items: ["Money", "Net Score", "Groups", "Tournament"])
+    private let dayPicker       = UISegmentedControl()
+    private let gameTypePicker  = UISegmentedControl(items: ["Wolf", "Net Skins", "Gross Skins"])
+    private let tableView       = UITableView(frame: .zero, style: .plain)
+    private let spinner         = UIActivityIndicatorView(style: .medium)
 
     // MARK: - Init
-    init(code: String, isOrganizerView: Bool = false) {
+    init(code: String, isOrganizerView: Bool = false, gameType: String? = nil, stablefordEnabled: Bool = false) {
         self.tournamentCode = code.uppercased()
         self.isOrganizerView = isOrganizerView
+        self.localGameType = gameType
+        self.localStablefordEnabled = stablefordEnabled
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -254,6 +284,7 @@ final class TournamentLeaderboardViewController: UIViewController {
             recompute()
             updateDayPicker()
             applyHeader()
+            applySegmentTitles()
             tableView.reloadData()
         } catch {
             print("❌ leaderboard loadData error: \(error)")
@@ -262,6 +293,9 @@ final class TournamentLeaderboardViewController: UIViewController {
 
     // MARK: - Aggregation
     private func recompute() {
+        // Auto-detect Stableford from actual row data (handles tournaments created before Stableford support).
+        rowsDetectedStableford = allRows.contains { $0.gameType == "stableford" }
+
         // ── Deduplicate: one row per (playerName, day, hole, game_type) ──
         let deduped: [TournamentHoleScoreRow] = {
             var seen = Set<String>()
@@ -284,7 +318,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         // Full tournament field — every player with any data under this code, any day.
         // Used to ensure all players appear on every day tab, even if that day's data
         // is missing (e.g. scores not yet submitted, or submitted without tournament linkage).
-        let fieldPlayers = Set(allRows.map { $0.playerName })
+        let fieldPlayers = Set(allRows.map { $0.playerName }).subtracting(["Team"])
 
         // ── Money ──
         var dayTotals: [String: Double] = [:]
@@ -511,10 +545,10 @@ final class TournamentLeaderboardViewController: UIViewController {
             ScoreRow(rank: i+1, name: kv.key, total: kv.value, holesPlayed: sHoles[kv.key] ?? 0)
         }
 
-        // ── Groups: from full deduped set (not day-filtered) ──
+        // ── Groups: from full deduped set (not day-filtered); exclude synthetic team rows ──
         var gNames: [String: [String]]  = [:]
         var gHoles: [String: Set<Int>]  = [:]
-        for r in deduped {
+        for r in deduped where r.gameType != "stableford_team" && r.playerName != "Team" {
             if !(gNames[r.matchId, default: []].contains(r.playerName)) {
                 gNames[r.matchId, default: []].append(r.playerName)
             }
@@ -523,6 +557,61 @@ final class TournamentLeaderboardViewController: UIViewController {
         groupData = gNames.map { id, names in
             GroupRow(matchId: id, playerNames: names, holesPlayed: gHoles[id]?.count ?? 0)
         }.sorted { ($0.playerNames.first ?? "") < ($1.playerNames.first ?? "") }
+
+        // ── Stableford individual ──
+        // One row per player: their running total pts at their furthest committed hole.
+        // Exclude "Team" name defensively — team totals are never individual competitors.
+        let sfIndividualRows = deduped.filter {
+            ($0.gameType ?? "") == "stableford"
+                && ($0.day ?? 1) == currentDay
+                && $0.playerName != "Team"
+        }
+        var sfPts:   [String: Int] = [:]
+        var sfHoles: [String: Int] = [:]
+        for r in sfIndividualRows {
+            let pts = Int((r.totalMoney ?? 0).rounded())
+            if (sfPts[r.playerName] ?? -1) < pts { sfPts[r.playerName] = pts }
+            sfHoles[r.playerName] = (sfHoles[r.playerName] ?? 0) + 1
+        }
+        stablefordIndividualData = sfPts.sorted {
+            let aH = sfHoles[$0.key] ?? 0; let bH = sfHoles[$1.key] ?? 0
+            if aH > 0 && bH == 0 { return true }
+            if aH == 0 && bH > 0 { return false }
+            return $0.value > $1.value
+        }.enumerated().map { i, kv in
+            PtsRow(rank: i+1, name: kv.key, dayPts: kv.value, holesPlayed: sfHoles[kv.key] ?? 0)
+        }
+
+        // ── Stableford team ──
+        // One row per matchId (playing group): their team running total at their furthest hole.
+        let sfTeamRows = deduped.filter {
+            ($0.gameType ?? "") == "stableford_team" && ($0.day ?? 1) == currentDay
+        }
+        var teamPts:   [String: Int] = [:]   // matchId → best totalMoney seen
+        var teamHoles: [String: Int] = [:]   // matchId → holes submitted
+        var teamLabel: [String: String] = [:] // matchId → display label (player names)
+        for r in sfTeamRows {
+            let pts = Int((r.totalMoney ?? 0).rounded())
+            if (teamPts[r.matchId] ?? -1) < pts { teamPts[r.matchId] = pts }
+            teamHoles[r.matchId] = (teamHoles[r.matchId] ?? 0) + 1
+        }
+        // Build display label from wolf/stableford player names in the same matchId
+        let playerRowsByMatch = Dictionary(grouping: deduped.filter {
+            $0.gameType == "stableford" && ($0.day ?? 1) == currentDay
+        }, by: { $0.matchId })
+        for (mid, prows) in playerRowsByMatch {
+            let names = Array(Set(prows.map { $0.playerName })).sorted().prefix(3)
+            teamLabel[mid] = names.joined(separator: ", ")
+        }
+        stablefordTeamData = teamPts.sorted {
+            let aH = teamHoles[$0.key] ?? 0; let bH = teamHoles[$1.key] ?? 0
+            if aH > 0 && bH == 0 { return true }
+            if aH == 0 && bH > 0 { return false }
+            return $0.value > $1.value
+        }.enumerated().map { i, kv in
+            let label = teamLabel[kv.key] ?? kv.key
+            return PtsRow(rank: i+1, name: label, dayPts: kv.value, holesPlayed: teamHoles[kv.key] ?? 0)
+        }
     }
 
     private func updateDayPicker() {
@@ -600,7 +689,10 @@ final class TournamentLeaderboardViewController: UIViewController {
         potBannerLabel.numberOfLines = 1
         potBannerLabel.isHidden      = true
 
-        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, potBannerLabel, gameTypePicker, dayPicker, segment])
+        moneyPtsToggle.isHidden = true   // shown only when both modes are active
+        moneyPtsToggle.addTarget(self, action: #selector(moneyPtsToggleChanged), for: .valueChanged)
+
+        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, potBannerLabel, moneyPtsToggle, gameTypePicker, dayPicker, segment])
         vStack.axis = .vertical; vStack.spacing = 6
         vStack.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(vStack)
@@ -722,6 +814,38 @@ final class TournamentLeaderboardViewController: UIViewController {
     @objc private func segmentChanged() {
         tableView.reloadData()
     }
+
+    private func applySegmentTitles() {
+        // Determine which modes are available and update toggle visibility.
+        let bothActive = hasMoneyFormat && hasStablefordFormat
+        moneyPtsToggle.isHidden = !bothActive
+        if !hasMoneyFormat    { showingMoneyView = false }
+        if !hasStablefordFormat { showingMoneyView = true }
+        moneyPtsToggle.selectedSegmentIndex = showingMoneyView ? 0 : 1
+
+        // Rebuild the tab bar to match the active mode (avoids stale segment indices).
+        while segment.numberOfSegments > 0 { segment.removeSegment(at: 0, animated: false) }
+        if showingMoneyView {
+            segment.insertSegment(withTitle: "Money",      at: 0, animated: false)
+            segment.insertSegment(withTitle: "Net Score",  at: 1, animated: false)
+            segment.insertSegment(withTitle: "Groups",     at: 2, animated: false)
+            segment.insertSegment(withTitle: "Tournament", at: 3, animated: false)
+            gameTypePicker.isHidden = false
+        } else {
+            segment.insertSegment(withTitle: "Individual", at: 0, animated: false)
+            segment.insertSegment(withTitle: "Team",       at: 1, animated: false)
+            segment.insertSegment(withTitle: "Groups",     at: 2, animated: false)
+            gameTypePicker.isHidden = true
+        }
+        segment.selectedSegmentIndex = 0
+    }
+
+    @objc private func moneyPtsToggleChanged() {
+        showingMoneyView = (moneyPtsToggle.selectedSegmentIndex == 0)
+        applySegmentTitles()
+        applyHeader()
+        tableView.reloadData()
+    }
 }
 
 // MARK: - UITableViewDataSource / Delegate
@@ -729,12 +853,21 @@ final class TournamentLeaderboardViewController: UIViewController {
 extension TournamentLeaderboardViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        switch segment.selectedSegmentIndex {
-        case 0: return (selectedGameType == "skins" || selectedGameType == "gross_skins") ? skinsData.count : moneyData.count
-        case 1: return scoreData.count
-        case 2: return groupData.count
-        case 3: return tournamentData.count
-        default: return 0
+        if showingMoneyView {
+            switch segment.selectedSegmentIndex {
+            case 0: return (selectedGameType == "skins" || selectedGameType == "gross_skins") ? skinsData.count : moneyData.count
+            case 1: return scoreData.count
+            case 2: return groupData.count
+            case 3: return tournamentData.count
+            default: return 0
+            }
+        } else {
+            switch segment.selectedSegmentIndex {
+            case 0: return stablefordIndividualData.count
+            case 1: return stablefordTeamData.count
+            case 2: return groupData.count
+            default: return 0
+            }
         }
     }
 
@@ -742,63 +875,89 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let me = currentUserName
         let i  = indexPath.row
-        switch segment.selectedSegmentIndex {
 
-        case 0:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "money",
-                                                     for: indexPath) as! LeaderboardMoneyCell
-            if selectedGameType == "skins" || selectedGameType == "gross_skins" {
-                let r = skinsData[i]
-                cell.configureSkins(rank: r.rank, name: r.name, skinsWon: r.skinsWon,
-                                    potPayout: r.potPayout,
-                                    holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
-            } else {
-                let r = moneyData[i]
-                cell.configure(rank: r.rank, name: r.name, total: r.dayTotal,
+        if showingMoneyView {
+            switch segment.selectedSegmentIndex {
+            case 0:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "money", for: indexPath) as! LeaderboardMoneyCell
+                if selectedGameType == "skins" || selectedGameType == "gross_skins" {
+                    let r = skinsData[i]
+                    cell.configureSkins(rank: r.rank, name: r.name, skinsWon: r.skinsWon,
+                                        potPayout: r.potPayout, holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+                } else {
+                    let r = moneyData[i]
+                    cell.configure(rank: r.rank, name: r.name, total: r.dayTotal,
+                                   holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+                }
+                return cell
+            case 1:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "score", for: indexPath) as! LeaderboardScoreCell
+                let r = scoreData[i]
+                cell.configure(rank: r.rank, name: r.name, total: r.total,
                                holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+                return cell
+            case 2:
+                return makeGroupCell(tableView, indexPath: indexPath, row: groupData[i])
+            case 3:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "money", for: indexPath) as! LeaderboardMoneyCell
+                let r = tournamentData[i]
+                cell.configure(rank: r.rank, name: r.name, total: r.total,
+                               holesPlayed: r.holesPlayed, isCurrentUser: r.name == me, dayTotal: r.dayTotal)
+                return cell
+            default:
+                return UITableViewCell()
             }
-            return cell
-
-        case 3:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "money",
-                                                     for: indexPath) as! LeaderboardMoneyCell
-            let r = tournamentData[i]
-            cell.configure(rank: r.rank, name: r.name, total: r.total,
-                           holesPlayed: r.holesPlayed, isCurrentUser: r.name == me,
-                           dayTotal: r.dayTotal)
-            return cell
-
-        case 1:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "score",
-                                                     for: indexPath) as! LeaderboardScoreCell
-            let r = scoreData[i]
-            cell.configure(rank: r.rank, name: r.name, total: r.total,
-                           holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
-            return cell
-
-        case 2:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "group", for: indexPath)
-            let r = groupData[i]
-            var cfg = cell.defaultContentConfiguration()
-            cfg.text = r.playerNames.joined(separator: ", ")
-            cfg.secondaryText = "\(r.holesPlayed) hole\(r.holesPlayed == 1 ? "" : "s") played"
-            cell.contentConfiguration = cfg
-            cell.accessoryType  = .disclosureIndicator
-            cell.backgroundColor = .systemBackground
-            return cell
-
-        default:
-            return UITableViewCell()
+        } else {
+            switch segment.selectedSegmentIndex {
+            case 0:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "money", for: indexPath) as! LeaderboardMoneyCell
+                let r = stablefordIndividualData[i]
+                cell.configurePoints(rank: r.rank, name: r.name, pts: r.dayPts,
+                                     holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+                return cell
+            case 1:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "money", for: indexPath) as! LeaderboardMoneyCell
+                let r = stablefordTeamData[i]
+                cell.configurePoints(rank: r.rank, name: r.name, pts: r.dayPts,
+                                     holesPlayed: r.holesPlayed, isCurrentUser: false)
+                return cell
+            case 2:
+                return makeGroupCell(tableView, indexPath: indexPath, row: groupData[i])
+            default:
+                return UITableViewCell()
+            }
         }
     }
 
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        if segment.selectedSegmentIndex == 0 {
-            tableView.deselectRow(at: indexPath, animated: true)
+    private func makeGroupCell(_ tableView: UITableView, indexPath: IndexPath, row: GroupRow) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "group", for: indexPath)
+        var cfg = cell.defaultContentConfiguration()
+        cfg.text = row.playerNames.joined(separator: ", ")
+        cfg.secondaryText = "\(row.holesPlayed) hole\(row.holesPlayed == 1 ? "" : "s") played"
+        cell.contentConfiguration = cfg
+        cell.accessoryType   = .disclosureIndicator
+        cell.backgroundColor = .systemBackground
+        return cell
+    }
 
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+
+        // Groups tap — both Money and Pts modes have Groups at segment index 2.
+        if segment.selectedSegmentIndex == 2 {
+            let g = groupData[indexPath.row]
+            // Filter rows to the currently displayed game type so GroupDetail shows matching data.
+            let filterType: String = showingMoneyView ? selectedGameType : "stableford"
+            let rows = allRows.filter { $0.matchId == g.matchId && ($0.gameType ?? "wolf") == filterType }
+            let vc = GroupDetailViewController(matchId: g.matchId, playerNames: g.playerNames, rows: rows)
+            navigationController?.pushViewController(vc, animated: true)
+            return
+        }
+
+        // Money mode — segment 0 interactions.
+        if showingMoneyView && segment.selectedSegmentIndex == 0 {
             if selectedGameType == "skins" || selectedGameType == "gross_skins" {
                 let row = skinsData[indexPath.row]
-                // Recompute field-wide per-hole to get exact holes and carry amounts for this player.
                 let useGross2 = (selectedGameType == "gross_skins")
                 let detailDay = selectedDay ?? availableDays.last ?? 1
                 let allDayRows = allRows.filter { $0.gameType == selectedGameType && ($0.day ?? 1) == detailDay }
@@ -846,6 +1005,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                 return
             }
 
+            // Wolf money carry-over (organizer only).
             guard isOrganizerView || GameManager.shared.currentGame?.tournamentIsOrganizer == true else { return }
             let row = moneyData[indexPath.row]
             let alert = UIAlertController(
@@ -881,17 +1041,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
             })
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             present(alert, animated: true)
-            return
         }
-
-        tableView.deselectRow(at: indexPath, animated: true)
-        guard segment.selectedSegmentIndex == 2 else { return }
-        let g    = groupData[indexPath.row]
-        let rows = allRows.filter { $0.matchId == g.matchId }
-        let vc   = GroupDetailViewController(matchId: g.matchId,
-                                              playerNames: g.playerNames,
-                                              rows: rows)
-        navigationController?.pushViewController(vc, animated: true)
     }
 }
 
@@ -971,6 +1121,18 @@ private final class LeaderboardMoneyCell: UITableViewCell {
         holesLabel.text        = "\(holesPlayed)h"
         dayTotalLabel.isHidden = true
         backgroundColor        = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
+    }
+
+    func configurePoints(rank: Int, name: String, pts: Int, holesPlayed: Int, isCurrentUser: Bool) {
+        let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
+        rankLabel.text       = "#\(rank)"
+        rankLabel.textColor  = rank == 1 ? gold : .secondaryLabel
+        nameLabel.text       = name
+        moneyLabel.text      = "\(pts) pt\(pts == 1 ? "" : "s")"
+        moneyLabel.textColor = pts > 0 ? .systemGreen : .secondaryLabel
+        holesLabel.text      = "\(holesPlayed)h"
+        dayTotalLabel.isHidden = true
+        backgroundColor      = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
     }
 
     func configure(rank: Int, name: String, total: Double, holesPlayed: Int, isCurrentUser: Bool, dayTotal: Double? = nil) {

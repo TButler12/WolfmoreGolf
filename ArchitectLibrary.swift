@@ -500,6 +500,9 @@ enum ArchitectLibrary {
         "Tom Simpson / Herbert Fowler":
             "British design partnership responsible for Cruden Bay Golf Club in Scotland, a dramatic links on the Aberdeenshire coast.",
 
+        "Tom Jackson":
+            "South Carolina–based architect from Taylors, SC who has been designing and building golf courses since 1965. Trained under Robert Trent Jones Sr. and George Cobb before founding his own firm in 1971. Has been involved in over 100 projects, the majority in the Southeast, spanning private, semi-private, resort, and public courses. His Cliffs at Glassy north of Greenville (opened 1992) was ranked Fourth Most Beautiful in the Nation by Golf Digest and launched the nationally renowned Cliffs residential golf community. Also designed Prestonwood Country Club in Cary, NC, host of the SAS Championship on the Senior Tour, and Mount Vintage Plantation in North Augusta, called a magnificent layout by Byron Nelson. Inducted into the Carolinas Golf Hall of Fame in 2007.",
+
         "Tom Weiskopf":
             "PGA Tour champion and respected architect known for designs that balance beauty with strategic challenge. Known for Forest Dunes, Frost Creek, and Black Desert Resort.",
 

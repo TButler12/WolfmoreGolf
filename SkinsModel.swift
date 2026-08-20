@@ -46,6 +46,7 @@ struct SkinsHoleResult: Codable {
     var winningPlayerIndexes: [Int] = []
     var awardedSkinCount: Int = 0
     var carriedToNextHole: Bool = false
+    var tiedPlayerIndexes: [Int] = []  // seats that tied for lowest net when carriedToNextHole = true
     var note: String? = nil
 }
 

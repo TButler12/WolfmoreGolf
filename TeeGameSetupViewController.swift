@@ -8,19 +8,25 @@ final class TeeGameSetupViewController: UIViewController {
     private let contentView = UIView()
 
     private let nameField        = UITextField()
-    private let gameTypeControl  = UISegmentedControl(items: ["Wolf", "Skins"])
+    private let gameTypeControl  = UISegmentedControl(items: ["Wolf", "Skins", "Stableford"])
     private let stakeField       = UITextField()
     private let potField         = UITextField()
     private let carryTiesControl = UISegmentedControl(items: ["No Carry", "Carry Ties"])
     private let createButton     = UIButton(type: .system)
 
-    private let stakeRow  = UIView()
-    private let potRow    = UIView()
-    private let carryRow  = UIView()
+    private let stakeRow            = UIView()
+    private let potRow              = UIView()
+    private let carryRow            = UIView()
+    private let stablefordRow       = UIView()
+    private let stablefordToggleRow = UIView()
 
-    private let stakeLabel = UILabel()
-    private let potLabel   = UILabel()
-    private let carryLabel = UILabel()
+    private let stakeLabel   = UILabel()
+    private let potLabel     = UILabel()
+    private let carryLabel   = UILabel()
+
+    private let baselineControl   = UISegmentedControl(items: ["Par", "Bogey"])
+    private let teamCountControl  = UISegmentedControl(items: ["Best 2", "Best 3", "All 4"])
+    private let stablefordSwitch  = UISwitch()
 
     // MARK: - Lifecycle
 
@@ -90,7 +96,7 @@ final class TeeGameSetupViewController: UIViewController {
 
         // Tournament name
         let infoLabel = UILabel()
-        infoLabel.text = "Tournament mode tracks scores across all groups with a live leaderboard. Net scoring is used for both Wolf and Skins."
+        infoLabel.text = "Tournament mode tracks scores across all groups with a live leaderboard."
         infoLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
         infoLabel.textColor = .secondaryLabel
         infoLabel.numberOfLines = 0
@@ -109,6 +115,29 @@ final class TeeGameSetupViewController: UIViewController {
         stack.addArrangedSubview(formatRow)
         gameTypeControl.selectedSegmentIndex = 0
         gameTypeControl.addTarget(self, action: #selector(gameTypeChanged), for: .valueChanged)
+
+        // "Also track Stableford points" toggle (Wolf/Skins only — hidden for pure Stableford format)
+        let sfToggleLabel = UILabel()
+        sfToggleLabel.text = "Also track Stableford points"
+        sfToggleLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        sfToggleLabel.textColor = .secondaryLabel
+        sfToggleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        stablefordSwitch.addTarget(self, action: #selector(stablefordSwitchChanged), for: .valueChanged)
+        let sfToggleInner = UIStackView(arrangedSubviews: [sfToggleLabel, stablefordSwitch])
+        sfToggleInner.axis = .horizontal
+        sfToggleInner.alignment = .center
+        sfToggleInner.spacing = 8
+        stablefordToggleRow.translatesAutoresizingMaskIntoConstraints = false
+        stablefordToggleRow.addSubview(sfToggleInner)
+        sfToggleInner.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            sfToggleInner.topAnchor.constraint(equalTo: stablefordToggleRow.topAnchor),
+            sfToggleInner.leadingAnchor.constraint(equalTo: stablefordToggleRow.leadingAnchor),
+            sfToggleInner.trailingAnchor.constraint(equalTo: stablefordToggleRow.trailingAnchor),
+            sfToggleInner.bottomAnchor.constraint(equalTo: stablefordToggleRow.bottomAnchor),
+        ])
+        stablefordToggleRow.isHidden = true
+        stack.addArrangedSubview(stablefordToggleRow)
 
         // Stake (Skins only, disabled when pot mode is set)
         stakeLabel.text = "Stake ($ per skin)"
@@ -173,6 +202,27 @@ final class TeeGameSetupViewController: UIViewController {
             carryStack.bottomAnchor.constraint(equalTo: carryRow.bottomAnchor),
         ])
         stack.addArrangedSubview(carryRow)
+
+        // Stableford rules (Stableford format only)
+        baselineControl.selectedSegmentIndex = 0
+        teamCountControl.selectedSegmentIndex = 1
+        let sfStack = UIStackView(arrangedSubviews: [
+            labeled("Scoring Baseline", control: baselineControl),
+            labeled("Scores That Count Per Hole", control: teamCountControl),
+        ])
+        sfStack.axis = .vertical
+        sfStack.spacing = 16
+        stablefordRow.translatesAutoresizingMaskIntoConstraints = false
+        stablefordRow.addSubview(sfStack)
+        sfStack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            sfStack.topAnchor.constraint(equalTo: stablefordRow.topAnchor),
+            sfStack.leadingAnchor.constraint(equalTo: stablefordRow.leadingAnchor),
+            sfStack.trailingAnchor.constraint(equalTo: stablefordRow.trailingAnchor),
+            sfStack.bottomAnchor.constraint(equalTo: stablefordRow.bottomAnchor),
+        ])
+        stablefordRow.isHidden = true
+        stack.addArrangedSubview(stablefordRow)
     }
 
     private func setupCreateButton() {
@@ -227,11 +277,22 @@ final class TeeGameSetupViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func gameTypeChanged() {
-        let isSkins = gameTypeControl.selectedSegmentIndex == 1
-        stakeRow.isHidden = !isSkins
-        potRow.isHidden   = !isSkins
-        carryRow.isHidden = !isSkins
+        let isSkins      = gameTypeControl.selectedSegmentIndex == 1
+        let isStableford = gameTypeControl.selectedSegmentIndex == 2
+        stakeRow.isHidden            = !isSkins
+        potRow.isHidden              = !isSkins
+        carryRow.isHidden            = !isSkins
+        // Toggle only makes sense when Wolf/Skins is the primary format.
+        stablefordToggleRow.isHidden = isStableford
+        // Stableford rules (baseline/team count) shown for pure Stableford OR when the toggle is on.
+        stablefordRow.isHidden       = !isStableford && !stablefordSwitch.isOn
     }
+
+    @objc private func stablefordSwitchChanged() {
+        stablefordRow.isHidden = !stablefordSwitch.isOn
+    }
+
+
 
     @objc private func potFieldChanged() {
         let hasPot = !(potField.text?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
@@ -287,6 +348,29 @@ final class TeeGameSetupViewController: UIViewController {
             carryTies = (carryIdx == 1)
         }
 
+        var sfBaseline: String? = nil
+        var sfTeamCount: Int? = nil
+        var sfEnabled: Bool? = nil
+
+        if gameType == "stableford" {
+            // Pure Stableford format — baseline and team count always apply.
+            sfBaseline  = baselineControl.selectedSegmentIndex == 1 ? "bogey" : "par"
+            switch teamCountControl.selectedSegmentIndex {
+            case 0:  sfTeamCount = 2
+            case 2:  sfTeamCount = 4
+            default: sfTeamCount = 3
+            }
+        } else if stablefordSwitch.isOn {
+            // Hybrid: Wolf/Skins primary format + Stableford overlay.
+            sfEnabled   = true
+            sfBaseline  = baselineControl.selectedSegmentIndex == 1 ? "bogey" : "par"
+            switch teamCountControl.selectedSegmentIndex {
+            case 0:  sfTeamCount = 2
+            case 2:  sfTeamCount = 4
+            default: sfTeamCount = 3
+            }
+        }
+
         let spinner = UIAlertController(title: nil, message: "Creating tournament…", preferredStyle: .alert)
         present(spinner, animated: true)
 
@@ -299,7 +383,10 @@ final class TeeGameSetupViewController: UIViewController {
                     stake: stake,
                     potAmount: potAmount,
                     carryTies: carryTies,
-                    courseName: courseName
+                    courseName: courseName,
+                    stablefordBaseline: sfBaseline,
+                    stablefordTeamCount: sfTeamCount,
+                    stablefordEnabled: sfEnabled
                 )
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
@@ -313,7 +400,10 @@ final class TeeGameSetupViewController: UIViewController {
                             g.tournamentDay         = 1
                             g.tournamentIsCreator   = (record.createdBy == DeviceID.id)
                             g.tournamentIsOrganizer = g.tournamentIsCreator
-                            g.tournamentPotAmount   = record.potAmount
+                            g.tournamentPotAmount       = record.potAmount
+                            g.tournamentStablefordEnabled = record.stablefordEnabled
+                            g.stablefordBaseline        = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+                            g.stablefordCountingPlayers = record.stablefordTeamCount ?? 3
                             if record.gameType == "skins", let stake = record.stake {
                                 var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                                 skins.settings.skinValue = stake

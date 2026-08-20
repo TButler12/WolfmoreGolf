@@ -1,5 +1,9 @@
 import Foundation
 
+enum StablefordBaseline: String, Codable {
+    case par, bogey
+}
+
 enum HammerStyle: String, Codable {
     case doubling  // traditional Wolf: ×2, ×4, ×8...
     case additive  // TGL style: stake grows linearly (+base each tap)
@@ -44,6 +48,11 @@ struct GameData: Codable {
     // Written at join/rejoin time; read by the tournament batch calc in GameViewController.
     var tournamentPotAmount: Double? = nil
     var tournamentCarryTies: Bool?   = nil
+    // Optional so old saves (missing these keys) decode safely; use computed wrappers below.
+    var stablefordBaselineOpt: StablefordBaseline? = nil
+    var stablefordCountingPlayersOpt: Int? = nil
+    // When true, Stableford rows are co-submitted alongside the primary money format (hybrid).
+    var tournamentStablefordEnabled: Bool? = nil
 
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: STANDARD_HOLES)
@@ -102,6 +111,10 @@ struct GameData: Codable {
 
     var aloneApplied: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
     var aloneBaseAmount: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
+
+    // Pure stake per hole before any hole-scoped multipliers (roll/reroll/alone/press).
+    // Only written by explicit stake adjustments; never by multiplier toggles.
+    var holeBaseAmount: [Double] = Array(repeating: 2.0, count: STANDARD_HOLES)
 
     var wolfButtonStatus: [[Bool]] = Array(
         repeating: Array(repeating: false, count: STANDARD_HOLES),
@@ -175,12 +188,44 @@ struct GameData: Codable {
 }
 
 extension GameData {
+    /// Recomputes `gameHoleDollarsArray[h]` from the pure base × press multiplier × active hole-scoped flags.
+    /// Call this after toggling rollApplied, rerollApplied, or aloneApplied on or off.
+    mutating func recomputeHoleAmount(hole h: Int) {
+        guard h >= 0, h < STANDARD_HOLES else { return }
+        if holeBaseAmount.count != STANDARD_HOLES { holeBaseAmount = Array(repeating: 2.0, count: STANDARD_HOLES) }
+        if gameHoleDollarsArray.count != STANDARD_HOLES { gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES) }
+
+        var amount = holeBaseAmount[h] <= 0 ? 2.0 : holeBaseAmount[h]
+
+        let pl = pressLevel[safe: h] ?? 0
+        if pl > 0 {
+            amount *= pressStyle == .additive ? Double(pl + 1) : Double(1 << pl)
+        }
+
+        if rollApplied[safe: h]   ?? false { amount *= 2.0 }
+        if rerollApplied[safe: h] ?? false { amount *= 2.0 }
+        if aloneApplied[safe: h]  ?? false { amount *= 2.0 }
+
+        gameHoleDollarsArray[h] = max(1.0, (amount * 2.0).rounded() / 2.0)
+    }
+
     func hammerMultiplier(for hole: Int) -> Double {
         let c = max(0, hammerCountPerHole?[safe: hole] ?? 0)
         switch hammerStyle {
         case .doubling: return Double(1 << c)   // 1×, 2×, 4×, 8×…
         case .additive: return Double(c + 1)    // 1×, 2×, 3×, 4×… (linear)
         }
+    }
+}
+
+extension GameData {
+    var stablefordBaseline: StablefordBaseline {
+        get { stablefordBaselineOpt ?? .par }
+        mutating set { stablefordBaselineOpt = newValue }
+    }
+    var stablefordCountingPlayers: Int {
+        get { stablefordCountingPlayersOpt ?? 3 }
+        mutating set { stablefordCountingPlayersOpt = newValue }
     }
 }
 

@@ -31,6 +31,7 @@ final class WolfSpectatorViewController: UIViewController {
     private var tabTopToSafeArea: NSLayoutConstraint?
     private var tabTopToToolbar: NSLayoutConstraint?
     private let statusBanner     = UILabel()
+
     private let namesHeaderView  = UIView()
     private let cachedHeaderCell = WolfHoleCell(style: .default, reuseIdentifier: nil)
     private let tableView        = UITableView(frame: .zero, style: .insetGrouped)
@@ -412,6 +413,7 @@ final class WolfSpectatorViewController: UIViewController {
                 if self.currentSession?.id == sessionId {
                     print("DEBUG spectator reloadData fired with \(dict.count) holes in dict")
                     self.tableView.reloadData()
+
                 } else {
                     print("DEBUG spectator skipping reloadData: currentSession=\(String(describing: self.currentSession?.id)) != target=\(sessionId)")
                 }
@@ -644,18 +646,20 @@ extension WolfSpectatorViewController: UITableViewDataSource {
     func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        (currentSession?.playerNames.count ?? 0) > 0 ? 20 : 0   // 18 holes + score totals + money totals
+        (currentSession?.playerNames.count ?? 0) > 0 ? 21 : 0   // 18 holes + score totals + money totals + skins totals
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: WolfHoleCell.reuseID, for: indexPath) as! WolfHoleCell
         guard let session = currentSession else { return cell }
         let allResults = Array(currentHoleResults.values)
-        // row 0-17 = holes 1-18, row 18 = score totals, row 19 = money totals
+        // row 0-17 = holes 1-18, row 18 = score totals, row 19 = money totals, row 20 = skins totals
         if indexPath.row == 18 {
             cell.configureAsScoreTotals(results: allResults, playerCount: session.playerNames.count)
         } else if indexPath.row == 19 {
             cell.configureAsTotals(results: allResults, playerCount: session.playerNames.count)
+        } else if indexPath.row == 20 {
+            cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
         } else {
             let hole = indexPath.row + 1  // 1-based
             let playerCount = session.playerNames.count
@@ -692,6 +696,10 @@ private final class WolfHoleCell: UITableViewCell {
     private let gameLabel  = UILabel()
     private var gameCols: [UILabel] = []
     private let gameRow    = UIStackView()
+
+    private let skinsLabel = UILabel()
+    private var skinsCols: [UILabel] = []
+    private let skinsRow   = UIStackView()
 
     private let outerStack = UIStackView()
 
@@ -808,6 +816,32 @@ private final class WolfHoleCell: UITableViewCell {
         let spacer3 = UIView()
         spacer3.setContentHuggingPriority(.defaultLow, for: .horizontal)
         gameRow.addArrangedSubview(spacer3)
+
+        // Skins sub-row: "{N}S" for winner, "C" for tied carryover players
+        skinsRow.axis     = .horizontal
+        skinsRow.spacing  = 6
+        skinsRow.isHidden = true
+        outerStack.addArrangedSubview(skinsRow)
+
+        configLabel(skinsLabel, size: 13, weight: .regular, width: 32)
+        skinsLabel.text      = "SK"
+        skinsLabel.textColor = .secondaryLabel
+        skinsRow.addArrangedSubview(skinsLabel)
+
+        let skinsDecisionSpacer = UIView()
+        skinsDecisionSpacer.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        skinsRow.addArrangedSubview(skinsDecisionSpacer)
+
+        for _ in 0..<MAX_PLAYERS {
+            let l = UILabel()
+            configLabel(l, size: 13, weight: .semibold, width: 40)
+            skinsCols.append(l)
+            skinsRow.addArrangedSubview(l)
+        }
+
+        let spacer4 = UIView()
+        spacer4.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        skinsRow.addArrangedSubview(spacer4)
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -838,8 +872,9 @@ private final class WolfHoleCell: UITableViewCell {
             col.minimumScaleFactor      = 0.7
             col.lineBreakMode           = .byClipping
         }
-        moneyRow.isHidden = true
-        gameRow.isHidden  = true
+        moneyRow.isHidden  = true
+        gameRow.isHidden   = true
+        skinsRow.isHidden  = true
     }
 
     /// Returns the shortest display label per player that keeps every entry unique.
@@ -900,6 +935,7 @@ private final class WolfHoleCell: UITableViewCell {
         }
         moneyRow.isHidden = true
         gameRow.isHidden  = true
+        skinsRow.isHidden = true
     }
 
     func configureAsTotals(results: [WolfHoleResult], playerCount: Int) {
@@ -931,6 +967,57 @@ private final class WolfHoleCell: UITableViewCell {
         }
         moneyRow.isHidden = true
         gameRow.isHidden  = true
+        skinsRow.isHidden = true
+    }
+
+    func configureAsSkinsTotals(results: [WolfHoleResult], playerNames: [String]) {
+        holePressLevel = 0
+        holeLabel.text      = "SK"
+        holeLabel.textColor = .systemYellow
+        holeLabel.font      = .systemFont(ofSize: 13, weight: .semibold)
+        moneyRow.isHidden   = true
+        gameRow.isHidden    = true
+        skinsRow.isHidden   = true
+
+        // Replay the pot to show current carryover count
+        var currentPot = 1
+        for hole in 1...18 {
+            guard let r = results.first(where: { $0.hole == hole }) else { continue }
+            if r.skinWinner != nil {
+                currentPot = 1
+            } else if r.skinTiedSeats != nil {
+                currentPot += 1
+            }
+        }
+        decisionLabel.text      = currentPot > 1 ? "\(currentPot)C" : ""
+        decisionLabel.textColor = .systemYellow
+        decisionLabel.font      = .systemFont(ofSize: 11, weight: .bold)
+
+        // Tally skins won per player — use trimmed case-insensitive matching for robustness
+        var skinsPerPlayer = Array(repeating: 0, count: playerNames.count)
+        for r in results {
+            guard let raw = r.skinWinner else { continue }
+            let winner = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            if let idx = playerNames.firstIndex(where: {
+                $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == winner
+            }) {
+                skinsPerPlayer[idx] += r.skinCount ?? 1
+            }
+        }
+
+        let playerCount = playerNames.count
+        for (i, col) in scoreCols.enumerated() {
+            guard i < playerCount else { col.text = ""; continue }
+            let total = skinsPerPlayer[i]
+            col.font = .systemFont(ofSize: 13, weight: total > 0 ? .bold : .regular)
+            if total > 0 {
+                col.text      = "\(total)S"
+                col.textColor = .systemYellow
+            } else {
+                col.text      = "—"
+                col.textColor = .secondaryLabel
+            }
+        }
     }
 
     func configure(hole: Int, result: WolfHoleResult?, playerNames: [String], cumulativeTotals: [Double] = []) {
@@ -1024,6 +1111,35 @@ private final class WolfHoleCell: UITableViewCell {
         } else {
             gameRow.isHidden = true
         }
+
+        // Skins sub-row: "{N}S" for winner, "C" for tied-carryover players, blank otherwise
+        let skinWinner = result?.skinWinner
+        let skinCount  = result?.skinCount ?? 1
+        let tiedSeats: Set<Int> = {
+            guard let raw = result?.skinTiedSeats else { return [] }
+            return Set(raw.split(separator: ",").compactMap { Int($0) })
+        }()
+        let hasSkinActivity = skinWinner != nil || !tiedSeats.isEmpty
+        if hasSkinActivity {
+            skinsRow.isHidden = false
+            for (i, col) in skinsCols.enumerated() {
+                let playerName = i < playerNames.count ? playerNames[i] : nil
+                if let winner = skinWinner?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                   let name = playerName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+                   winner == name {
+                    col.text      = "\(skinCount)S"
+                    col.textColor = .systemYellow
+                } else if tiedSeats.contains(i) {
+                    col.text      = "C"
+                    col.textColor = .secondaryLabel
+                } else {
+                    col.text      = ""
+                    col.textColor = .tertiaryLabel
+                }
+            }
+        } else {
+            skinsRow.isHidden = true
+        }
     }
 }
 
@@ -1033,3 +1149,4 @@ extension WolfSpectatorViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? { nil }
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat { 0 }
 }
+

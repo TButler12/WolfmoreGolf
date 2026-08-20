@@ -133,6 +133,12 @@ struct WolfHoleResult: Codable {
     let decision: String?
     let partnerName: String?
     let proxWinner: String?
+    // Live-summary fields
+    let skinWinner: String?
+    let skinValue: Double?
+    let nassauStatus: String?
+    let skinCount: Int?
+    let skinTiedSeats: String?
     enum CodingKeys: String, CodingKey {
         case id, hole, scores, decision, payouts, alone
         case sessionId        = "session_id"
@@ -148,6 +154,11 @@ struct WolfHoleResult: Codable {
         case hammerMultiplier = "hammer_multiplier"
         case hammerHolder     = "hammer_holder"
         case proxWinner       = "prox_winner"
+        case skinWinner       = "skin_winner"
+        case skinValue        = "skin_value"
+        case nassauStatus     = "nassau_status"
+        case skinCount        = "skin_count"
+        case skinTiedSeats    = "skin_tied_seats"
     }
 
     // Try Bool first; fall back to string comparison for inconsistently stored rows.
@@ -176,8 +187,13 @@ struct WolfHoleResult: Codable {
         hammerHolder = try c.decodeIfPresent(Int.self, forKey: .hammerHolder)
         wolfName     = try c.decodeIfPresent(String.self, forKey: .wolfName)
         decision     = try c.decodeIfPresent(String.self, forKey: .decision)
-        partnerName  = try c.decodeIfPresent(String.self, forKey: .partnerName)
-        proxWinner   = try c.decodeIfPresent(String.self, forKey: .proxWinner)
+        partnerName  = try c.decodeIfPresent(String.self,   forKey: .partnerName)
+        proxWinner   = try c.decodeIfPresent(String.self,   forKey: .proxWinner)
+        skinWinner   = try c.decodeIfPresent(String.self,   forKey: .skinWinner)
+        skinValue    = try c.decodeIfPresent(Double.self,   forKey: .skinValue)
+        nassauStatus = try c.decodeIfPresent(String.self,   forKey: .nassauStatus)
+        skinCount    = try c.decodeIfPresent(Int.self,      forKey: .skinCount)
+        skinTiedSeats = try c.decodeIfPresent(String.self,  forKey: .skinTiedSeats)
         teamWon    = Self.flexBool(c, .teamWon)
         wentAlone  = Self.flexBool(c, .wentAlone)
         wolfPlayer = try? c.decodeIfPresent(Int.self, forKey: .wolfPlayer)
@@ -219,19 +235,27 @@ struct TournamentRecord: Codable {
     let currentDay: Int?
     let coOrganizerCode: String?
     let coOrganizerDevices: [String]?
+    // Stableford-specific organizer rules
+    let stablefordBaseline: String?    // "par" (default) or "bogey"
+    let stablefordTeamCount: Int?      // 2, 3, or 4 — best-N scores count per hole
+    // When true, Stableford rows are submitted alongside the primary money format (hybrid mode).
+    let stablefordEnabled: Bool?
 
     enum CodingKeys: String, CodingKey {
         case id, code, name, stake, scoring
-        case wolfStake         = "wolf_stake"
-        case potAmount         = "pot_amount"
-        case gameType          = "game_type"
-        case carryTies         = "carry_ties"
-        case createdBy         = "created_by"
-        case createdAt         = "created_at"
-        case courseName        = "course_name"
-        case currentDay        = "current_day"
+        case wolfStake          = "wolf_stake"
+        case potAmount          = "pot_amount"
+        case gameType           = "game_type"
+        case carryTies          = "carry_ties"
+        case createdBy          = "created_by"
+        case createdAt          = "created_at"
+        case courseName         = "course_name"
+        case currentDay         = "current_day"
         case coOrganizerCode    = "co_organizer_code"
         case coOrganizerDevices = "co_organizer_devices"
+        case stablefordBaseline  = "stableford_baseline"
+        case stablefordTeamCount = "stableford_team_count"
+        case stablefordEnabled   = "stableford_enabled"
     }
 }
 

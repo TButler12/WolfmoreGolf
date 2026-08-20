@@ -27,6 +27,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private let capacity = 5
     private var maxActive: Int { capacity }
     private weak var editStakeLinkButton: UIButton?
+    private weak var stablefordToggleSwitch: UISwitch?
+    private weak var stablefordSubRow: UIView?
+    private weak var stablefordBaselineControl: UISegmentedControl?
+    private weak var stablefordCountingControl: UISegmentedControl?
     private weak var gameInfoLabel: UILabel?
     private weak var stakeInfoLabel: UILabel?
     private weak var headerCourseChipLabel: UILabel?
@@ -252,6 +256,15 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
 
         main.addArrangedSubview(hairline())
+
+        // Stableford points toggle — hidden for pure Stableford games (they use the dedicated flow)
+        let isPureStableford = GameManager.shared.currentGame?.resolvedGameType == .tournament
+        if !isPureStableford {
+            let sfRow = buildStablefordToggleRow()
+            main.addArrangedSubview(sfRow)
+            main.setCustomSpacing(2, after: sfRow)
+        }
+
         let editLink = makeEditStakeLink()
         editStakeLinkButton = editLink
         main.addArrangedSubview(editLink)
@@ -319,6 +332,85 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         l.adjustsFontForContentSizeCategory = true
         l.textColor = .secondaryLabel
         return l
+    }
+
+    private func buildStablefordToggleRow() -> UIView {
+        let wolfGreen = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+        let g = GameManager.shared.currentGame
+        let isOn = g?.tournamentStablefordEnabled == true
+
+        // Toggle row
+        let toggleRow = UIStackView()
+        toggleRow.axis = .horizontal
+        toggleRow.alignment = .center
+        toggleRow.spacing = 12
+        toggleRow.translatesAutoresizingMaskIntoConstraints = false
+        toggleRow.heightAnchor.constraint(equalToConstant: 44).isActive = true
+
+        let label = UILabel()
+        label.text = "Track Stableford Points"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        label.textColor = .label
+        label.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let sw = UISwitch()
+        sw.onTintColor = wolfGreen
+        sw.isOn = isOn
+        sw.addTarget(self, action: #selector(stablefordSwitchChanged(_:)), for: .valueChanged)
+        stablefordToggleSwitch = sw
+
+        toggleRow.addArrangedSubview(label)
+        toggleRow.addArrangedSubview(sw)
+
+        // Sub-row: baseline + counting players (visible only when toggle is on)
+        let subStack = UIStackView()
+        subStack.axis = .vertical
+        subStack.spacing = 10
+        subStack.isHidden = !isOn
+        subStack.translatesAutoresizingMaskIntoConstraints = false
+        stablefordSubRow = subStack
+
+        func makeSubRow(_ title: String, control: UISegmentedControl) -> UIStackView {
+            let lbl = UILabel()
+            lbl.text = title
+            lbl.font = UIFont.systemFont(ofSize: 13)
+            lbl.textColor = .secondaryLabel
+            lbl.setContentHuggingPriority(.required, for: .horizontal)
+            let row = UIStackView(arrangedSubviews: [lbl, control])
+            row.axis = .horizontal
+            row.alignment = .center
+            row.spacing = 10
+            return row
+        }
+
+        let baselineSeg = UISegmentedControl(items: ["Par", "Bogey"])
+        let currentBaseline = g?.stablefordBaselineOpt ?? .par
+        baselineSeg.selectedSegmentIndex = currentBaseline == .par ? 0 : 1
+        stablefordBaselineControl = baselineSeg
+
+        let countingSeg = UISegmentedControl(items: ["Best 2", "Best 3", "Best 4"])
+        let currentCounting = g?.stablefordCountingPlayersOpt ?? 3
+        countingSeg.selectedSegmentIndex = max(0, min(2, currentCounting - 2))
+        stablefordCountingControl = countingSeg
+
+        subStack.addArrangedSubview(makeSubRow("Baseline", control: baselineSeg))
+        subStack.addArrangedSubview(makeSubRow("Count", control: countingSeg))
+
+        let spacer = UIView()
+        spacer.heightAnchor.constraint(equalToConstant: 4).isActive = true
+        subStack.addArrangedSubview(spacer)
+
+        let container = UIStackView(arrangedSubviews: [toggleRow, subStack])
+        container.axis = .vertical
+        container.spacing = 0
+        container.translatesAutoresizingMaskIntoConstraints = false
+        return container
+    }
+
+    @objc private func stablefordSwitchChanged(_ sender: UISwitch) {
+        UIView.animate(withDuration: 0.22) {
+            self.stablefordSubRow?.isHidden = !sender.isOn
+        }
     }
 
     private func hairline() -> UIView {
@@ -1103,6 +1195,19 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             }
             present(ac, animated: true)
             return
+        }
+
+        let sfEnabled = stablefordToggleSwitch?.isOn == true
+        let baselineIdx = stablefordBaselineControl?.selectedSegmentIndex ?? 0
+        let countIdx = stablefordCountingControl?.selectedSegmentIndex ?? 1
+        GameManager.shared.update { g in
+            if sfEnabled {
+                g.tournamentStablefordEnabled = true
+                g.stablefordBaselineOpt = baselineIdx == 0 ? .par : .bogey
+                g.stablefordCountingPlayersOpt = countIdx + 2
+            } else {
+                g.tournamentStablefordEnabled = nil
+            }
         }
 
         pushGameVC()
