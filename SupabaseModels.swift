@@ -240,6 +240,10 @@ struct TournamentRecord: Codable {
     let stablefordTeamCount: Int?      // 2, 3, or 4 — best-N scores count per hole
     // When true, Stableford rows are submitted alongside the primary money format (hybrid mode).
     let stablefordEnabled: Bool?
+    // Wolf-specific organizer settings
+    let wolfVariant: String?    // "6pt" | "2pt" | "lowball"
+    let pressStyle: String?     // "doubling" | "additive"
+    let hammerStyle: String?    // "doubling" | "additive"
 
     enum CodingKeys: String, CodingKey {
         case id, code, name, stake, scoring
@@ -256,6 +260,9 @@ struct TournamentRecord: Codable {
         case stablefordBaseline  = "stableford_baseline"
         case stablefordTeamCount = "stableford_team_count"
         case stablefordEnabled   = "stableford_enabled"
+        case wolfVariant         = "wolf_variant"
+        case pressStyle          = "press_style"
+        case hammerStyle         = "hammer_style"
     }
 }
 

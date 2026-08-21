@@ -39,15 +39,20 @@ enum SummaryStyle: Int, CaseIterable {
         }
     }
 
-    func systemPrompt(isStableford: Bool = false) -> String {
+    func systemPrompt(isStableford: Bool = false, isTournament: Bool = false) -> String {
         let stablefordNote = isStableford ? """
             IMPORTANT: This is a Stableford round — individual points-based scoring. \
             Focus on points earned per hole, standout individual performances, and the final leaderboard. \
             Do NOT mention Wolf, Lone Wolf, Nassau, Skins, Hammers, or money — none of those apply here.\n
             """ : ""
+        let tournamentNote = isTournament ? """
+            IMPORTANT: This is a multi-group tournament. Data includes all groups and an overall money leaderboard. \
+            Structure your recap in two parts: (1) a brief summary of each group's round, calling out standout moments; \
+            (2) the overall tournament leaderboard with commentary on who's up, who's down, and who had the biggest swing.\n
+            """ : ""
         // Applied to every style: birdie always means a natural gross birdie (scored below par before handicap)
         let birdieNote = "IMPORTANT: When mentioning birdies, only reference natural gross birdies — a score of one under par on the hole before any handicap strokes. Do not call a net birdie a birdie.\n"
-        let prefix = birdieNote + stablefordNote
+        let prefix = birdieNote + stablefordNote + tournamentNote
         switch self {
         case .lockerRoom:
             return prefix + """
@@ -332,6 +337,91 @@ private enum GameContextBuilder {
     }
 }
 
+// MARK: - Tournament Context Builder
+
+private enum TournamentContextBuilder {
+
+    static func build(code: String, day: Int, tournamentName: String,
+                      courseName: String, gameType: String,
+                      coursePars: [Int]) async throws -> String {
+        let rows = try await SupabaseService.shared.fetchTournamentHoleScores(code: code)
+        let dayRows = rows.filter { ($0.day ?? 1) == day }
+
+        var lines: [String] = []
+        let df = DateFormatter(); df.dateStyle = .long; df.timeStyle = .none
+        lines.append("TOURNAMENT: \(tournamentName)")
+        lines.append("COURSE: \(courseName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Unknown Course" : courseName)")
+        lines.append("DATE: \(df.string(from: Date()))")
+        lines.append("DAY: \(day)")
+        lines.append("GAME TYPE: \(gameType)")
+        lines.append("")
+
+        // Aggregate per-player totals (take the highest-hole totalMoney as their current standing)
+        var playerTotals: [String: Double] = [:]
+        var playerHolesPlayed: [String: Int] = [:]
+        for row in dayRows {
+            let name = row.playerName
+            playerHolesPlayed[name] = max(playerHolesPlayed[name] ?? 0, row.hole)
+            if let total = row.totalMoney {
+                // totalMoney on the latest hole is the running total
+                if row.hole >= (playerHolesPlayed[name] ?? 0) {
+                    playerTotals[name] = total
+                }
+            }
+        }
+
+        // Overall leaderboard
+        let leaderboard = playerTotals.sorted { $0.value > $1.value }
+        lines.append("OVERALL LEADERBOARD (\(leaderboard.count) players):")
+        for (i, (name, total)) in leaderboard.enumerated() {
+            let holes = playerHolesPlayed[name] ?? 0
+            let sign = total >= 0 ? "+" : ""
+            lines.append("  #\(i + 1) \(name): \(sign)$\(Int(total.rounded())) (thru \(holes))")
+        }
+        lines.append("")
+
+        // Group by matchId (each matchId is one scorer group's round)
+        var byMatch: [String: [TournamentHoleScoreRow]] = [:]
+        for row in dayRows { byMatch[row.matchId, default: []].append(row) }
+
+        lines.append("GROUPS (\(byMatch.count) scoring group\(byMatch.count == 1 ? "" : "s")):")
+        for (_, groupRows) in byMatch.sorted(by: { $0.key < $1.key }) {
+            let playerNames = Array(Set(groupRows.map { $0.playerName })).sorted()
+            let maxHole = groupRows.map { $0.hole }.max() ?? 0
+            lines.append("")
+            lines.append("  Players: \(playerNames.joined(separator: ", ")) | Thru hole \(maxHole)")
+
+            // Hole-by-hole for this group
+            let holesInGroup = Array(Set(groupRows.map { $0.hole })).sorted()
+            for hole in holesInGroup {
+                let holeRows = groupRows.filter { $0.hole == hole }
+                    .sorted { $0.playerName < $1.playerName }
+                let par = (hole - 1) < coursePars.count ? coursePars[hole - 1] : 4
+                var parts: [String] = []
+                for row in holeRows {
+                    var part = "\(row.playerName): \(row.grossScore) gross"
+                    if let net = row.netScore { part += "/\(net) net" }
+                    if let money = row.holeMoney, money != 0 {
+                        let sign = money >= 0 ? "+" : ""
+                        part += " (\(sign)$\(Int(money.rounded())))"
+                    }
+                    parts.append(part)
+                }
+                lines.append("    Hole \(hole) (Par \(par)): " + parts.joined(separator: " | "))
+            }
+
+            // Group running totals
+            lines.append("    Running totals: " + playerNames.compactMap { name -> String? in
+                guard let total = playerTotals[name] else { return nil }
+                let sign = total >= 0 ? "+" : ""
+                return "\(name) \(sign)$\(Int(total.rounded()))"
+            }.joined(separator: ", "))
+        }
+
+        return lines.joined(separator: "\n")
+    }
+}
+
 // MARK: - NassauMatch summary helper
 
 private extension NassauMatch {
@@ -404,7 +494,8 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
     private func setupLoading() {
         spinner.translatesAutoresizingMaskIntoConstraints = false
         loadLabel.translatesAutoresizingMaskIntoConstraints = false
-        loadLabel.text = "Generating your round recap…"
+        let isTournament = GameManager.shared.currentGame?.tournamentCode != nil
+        loadLabel.text = isTournament ? "Fetching all groups & generating recap…" : "Generating your round recap…"
         loadLabel.font = .systemFont(ofSize: 16, weight: .medium)
         loadLabel.textColor = .secondaryLabel
         loadLabel.textAlignment = .center
@@ -529,15 +620,30 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
         noteField.resignFirstResponder()
         state = .loading
 
-        var context = GameContextBuilder.build(from: game)
         let note = noteField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if !note.isEmpty {
-            context += "\n\nAdditional context from the scorer: \(note)"
-        }
-        let systemPrompt = style.systemPrompt(isStableford: GameContextBuilder.isStableford(game))
+        let isTournament = game.tournamentCode != nil
+        let isStableford = !isTournament && GameContextBuilder.isStableford(game)
+        let systemPrompt = style.systemPrompt(isStableford: isStableford, isTournament: isTournament)
 
         Task {
             do {
+                var context: String
+                if let code = game.tournamentCode {
+                    context = try await TournamentContextBuilder.build(
+                        code: code,
+                        day: game.tournamentDay ?? 1,
+                        tournamentName: game.tournamentName ?? "Tournament",
+                        courseName: game.course.name,
+                        gameType: game.tournamentGameType ?? "wolf",
+                        coursePars: game.course.pars
+                    )
+                } else {
+                    context = GameContextBuilder.build(from: game)
+                }
+                if !note.isEmpty {
+                    context += "\n\nAdditional context from the scorer: \(note)"
+                }
+
                 let text = try await ClaudeService.generate(
                     systemPrompt: systemPrompt,
                     userMessage: "Here is the golf round data. Write your recap:\n\n\(context)"

@@ -133,6 +133,13 @@ final class GameManager {
             fresh.tournamentStablefordEnabled  = old.tournamentStablefordEnabled
             fresh.stablefordBaselineOpt        = old.stablefordBaselineOpt
             fresh.stablefordCountingPlayersOpt = old.stablefordCountingPlayersOpt
+            // Preserve organizer-set game type and wolf styles so scorers keep the
+            // tournament's configured variant across multi-round resets.
+            fresh.gameType    = old.gameType
+            fresh.pressStyle  = old.pressStyle
+            fresh.hammerStyle = old.hammerStyle
+            fresh.wolfStake   = old.wolfStake
+            fresh.gameHoleDollarsArray = old.gameHoleDollarsArray
         }
         // If you want to keep the existing per-hole stakes, uncomment:
         // fresh.gameHoleDollarsArray = old.gameHoleDollarsArray

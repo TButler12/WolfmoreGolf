@@ -40,6 +40,33 @@ final class LiveConnectedViewController: UITableViewController {
         buildSections()
         tableView.reloadData()
         checkRecentTournamentsForNewDay()
+        syncTournamentSettingsIfScorer()
+    }
+
+    // Re-fetch the organizer's latest wolf/press/hammer settings for scorer devices so
+    // setting changes made after the scorer joined are picked up automatically.
+    private func syncTournamentSettingsIfScorer() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode,
+              GameManager.shared.currentGame?.tournamentIsOrganizer == false else { return }
+        Task {
+            guard let record = try? await SupabaseService.shared.fetchTournament(code: code),
+                  record.gameType == "wolf" else { return }
+            await MainActor.run {
+                GameManager.shared.update { g in
+                    switch record.wolfVariant {
+                    case "2pt":     g.gameType = .wolf
+                    case "lowball": g.gameType = .wolfLowBall
+                    default:        g.gameType = .sixPointScotch
+                    }
+                    if let ps = record.pressStyle  { g.pressStyle  = ps == "additive" ? .additive : .doubling }
+                    if let hs = record.hammerStyle { g.hammerStyle = hs == "additive" ? .additive : .doubling }
+                    if let ws = record.wolfStake {
+                        g.wolfStake = ws
+                        g.gameHoleDollarsArray = Array(repeating: ws, count: STANDARD_HOLES)
+                    }
+                }
+            }
+        }
     }
 
     private func checkRecentTournamentsForNewDay() {
@@ -100,6 +127,12 @@ final class LiveConnectedViewController: UITableViewController {
                 icon: "trophy.fill",
                 tint: wolfGreen) { [weak self] in
                 self?.createTournamentTapped()
+            },
+            Row(title: "Calcutta Pools",
+                subtitle: "Manage auction pools, bids, and payouts",
+                icon: "dollarsign.circle.fill",
+                tint: .systemGreen) { [weak self] in
+                self?.openCalcutta()
             },
             Row(title: "Create Remote Nassau Match",
                 subtitle: "Start a live match and send an invite",
@@ -288,8 +321,20 @@ final class LiveConnectedViewController: UITableViewController {
         if GameManager.shared.currentGame == nil {
             GameManager.shared.startNewGame()
         }
-        let groupCode = UUID().uuidString
-        let tournamentMatchId = UUID().uuidString
+        // Reuse IDs if rejoining the same tournament on the same day — preserves roster claims
+        // and submitted score rows. Generate fresh IDs only for a new day or first join.
+        let liveDay = record.currentDay ?? 1
+        let existing = TournamentHistoryStore.shared.all().first { $0.code == record.code }
+        let isSameDay = existing?.lastDay == liveDay
+        let groupCode: String
+        let tournamentMatchId: String
+        if isSameDay, let savedGroup = existing?.groupCode, let savedMatch = existing?.tournamentMatchId {
+            groupCode = savedGroup
+            tournamentMatchId = savedMatch
+        } else {
+            groupCode = UUID().uuidString
+            tournamentMatchId = UUID().uuidString
+        }
         GameManager.shared.update { g in
             g.tournamentCode         = record.code
             g.groupCode              = groupCode
@@ -314,6 +359,15 @@ final class LiveConnectedViewController: UITableViewController {
             g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
             g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
             g.tournamentStablefordEnabled = record.stablefordEnabled
+            if record.gameType == "wolf" {
+                switch record.wolfVariant {
+                case "2pt":    g.gameType = .wolf
+                case "lowball": g.gameType = .wolfLowBall
+                default:       g.gameType = .sixPointScotch
+                }
+                if let ps = record.pressStyle  { g.pressStyle  = ps == "additive" ? .additive : .doubling }
+                if let hs = record.hammerStyle { g.hammerStyle = hs == "additive" ? .additive : .doubling }
+            }
         }
         let joinDay = record.currentDay ?? 1
         UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
@@ -321,7 +375,8 @@ final class LiveConnectedViewController: UITableViewController {
         let isOrg = GameManager.shared.currentGame?.tournamentIsOrganizer == true
         TournamentHistoryStore.shared.record(
             code: record.code, name: record.name,
-            gameType: record.gameType, day: joinDay, isOrganizer: isOrg)
+            gameType: record.gameType, day: joinDay, isOrganizer: isOrg,
+            groupCode: groupCode, tournamentMatchId: tournamentMatchId)
         NotificationCenter.default.post(name: .reloadUI, object: nil)
 
         // After joining as a scorer, surface ManagePlayersVC with the roster picker
@@ -352,6 +407,11 @@ final class LiveConnectedViewController: UITableViewController {
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    private func openCalcutta() {
+        let vc = CalcuttaListViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
     // MARK: - Manage Tournament
 
     private func manageTournamentTapped() {
@@ -359,6 +419,31 @@ final class LiveConnectedViewController: UITableViewController {
         sheet.addAction(UIAlertAction(title: "View Results", style: .default) { [weak self] _ in
             self?.viewOrganizerResults()
         })
+        sheet.addAction(UIAlertAction(title: "AI Summary", style: .default) { [weak self] _ in
+            self?.navigationController?.pushViewController(AISummaryViewController(), animated: true)
+        })
+        sheet.addAction(UIAlertAction(title: "Roster", style: .default) { [weak self] _ in
+            self?.showRosterSheet()
+        })
+        if GameManager.shared.currentGame?.tournamentIsOrganizer == true {
+            sheet.addAction(UIAlertAction(title: "Edit Game Settings", style: .default) { [weak self] _ in
+                self?.editTournamentSettings()
+            })
+        }
+        sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
+            self?.advanceDay()
+        })
+        if GameManager.shared.currentGame?.tournamentIsCreator == true {
+            sheet.addAction(UIAlertAction(title: "Share Organizer Access", style: .default) { [weak self] _ in
+                self?.shareOrganizerAccess()
+            })
+        }
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(sheet)
+    }
+
+    private func showRosterSheet() {
+        let sheet = UIAlertController(title: "Roster", message: nil, preferredStyle: .actionSheet)
         sheet.addAction(UIAlertAction(title: "Edit Roster", style: .default) { [weak self] _ in
             self?.editRosterTapped()
         })
@@ -373,17 +458,6 @@ final class LiveConnectedViewController: UITableViewController {
                     self?.showPastRosterImportSheet(past, into: currentCode)
                 })
             }
-            sheet.addAction(UIAlertAction(title: "Edit Settings", style: .default) { [weak self] _ in
-                self?.editTournamentSettings()
-            })
-        }
-        sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
-            self?.advanceDay()
-        })
-        if GameManager.shared.currentGame?.tournamentIsCreator == true {
-            sheet.addAction(UIAlertAction(title: "Share Organizer Access", style: .default) { [weak self] _ in
-                self?.shareOrganizerAccess()
-            })
         }
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet)

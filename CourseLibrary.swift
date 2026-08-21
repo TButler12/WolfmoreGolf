@@ -2374,13 +2374,12 @@ let LA_COSTA_NORTH_HCS: [Int] = [
 ]
 
 let LA_COSTA_NORTH_TEES: [TeeInfo] = [
-    TeeInfo(
-        teeName: "I",
-        yardage: 7500,
-        rating: 77.8,
-        slope: 146
-    )
-    
+    TeeInfo(teeName: "Black", yardage: 7500, rating: 77.8, slope: 146),
+    TeeInfo(teeName: "Gold",  yardage: 6703, rating: 74.0, slope: 137),
+    TeeInfo(teeName: "Blue",  yardage: 6419, rating: 72.8, slope: 134),
+    TeeInfo(teeName: "White", yardage: 6110, rating: 71.4, slope: 130),
+    TeeInfo(teeName: "Green", yardage: 5412, rating: 68.1, slope: 122),
+    TeeInfo(teeName: "Red",   yardage: 4502, rating: 63.9, slope: 112)
 ]
 // MARK: - Yocha Dehe Golf Club at Cache Creek
 
@@ -8959,6 +8958,179 @@ let AUDUBON_CARDINAL_HCS: [Int] = [
 let AUDUBON_CARDINAL_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Cardinal", yardage: 6843, rating: 74.1, slope: 134)
 ]
+// MARK: Gibson Bay Golf Course
+private let GIBSON_BAY_GC_ID = UUID(uuidString: "61B50BA0-0001-4001-8001-000000000001")!
+
+let GIBSON_BAY_GC_PARS: [Int] = [
+    4,5,3,4,4,3,5,4,4,
+    4,4,3,4,5,4,5,3,4
+]
+
+let GIBSON_BAY_GC_HCS: [Int] = [
+    13,3,14,4,15,17,7,18,8,
+    11,2,10,5,1,12,6,16,9
+]
+
+let GIBSON_BAY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7130, rating: 73.7, slope: 131),
+    TeeInfo(teeName: "Blue",  yardage: 6508, rating: 71.0, slope: 125),
+    TeeInfo(teeName: "White", yardage: 6002, rating: 68.8, slope: 121),
+    TeeInfo(teeName: "Gold",  yardage: 4694)
+]
+
+// MARK: Caledonia Golf & Fish Club
+private let CALEDONIA_GFC_ID = UUID(uuidString: "CA1ED0A1-A001-4001-8001-000000000001")!
+
+let CALEDONIA_GFC_PARS: [Int] = [
+    4,5,3,4,4,3,4,5,3,
+    5,3,4,4,4,4,4,3,4
+]
+
+let CALEDONIA_GFC_HCS: [Int] = [
+    12,8,14,6,2,16,4,10,18,
+    15,13,9,5,7,3,1,17,11
+]
+
+let CALEDONIA_GFC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6526),
+    TeeInfo(teeName: "White", yardage: 6121),
+    TeeInfo(teeName: "Gold",  yardage: 5710),
+    TeeInfo(teeName: "Red",   yardage: 4957)
+]
+
+// MARK: La Costa - North Course (Omni La Costa Resort)
+// MARK: La Costa - South Course (Omni La Costa Resort)
+private let LA_COSTA_SOUTH_ID = UUID(uuidString: "1AC05A02-0001-4001-8001-000000000001")!
+
+let LA_COSTA_SOUTH_PARS: [Int] = [
+    4,4,4,4,4,3,5,3,5,
+    4,3,5,4,3,4,4,5,4
+]
+
+let LA_COSTA_SOUTH_HCS: [Int] = [
+    3,9,1,5,7,15,13,17,11,
+    2,16,14,8,18,10,6,12,4
+]
+
+let LA_COSTA_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6996, rating: 74.8, slope: 138),
+    TeeInfo(teeName: "Gold",  yardage: 6587, rating: 72.9, slope: 133),
+    TeeInfo(teeName: "Blue",  yardage: 6354, rating: 71.7, slope: 130),
+    TeeInfo(teeName: "White", yardage: 6135, rating: 70.6, slope: 127),
+    TeeInfo(teeName: "Green", yardage: 5438, rating: 67.4, slope: 119),
+    TeeInfo(teeName: "Red",   yardage: 4904, rating: 64.9, slope: 112)
+]
+
+// MARK: St. Johns Golf Club
+private let ST_JOHNS_GC_ID = UUID(uuidString: "5140485D-0001-4001-8001-000000000001")!
+
+let ST_JOHNS_GC_PARS: [Int] = [
+    4,3,4,5,4,3,5,3,4,
+    4,5,4,4,3,4,4,3,5
+]
+
+let ST_JOHNS_GC_HCS: [Int] = [
+    9,11,1,15,17,7,3,13,5,
+    16,18,12,8,10,6,2,14,4
+]
+
+let ST_JOHNS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7009),
+    TeeInfo(teeName: "Match",        yardage: 6531),
+    TeeInfo(teeName: "General",      yardage: 5977),
+    TeeInfo(teeName: "Relief",       yardage: 5384),
+    TeeInfo(teeName: "Nearest",      yardage: 4825)
+]
+
+// MARK: St. Johns Golf & Country Club
+private let ST_JOHNS_GCC_ID = UUID(uuidString: "5140485C-0001-4001-8001-000000000001")!
+
+let ST_JOHNS_GCC_PARS: [Int] = [
+    4,5,3,4,3,4,4,5,4,
+    4,4,5,3,4,4,5,3,4
+]
+
+let ST_JOHNS_GCC_HCS: [Int] = [
+    7,15,13,5,17,1,9,11,3,
+    18,6,14,16,12,2,8,10,4
+]
+
+let ST_JOHNS_GCC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7183, rating: 74.6, slope: 134)
+]
+
+// MARK: Sterling Hills Golf Club
+private let STERLING_HILLS_GC_ID = UUID(uuidString: "5E211165-0001-4001-8001-000000000001")!
+
+let STERLING_HILLS_GC_PARS: [Int] = [
+    4,4,3,5,4,4,4,3,4,
+    4,3,4,4,4,3,5,4,5
+]
+
+let STERLING_HILLS_GC_HCS: [Int] = [
+    11,7,9,15,1,3,17,13,5,
+    14,18,6,4,8,10,16,2,12
+]
+
+let STERLING_HILLS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 6820, rating: 73.5, slope: 133),
+    TeeInfo(teeName: "Black", yardage: 6430, rating: 71.4, slope: 128),
+    TeeInfo(teeName: "Blue",  yardage: 5953, rating: 69.2, slope: 122),
+    TeeInfo(teeName: "White", yardage: 5558, rating: 67.5, slope: 117),
+    TeeInfo(teeName: "Red",   yardage: 4590)
+]
+
+// MARK: The Classic Club
+private let THE_CLASSIC_CLUB_ID = UUID(uuidString: "C1ACCA01-0001-4001-8001-000000000001")!
+
+let THE_CLASSIC_CLUB_PARS: [Int] = [
+    4,3,4,5,4,3,4,4,5,
+    4,4,3,4,5,4,4,3,5
+]
+
+let THE_CLASSIC_CLUB_HCS: [Int] = [
+    15,17,7,5,9,13,3,11,1,
+    4,6,16,12,8,14,10,18,2
+]
+
+let THE_CLASSIC_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7322, rating: 75.9, slope: 142)
+]
+
+// MARK: United States Naval Academy Golf Club
+private let USNA_GC_ID = UUID(uuidString: "ABEF0001-0001-4001-8001-000000000001")!
+
+let USNA_GC_PARS: [Int] = [
+    4,4,5,3,4,4,3,4,4,
+    4,4,3,5,4,4,4,3,4
+]
+
+let USNA_GC_HCS: [Int] = [
+    3,17,7,13,9,15,11,1,5,
+    4,14,12,10,2,8,16,18,6
+]
+
+let USNA_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "College", yardage: 7025, rating: 74.0, slope: 130)
+]
+
+// MARK: Greenville Country Club
+private let GREENVILLE_CC_NC_ID = UUID(uuidString: "6BCC0001-0001-4001-8001-000000000001")!
+
+let GREENVILLE_CC_NC_PARS: [Int] = [
+    4,4,3,4,4,5,4,3,4,
+    3,4,4,5,4,3,4,4,5
+]
+
+let GREENVILLE_CC_NC_HCS: [Int] = [
+    4,14,18,16,6,12,8,10,2,
+    15,1,9,11,3,17,5,7,13
+]
+
+let GREENVILLE_CC_NC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6220, rating: 70.9, slope: 129)
+]
+
 private let KNOLLWOOD_CLUB_ID = UUID(uuidString: "A1B2C3D4-1111-4AAA-8C11-100000000402")!
 
 let KNOLLWOOD_CLUB_PARS: [Int] = [
@@ -14280,7 +14452,7 @@ private enum BuiltIns {
             country: "USA",
             state: "CA",
             region: "SoCal",
-            architect: "Dick Wilson",
+            architect: "Gil Hanse",
             type: "Resort",
             phone: "(760) 438-9111",
             website: "https://www.omnihotels.com/hotels/san-diego-la-costa/golf",
@@ -19837,7 +20009,7 @@ private enum BuiltIns {
         c(SHELTER_HARBOR_GC_ID, "Shelter Harbor Golf Club",
           SHELTER_HARBOR_GC_PARS, SHELTER_HARBOR_GC_HCS, SHELTER_HARBOR_GC_TEES,
           country: "USA", state: "RI",
-          architect: "Hurdzan/Fry Environmental Golf Design",
+          architect: "Michael Hurdzan & Dana Fry",
           type: "Private",
           phone: "(401) 322-0600",
           website: "https://www.shgcri.com",
@@ -19985,6 +20157,152 @@ private enum BuiltIns {
           website: "https://www.paganicagolf.com",
           address: "1335 Silver Lake St, Oconomowoc, WI",
           isWolfApproved: true
+        ),
+
+        // -------------------------
+        // Kentucky
+        // -------------------------
+        c(
+            GIBSON_BAY_GC_ID,
+            "Gibson Bay Golf Course",
+            GIBSON_BAY_GC_PARS,
+            GIBSON_BAY_GC_HCS,
+            GIBSON_BAY_GC_TEES,
+            country: "USA",
+            state: "KY",
+            architect: "Michael Hurdzan",
+            type: "Public",
+            phone: "859-623-0225",
+            website: "https://gibsonbay.com",
+            address: "2000 Gibson Bay Drive, Richmond, KY 40475"
+        ),
+
+        // -------------------------
+        // Maryland
+        // -------------------------
+        c(
+            USNA_GC_ID,
+            "United States Naval Academy Golf Club",
+            USNA_GC_PARS,
+            USNA_GC_HCS,
+            USNA_GC_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "William S. Flynn",
+            type: "Private",
+            website: "https://usnagolf.com",
+            address: "Annapolis, MD 21402"
+        ),
+
+        // -------------------------
+        // North Carolina
+        // -------------------------
+        c(
+            GREENVILLE_CC_NC_ID,
+            "Greenville Country Club",
+            GREENVILLE_CC_NC_PARS,
+            GREENVILLE_CC_NC_HCS,
+            GREENVILLE_CC_NC_TEES,
+            country: "USA",
+            state: "NC",
+            architect: "John LaFoy",
+            type: "Private",
+            phone: "(252) 756-1237",
+            website: "https://greenvillecountryclub.com",
+            address: "216 Country Club Drive, Greenville, NC 27834"
+        ),
+
+        // -------------------------
+        // South Carolina (Public)
+        // -------------------------
+        c(
+            CALEDONIA_GFC_ID,
+            "Caledonia Golf & Fish Club",
+            CALEDONIA_GFC_PARS,
+            CALEDONIA_GFC_HCS,
+            CALEDONIA_GFC_TEES,
+            country: "USA",
+            state: "SC",
+            architect: "Mike Strantz",
+            type: "Semi-Private",
+            phone: "1-800-483-6800",
+            website: "https://caledoniagolfandfishclub.com",
+            address: "369 Caledonia Dr, Pawleys Island, SC 29585"
+        ),
+
+        // -------------------------
+        // Florida
+        // -------------------------
+        c(
+            ST_JOHNS_GC_ID,
+            "St. Johns Golf Club",
+            ST_JOHNS_GC_PARS,
+            ST_JOHNS_GC_HCS,
+            ST_JOHNS_GC_TEES,
+            country: "USA",
+            state: "FL",
+            type: "Public",
+            phone: "(904) 209-0350",
+            website: "https://sjgc.com"
+        ),
+        c(
+            ST_JOHNS_GCC_ID,
+            "St. Johns Golf & Country Club",
+            ST_JOHNS_GCC_PARS,
+            ST_JOHNS_GCC_HCS,
+            ST_JOHNS_GCC_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Clyde Johnston",
+            type: "Semi-Private",
+            phone: "(904) 940-3200",
+            website: "https://stjohnsgolf.com",
+            address: "205 St Johns Golf Dr., St. Augustine, FL 32092"
+        ),
+
+        // -------------------------
+        // California
+        // -------------------------
+        c(
+            LA_COSTA_SOUTH_ID,
+            "La Costa - South Course",
+            LA_COSTA_SOUTH_PARS,
+            LA_COSTA_SOUTH_HCS,
+            LA_COSTA_SOUTH_TEES,
+            country: "USA",
+            state: "CA",
+            architect: "Dick Wilson / Pascuzzo & Pate",
+            type: "Resort",
+            phone: "(760) 438-9111",
+            website: "https://omnihotels.com/hotels/carlsbad-la-costa",
+            address: "2100 Costa Del Mar Road, Carlsbad, CA 92009"
+        ),
+        c(
+            STERLING_HILLS_GC_ID,
+            "Sterling Hills Golf Club",
+            STERLING_HILLS_GC_PARS,
+            STERLING_HILLS_GC_HCS,
+            STERLING_HILLS_GC_TEES,
+            country: "USA",
+            state: "CA",
+            architect: "Robert Muir Graves & Damian Pascuzzo",
+            type: "Public",
+            website: "https://sterlinghillsgolf.com",
+            address: "901 Sterling Hills Drive, Camarillo, CA 93010"
+        ),
+        c(
+            THE_CLASSIC_CLUB_ID,
+            "The Classic Club",
+            THE_CLASSIC_CLUB_PARS,
+            THE_CLASSIC_CLUB_HCS,
+            THE_CLASSIC_CLUB_TEES,
+            country: "USA",
+            state: "CA",
+            architect: "Arnold Palmer",
+            type: "Public",
+            phone: "(760) 601-3600",
+            website: "https://classicclubgolf.com",
+            address: "75-200 Classic Club Blvd, Palm Desert, CA 92211"
         ),
         ]
 

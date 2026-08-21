@@ -660,7 +660,10 @@ final class SupabaseService {
         wolfStake: Double? = nil,
         scoring: String = "net",
         stablefordBaseline: StablefordBaseline? = nil,
-        stablefordTeamCount: Int? = nil
+        stablefordTeamCount: Int? = nil,
+        wolfVariant: String? = nil,
+        pressStyle: String? = nil,
+        hammerStyle: String? = nil
     ) async throws {
         var payload: [String: AnyJSON] = [
             "carry_ties": .bool(carryTies),
@@ -675,6 +678,9 @@ final class SupabaseService {
         if let teamCount = stablefordTeamCount {
             payload["stableford_team_count"] = .integer(teamCount)
         }
+        if let variant = wolfVariant  { payload["wolf_variant"]  = .string(variant) }
+        if let ps = pressStyle        { payload["press_style"]   = .string(ps) }
+        if let hs = hammerStyle       { payload["hammer_style"]  = .string(hs) }
         try await client
             .from("tournaments")
             .update(payload)

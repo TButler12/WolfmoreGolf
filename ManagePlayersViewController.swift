@@ -29,12 +29,15 @@ final class ManagePlayersViewController: UIViewController,
     private var friends: [Friend] { FriendStore.shared.friends }
     // Cached roster names for tournament mode — used to filter selectedCount correctly.
     private var tournamentRosterNames: Set<String> = []
+    // When true, scorer bypasses the tournament roster and picks from their local friend list.
+    private var useOwnPlayers: Bool = false
 
     // MARK: - UI refs
     private weak var addUIButton: UIButton?
     private weak var startRoundButton: UIButton?
     private weak var quickStartButton: UIButton?
     private weak var rosterPickerButton: UIButton?
+    private weak var useOwnPlayersButton: UIButton?
     private var groupsBarItem: UIBarButtonItem?
 
     // MARK: - Lifecycle
@@ -559,7 +562,7 @@ final class ManagePlayersViewController: UIViewController,
     @IBAction func startRoundTapped(_ sender: Any) {
         var selected = FriendStore.shared.friends.filter { $0.preselectForRound }
 
-        if let code = GameManager.shared.currentGame?.tournamentCode {
+        if let code = GameManager.shared.currentGame?.tournamentCode, !useOwnPlayers {
             // Tournament path: filter selected against the live roster so stale
             // preselectForRound entries from unrelated rounds can't leak through.
             // Device owner is never auto-inserted here.
@@ -675,7 +678,7 @@ final class ManagePlayersViewController: UIViewController,
     // MARK: - Start button helpers
 
     private var selectedCount: Int {
-        if GameManager.shared.currentGame?.tournamentCode != nil {
+        if GameManager.shared.currentGame?.tournamentCode != nil && !useOwnPlayers {
             // In tournament mode only count preselected friends who are in this tournament's roster.
             if tournamentRosterNames.isEmpty {
                 return 0
@@ -754,9 +757,16 @@ final class ManagePlayersViewController: UIViewController,
         let code = GameManager.shared.currentGame?.tournamentCode
         if let code, !code.isEmpty {
             if rosterPickerButton == nil { buildRosterPickerButton(code: code) }
-            rosterPickerButton?.isHidden = false
+            rosterPickerButton?.isHidden = useOwnPlayers
+            if useOwnPlayers {
+                useOwnPlayersButton?.setTitle("Use Tournament Roster Instead", for: .normal)
+            } else {
+                useOwnPlayersButton?.setTitle("Use My Players Instead", for: .normal)
+            }
+            useOwnPlayersButton?.isHidden = false
         } else {
             rosterPickerButton?.isHidden = true
+            useOwnPlayersButton?.isHidden = true
         }
     }
 
@@ -778,6 +788,18 @@ final class ManagePlayersViewController: UIViewController,
         rosterPickerButton = btn
         view.addSubview(btn)
 
+        let toggleBtn = UIButton(type: .system)
+        toggleBtn.setTitle("Use My Players Instead", for: .normal)
+        toggleBtn.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
+        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+        toggleBtn.tintColor = wolfGreen
+        toggleBtn.setTitleColor(wolfGreen, for: .normal)
+        toggleBtn.setTitleColor(wolfGreen.withAlphaComponent(0.5), for: .highlighted)
+        toggleBtn.addTarget(self, action: #selector(useOwnPlayersTapped), for: .touchUpInside)
+        toggleBtn.translatesAutoresizingMaskIntoConstraints = false
+        useOwnPlayersButton = toggleBtn
+        view.addSubview(toggleBtn)
+
         guard let quickBtn = quickStartButton,
               let homeBtn = button(forAction: #selector(closeTapped(_:))) else { return }
         NSLayoutConstraint.activate([
@@ -786,8 +808,19 @@ final class ManagePlayersViewController: UIViewController,
             btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
             btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
             btn.heightAnchor.constraint(equalToConstant: 60),
-            btn.bottomAnchor.constraint(equalTo: homeBtn.topAnchor, constant: -12),
+
+            toggleBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            toggleBtn.topAnchor.constraint(equalTo: btn.bottomAnchor, constant: 6),
+            toggleBtn.bottomAnchor.constraint(equalTo: homeBtn.topAnchor, constant: -8),
+            toggleBtn.heightAnchor.constraint(equalToConstant: 36),
         ])
+    }
+
+    @objc private func useOwnPlayersTapped() {
+        useOwnPlayers.toggle()
+        refreshRosterPickerButton()
+        tableView.reloadData()
+        refreshStartButton()
     }
 
     @objc private func rosterPickerTapped() {

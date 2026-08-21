@@ -18,7 +18,10 @@ final class TournamentSettingsViewController: UIViewController {
 
     // MARK: - Controls
 
-    private let wolfStakeField  = UITextField()
+    private let wolfStakeField       = UITextField()
+    private let wolfScoringSegment   = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "Wolf LowBall"])
+    private let pressStyleSegment    = UISegmentedControl(items: ["Doubling", "Additive"])
+    private let hammerStyleSegment   = UISegmentedControl(items: ["Doubling", "Additive"])
 
     private let skinsModeSegment = UISegmentedControl(items: ["Stake Per Skin", "Pot"])
     private let stakeField       = UITextField()
@@ -124,16 +127,37 @@ final class TournamentSettingsViewController: UIViewController {
 
         // Wolf card
         if isWolfTournament {
-            let wolfCard = makeCard(header: "WOLF GAME", tint: wolfGreen)
+            let wolfCard  = makeCard(header: "WOLF GAME", tint: wolfGreen)
             let wolfInner = wolfCard.viewWithTag(99)!
-            let wolfContent = makeFieldRow(label: "Wolf Game Stake ($)", field: wolfStakeField)
-            wolfInner.addSubview(wolfContent)
-            wolfContent.translatesAutoresizingMaskIntoConstraints = false
+
+            styleWolfSegment(wolfScoringSegment, tint: wolfGreen)
+            styleWolfSegment(pressStyleSegment,  tint: .systemYellow)
+            styleWolfSegment(hammerStyleSegment, tint: .systemYellow)
+
+            let styleNote = UILabel()
+            styleNote.font          = .systemFont(ofSize: 12)
+            styleNote.textColor     = .secondaryLabel
+            styleNote.numberOfLines = 0
+            styleNote.text          = "Doubling: ×2, ×4, ×8… each tap  •  Additive: +$base each tap (×2, ×3, ×4…)"
+
+            let wolfStack = UIStackView(arrangedSubviews: [
+                makeFieldRow(label: "Wolf Game Stake ($)", field: wolfStakeField),
+                makeSeparator(),
+                makeLabeledRow(label: "Wolf Scoring Options", content: wolfScoringSegment),
+                makeSeparator(),
+                makeLabeledRow(label: "Press Style", content: pressStyleSegment),
+                makeLabeledRow(label: "Hammer Style", content: hammerStyleSegment),
+                styleNote,
+            ])
+            wolfStack.axis    = .vertical
+            wolfStack.spacing = 16
+            wolfStack.translatesAutoresizingMaskIntoConstraints = false
+            wolfInner.addSubview(wolfStack)
             NSLayoutConstraint.activate([
-                wolfContent.topAnchor.constraint(equalTo: wolfInner.topAnchor),
-                wolfContent.leadingAnchor.constraint(equalTo: wolfInner.leadingAnchor),
-                wolfContent.trailingAnchor.constraint(equalTo: wolfInner.trailingAnchor),
-                wolfContent.bottomAnchor.constraint(equalTo: wolfInner.bottomAnchor),
+                wolfStack.topAnchor.constraint(equalTo: wolfInner.topAnchor),
+                wolfStack.leadingAnchor.constraint(equalTo: wolfInner.leadingAnchor),
+                wolfStack.trailingAnchor.constraint(equalTo: wolfInner.trailingAnchor),
+                wolfStack.bottomAnchor.constraint(equalTo: wolfInner.bottomAnchor),
             ])
             outerStack.addArrangedSubview(wolfCard)
         }
@@ -208,6 +232,15 @@ final class TournamentSettingsViewController: UIViewController {
     // MARK: - Card builder
 
     private var wolfGreen: UIColor { UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0) }
+
+    private func styleWolfSegment(_ seg: UISegmentedControl, tint: UIColor) {
+        seg.backgroundColor          = .systemGray6
+        seg.selectedSegmentTintColor = tint
+        seg.setTitleTextAttributes([.foregroundColor: UIColor.secondaryLabel,
+                                    .font: UIFont.systemFont(ofSize: 13)], for: .normal)
+        seg.setTitleTextAttributes([.foregroundColor: UIColor.white,
+                                    .font: UIFont.systemFont(ofSize: 13, weight: .semibold)], for: .selected)
+    }
 
     private func makeCard(header: String, tint: UIColor) -> UIView {
         let card = UIView()
@@ -332,6 +365,14 @@ final class TournamentSettingsViewController: UIViewController {
         if isWolfTournament {
             let ws = g.wolfStake ?? (g.gameHoleDollarsArray.first ?? 0)
             if ws > 0 { wolfStakeField.text = String(format: "%.2f", ws) }
+
+            switch g.resolvedGameType {
+            case .wolf:         wolfScoringSegment.selectedSegmentIndex = 1
+            case .wolfLowBall:  wolfScoringSegment.selectedSegmentIndex = 2
+            default:            wolfScoringSegment.selectedSegmentIndex = 0
+            }
+            pressStyleSegment.selectedSegmentIndex  = (g.pressStyle  == .additive) ? 1 : 0
+            hammerStyleSegment.selectedSegmentIndex = (g.hammerStyle == .additive) ? 1 : 0
         }
 
         carryoversSegment.selectedSegmentIndex = (g.tournamentCarryTies == true) ? 0 : 1
@@ -388,6 +429,23 @@ final class TournamentSettingsViewController: UIViewController {
             ? Double(wolfStakeText).flatMap { $0 > 0 ? $0 : nil }
             : nil
 
+        let wolfVariant: String?
+        let newPressStyle: HammerStyle
+        let newHammerStyle: HammerStyle
+        if isWolfTournament {
+            switch wolfScoringSegment.selectedSegmentIndex {
+            case 1:  wolfVariant = "2pt"
+            case 2:  wolfVariant = "lowball"
+            default: wolfVariant = "6pt"
+            }
+            newPressStyle  = pressStyleSegment.selectedSegmentIndex  == 1 ? .additive : .doubling
+            newHammerStyle = hammerStyleSegment.selectedSegmentIndex == 1 ? .additive : .doubling
+        } else {
+            wolfVariant = nil
+            newPressStyle  = .doubling
+            newHammerStyle = .additive
+        }
+
         let isPot = skinsModeSegment.selectedSegmentIndex == 1
         let stakeText = stakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let skinsStake: Double? = isPot ? nil : Double(stakeText).flatMap { $0 > 0 ? $0 : nil }
@@ -432,7 +490,10 @@ final class TournamentSettingsViewController: UIViewController {
                     wolfStake:           wolfStake,
                     scoring:             scoring,
                     stablefordBaseline:  isStablefordTournament ? sfBaseline  : nil,
-                    stablefordTeamCount: isStablefordTournament ? sfTeamCount : nil
+                    stablefordTeamCount: isStablefordTournament ? sfTeamCount : nil,
+                    wolfVariant:         wolfVariant,
+                    pressStyle:          self.isWolfTournament ? newPressStyle.rawValue  : nil,
+                    hammerStyle:         self.isWolfTournament ? newHammerStyle.rawValue : nil
                 )
                 GameManager.shared.update { g in
                     g.tournamentCarryTies   = carryTies
@@ -450,6 +511,15 @@ final class TournamentSettingsViewController: UIViewController {
                     if self.isStablefordTournament {
                         g.stablefordBaseline        = sfBaseline
                         g.stablefordCountingPlayers = sfTeamCount
+                    }
+                    if self.isWolfTournament {
+                        switch self.wolfScoringSegment.selectedSegmentIndex {
+                        case 1:  g.gameType = .wolf
+                        case 2:  g.gameType = .wolfLowBall
+                        default: g.gameType = .sixPointScotch
+                        }
+                        g.pressStyle  = newPressStyle
+                        g.hammerStyle = newHammerStyle
                     }
                 }
                 GameManager.shared.saveCurrent()
