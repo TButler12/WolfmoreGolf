@@ -121,6 +121,14 @@ struct GameData: Codable {
         count: 9
     )
 
+    // Match Play fixed team assignments (optional so old saves decode safely)
+    var matchPlayTeamA: [Int]? = nil
+    var matchPlayTeamB: [Int]? = nil
+    // Match Play 36-hole round: plays the same 18-hole course twice back-to-back
+    var matchPlay36Holes: Bool = false
+
+    var totalHoles: Int { matchPlay36Holes ? 36 : STANDARD_HOLES }
+
     var playerNames: [String] = Array(repeating: "", count: MAX_PLAYERS)
     var hcPlayers: [Int] = Array(repeating: 0, count: MAX_PLAYERS)
     var playerActivated: [Bool] = Array(repeating: false, count: MAX_PLAYERS)
@@ -164,6 +172,43 @@ struct GameData: Codable {
             }
             course.holeHandicaps = Array(fixed)
         }
+    }
+
+    /// Pads (or truncates) every per-hole array to match `totalHoles`.
+    /// Call immediately after changing `matchPlay36Holes`.
+    mutating func extendToTotalHoles() {
+        let target = totalHoles
+        func padHole<T>(_ arr: inout [T], fill: T) {
+            if arr.count < target { arr += Array(repeating: fill, count: target - arr.count) }
+            else if arr.count > target { arr = Array(arr.prefix(target)) }
+        }
+        let defaultStake = gameHoleDollarsArray.first ?? 2.0
+        let defaultBase  = holeBaseAmount.first  ?? 2.0
+        padHole(&holeCommitted,                  fill: false)
+        padHole(&gameTypePerHole,                fill: GameType.sixPointScotch)
+        padHole(&umbieWonPerHole,                fill: false)
+        padHole(&wolfCalledPerHole,              fill: false)
+        padHole(&wolfTeamWonPerHole,             fill: false)
+        padHole(&pressedPushedToggleArray,       fill: false)
+        padHole(&previousPressedPushedToggleArray, fill: false)
+        padHole(&gameHoleDollarsArray,           fill: defaultStake)
+        padHole(&proxWinnerPerHole,              fill: nil)
+        padHole(&pressLevel,                     fill: 0)
+        padHole(&pressBaseDollars,               fill: 0.0)
+        padHole(&pressBaseAmount,                fill: 0.0)
+        padHole(&rollBaseAmount,                 fill: 0.0)
+        padHole(&rollApplied,                    fill: false)
+        padHole(&rerollApplied,                  fill: false)
+        padHole(&rerollBaseAmount,               fill: 0.0)
+        padHole(&aloneApplied,                   fill: false)
+        padHole(&aloneBaseAmount,                fill: 0.0)
+        padHole(&holeBaseAmount,                 fill: defaultBase)
+        for i in 0..<scores.count      { padHole(&scores[i],      fill: nil as Int?) }
+        for i in 0..<playerMoney.count { padHole(&playerMoney[i], fill: 0.0) }
+        for i in 0..<fairwayHit.count  { padHole(&fairwayHit[i],  fill: nil as Bool?) }
+        for i in 0..<girHit.count      { padHole(&girHit[i],      fill: nil as Bool?) }
+        for i in 0..<puttsPerHole.count { padHole(&puttsPerHole[i], fill: nil as Int?) }
+        for i in 0..<wolfButtonStatus.count { padHole(&wolfButtonStatus[i], fill: false) }
     }
 
     mutating func normalize(holes: Int = STANDARD_HOLES) {

@@ -19,9 +19,14 @@ final class TournamentSettingsViewController: UIViewController {
     // MARK: - Controls
 
     private let wolfStakeField       = UITextField()
-    private let wolfScoringSegment   = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "Wolf LowBall"])
+    private let wolfScoringSegment   = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "LowBall", "Match Play"])
     private let pressStyleSegment    = UISegmentedControl(items: ["Doubling", "Additive"])
     private let hammerStyleSegment   = UISegmentedControl(items: ["Doubling", "Additive"])
+
+    // Rows to hide when Match Play is selected (no press/hammer in fixed-team mode)
+    private var wolfPressRow:   UIView?
+    private var wolfHammerRow:  UIView?
+    private var wolfStyleNote:  UILabel?
 
     private let skinsModeSegment = UISegmentedControl(items: ["Stake Per Skin", "Pot"])
     private let stakeField       = UITextField()
@@ -98,6 +103,7 @@ final class TournamentSettingsViewController: UIViewController {
         carryoversSegment.addTarget(self, action: #selector(scoringChanged), for: .valueChanged)
         scoringSegment.addTarget(self, action: #selector(scoringChanged), for: .valueChanged)
         splitSegment.addTarget(self, action: #selector(scoringChanged), for: .valueChanged)
+        wolfScoringSegment.addTarget(self, action: #selector(wolfScoringChanged), for: .valueChanged)
 
         saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
         saveButton.addTarget(self, action: #selector(saveTapped), for: .touchUpInside)
@@ -139,14 +145,20 @@ final class TournamentSettingsViewController: UIViewController {
             styleNote.textColor     = .secondaryLabel
             styleNote.numberOfLines = 0
             styleNote.text          = "Doubling: ×2, ×4, ×8… each tap  •  Additive: +$base each tap (×2, ×3, ×4…)"
+            wolfStyleNote = styleNote
+
+            let pressRow  = makeLabeledRow(label: "Press Style",  content: pressStyleSegment)
+            let hammerRow = makeLabeledRow(label: "Hammer Style", content: hammerStyleSegment)
+            wolfPressRow  = pressRow
+            wolfHammerRow = hammerRow
 
             let wolfStack = UIStackView(arrangedSubviews: [
                 makeFieldRow(label: "Wolf Game Stake ($)", field: wolfStakeField),
                 makeSeparator(),
                 makeLabeledRow(label: "Wolf Scoring Options", content: wolfScoringSegment),
                 makeSeparator(),
-                makeLabeledRow(label: "Press Style", content: pressStyleSegment),
-                makeLabeledRow(label: "Hammer Style", content: hammerStyleSegment),
+                pressRow,
+                hammerRow,
                 styleNote,
             ])
             wolfStack.axis    = .vertical
@@ -342,8 +354,16 @@ final class TournamentSettingsViewController: UIViewController {
 
     // MARK: - Visibility
 
-    @objc private func skinsModeChanged() { updateVisibility() }
-    @objc private func scoringChanged()   { updateVisibility() }
+    @objc private func skinsModeChanged()   { updateVisibility() }
+    @objc private func scoringChanged()     { updateVisibility() }
+    @objc private func wolfScoringChanged() { refreshWolfScoringUI() }
+
+    private func refreshWolfScoringUI() {
+        let isMatchPlay = wolfScoringSegment.selectedSegmentIndex == 3
+        wolfPressRow?.isHidden  = isMatchPlay
+        wolfHammerRow?.isHidden = isMatchPlay
+        wolfStyleNote?.isHidden = isMatchPlay
+    }
 
     private func updateVisibility() {
         let isPot    = skinsModeSegment.selectedSegmentIndex == 1
@@ -367,12 +387,14 @@ final class TournamentSettingsViewController: UIViewController {
             if ws > 0 { wolfStakeField.text = String(format: "%.2f", ws) }
 
             switch g.resolvedGameType {
-            case .wolf:         wolfScoringSegment.selectedSegmentIndex = 1
-            case .wolfLowBall:  wolfScoringSegment.selectedSegmentIndex = 2
-            default:            wolfScoringSegment.selectedSegmentIndex = 0
+            case .wolf:       wolfScoringSegment.selectedSegmentIndex = 1
+            case .wolfLowBall: wolfScoringSegment.selectedSegmentIndex = 2
+            case .matchPlay:   wolfScoringSegment.selectedSegmentIndex = 3
+            default:           wolfScoringSegment.selectedSegmentIndex = 0
             }
             pressStyleSegment.selectedSegmentIndex  = (g.pressStyle  == .additive) ? 1 : 0
             hammerStyleSegment.selectedSegmentIndex = (g.hammerStyle == .additive) ? 1 : 0
+            refreshWolfScoringUI()
         }
 
         carryoversSegment.selectedSegmentIndex = (g.tournamentCarryTies == true) ? 0 : 1
@@ -436,6 +458,7 @@ final class TournamentSettingsViewController: UIViewController {
             switch wolfScoringSegment.selectedSegmentIndex {
             case 1:  wolfVariant = "2pt"
             case 2:  wolfVariant = "lowball"
+            case 3:  wolfVariant = "matchplay"
             default: wolfVariant = "6pt"
             }
             newPressStyle  = pressStyleSegment.selectedSegmentIndex  == 1 ? .additive : .doubling
@@ -516,6 +539,7 @@ final class TournamentSettingsViewController: UIViewController {
                         switch self.wolfScoringSegment.selectedSegmentIndex {
                         case 1:  g.gameType = .wolf
                         case 2:  g.gameType = .wolfLowBall
+                        case 3:  g.gameType = .matchPlay
                         default: g.gameType = .sixPointScotch
                         }
                         g.pressStyle  = newPressStyle

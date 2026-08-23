@@ -139,6 +139,7 @@ struct WolfHoleResult: Codable {
     let nassauStatus: String?
     let skinCount: Int?
     let skinTiedSeats: String?
+    let wolfVariant: String?
     enum CodingKeys: String, CodingKey {
         case id, hole, scores, decision, payouts, alone
         case sessionId        = "session_id"
@@ -159,6 +160,7 @@ struct WolfHoleResult: Codable {
         case nassauStatus     = "nassau_status"
         case skinCount        = "skin_count"
         case skinTiedSeats    = "skin_tied_seats"
+        case wolfVariant      = "wolf_variant"
     }
 
     // Try Bool first; fall back to string comparison for inconsistently stored rows.
@@ -194,6 +196,7 @@ struct WolfHoleResult: Codable {
         nassauStatus = try c.decodeIfPresent(String.self,   forKey: .nassauStatus)
         skinCount    = try c.decodeIfPresent(Int.self,      forKey: .skinCount)
         skinTiedSeats = try c.decodeIfPresent(String.self,  forKey: .skinTiedSeats)
+        wolfVariant   = try c.decodeIfPresent(String.self,  forKey: .wolfVariant)
         teamWon    = Self.flexBool(c, .teamWon)
         wentAlone  = Self.flexBool(c, .wentAlone)
         wolfPlayer = try? c.decodeIfPresent(Int.self, forKey: .wolfPlayer)

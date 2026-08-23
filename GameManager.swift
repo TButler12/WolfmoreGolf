@@ -278,54 +278,58 @@ final class GameManager {
     
     /// Ensure an old save has all fields with correct sizes/defaults.
     private func normalizeShapes(_ g: inout GameData) {
-        g.normalize()   // ✅ handles gameType + hammer/wolf arrays
-        
+        g.normalize()   // handles gameType + hammer/wolf arrays
+
+        let h = g.totalHoles  // 18 for normal rounds, 36 for match play 36-hole
+
         // Seats
-        if g.playerNames.count != MAX_PLAYERS     { g.playerNames     = pad(g.playerNames,     to: MAX_PLAYERS,  fill: "") }
-        if g.hcPlayers.count != MAX_PLAYERS       { g.hcPlayers       = pad(g.hcPlayers,       to: MAX_PLAYERS,  fill: 0) }
-        if g.playerActivated.count != MAX_PLAYERS { g.playerActivated = pad(g.playerActivated, to: MAX_PLAYERS,  fill: false) }
-        
-        // Course
+        if g.playerNames.count != MAX_PLAYERS     { g.playerNames     = pad(g.playerNames,     to: MAX_PLAYERS, fill: "") }
+        if g.hcPlayers.count != MAX_PLAYERS       { g.hcPlayers       = pad(g.hcPlayers,       to: MAX_PLAYERS, fill: 0) }
+        if g.playerActivated.count != MAX_PLAYERS { g.playerActivated = pad(g.playerActivated, to: MAX_PLAYERS, fill: false) }
+
+        // Course data always stays at STANDARD_HOLES (18-hole course repeated for 36-hole rounds)
         if g.courseParToPass.count != STANDARD_HOLES { g.courseParToPass = pad(g.courseParToPass, to: STANDARD_HOLES, fill: 4) }
         if g.courseHCToPass.count  != STANDARD_HOLES { g.courseHCToPass  = pad(g.courseHCToPass,  to: STANDARD_HOLES, fill: 1) }
-        
-        // Stakes
-        if g.gameHoleDollarsArray.count != STANDARD_HOLES {
-            g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: STANDARD_HOLES, fill: 2.0)
+
+        // Per-hole arrays use g.totalHoles so 36-hole saves survive a reload
+        if g.gameHoleDollarsArray.count != h {
+            g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: h, fill: 2.0)
         }
-        
-        // Wolves & Prox
-        if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != STANDARD_HOLES {
-            g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != h {
+            g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: h), count: MAX_PLAYERS)
         }
-        if g.proxWinnerPerHole.count != STANDARD_HOLES {
-            g.proxWinnerPerHole = Array(repeating: nil, count: STANDARD_HOLES)
+        if g.proxWinnerPerHole.count != h {
+            g.proxWinnerPerHole = Array(repeating: nil, count: h)
         }
-        
-        // Scores & Money
-        if g.scores.count != MAX_PLAYERS || g.scores.first?.count != STANDARD_HOLES {
-            g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        if g.scores.count != MAX_PLAYERS || g.scores.first?.count != h {
+            if g.scores.count != MAX_PLAYERS {
+                g.scores = Array(repeating: Array(repeating: nil, count: h), count: MAX_PLAYERS)
+            } else {
+                for i in 0..<g.scores.count { g.scores[i] = pad(g.scores[i], to: h, fill: nil) }
+            }
         }
-        if g.playerMoney.count != MAX_PLAYERS || g.playerMoney.first?.count != STANDARD_HOLES {
-            g.playerMoney = Array(repeating: Array(repeating: 0, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        if g.playerMoney.count != MAX_PLAYERS || g.playerMoney.first?.count != h {
+            if g.playerMoney.count != MAX_PLAYERS {
+                g.playerMoney = Array(repeating: Array(repeating: 0.0, count: h), count: MAX_PLAYERS)
+            } else {
+                for i in 0..<g.playerMoney.count { g.playerMoney[i] = pad(g.playerMoney[i], to: h, fill: 0.0) }
+            }
         }
-        
-        // Press
-        if g.pressedPushedToggleArray.count != STANDARD_HOLES {
-            g.pressedPushedToggleArray = Array(repeating: false, count: STANDARD_HOLES)
+        if g.pressedPushedToggleArray.count != h {
+            g.pressedPushedToggleArray = pad(g.pressedPushedToggleArray, to: h, fill: false)
         }
-        if g.previousPressedPushedToggleArray.count != STANDARD_HOLES {
-            g.previousPressedPushedToggleArray = Array(repeating: false, count: STANDARD_HOLES)
+        if g.previousPressedPushedToggleArray.count != h {
+            g.previousPressedPushedToggleArray = pad(g.previousPressedPushedToggleArray, to: h, fill: false)
         }
-        
+
         // Roster list ok even if empty
         if g.rosterNames.isEmpty { g.rosterNames = [] }
-        
+
         // Ensure legacy saves get a stable history ID
         if g.historyGameID == nil { g.historyGameID = UUID() }
 
-        // Clamp current hole
-        g.hole = max(0, min(17, g.hole))
+        // Clamp current hole to valid range
+        g.hole = max(0, min(h - 1, g.hole))
     }
     
     

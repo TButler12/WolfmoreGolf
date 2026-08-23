@@ -19,6 +19,11 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private weak var wolfScoringSegment: UISegmentedControl?
     private weak var pressStyleSegment: UISegmentedControl?
     private weak var hammerStyleSegment: UISegmentedControl?
+    private weak var pressStyleSection: UIStackView?
+    private weak var hammerStyleSection: UIStackView?
+    private weak var matchPlayTeamsSection: UIStackView?
+    private weak var matchPlayTeamsInner: UIStackView?
+    private weak var matchPlay36Switch: UISwitch?
     private weak var goLiveButton: UIButton?
     private var scrollView: UIScrollView!
     private var contentStack: UIStackView!
@@ -73,6 +78,8 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         installWolfScoringSegment()
         installPressStyleSegment()
         installHammerStyleSegment()
+        installMatchPlayTeamsSection()
+        refreshMatchPlayUI()
         installGoLiveButton()
         NotificationCenter.default.addObserver(self, selector: #selector(refreshGoLiveButton), name: .reloadUI, object: nil)
         saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
@@ -231,18 +238,18 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private func installWolfScoringSegment() {
         let header = sectionHeader("Wolf Scoring Options")
 
-        let segment = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "Wolf LowBall"])
+        let segment = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "LowBall", "Match Play"])
         segment.addTarget(self, action: #selector(wolfScoringChanged(_:)), for: .valueChanged)
 
         segment.backgroundColor = .systemGray6
         segment.selectedSegmentTintColor = .wolfMoreGreen
         segment.setTitleTextAttributes([
             .foregroundColor: UIColor.secondaryLabel,
-            .font: UIFont.systemFont(ofSize: 14, weight: .regular)
+            .font: UIFont.systemFont(ofSize: 13, weight: .regular)
         ], for: .normal)
         segment.setTitleTextAttributes([
             .foregroundColor: UIColor.white,
-            .font: UIFont.systemFont(ofSize: 14, weight: .semibold)
+            .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
         ], for: .selected)
         segment.layer.borderColor = UIColor.systemGray4.cgColor
         segment.layer.borderWidth = 1
@@ -252,16 +259,21 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             case .sixPointScotch: segment.selectedSegmentIndex = 0
             case .wolf:           segment.selectedSegmentIndex = 1
             case .wolfLowBall:    segment.selectedSegmentIndex = 2
+            case .matchPlay:      segment.selectedSegmentIndex = 3
             case .hammer:         segment.selectedSegmentIndex = 0
-            case .tournament:     break  // TODO: tournament — segment hidden in this mode
+            case .tournament:     break
             }
+            // Disable Match Play for odd player counts (teams need equal sides)
+            let activePlayers = g.playerNames.enumerated()
+                .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                .count
+            if activePlayers % 2 != 0 { segment.setEnabled(false, forSegmentAt: 3) }
         }
 
         let wolfSection = UIStackView(arrangedSubviews: [header, segment])
         wolfSection.axis = .vertical
         wolfSection.spacing = 8
 
-        // Insert before the save button (last arranged subview)
         let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
         contentStack.insertArrangedSubview(wolfSection, at: insertIndex)
 
@@ -273,15 +285,26 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         switch sender.selectedSegmentIndex {
         case 0: newType = .sixPointScotch
         case 1: newType = .wolf
-        default: newType = .wolfLowBall
+        case 2: newType = .wolfLowBall
+        default: newType = .matchPlay
         }
         GameManager.shared.update { g in
             g.gameType = newType
             g.normalize()
             if newType != .sixPointScotch { g.isUmbrella = false }
+            // Initialize default team split when switching to Match Play
+            if newType == .matchPlay, g.matchPlayTeamA == nil {
+                let active = g.playerNames.enumerated()
+                    .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                    .map { $0.offset }
+                let half = active.count / 2
+                g.matchPlayTeamA = Array(active.prefix(half))
+                g.matchPlayTeamB = Array(active.dropFirst(half))
+            }
         }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         umbrellaButton.alpha = (sender.selectedSegmentIndex == 0) ? 1.0 : 0.4
+        refreshMatchPlayUI()
     }
 
     // MARK: - Press Style segment
@@ -318,6 +341,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
         contentStack.insertArrangedSubview(section, at: insertIndex)
         pressStyleSegment = segment
+        pressStyleSection = section
     }
 
     @objc private func pressStyleChanged(_ sender: UISegmentedControl) {
@@ -360,11 +384,138 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
         contentStack.insertArrangedSubview(section, at: insertIndex)
         hammerStyleSegment = segment
+        hammerStyleSection = section
     }
 
     @objc private func hammerStyleChanged(_ sender: UISegmentedControl) {
         let style: HammerStyle = (sender.selectedSegmentIndex == 1) ? .additive : .doubling
         GameManager.shared.update { g in g.hammerStyle = style }
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+    }
+
+    // MARK: - Match Play Teams
+
+    private func installMatchPlayTeamsSection() {
+        let header = sectionHeader("Match Play Teams")
+
+        let inner = UIStackView()
+        inner.axis    = .vertical
+        inner.spacing = 10
+        matchPlayTeamsInner = inner
+
+        let container = UIStackView(arrangedSubviews: [header, inner])
+        container.axis    = .vertical
+        container.spacing = 8
+        container.isHidden = true
+        matchPlayTeamsSection = container
+
+        let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
+        contentStack.insertArrangedSubview(container, at: insertIndex)
+    }
+
+    private func refreshMatchPlayTeamsContent() {
+        guard let inner = matchPlayTeamsInner else { return }
+        inner.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        guard let g = GameManager.shared.currentGame else { return }
+
+        // ── 36-Hole toggle ───────────────────────────────────────────────────
+        let switchLbl = UILabel()
+        switchLbl.text = "36-Hole Round"
+        switchLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        switchLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let sw = UISwitch()
+        sw.onTintColor = .wolfMoreGreen
+        sw.isOn = g.matchPlay36Holes
+        sw.addTarget(self, action: #selector(matchPlay36Toggled(_:)), for: .valueChanged)
+        matchPlay36Switch = sw
+
+        let switchRow = UIStackView(arrangedSubviews: [switchLbl, sw])
+        switchRow.axis = .horizontal; switchRow.alignment = .center; switchRow.spacing = 8
+        inner.addArrangedSubview(switchRow)
+
+        let switchNote = UILabel()
+        switchNote.text = "Holes 19–36 replay the same course as holes 1–18."
+        switchNote.font = UIFont.systemFont(ofSize: 12)
+        switchNote.textColor = .secondaryLabel
+        switchNote.numberOfLines = 0
+        inner.addArrangedSubview(switchNote)
+
+        // ── Separator ────────────────────────────────────────────────────────
+        let sep = UIView()
+        sep.backgroundColor = .separator
+        sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        inner.addArrangedSubview(sep)
+
+        // ── Team assignment ──────────────────────────────────────────────────
+        let active = g.playerNames.enumerated()
+            .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map { ($0.offset, $0.element) }
+
+        let teamASet = Set(g.matchPlayTeamA ?? [])
+
+        for (seat, name) in active {
+            let nameLbl = UILabel()
+            nameLbl.text = name
+            nameLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+            nameLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+            let seg = UISegmentedControl(items: ["Team A", "Team B"])
+            seg.selectedSegmentIndex  = teamASet.contains(seat) ? 0 : 1
+            seg.tag                   = seat
+            seg.backgroundColor       = .systemGray6
+            seg.selectedSegmentTintColor = .wolfMoreGreen
+            seg.setTitleTextAttributes([
+                .foregroundColor: UIColor.secondaryLabel,
+                .font: UIFont.systemFont(ofSize: 13, weight: .regular)
+            ], for: .normal)
+            seg.setTitleTextAttributes([
+                .foregroundColor: UIColor.white,
+                .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
+            ], for: .selected)
+            seg.addTarget(self, action: #selector(matchPlayTeamChanged(_:)), for: .valueChanged)
+            seg.setContentHuggingPriority(.required, for: .horizontal)
+            seg.widthAnchor.constraint(equalToConstant: 160).isActive = true
+
+            let row = UIStackView(arrangedSubviews: [nameLbl, seg])
+            row.axis      = .horizontal
+            row.spacing   = 8
+            row.alignment = .center
+            inner.addArrangedSubview(row)
+        }
+    }
+
+    private func refreshMatchPlayUI() {
+        let isMatchPlay = wolfScoringSegment?.selectedSegmentIndex == 3
+        pressStyleSection?.isHidden  = isMatchPlay
+        hammerStyleSection?.isHidden = isMatchPlay
+        if isMatchPlay {
+            refreshMatchPlayTeamsContent()
+            matchPlayTeamsSection?.isHidden = false
+        } else {
+            matchPlayTeamsSection?.isHidden = true
+        }
+    }
+
+    @objc private func matchPlayTeamChanged(_ sender: UISegmentedControl) {
+        let seat = sender.tag
+        GameManager.shared.update { g in
+            var teamA = g.matchPlayTeamA ?? []
+            var teamB = g.matchPlayTeamB ?? []
+            teamA.removeAll { $0 == seat }
+            teamB.removeAll { $0 == seat }
+            if sender.selectedSegmentIndex == 0 { teamA.append(seat) } else { teamB.append(seat) }
+            g.matchPlayTeamA = teamA.sorted()
+            g.matchPlayTeamB = teamB.sorted()
+        }
+    }
+
+    @objc private func matchPlay36Toggled(_ sender: UISwitch) {
+        GameManager.shared.update { g in
+            g.matchPlay36Holes = sender.isOn
+            g.extendToTotalHoles()
+        }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
     }
 

@@ -54,9 +54,10 @@ final class LiveConnectedViewController: UITableViewController {
             await MainActor.run {
                 GameManager.shared.update { g in
                     switch record.wolfVariant {
-                    case "2pt":     g.gameType = .wolf
-                    case "lowball": g.gameType = .wolfLowBall
-                    default:        g.gameType = .sixPointScotch
+                    case "2pt":       g.gameType = .wolf
+                    case "lowball":   g.gameType = .wolfLowBall
+                    case "matchplay": g.gameType = .matchPlay
+                    default:          g.gameType = .sixPointScotch
                     }
                     if let ps = record.pressStyle  { g.pressStyle  = ps == "additive" ? .additive : .doubling }
                     if let hs = record.hammerStyle { g.hammerStyle = hs == "additive" ? .additive : .doubling }
@@ -361,9 +362,10 @@ final class LiveConnectedViewController: UITableViewController {
             g.tournamentStablefordEnabled = record.stablefordEnabled
             if record.gameType == "wolf" {
                 switch record.wolfVariant {
-                case "2pt":    g.gameType = .wolf
-                case "lowball": g.gameType = .wolfLowBall
-                default:       g.gameType = .sixPointScotch
+                case "2pt":       g.gameType = .wolf
+                case "lowball":   g.gameType = .wolfLowBall
+                case "matchplay": g.gameType = .matchPlay
+                default:          g.gameType = .sixPointScotch
                 }
                 if let ps = record.pressStyle  { g.pressStyle  = ps == "additive" ? .additive : .doubling }
                 if let hs = record.hammerStyle { g.hammerStyle = hs == "additive" ? .additive : .doubling }

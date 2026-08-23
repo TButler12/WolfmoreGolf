@@ -386,7 +386,8 @@ final class WolfSpectatorViewController: UIViewController {
     private func applyCurrentSession() {
         guard let session = currentSession else { return }
         applySessionStatus(session.status)
-        cachedHeaderCell.configureAsHeader(playerNames: session.playerNames)
+        let isMP = currentHoleResults.values.contains { $0.decision == "matchplay" }
+        cachedHeaderCell.configureAsHeader(playerNames: session.playerNames, isMatchPlay: isMP)
         namesHeaderView.isHidden = false
         tableView.reloadData()
     }
@@ -433,6 +434,10 @@ final class WolfSpectatorViewController: UIViewController {
             guard let self else { return }
             self.holeResultsBySessionId[sessionId, default: [:]][result.hole] = result
             if self.currentSession?.id == sessionId {
+                let isMP = self.currentHoleResults.values.contains { $0.decision == "matchplay" }
+                if let sess = self.currentSession {
+                    self.cachedHeaderCell.configureAsHeader(playerNames: sess.playerNames, isMatchPlay: isMP)
+                }
                 self.tableView.reloadData()
             }
         }
@@ -653,11 +658,16 @@ extension WolfSpectatorViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: WolfHoleCell.reuseID, for: indexPath) as! WolfHoleCell
         guard let session = currentSession else { return cell }
         let allResults = Array(currentHoleResults.values)
+        let isMatchPlay = allResults.contains { $0.decision == "matchplay" }
         // row 0-17 = holes 1-18, row 18 = score totals, row 19 = money totals, row 20 = skins totals
         if indexPath.row == 18 {
             cell.configureAsScoreTotals(results: allResults, playerCount: session.playerNames.count)
         } else if indexPath.row == 19 {
-            cell.configureAsTotals(results: allResults, playerCount: session.playerNames.count)
+            if isMatchPlay {
+                cell.configureAsMatchPlayTotals(results: allResults, playerCount: session.playerNames.count)
+            } else {
+                cell.configureAsTotals(results: allResults, playerCount: session.playerNames.count)
+            }
         } else if indexPath.row == 20 {
             cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
         } else {
@@ -670,8 +680,29 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 for (i, v) in deltas.enumerated() where i < playerCount { cumulative[i] += v }
             }
             let hasCumulative = currentHoleResults[hole] != nil
+
+            // Running match score for match play (from Team A / wolfSlot perspective)
+            var matchStatus: String? = nil
+            if isMatchPlay {
+                var teamAWins = 0, teamBWins = 0
+                for h in 1...hole {
+                    guard let r = currentHoleResults[h] else { continue }
+                    if let ws = r.wolfSlot, let deltas = r.moneyDeltas ?? r.payouts, ws < deltas.count {
+                        let p = deltas[ws]
+                        if p > 0.001 { teamAWins += 1 } else if p < -0.001 { teamBWins += 1 }
+                    } else if let tw = r.teamWon {
+                        if tw { teamAWins += 1 } else { teamBWins += 1 }
+                    }
+                }
+                let diff = teamAWins - teamBWins
+                if diff == 0        { matchStatus = "AS" }
+                else if diff > 0    { matchStatus = "A \(diff)↑" }
+                else                { matchStatus = "B \(abs(diff))↑" }
+            }
+
             cell.configure(hole: hole, result: currentHoleResults[hole], playerNames: session.playerNames,
-                           cumulativeTotals: hasCumulative ? cumulative : [])
+                           cumulativeTotals: hasCumulative ? cumulative : [],
+                           matchStatus: matchStatus)
         }
         return cell
     }
@@ -856,12 +887,13 @@ private final class WolfHoleCell: UITableViewCell {
         l.widthAnchor.constraint(equalToConstant: width).isActive = true
     }
 
-    func configureAsHeader(playerNames: [String]) {
+    func configureAsHeader(playerNames: [String], isMatchPlay: Bool = false) {
         holePressLevel = 0
         holeLabel.text        = "Hole"
         holeLabel.textColor   = .secondaryLabel
-        decisionLabel.text    = ""
+        decisionLabel.text    = isMatchPlay ? "MP" : ""
         decisionLabel.textColor = .secondaryLabel
+        decisionLabel.font    = .systemFont(ofSize: 10, weight: .semibold)
 
         let labels = Self.deduplicatedDisplayNames(playerNames)
         for (i, col) in scoreCols.enumerated() {
@@ -1020,11 +1052,64 @@ private final class WolfHoleCell: UITableViewCell {
         }
     }
 
-    func configure(hole: Int, result: WolfHoleResult?, playerNames: [String], cumulativeTotals: [Double] = []) {
+    func configureAsMatchPlayTotals(results: [WolfHoleResult], playerCount: Int) {
+        holePressLevel = 0
+        holeLabel.text      = "Match"
+        holeLabel.textColor = .secondaryLabel
+        holeLabel.font      = .systemFont(ofSize: 13, weight: .semibold)
+        moneyRow.isHidden   = true
+        gameRow.isHidden    = true
+        skinsRow.isHidden   = true
+
+        var teamAWins = 0, teamBWins = 0
+        for r in results {
+            if let ws = r.wolfSlot, let deltas = r.moneyDeltas ?? r.payouts, ws < deltas.count {
+                let p = deltas[ws]
+                if p > 0.001 { teamAWins += 1 } else if p < -0.001 { teamBWins += 1 }
+            } else if let tw = r.teamWon {
+                if tw { teamAWins += 1 } else { teamBWins += 1 }
+            }
+        }
+        let diff = teamAWins - teamBWins
+        let shortText: String
+        let statusColor: UIColor
+        if diff == 0 {
+            shortText   = "AS"
+            statusColor = .secondaryLabel
+        } else if diff > 0 {
+            shortText   = "A ↑\(diff)"
+            statusColor = .systemGreen
+        } else {
+            shortText   = "B ↑\(abs(diff))"
+            statusColor = .systemGreen
+        }
+
+        decisionLabel.text      = ""
+        decisionLabel.textColor = .label
+        for (i, col) in scoreCols.enumerated() {
+            if i == 0 {
+                col.text      = shortText
+                col.textColor = statusColor
+                col.font      = .systemFont(ofSize: 14, weight: .bold)
+            } else {
+                col.text      = ""
+                col.textColor = .tertiaryLabel
+            }
+        }
+    }
+
+    func configure(hole: Int, result: WolfHoleResult?, playerNames: [String], cumulativeTotals: [Double] = [],
+                   matchStatus: String? = nil) {
         holePressLevel       = result?.wolfPlayer ?? 0
         holeLabel.text       = "\(hole)"
         holeLabel.textColor  = holePressLevel > 0 ? .systemOrange : .label
 
+        // Match play: show running score in decision column (e.g. "A 2↑", "AS", "B 1↑")
+        if let ms = matchStatus {
+            decisionLabel.text      = ms
+            decisionLabel.font      = .systemFont(ofSize: 10, weight: .bold)
+            decisionLabel.textColor = ms == "AS" ? .secondaryLabel : .systemGreen
+        } else {
         switch result?.decision {
         case "alone":
             decisionLabel.text      = "A"
@@ -1039,10 +1124,33 @@ private final class WolfHoleCell: UITableViewCell {
             decisionLabel.text      = ""
             decisionLabel.textColor = .label
         }
+        decisionLabel.font = .systemFont(ofSize: 11, weight: .semibold)
+        }
+
+        // Match play: scores only + match status; no $ / G$ / SK rows
+        if matchStatus != nil {
+            let deltas = result?.moneyDeltas ?? result?.payouts ?? []
+            for (i, col) in scoreCols.enumerated() {
+                col.font = .systemFont(ofSize: 16, weight: .semibold)
+                if let r = result, let scores = r.scores, i < scores.count, scores[i] > 0 {
+                    col.text = "\(scores[i])"
+                    let delta = i < deltas.count ? deltas[i] : 0.0
+                    if delta > 0.001      { col.textColor = .systemGreen }
+                    else if delta < -0.001 { col.textColor = .systemRed }
+                    else                  { col.textColor = .label }
+                } else {
+                    col.text      = "—"
+                    col.textColor = .tertiaryLabel
+                }
+            }
+            moneyRow.isHidden = true
+            gameRow.isHidden  = true
+            skinsRow.isHidden = true
+            return
+        }
 
         let wolfSlot    = result?.wolfSlot
         let partnerSlot = result?.partnerSlot
-        let deltas      = result?.moneyDeltas ?? result?.payouts
 
         // Wolf team indices for orange coloring (explicit slots preferred)
         let wolfTeamIndices: Set<Int>

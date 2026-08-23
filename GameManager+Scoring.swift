@@ -27,7 +27,7 @@ extension GameManager {
     ///   - hole: 0…17
     ///   - umbePressed: true if Umbrella is pressed (disables doubling at ≥6)
     func computeHolePayout(hole: Int, umbePressed: Bool, modeOverride: GameType? = nil) -> [Double] {
-        guard let g = currentGame, (0..<STANDARD_HOLES).contains(hole) else {
+        guard let g = currentGame, (0..<g.totalHoles).contains(hole) else {
             return Array(repeating: 0.0, count: MAX_PLAYERS)
         }
 
@@ -42,17 +42,25 @@ extension GameManager {
         }
         if activeSeats.isEmpty { return Array(repeating: 0.0, count: MAX_PLAYERS) }
 
-        // Wolves for this hole (by seat)
-        var wolfSeats = Set<Int>()
-        if g.wolfButtonStatus.count >= MAX_PLAYERS, (g.wolfButtonStatus.first?.count ?? 0) >= STANDARD_HOLES {
-            for s in activeSeats where g.wolfButtonStatus[s][hole] { wolfSeats.insert(s) }
+        // Teams — matchPlay uses fixed assignments; other modes use per-hole wolfButtonStatus
+        let wolfTeam:    [Int]
+        let nonWolfTeam: [Int]
+
+        if mode == .matchPlay {
+            let teamA = (g.matchPlayTeamA ?? []).filter { activeSeats.contains($0) }
+            let teamB = (g.matchPlayTeamB ?? []).filter { activeSeats.contains($0) }
+            wolfTeam    = teamA
+            nonWolfTeam = teamB
+        } else {
+            var wolfSeats = Set<Int>()
+            if g.wolfButtonStatus.count >= MAX_PLAYERS, (g.wolfButtonStatus.first?.count ?? 0) >= STANDARD_HOLES {
+                for s in activeSeats where g.wolfButtonStatus[s][hole] { wolfSeats.insert(s) }
+            }
+            wolfTeam    = activeSeats.filter { wolfSeats.contains($0) }
+            nonWolfTeam = activeSeats.filter { !wolfSeats.contains($0) }
         }
 
-        // Teams
-        let wolfTeam    = activeSeats.filter { wolfSeats.contains($0) }
-        let nonWolfTeam = activeSeats.filter { !wolfSeats.contains($0) }
-
-        // ✅ Need both sides or money math becomes nonsense
+        // Need both sides or money math becomes nonsense
         guard !wolfTeam.isEmpty, !nonWolfTeam.isEmpty else {
             return Array(repeating: 0.0, count: MAX_PLAYERS)
         }
@@ -60,25 +68,27 @@ extension GameManager {
         let numWolf    = wolfTeam.count
         let numNonWolf = nonWolfTeam.count
 
-        // Hole constants
-        let par   = g.courseParToPass[safe: hole] ?? 4
-        let rawSI = g.courseHCToPass[safe: hole] ?? STANDARD_HOLES
+        // Hole constants — wrap index for 36-hole rounds (holes 19–36 mirror course holes 1–18)
+        let courseH = hole % STANDARD_HOLES
+        let par   = g.courseParToPass[safe: courseH] ?? 4
+        let rawSI = g.courseHCToPass[safe: courseH] ?? STANDARD_HOLES
         let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI)) // 1…18 (0 → 18)
 
-        // Stake (includes hammer multiplier)
+        // Stake — matchPlay uses flat stake (no hammer); all other modes include hammer multiplier
         let baseStake  = (g.gameHoleDollarsArray[safe: hole] ?? 2.0)
-        let hammerMult = g.hammerMultiplier(for: hole)
+        let hammerMult = (mode == .matchPlay) ? 1.0 : g.hammerMultiplier(for: hole)
         let stake      = baseStake * hammerMult
 
-        // ✅ Point values by mode
+        // Point values by mode
         let lowBallPts: Int = mode.isScotch ? 2 : 1
         let lowTotalPts: Int = {
             switch mode {
             case .sixPointScotch: return 2
             case .wolf:           return 1
             case .wolfLowBall:    return 0   // low ball only
+            case .matchPlay:      return 0   // low ball only
             case .hammer:         return 2   // treat like scotch scoring
-            case .tournament:     return 0   // TODO: tournament — no wolf payouts
+            case .tournament:     return 0   // tournament — no wolf payouts
             }
         }()
 
@@ -113,7 +123,7 @@ extension GameManager {
            hole < g.proxWinnerPerHole.count,
            let pxSeat = g.proxWinnerPerHole[hole],
            activeSeats.contains(pxSeat) {
-            if wolfSeats.contains(pxSeat) { wolfProx = 1 } else { nonWolfProx = 1 }
+            if wolfTeam.contains(pxSeat) { wolfProx = 1 } else { nonWolfProx = 1 }
         }
 
         // ---------------------------------------------------------
@@ -175,18 +185,17 @@ extension GameManager {
             nonTeamScore  = nonWolfProx + nonLowTotal + nonLowBall + nonBirdie + nonEagle
 
         case .wolf:
-            // ✅ Wolf “2-point” now means 1 + 1
+            // Wolf “2-point”: low ball + low total
             wolfTeamScore = wolfLowBall + wolfLowTotal
             nonTeamScore  = nonLowBall  + nonLowTotal
 
-        case .wolfLowBall:
-            // ✅ Wolf Low Ball only: 1 point max
+        case .wolfLowBall, .matchPlay:
+            // Low ball only: 1 point max per hole
             wolfTeamScore = wolfLowBall
             nonTeamScore  = nonLowBall
 
         case .tournament:
-            // TODO: tournament — Stableford points are per-player, not team-based.
-            // computeHolePayout is irrelevant for tournament mode; return zeros.
+            // Stableford points are per-player, not team-based; return zeros.
             wolfTeamScore = 0
             nonTeamScore  = 0
         }
