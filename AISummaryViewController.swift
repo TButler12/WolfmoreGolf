@@ -119,8 +119,8 @@ private enum GameContextBuilder {
         (g.tournamentGameType == "stableford" || g.tournamentGameType == nil)
     }
 
-    static func build(from g: GameData) -> String {
-        isStableford(g) ? buildStableford(from: g) : buildWolf(from: g)
+    static func build(from g: GameData, includeSkins: Bool = false) -> String {
+        isStableford(g) ? buildStableford(from: g) : buildWolf(from: g, includeSkins: includeSkins)
     }
 
     // MARK: - Stableford context
@@ -194,7 +194,7 @@ private enum GameContextBuilder {
 
     // MARK: - Wolf context (original)
 
-    private static func buildWolf(from g: GameData) -> String {
+    private static func buildWolf(from g: GameData, includeSkins: Bool = false) -> String {
         var lines: [String] = []
 
         let courseName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -282,8 +282,8 @@ private enum GameContextBuilder {
             lines.append("")
         }
 
-        // Skins
-        if let skins = g.skinsState {
+        // Skins (only included when user opts in via the Include Skins toggle)
+        if includeSkins, let skins = g.skinsState {
             let skinResults = skins.resultsByHole.filter { !$0.winningPlayerIndexes.isEmpty }
             if !skinResults.isEmpty {
                 lines.append("SKINS:")
@@ -444,6 +444,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
     private enum State { case picker, loading, result(String, SummaryStyle) }
     private var state: State = .picker { didSet { applyState() } }
     private var limitWarningSentThisSession = false
+    private var includeSkins: Bool = false
 
     // Picker
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -480,6 +481,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
         tableView.delegate   = self
         tableView.register(StyleCell.self, forCellReuseIdentifier: StyleCell.reuseID)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "NoteCell")
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "SkinsCell")
         tableView.translatesAutoresizingMaskIntoConstraints = false
         tableView.backgroundColor = .systemGroupedBackground
         view.addSubview(tableView)
@@ -638,7 +640,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
                         coursePars: game.course.pars
                     )
                 } else {
-                    context = GameContextBuilder.build(from: game)
+                    context = GameContextBuilder.build(from: game, includeSkins: includeSkins)
                 }
                 if !note.isEmpty {
                     context += "\n\nAdditional context from the scorer: \(note)"
@@ -811,18 +813,26 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
 
 extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
 
-    func numberOfSections(in tableView: UITableView) -> Int { 2 }
+    func numberOfSections(in tableView: UITableView) -> Int { 3 }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        section == 0 ? 1 : SummaryStyle.allCases.count
+        switch section {
+        case 0:  return 1                        // personal note
+        case 1:  return 1                        // skins toggle
+        default: return SummaryStyle.allCases.count
+        }
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        section == 0 ? "Add a personal note (optional)" : "Choose a voice for your round recap"
+        switch section {
+        case 0:  return "Add a personal note (optional)"
+        case 1:  return "Options"
+        default: return "Choose a voice for your round recap"
+        }
     }
 
     func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
-        guard section == 1 else { return nil }
+        guard section == 2 else { return nil }
         let pm = PremiumManager.shared
         if pm.isPremium { return nil }
         let remaining = pm.remainingFreeUses(for: .aiSummary)
@@ -867,6 +877,20 @@ extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
             cell.selectionStyle = .none
             return cell
         }
+
+        if indexPath.section == 1 {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "SkinsCell", for: indexPath)
+            cell.textLabel?.text = "Include Skins"
+            cell.textLabel?.font = .systemFont(ofSize: 15)
+            cell.selectionStyle = .none
+            let sw = UISwitch()
+            sw.isOn = includeSkins
+            sw.onTintColor = UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1)
+            sw.addTarget(self, action: #selector(skinsToggled(_:)), for: .valueChanged)
+            cell.accessoryView = sw
+            return cell
+        }
+
         let style = SummaryStyle.allCases[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: StyleCell.reuseID, for: indexPath) as! StyleCell
         cell.configure(style: style)
@@ -874,11 +898,15 @@ extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        indexPath.section == 0 ? 50 : 72
+        switch indexPath.section {
+        case 0:  return 50
+        case 1:  return 44
+        default: return 72
+        }
     }
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        guard indexPath.section == 1 else { return }
+        guard indexPath.section == 2 else { return }
         tableView.deselectRow(at: indexPath, animated: true)
         let style = SummaryStyle.allCases[indexPath.row]
         generate(style: style)
@@ -891,6 +919,14 @@ extension AISummaryViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
+    }
+}
+
+// MARK: - Skins toggle
+
+extension AISummaryViewController {
+    @objc private func skinsToggled(_ sender: UISwitch) {
+        includeSkins = sender.isOn
     }
 }
 
