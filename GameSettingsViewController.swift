@@ -24,6 +24,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private weak var matchPlayTeamsSection: UIStackView?
     private weak var matchPlayTeamsInner: UIStackView?
     private weak var matchPlay36Switch: UISwitch?
+    private weak var dualMatchSwitch: UISwitch?
     private weak var goLiveButton: UIButton?
     private var scrollView: UIScrollView!
     private var contentStack: UIStackView!
@@ -448,12 +449,46 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
         inner.addArrangedSubview(sep)
 
+        // ── Dual Match toggle ────────────────────────────────────────────────
+        let dualLbl = UILabel()
+        dualLbl.text = "Dual Match"
+        dualLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        dualLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let dualSw = UISwitch()
+        dualSw.onTintColor = .wolfMoreGreen
+        dualSw.isOn = g.isDualMatch
+        dualSw.addTarget(self, action: #selector(dualMatchToggled(_:)), for: .valueChanged)
+        dualMatchSwitch = dualSw
+
+        let dualRow = UIStackView(arrangedSubviews: [dualLbl, dualSw])
+        dualRow.axis = .horizontal; dualRow.alignment = .center; dualRow.spacing = 8
+        inner.addArrangedSubview(dualRow)
+
+        let dualNote = UILabel()
+        dualNote.text = "Two matches at once (e.g. McTommy vs Test AND G vs Y)."
+        dualNote.font = UIFont.systemFont(ofSize: 12)
+        dualNote.textColor = .secondaryLabel
+        dualNote.numberOfLines = 0
+        inner.addArrangedSubview(dualNote)
+
+        let sep2 = UIView()
+        sep2.backgroundColor = .separator
+        sep2.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        inner.addArrangedSubview(sep2)
+
         // ── Team assignment ──────────────────────────────────────────────────
         let active = g.playerNames.enumerated()
             .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
             .map { ($0.offset, $0.element) }
 
-        let teamASet = Set(g.matchPlayTeamA ?? [])
+        let isDual   = g.isDualMatch
+        let teamASet = Set(g.matchPlayTeamA  ?? [])
+        let teamA2   = Set(g.matchPlayTeamA2 ?? [])
+        let teamB2   = Set(g.matchPlayTeamB2 ?? [])
+
+        let segItems: [String] = isDual ? ["1:A", "1:B", "2:A", "2:B"] : ["Team A", "Team B"]
+        let segWidth: CGFloat  = isDual ? 220 : 160
 
         for (seat, name) in active {
             let nameLbl = UILabel()
@@ -461,22 +496,29 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             nameLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
             nameLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
-            let seg = UISegmentedControl(items: ["Team A", "Team B"])
-            seg.selectedSegmentIndex  = teamASet.contains(seat) ? 0 : 1
-            seg.tag                   = seat
-            seg.backgroundColor       = .systemGray6
+            let seg = UISegmentedControl(items: segItems)
+            if isDual {
+                if teamASet.contains(seat)  { seg.selectedSegmentIndex = 0 }
+                else if teamA2.contains(seat) { seg.selectedSegmentIndex = 2 }
+                else if teamB2.contains(seat) { seg.selectedSegmentIndex = 3 }
+                else                         { seg.selectedSegmentIndex = 1 }  // default M1-B
+            } else {
+                seg.selectedSegmentIndex = teamASet.contains(seat) ? 0 : 1
+            }
+            seg.tag = seat
+            seg.backgroundColor          = .systemGray6
             seg.selectedSegmentTintColor = .wolfMoreGreen
             seg.setTitleTextAttributes([
                 .foregroundColor: UIColor.secondaryLabel,
-                .font: UIFont.systemFont(ofSize: 13, weight: .regular)
+                .font: UIFont.systemFont(ofSize: 12, weight: .regular)
             ], for: .normal)
             seg.setTitleTextAttributes([
                 .foregroundColor: UIColor.white,
-                .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
+                .font: UIFont.systemFont(ofSize: 12, weight: .semibold)
             ], for: .selected)
             seg.addTarget(self, action: #selector(matchPlayTeamChanged(_:)), for: .valueChanged)
             seg.setContentHuggingPriority(.required, for: .horizontal)
-            seg.widthAnchor.constraint(equalToConstant: 160).isActive = true
+            seg.widthAnchor.constraint(equalToConstant: segWidth).isActive = true
 
             let row = UIStackView(arrangedSubviews: [nameLbl, seg])
             row.axis      = .horizontal
@@ -501,14 +543,69 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     @objc private func matchPlayTeamChanged(_ sender: UISegmentedControl) {
         let seat = sender.tag
         GameManager.shared.update { g in
-            var teamA = g.matchPlayTeamA ?? []
-            var teamB = g.matchPlayTeamB ?? []
-            teamA.removeAll { $0 == seat }
-            teamB.removeAll { $0 == seat }
-            if sender.selectedSegmentIndex == 0 { teamA.append(seat) } else { teamB.append(seat) }
-            g.matchPlayTeamA = teamA.sorted()
-            g.matchPlayTeamB = teamB.sorted()
+            var a1 = g.matchPlayTeamA  ?? []
+            var b1 = g.matchPlayTeamB  ?? []
+            var a2 = g.matchPlayTeamA2 ?? []
+            var b2 = g.matchPlayTeamB2 ?? []
+            // Remove from all teams first
+            a1.removeAll { $0 == seat }
+            b1.removeAll { $0 == seat }
+            a2.removeAll { $0 == seat }
+            b2.removeAll { $0 == seat }
+            if g.isDualMatch {
+                switch sender.selectedSegmentIndex {
+                case 0: a1.append(seat)
+                case 1: b1.append(seat)
+                case 2: a2.append(seat)
+                default: b2.append(seat)
+                }
+                g.matchPlayTeamA2 = a2.sorted()
+                g.matchPlayTeamB2 = b2.sorted()
+            } else {
+                if sender.selectedSegmentIndex == 0 { a1.append(seat) } else { b1.append(seat) }
+            }
+            g.matchPlayTeamA = a1.sorted()
+            g.matchPlayTeamB = b1.sorted()
         }
+    }
+
+    @objc private func dualMatchToggled(_ sender: UISwitch) {
+        GameManager.shared.update { g in
+            if sender.isOn {
+                let teamA = (g.matchPlayTeamA ?? []).sorted()
+                let teamB = (g.matchPlayTeamB ?? []).sorted()
+                let inMatch1 = Set(teamA + teamB)
+                let active = g.playerNames.indices.filter {
+                    g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }.sorted()
+                let notInMatch1 = active.filter { !inMatch1.contains($0) }
+
+                if !notInMatch1.isEmpty {
+                    // Spare players not yet in Match 1 — seed Match 2 from them
+                    let half = max(1, notInMatch1.count / 2)
+                    g.matchPlayTeamA2 = Array(notInMatch1.prefix(half))
+                    g.matchPlayTeamB2 = Array(notInMatch1.suffix(from: half))
+                } else {
+                    // All players are in Match 1 (2v2) — split into two 1v1 matches.
+                    // Keep the first player from each side in Match 1; move the rest to Match 2.
+                    g.matchPlayTeamA  = teamA.count > 0 ? [teamA[0]] : []
+                    g.matchPlayTeamB  = teamB.count > 0 ? [teamB[0]] : []
+                    g.matchPlayTeamA2 = teamA.count > 1 ? Array(teamA.dropFirst()) : (teamB.count > 1 ? [] : [])
+                    g.matchPlayTeamB2 = teamB.count > 1 ? Array(teamB.dropFirst()) : []
+                }
+            } else {
+                // Merge Match 2 players back into Match 1 before clearing
+                var a1 = g.matchPlayTeamA ?? []
+                var b1 = g.matchPlayTeamB ?? []
+                for s in (g.matchPlayTeamA2 ?? []) where !a1.contains(s) { a1.append(s) }
+                for s in (g.matchPlayTeamB2 ?? []) where !b1.contains(s) { b1.append(s) }
+                g.matchPlayTeamA  = a1.sorted()
+                g.matchPlayTeamB  = b1.sorted()
+                g.matchPlayTeamA2 = nil
+                g.matchPlayTeamB2 = nil
+            }
+        }
+        refreshMatchPlayTeamsContent()
     }
 
     @objc private func matchPlay36Toggled(_ sender: UISwitch) {
@@ -604,14 +701,8 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         GameManager.shared.update { g in
             g.baseGameStake = Int(stake)
             g.isUmbrella = umbrellaMuted
-
-            if g.gameHoleDollarsArray.count != STANDARD_HOLES {
-                g.gameHoleDollarsArray = Array(repeating: stake, count: STANDARD_HOLES)
-            } else {
-                for i in 0..<STANDARD_HOLES {
-                    g.gameHoleDollarsArray[i] = stake
-                }
-            }
+            g.gameHoleDollarsArray = Array(repeating: stake, count: STANDARD_HOLES)
+            g.holeBaseAmount       = Array(repeating: stake, count: STANDARD_HOLES)
         }
 
         GameManager.shared.saveCurrent()

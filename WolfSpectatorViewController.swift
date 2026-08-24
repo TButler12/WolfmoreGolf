@@ -648,10 +648,26 @@ final class WolfSpectatorViewController: UIViewController {
 
 extension WolfSpectatorViewController: UITableViewDataSource {
 
+    /// Total holes to display for the current session.
+    /// Rounds the max hole seen in results up to the nearest multiple of 18,
+    /// so a 36-hole match shows 36 rows as soon as hole 19 data arrives.
+    private var totalHolesForCurrentSession: Int {
+        let allResults = Array(currentHoleResults.values)
+        let isMatchPlay = allResults.contains { $0.decision == "matchplay" }
+        guard let maxHole = currentHoleResults.keys.max() else {
+            return isMatchPlay ? 36 : STANDARD_HOLES
+        }
+        let fromData = ((maxHole + STANDARD_HOLES - 1) / STANDARD_HOLES) * STANDARD_HOLES
+        // Match play sessions always list all 36 holes
+        return isMatchPlay ? max(36, fromData) : fromData
+    }
+
+    private var summaryRowCount: Int { totalHolesForCurrentSession == 36 ? 7 : 4 }
+
     func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        (currentSession?.playerNames.count ?? 0) > 0 ? 21 : 0   // 18 holes + score totals + money totals + skins totals
+        (currentSession?.playerNames.count ?? 0) > 0 ? totalHolesForCurrentSession + summaryRowCount : 0
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -659,19 +675,44 @@ extension WolfSpectatorViewController: UITableViewDataSource {
         guard let session = currentSession else { return cell }
         let allResults = Array(currentHoleResults.values)
         let isMatchPlay = allResults.contains { $0.decision == "matchplay" }
-        // row 0-17 = holes 1-18, row 18 = score totals, row 19 = money totals, row 20 = skins totals
-        if indexPath.row == 18 {
-            cell.configureAsScoreTotals(results: allResults, playerCount: session.playerNames.count)
-        } else if indexPath.row == 19 {
-            if isMatchPlay {
-                cell.configureAsMatchPlayTotals(results: allResults, playerCount: session.playerNames.count)
+        let totalHoles = totalHolesForCurrentSession
+        let is36 = totalHoles == 36
+        let pc = session.playerNames.count
+        let summaryBase = totalHoles
+        let summaryRow = indexPath.row - summaryBase
+
+        if summaryRow >= 0 {
+            if is36 {
+                switch summaryRow {
+                case 0: cell.configureAsScoreSubtotal(label: "F9",     holes: 1...9,  results: allResults, playerCount: pc)
+                case 1: cell.configureAsScoreSubtotal(label: "1st 18", holes: 1...18, results: allResults, playerCount: pc)
+                case 2: cell.configureAsScoreSubtotal(label: "2nd F9", holes: 19...27, results: allResults, playerCount: pc)
+                case 3: cell.configureAsScoreSubtotal(label: "2nd 18", holes: 19...36, results: allResults, playerCount: pc)
+                case 4: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
+                case 5:
+                    if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc) }
+                    else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
+                case 6: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
+                default: break
+                }
             } else {
-                cell.configureAsTotals(results: allResults, playerCount: session.playerNames.count)
+                switch summaryRow {
+                case 0: cell.configureAsScoreSubtotal(label: "F9",    holes: 1...9,  results: allResults, playerCount: pc)
+                case 1: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
+                case 2:
+                    if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc) }
+                    else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
+                case 3: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
+                default: break
+                }
             }
-        } else if indexPath.row == 20 {
-            cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
-        } else {
-            let hole = indexPath.row + 1  // 1-based
+            return cell
+        }
+
+        // Hole rows
+        let hole = indexPath.row + 1  // 1-based
+        if hole < 1 { return cell }
+        do {
             let playerCount = session.playerNames.count
             var cumulative = Array(repeating: 0.0, count: playerCount)
             for h in 1...hole {
@@ -970,6 +1011,30 @@ private final class WolfHoleCell: UITableViewCell {
         skinsRow.isHidden = true
     }
 
+    func configureAsScoreSubtotal(label: String, holes: ClosedRange<Int>, results: [WolfHoleResult], playerCount: Int) {
+        holePressLevel = 0
+        holeLabel.text      = label
+        holeLabel.textColor = .secondaryLabel
+        holeLabel.font      = .systemFont(ofSize: 13, weight: .semibold)
+        decisionLabel.text  = ""
+
+        var totals = Array(repeating: 0, count: playerCount)
+        for result in results where holes.contains(result.hole) {
+            guard let scores = result.scores else { continue }
+            for (i, s) in scores.enumerated() where i < playerCount { totals[i] += s }
+        }
+
+        for (i, col) in scoreCols.enumerated() {
+            guard i < playerCount else { col.text = ""; continue }
+            col.font      = .systemFont(ofSize: 14, weight: .semibold)
+            col.text      = totals[i] > 0 ? "\(totals[i])" : "—"
+            col.textColor = .secondaryLabel
+        }
+        moneyRow.isHidden = true
+        gameRow.isHidden  = true
+        skinsRow.isHidden = true
+    }
+
     func configureAsTotals(results: [WolfHoleResult], playerCount: Int) {
         holePressLevel = 0
         holeLabel.text        = "Total"
@@ -1011,10 +1076,9 @@ private final class WolfHoleCell: UITableViewCell {
         gameRow.isHidden    = true
         skinsRow.isHidden   = true
 
-        // Replay the pot to show current carryover count
+        // Replay the pot to show current carryover count (sorted so multi-round games work)
         var currentPot = 1
-        for hole in 1...18 {
-            guard let r = results.first(where: { $0.hole == hole }) else { continue }
+        for r in results.sorted(by: { $0.hole < $1.hole }) {
             if r.skinWinner != nil {
                 currentPot = 1
             } else if r.skinTiedSeats != nil {
@@ -1060,40 +1124,39 @@ private final class WolfHoleCell: UITableViewCell {
         moneyRow.isHidden   = true
         gameRow.isHidden    = true
         skinsRow.isHidden   = true
+        decisionLabel.text  = ""
 
-        var teamAWins = 0, teamBWins = 0
+        // Tally each player's match result from their own moneyDeltas.
+        // This works for both single match and dual simultaneous matches: a positive
+        // delta means that player won their hole, negative means they lost.
+        var wins  = Array(repeating: 0, count: playerCount)
+        var losses = Array(repeating: 0, count: playerCount)
         for r in results {
-            if let ws = r.wolfSlot, let deltas = r.moneyDeltas ?? r.payouts, ws < deltas.count {
-                let p = deltas[ws]
-                if p > 0.001 { teamAWins += 1 } else if p < -0.001 { teamBWins += 1 }
-            } else if let tw = r.teamWon {
-                if tw { teamAWins += 1 } else { teamBWins += 1 }
+            guard let deltas = r.moneyDeltas ?? r.payouts else {
+                // Fall back to teamWon flag for older results that lack per-player deltas
+                if let tw = r.teamWon, let ws = r.wolfSlot, ws < playerCount {
+                    if tw { wins[ws] += 1 } else { losses[ws] += 1 }
+                }
+                continue
+            }
+            for (i, d) in deltas.enumerated() where i < playerCount {
+                if d > 0.001 { wins[i] += 1 } else if d < -0.001 { losses[i] += 1 }
             }
         }
-        let diff = teamAWins - teamBWins
-        let shortText: String
-        let statusColor: UIColor
-        if diff == 0 {
-            shortText   = "AS"
-            statusColor = .secondaryLabel
-        } else if diff > 0 {
-            shortText   = "A ↑\(diff)"
-            statusColor = .systemGreen
-        } else {
-            shortText   = "B ↑\(abs(diff))"
-            statusColor = .systemGreen
-        }
 
-        decisionLabel.text      = ""
-        decisionLabel.textColor = .label
         for (i, col) in scoreCols.enumerated() {
-            if i == 0 {
-                col.text      = shortText
-                col.textColor = statusColor
-                col.font      = .systemFont(ofSize: 14, weight: .bold)
+            guard i < playerCount else { col.text = ""; continue }
+            let diff = wins[i] - losses[i]
+            col.font = .systemFont(ofSize: 13, weight: .bold)
+            if diff == 0 {
+                col.text      = "AS"
+                col.textColor = .secondaryLabel
+            } else if diff > 0 {
+                col.text      = "↑\(diff)"
+                col.textColor = .systemGreen
             } else {
-                col.text      = ""
-                col.textColor = .tertiaryLabel
+                col.text      = "↓\(abs(diff))"
+                col.textColor = .systemRed
             }
         }
     }

@@ -117,6 +117,12 @@ final class GameManager {
         fresh.hcPlayers          = keepHCs
         fresh.playerActivated    = keepActives
         fresh.rosterNames        = keepRosterList
+
+        // Carry base stake forward so the new round starts at the same stake the user configured.
+        fresh.baseGameStake = old.baseGameStake
+        let inheritedStake = Double(old.baseGameStake)
+        fresh.gameHoleDollarsArray = Array(repeating: inheritedStake, count: STANDARD_HOLES)
+        fresh.holeBaseAmount       = Array(repeating: inheritedStake, count: STANDARD_HOLES)
         // Preserve tournament linkage when scorer is mid-tournament (multi-day support).
         if let code = old.tournamentCode {
             fresh.tournamentCode        = code
@@ -202,7 +208,8 @@ final class GameManager {
         g.proxWinnerPerHole    = Array(repeating: nil, count: STANDARD_HOLES)
         g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
         g.gameHoleDollarsArray = Array(repeating: defaultBet, count: STANDARD_HOLES)
-        
+        g.holeBaseAmount       = Array(repeating: defaultBet, count: STANDARD_HOLES)
+
         // ✅ NEW: Wolf/Hammer state reset (safe defaults)
         g.hammerCountPerHole   = Array(repeating: 0, count: STANDARD_HOLES)
         g.wolfPlayerPerHole    = Array(repeating: nil, count: STANDARD_HOLES)
@@ -293,7 +300,8 @@ final class GameManager {
 
         // Per-hole arrays use g.totalHoles so 36-hole saves survive a reload
         if g.gameHoleDollarsArray.count != h {
-            g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: h, fill: 2.0)
+            let baseStake = Double(g.baseGameStake)
+            g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: h, fill: baseStake)
         }
         if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != h {
             g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: h), count: MAX_PLAYERS)
@@ -320,6 +328,23 @@ final class GameManager {
         }
         if g.previousPressedPushedToggleArray.count != h {
             g.previousPressedPushedToggleArray = pad(g.previousPressedPushedToggleArray, to: h, fill: false)
+        }
+
+        // Ensure holeBaseAmount is sized correctly and not stale.
+        // For any hole with no active multipliers, the pure base equals what's displayed in
+        // gameHoleDollarsArray. Old saves defaulted holeBaseAmount to 2.0 regardless of
+        // baseGameStake, so sync it here on every load to keep recomputeHoleAmount correct.
+        if g.holeBaseAmount.count != h {
+            g.holeBaseAmount = pad(g.holeBaseAmount, to: h, fill: Double(g.baseGameStake))
+        }
+        for i in 0..<h {
+            let noMultipliers = !(g.rollApplied[safe: i] ?? false)
+                             && !(g.rerollApplied[safe: i] ?? false)
+                             && !(g.aloneApplied[safe: i] ?? false)
+                             && (g.pressLevel[safe: i] ?? 0) == 0
+            if noMultipliers, let displayed = g.gameHoleDollarsArray[safe: i], displayed > 0 {
+                g.holeBaseAmount[i] = displayed
+            }
         }
 
         // Roster list ok even if empty

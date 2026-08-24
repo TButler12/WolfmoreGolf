@@ -1941,7 +1941,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             b.alpha = isSeatActive ? 1.0 : 0.4
             guard (0..<MAX_PLAYERS).contains(seat),
                   g.wolfButtonStatus.count == MAX_PLAYERS,
-                  g.wolfButtonStatus[seat].count == STANDARD_HOLES else { continue }
+                  hole < (g.wolfButtonStatus[safe: seat]?.count ?? 0) else { continue }
             let isOn = g.wolfButtonStatus[seat][hole]
             applyWolfStyle(b, isOn: isOn)
         }
@@ -2147,6 +2147,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         bottomRow1?.isHidden = isMatchPlay
         bottomRow2?.isHidden = isMatchPlay
 
+        // In Match Play, hide Nassau betting only — hole/game columns stay to show +1/0/-1
+        nassauButton?.isHidden = isMatchPlay
+        if isMatchPlay { liveNassauButton?.isHidden = true }
+
         // Umbrella is 6-point only
         if !t.isScotch, g.isUmbrella {
             GameManager.shared.update { $0.isUmbrella = false }
@@ -2331,7 +2335,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 g.recomputeHoleAmount(hole: h)
             } else {
                 // TURN ON: double the current displayed value
-                let current = max(2.0, g.gameHoleDollarsArray[h])
+                let current = g.gameHoleDollarsArray[h]
                 g.gameHoleDollarsArray[h] = roundToHalf(max(1.0, current * 2.0))
                 g.rerollApplied[h] = true
             }
@@ -2357,7 +2361,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             if sender.isSelected {
                 // TURN ON: double the current displayed value
                 if !g.rollApplied[hole] {
-                    let current = max(2.0, g.gameHoleDollarsArray[hole])
+                    let current = g.gameHoleDollarsArray[hole]
                     g.gameHoleDollarsArray[hole] = roundToHalf(max(1.0, current * 2.0))
                     g.rollApplied[hole] = true
                 }
@@ -2747,7 +2751,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             if sender.isSelected {
                 // TURN ON: double the current displayed value
                 if !g.aloneApplied[hole] {
-                    let current = max(2.0, g.gameHoleDollarsArray[hole])
+                    let current = g.gameHoleDollarsArray[hole]
                     g.gameHoleDollarsArray[hole] = roundToHalf(max(1.0, current * 2.0))
                     g.aloneApplied[hole] = true
                 }
@@ -2820,8 +2824,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         GameManager.shared.update { g in
             let hole = max(0, min(g.totalHoles - 1, g.hole))
-            if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != STANDARD_HOLES {
-                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
+            let totalH = g.totalHoles
+            if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != totalH {
+                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: totalH), count: MAX_PLAYERS)
             }
             g.wolfButtonStatus[player][hole].toggle()
         }
@@ -4247,32 +4252,43 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         // Match Play: show running match status instead of dollar amounts
         if g.resolvedGameType == .matchPlay {
-            let teamA = (g.matchPlayTeamA ?? []).filter { $0 < MAX_PLAYERS }
-            let teamB = (g.matchPlayTeamB ?? []).filter { $0 < MAX_PLAYERS }
-            let onTeamA = teamA.contains(mySeat)
-            let refSeat = teamA.first ?? 0   // TeamA payout is positive when TeamA wins
-
-            var teamAWins = 0, teamBWins = 0, played = 0
             let upThrough = min(g.hole, g.totalHoles - 1)
-            for h in 0...upThrough {
-                guard g.holeCommitted[safe: h] == true else { continue }
-                let payout = g.playerMoney[safe: refSeat]?[safe: h] ?? 0.0
-                if payout > 0.001       { teamAWins += 1 }
-                else if payout < -0.001 { teamBWins += 1 }
-                played += 1
+            var played = 0
+            for h in 0...upThrough { if g.holeCommitted[safe: h] == true { played += 1 } }
+
+            func matchStatus(teamA: [Int], teamB: [Int]) -> String {
+                let refSeat = teamA.first ?? 0
+                var wins = 0, losses = 0
+                for h in 0...upThrough {
+                    guard g.holeCommitted[safe: h] == true else { continue }
+                    let p = g.playerMoney[safe: refSeat]?[safe: h] ?? 0.0
+                    if p > 0.001 { wins += 1 } else if p < -0.001 { losses += 1 }
+                }
+                let onA = teamA.contains(mySeat)
+                let diff = onA ? (wins - losses) : (losses - wins)
+                if diff == 0  { return "All Square" }
+                if diff > 0   { return "\(diff) Up" }
+                return "\(abs(diff)) Down"
             }
 
-            let diff = onTeamA ? (teamAWins - teamBWins) : (teamBWins - teamAWins)
-            let statusText: String
-            if diff == 0        { statusText = "All Square" }
-            else if diff > 0    { statusText = "\(diff) Up" }
-            else                { statusText = "\(abs(diff)) Down" }
+            let a1 = (g.matchPlayTeamA ?? []).filter { $0 < MAX_PLAYERS }
+            let b1 = (g.matchPlayTeamB ?? []).filter { $0 < MAX_PLAYERS }
 
-            let playerName = g.playerNames[safe: mySeat]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            liveSummaryPlayerLabel?.text = playerName.isEmpty ? "Match Play" : playerName
-            liveSummaryWolfLabel?.text   = "Match Play"
-            liveSummarySkinsLabel?.text  = statusText
-            liveSummaryNassauLabel?.text = played > 0 ? "Thru \(played)" : "—"
+            if g.isDualMatch {
+                let a2 = (g.matchPlayTeamA2 ?? []).filter { $0 < MAX_PLAYERS }
+                let b2 = (g.matchPlayTeamB2 ?? []).filter { $0 < MAX_PLAYERS }
+                let playerName = g.playerNames[safe: mySeat]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                liveSummaryPlayerLabel?.text = playerName.isEmpty ? "Match Play" : playerName
+                liveSummaryWolfLabel?.text   = "M1: \(matchStatus(teamA: a1, teamB: b1))"
+                liveSummarySkinsLabel?.text  = "M2: \(matchStatus(teamA: a2, teamB: b2))"
+                liveSummaryNassauLabel?.text = played > 0 ? "Thru \(played)" : "—"
+            } else {
+                let playerName = g.playerNames[safe: mySeat]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                liveSummaryPlayerLabel?.text = playerName.isEmpty ? "Match Play" : playerName
+                liveSummaryWolfLabel?.text   = "Match Play"
+                liveSummarySkinsLabel?.text  = matchStatus(teamA: a1, teamB: b1)
+                liveSummaryNassauLabel?.text = played > 0 ? "Thru \(played)" : "—"
+            }
             return
         }
 
@@ -4906,6 +4922,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
             // Strip labels are nil during viewDidLoad refresh calls; populate now that they exist
             refreshLiveSummaryStrip()
+
+            // Apply game-type visibility (rows 1+2, nassauButton) now that the rows exist.
+            // applyGameTypeUI() fires in viewWillAppear but bottomRow1/2 were nil then.
+            UpdateScores.isHidden = false
+            applyGameTypeUI()
         }
 
         // Update frame every layout pass (handles rotation / safe-area changes)

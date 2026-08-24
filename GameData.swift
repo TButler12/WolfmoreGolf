@@ -124,10 +124,19 @@ struct GameData: Codable {
     // Match Play fixed team assignments (optional so old saves decode safely)
     var matchPlayTeamA: [Int]? = nil
     var matchPlayTeamB: [Int]? = nil
+    // Second simultaneous match (dual 1v1 within the foursome)
+    var matchPlayTeamA2: [Int]? = nil
+    var matchPlayTeamB2: [Int]? = nil
     // Match Play 36-hole round: plays the same 18-hole course twice back-to-back
     var matchPlay36Holes: Bool = false
 
     var totalHoles: Int { matchPlay36Holes ? 36 : STANDARD_HOLES }
+
+    var isDualMatch: Bool {
+        guard resolvedGameType == .matchPlay,
+              let a2 = matchPlayTeamA2, let b2 = matchPlayTeamB2 else { return false }
+        return !a2.isEmpty && !b2.isEmpty
+    }
 
     var playerNames: [String] = Array(repeating: "", count: MAX_PLAYERS)
     var hcPlayers: [Int] = Array(repeating: 0, count: MAX_PLAYERS)

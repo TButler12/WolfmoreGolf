@@ -290,6 +290,63 @@ let TASHUA_GLEN_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Forward",      yardage: 1664)
 ]
 
+// MARK: - Butterfield Country Club — Oak Brook, IL (27-hole: Blue / White / Red nines)
+private let BUTTERFIELD_CC_BLUE_WHITE_ID = UUID(uuidString: "33C8E5E4-F95A-4804-A2F0-F0ADB1ACA7FA")!
+private let BUTTERFIELD_CC_RED_BLUE_ID   = UUID(uuidString: "5528FF86-EBB8-4B15-949C-D5F2AFCE409A")!
+private let BUTTERFIELD_CC_WHITE_RED_ID  = UUID(uuidString: "2619BE19-C61D-40B6-930E-C9F015E2CB31")!
+
+// Blue nine (holes 1–9): 4,4,4,3,5,3,5,4,4 = 36
+// White nine (holes 1–9): 5,3,4,4,4,3,4,4,4 = 35
+// Red nine (holes 1–9): 4,4,4,3,4,4,4,5,3 = 35
+
+let BUTTERFIELD_CC_BLUE_WHITE_PARS: [Int] = [
+    4,4,4,3,5,3,5,4,4,   // Blue nine
+    5,3,4,4,4,3,4,4,4    // White nine
+]
+let BUTTERFIELD_CC_BLUE_WHITE_HCS: [Int] = [
+    3,13,5,15,11,9,17,7,1,   // Blue nine in Blue/White
+    12,18,8,6,2,16,10,14,4   // White nine in Blue/White
+]
+let BUTTERFIELD_CC_BLUE_WHITE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7109, rating: 75.3, slope: 146),
+    TeeInfo(teeName: "Blue",  yardage: 6780, rating: 73.7, slope: 142),
+    TeeInfo(teeName: "White", yardage: 6298, rating: 71.5, slope: 137),
+    TeeInfo(teeName: "Gold",  yardage: 5711, rating: 68.8, slope: 131),
+    TeeInfo(teeName: "Red",   yardage: 5242, rating: 66.6, slope: 126)
+]
+
+let BUTTERFIELD_CC_RED_BLUE_PARS: [Int] = [
+    4,4,4,3,4,4,4,5,3,   // Red nine
+    4,4,4,3,5,3,5,4,4    // Blue nine
+]
+let BUTTERFIELD_CC_RED_BLUE_HCS: [Int] = [
+    9,1,11,5,17,7,15,13,3,   // Red nine in Red/Blue
+    4,14,6,16,12,10,18,8,2   // Blue nine in Red/Blue
+]
+let BUTTERFIELD_CC_RED_BLUE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6918, rating: 74.3, slope: 147),
+    TeeInfo(teeName: "Blue",  yardage: 6594, rating: 72.8, slope: 143),
+    TeeInfo(teeName: "White", yardage: 6128, rating: 70.8, slope: 138),
+    TeeInfo(teeName: "Gold",  yardage: 5608, rating: 68.3, slope: 133),
+    TeeInfo(teeName: "Red",   yardage: 5052, rating: 65.8, slope: 127)
+]
+
+let BUTTERFIELD_CC_WHITE_RED_PARS: [Int] = [
+    5,3,4,4,4,3,4,4,4,   // White nine
+    4,4,4,3,4,4,4,5,3    // Red nine
+]
+let BUTTERFIELD_CC_WHITE_RED_HCS: [Int] = [
+    11,17,7,5,1,15,9,13,3,   // White nine in White/Red
+    10,2,12,6,18,8,16,14,4   // Red nine in White/Red
+]
+let BUTTERFIELD_CC_WHITE_RED_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6775, rating: 73.6, slope: 146),
+    TeeInfo(teeName: "Blue",  yardage: 6468, rating: 72.3, slope: 143),
+    TeeInfo(teeName: "White", yardage: 6004, rating: 70.1, slope: 138),
+    TeeInfo(teeName: "Gold",  yardage: 5451, rating: 67.5, slope: 132),
+    TeeInfo(teeName: "Red",   yardage: 4948, rating: 65.4, slope: 127)
+]
+
 // MARK: Butler National (BUTLER / Championship) — Oak Brook, IL
 // Par 71 | 7,550 yds | Rating 78.4 | Slope 155
 private let BUTLER_NATIONAL_BUTLER_TEE_ID = UUID(uuidString: "A6E1C1F2-4E2B-4C4C-9B1A-2B3C4D5E6F70")!
@@ -11247,6 +11304,14 @@ let MERIT_CLUB_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 7236, rating: 75.4, slope: 140),
 ]
 
+// MARK: - Itasca Country Club
+private let ITASCA_CC_ID = UUID(uuidString: "17A5CA00-CC01-4001-8001-000000000001")!
+let ITASCA_CC_PARS: [Int] = [4,4,4,3,5,3,4,4,5, 3,4,4,5,4,4,5,3,4]
+let ITASCA_CC_HCS:  [Int] = [5,11,9,17,1,13,3,15,7, 12,2,14,16,4,10,8,18,6]
+let ITASCA_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6815, rating: 73.3, slope: 139),
+]
+
 // MARK: - Carolina Golf Club
 private let CAROLINA_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000228")!
 let CAROLINA_GC_PARS: [Int] = [5,4,3,4,4,4,4,5,3, 4,4,3,5,4,4,3,4,4]
@@ -11556,6 +11621,36 @@ private enum BuiltIns {
           website: "https://www.richharvestfarms.com",
           address: "7S771 Dugan Road, Sugar Grove, IL 60554"),
 
+
+        c(BUTTERFIELD_CC_BLUE_WHITE_ID, "Butterfield CC (Blue / White)", BUTTERFIELD_CC_BLUE_WHITE_PARS, BUTTERFIELD_CC_BLUE_WHITE_HCS, BUTTERFIELD_CC_BLUE_WHITE_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "William Langford (1920) / Steve Smyers (2010)",
+          type: "Private",
+          phone: "(630) 323-1000",
+          website: "https://www.butterfieldcc.org",
+          address: "2800 Midwest Road, Oak Brook, IL 60523",
+          isWolfApproved: true),
+
+        c(BUTTERFIELD_CC_RED_BLUE_ID, "Butterfield CC (Red / Blue)", BUTTERFIELD_CC_RED_BLUE_PARS, BUTTERFIELD_CC_RED_BLUE_HCS, BUTTERFIELD_CC_RED_BLUE_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "William Langford (1920) / Steve Smyers (2010)",
+          type: "Private",
+          phone: "(630) 323-1000",
+          website: "https://www.butterfieldcc.org",
+          address: "2800 Midwest Road, Oak Brook, IL 60523",
+          isWolfApproved: true),
+
+        c(BUTTERFIELD_CC_WHITE_RED_ID, "Butterfield CC (White / Red)", BUTTERFIELD_CC_WHITE_RED_PARS, BUTTERFIELD_CC_WHITE_RED_HCS, BUTTERFIELD_CC_WHITE_RED_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "William Langford (1920) / Steve Smyers (2010)",
+          type: "Private",
+          phone: "(630) 323-1000",
+          website: "https://www.butterfieldcc.org",
+          address: "2800 Midwest Road, Oak Brook, IL 60523",
+          isWolfApproved: true),
 
         c(BUTLER_NATIONAL_BUTLER_TEE_ID, "Butler National (7,550-yard)", BUTLER_NATIONAL_BUTLER_TEE_PARS, BUTLER_NATIONAL_BUTLER_TEE_HCS, BUTLER_NATIONAL_BUTLER_TEE_TEES,
           country: "USA",
@@ -20117,6 +20212,15 @@ private enum BuiltIns {
           website: "https://www.meritclub.org",
           address: "1500 Merit Club Lane, Libertyville, IL 60048",
           isWolfApproved: true
+        ),
+        c(ITASCA_CC_ID, "Itasca Country Club",
+          ITASCA_CC_PARS, ITASCA_CC_HCS, ITASCA_CC_TEES,
+          country: "USA", state: "IL",
+          architect: "James Foulis Jr.",
+          type: "Private",
+          phone: "(630) 773-1800",
+          website: "https://www.itascacountryclub.com",
+          address: "400 E Orchard St, Itasca, IL 60143"
         ),
         c(CAROLINA_GC_ID, "Carolina Golf Club",
           CAROLINA_GC_PARS, CAROLINA_GC_HCS, CAROLINA_GC_TEES,

@@ -53,7 +53,7 @@ extension GameManager {
             nonWolfTeam = teamB
         } else {
             var wolfSeats = Set<Int>()
-            if g.wolfButtonStatus.count >= MAX_PLAYERS, (g.wolfButtonStatus.first?.count ?? 0) >= STANDARD_HOLES {
+            if g.wolfButtonStatus.count >= MAX_PLAYERS, (g.wolfButtonStatus.first?.count ?? 0) > hole {
                 for s in activeSeats where g.wolfButtonStatus[s][hole] { wolfSeats.insert(s) }
             }
             wolfTeam    = activeSeats.filter { wolfSeats.contains($0) }
@@ -113,6 +113,46 @@ extension GameManager {
             let S = max(0, g.hcPlayers[s] - baseHC)
             let pops = strokesGiven(delta: S, strokeIndex: si)
             net[s] = (gScore < 99) ? (gScore - pops) : 99
+        }
+
+        // ---------------------------------------------------------
+        //  DUAL MATCH: two independent matches scored simultaneously
+        // ---------------------------------------------------------
+        if mode == .matchPlay, g.isDualMatch {
+            func oneMatch(teamA: [Int], teamB: [Int]) -> [Double] {
+                let aMin = teamA.map { net[$0] ?? 99 }.min() ?? 99
+                let bMin = teamB.map { net[$0] ?? 99 }.min() ?? 99
+                var p = Array(repeating: 0.0, count: MAX_PLAYERS)
+                guard aMin != bMin else { return p }
+                let perPayer = Int(stake.rounded())
+                guard perPayer != 0 else { return p }
+                if aMin < bMin {
+                    let totalIn = perPayer * teamB.count
+                    let baseOut = totalIn / max(1, teamA.count)
+                    let rem     = totalIn % max(1, teamA.count)
+                    for s in teamB { p[s] = -Double(perPayer) }
+                    for s in teamA { p[s] =  Double(baseOut) }
+                    if rem > 0, let f = teamA.first { p[f] += Double(rem) }
+                } else {
+                    let totalIn = perPayer * teamA.count
+                    let baseOut = totalIn / max(1, teamB.count)
+                    let rem     = totalIn % max(1, teamB.count)
+                    for s in teamA { p[s] = -Double(perPayer) }
+                    for s in teamB { p[s] =  Double(baseOut) }
+                    if rem > 0, let f = teamB.first { p[f] += Double(rem) }
+                }
+                return p
+            }
+
+            let a1 = (g.matchPlayTeamA  ?? []).filter { activeSeats.contains($0) }
+            let b1 = (g.matchPlayTeamB  ?? []).filter { activeSeats.contains($0) }
+            let a2 = (g.matchPlayTeamA2 ?? []).filter { activeSeats.contains($0) }
+            let b2 = (g.matchPlayTeamB2 ?? []).filter { activeSeats.contains($0) }
+            let p1 = oneMatch(teamA: a1, teamB: b1)
+            let p2 = oneMatch(teamA: a2, teamB: b2)
+            var combined = Array(repeating: 0.0, count: MAX_PLAYERS)
+            for i in 0..<MAX_PLAYERS { combined[i] = p1[i] + p2[i] }
+            return combined
         }
 
         // ---------------------------------------------------------

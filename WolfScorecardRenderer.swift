@@ -46,7 +46,8 @@ final class WolfScorecardRenderer {
         let pars    = (0..<STANDARD_HOLES).map { game.courseParToPass[safe: $0] ?? 4 }
 
         let docHdrH: CGFloat = 96
-        let gridH   = hdrH + parH + CGFloat(players.count) * playerH
+        let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
+        let gridH   = hdrH + parH + CGFloat(totalPlayerRows) * playerH
         let footerH: CGFloat = 40
         let totalH  = docHdrH + gridH + footerH
 
@@ -72,11 +73,13 @@ final class WolfScorecardRenderer {
         let seat:  Int
         let name:  String
         let hc:    Int
-        let gross: [Int?]   // 18 elements, nil = unplayed
+        let gross: [Int?]    // 18 elements (round 1), nil = unplayed
+        let gross2: [Int?]?  // 18 elements (round 2), nil if not a 36-hole round
     }
 
     private func buildPlayers() -> [PlayerData] {
-        let cap = min(game.playerNames.count, game.playerActivated.count)
+        let is36 = game.matchPlay36Holes
+        let cap  = min(game.playerNames.count, game.playerActivated.count)
         return (0..<cap).compactMap { seat -> PlayerData? in
             guard game.playerActivated[seat] else { return nil }
             let name = game.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -85,7 +88,11 @@ final class WolfScorecardRenderer {
             let gross = (0..<STANDARD_HOLES).map { h -> Int? in
                 seat < game.scores.count ? game.scores[seat][h] : nil
             }
-            return PlayerData(seat: seat, name: name, hc: hc, gross: gross)
+            let gross2: [Int?]? = is36 ? (STANDARD_HOLES..<(2 * STANDARD_HOLES)).map { h -> Int? in
+                guard seat < game.scores.count, h < game.scores[seat].count else { return nil }
+                return game.scores[seat][h]
+            } : nil
+            return PlayerData(seat: seat, name: name, hc: hc, gross: gross, gross2: gross2)
         }
     }
 
@@ -203,22 +210,24 @@ final class WolfScorecardRenderer {
         }
         ry += parH
 
-        // ── Player rows ───────────────────────────────────────
-        for (pi, player) in players.enumerated() {
-            let rowBg = pi % 2 == 1 ? altBg : UIColor.white
-            let (frontGross, hasFront) = rangeSum(player.gross, front)
-            let (backGross,  hasBack)  = rangeSum(player.gross, back)
+        // ── Player rows (draws R1 then optional R2 per player) ─
+        let dimGray = UIColor(white: 0.55, alpha: 1)
+
+        func drawPlayerRow(gross: [Int?], holeOffset: Int, seat: Int, rowBg: UIColor,
+                           nameLabel: String, subLabel: String, subLabelColor: UIColor) {
+            let (frontGross, hasFront) = rangeSum(gross, front)
+            let (backGross,  hasBack)  = rangeSum(gross, back)
 
             for ci in 0..<22 {
                 let w = colW(ci)
 
-                // Cell background
                 let bg: UIColor
-                if let h = hIdx(ci) {
-                    let mask      = h < wolfMask.count ? wolfMask[h] : []
+                if let localH = hIdx(ci) {
+                    let gameH = localH + holeOffset
+                    let mask  = gameH < wolfMask.count ? wolfMask[gameH] : []
                     let wolfCalled = mask.contains(true)
                     if wolfCalled {
-                        let onWolfTeam = player.seat < mask.count && mask[player.seat]
+                        let onWolfTeam = seat < mask.count && mask[seat]
                         bg = onWolfTeam ? wolfTeamBg : packBg
                     } else {
                         bg = rowBg
@@ -228,19 +237,18 @@ final class WolfScorecardRenderer {
                 }
                 fill(x: colXs[ci], y: ry, w: w, h: playerH, color: bg)
 
-                // Content
                 switch ci {
                 case 0:
                     let nameH: CGFloat = playerH * 0.60
-                    let hcH:   CGFloat = playerH - nameH
-                    drawCell(player.name,
+                    let subH:  CGFloat = playerH - nameH
+                    drawCell(nameLabel,
                              x: colXs[ci], y: ry, w: w, h: nameH,
                              font: .systemFont(ofSize: 12, weight: .semibold),
                              color: .black, leftAlign: true)
-                    drawCell("HC \(player.hc)",
-                             x: colXs[ci], y: ry + nameH, w: w, h: hcH,
+                    drawCell(subLabel,
+                             x: colXs[ci], y: ry + nameH, w: w, h: subH,
                              font: .systemFont(ofSize: 9, weight: .regular),
-                             color: UIColor(white: 0.50, alpha: 1), leftAlign: true)
+                             color: subLabelColor, leftAlign: true)
 
                 case 10:
                     drawCell(hasFront ? "\(frontGross)" : "·",
@@ -255,24 +263,20 @@ final class WolfScorecardRenderer {
                 case 21:
                     let (totTxt, totClr): (String, UIColor)
                     switch (hasFront, hasBack) {
-                    case (true, true):
-                        (totTxt, totClr) = ("\(frontGross + backGross)", .black)
-                    case (true, false):
-                        (totTxt, totClr) = ("\(frontGross)", .black)
-                    case (false, true):
-                        (totTxt, totClr) = ("\(backGross)", .black)
-                    default:
-                        (totTxt, totClr) = ("·", dotGray)
+                    case (true, true):  (totTxt, totClr) = ("\(frontGross + backGross)", .black)
+                    case (true, false): (totTxt, totClr) = ("\(frontGross)", .black)
+                    case (false, true): (totTxt, totClr) = ("\(backGross)", .black)
+                    default:            (totTxt, totClr) = ("·", dotGray)
                     }
                     drawCell(totTxt, x: colXs[ci], y: ry, w: w, h: playerH,
                              font: boldSumm, color: totClr)
 
                 default:
-                    if let h = hIdx(ci) {
-                        if let gross = player.gross[h] {
-                            let diff  = gross - pars[h]
+                    if let localH = hIdx(ci) {
+                        if let score = gross[localH] {
+                            let diff  = score - pars[localH]
                             let color = scoreColor(diff: diff)
-                            drawCell("\(gross)",
+                            drawCell("\(score)",
                                      x: colXs[ci], y: ry, w: w, h: playerH,
                                      font: .systemFont(ofSize: 14, weight: .semibold),
                                      color: color)
@@ -291,10 +295,28 @@ final class WolfScorecardRenderer {
             ry += playerH
         }
 
+        for (pi, player) in players.enumerated() {
+            let rowBg = pi % 2 == 1 ? altBg : UIColor.white
+            // Round 1
+            drawPlayerRow(gross: player.gross, holeOffset: 0, seat: player.seat, rowBg: rowBg,
+                          nameLabel: player.name,
+                          subLabel: "HC \(player.hc)",
+                          subLabelColor: UIColor(white: 0.50, alpha: 1))
+            // Round 2 (36-hole only)
+            if let g2 = player.gross2 {
+                drawPlayerRow(gross: g2, holeOffset: STANDARD_HOLES, seat: player.seat,
+                              rowBg: rowBg,
+                              nameLabel: player.name,
+                              subLabel: "R2",
+                              subLabelColor: dimGray)
+            }
+        }
+
         // ── Grid lines ────────────────────────────────────────
         gridLine.setFill()
         var lineY = y
-        for step in [hdrH, parH] + Array(repeating: playerH, count: players.count) {
+        let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
+        for step in [hdrH, parH] + Array(repeating: playerH, count: totalPlayerRows) {
             UIRectFill(CGRect(x: hPad, y: lineY, width: gridW, height: 0.5))
             lineY += step
         }
