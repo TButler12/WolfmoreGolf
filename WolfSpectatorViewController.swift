@@ -723,7 +723,10 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 var m2AWins = 0, m2BWins = 0
                 var m2AnchorSeat: Int? = nil
 
-                for h in 1...hole {
+                // In a 36-hole match, Round 2 (holes 19-36) is a fresh match;
+                // only count holes within the current round.
+                let roundStart = ((hole - 1) / STANDARD_HOLES) * STANDARD_HOLES + 1
+                for h in roundStart...hole {
                     guard let r = currentHoleResults[h] else { continue }
                     let deltas = r.moneyDeltas ?? r.payouts ?? []
                     if let ws = r.wolfSlot, ws < deltas.count {
@@ -845,9 +848,9 @@ private final class WolfHoleCell: UITableViewCell {
         configLabel(holeLabel, size: 15, weight: .regular, width: 32)
         scoreRow.addArrangedSubview(holeLabel)
 
-        configLabel(decisionLabel, size: 11, weight: .semibold, width: 30)
+        configLabel(decisionLabel, size: 11, weight: .semibold, width: 46)
         decisionLabel.numberOfLines = 2
-        decisionLabel.lineBreakMode = .byWordWrapping
+        decisionLabel.lineBreakMode = .byTruncatingTail
         scoreRow.addArrangedSubview(decisionLabel)
 
         for _ in 0..<MAX_PLAYERS {
@@ -874,7 +877,7 @@ private final class WolfHoleCell: UITableViewCell {
 
         // Spacer to align money cols under score cols (skip decision column)
         let moneyDecisionSpacer = UIView()
-        moneyDecisionSpacer.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        moneyDecisionSpacer.widthAnchor.constraint(equalToConstant: 46).isActive = true
         moneyRow.addArrangedSubview(moneyDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
@@ -900,7 +903,7 @@ private final class WolfHoleCell: UITableViewCell {
         gameRow.addArrangedSubview(gameLabel)
 
         let gameDecisionSpacer = UIView()
-        gameDecisionSpacer.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        gameDecisionSpacer.widthAnchor.constraint(equalToConstant: 46).isActive = true
         gameRow.addArrangedSubview(gameDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
@@ -926,7 +929,7 @@ private final class WolfHoleCell: UITableViewCell {
         skinsRow.addArrangedSubview(skinsLabel)
 
         let skinsDecisionSpacer = UIView()
-        skinsDecisionSpacer.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        skinsDecisionSpacer.widthAnchor.constraint(equalToConstant: 46).isActive = true
         skinsRow.addArrangedSubview(skinsDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
