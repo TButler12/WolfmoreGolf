@@ -541,32 +541,69 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func matchPlayTeamChanged(_ sender: UISegmentedControl) {
-        let seat = sender.tag
+        let movingSeat = sender.tag
+        let newSlot    = sender.selectedSegmentIndex  // 0=1:A 1=1:B 2=2:A 3=2:B
+
         GameManager.shared.update { g in
+            guard g.isDualMatch else {
+                // Non-dual: simple 2-slot assignment, teams can share players.
+                var a1 = g.matchPlayTeamA ?? []
+                var b1 = g.matchPlayTeamB ?? []
+                a1.removeAll { $0 == movingSeat }
+                b1.removeAll { $0 == movingSeat }
+                if newSlot == 0 { a1.append(movingSeat) } else { b1.append(movingSeat) }
+                g.matchPlayTeamA = a1.sorted()
+                g.matchPlayTeamB = b1.sorted()
+                return
+            }
+
+            // Dual match: 4-slot exclusive picker — each slot must have exactly one player.
+            // Enforce this by swapping: whoever is in the destination slot moves to the
+            // moving player's old slot.
             var a1 = g.matchPlayTeamA  ?? []
             var b1 = g.matchPlayTeamB  ?? []
             var a2 = g.matchPlayTeamA2 ?? []
             var b2 = g.matchPlayTeamB2 ?? []
-            // Remove from all teams first
-            a1.removeAll { $0 == seat }
-            b1.removeAll { $0 == seat }
-            a2.removeAll { $0 == seat }
-            b2.removeAll { $0 == seat }
-            if g.isDualMatch {
-                switch sender.selectedSegmentIndex {
-                case 0: a1.append(seat)
-                case 1: b1.append(seat)
-                case 2: a2.append(seat)
-                default: b2.append(seat)
-                }
-                g.matchPlayTeamA2 = a2.sorted()
-                g.matchPlayTeamB2 = b2.sorted()
-            } else {
-                if sender.selectedSegmentIndex == 0 { a1.append(seat) } else { b1.append(seat) }
+
+            func currentSlot(of seat: Int) -> Int? {
+                if a1.contains(seat) { return 0 }
+                if b1.contains(seat) { return 1 }
+                if a2.contains(seat) { return 2 }
+                if b2.contains(seat) { return 3 }
+                return nil
             }
-            g.matchPlayTeamA = a1.sorted()
-            g.matchPlayTeamB = b1.sorted()
+            func playersIn(slot: Int) -> [Int] {
+                switch slot { case 0: return a1; case 1: return b1; case 2: return a2; default: return b2 }
+            }
+            func place(_ seat: Int, in slot: Int) {
+                switch slot {
+                case 0: a1.append(seat); case 1: b1.append(seat)
+                case 2: a2.append(seat); default: b2.append(seat)
+                }
+            }
+            func removeFromAll(_ seat: Int) {
+                a1.removeAll { $0 == seat }; b1.removeAll { $0 == seat }
+                a2.removeAll { $0 == seat }; b2.removeAll { $0 == seat }
+            }
+
+            let oldSlot   = currentSlot(of: movingSeat) ?? -1
+            guard oldSlot != newSlot else { return }  // already here — no-op
+
+            // Whoever occupies the destination slot gets bumped to the vacated slot (swap).
+            let displaced = playersIn(slot: newSlot).filter { $0 != movingSeat }
+
+            for seat in [movingSeat] + displaced { removeFromAll(seat) }
+
+            place(movingSeat, in: newSlot)
+            for d in displaced { if oldSlot >= 0 { place(d, in: oldSlot) } }
+
+            g.matchPlayTeamA  = a1.sorted()
+            g.matchPlayTeamB  = b1.sorted()
+            g.matchPlayTeamA2 = a2.sorted()
+            g.matchPlayTeamB2 = b2.sorted()
         }
+        // Rebuild all segment controls so the displaced player's control also updates visually.
+        refreshMatchPlayTeamsContent()
     }
 
     @objc private func dualMatchToggled(_ sender: UISwitch) {
