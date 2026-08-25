@@ -7643,6 +7643,33 @@ let INVERNESS_GC_TEES: [TeeInfo] = [
     )
     
 ]
+
+// MARK: - Palatine Hills Golf Course — Palatine, IL
+// Par 72 | Designed by Larry Packard (1968) / Bob Lohmann
+// Host: 2023 US Women's Open Qualifier | Owned by Palatine Park District
+
+private let PALATINE_HILLS_GC_ID = UUID(uuidString: "C3D4E5F6-A7B8-4901-BCDE-F12345678901")!
+
+let PALATINE_HILLS_GC_PARS: [Int] = [
+    4,4,5,3,4,5,3,4,4,   // Front 9
+    4,4,5,3,4,5,4,3,4    // Back 9
+]
+
+// Men's handicaps
+let PALATINE_HILLS_GC_HCS: [Int] = [
+    7,3,13,17,1,9,11,15,5,
+    4,18,10,12,8,14,6,16,2
+]
+
+let PALATINE_HILLS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 6820, rating: 72.9, slope: 130),
+    TeeInfo(teeName: "Blue",       yardage: 6543, rating: 71.6, slope: 127),
+    TeeInfo(teeName: "Blue/White", yardage: 6227, rating: 70.2, slope: 124),
+    TeeInfo(teeName: "White",      yardage: 5913, rating: 68.8, slope: 120),
+    TeeInfo(teeName: "White/Gold", yardage: 5608, rating: 67.3, slope: 116),
+    TeeInfo(teeName: "Gold",       yardage: 5251, rating: 65.7, slope: 112)
+]
+
 // MARK: - Wynstone Golf Club
 
 private let WYNSTONE_GC_ID = UUID(uuidString: "D4A1F8E2-9C3A-4D91-B8A1-100000000111")!
@@ -17428,7 +17455,16 @@ private enum BuiltIns {
             resortBrand: nil,
             promo: nil
         ),
-       
+
+        c(PALATINE_HILLS_GC_ID, "Palatine Hills Golf Course", PALATINE_HILLS_GC_PARS, PALATINE_HILLS_GC_HCS, PALATINE_HILLS_GC_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "Larry Packard (1968) / Bob Lohmann",
+          type: "Public",
+          phone: "(847) 359-4020",
+          website: "https://www.palatinehills.org",
+          address: "512 W. Northwest Hwy, Palatine, IL 60067"),
+
         c(
             WYNSTONE_GC_ID,
             "Wynstone Golf Club",
