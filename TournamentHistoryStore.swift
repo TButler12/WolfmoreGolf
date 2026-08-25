@@ -7,6 +7,8 @@ struct TournamentHistoryEntry: Codable {
     var lastDay: Int
     var lastJoined: Date
     var isOrganizer: Bool
+    var groupCode: String?         // scorer's claim identity — nil for old entries or organizers
+    var tournamentMatchId: String? // score submission ID — nil for old entries or organizers
 }
 
 final class TournamentHistoryStore {
@@ -15,12 +17,14 @@ final class TournamentHistoryStore {
     private let maxEntries = 5
     private init() {}
 
-    func record(code: String, name: String, gameType: String, day: Int, isOrganizer: Bool) {
+    func record(code: String, name: String, gameType: String, day: Int, isOrganizer: Bool,
+                groupCode: String? = nil, tournamentMatchId: String? = nil) {
         var entries = all()
         entries.removeAll { $0.code == code }
         entries.insert(TournamentHistoryEntry(
             code: code, name: name, gameType: gameType,
-            lastDay: day, lastJoined: Date(), isOrganizer: isOrganizer
+            lastDay: day, lastJoined: Date(), isOrganizer: isOrganizer,
+            groupCode: groupCode, tournamentMatchId: tournamentMatchId
         ), at: 0)
         save(Array(entries.prefix(maxEntries)))
     }

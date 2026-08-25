@@ -37,7 +37,11 @@ final class CalcuttaListViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func doneTapped() {
-        dismiss(animated: true)
+        if let nav = navigationController, nav.viewControllers.count > 1 {
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
     }
 
     @objc private func newTapped() {

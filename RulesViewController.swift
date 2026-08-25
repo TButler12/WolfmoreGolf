@@ -436,6 +436,47 @@ private extension RulesViewController {
         • Player names must be entered consistently across all groups for the leaderboard to aggregate correctly
         """)
 
+        header("STABLEFORD")
+        body("""
+        Points-based scoring format used in WolfMore Tournaments.
+
+        • Start a Stableford tournament via Live & Tournaments → Create Tournament → Stableford
+        • All groups join with the same 6-character code and submit scores in real time
+
+        Scoring baselines (set by the organizer):
+        • Par baseline: Eagle = 3 pts, Birdie = 2 pts, Par = 1 pt, Bogey = 0 pts
+        • Bogey baseline: Birdie = 3 pts, Par = 2 pts, Bogey = 1 pt, Double Bogey = 0 pts
+
+        Team scoring:
+        • Organizer selects how many scores count per hole: Best 2, Best 3, or All 4
+        • Handicaps are applied automatically based on each player's stroke index
+        • The real-time leaderboard shows hole-by-hole points, front/back 9 totals, and overall standings
+
+        The scorecard highlights each gross score with a color — gold for eagle, green for birdie, pink for bogey, and red for double bogey or worse.
+        """)
+
+        header("CALCUTTA")
+        body("""
+        Auction-based tournament format where teams are bid on before play begins.
+
+        • Access Calcutta via Tee Games on the home screen
+        • Create an event, enter team rosters, and record the bid amount won at auction for each team
+        • The total pot is the sum of all bids
+
+        Payout setup:
+        • Add payout rows (e.g. 1st place = 60%, 2nd = 25%, 3rd = 15%) — WolfMore calculates the dollar amounts automatically
+        • Ties split the combined payout evenly
+
+        Leaderboard:
+        • Supports two-day scoring — enter points for Day 1 and Day 2 separately
+        • Teams are ranked by combined points across both days
+        • BOW (Best of Week) winner can be recorded on the event
+
+        • Each team can list a captain and up to three additional players
+        • Use "Captain Only" mode to score on one player per team, or track the full roster
+        • Tap Share to send a summary of bids, payouts, and standings
+        """)
+
         header("TRACKING")
         body("""
         Your personal stat tracking.

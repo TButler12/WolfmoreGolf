@@ -6,7 +6,7 @@ final class TournamentLeaderboardViewController: UIViewController {
 
     // MARK: - Private models
     private struct MoneyRow  { let rank: Int; let name: String; let dayTotal: Double; let total: Double; let holesPlayed: Int; let offset: Double? }
-    private struct ScoreRow  { let rank: Int; let name: String; let total: Int;    let holesPlayed: Int }
+    private struct ScoreRow  { let rank: Int; let name: String; let netTotal: Int; let grossTotal: Int; let holesPlayed: Int }
     private struct GroupRow  { let matchId: String; let playerNames: [String];     let holesPlayed: Int }
     private struct SkinsRow  { let rank: Int; let name: String; let skinsWon: Int; let holesPlayed: Int; let potPayout: Double? }
     private struct PtsRow    { let rank: Int; let name: String; let dayPts: Int;   let holesPlayed: Int }
@@ -526,23 +526,25 @@ final class TournamentLeaderboardViewController: UIViewController {
         }
 
         // ── Score ──
-        let useNet = record?.scoring == "net"
-        var sums:   [String: Int] = [:]
-        var sHoles: [String: Int] = [:]
-        for player in fieldPlayers { sums[player] = 0; sHoles[player] = 0 }
+        var netSums:   [String: Int] = [:]
+        var grossSums: [String: Int] = [:]
+        var sHoles:    [String: Int] = [:]
+        for player in fieldPlayers { netSums[player] = 0; grossSums[player] = 0; sHoles[player] = 0 }
         for (player, playerRows) in grouped {
-            sums[player]   = playerRows.reduce(0) { $0 + (useNet ? ($1.netScore ?? $1.grossScore) : $1.grossScore) }
-            sHoles[player] = playerRows.count
+            netSums[player]   = playerRows.reduce(0) { $0 + ($1.netScore ?? $1.grossScore) }
+            grossSums[player] = playerRows.reduce(0) { $0 + $1.grossScore }
+            sHoles[player]    = playerRows.count
         }
-        // Players with data sort ascending (lower score wins); no-data players go last.
-        scoreData = sums.sorted {
+        // Sort by net (lower = better); no-data players go last.
+        scoreData = netSums.sorted {
             let aHoles = sHoles[$0.key] ?? 0
             let bHoles = sHoles[$1.key] ?? 0
             if aHoles > 0 && bHoles == 0 { return true }
             if aHoles == 0 && bHoles > 0 { return false }
             return $0.value < $1.value
         }.enumerated().map { i, kv in
-            ScoreRow(rank: i+1, name: kv.key, total: kv.value, holesPlayed: sHoles[kv.key] ?? 0)
+            ScoreRow(rank: i+1, name: kv.key, netTotal: kv.value,
+                     grossTotal: grossSums[kv.key] ?? 0, holesPlayed: sHoles[kv.key] ?? 0)
         }
 
         // ── Groups: from full deduped set (not day-filtered); exclude synthetic team rows ──
@@ -893,8 +895,8 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
             case 1:
                 let cell = tableView.dequeueReusableCell(withIdentifier: "score", for: indexPath) as! LeaderboardScoreCell
                 let r = scoreData[i]
-                cell.configure(rank: r.rank, name: r.name, total: r.total,
-                               holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+                cell.configure(rank: r.rank, name: r.name, netTotal: r.netTotal,
+                               grossTotal: r.grossTotal, holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
                 return cell
             case 2:
                 return makeGroupCell(tableView, indexPath: indexPath, row: groupData[i])
@@ -1162,7 +1164,8 @@ private final class LeaderboardScoreCell: UITableViewCell {
 
     private let rankLabel  = UILabel()
     private let nameLabel  = UILabel()
-    private let scoreLabel = UILabel()
+    private let netLabel   = UILabel()
+    private let grossLabel = UILabel()
     private let holesLabel = UILabel()
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -1179,10 +1182,19 @@ private final class LeaderboardScoreCell: UITableViewCell {
         nameLabel.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
         nameLabel.adjustsFontSizeToFitWidth = true; nameLabel.minimumScaleFactor = 0.75
 
-        scoreLabel.font          = UIFont.systemFont(ofSize: 15, weight: .semibold)
-        scoreLabel.textAlignment = .right
-        scoreLabel.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        scoreLabel.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        netLabel.font          = UIFont.systemFont(ofSize: 15, weight: .semibold)
+        netLabel.textAlignment = .right
+
+        grossLabel.font          = UIFont.systemFont(ofSize: 11)
+        grossLabel.textColor     = .secondaryLabel
+        grossLabel.textAlignment = .right
+
+        let scoreStack = UIStackView(arrangedSubviews: [netLabel, grossLabel])
+        scoreStack.axis      = .vertical
+        scoreStack.spacing   = 1
+        scoreStack.alignment = .trailing
+        scoreStack.setContentHuggingPriority(.defaultHigh, for: .horizontal)
+        scoreStack.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
 
         holesLabel.font          = UIFont.systemFont(ofSize: 12)
         holesLabel.textColor     = .tertiaryLabel
@@ -1190,7 +1202,7 @@ private final class LeaderboardScoreCell: UITableViewCell {
         holesLabel.widthAnchor.constraint(equalToConstant: 30).isActive = true
         holesLabel.setContentHuggingPriority(.required, for: .horizontal)
 
-        let stack = UIStackView(arrangedSubviews: [rankLabel, nameLabel, scoreLabel, holesLabel])
+        let stack = UIStackView(arrangedSubviews: [rankLabel, nameLabel, scoreStack, holesLabel])
         stack.axis = .horizontal; stack.spacing = 8; stack.alignment = .center
         stack.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(stack)
@@ -1203,14 +1215,15 @@ private final class LeaderboardScoreCell: UITableViewCell {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    func configure(rank: Int, name: String, total: Int, holesPlayed: Int, isCurrentUser: Bool) {
+    func configure(rank: Int, name: String, netTotal: Int, grossTotal: Int, holesPlayed: Int, isCurrentUser: Bool) {
         let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
-        rankLabel.text      = "#\(rank)"
-        rankLabel.textColor = rank == 1 ? gold : .secondaryLabel
-        nameLabel.text      = name
-        scoreLabel.text     = "\(total)"
-        scoreLabel.textColor = .label
-        holesLabel.text     = "\(holesPlayed)h"
-        backgroundColor     = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
+        rankLabel.text       = "#\(rank)"
+        rankLabel.textColor  = rank == 1 ? gold : .secondaryLabel
+        nameLabel.text       = name
+        netLabel.text        = "\(netTotal)"
+        netLabel.textColor   = .label
+        grossLabel.text      = "Gross: \(grossTotal)"
+        holesLabel.text      = "\(holesPlayed)h"
+        backgroundColor      = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
     }
 }

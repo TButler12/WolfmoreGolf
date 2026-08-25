@@ -22,6 +22,7 @@ final class TournamentScorecardRenderer {
     // Row heights
     private let hdrH:  CGFloat = 22
     private let parH:  CGFloat = 22
+    private let nameH: CGFloat = 20   // per-player name header row
     private let ptsH:  CGFloat = 28
     private let grsH:  CGFloat = 18
     private let strkH: CGFloat = 13   // strokes/pops dots row
@@ -46,7 +47,7 @@ final class TournamentScorecardRenderer {
         let teamPts = buildTeamPts(players: players)
 
         let docHdrH: CGFloat = 130
-        let gridH   = hdrH + parH + CGFloat(players.count) * (ptsH + grsH + strkH) + 2 + teamH
+        let gridH   = hdrH + parH + CGFloat(players.count) * (nameH + grsH + ptsH + strkH) + 2 + teamH
         let footerH: CGFloat = 52
         let totalH  = docHdrH + gridH + footerH
 
@@ -193,6 +194,16 @@ final class TournamentScorecardRenderer {
             }
         }
 
+        func grossBg(gross: Int, par: Int) -> UIColor? {
+            switch gross - par {
+            case ..<(-1): return UIColor(red: 1.00, green: 0.82, blue: 0.10, alpha: 0.85) // eagle+: gold
+            case -1:      return UIColor(red: 0.65, green: 0.92, blue: 0.65, alpha: 1)    // birdie: green
+            case 0:       return nil                                                        // par: no tint
+            case 1:       return UIColor(red: 1.00, green: 0.82, blue: 0.82, alpha: 1)    // bogey: pink
+            default:      return UIColor(red: 1.00, green: 0.62, blue: 0.62, alpha: 1)    // double+: red
+            }
+        }
+
         let front = Array(0..<9)
         let back  = Array(9..<18)
 
@@ -241,11 +252,26 @@ final class TournamentScorecardRenderer {
         }
         ry += parH
 
-        // ── Player rows ── order: Score (gross) → Points → Strokes ──────────
+        // ── Player rows ── order: Name header → Gross → Points → Strokes ──────
+        let nameBg = UIColor(white: 0.90, alpha: 1)
+
         for (pi, player) in players.enumerated() {
             let rowBg: UIColor = pi % 2 == 1 ? altBg : .white
 
-            // Score (gross) row — directly under Par
+            // Name header row — full grid width, consistent bg
+            for ci in 0..<22 {
+                fill(x: colXs[ci], y: ry, w: colW(ci), h: nameH, color: nameBg)
+            }
+            let nameStr = player.hc > 0
+                ? "\(player.name)  ·  HC \(player.hc)"
+                : player.name
+            cell(nameStr,
+                 x: hPad + 6, y: ry, w: gridW - 12, h: nameH,
+                 font: .systemFont(ofSize: 11, weight: .semibold),
+                 color: .black, leftAlign: true)
+            ry += nameH
+
+            // Gross row — colored backgrounds for eagle/birdie/bogey
             let (frontGross, hasFrontGross) = rangeSum(player.gross, front)
             let (backGross,  hasBackGross)  = rangeSum(player.gross, back)
             let summaryGrayFont = UIFont.systemFont(ofSize: 11, weight: .semibold)
@@ -255,7 +281,7 @@ final class TournamentScorecardRenderer {
                 fill(x: colXs[ci], y: ry, w: colW(ci), h: grsH,
                      color: isSumm(ci) ? summBg : rowBg)
                 if ci == 0 {
-                    cell("Score",
+                    cell("Gross",
                          x: colXs[ci], y: ry, w: colW(ci), h: grsH,
                          font: .systemFont(ofSize: 10, weight: .regular),
                          color: UIColor(white: 0.50, alpha: 1), leftAlign: true)
@@ -279,8 +305,12 @@ final class TournamentScorecardRenderer {
                         (text, clr, fnt) = (tot, summaryGrayClr, summaryGrayFont)
                     default:
                         if let h = hIdx(ci), let g = player.gross[h] {
-                            (text, clr, fnt) = ("\(g)", UIColor(white: 0.42, alpha: 1),
-                                                .systemFont(ofSize: 11, weight: .regular))
+                            let par = pars[h]
+                            if let bg = grossBg(gross: g, par: par) {
+                                fill(x: colXs[ci], y: ry, w: colW(ci), h: grsH, color: bg)
+                            }
+                            (text, clr, fnt) = ("\(g)", UIColor(white: 0.20, alpha: 1),
+                                                .systemFont(ofSize: 11, weight: .semibold))
                         } else {
                             (text, clr, fnt) = ("·", dotGray,
                                                 .systemFont(ofSize: 11, weight: .regular))
@@ -302,16 +332,10 @@ final class TournamentScorecardRenderer {
                 let semiBFont  = UIFont.systemFont(ofSize: 13, weight: .semibold)
                 switch ci {
                 case 0:
-                    // Name on top portion, "Points" sub-label on bottom
-                    let nameH = ptsH * 0.62
-                    let subH  = ptsH - nameH
-                    cell(player.name,
-                         x: colXs[ci], y: ry, w: colW(ci), h: nameH,
-                         font: semiBFont, color: .black, leftAlign: true)
                     cell("Points",
-                         x: colXs[ci], y: ry + nameH, w: colW(ci), h: subH,
-                         font: .systemFont(ofSize: 8, weight: .regular),
-                         color: UIColor(white: 0.60, alpha: 1), leftAlign: true)
+                         x: colXs[ci], y: ry, w: colW(ci), h: ptsH,
+                         font: .systemFont(ofSize: 10, weight: .regular),
+                         color: UIColor(white: 0.50, alpha: 1), leftAlign: true)
                 case 10:
                     let text = hasFront ? "\(frontSum)" : "·"
                     cell(text, x: colXs[ci], y: ry, w: colW(ci), h: ptsH,
@@ -424,7 +448,7 @@ final class TournamentScorecardRenderer {
         lineY += parH
         UIRectFill(CGRect(x: hPad, y: lineY, width: gridW, height: 0.5))
         for _ in players {
-            lineY += ptsH + grsH + strkH
+            lineY += nameH + grsH + ptsH + strkH
             UIRectFill(CGRect(x: hPad, y: lineY, width: gridW, height: 0.5))
         }
         // Vertical lines

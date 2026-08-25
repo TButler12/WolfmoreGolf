@@ -1460,7 +1460,6 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     @objc private func moreTapped(_ sender: UIButton) {
         let ac = UIAlertController(title: "More", message: nil, preferredStyle: .actionSheet)
-        ac.addAction(UIAlertAction(title: "Calcutta Pools",    style: .default) { [weak self] _ in self?.openCalcutta() })
         ac.addAction(UIAlertAction(title: "Manage Players",    style: .default) { [weak self] _ in self?.presentManagePlayers() })
         ac.addAction(UIAlertAction(title: "Past Games",        style: .default) { [weak self] _ in self?.openPastGames() })
         ac.addAction(UIAlertAction(title: "Explore the Rules", style: .default) { [weak self] _ in self?.openRules() })
@@ -1488,13 +1487,6 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             pop.permittedArrowDirections = [.up, .down]
         }
         present(ac, animated: true)
-    }
-
-    private func openCalcutta() {
-        let vc = CalcuttaListViewController()
-        let nav = UINavigationController(rootViewController: vc)
-        nav.modalPresentationStyle = .fullScreen
-        present(nav, animated: true)
     }
 
     private func openPastGames() {
