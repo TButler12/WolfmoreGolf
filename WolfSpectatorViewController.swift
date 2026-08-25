@@ -652,14 +652,8 @@ extension WolfSpectatorViewController: UITableViewDataSource {
     /// Rounds the max hole seen in results up to the nearest multiple of 18,
     /// so a 36-hole match shows 36 rows as soon as hole 19 data arrives.
     private var totalHolesForCurrentSession: Int {
-        let allResults = Array(currentHoleResults.values)
-        let isMatchPlay = allResults.contains { $0.decision == "matchplay" }
-        guard let maxHole = currentHoleResults.keys.max() else {
-            return isMatchPlay ? 36 : STANDARD_HOLES
-        }
-        let fromData = ((maxHole + STANDARD_HOLES - 1) / STANDARD_HOLES) * STANDARD_HOLES
-        // Match play sessions always list all 36 holes
-        return isMatchPlay ? max(36, fromData) : fromData
+        guard let maxHole = currentHoleResults.keys.max() else { return STANDARD_HOLES }
+        return ((maxHole + STANDARD_HOLES - 1) / STANDARD_HOLES) * STANDARD_HOLES
     }
 
     private var summaryRowCount: Int { totalHolesForCurrentSession == 36 ? 7 : 4 }
@@ -725,20 +719,49 @@ extension WolfSpectatorViewController: UITableViewDataSource {
             // Running match score for match play (from Team A / wolfSlot perspective)
             var matchStatus: String? = nil
             if isMatchPlay {
-                var teamAWins = 0, teamBWins = 0
+                var m1AWins = 0, m1BWins = 0
+                var m2AWins = 0, m2BWins = 0
+                var m2AnchorSeat: Int? = nil
+
                 for h in 1...hole {
                     guard let r = currentHoleResults[h] else { continue }
-                    if let ws = r.wolfSlot, let deltas = r.moneyDeltas ?? r.payouts, ws < deltas.count {
-                        let p = deltas[ws]
-                        if p > 0.001 { teamAWins += 1 } else if p < -0.001 { teamBWins += 1 }
+                    let deltas = r.moneyDeltas ?? r.payouts ?? []
+                    if let ws = r.wolfSlot, ws < deltas.count {
+                        let m1ADelta = deltas[ws]
+                        if m1ADelta > 0.001 { m1AWins += 1 } else if m1ADelta < -0.001 { m1BWins += 1 }
+
+                        // Identify Match 2 players: not wolfSlot, not partnerSlot, and have non-zero delta
+                        let m1Seats = Set([ws, r.partnerSlot].compactMap { $0 })
+                        let m2Seats = (0..<min(playerCount, deltas.count)).filter {
+                            !m1Seats.contains($0) && abs(deltas[$0]) > 0.001
+                        }
+                        if !m2Seats.isEmpty {
+                            if m2AnchorSeat == nil { m2AnchorSeat = m2Seats.min() }
+                            if let anchor = m2AnchorSeat, anchor < deltas.count {
+                                let d = deltas[anchor]
+                                if d > 0.001 { m2AWins += 1 } else if d < -0.001 { m2BWins += 1 }
+                            }
+                        }
                     } else if let tw = r.teamWon {
-                        if tw { teamAWins += 1 } else { teamBWins += 1 }
+                        if tw { m1AWins += 1 } else { m1BWins += 1 }
                     }
                 }
-                let diff = teamAWins - teamBWins
-                if diff == 0        { matchStatus = "AS" }
-                else if diff > 0    { matchStatus = "A \(diff)↑" }
-                else                { matchStatus = "B \(abs(diff))↑" }
+
+                func statusString(aWins: Int, bWins: Int, aLabel: String, bLabel: String) -> String {
+                    let diff = aWins - bWins
+                    if diff == 0     { return "AS" }
+                    if diff > 0      { return "\(aLabel) \(diff)↑" }
+                    return "\(bLabel) \(abs(diff))↑"
+                }
+
+                let m1Status = statusString(aWins: m1AWins, bWins: m1BWins, aLabel: "A", bLabel: "B")
+                if m2AnchorSeat != nil {
+                    // Dual match — show both on two lines
+                    let m2Status = statusString(aWins: m2AWins, bWins: m2BWins, aLabel: "C", bLabel: "D")
+                    matchStatus = "\(m1Status)\n\(m2Status)"
+                } else {
+                    matchStatus = m1Status
+                }
             }
 
             cell.configure(hole: hole, result: currentHoleResults[hole], playerNames: session.playerNames,
@@ -823,6 +846,8 @@ private final class WolfHoleCell: UITableViewCell {
         scoreRow.addArrangedSubview(holeLabel)
 
         configLabel(decisionLabel, size: 11, weight: .semibold, width: 30)
+        decisionLabel.numberOfLines = 2
+        decisionLabel.lineBreakMode = .byWordWrapping
         scoreRow.addArrangedSubview(decisionLabel)
 
         for _ in 0..<MAX_PLAYERS {
