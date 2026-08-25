@@ -293,6 +293,12 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             g.gameType = newType
             g.normalize()
             if newType != .sixPointScotch { g.isUmbrella = false }
+            // Auto-set stake to $1 when switching to Match Play
+            if newType == .matchPlay {
+                g.baseGameStake = 1
+                g.gameHoleDollarsArray = Array(repeating: 1.0, count: g.totalHoles)
+                g.holeBaseAmount       = Array(repeating: 1.0, count: g.totalHoles)
+            }
             // Initialize default team split when switching to Match Play
             if newType == .matchPlay, g.matchPlayTeamA == nil {
                 let active = g.playerNames.enumerated()
@@ -303,6 +309,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 g.matchPlayTeamB = Array(active.dropFirst(half))
             }
         }
+        if newType == .matchPlay { baseStakeField.text = "1" }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         umbrellaButton.alpha = (sender.selectedSegmentIndex == 0) ? 1.0 : 0.4
         refreshMatchPlayUI()
