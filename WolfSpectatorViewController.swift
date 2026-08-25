@@ -723,10 +723,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 var m2AWins = 0, m2BWins = 0
                 var m2AnchorSeat: Int? = nil
 
-                // In a 36-hole match, Round 2 (holes 19-36) is a fresh match;
-                // only count holes within the current round.
-                let roundStart = ((hole - 1) / STANDARD_HOLES) * STANDARD_HOLES + 1
-                for h in roundStart...hole {
+                for h in 1...hole {
                     guard let r = currentHoleResults[h] else { continue }
                     let deltas = r.moneyDeltas ?? r.payouts ?? []
                     if let ws = r.wolfSlot, ws < deltas.count {
