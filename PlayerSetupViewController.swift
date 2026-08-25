@@ -644,7 +644,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     @objc private func settingsTapped() {
         let ac = UIAlertController(title: "Settings", message: "Choose settings to edit", preferredStyle: .actionSheet)
 
-        ac.addAction(UIAlertAction(title: "Wolf Settings", style: .default) { _ in
+        let isMatchPlay = GameManager.shared.currentGame?.resolvedGameType == .matchPlay
+        let wolfLabel = isMatchPlay ? "Wolf / Match Play Settings" : "Wolf Settings"
+        ac.addAction(UIAlertAction(title: wolfLabel, style: .default) { _ in
             self.openGameSettings()
         })
 
