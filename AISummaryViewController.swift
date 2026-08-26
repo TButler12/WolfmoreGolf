@@ -652,6 +652,7 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
                 )
                 await MainActor.run {
                     pm.recordUse(.aiSummary)
+                    pm.nudgeIfNeeded(for: .aiSummary, from: self)
                     self.state = .result(text, style)
                 }
             } catch {

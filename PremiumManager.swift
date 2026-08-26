@@ -1,4 +1,5 @@
 import StoreKit
+import UIKit
 
 @MainActor
 final class PremiumManager {
@@ -23,12 +24,7 @@ final class PremiumManager {
 
         // When true, usageKey is scoped to the current calendar month (YYYY-MM).
         // The key changes each month, so the counter resets automatically with no manual logic.
-        var resetsMonthly: Bool {
-            switch self {
-            case .aiSummary: return true
-            default:         return false
-            }
-        }
+        var resetsMonthly: Bool { true }
 
         var usageKey: String {
             let base: String
@@ -53,12 +49,7 @@ final class PremiumManager {
 
         // Used by PaywallViewController limit label.
         var limitMessage: String {
-            switch self {
-            case .aiSummary:
-                return "You've used your \(freeLimit) free AI Summary sessions this month."
-            default:
-                return "You've used your \(freeLimit) free \(displayName) sessions."
-            }
+            "You've used your \(freeLimit) free \(displayName) sessions this month."
         }
     }
 
@@ -74,7 +65,7 @@ final class PremiumManager {
         }
     }
 
-    var isPremium: Bool { true }
+    var isPremium: Bool { _isPremium }
 
     // Persists a month-keyed flag so was_premium_this_month can be read reliably
     // even after a downgrade, without inferring from usage counts.
@@ -103,12 +94,67 @@ final class PremiumManager {
         max(0, feature.freeLimit - usageCount(for: feature))
     }
 
-    func canUse(_ feature: Feature) -> Bool { true }
+    func canUse(_ feature: Feature) -> Bool {
+        isPremium || usageCount(for: feature) < feature.freeLimit
+    }
 
     func recordUse(_ feature: Feature) {
         let key = feature.usageKey
         UserDefaults.standard.set(UserDefaults.standard.integer(forKey: key) + 1, forKey: key)
         NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+    }
+
+    // Shows a non-blocking usage reminder after a free-tier session completes.
+    func nudgeIfNeeded(for feature: Feature, from presenter: UIViewController) {
+        guard !isPremium else { return }
+        let remaining = remainingFreeUses(for: feature)
+        let message: String
+        switch remaining {
+        case 0:
+            message = "That was your last free \(feature.displayName) session this month. Upgrade for unlimited access."
+        case 1:
+            message = "Heads up — 1 free \(feature.displayName) session left this month."
+        default:
+            message = "\(remaining) free \(feature.displayName) sessions remaining this month."
+        }
+        showToast(message, from: presenter)
+    }
+
+    private func showToast(_ message: String, from presenter: UIViewController) {
+        guard let view = presenter.viewIfLoaded else { return }
+
+        let toast = UIView()
+        toast.backgroundColor = UIColor.black.withAlphaComponent(0.80)
+        toast.layer.cornerRadius = 12
+        toast.translatesAutoresizingMaskIntoConstraints = false
+
+        let label = UILabel()
+        label.text = message
+        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        toast.addSubview(label)
+        view.addSubview(toast)
+
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: toast.topAnchor, constant: 10),
+            label.leadingAnchor.constraint(equalTo: toast.leadingAnchor, constant: 14),
+            label.trailingAnchor.constraint(equalTo: toast.trailingAnchor, constant: -14),
+            label.bottomAnchor.constraint(equalTo: toast.bottomAnchor, constant: -10),
+            toast.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            toast.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            toast.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+        ])
+
+        toast.alpha = 0
+        UIView.animate(withDuration: 0.3) { toast.alpha = 1 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.5) {
+            UIView.animate(withDuration: 0.4, animations: { toast.alpha = 0 }) { _ in
+                toast.removeFromSuperview()
+            }
+        }
     }
 
     // MARK: - Lifecycle

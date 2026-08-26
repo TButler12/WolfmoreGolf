@@ -11,6 +11,7 @@ enum WolfActions {
             return
         }
         pm.recordUse(.remoteNassau)
+        pm.nudgeIfNeeded(for: .remoteNassau, from: presenter)
         let ac = UIAlertController(title: "Remote Nassau", message: nil, preferredStyle: .actionSheet)
 
         ac.addAction(UIAlertAction(title: "▶ Start Live Match", style: .default) { [weak presenter] _ in
@@ -229,6 +230,7 @@ enum WolfActions {
                 return
             }
             pm.recordUse(.liveWolf)
+            pm.nudgeIfNeeded(for: .liveWolf, from: presenter)
         }
 
         if let sessionId = g.liveSessionId {
