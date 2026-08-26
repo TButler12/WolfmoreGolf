@@ -207,15 +207,42 @@ final class PremiumManager {
     }
 
     func restorePurchases() async throws {
-        #if DEBUG
         print("[PremiumManager] AppStore.sync() starting…")
-        #endif
         try await AppStore.sync()
-        #if DEBUG
-        print("[PremiumManager] AppStore.sync() completed successfully")
-        #endif
+        print("[PremiumManager] AppStore.sync() completed")
         await refreshPremiumStatus()
+
+        // If currentEntitlements was empty, scan Transaction.all for any historical
+        // WolfMore transactions so we can distinguish "wrong Apple ID" from "expired sub".
+        if lastSeenEntitlementIDs.isEmpty {
+            print("[PremiumManager] currentEntitlements empty — scanning Transaction.all for diagnostics…")
+            var historyLines: [String] = []
+            let knownIDs: Set<String> = [Self.monthlyProductID, Self.yearlyProductID, Self.legacyProProductID]
+            for await result in Transaction.all {
+                switch result {
+                case .verified(let tx) where knownIDs.contains(tx.productID):
+                    let expired = tx.expirationDate.map { $0 < Date() } ?? false
+                    let line = "\(tx.productID) purchased=\(tx.purchaseDate) expires=\(String(describing: tx.expirationDate)) revoked=\(tx.revocationDate != nil) isExpired=\(expired)"
+                    historyLines.append(line)
+                    print("[PremiumManager] historical tx: \(line)")
+                default:
+                    break
+                }
+            }
+            if historyLines.isEmpty {
+                print("[PremiumManager] Transaction.all: no WolfMore transactions found — likely wrong Apple ID signed in")
+                lastRestoreDiagnostic = "No WolfMore transactions found at all. The Apple ID signed in on this device may not be the one used to purchase WolfMore Premium."
+            } else {
+                print("[PremiumManager] Transaction.all: found \(historyLines.count) historical WolfMore transaction(s)")
+                lastRestoreDiagnostic = "A past WolfMore purchase was found but is no longer active (subscription may have expired or was refunded). If you believe your subscription should still be active, check your subscription status in the App Store."
+            }
+        } else {
+            lastRestoreDiagnostic = nil
+        }
     }
+
+    // Set by restorePurchases() when entitlements came back empty, to surface a better error.
+    private(set) var lastRestoreDiagnostic: String? = nil
 
     func refreshPremiumStatus() async {
         let premiumIDs: Set<String> = [
@@ -228,24 +255,19 @@ final class PremiumManager {
         for await result in Transaction.currentEntitlements {
             switch result {
             case .verified(let tx):
+                let expired = tx.expirationDate.map { $0 < Date() } ?? false
                 seenIDs.append(tx.productID)
-                #if DEBUG
-                print("[PremiumManager] entitlement: \(tx.productID) revoked=\(tx.revocationDate != nil) expires=\(String(describing: tx.expirationDate))")
-                #endif
+                print("[PremiumManager] entitlement: \(tx.productID) revoked=\(tx.revocationDate != nil) expires=\(String(describing: tx.expirationDate)) isExpired=\(expired)")
                 if premiumIDs.contains(tx.productID), tx.revocationDate == nil {
                     found = true
                 }
             case .unverified(let tx, let error):
                 seenIDs.append("UNVERIFIED:\(tx.productID)")
-                #if DEBUG
                 print("[PremiumManager] UNVERIFIED entitlement: \(tx.productID) error=\(error)")
-                #endif
             }
         }
         lastSeenEntitlementIDs = seenIDs
-        #if DEBUG
         print("[PremiumManager] refreshPremiumStatus complete — isPremium=\(found), seenIDs=\(seenIDs)")
-        #endif
         _isPremium = found
     }
 }

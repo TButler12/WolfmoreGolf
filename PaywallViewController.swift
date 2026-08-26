@@ -210,14 +210,21 @@ final class PaywallViewController: UIViewController {
                 try await PremiumManager.shared.restorePurchases()
                 await MainActor.run {
                     self.setLoading(false)
-                    if PremiumManager.shared.isPremium {
+                    let pm = PremiumManager.shared
+                    if pm.isPremium {
                         self.dismiss(animated: true)
                     } else {
-                        let found = PremiumManager.shared.lastSeenEntitlementIDs
-                        let detail = found.isEmpty
-                            ? "No entitlements were returned by the App Store for this Apple ID."
-                            : "Entitlements found but none matched a known product ID:\n\(found.joined(separator: "\n"))"
-                        self.alert("No Purchases Found", detail)
+                        let entitlementIDs = pm.lastSeenEntitlementIDs
+                        let detail: String
+                        if let diagnostic = pm.lastRestoreDiagnostic {
+                            // currentEntitlements was empty — use the richer diagnostic from Transaction.all scan
+                            detail = diagnostic
+                        } else if entitlementIDs.isEmpty {
+                            detail = "No entitlements were returned by the App Store for this Apple ID."
+                        } else {
+                            detail = "Entitlements found but none matched a known product ID:\n\(entitlementIDs.joined(separator: "\n"))"
+                        }
+                        self.alert("No Active Subscription Found", detail)
                     }
                 }
             } catch {
