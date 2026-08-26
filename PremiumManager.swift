@@ -211,54 +211,34 @@ final class PremiumManager {
         try await AppStore.sync()
         print("[PremiumManager] AppStore.sync() completed")
         await refreshPremiumStatus()
-
-        // If currentEntitlements was empty, scan Transaction.all for any historical
-        // WolfMore transactions so we can distinguish "wrong Apple ID" from "expired sub".
-        if lastSeenEntitlementIDs.isEmpty {
-            print("[PremiumManager] currentEntitlements empty — scanning Transaction.all for diagnostics…")
-            var historyLines: [String] = []
-            let knownIDs: Set<String> = [Self.monthlyProductID, Self.yearlyProductID, Self.legacyProProductID]
-            for await result in Transaction.all {
-                switch result {
-                case .verified(let tx) where knownIDs.contains(tx.productID):
-                    let expired = tx.expirationDate.map { $0 < Date() } ?? false
-                    let line = "\(tx.productID) purchased=\(tx.purchaseDate) expires=\(String(describing: tx.expirationDate)) revoked=\(tx.revocationDate != nil) isExpired=\(expired)"
-                    historyLines.append(line)
-                    print("[PremiumManager] historical tx: \(line)")
-                default:
-                    break
-                }
-            }
-            if historyLines.isEmpty {
-                print("[PremiumManager] Transaction.all: no WolfMore transactions found — likely wrong Apple ID signed in")
-                lastRestoreDiagnostic = "No WolfMore transactions found at all. The Apple ID signed in on this device may not be the one used to purchase WolfMore Premium."
-            } else {
-                print("[PremiumManager] Transaction.all: found \(historyLines.count) historical WolfMore transaction(s)")
-                lastRestoreDiagnostic = "A past WolfMore purchase was found but is no longer active (subscription may have expired or was refunded). If you believe your subscription should still be active, check your subscription status in the App Store."
-            }
-        } else {
-            lastRestoreDiagnostic = nil
-        }
+        lastRestoreDiagnostic = isPremium ? nil : buildRestoreDiagnostic()
     }
 
-    // Set by restorePurchases() when entitlements came back empty, to surface a better error.
+    // Set by restorePurchases() when restore does not yield premium access.
     private(set) var lastRestoreDiagnostic: String? = nil
 
+    private func buildRestoreDiagnostic() -> String {
+        if lastSeenEntitlementIDs.isEmpty {
+            return "No WolfMore purchases were found for the Apple ID signed in on this device. Make sure you're signed in with the same Apple ID used to purchase WolfMore Premium."
+        }
+        return "A past WolfMore purchase was found but could not restore access — the subscription may have expired or been refunded. Contact support if you believe this is incorrect."
+    }
+
     func refreshPremiumStatus() async {
-        let premiumIDs: Set<String> = [
-            Self.monthlyProductID,
-            Self.yearlyProductID,
-            Self.legacyProProductID,
-        ]
         var found = false
         var seenIDs: [String] = []
+
+        // Pass 1: currentEntitlements covers active auto-renewable subscriptions
+        // (monthly and yearly). The legacy product is a Non-Renewing Subscription and
+        // is explicitly excluded from this API by Apple — handled in Pass 2.
+        let subscriptionIDs: Set<String> = [Self.monthlyProductID, Self.yearlyProductID]
         for await result in Transaction.currentEntitlements {
             switch result {
             case .verified(let tx):
                 let expired = tx.expirationDate.map { $0 < Date() } ?? false
                 seenIDs.append(tx.productID)
                 print("[PremiumManager] entitlement: \(tx.productID) revoked=\(tx.revocationDate != nil) expires=\(String(describing: tx.expirationDate)) isExpired=\(expired)")
-                if premiumIDs.contains(tx.productID), tx.revocationDate == nil {
+                if subscriptionIDs.contains(tx.productID), tx.revocationDate == nil {
                     found = true
                 }
             case .unverified(let tx, let error):
@@ -266,6 +246,25 @@ final class PremiumManager {
                 print("[PremiumManager] UNVERIFIED entitlement: \(tx.productID) error=\(error)")
             }
         }
+
+        // Pass 2: scan Transaction.all for the legacy lifetime product.
+        // com.wolfmoregolf.pro is a Non-Renewing Subscription — Apple never includes NRS
+        // products in currentEntitlements. Any verified, unrevoked purchase grants permanent
+        // access; there is no expiration date to check.
+        if !found {
+            for await result in Transaction.all {
+                guard case .verified(let tx) = result,
+                      tx.productID == Self.legacyProProductID else { continue }
+                let isRevoked = tx.revocationDate != nil
+                print("[PremiumManager] legacy tx: purchased=\(tx.purchaseDate) revoked=\(isRevoked)")
+                if !isRevoked {
+                    found = true
+                    seenIDs.append("\(tx.productID) (lifetime)")
+                    break
+                }
+            }
+        }
+
         lastSeenEntitlementIDs = seenIDs
         print("[PremiumManager] refreshPremiumStatus complete — isPremium=\(found), seenIDs=\(seenIDs)")
         _isPremium = found
