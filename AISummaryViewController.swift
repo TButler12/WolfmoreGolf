@@ -39,7 +39,7 @@ enum SummaryStyle: Int, CaseIterable {
         }
     }
 
-    func systemPrompt(isStableford: Bool = false, isTournament: Bool = false) -> String {
+    func systemPrompt(isStableford: Bool = false, isTournament: Bool = false, isMatchPlay: Bool = false) -> String {
         let stablefordNote = isStableford ? """
             IMPORTANT: This is a Stableford round — individual points-based scoring. \
             Focus on points earned per hole, standout individual performances, and the final leaderboard. \
@@ -50,9 +50,14 @@ enum SummaryStyle: Int, CaseIterable {
             Structure your recap in two parts: (1) a brief summary of each group's round, calling out standout moments; \
             (2) the overall tournament leaderboard with commentary on who's up, who's down, and who had the biggest swing.\n
             """ : ""
+        let matchPlayNote = isMatchPlay ? """
+            IMPORTANT: This is a Match Play game — score is measured in holes won/lost, not strokes or net score. \
+            Focus on how the match(es) played out: who was up or down, key turning-point holes, clutch wins, and the final result. \
+            Do NOT mention money, dollar amounts, prize totals, or Nassau — match play is purely holes up or down.\n
+            """ : ""
         // Applied to every style: birdie always means a natural gross birdie (scored below par before handicap)
         let birdieNote = "IMPORTANT: When mentioning birdies, only reference natural gross birdies — a score of one under par on the hole before any handicap strokes. Do not call a net birdie a birdie.\n"
-        let prefix = birdieNote + stablefordNote + tournamentNote
+        let prefix = birdieNote + stablefordNote + tournamentNote + matchPlayNote
         switch self {
         case .lockerRoom:
             return prefix + """
@@ -119,8 +124,13 @@ private enum GameContextBuilder {
         (g.tournamentGameType == "stableford" || g.tournamentGameType == nil)
     }
 
+    static func isMatchPlay(_ g: GameData) -> Bool {
+        g.resolvedGameType == .matchPlay
+    }
+
     static func build(from g: GameData, includeSkins: Bool = false) -> String {
-        isStableford(g) ? buildStableford(from: g) : buildWolf(from: g, includeSkins: includeSkins)
+        if isMatchPlay(g) { return buildMatchPlay(from: g) }
+        return isStableford(g) ? buildStableford(from: g) : buildWolf(from: g, includeSkins: includeSkins)
     }
 
     // MARK: - Stableford context
@@ -187,6 +197,73 @@ private enum GameContextBuilder {
         if !hasFifthPlayer {
             let teamTotal = gm.runningTeamStablefordTotal(game: g)
             lines.append("  TEAM TOTAL: \(teamTotal) pts")
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    // MARK: - Match Play context
+
+    private static func buildMatchPlay(from g: GameData) -> String {
+        var lines: [String] = []
+
+        let courseName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let df = DateFormatter(); df.dateStyle = .long; df.timeStyle = .none
+
+        let isDual = g.isDualMatch
+        let hasTwoVsTwo = (g.nassauState?.twoVsTwoMatches.count ?? 0) > 0
+        let formatStr: String
+        if isDual      { formatStr = "Dual Match Play (1v1 + 1v1)" }
+        else if hasTwoVsTwo { formatStr = "Team Match Play (2v2)" }
+        else           { formatStr = "Match Play (1v1)" }
+
+        lines.append("GAME FORMAT: \(formatStr)")
+        lines.append("COURSE: \(courseName.isEmpty ? "Unknown Course" : courseName)")
+        lines.append("DATE: \(df.string(from: Date()))")
+
+        let activePlayers: [(seat: Int, name: String)] = (0..<MAX_PLAYERS).compactMap { i in
+            guard i < g.playerNames.count, i < g.playerActivated.count,
+                  g.playerActivated[i] else { return nil }
+            let name = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { return nil }
+            return (i, name)
+        }
+        lines.append("PLAYERS (\(activePlayers.count)): \(activePlayers.map(\.name).joined(separator: ", "))")
+        lines.append("")
+
+        // Match results from NassauEngine (holes won/lost per segment, no money)
+        if let nassau = g.nassauState {
+            let summaries = NassauEngine.finalSummaries(
+                state: nassau,
+                playerNames: g.playerNames,
+                gameData: g
+            )
+            for summary in summaries {
+                lines.append("MATCH: \(summary.team1Display) vs \(summary.team2Display)")
+                for seg in [summary.front9, summary.back9, summary.overall18].compactMap({ $0 }) {
+                    let holesLine = "holes won: \(summary.team1Display) \(seg.holesWonTeam1), \(summary.team2Display) \(seg.holesWonTeam2), halved \(seg.ties)"
+                    lines.append("  \(seg.title): \(seg.resultText) (\(holesLine))")
+                }
+                if !summary.presses.isEmpty {
+                    lines.append("  Presses: " + summary.presses.map { "\($0.title): \($0.resultText)" }.joined(separator: "; "))
+                }
+                lines.append("")
+            }
+        }
+
+        // Hole-by-hole gross scores (no money columns)
+        let pars = g.course.pars
+        let committed = g.holeCommitted
+        lines.append("HOLE-BY-HOLE SCORES (gross):")
+        for hole in 0..<g.totalHoles {
+            guard hole < committed.count, committed[hole] else { continue }
+            let par = hole < pars.count ? pars[hole] : 4
+            let scoreParts: [String] = activePlayers.map { seat, name in
+                var s = "–"
+                if seat < g.scores.count, hole < g.scores[seat].count, let v = g.scores[seat][hole] { s = "\(v)" }
+                return "\(name): \(s)"
+            }
+            lines.append("  Hole \(hole + 1) (Par \(par)): " + scoreParts.joined(separator: ", "))
         }
 
         return lines.joined(separator: "\n")
@@ -624,8 +701,9 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
 
         let note = noteField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let isTournament = game.tournamentCode != nil
-        let isStableford = !isTournament && GameContextBuilder.isStableford(game)
-        let systemPrompt = style.systemPrompt(isStableford: isStableford, isTournament: isTournament)
+        let isMatchPlay  = !isTournament && GameContextBuilder.isMatchPlay(game)
+        let isStableford = !isTournament && !isMatchPlay && GameContextBuilder.isStableford(game)
+        let systemPrompt = style.systemPrompt(isStableford: isStableford, isTournament: isTournament, isMatchPlay: isMatchPlay)
 
         Task {
             do {
