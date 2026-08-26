@@ -221,7 +221,8 @@ final class PremiumManager {
         if lastSeenEntitlementIDs.isEmpty {
             return "No WolfMore purchases were found for the Apple ID signed in on this device. Make sure you're signed in with the same Apple ID used to purchase WolfMore Premium."
         }
-        return "A past WolfMore purchase was found but could not restore access — the subscription may have expired or been refunded. Contact support if you believe this is incorrect."
+        // Past WolfMore transactions exist but none are currently active — subscription has lapsed.
+        return "A past WolfMore subscription was found but it is no longer active. To re-enable premium features, subscribe again from the upgrade options above."
     }
 
     func refreshPremiumStatus() async {
@@ -266,9 +267,14 @@ final class PremiumManager {
                 let isKnown   = knownIDs.contains(tx.productID)
                 let isRevoked = tx.revocationDate != nil
                 print("[PremiumManager] tx[\(allTxCount)]: id=\(tx.productID) purchased=\(tx.purchaseDate) expires=\(String(describing: tx.expirationDate)) revoked=\(isRevoked) wolfmore=\(isKnown)")
-                if tx.productID == Self.legacyProProductID {
-                    seenIDs.append(isRevoked ? "\(tx.productID) (revoked)" : "\(tx.productID) (lifetime)")
-                    if !isRevoked { found = true }
+                if isKnown {
+                    // Record in seenIDs for all known WolfMore products so buildRestoreDiagnostic()
+                    // can distinguish "nothing found" from "found but expired/inactive".
+                    seenIDs.append(tx.productID)
+                }
+                if tx.productID == Self.legacyProProductID && !isRevoked {
+                    // Legacy Non-Renewing Subscription: any unrevoked purchase grants permanent access.
+                    found = true
                 }
             case .unverified(let tx, let error):
                 print("[PremiumManager] tx[\(allTxCount)] UNVERIFIED: id=\(tx.productID) error=\(error)")
