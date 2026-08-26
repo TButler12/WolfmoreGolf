@@ -18,13 +18,19 @@ final class PremiumManager {
             switch self {
             case .aiSummary:    return 5
             case .remoteNassau: return 5
-            case .liveWolf:     return 5
+            case .liveWolf:     return 10
             }
         }
 
         // When true, usageKey is scoped to the current calendar month (YYYY-MM).
         // The key changes each month, so the counter resets automatically with no manual logic.
-        var resetsMonthly: Bool { true }
+        // AI Summary resets monthly (real API cost per call). Nassau/LiveWolf are lifetime caps.
+        var resetsMonthly: Bool {
+            switch self {
+            case .aiSummary: return true
+            default:         return false
+            }
+        }
 
         var usageKey: String {
             let base: String
@@ -49,7 +55,9 @@ final class PremiumManager {
 
         // Used by PaywallViewController limit label.
         var limitMessage: String {
-            "You've used your \(freeLimit) free \(displayName) sessions this month."
+            resetsMonthly
+                ? "You've used your \(freeLimit) free \(displayName) sessions this month."
+                : "You've used your \(freeLimit) free \(displayName) sessions."
         }
     }
 
