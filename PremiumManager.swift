@@ -247,23 +247,34 @@ final class PremiumManager {
             }
         }
 
-        // Pass 2: scan Transaction.all for the legacy lifetime product.
-        // com.wolfmoregolf.pro is a Non-Renewing Subscription — Apple never includes NRS
-        // products in currentEntitlements. Any verified, unrevoked purchase grants permanent
-        // access; there is no expiration date to check.
-        if !found {
-            for await result in Transaction.all {
-                guard case .verified(let tx) = result,
-                      tx.productID == Self.legacyProProductID else { continue }
+        // Pass 2: scan Transaction.all for the legacy Non-Renewing Subscription.
+        // com.wolfmoregolf.pro is explicitly excluded from Transaction.currentEntitlements by
+        // Apple (NRS products never appear there). Any verified, unrevoked purchase grants
+        // permanent access — NRS products have no expiration date.
+        //
+        // This runs unconditionally so it always produces diagnostic output. Every item
+        // Transaction.all yields is logged, regardless of product ID, so we can distinguish
+        // between "sequence is empty" (wrong Apple ID / nothing synced) and
+        // "sequence has items but none matched" (product ID mismatch).
+        let knownIDs: Set<String> = [Self.monthlyProductID, Self.yearlyProductID, Self.legacyProProductID]
+        print("[PremiumManager] Pass 2 — scanning Transaction.all (all items logged)…")
+        var allTxCount = 0
+        for await result in Transaction.all {
+            allTxCount += 1
+            switch result {
+            case .verified(let tx):
+                let isKnown   = knownIDs.contains(tx.productID)
                 let isRevoked = tx.revocationDate != nil
-                print("[PremiumManager] legacy tx: purchased=\(tx.purchaseDate) revoked=\(isRevoked)")
-                if !isRevoked {
-                    found = true
-                    seenIDs.append("\(tx.productID) (lifetime)")
-                    break
+                print("[PremiumManager] tx[\(allTxCount)]: id=\(tx.productID) purchased=\(tx.purchaseDate) expires=\(String(describing: tx.expirationDate)) revoked=\(isRevoked) wolfmore=\(isKnown)")
+                if tx.productID == Self.legacyProProductID {
+                    seenIDs.append(isRevoked ? "\(tx.productID) (revoked)" : "\(tx.productID) (lifetime)")
+                    if !isRevoked { found = true }
                 }
+            case .unverified(let tx, let error):
+                print("[PremiumManager] tx[\(allTxCount)] UNVERIFIED: id=\(tx.productID) error=\(error)")
             }
         }
+        print("[PremiumManager] Pass 2 complete — \(allTxCount) total tx in Transaction.all")
 
         lastSeenEntitlementIDs = seenIDs
         print("[PremiumManager] refreshPremiumStatus complete — isPremium=\(found), seenIDs=\(seenIDs)")
