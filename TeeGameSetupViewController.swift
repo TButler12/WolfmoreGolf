@@ -8,7 +8,7 @@ final class TeeGameSetupViewController: UIViewController {
     private let contentView = UIView()
 
     private let nameField        = UITextField()
-    private let gameTypeControl  = UISegmentedControl(items: ["Wolf", "Skins", "Stableford"])
+    private let gameTypeControl  = UISegmentedControl(items: ["Wolf", "Skins", "Stableford", "Scramble"])
     private let stakeField       = UITextField()
     private let potField         = UITextField()
     private let carryTiesControl = UISegmentedControl(items: ["No Carry", "Carry Ties"])
@@ -19,6 +19,7 @@ final class TeeGameSetupViewController: UIViewController {
     private let carryRow            = UIView()
     private let stablefordRow       = UIView()
     private let stablefordToggleRow = UIView()
+    private let scrambleRow         = UIView()
 
     private let stakeLabel   = UILabel()
     private let potLabel     = UILabel()
@@ -223,6 +224,24 @@ final class TeeGameSetupViewController: UIViewController {
         ])
         stablefordRow.isHidden = true
         stack.addArrangedSubview(stablefordRow)
+
+        // Scramble info row (no configuration needed — teams type their name when joining)
+        let scrambleInfoLabel = UILabel()
+        scrambleInfoLabel.text = "Scorers enter this tournament code, type their team name, and start scoring. No pre-registration required."
+        scrambleInfoLabel.font = UIFont.preferredFont(forTextStyle: .footnote)
+        scrambleInfoLabel.textColor = .secondaryLabel
+        scrambleInfoLabel.numberOfLines = 0
+        scrambleRow.translatesAutoresizingMaskIntoConstraints = false
+        scrambleRow.addSubview(scrambleInfoLabel)
+        scrambleInfoLabel.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            scrambleInfoLabel.topAnchor.constraint(equalTo: scrambleRow.topAnchor),
+            scrambleInfoLabel.leadingAnchor.constraint(equalTo: scrambleRow.leadingAnchor),
+            scrambleInfoLabel.trailingAnchor.constraint(equalTo: scrambleRow.trailingAnchor),
+            scrambleInfoLabel.bottomAnchor.constraint(equalTo: scrambleRow.bottomAnchor),
+        ])
+        scrambleRow.isHidden = true
+        stack.addArrangedSubview(scrambleRow)
     }
 
     private func setupCreateButton() {
@@ -277,15 +296,15 @@ final class TeeGameSetupViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func gameTypeChanged() {
+        let isScramble   = gameTypeControl.selectedSegmentIndex == 3
         let isSkins      = gameTypeControl.selectedSegmentIndex == 1
         let isStableford = gameTypeControl.selectedSegmentIndex == 2
         stakeRow.isHidden            = !isSkins
         potRow.isHidden              = !isSkins
         carryRow.isHidden            = !isSkins
-        // Toggle only makes sense when Wolf/Skins is the primary format.
-        stablefordToggleRow.isHidden = isStableford
-        // Stableford rules (baseline/team count) shown for pure Stableford OR when the toggle is on.
-        stablefordRow.isHidden       = !isStableford && !stablefordSwitch.isOn
+        stablefordToggleRow.isHidden = isStableford || isScramble
+        stablefordRow.isHidden       = (!isStableford && !stablefordSwitch.isOn) || isScramble
+        scrambleRow.isHidden         = !isScramble
     }
 
     @objc private func stablefordSwitchChanged() {
@@ -324,8 +343,10 @@ final class TeeGameSetupViewController: UIViewController {
         switch gameIdx {
         case 0: gameType = "wolf"
         case 1: gameType = "skins"
-        default: gameType = "stableford"
+        case 2: gameType = "stableford"
+        default: gameType = "scramble"
         }
+
         let scoringType = "net"
         var stake: Double? = nil
         var potAmount: Double? = nil
@@ -388,6 +409,7 @@ final class TeeGameSetupViewController: UIViewController {
                     stablefordTeamCount: sfTeamCount,
                     stablefordEnabled: sfEnabled
                 )
+
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
                         GameManager.shared.update { g in
@@ -415,7 +437,11 @@ final class TeeGameSetupViewController: UIViewController {
                             code: record.code, name: record.name,
                             gameType: record.gameType, day: 1, isOrganizer: true)
                         NotificationCenter.default.post(name: .reloadUI, object: nil)
-                        self.showSuccess(code: record.code)
+                        if gameType == "scramble" {
+                            self.showScrambleCreated(code: record.code)
+                        } else {
+                            self.showSuccess(code: record.code)
+                        }
                     }
                 }
             } catch {
@@ -427,6 +453,74 @@ final class TeeGameSetupViewController: UIViewController {
                 }
             }
         }
+    }
+
+    private func showScrambleCreated(code: String) {
+        let ac = UIAlertController(
+            title: "Scramble Created!",
+            message: "Share this code with every scorer:\n\n\(code)\n\nEach scorer enters the code, types their team name, and starts scoring.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Copy Code", style: .default) { [weak self] _ in
+            UIPasteboard.general.string = code
+            self?.showScrambleTeamEntry(code: code)
+        })
+        ac.addAction(UIAlertAction(title: "Done", style: .cancel) { [weak self] _ in
+            self?.showScrambleTeamEntry(code: code)
+        })
+        present(ac, animated: true)
+    }
+
+    private func showScrambleTeamEntry(code: String) {
+        let entryVC = ScrambleTeamEntryViewController()
+        entryVC.allowSkip = true
+        entryVC.onSkip = { [weak self] in
+            self?.navigationController?.dismiss(animated: true)
+        }
+        entryVC.submit = { [weak self] vc, teamName, playerNames in
+            guard let self else { return }
+            let spinner = UIAlertController(title: nil, message: "Setting up team…", preferredStyle: .alert)
+            vc.present(spinner, animated: true)
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    _ = try await SupabaseService.shared.findOrCreateScrambleTeam(
+                        tournamentCode: code, teamName: teamName, playerNames: playerNames)
+                    await MainActor.run {
+                        GameManager.shared.update { g in
+                            g.scrambleTeamName   = teamName
+                            g.playerNames[0]     = teamName
+                            for i in g.playerActivated.indices { g.playerActivated[i] = false }
+                            g.playerActivated[0] = true
+                            // Wipe previous round's scores so the new game starts clean.
+                            g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                        }
+                        GameManager.shared.seedScoresWithParsForActivePlayers()
+                        GameManager.shared.saveCurrent()
+                        let hostNav = self.navigationController?.presentingViewController as? UINavigationController
+                            ?? self.navigationController?.presentingViewController?.navigationController
+                        let sb = UIStoryboard(name: "Main", bundle: nil)
+                        let game = sb.instantiateViewController(withIdentifier: "GameViewController")
+                        spinner.dismiss(animated: false) {
+                            self.navigationController?.dismiss(animated: true) {
+                                hostNav?.pushViewController(game, animated: true)
+                            }
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        spinner.dismiss(animated: false) {
+                            let err = UIAlertController(title: "Error",
+                                message: "Couldn't register team.\n\n\(error.localizedDescription)",
+                                preferredStyle: .alert)
+                            err.addAction(UIAlertAction(title: "OK", style: .default))
+                            vc.present(err, animated: true)
+                        }
+                    }
+                }
+            }
+        }
+        navigationController?.pushViewController(entryVC, animated: true)
     }
 
     private func showSuccess(code: String) {

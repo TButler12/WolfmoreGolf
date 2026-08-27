@@ -129,6 +129,9 @@ private final class GroupHoleCell: UITableViewCell {
 
         let parts: [String] = playerNames.compactMap { name in
             guard let r = holeData[name] else { return nil }
+            if r.gameType == "scramble" {
+                return "\(name): \(r.grossScore)"
+            }
             let m = r.holeMoney ?? 0.0
             let valueStr: String
             if r.gameType == "stableford" {

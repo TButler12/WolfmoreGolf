@@ -200,10 +200,9 @@ final class TeeGamesViewController: UIViewController {
                     }
                 }
             } catch {
-                print("❌ fetchTournament error: \(error)")
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
-                        self.showError("Tournament not found. Check the code and try again.\n\n\(error.localizedDescription)")
+                        self.showError("Tournament not found. Check the code and try again.")
                     }
                 }
             }
@@ -227,6 +226,8 @@ final class TeeGamesViewController: UIViewController {
                 valueStr = ""
             }
             gameDesc = "Skins · \(scoringLabel) · \(carry)\(valueStr.isEmpty ? "" : " · \(valueStr)")"
+        case "scramble":
+            gameDesc = "Scramble"
         default:
             gameDesc = "Stableford · \(scoringLabel)"
         }
@@ -240,14 +241,15 @@ final class TeeGamesViewController: UIViewController {
         present(ac, animated: true)
     }
 
-    private func applyJoinedTournament(record: TournamentRecord) {
+    @discardableResult
+    private func setupJoinedGame(record: TournamentRecord) -> String {
         if GameManager.shared.currentGame == nil {
             _ = GameManager.shared.loadLastOpened(notify: false)
         }
         if GameManager.shared.currentGame == nil {
             GameManager.shared.startNewGame()
         }
-        let groupCode        = UUID().uuidString
+        let groupCode         = UUID().uuidString
         let tournamentMatchId = UUID().uuidString
         GameManager.shared.update { g in
             g.tournamentCode         = record.code
@@ -286,7 +288,67 @@ final class TeeGamesViewController: UIViewController {
         #if DEBUG
         print("🏆 joined tournament: code=\(record.code) groupCode=\(groupCode) matchId=\(tournamentMatchId)")
         #endif
-        dismiss(animated: true)
+        return groupCode
+    }
+
+    private func applyJoinedTournament(record: TournamentRecord) {
+        setupJoinedGame(record: record)
+        if record.gameType == "scramble" {
+            showScrambleTeamNameEntry(tournamentCode: record.code)
+        } else {
+            dismiss(animated: true)
+        }
+    }
+
+    private func showScrambleTeamNameEntry(tournamentCode: String) {
+        let ac = UIAlertController(
+            title: "Your Team Name",
+            message: "Enter the name of the team you're scoring for.",
+            preferredStyle: .alert
+        )
+        ac.addTextField { tf in
+            tf.placeholder = "e.g. Team Alpha"
+            tf.autocapitalizationType = .words
+            tf.autocorrectionType = .no
+            tf.returnKeyType = .done
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            self?.dismiss(animated: true)
+        })
+        ac.addAction(UIAlertAction(title: "Continue", style: .default) { [weak self, weak ac] _ in
+            let name = (ac?.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { self?.dismiss(animated: true); return }
+            self?.applyScrambleTeam(name: name, tournamentCode: tournamentCode)
+        })
+        present(ac, animated: true)
+    }
+
+    private func applyScrambleTeam(name: String, tournamentCode: String) {
+        let spinner = UIAlertController(title: nil, message: "Setting up team…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                _ = try await SupabaseService.shared.findOrCreateScrambleTeam(
+                    tournamentCode: tournamentCode, teamName: name)
+                await MainActor.run {
+                    GameManager.shared.update { g in
+                        g.scrambleTeamName   = name
+                        g.playerNames[0]     = name
+                        for i in g.playerActivated.indices { g.playerActivated[i] = false }
+                        g.playerActivated[0] = true
+                    }
+                    GameManager.shared.saveCurrent()
+                    spinner.dismiss(animated: false) { self.dismiss(animated: true) }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Couldn't register team. Try again.\n\n\(error.localizedDescription)")
+                    }
+                }
+            }
+        }
     }
 
     @objc private func leaderboardTapped() {

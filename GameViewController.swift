@@ -2134,9 +2134,37 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
 
+    private func applyScrambleSlotVisibility(isScramble: Bool) {
+        let sortedScore  = scoreFields.sorted      { $0.tag < $1.tag }
+        let sortedNames  = playerNameLabels.sorted { $0.tag < $1.tag }
+        let sortedMoney  = playerMoneyFields.sorted { $0.tag < $1.tag }
+        let sortedTotals = totalMoneyLabels.sorted { $0.tag < $1.tag }
+        for i in 1..<sortedScore.count  { sortedScore[i].isHidden  = isScramble }
+        for i in 1..<sortedNames.count  { sortedNames[i].isHidden  = isScramble }
+        for i in 1..<sortedMoney.count  { sortedMoney[i].isHidden  = isScramble }
+        for i in 1..<sortedTotals.count { sortedTotals[i].isHidden = isScramble }
+        for i in 1..<wolfButtons.count  { wolfButtons[i].isHidden  = isScramble }
+        for i in 1..<proxButtons.count  { proxButtons[i].isHidden  = isScramble }
+    }
+
     private func applyGameTypeUI() {
         guard let g = GameManager.shared.currentGame else { return }
         let t = g.resolvedGameType
+
+        // Scramble tournaments: single-team score entry, no bet controls
+        if g.tournamentGameType == "scramble" {
+            wolfControlsStack.isHidden   = true
+            scotchControlsStack.isHidden = true
+            bottomRow1?.isHidden = true
+            bottomRow2?.isHidden = true
+            nassauButton?.isHidden = true
+            liveNassauButton?.isHidden = true
+            standingsHeaderButton?.isHidden = false
+            applyScrambleSlotVisibility(isScramble: true)
+            updateStablefordToggleVisibility()
+            return
+        }
+        applyScrambleSlotVisibility(isScramble: false)
 
         wolfControlsStack.isHidden   = !t.isWolf
         let showScotchControls = t.isScotch || (t == .tournament && !showingStablefordPoints)
@@ -3526,6 +3554,35 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 }
 
                 let isPureStableford = g.tournamentGameType == "stableford"
+
+                // Scramble: one gross score per hole (seat 0 = the team), submitted as the team name.
+                if g.tournamentGameType == "scramble" {
+                    let teamName = g.scrambleTeamName ?? (g.playerNames[safe: 0] ?? "Team")
+                    for backfillHole in backfillRange {
+                        guard let gross = g.scores[safe: 0].flatMap({ $0[safe: backfillHole] }) ?? nil else { continue }
+                        let par = g.courseParToPass[safe: backfillHole] ?? 4
+                        do {
+                            try await SupabaseService.shared.submitTournamentHoleScore(
+                                playerSlot:     0,
+                                playerName:     teamName,
+                                hole:           backfillHole,
+                                grossScore:     gross,
+                                netScore:       gross - par,
+                                holeMoney:      0,
+                                totalMoney:     0,
+                                holeHc:         par,
+                                playerHc:       0,
+                                tournamentCode: tCode,
+                                groupCode:      gCode,
+                                day:            effectiveDay,
+                                game_type:      "scramble"
+                            )
+                        } catch {
+                            print("ERROR scramble tournament write hole=\(backfillHole+1): \(error)")
+                        }
+                    }
+                    return
+                }
 
                 // Wolf/Skins money submission — skipped for pure Stableford tournaments.
                 if !isPureStableford {

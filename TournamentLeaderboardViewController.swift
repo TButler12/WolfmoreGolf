@@ -5,11 +5,12 @@ import UIKit
 final class TournamentLeaderboardViewController: UIViewController {
 
     // MARK: - Private models
-    private struct MoneyRow  { let rank: Int; let name: String; let dayTotal: Double; let total: Double; let holesPlayed: Int; let offset: Double? }
-    private struct ScoreRow  { let rank: Int; let name: String; let netTotal: Int; let grossTotal: Int; let holesPlayed: Int }
-    private struct GroupRow  { let matchId: String; let playerNames: [String];     let holesPlayed: Int }
-    private struct SkinsRow  { let rank: Int; let name: String; let skinsWon: Int; let holesPlayed: Int; let potPayout: Double? }
-    private struct PtsRow    { let rank: Int; let name: String; let dayPts: Int;   let holesPlayed: Int }
+    private struct MoneyRow    { let rank: Int; let name: String; let dayTotal: Double; let total: Double; let holesPlayed: Int; let offset: Double? }
+    private struct ScoreRow    { let rank: Int; let name: String; let netTotal: Int; let grossTotal: Int; let holesPlayed: Int }
+    private struct GroupRow    { let matchId: String; let playerNames: [String];     let holesPlayed: Int }
+    private struct SkinsRow    { let rank: Int; let name: String; let skinsWon: Int; let holesPlayed: Int; let potPayout: Double? }
+    private struct PtsRow      { let rank: Int; let name: String; let dayPts: Int;   let holesPlayed: Int }
+    private struct ScrambleRow { let rank: Int; let name: String; let toPar: Int; let grossTotal: Int; let holesPlayed: Int }
 
     // MARK: - State
     let tournamentCode: String
@@ -20,8 +21,11 @@ final class TournamentLeaderboardViewController: UIViewController {
     private var scoreData:      [ScoreRow]  = []
     private var groupData:      [GroupRow]  = []
     private var skinsData:      [SkinsRow]  = []
-    private var stablefordIndividualData: [PtsRow] = []
-    private var stablefordTeamData:       [PtsRow] = []
+    private var stablefordIndividualData: [PtsRow]     = []
+    private var stablefordTeamData:       [PtsRow]     = []
+    private var scrambleData:             [ScrambleRow] = []
+    private var rosterEntries:            [TournamentRosterEntry] = []
+    private var scrambleRosterPlayers:    [String: [String]] = [:]  // teamName → player name list
 
     // Local overrides — set at init from GameData so server record mismatches don't break display.
     private let localGameType: String?
@@ -29,10 +33,15 @@ final class TournamentLeaderboardViewController: UIViewController {
     // Detected from actual hole_scores rows (fallback for tournaments created before Stableford support).
     private var rowsDetectedStableford = false
 
+    // Whether this is a Scramble tournament (team gross score to-par only).
+    private var hasScrambleFormat: Bool {
+        let gt = record?.gameType ?? localGameType ?? "wolf"
+        return gt == "scramble"
+    }
     // Whether this tournament has a money format (Wolf/Skins) active.
     private var hasMoneyFormat: Bool {
         let gt = record?.gameType ?? localGameType ?? "wolf"
-        return gt != "stableford"
+        return gt != "stableford" && gt != "scramble"
     }
     // Whether this tournament has Stableford points tracking active.
     private var hasStablefordFormat: Bool {
@@ -263,19 +272,23 @@ final class TournamentLeaderboardViewController: UIViewController {
                 async let rowsFetch       = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
                 async let offsetsFetch    = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: day)
                 async let allOffsetsFetch = SupabaseService.shared.fetchAllPlayerOffsets(code: tournamentCode)
+                async let rosterFetch     = SupabaseService.shared.fetchRoster(code: tournamentCode)
                 let (rec, rows, offsets, allOffsets) = try await (recFetch, rowsFetch, offsetsFetch, allOffsetsFetch)
                 record        = rec
                 allRows       = rows
                 playerOffsets = offsets
                 allDayOffsets = allOffsets
+                rosterEntries = (try? await rosterFetch) ?? []
             } else {
                 async let rowsFetch       = SupabaseService.shared.fetchTournamentHoleScores(code: tournamentCode)
                 async let offsetsFetch    = SupabaseService.shared.fetchPlayerOffsets(code: tournamentCode, day: day)
                 async let allOffsetsFetch = SupabaseService.shared.fetchAllPlayerOffsets(code: tournamentCode)
+                async let rosterFetch     = SupabaseService.shared.fetchRoster(code: tournamentCode)
                 let (rows, offsets, allOffsets) = try await (rowsFetch, offsetsFetch, allOffsetsFetch)
                 allRows       = rows
                 playerOffsets = offsets
                 allDayOffsets = allOffsets
+                rosterEntries = (try? await rosterFetch) ?? []
             }
 
             #if DEBUG
@@ -614,6 +627,40 @@ final class TournamentLeaderboardViewController: UIViewController {
             let label = teamLabel[kv.key] ?? kv.key
             return PtsRow(rank: i+1, name: label, dayPts: kv.value, holesPlayed: teamHoles[kv.key] ?? 0)
         }
+
+        // ── Scramble: one row per team, sorted by to-par (net_score = gross - par per hole) ──
+        let scrambleRows = deduped.filter {
+            ($0.gameType ?? "") == "scramble" && ($0.day ?? 1) == currentDay
+        }
+        var sTeamToPar:  [String: Int] = [:]
+        var sTeamGross:  [String: Int] = [:]
+        var sTeamHoles:  [String: Int] = [:]
+        for r in scrambleRows {
+            sTeamToPar[r.playerName, default: 0]  += r.netScore ?? 0
+            sTeamGross[r.playerName, default: 0]  += r.grossScore
+            sTeamHoles[r.playerName, default: 0]  += 1
+        }
+        scrambleData = sTeamToPar.sorted { a, b in
+            let aH = sTeamHoles[a.key] ?? 0; let bH = sTeamHoles[b.key] ?? 0
+            if aH > 0 && bH == 0 { return true }
+            if aH == 0 && bH > 0 { return false }
+            return a.value < b.value  // lower to-par is better
+        }.enumerated().map { i, kv in
+            ScrambleRow(rank: i + 1, name: kv.key,
+                        toPar: kv.value,
+                        grossTotal: sTeamGross[kv.key] ?? 0,
+                        holesPlayed: sTeamHoles[kv.key] ?? 0)
+        }
+
+        // Build team → player-names lookup from roster group_code (pipe-separated).
+        scrambleRosterPlayers = [:]
+        for entry in rosterEntries {
+            guard let encoded = entry.groupCode, !encoded.isEmpty else { continue }
+            let names = encoded.split(separator: "|").map(String.init).filter { !$0.isEmpty }
+            if !names.isEmpty {
+                scrambleRosterPlayers[entry.canonicalName] = names
+            }
+        }
     }
 
     private func updateDayPicker() {
@@ -818,15 +865,24 @@ final class TournamentLeaderboardViewController: UIViewController {
     }
 
     private func applySegmentTitles() {
+        while segment.numberOfSegments > 0 { segment.removeSegment(at: 0, animated: false) }
+
+        if hasScrambleFormat {
+            moneyPtsToggle.isHidden = true
+            gameTypePicker.isHidden = true
+            segment.insertSegment(withTitle: "Leaderboard", at: 0, animated: false)
+            segment.insertSegment(withTitle: "Groups",      at: 1, animated: false)
+            segment.selectedSegmentIndex = 0
+            return
+        }
+
         // Determine which modes are available and update toggle visibility.
         let bothActive = hasMoneyFormat && hasStablefordFormat
         moneyPtsToggle.isHidden = !bothActive
-        if !hasMoneyFormat    { showingMoneyView = false }
+        if !hasMoneyFormat      { showingMoneyView = false }
         if !hasStablefordFormat { showingMoneyView = true }
         moneyPtsToggle.selectedSegmentIndex = showingMoneyView ? 0 : 1
 
-        // Rebuild the tab bar to match the active mode (avoids stale segment indices).
-        while segment.numberOfSegments > 0 { segment.removeSegment(at: 0, animated: false) }
         if showingMoneyView {
             segment.insertSegment(withTitle: "Money",      at: 0, animated: false)
             segment.insertSegment(withTitle: "Net Score",  at: 1, animated: false)
@@ -855,6 +911,13 @@ final class TournamentLeaderboardViewController: UIViewController {
 extension TournamentLeaderboardViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if hasScrambleFormat {
+            switch segment.selectedSegmentIndex {
+            case 0: return scrambleData.count
+            case 1: return groupData.count
+            default: return 0
+            }
+        }
         if showingMoneyView {
             switch segment.selectedSegmentIndex {
             case 0: return (selectedGameType == "skins" || selectedGameType == "gross_skins") ? skinsData.count : moneyData.count
@@ -877,6 +940,22 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let me = currentUserName
         let i  = indexPath.row
+
+        if hasScrambleFormat {
+            switch segment.selectedSegmentIndex {
+            case 0:
+                let cell = tableView.dequeueReusableCell(withIdentifier: "score", for: indexPath) as! LeaderboardScoreCell
+                let r = scrambleData[i]
+                cell.configureScramble(rank: r.rank, name: r.name, toPar: r.toPar,
+                                       grossTotal: r.grossTotal, holesPlayed: r.holesPlayed,
+                                       isCurrentUser: r.name == me)
+                return cell
+            case 1:
+                return makeGroupCell(tableView, indexPath: indexPath, row: groupData[i])
+            default:
+                return UITableViewCell()
+            }
+        }
 
         if showingMoneyView {
             switch segment.selectedSegmentIndex {
@@ -934,8 +1013,16 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
     private func makeGroupCell(_ tableView: UITableView, indexPath: IndexPath, row: GroupRow) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "group", for: indexPath)
         var cfg = cell.defaultContentConfiguration()
-        cfg.text = row.playerNames.joined(separator: ", ")
-        cfg.secondaryText = "\(row.holesPlayed) hole\(row.holesPlayed == 1 ? "" : "s") played"
+        let holeStr = "\(row.holesPlayed) hole\(row.holesPlayed == 1 ? "" : "s") played"
+        if hasScrambleFormat {
+            let teamName = row.playerNames.first ?? ""
+            let players  = scrambleRosterPlayers[teamName] ?? []
+            cfg.text = teamName
+            cfg.secondaryText = players.isEmpty ? holeStr : players.joined(separator: ", ") + "  ·  " + holeStr
+        } else {
+            cfg.text = row.playerNames.joined(separator: ", ")
+            cfg.secondaryText = holeStr
+        }
         cell.contentConfiguration = cfg
         cell.accessoryType   = .disclosureIndicator
         cell.backgroundColor = .systemBackground
@@ -945,16 +1032,20 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
 
-        // Groups tap — both Money and Pts modes have Groups at segment index 2.
-        if segment.selectedSegmentIndex == 2 {
+        // Groups tap — scramble uses index 1; Money/Pts modes use index 2.
+        let groupsSegmentIdx = hasScrambleFormat ? 1 : 2
+        if segment.selectedSegmentIndex == groupsSegmentIdx {
             let g = groupData[indexPath.row]
-            // Filter rows to the currently displayed game type so GroupDetail shows matching data.
-            let filterType: String = showingMoneyView ? selectedGameType : "stableford"
+            let filterType: String = hasScrambleFormat ? "scramble"
+                : (showingMoneyView ? selectedGameType : "stableford")
             let rows = allRows.filter { $0.matchId == g.matchId && ($0.gameType ?? "wolf") == filterType }
             let vc = GroupDetailViewController(matchId: g.matchId, playerNames: g.playerNames, rows: rows)
             navigationController?.pushViewController(vc, animated: true)
             return
         }
+
+        // Scramble leaderboard rows have no tap interaction.
+        if hasScrambleFormat { return }
 
         // Money mode — segment 0 interactions.
         if showingMoneyView && segment.selectedSegmentIndex == 0 {
@@ -1225,5 +1316,21 @@ private final class LeaderboardScoreCell: UITableViewCell {
         grossLabel.text      = "Gross: \(grossTotal)"
         holesLabel.text      = "\(holesPlayed)h"
         backgroundColor      = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
+    }
+
+    func configureScramble(rank: Int, name: String, toPar: Int, grossTotal: Int, holesPlayed: Int, isCurrentUser: Bool) {
+        let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
+        rankLabel.text      = "#\(rank)"
+        rankLabel.textColor = rank == 1 ? gold : .secondaryLabel
+        nameLabel.text      = name
+        let toParStr: String
+        if toPar == 0        { toParStr = "E" }
+        else if toPar < 0    { toParStr = "\(toPar)" }
+        else                 { toParStr = "+\(toPar)" }
+        netLabel.text       = toParStr
+        netLabel.textColor  = toPar < 0 ? .systemRed : (toPar == 0 ? .label : .secondaryLabel)
+        grossLabel.text     = "Gross: \(grossTotal)"
+        holesLabel.text     = "\(holesPlayed)h"
+        backgroundColor     = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
     }
 }

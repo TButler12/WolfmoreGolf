@@ -298,6 +298,8 @@ final class LiveConnectedViewController: UITableViewController {
             let carry = record.carryTies == true ? "carry ties" : "no carry"
             let stakeStr = record.stake.map { "$\(Int($0))/hole" } ?? ""
             gameDesc = "Skins · \(scoringLabel) · \(carry)\(stakeStr.isEmpty ? "" : " · \(stakeStr)")"
+        case "scramble":
+            gameDesc = "Scramble"
         default:
             gameDesc = "Stableford · \(scoringLabel)"
         }
@@ -381,12 +383,75 @@ final class LiveConnectedViewController: UITableViewController {
             groupCode: groupCode, tournamentMatchId: tournamentMatchId)
         NotificationCenter.default.post(name: .reloadUI, object: nil)
 
-        // After joining as a scorer, surface ManagePlayersVC with the roster picker
-        // already opening — so group setup is immediate, not three menus deep.
-        let day = record.currentDay ?? 1
-        let successMsg = "Joined: \(record.name) · Day \(day)"
         let presenter = self.navigationController?.presentingViewController ?? presentingViewController
         let sb = UIStoryboard(name: "Main", bundle: nil)
+
+        if record.gameType == "scramble" {
+            // Scramble: skip roster picker — show team entry form, then go straight to scoring.
+            let tCode       = record.code
+            let tCourseName = record.courseName
+            dismiss(animated: true) {
+                guard let presenter else { return }
+                let entryVC = ScrambleTeamEntryViewController()
+                entryVC.allowSkip = false
+                entryVC.submit = { vc, teamName, playerNames in
+                    let spinner = UIAlertController(title: nil, message: "Setting up team…", preferredStyle: .alert)
+                    vc.present(spinner, animated: true)
+                    Task {
+                        do {
+                            _ = try await SupabaseService.shared.findOrCreateScrambleTeam(
+                                tournamentCode: tCode, teamName: teamName, playerNames: playerNames)
+                            await MainActor.run {
+                                GameManager.shared.update { g in
+                                    if let courseName = tCourseName,
+                                       let profile = CourseLibrary.shared.courses.first(where: {
+                                           $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                                               .caseInsensitiveCompare(courseName.trimmingCharacters(in: .whitespacesAndNewlines)) == .orderedSame
+                                       }) {
+                                        g.course = Course(id: profile.id, name: profile.name,
+                                                         pars: Array(profile.pars.prefix(STANDARD_HOLES)),
+                                                         holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)))
+                                    }
+                                    g.scrambleTeamName   = teamName
+                                    g.playerNames[0]     = teamName
+                                    for i in g.playerActivated.indices { g.playerActivated[i] = false }
+                                    g.playerActivated[0] = true
+                                    // Wipe previous round's scores so the new game starts clean.
+                                    g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                                }
+                                GameManager.shared.seedScoresWithParsForActivePlayers()
+                                GameManager.shared.saveCurrent()
+                                let game = sb.instantiateViewController(withIdentifier: "GameViewController")
+                                let hostNav = (presenter as? UINavigationController) ?? presenter.navigationController
+                                spinner.dismiss(animated: false) {
+                                    vc.navigationController?.dismiss(animated: true) {
+                                        hostNav?.pushViewController(game, animated: true)
+                                    }
+                                }
+                            }
+                        } catch {
+                            await MainActor.run {
+                                spinner.dismiss(animated: false) {
+                                    let err = UIAlertController(title: "Error",
+                                        message: "Couldn't register team. Try again.\n\n\(error.localizedDescription)",
+                                        preferredStyle: .alert)
+                                    err.addAction(UIAlertAction(title: "OK", style: .default))
+                                    vc.present(err, animated: true)
+                                }
+                            }
+                        }
+                    }
+                }
+                let nav = UINavigationController(rootViewController: entryVC)
+                nav.modalPresentationStyle = .formSheet
+                presenter.present(nav, animated: true)
+            }
+            return
+        }
+
+        // Non-scramble: surface ManagePlayersVC with the roster picker already opening.
+        let day = record.currentDay ?? 1
+        let successMsg = "Joined: \(record.name) · Day \(day)"
         dismiss(animated: true) {
             guard let presenter,
                   let manageVC = sb.instantiateViewController(withIdentifier: "ManagePlayersVC")

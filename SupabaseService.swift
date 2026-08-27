@@ -937,4 +937,37 @@ final class SupabaseService {
         let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
         return String((0..<6).map { _ in chars.randomElement()! })
     }
+
+    func findOrCreateScrambleTeam(tournamentCode: String, teamName: String, playerNames: [String] = []) async throws -> TournamentRosterEntry {
+        let trimmed     = teamName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let encoded     = playerNames.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.joined(separator: "|")
+        let groupCode   = encoded.isEmpty ? nil : encoded
+
+        let existing: [TournamentRosterEntry] = try await client
+            .from("tournament_roster")
+            .select()
+            .eq("tournament_code", value: tournamentCode.uppercased())
+            .execute()
+            .value
+        if let match = existing.first(where: {
+            $0.canonicalName.trimmingCharacters(in: .whitespacesAndNewlines)
+                .caseInsensitiveCompare(trimmed) == .orderedSame
+        }) {
+            // Always update player names when provided so re-entry refreshes the roster.
+            if groupCode != nil {
+                let updated = TournamentRosterEntry(
+                    id: match.id, tournamentCode: match.tournamentCode,
+                    canonicalName: match.canonicalName, handicap: match.handicap,
+                    addedBy: match.addedBy, groupCode: groupCode)
+                try await upsertRosterEntry(updated)
+                return updated
+            }
+            return match
+        }
+        let entry = TournamentRosterEntry(
+            id: UUID(), tournamentCode: tournamentCode.uppercased(),
+            canonicalName: trimmed, handicap: 0, addedBy: "scorer", groupCode: groupCode)
+        try await upsertRosterEntry(entry)
+        return entry
+    }
 }

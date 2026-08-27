@@ -112,6 +112,15 @@ final class PremiumManager {
         NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
     }
 
+    #if DEBUG
+    func debugResetAllUsage() {
+        for feature in [Feature.aiSummary, .remoteNassau, .liveWolf] {
+            UserDefaults.standard.set(0, forKey: feature.usageKey)
+        }
+        NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+    }
+    #endif
+
     // Shows a non-blocking usage reminder after a free-tier session completes.
     func nudgeIfNeeded(for feature: Feature, from presenter: UIViewController) {
         guard !isPremium else { return }

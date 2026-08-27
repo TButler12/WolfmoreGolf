@@ -53,6 +53,8 @@ struct GameData: Codable {
     var stablefordCountingPlayersOpt: Int? = nil
     // When true, Stableford rows are co-submitted alongside the primary money format (hybrid).
     var tournamentStablefordEnabled: Bool? = nil
+    // Scramble: the team name this scorer is submitting for (nil = not in a scramble tournament).
+    var scrambleTeamName: String? = nil
 
     // NEW (optional so old saves decode safely)
     var gameTypePerHole: [GameType] = Array(repeating: .sixPointScotch, count: STANDARD_HOLES)

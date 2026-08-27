@@ -25,6 +25,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private weak var tournamentInfoCard: UIView?
     private weak var tournamentInfoNameLabel: UILabel?
     private weak var tournamentInfoSubtitleLabel: UILabel?
+    private weak var tournamentGroupButton: UIButton?
     private weak var editCourseButton: UIButton?
     private weak var tournamentButton: UIButton?
     private weak var liveConnectedButton: UIButton?
@@ -478,6 +479,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         groupBtn.tintColor = UIColor.white.withAlphaComponent(0.85)
         groupBtn.addTarget(self, action: #selector(tournamentCardGroupTapped), for: .touchUpInside)
         groupBtn.translatesAutoresizingMaskIntoConstraints = false
+        tournamentGroupButton = groupBtn
 
         let btnRow = UIStackView(arrangedSubviews: [lbBtn, groupBtn])
         btnRow.axis = .horizontal
@@ -517,6 +519,8 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     @objc private func tournamentCardGroupTapped() {
         guard let g = GameManager.shared.currentGame,
               let code = g.tournamentCode else { return }
+
+        if g.tournamentGameType == "scramble" { return }
 
         let spinner = UIAlertController(title: nil, message: "Setting up…", preferredStyle: .alert)
         present(spinner, animated: true)
@@ -785,6 +789,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         tournamentInfoNameLabel?.text = g.tournamentName ?? "Tournament"
         let day = g.tournamentDay ?? 1
         tournamentInfoSubtitleLabel?.text = "Day \(day) · Code: \(code)"
+        tournamentGroupButton?.isHidden = (g.tournamentGameType == "scramble")
         card.isHidden = false
 
         // Background fetch to catch stale day (e.g. day advanced while app was idle)
@@ -1480,6 +1485,11 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         if ResetSnapshotStore.shared.hasSnapshots {
             ac.addAction(UIAlertAction(title: "Swap to Previous Round", style: .default) { [weak self] _ in self?.openRestorePastRound() })
         }
+        #if DEBUG
+        ac.addAction(UIAlertAction(title: "Reset Usage Counters (Debug)", style: .destructive) { _ in
+            PremiumManager.shared.debugResetAllUsage()
+        })
+        #endif
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         if let pop = ac.popoverPresentationController {
             pop.sourceView = sender
