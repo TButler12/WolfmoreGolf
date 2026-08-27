@@ -7670,6 +7670,28 @@ let PALATINE_HILLS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold",       yardage: 5251, rating: 65.7, slope: 112)
 ]
 
+// MARK: - Prairie Isle Golf Club — Prairie Grove, IL
+// Par 72 | Designed by Gordon Cunningham | Opened 1994
+
+private let PRAIRIE_ISLE_GC_ID = UUID(uuidString: "E5F6A7B8-C9D0-4E12-BCD3-456789012345")!
+
+let PRAIRIE_ISLE_GC_PARS: [Int] = [
+    5,4,4,4,3,4,5,3,4,   // Front 9
+    5,4,4,4,4,3,4,3,5    // Back 9
+]
+
+let PRAIRIE_ISLE_GC_HCS: [Int] = [
+    3,11,9,13,15,7,1,17,5,
+    2,6,10,8,14,16,12,18,4
+]
+
+let PRAIRIE_ISLE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6601, rating: 72.0, slope: 127),
+    TeeInfo(teeName: "White",  yardage: 6255, rating: 70.2, slope: 122),
+    TeeInfo(teeName: "Silver", yardage: 5623, rating: 67.4, slope: 115),
+    TeeInfo(teeName: "Red",    yardage: 5251, rating: 70.0, slope: 120)
+]
+
 // MARK: - Wynstone Golf Club
 
 private let WYNSTONE_GC_ID = UUID(uuidString: "D4A1F8E2-9C3A-4D91-B8A1-100000000111")!
@@ -17464,6 +17486,15 @@ private enum BuiltIns {
           phone: "(847) 359-4020",
           website: "https://www.palatinehills.org",
           address: "512 W. Northwest Hwy, Palatine, IL 60067"),
+
+        c(PRAIRIE_ISLE_GC_ID, "Prairie Isle Golf Club", PRAIRIE_ISLE_GC_PARS, PRAIRIE_ISLE_GC_HCS, PRAIRIE_ISLE_GC_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "Gordon Cunningham",
+          type: "Public",
+          phone: "(815) 356-0202",
+          website: "https://www.prairieislegc.com",
+          address: "2216 Route 176, Prairie Grove, IL 60012"),
 
         c(
             WYNSTONE_GC_ID,
