@@ -5090,6 +5090,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func applyTournamentAttach(record: TournamentRecord) {
         GameManager.applyTournamentJoin(record: record)
+        // Re-seed with the now-correct tournament course. viewDidLoad already seeded with the
+        // pre-join course, so any score that was par on the old course but should be a different
+        // par on the tournament course needs to be re-evaluated. Only fills nil slots, so scores
+        // already entered by the player are preserved. Stableford skipped: nil = unplayed there.
+        if GameManager.shared.currentGame?.resolvedGameType != .tournament {
+            GameManager.shared.seedScoresWithParsForActivePlayers()
+        }
         applyGameTypeUI()
         paintEverythingForCurrentHole()
 

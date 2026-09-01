@@ -427,9 +427,10 @@ extension GameManager {
         // Work on a mutable copy of the game
         guard var game = self.currentGame else { return }
 
-        // How many holes? usually 18, but respect the course data
-        let holeCount = min(STANDARD_HOLES, game.courseParToPass.count)
-        guard holeCount > 0 else { return }
+        // Use totalHoles so 36-hole match play rounds seed all 36 holes.
+        let holeCount = game.totalHoles
+        let pars = game.courseParToPass
+        guard holeCount > 0, !pars.isEmpty else { return }
 
         // Seats visible on the Game screen
         let seatsRange = 0 ..< min(MAX_PLAYERS,
@@ -443,7 +444,8 @@ extension GameManager {
             }
         }
 
-        // Fill nil scores with par for every active player, every hole
+        // Fill nil scores with par for every active player, every hole.
+        // For 36-hole rounds, holes 18-35 replay the same course, so wrap the par index.
         for seat in seatsRange where game.playerActivated[seat] {
 
             // Make sure this player’s row has a slot for each hole
@@ -456,7 +458,7 @@ extension GameManager {
 
             for hole in 0..<holeCount {
                 if game.scores[seat][hole] == nil {
-                    game.scores[seat][hole] = game.courseParToPass[hole]
+                    game.scores[seat][hole] = pars[hole % STANDARD_HOLES]
                 }
             }
         }
