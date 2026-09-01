@@ -29,6 +29,13 @@ extension GameManager {
         }
 
         shared.update { g in
+            // Wipe scores and hole state from any previous round so stale data from a
+            // different course never appears in the newly joined session.
+            let holes = g.totalHoles
+            g.scores        = Array(repeating: Array(repeating: nil, count: holes), count: MAX_PLAYERS)
+            g.holeCommitted = Array(repeating: false, count: holes)
+            g.hole          = 0
+
             g.tournamentCode        = record.code
             g.groupCode             = groupCode
             g.tournamentMatchId     = matchId
