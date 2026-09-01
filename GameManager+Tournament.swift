@@ -143,13 +143,15 @@ extension GameManager {
         return total
     }
 
-    /// Holes from startHole through upThrough (or through the last hole if nil), wrapping for back-9 starts.
+    /// Holes that have been committed (Update Scores pressed), from startHole through upThrough,
+    /// wrapping for back-9 starts. Only committed holes count toward Stableford totals.
     private func committedHoles(game: GameData, upThrough: Int?) -> [Int] {
-        let end     = max(0, min(17, upThrough ?? (STANDARD_HOLES - 1)))
-        let start   = max(0, min(17, game.startHole ?? end))
-        return start <= end
+        let end   = max(0, min(17, upThrough ?? (STANDARD_HOLES - 1)))
+        let start = max(0, min(17, game.startHole ?? end))
+        let range = start <= end
             ? Array(start...end)
             : Array(start..<STANDARD_HOLES) + Array(0...end)
+        return range.filter { game.holeCommitted[safe: $0] == true }
     }
 
     /// Best-N Stableford points for one hole across all active players.
