@@ -1455,6 +1455,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 g.course.holeHandicaps = picked.hcs
                 g.course.name          = picked.name
                 g.course.id            = picked.id
+                g.course.teeSets       = picked.teeSets ?? []
+                let setCount = g.course.teeSets.count
+                for i in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[i] > setCount {
+                    g.playerTeeSetIndex[i] = 0
+                }
             }
             CourseLibrary.shared.selectedCourseID = picked.id
             GameManager.shared.saveCurrent()

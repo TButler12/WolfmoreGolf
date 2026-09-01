@@ -49,12 +49,19 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         GameManager.shared.update { g in self.ensureModelHasCapacity(&g) }
         CourseLibrary.shared.seedIfNeeded()
 
-        // Sync teeSets from library into the live game if the saved game predates tee-set support.
+        // Always sync teeSets from the library — prevents stale tee data from a previous course
+        // (e.g., Biltmore Red) bleeding into a game where a different course is active.
         GameManager.shared.update { g in
-            if g.course.teeSets.isEmpty,
-               let profile = CourseLibrary.shared.get(id: g.course.id),
-               let libTeeSets = profile.teeSets, !libTeeSets.isEmpty {
-                g.course.teeSets = libTeeSets
+            if let profile = CourseLibrary.shared.get(id: g.course.id) {
+                g.course.teeSets = profile.teeSets ?? []
+            } else {
+                // Custom course — no library entry; clear any stale tee data.
+                g.course.teeSets = []
+            }
+            // Reset any playerTeeSetIndex that is now out of bounds.
+            let setCount = g.course.teeSets.count
+            for i in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[i] > setCount {
+                g.playerTeeSetIndex[i] = 0
             }
         }
 
