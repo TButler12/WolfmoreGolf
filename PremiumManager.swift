@@ -73,7 +73,13 @@ final class PremiumManager {
         }
     }
 
-    var isPremium: Bool { _isPremium }
+    var isPremium: Bool {
+        #if DEBUG
+        return _isPremium || debugForcePremiumActive
+        #else
+        return _isPremium
+        #endif
+    }
 
     // Persists a month-keyed flag so was_premium_this_month can be read reliably
     // even after a downgrade, without inferring from usage counts.
@@ -113,6 +119,22 @@ final class PremiumManager {
     }
 
     #if DEBUG
+    var debugForcePremiumActive: Bool {
+        get {
+            // Default ON in DEBUG — explicit tap to OFF required to test real paywall flows.
+            guard UserDefaults.standard.object(forKey: "debugForcePremium") != nil else { return true }
+            return UserDefaults.standard.bool(forKey: "debugForcePremium")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "debugForcePremium")
+            NotificationCenter.default.post(name: .premiumStatusChanged, object: nil)
+        }
+    }
+
+    func debugToggleForcePremium() {
+        debugForcePremiumActive = !debugForcePremiumActive
+    }
+
     func debugResetAllUsage() {
         for feature in [Feature.aiSummary, .remoteNassau, .liveWolf] {
             UserDefaults.standard.set(0, forKey: feature.usageKey)

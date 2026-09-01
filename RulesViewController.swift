@@ -195,13 +195,12 @@ private extension RulesViewController {
         body("""
         Access game settings before or during a round to customize your game.
 
-        • Tap the gear/settings icon from the scoring screen to open Game Settings
+        • Tap "Edit stake & format" on the pre-round screen to open Game Settings
         • Adjust Wolf scoring style: 6-Point Scotch, Wolf 2pt, Wolf LowBall
         • Set Hammer style: Doubling (2× → 4× → 8×) or Additive (2× → 3× → 4×)
         • Toggle Umbrella (sweep rule) on or off
         • Change base stake amount
-        • Select or change course
-        • Go Live — start a Wolf Live session and get your 6-character spectator code
+        • During a round: tap ⓘ on the scoring screen to change course, adjust handicaps, or get scoring tips
 
         Nassau Settings:
         • Set Nassau stake independently from main game
@@ -266,9 +265,55 @@ private extension RulesViewController {
         • Wolf (1 Point)
         • Hammer
         • Wolf Live (real-time spectator mode)
+        • Match Play
+        • Best Ball
+        • Scramble (tournament format — see SCRAMBLE below)
 
         • Nassau and Skins run automatically as side games
         • You can change game modes mid-round if you want to mix it up
+
+        From the scoring page, two buttons give direct access to live features:
+        • Live Wolf — start or share a live spectator session (replaces the old Game Settings flow)
+        • Tournament — join or view the current tournament leaderboard
+        """)
+
+        header("MATCH PLAY")
+        body("""
+        • Fixed teams assigned before the round
+        • Each hole is won, lost, or halved
+        • The team that wins more holes wins the match
+        • A stake is paid per hole — no accumulation
+        • The match ends when one team leads by more holes than remain
+        • Handicap strokes apply on the holes with the lowest stroke index
+        • Supports 36-hole rounds (same course played twice back-to-back)
+        • Dual Match: two simultaneous 1v1 matches within the group
+        """)
+
+        header("BEST BALL")
+        body("""
+        • Fixed teams assigned before the round
+        • Each player plays their own ball every hole
+        • The best net score on each team counts for that hole
+        • Running totals accumulate across all 18 holes — no per-hole stake
+        • The team with the lowest cumulative best-net total wins
+        • Handicap strokes apply using each player's index vs the field's lowest
+        • Needs 2+ players per team (Dual Match not available)
+        """)
+
+        header("SCRAMBLE")
+        body("""
+        Team format where all players tee off, the best shot is chosen, and everyone plays from that spot.
+
+        • Start a Scramble tournament via Live & Tournaments → Create Tournament → Scramble
+        • All groups join with the same 6-character code
+        • Scores submit to a shared real-time leaderboard automatically when Update Scores is tapped
+
+        How scoring works:
+        • Each group plays as a team — enter the team's score for each hole
+        • Net scoring: team handicap is applied automatically based on the players in the group
+        • The leaderboard ranks teams by cumulative score across all holes
+
+        Scramble is a tournament-only format — it requires creating or joining a tournament via Live & Tournaments before starting a round.
         """)
 
         header("SIDE GAMES (AUTOMATIC)")
@@ -379,7 +424,7 @@ private extension RulesViewController {
         header("WOLF LIVE")
         body("""
         Wolf Live lets spectators watch a Wolf game in real time from their own phone.
-        • Scorer taps 'Go Live' in Game Settings to start a live session and get a 6-character code
+        • Scorer taps the Live Wolf button on the scoring page to start a session and get a 6-character code
         • Spectators tap Live & Tournaments → Watch Live and enter the code
         • Scores, wolf assignments, press indicators, money, and roll decisions update in real time
         • Tap the refresh button to manually sync the latest scores

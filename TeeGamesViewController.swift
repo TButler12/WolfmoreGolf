@@ -275,6 +275,18 @@ final class TeeGamesViewController: UIViewController {
             g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
             g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
             g.tournamentStablefordEnabled = record.stablefordEnabled
+            // Always reset gameType first so stale values from a prior session don't carry over
+            g.gameType = nil
+            switch record.gameType {
+            case "stableford": g.gameType = .tournament
+            case "wolf":
+                switch record.wolfVariant {
+                case "2pt":     g.gameType = .wolf
+                case "lowball": g.gameType = .wolfLowBall
+                default:        g.gameType = .sixPointScotch  // "6pt" or nil → 6-point
+                }
+            default: break  // skins/scramble resolved via tournamentGameType
+            }
         }
         let joinDay = record.currentDay ?? 1
         UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
@@ -454,6 +466,17 @@ final class TeeGamesViewController: UIViewController {
                     g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
                     g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
                     g.tournamentStablefordEnabled = record.stablefordEnabled
+                    g.gameType = nil
+                    switch record.gameType {
+                    case "stableford": g.gameType = .tournament
+                    case "wolf":
+                        switch record.wolfVariant {
+                        case "2pt":     g.gameType = .wolf
+                        case "lowball": g.gameType = .wolfLowBall
+                        default:        g.gameType = .sixPointScotch
+                        }
+                    default: break
+                    }
                 }
                 GameManager.shared.saveCurrent()
                 let rejoinIsOrg = (record.createdBy == DeviceID.id)

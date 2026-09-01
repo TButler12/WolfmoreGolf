@@ -238,12 +238,10 @@ enum SkinsEngine {
         gameData: GameData,
         state: SkinsState
     ) -> Int {
-        guard playerIndex < gameData.hcPlayers.count,
-              hole < gameData.courseHCToPass.count else { return 0 }
+        guard playerIndex < gameData.hcPlayers.count else { return 0 }
 
         let playerCap = gameData.hcPlayers[playerIndex]
-        let siRaw     = gameData.courseHCToPass[hole]
-        let si        = max(1, min(STANDARD_HOLES, siRaw == 0 ? STANDARD_HOLES : siRaw))
+        let si        = gameData.hcForHole(hole, player: playerIndex)
 
         // Always relative HC — delta from the lowest activated player in the group.
         // The Supabase tournament write path uses absoluteStrokesGiven() directly instead.

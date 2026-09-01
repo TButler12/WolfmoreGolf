@@ -48,7 +48,7 @@ final class ScrambleTeamEntryViewController: UIViewController {
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.keyboardLayoutGuide.topAnchor),
             content.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor),
             content.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor),
             content.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor),

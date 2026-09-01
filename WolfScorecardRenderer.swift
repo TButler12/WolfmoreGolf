@@ -42,13 +42,17 @@ final class WolfScorecardRenderer {
     // MARK: - Public entry point
 
     func render() -> UIImage {
-        let players = buildPlayers()
-        let pars    = (0..<STANDARD_HOLES).map { game.courseParToPass[safe: $0] ?? 4 }
+        let players   = buildPlayers()
+        let pars      = (0..<STANDARD_HOLES).map { game.courseParToPass[safe: $0] ?? 4 }
+        let bbTeams   = buildBestBallTeams(players: players, pars: pars)
+        let mpStatus  = buildMatchPlayStatus(players: players, pars: pars)
 
-        let docHdrH: CGFloat = 96
+        let teamsLine: String? = mpStatus.map { "Teams: \($0.teamALabel) vs. \($0.teamBLabel)" }
+        let docHdrH: CGFloat   = teamsLine != nil ? 114 : 96
         let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
-        let gridH   = hdrH + parH + CGFloat(totalPlayerRows) * playerH
-        let footerH: CGFloat = 40
+        let extraRows = bbTeams.count + (mpStatus != nil ? 1 : 0)
+        let gridH   = hdrH + parH + CGFloat(totalPlayerRows + extraRows) * playerH
+        let footerH: CGFloat = mpStatus != nil ? 60 : 40
         let totalH  = docHdrH + gridH + footerH
 
         let fmt = UIGraphicsImageRendererFormat()
@@ -61,9 +65,9 @@ final class WolfScorecardRenderer {
             UIRectFill(CGRect(x: 0, y: 0, width: pageW, height: totalH))
 
             var y: CGFloat = 0
-            y = drawDocHeader(y: y, players: players)
-            y = drawGrid(y: y, players: players, pars: pars)
-            drawFooter(y: y)
+            y = drawDocHeader(y: y, players: players, teamsLine: teamsLine)
+            y = drawGrid(y: y, players: players, pars: pars, bbTeams: bbTeams, mpStatus: mpStatus)
+            drawFooter(y: y, matchResult: mpStatus?.finalResult)
         }
     }
 
@@ -96,10 +100,176 @@ final class WolfScorecardRenderer {
         }
     }
 
+    // MARK: - Best Ball team data builder
+
+    private struct BestBallTeamData {
+        let label:        String    // e.g. "Team A: Alice & Bob"
+        let countingGross: [Int?]   // 18 elements — gross of the better-net player each hole
+    }
+
+    private func buildBestBallTeams(players: [PlayerData], pars: [Int]) -> [BestBallTeamData] {
+        guard game.resolvedGameType == .bestBall else { return [] }
+
+        let activeSeats = players.map { $0.seat }
+        guard !activeSeats.isEmpty else { return [] }
+
+        let baseHC = activeSeats.compactMap { game.hcPlayers[safe: $0] }.min() ?? 0
+
+        func strokesGiven(seat: Int, holeIdx: Int) -> Int {
+            let si = { () -> Int in
+                let raw = game.courseHCToPass[safe: holeIdx] ?? STANDARD_HOLES
+                return max(1, min(STANDARD_HOLES, raw == 0 ? STANDARD_HOLES : raw))
+            }()
+            let delta = max(0, (game.hcPlayers[safe: seat] ?? 0) - baseHC)
+            if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
+            return 1 + (si <= (delta - STANDARD_HOLES) ? 1 : 0)
+        }
+
+        func teamRow(seats: [Int], label: String) -> BestBallTeamData? {
+            guard !seats.isEmpty else { return nil }
+            let counting: [Int?] = (0..<STANDARD_HOLES).map { h in
+                var bestNet = Int.max
+                var bestGross: Int? = nil
+                for s in seats {
+                    guard let g = (s < game.scores.count ? game.scores[s][h] : nil) else { continue }
+                    let net = g - strokesGiven(seat: s, holeIdx: h)
+                    if net < bestNet { bestNet = net; bestGross = g }
+                }
+                return bestGross
+            }
+            return BestBallTeamData(label: label, countingGross: counting)
+        }
+
+        func playerName(_ seat: Int) -> String {
+            (game.playerNames[safe: seat] ?? "P\(seat + 1)")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        let teamA = (game.matchPlayTeamA ?? []).filter { activeSeats.contains($0) }
+        let teamB = (game.matchPlayTeamB ?? []).filter { activeSeats.contains($0) }
+
+        guard !teamA.isEmpty, !teamB.isEmpty else { return [] }
+
+        let labelA = "Team A: " + teamA.map { playerName($0) }.joined(separator: " & ")
+        let labelB = "Team B: " + teamB.map { playerName($0) }.joined(separator: " & ")
+
+        return [teamRow(seats: teamA, label: labelA), teamRow(seats: teamB, label: labelB)]
+            .compactMap { $0 }
+    }
+
+    // MARK: - Match Play status builder
+
+    private struct MatchPlayStatusData {
+        let teamALabel:    String
+        let teamBLabel:    String
+        let statusPerHole: [String?]  // 18 elements, nil = hole not yet scored
+        let outStatus:     String?    // running lead after hole 9
+        let inStatus:      String?    // running lead after hole 18
+        let shortResult:   String     // e.g. "3&2", "2 UP", "AS"
+        let finalResult:   String     // full footer text
+    }
+
+    private func buildMatchPlayStatus(players: [PlayerData], pars: [Int]) -> MatchPlayStatusData? {
+        guard game.resolvedGameType == .matchPlay else { return nil }
+
+        let activeSeats = players.map { $0.seat }
+        let teamA = (game.matchPlayTeamA ?? []).filter { activeSeats.contains($0) }
+        let teamB = (game.matchPlayTeamB ?? []).filter { activeSeats.contains($0) }
+        guard !teamA.isEmpty, !teamB.isEmpty else { return nil }
+
+        let baseHC = activeSeats.compactMap { game.hcPlayers[safe: $0] }.min() ?? 0
+
+        func strokes(seat: Int, h: Int) -> Int {
+            let raw = game.courseHCToPass[safe: h] ?? STANDARD_HOLES
+            let si  = max(1, min(STANDARD_HOLES, raw == 0 ? STANDARD_HOLES : raw))
+            let d   = max(0, (game.hcPlayers[safe: seat] ?? 0) - baseHC)
+            if d <= STANDARD_HOLES { return si <= d ? 1 : 0 }
+            return 1 + (si <= (d - STANDARD_HOLES) ? 1 : 0)
+        }
+
+        func playerName(_ seat: Int) -> String {
+            (game.playerNames[safe: seat] ?? "P\(seat+1)")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+
+        func leadStr(_ lead: Int) -> String {
+            if lead == 0 { return "AS" }
+            return lead > 0 ? "+\(lead)" : "\(lead)"
+        }
+
+        let teamALabel = teamA.map { playerName($0) }.joined(separator: " & ")
+        let teamBLabel = teamB.map { playerName($0) }.joined(separator: " & ")
+
+        var runningLead = 0
+        var statusPerHole = [String?](repeating: nil, count: STANDARD_HOLES)
+        var decisiveHole: Int? = nil
+        var decisiveLead = 0
+        var holesPlayed  = 0
+
+        for h in 0..<STANDARD_HOLES {
+            let aN = teamA.compactMap { s -> Int? in
+                guard let g = (s < game.scores.count ? game.scores[s][h] : nil) else { return nil }
+                return g - strokes(seat: s, h: h)
+            }.min()
+            let bN = teamB.compactMap { s -> Int? in
+                guard let g = (s < game.scores.count ? game.scores[s][h] : nil) else { return nil }
+                return g - strokes(seat: s, h: h)
+            }.min()
+            guard let aN, let bN else { break }
+
+            if aN < bN      { runningLead += 1 }
+            else if bN < aN { runningLead -= 1 }
+
+            holesPlayed = h + 1
+            let remaining = STANDARD_HOLES - holesPlayed
+            if decisiveHole == nil && abs(runningLead) > remaining {
+                decisiveHole = h; decisiveLead = runningLead
+            }
+            statusPerHole[h] = leadStr(runningLead)
+        }
+
+        let outStatus = holesPlayed >= 9  ? statusPerHole[8]  : nil
+        let inStatus  = holesPlayed >= 18 ? statusPerHole[17] : nil
+
+        let shortResult: String
+        let finalResult: String
+        if holesPlayed == 0 {
+            shortResult = "—"; finalResult = "—"
+        } else if let dh = decisiveHole {
+            let margin    = abs(decisiveLead)
+            let remaining = STANDARD_HOLES - (dh + 1)
+            let winner    = decisiveLead > 0 ? teamALabel : teamBLabel
+            shortResult = remaining == 0 ? "\(margin) UP" : "\(margin)&\(remaining)"
+            finalResult = remaining == 0 ? "\(winner) won \(margin) UP"
+                                         : "\(winner) won \(margin)&\(remaining)"
+        } else if holesPlayed == STANDARD_HOLES {
+            if runningLead == 0 {
+                shortResult = "AS"; finalResult = "All Square"
+            } else {
+                let winner = runningLead > 0 ? teamALabel : teamBLabel
+                shortResult = "\(abs(runningLead)) UP"
+                finalResult = "\(winner) won \(abs(runningLead)) UP"
+            }
+        } else {
+            shortResult = "\(leadStr(runningLead)) / \(holesPlayed) holes"
+            finalResult = shortResult
+        }
+
+        return MatchPlayStatusData(
+            teamALabel:    teamALabel,
+            teamBLabel:    teamBLabel,
+            statusPerHole: statusPerHole,
+            outStatus:     outStatus,
+            inStatus:      inStatus,
+            shortResult:   shortResult,
+            finalResult:   finalResult
+        )
+    }
+
     // MARK: - Document header
 
     @discardableResult
-    private func drawDocHeader(y: CGFloat, players: [PlayerData]) -> CGFloat {
+    private func drawDocHeader(y: CGFloat, players: [PlayerData], teamsLine: String? = nil) -> CGFloat {
         var cy = y + 20
 
         drawCentered("WOLFMORE SCORECARD", y: cy,
@@ -120,13 +290,22 @@ final class WolfScorecardRenderer {
                      color: UIColor(white: 0.50, alpha: 1))
         cy += 18
 
+        if let tl = teamsLine {
+            drawCentered(tl, y: cy,
+                         font: .systemFont(ofSize: 12, weight: .semibold),
+                         color: UIColor(red: 0.20, green: 0.44, blue: 0.70, alpha: 1))
+            cy += 18
+        }
+
         return cy + 8
     }
 
     // MARK: - Scorecard grid
 
     @discardableResult
-    private func drawGrid(y: CGFloat, players: [PlayerData], pars: [Int]) -> CGFloat {
+    private func drawGrid(y: CGFloat, players: [PlayerData], pars: [Int],
+                          bbTeams: [BestBallTeamData] = [],
+                          mpStatus: MatchPlayStatusData? = nil) -> CGFloat {
 
         // Column x-positions: ci 0=name, 1-9=h1-9, 10=OUT, 11-19=h10-18, 20=IN, 21=TOT
         var colXs = [CGFloat](repeating: 0, count: 22)
@@ -312,11 +491,149 @@ final class WolfScorecardRenderer {
             }
         }
 
+        // ── Best Ball team rows ───────────────────────────────
+        let bbTeamBg = UIColor(red: 0.88, green: 0.96, blue: 0.88, alpha: 1)  // soft green
+        let bbLabelColor = UIColor(red: 0.12, green: 0.42, blue: 0.18, alpha: 1)
+
+        if !bbTeams.isEmpty {
+            // Divider line above team section
+            gridLine.setFill()
+            UIRectFill(CGRect(x: hPad, y: ry, width: gridW, height: 1.0))
+        }
+
+        for team in bbTeams {
+            let (frontSum, hasFront) = rangeSum(team.countingGross, front)
+            let (backSum,  hasBack)  = rangeSum(team.countingGross, back)
+
+            for ci in 0..<22 {
+                let w = colW(ci)
+                let bg: UIColor = isSumm(ci) ? summBg : bbTeamBg
+                fill(x: colXs[ci], y: ry, w: w, h: playerH, color: bg)
+
+                switch ci {
+                case 0:
+                    let nameH: CGFloat = playerH * 0.60
+                    let subH:  CGFloat = playerH - nameH
+                    let shortLabel = team.label
+                    drawCell(shortLabel,
+                             x: colXs[ci], y: ry, w: w, h: nameH,
+                             font: .systemFont(ofSize: 11, weight: .bold),
+                             color: bbLabelColor, leftAlign: true)
+                    drawCell("Best Ball",
+                             x: colXs[ci], y: ry + nameH, w: w, h: subH,
+                             font: .systemFont(ofSize: 9, weight: .regular),
+                             color: bbLabelColor, leftAlign: true)
+
+                case 10:
+                    drawCell(hasFront ? "\(frontSum)" : "·",
+                             x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: boldSumm, color: hasFront ? bbLabelColor : dotGray)
+
+                case 20:
+                    drawCell(hasBack ? "\(backSum)" : "·",
+                             x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: boldSumm, color: hasBack ? bbLabelColor : dotGray)
+
+                case 21:
+                    let (totTxt, totClr): (String, UIColor)
+                    switch (hasFront, hasBack) {
+                    case (true, true):  (totTxt, totClr) = ("\(frontSum + backSum)", bbLabelColor)
+                    case (true, false): (totTxt, totClr) = ("\(frontSum)", bbLabelColor)
+                    case (false, true): (totTxt, totClr) = ("\(backSum)", bbLabelColor)
+                    default:            (totTxt, totClr) = ("·", dotGray)
+                    }
+                    drawCell(totTxt, x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: boldSumm, color: totClr)
+
+                default:
+                    if let localH = hIdx(ci), let score = team.countingGross[localH] {
+                        let diff = score - pars[localH]
+                        drawCell("\(score)",
+                                 x: colXs[ci], y: ry, w: w, h: playerH,
+                                 font: .systemFont(ofSize: 14, weight: .bold),
+                                 color: bbLabelColor)
+                        drawAnnotation(diff: diff,
+                                       x: colXs[ci], y: ry, w: w, h: playerH,
+                                       color: bbLabelColor)
+                    } else if hIdx(ci) != nil {
+                        drawCell("·", x: colXs[ci], y: ry, w: w, h: playerH,
+                                 font: .systemFont(ofSize: 11, weight: .regular),
+                                 color: dotGray)
+                    }
+                }
+            }
+            ry += playerH
+        }
+
+        // ── Match Play status row ─────────────────────────────
+        if let mp = mpStatus {
+            let mpBg       = UIColor(red: 0.88, green: 0.93, blue: 1.00, alpha: 1)  // soft blue
+            let mpUpClr    = UIColor(red: 0.10, green: 0.50, blue: 0.18, alpha: 1)  // green = Team A up
+            let mpDnClr    = UIColor(red: 0.72, green: 0.12, blue: 0.12, alpha: 1)  // red = Team B up
+            let mpAsClr    = UIColor(white: 0.48, alpha: 1)
+            let mpTitleClr = UIColor(red: 0.20, green: 0.44, blue: 0.70, alpha: 1)
+
+            func mpStatusColor(_ s: String) -> UIColor {
+                if s.hasPrefix("+") { return mpUpClr }
+                if s.hasPrefix("-") { return mpDnClr }
+                return mpAsClr
+            }
+
+            gridLine.setFill()
+            UIRectFill(CGRect(x: hPad, y: ry, width: gridW, height: 1.0))
+
+            for ci in 0..<22 {
+                let w = colW(ci)
+                fill(x: colXs[ci], y: ry, w: w, h: playerH,
+                     color: isSumm(ci) ? summBg : mpBg)
+
+                switch ci {
+                case 0:
+                    let nameH: CGFloat = playerH * 0.60
+                    let subH:  CGFloat = playerH - nameH
+                    drawCell("Match",
+                             x: colXs[ci], y: ry, w: w, h: nameH,
+                             font: .systemFont(ofSize: 12, weight: .bold),
+                             color: mpTitleClr, leftAlign: true)
+                    drawCell("+ = \(mp.teamALabel)",
+                             x: colXs[ci], y: ry + nameH, w: w, h: subH,
+                             font: .systemFont(ofSize: 9, weight: .regular),
+                             color: mpTitleClr, leftAlign: true)
+
+                case 10:
+                    let s = mp.outStatus ?? "·"
+                    drawCell(s, x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: boldSumm, color: mp.outStatus != nil ? mpStatusColor(s) : dotGray)
+
+                case 20:
+                    let s = mp.inStatus ?? "·"
+                    drawCell(s, x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: boldSumm, color: mp.inStatus != nil ? mpStatusColor(s) : dotGray)
+
+                case 21:
+                    // shortResult is decisive notation ("3&2", "2 UP", "AS") — always show in title blue
+                    drawCell(mp.shortResult, x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: .systemFont(ofSize: 11, weight: .bold),
+                             color: mp.shortResult == "AS" ? mpAsClr : mpTitleClr)
+
+                default:
+                    if let localH = hIdx(ci) {
+                        let s = mp.statusPerHole[localH] ?? "·"
+                        let clr = mp.statusPerHole[localH] != nil ? mpStatusColor(s) : dotGray
+                        drawCell(s, x: colXs[ci], y: ry, w: w, h: playerH,
+                                 font: .systemFont(ofSize: 11, weight: .semibold), color: clr)
+                    }
+                }
+            }
+            ry += playerH
+        }
+
         // ── Grid lines ────────────────────────────────────────
         gridLine.setFill()
         var lineY = y
         let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
-        for step in [hdrH, parH] + Array(repeating: playerH, count: totalPlayerRows) {
+        let extraRows = bbTeams.count + (mpStatus != nil ? 1 : 0)
+        for step in [hdrH, parH] + Array(repeating: playerH, count: totalPlayerRows + extraRows) {
             UIRectFill(CGRect(x: hPad, y: lineY, width: gridW, height: 0.5))
             lineY += step
         }
@@ -388,7 +705,7 @@ final class WolfScorecardRenderer {
 
     // MARK: - Footer
 
-    private func drawFooter(y: CGFloat) {
+    private func drawFooter(y: CGFloat, matchResult: String? = nil) {
         let fmt = DateFormatter()
         fmt.dateStyle = .medium
         fmt.timeStyle = .short
@@ -396,6 +713,12 @@ final class WolfScorecardRenderer {
                      y: y + 12,
                      font: .systemFont(ofSize: 12, weight: .regular),
                      color: UIColor(white: 0.58, alpha: 1))
+        if let result = matchResult {
+            drawCentered("Result: \(result)",
+                         y: y + 30,
+                         font: .systemFont(ofSize: 13, weight: .semibold),
+                         color: UIColor(red: 0.20, green: 0.44, blue: 0.70, alpha: 1))
+        }
     }
 
     // MARK: - Drawing primitives

@@ -41,8 +41,8 @@ extension GameManager {
         let holesToSum = committedHoles(game: game, upThrough: upThrough)
         var total = 0
         for hole in holesToSum {
-            let par   = game.courseParToPass[safe: hole] ?? 4
-            let si    = game.courseHCToPass[safe: hole] ?? (hole + 1)
+            let par   = game.parForHole(hole, player: playerIndex)
+            let si    = game.hcForHole(hole, player: playerIndex)
             let hc    = game.hcPlayers[safe: playerIndex] ?? 0
             let gross = (playerIndex < game.scores.count) ? game.scores[playerIndex][hole] : nil
             if let pts = stablefordPoints(grossScore: gross, par: par, playerHC: hc,
@@ -71,8 +71,8 @@ extension GameManager {
             !game.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         let pts: [Int] = activeSeats.compactMap { seat in
-            let par   = game.courseParToPass[safe: hole] ?? 4
-            let si    = game.courseHCToPass[safe: hole] ?? (hole + 1)
+            let par   = game.parForHole(hole, player: seat)
+            let si    = game.hcForHole(hole, player: seat)
             let hc    = game.hcPlayers[safe: seat] ?? 0
             let gross = (seat < game.scores.count) ? game.scores[seat][hole] : nil
             return stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,

@@ -850,6 +850,19 @@ final class ManagePlayersViewController: UIViewController,
                 self.refreshStartButton()
             }
         }
+        picker.onUseMyPlayers = { [weak self, weak picker] in
+            guard let self else { return }
+            self.useOwnPlayers = true
+            self.refreshRosterPickerButton()
+            self.tableView.reloadData()
+            self.refreshStartButton()
+            picker?.dismiss(animated: true)
+        }
+        picker.onAddManually = { [weak self, weak picker] in
+            picker?.dismiss(animated: true) { [weak self] in
+                self?.showNamePrompt(prefillName: nil)
+            }
+        }
         let nav = UINavigationController(rootViewController: picker)
         nav.modalPresentationStyle = .pageSheet
         if let sheet = nav.sheetPresentationController {
@@ -1103,7 +1116,9 @@ final class ManagePlayersViewController: UIViewController,
                 g.course = Course(id: profile.id,
                                   name: profile.name,
                                   pars: Array(profile.pars.prefix(STANDARD_HOLES)),
-                                  holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)))
+                                  holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)),
+                                  teeSets: profile.teeSets ?? [])
+                g.playerTeeSetIndex = Array(repeating: 0, count: MAX_PLAYERS)
             }
         }
 

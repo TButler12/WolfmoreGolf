@@ -930,9 +930,10 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         case .wolf:           gameLabel = "Wolf"
         case .wolfLowBall:    gameLabel = "Wolf LowBall"
         case .sixPointScotch: gameLabel = "6-Point Scotch"
+        case .matchPlay:      gameLabel = "Match Play"
+        case .bestBall:       gameLabel = "Best Ball"
         case .hammer:         gameLabel = "Hammer"
         case .tournament:     gameLabel = "Stableford"
-        default:              gameLabel = "Wolf"
         }
         row.addArrangedSubview(makeGameChip(gameLabel))
 
@@ -1486,6 +1487,21 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             ac.addAction(UIAlertAction(title: "Swap to Previous Round", style: .default) { [weak self] _ in self?.openRestorePastRound() })
         }
         #if DEBUG
+        let forcedOn = PremiumManager.shared.debugForcePremiumActive
+        let forceTitle = forcedOn ? "Force Premium: ON ✓ (Debug) — Tap to Disable" : "Force Premium: OFF (Debug) — Tap to Enable"
+        ac.addAction(UIAlertAction(title: forceTitle, style: .default) { [weak self] _ in
+            PremiumManager.shared.debugToggleForcePremium()
+            let nowOn = PremiumManager.shared.debugForcePremiumActive
+            let alert = UIAlertController(
+                title: nowOn ? "Premium Forced ON" : "Premium Override OFF",
+                message: nowOn
+                    ? "All paywalled features (AI Summary, Remote Nassau, Live Wolf) are unlocked for this Debug build. Reopen the menu to confirm or turn off."
+                    : "Real paywall behavior restored. Usage counters apply normally.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            self?.present(alert, animated: true)
+        })
         ac.addAction(UIAlertAction(title: "Reset Usage Counters (Debug)", style: .destructive) { _ in
             PremiumManager.shared.debugResetAllUsage()
         })

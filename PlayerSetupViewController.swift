@@ -37,6 +37,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private weak var headerGamePillsStack: UIStackView?
     private var editStakeBlinkTimer: Timer?
     private var editStakeBlinkIsGold = false
+    private var teeSetButtons: [UIButton] = []
+    private weak var teeHdrLabel: UILabel?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,6 +48,15 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
         GameManager.shared.update { g in self.ensureModelHasCapacity(&g) }
         CourseLibrary.shared.seedIfNeeded()
+
+        // Sync teeSets from library into the live game if the saved game predates tee-set support.
+        GameManager.shared.update { g in
+            if g.course.teeSets.isEmpty,
+               let profile = CourseLibrary.shared.get(id: g.course.id),
+               let libTeeSets = profile.teeSets, !libTeeSets.isEmpty {
+                g.course.teeSets = libTeeSets
+            }
+        }
 
         // Replace fixed-frame storyboard layout with Dynamic Type–aware layout
         buildDynamicUI()
@@ -197,6 +208,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let switchColW: CGFloat = 60
         let hcColW: CGFloat     = 50
         let strokeColW: CGFloat = 34
+        let teeColW: CGFloat    = 58
 
         // Header row
         let hdrRow = hRow()
@@ -208,10 +220,17 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let sH = hdrLabel("S"); sH.textAlignment = .right
         sH.widthAnchor.constraint(equalToConstant: strokeColW).isActive = true
         hdrRow.addArrangedSubview(sH)
+        let tHdr = hdrLabel("Tee")
+        tHdr.textAlignment = .right
+        tHdr.widthAnchor.constraint(equalToConstant: teeColW).isActive = true
+        tHdr.isHidden = true
+        teeHdrLabel = tHdr
+        hdrRow.addArrangedSubview(tHdr)
         main.addArrangedSubview(hdrRow)
         main.addArrangedSubview(hairline())
 
         // Player rows as white cards
+        var tsbs = [UIButton]()
         for i in 0..<capacity {
             let row = hRow()
 
@@ -235,7 +254,21 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             sls[i].translatesAutoresizingMaskIntoConstraints = false
             sls[i].widthAnchor.constraint(equalToConstant: strokeColW).isActive = true
 
-            [swWrap, nfs[i], hfs[i], sls[i]].forEach { row.addArrangedSubview($0) }
+            var tCfg = UIButton.Configuration.plain()
+            tCfg.baseForegroundColor = .systemBlue
+            tCfg.contentInsets = .zero
+            tCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+                var a = attrs; a.font = UIFont.systemFont(ofSize: 12, weight: .medium); return a
+            }
+            let tsBtn = UIButton(configuration: tCfg)
+            tsBtn.tag = i
+            tsBtn.isHidden = true
+            tsBtn.translatesAutoresizingMaskIntoConstraints = false
+            tsBtn.widthAnchor.constraint(equalToConstant: teeColW).isActive = true
+            tsBtn.addTarget(self, action: #selector(teeSetButtonTapped(_:)), for: .touchUpInside)
+            tsbs.append(tsBtn)
+
+            [swWrap, nfs[i], hfs[i], sls[i], tsBtn].forEach { row.addArrangedSubview($0) }
 
             let card = UIView()
             card.backgroundColor = .systemBackground
@@ -254,6 +287,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             ])
             main.addArrangedSubview(card)
         }
+        teeSetButtons = tsbs
 
         main.addArrangedSubview(hairline())
 
@@ -734,6 +768,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        refreshTeeSetUI()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -836,6 +871,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         resize(&g.playerNames, fill: "")
         resize(&g.hcPlayers, fill: 0)
         resize(&g.playerActivated, fill: false)
+        resize(&g.playerTeeSetIndex, fill: 0)
     }
 
     // MARK: - Course label
@@ -919,6 +955,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
             setRowEnabled(i, enabled: on)
         }
+        refreshTeeSetUI()
     }
 
     // MARK: - Row enable/disable styling
@@ -973,6 +1010,60 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
                 strokeLabels[i].text = ""
             }
         }
+    }
+
+    // MARK: - Tee Set UI
+
+    private func refreshTeeSetUI() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let hasTees = !g.course.teeSets.isEmpty
+        teeHdrLabel?.isHidden = !hasTees
+        for i in 0..<uiCount {
+            guard i < teeSetButtons.count else { continue }
+            let btn = teeSetButtons[i]
+            btn.isHidden = !hasTees
+            if hasTees {
+                var cfg = btn.configuration ?? UIButton.Configuration.plain()
+                let teeIdx = g.playerTeeSetIndex[safe: i] ?? 0
+                if teeIdx > 0, let ts = g.course.teeSets[safe: teeIdx - 1] {
+                    cfg.title = ts.name
+                    cfg.baseForegroundColor = .systemOrange
+                } else {
+                    cfg.title = "Default"
+                    cfg.baseForegroundColor = .secondaryLabel
+                }
+                btn.configuration = cfg
+            }
+        }
+    }
+
+    @objc private func teeSetButtonTapped(_ sender: UIButton) {
+        let seat = sender.tag
+        guard let g = GameManager.shared.currentGame, !g.course.teeSets.isEmpty else { return }
+
+        let ac = UIAlertController(title: "Tee Set for \(g.playerNames[safe: seat] ?? "Player \(seat+1)")", message: nil, preferredStyle: .actionSheet)
+
+        ac.addAction(UIAlertAction(title: "Default (Course)", style: .default) { [weak self] _ in
+            GameManager.shared.update { g in g.playerTeeSetIndex[seat] = 0 }
+            self?.refreshTeeSetUI()
+            self?.recalcStrokesFromModel()
+        })
+
+        for (idx, ts) in g.course.teeSets.enumerated() {
+            let teeIndex = idx + 1
+            ac.addAction(UIAlertAction(title: ts.name, style: .default) { [weak self] _ in
+                GameManager.shared.update { g in g.playerTeeSetIndex[seat] = teeIndex }
+                self?.refreshTeeSetUI()
+                self?.recalcStrokesFromModel()
+            })
+        }
+
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = sender
+            pop.sourceRect = sender.bounds
+        }
+        present(ac, animated: true)
     }
     // MARK: - Cap + buttons
     private func enforceActivationCap() {
@@ -1159,12 +1250,14 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             return
         }
 
-        if GameManager.shared.currentGame?.resolvedGameType == .tournament {
+        let currentTGT = GameManager.shared.currentGame?.tournamentGameType
+        if GameManager.shared.currentGame?.resolvedGameType == .tournament
+            && currentTGT != "scramble" {
             let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
             if activeCount < 4 || activeCount > 5 {
                 let ac = UIAlertController(
                     title: "Tournament Requires 4 or 5 Players",
-                    message: "Please activate 4 or 5 players to start a Stableford round.",
+                    message: "Please activate 4 or 5 players to start a tournament round.",
                     preferredStyle: .alert
                 )
                 ac.addAction(UIAlertAction(title: "OK", style: .default))
@@ -1269,6 +1362,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
                 g.hcPlayers[i] = Int(handicapFields[i].text ?? "") ?? 0
                 g.playerActivated[i] = activeSwitches[i].isOn
             }
+            // playerTeeSetIndex is mutated directly via teeSetButtonTapped; no UI read-back needed
         }
     }
     private func rebuildNassauAfterRandomize() {

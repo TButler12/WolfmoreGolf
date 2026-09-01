@@ -76,6 +76,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private weak var liveSummarySkinsLabel: UILabel?
     private weak var liveSummaryNassauLabel: UILabel?
     private weak var liveSummaryPlayerLabel: UILabel?
+    private weak var liveSummaryStrip: UIView?
     
     @IBOutlet weak var rerollPushed: UIButton!
     
@@ -430,10 +431,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        let showedOnboarding = showGameOnboardingIfNeeded()
-        if !showedOnboarding {
-            showLiveCodePromptIfNeeded()
-        }
+        showGameOnboardingIfNeeded()
         showMuteTipBannerIfNeeded()
         startNewDayPollingIfNeeded()
     }
@@ -520,12 +518,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let standingsBtn = UIButton(type: .system)
         standingsBtn.translatesAutoresizingMaskIntoConstraints = false
         standingsBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
-        standingsBtn.layer.cornerRadius = 14
+        standingsBtn.layer.cornerRadius = 16
         standingsBtn.clipsToBounds = true
         standingsBtn.tintColor = .white
         standingsBtn.setTitle("Stableford", for: .normal)
-        standingsBtn.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
-        standingsBtn.contentEdgeInsets = UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10)
+        standingsBtn.titleLabel?.font = UIFont.systemFont(ofSize: 14, weight: .semibold)
+        standingsBtn.contentEdgeInsets = UIEdgeInsets(top: 5, left: 14, bottom: 5, right: 14)
         standingsBtn.addTarget(self, action: #selector(standingsTapped), for: .touchUpInside)
         standingsBtn.isHidden = true
         header.addSubview(standingsBtn)
@@ -1279,23 +1277,29 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func allThreeGameRulesText() -> String {
         """
         • Teams of two vs two or three
-        
-        6-Point Scotch 
+
+        6-Point Scotch
         • 2 points low ball
         • 2 points low team total
         • 1 point prox
         • 1 point birdie
-        • Sweep all 6 points and points double. Umbie button can mute this double. 
-        
-        2-Point 
+        • Sweep all 6 points and points double. Umbie button can mute this double.
+
+        2-Point
         • 1 point team low ball
         • 1 point team low total
-        
-        1-Point 
+
+        1-Point
         • 1-Point team low ball
-        
+
+        Match Play
+        \(matchPlayRules())
+
+        Best Ball
+        \(bestBallRules())
         """
     }
+
     private func sixPointRules() -> String {
         """
         • Teams of two vs two or three
@@ -1322,6 +1326,31 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         """
     }
 
+    private func matchPlayRules() -> String {
+        """
+        • Fixed teams assigned before the round
+        • Each hole is won, lost, or halved
+        • The team that wins more holes wins the match
+        • A stake is paid per hole — no accumulation
+        • The match ends when one team leads by more holes than remain
+        • Handicap strokes apply on the holes with the lowest stroke index
+        • Supports 36-hole rounds (same course played twice back-to-back)
+        • Dual Match: two simultaneous 1v1 matches within the group
+        """
+    }
+
+    private func bestBallRules() -> String {
+        """
+        • Fixed teams assigned before the round
+        • Each player plays their own ball every hole
+        • The best net score on each team counts for that hole
+        • Running totals accumulate across all 18 holes — no per-hole stake
+        • The team with the lowest cumulative best-net total wins
+        • Handicap strokes apply using each player's index vs the field's lowest
+        • Needs 2+ players per team (Dual Match not available)
+        """
+    }
+
     private func allRules() -> String {
         """
         6-Point Scotch:
@@ -1332,6 +1361,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         1-Point:
         \(onePointRules())
+
+        Match Play:
+        \(matchPlayRules())
+
+        Best Ball:
+        \(bestBallRules())
         """
     }
 
@@ -1501,6 +1536,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func refreshTotalMoneyLabels() {
         guard let g = GameManager.shared.currentGame else { return }
+        if g.tournamentGameType == "scramble" {
+            showScrambleRunningScore(g: g)
+            return
+        }
         if g.resolvedGameType == .tournament {
             if showingStablefordPoints {
                 refreshTournamentTotalPoints(g: g)
@@ -1599,6 +1638,33 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         label.backgroundColor = moneyBgColor(for: rounded)
         label.layer.cornerRadius = 4
         label.clipsToBounds = true
+    }
+
+    private func showScrambleRunningScore(g: GameData) {
+        guard let label = totalMoneyLabels[safe: 0] ?? totalMoneyLabels.first else { return }
+        var toPar = 0
+        var anyScore = false
+        for h in 0..<g.totalHoles {
+            guard let gross = g.scores[safe: 0].flatMap({ $0[safe: h] }) ?? nil else { continue }
+            let par = g.courseParToPass[safe: h % STANDARD_HOLES] ?? 4
+            toPar += gross - par
+            anyScore = true
+        }
+        if anyScore {
+            label.text = toPar == 0 ? "E" : (toPar > 0 ? "+\(toPar)" : "\(toPar)")
+            label.textColor = toPar < 0
+                ? UIColor(red: 0.08, green: 0.58, blue: 0.15, alpha: 1)
+                : (toPar > 0 ? .systemRed : .label)
+        } else {
+            label.text = "E"
+            label.textColor = .label
+        }
+        label.backgroundColor = .clear
+        label.layer.cornerRadius = 4
+        label.clipsToBounds = true
+        for i in 1..<min(totalMoneyLabels.count, MAX_PLAYERS) {
+            setTotalMoneyLabel(totalMoneyLabels[i], 0)
+        }
     }
 
     @inline(__always)
@@ -1790,8 +1856,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let order = displayOrder
         let hole  = max(0, min(g.totalHoles - 1, g.hole))
 
-        let rawSI = g.course.holeHandicaps[safe: hole] ?? STANDARD_HOLES
-        let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
         let capacity = min(g.playerNames.count, g.hcPlayers.count, g.playerActivated.count)
         let activeSeats = (0..<capacity).filter {
             g.playerActivated[$0] &&
@@ -1825,13 +1889,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
             var redPops   = 0
             var greenPops = 0
+            var onAltTee  = false
             if isActive {
+                let si = g.hcForHole(hole, player: seat)
                 let playerHC = seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0
                 let delta    = max(0, playerHC - baseHC)
                 redPops      = GameManager.shared.absoluteStrokesGiven(playerHC: delta, strokeIndex: si)
                 if isTournament || g.tournamentStablefordEnabled == true {
                     greenPops = GameManager.shared.absoluteStrokesGiven(playerHC: playerHC, strokeIndex: si)
                 }
+                onAltTee = g.isUsingAltTee(player: seat)
             }
 
             label.lineBreakMode = .byTruncatingTail
@@ -1857,7 +1924,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             // Money tab: show delta strokes (red) for the Wolf/Scotch pops system.
             let hasStablefordComponent = g.resolvedGameType == .tournament || g.tournamentStablefordEnabled == true
             let popsToShow = (hasStablefordComponent && showingStablefordPoints) ? greenPops : redPops
-            let dotColor: UIColor = (hasStablefordComponent && showingStablefordPoints) ? .systemBlue : .systemRed
+            let dotColor: UIColor = (hasStablefordComponent && showingStablefordPoints)
+                ? .systemBlue
+                : (onAltTee ? .systemOrange : .systemRed)
             let redDotsStr = popsToShow > 0 ? " " + String(repeating: "•", count: popsToShow) : ""
 
             if !redDotsStr.isEmpty {
@@ -2145,6 +2214,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         for i in 1..<sortedTotals.count { sortedTotals[i].isHidden = isScramble }
         for i in 1..<wolfButtons.count  { wolfButtons[i].isHidden  = isScramble }
         for i in 1..<proxButtons.count  { proxButtons[i].isHidden  = isScramble }
+        playerRowCardViews.dropFirst().forEach { $0.isHidden = isScramble }
     }
 
     private func applyGameTypeUI() {
@@ -2159,6 +2229,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             bottomRow2?.isHidden = true
             nassauButton?.isHidden = true
             liveNassauButton?.isHidden = true
+            liveSummaryStrip?.isHidden = true
+            standingsHeaderButton?.setTitle("Scramble", for: .normal)
             standingsHeaderButton?.isHidden = false
             applyScrambleSlotVisibility(isScramble: true)
             updateStablefordToggleVisibility()
@@ -2166,18 +2238,27 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
         applyScrambleSlotVisibility(isScramble: false)
 
+        // Pure stableford: no per-hole betting controls
+        // Hybrid (tournamentStablefordEnabled) keeps scotch/bet controls for the $ tab.
+        // Check both resolvedGameType and tournamentGameType to handle sessions joined
+        // before setupJoinedGame began setting gameType.
+        let isPureStableford = (t == .tournament || g.tournamentGameType == "stableford")
+            && g.tournamentStablefordEnabled != true
+        liveSummaryStrip?.isHidden = isPureStableford
+        standingsHeaderButton?.setTitle("Stableford", for: .normal)
+
         wolfControlsStack.isHidden   = !t.isWolf
-        let showScotchControls = t.isScotch || (t == .tournament && !showingStablefordPoints)
+        let showScotchControls = t.isScotch || (t == .tournament && !showingStablefordPoints && !isPureStableford)
         scotchControlsStack.isHidden = !showScotchControls
 
-        // Hide per-hole wolf controls and press/hammer for Match Play (teams are fixed)
+        // Hide per-hole bet controls for Match Play (fixed teams) and pure Stableford
         let isMatchPlay = t.isMatchPlay
-        bottomRow1?.isHidden = isMatchPlay
-        bottomRow2?.isHidden = isMatchPlay
+        bottomRow1?.isHidden = isMatchPlay || isPureStableford
+        bottomRow2?.isHidden = isMatchPlay || isPureStableford
 
-        // In Match Play, hide Nassau betting only — hole/game columns stay to show +1/0/-1
-        nassauButton?.isHidden = isMatchPlay
-        if isMatchPlay { liveNassauButton?.isHidden = true }
+        // In Match Play / pure Stableford, hide Nassau betting
+        nassauButton?.isHidden = isMatchPlay || isPureStableford
+        if isMatchPlay || isPureStableford { liveNassauButton?.isHidden = true }
 
         // Umbrella is 6-point only
         if !t.isScotch, g.isUmbrella {
@@ -2190,15 +2271,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         case .wolf:           gameModeSegment.selectedSegmentIndex = 1
         case .wolfLowBall:    gameModeSegment.selectedSegmentIndex = 2
         case .matchPlay:      gameModeSegment.selectedSegmentIndex = -1  // no match in 3-item segment
+        case .bestBall:       gameModeSegment.selectedSegmentIndex = -1  // no match in 3-item segment
         case .hammer:         gameModeSegment.selectedSegmentIndex = 0
         case .tournament:     break
         }
 
         // Standings header button: show for pure Stableford rounds and hybrid Wolf+Stableford rounds.
-        let isStablefordTournament = (t == .tournament
-            && (GameManager.shared.currentGame?.tournamentGameType == "stableford"
-                || GameManager.shared.currentGame?.tournamentGameType == nil))
-            || GameManager.shared.currentGame?.tournamentStablefordEnabled == true
+        // Also check tournamentGameType directly to cover sessions joined before gameType was persisted.
+        let isStablefordTournament = g.tournamentGameType == "stableford"
+            || (t == .tournament && g.tournamentGameType == nil)
+            || g.tournamentStablefordEnabled == true
         standingsHeaderButton?.isHidden = !isStablefordTournament
 
         updateStablefordToggleVisibility()
@@ -2209,6 +2291,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let toggle = stablefordToggle else { return }
         let showToggle = g.resolvedGameType == .tournament
             || g.tournamentStablefordEnabled == true
+            || g.tournamentGameType == "stableford"
         if showToggle && toggle.isHidden {
             toggle.isHidden = false
             navRowTopHidden?.isActive  = false
@@ -2621,6 +2704,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             scoreFields[s].isEnabled = isActive
             scoreFields[s].alpha = isActive ? 1.0 : 0.4
             scoreFields[s].tag = seat
+            let isCommitted = g.tournamentGameType == "scramble"
+                && (g.holeCommitted[safe: h] == true)
+                && v != nil
+            scoreFields[s].backgroundColor = isCommitted
+                ? UIColor.systemGreen.withAlphaComponent(0.3)
+                : .secondarySystemBackground
         }
     }
 
@@ -2677,24 +2766,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         GameManager.shared.update { $0.hole = currentHole }
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
-        refreshWolfButtons()
-      
         refreshTotalMoneyLabels()
         hasPromptedForThisHole = false
-        
     }
-    
+
     @IBAction func nextHoleTapped(_ sender: UIButton) {
         let total = GameManager.shared.currentGame?.totalHoles ?? STANDARD_HOLES
         currentHole = (currentHole + 1) % total
-        GameManager.shared.update { $0.hole = currentHole }   // ← sync to model
+        GameManager.shared.update { $0.hole = currentHole }
         refreshForCurrentHole()
-        
-        refreshWolfButtons()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
         hasPromptedForThisHole = false
-        
     }
 
     // Put near the top of GameViewController
@@ -3606,7 +3689,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                             let totalMoney = seat < g.playerMoney.count
                                 ? totalRange.reduce(0.0) { $0 + (g.playerMoney[seat][safe: $1] ?? 0.0) }
                                 : 0.0
-                            let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                            let playerSI = g.hcForHole(backfillHole, player: seat)
+                            let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: playerSI)
                             let netScore = gross - strokes
 
                             do {
@@ -3638,7 +3722,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 if isPureStableford || (g.tournamentStablefordEnabled == true) {
                     for backfillHole in backfillRange {
                         let holeHc = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
-                        let par    = g.courseParToPass[safe: backfillHole] ?? 4
                         let range: [Int] = startH <= backfillHole
                             ? Array(startH...backfillHole)
                             : Array(startH..<g.totalHoles) + Array(0...backfillHole)
@@ -3650,15 +3733,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                             let name = g.playerNames[safe: seat] ?? ""
                             guard !name.isEmpty else { continue }
                             let playerHc = g.hcPlayers[safe: seat] ?? 0
-                            let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                            let playerSI = g.hcForHole(backfillHole, player: seat)
+                            let playerPar = g.parForHole(backfillHole, player: seat)
+                            let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: playerSI)
 
                             let holePts = GameManager.shared.stablefordPoints(
-                                grossScore: gross, par: par, playerHC: playerHc,
-                                strokeIndex: holeHc, baseline: g.stablefordBaseline) ?? 0
+                                grossScore: gross, par: playerPar, playerHC: playerHc,
+                                strokeIndex: playerSI, baseline: g.stablefordBaseline) ?? 0
                             let totalPts = range.reduce(0) { sum, h in
-                                guard h < g.scores[seat].count, let sc = g.scores[seat][h],
-                                      let p  = g.courseParToPass[safe: h],
-                                      let si = g.courseHCToPass[safe: h] else { return sum }
+                                guard h < g.scores[seat].count, let sc = g.scores[seat][h] else { return sum }
+                                let p  = g.parForHole(h, player: seat)
+                                let si = g.hcForHole(h, player: seat)
                                 return sum + (GameManager.shared.stablefordPoints(
                                     grossScore: sc, par: p, playerHC: playerHc,
                                     strokeIndex: si, baseline: g.stablefordBaseline) ?? 0)
@@ -3760,7 +3845,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
                     for h in 0..<g.totalHoles {
                         guard g.holeCommitted[safe: h] == true else { continue }
-                        let holeHc = g.course.holeHandicaps[safe: h] ?? (h + 1)
                         var scored: [(idx: Int, net: Int)] = []
                         var complete = true
                         for idx in activeIndexes {
@@ -3768,8 +3852,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                   h < g.scores[idx].count,
                                   let gross = g.scores[idx][h] else { complete = false; break }
                             let playerHc = g.hcPlayers[safe: idx] ?? 0
+                            let playerSI = g.hcForHole(h, player: idx)
                             let net = pass.useGross ? gross
-                                : gross - GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                                : gross - GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: playerSI)
                             scored.append((idx, net))
                         }
                         guard complete, let low = scored.map(\.net).min() else { continue }
@@ -3830,7 +3915,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                                ? (g.scores[seat][backfillHole] ?? 0) : 0
                             let holeHc   = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
                             let playerHc = g.hcPlayers[safe: seat] ?? 0
-                            let pops     = pass.useGross ? 0 : GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: holeHc)
+                            let playerSI = g.hcForHole(backfillHole, player: seat)
+                            let pops     = pass.useGross ? 0 : GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: playerSI)
                             let net      = gross - pops
                             let holeMoney  = holeMoneyBySeat[seat] ?? 0
                             let totalMoney = cumulativeMoney[seat] ?? 0
@@ -3878,7 +3964,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     // For regular Wolf: derive from wolfButtonStatus mask.
                     let wolfSlot: Int?
                     let partnerSlot: Int?
-                    if g.resolvedGameType == .matchPlay {
+                    if g.resolvedGameType.isMatchPlay {
                         wolfSlot    = g.matchPlayTeamA?.first
                         partnerSlot = (g.matchPlayTeamA?.count ?? 0) > 1 ? g.matchPlayTeamA?[1] : nil
                     } else {
@@ -3893,9 +3979,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     let pressLevel    = g.pressLevel[safe: backfillHole] ?? 0
                     let teamWon       = backfillHole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[backfillHole]
                     let holePayouts   = g.playerMoney.map { $0[safe: backfillHole] ?? 0.0 }
-                    // "matchplay" in the decision column signals match play mode to spectators.
-                    // Regular Wolf uses the field for alone/reroll/roll.
-                    let decision: String? = g.resolvedGameType == .matchPlay ? "matchplay" :
+                    // "matchplay"/"bestball" signal the format to spectators; Wolf uses alone/reroll/roll.
+                    let decision: String? = g.resolvedGameType == .bestBall ? "bestball" :
+                        g.resolvedGameType == .matchPlay ? "matchplay" :
                         wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
                     let holeHammer    = Int(g.hammerMultiplier(for: backfillHole))
 
@@ -3980,6 +4066,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
+
+        // Tint score field green for scramble — persists until user edits again
+        if GameManager.shared.currentGame?.tournamentGameType == "scramble",
+           let field = scoreFields.sorted(by: { $0.tag < $1.tag }).first {
+            UIView.animate(withDuration: 0.2) {
+                field.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.3)
+            }
+        }
 
         // 7) debug
         if let g = GameManager.shared.currentGame {
@@ -4307,11 +4401,69 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // Wolf: scorekeeper's seat running net through committed holes
         let mySeat = myPlayerIndex(in: g) ?? 0
 
-        // Match Play: show running match status instead of dollar amounts
-        if g.resolvedGameType == .matchPlay {
+        // Match Play / Best Ball: show running match status instead of dollar amounts
+        if g.resolvedGameType.isMatchPlay {
             let upThrough = min(g.hole, g.totalHoles - 1)
             var played = 0
             for h in 0...upThrough { if g.holeCommitted[safe: h] == true { played += 1 } }
+
+            // Best Ball: accumulate team best-net-vs-par totals across committed holes
+            if g.resolvedGameType == .bestBall {
+                let activeSeats = (0..<MAX_PLAYERS).filter {
+                    $0 < g.playerActivated.count && g.playerActivated[$0] &&
+                    !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }
+                let baseHC = activeSeats.map { g.hcPlayers[$0] }.min() ?? 0
+
+                func bbPops(hcDelta: Int, si: Int) -> Int {
+                    let d = max(0, hcDelta)
+                    if d <= STANDARD_HOLES { return si <= d ? 1 : 0 }
+                    return 1 + (si <= d - STANDARD_HOLES ? 1 : 0)
+                }
+                func teamBestBallToPar(_ team: [Int]) -> Int {
+                    var total = 0
+                    for h in 0...upThrough {
+                        guard g.holeCommitted[safe: h] == true else { continue }
+                        let courseH = h % STANDARD_HOLES
+                        let par = g.courseParToPass[safe: courseH] ?? 4
+                        let si  = max(1, g.courseHCToPass[safe: courseH] ?? STANDARD_HOLES)
+                        let bestNet = team.map { seat -> Int in
+                            let gross = (seat < g.scores.count && h < g.scores[seat].count)
+                                ? (g.scores[seat][h] ?? 99) : 99
+                            guard gross < 99 else { return 99 }
+                            return gross - bbPops(hcDelta: g.hcPlayers[seat] - baseHC, si: si)
+                        }.min() ?? 99
+                        if bestNet < 99 { total += bestNet - par }
+                    }
+                    return total
+                }
+                func toParStr(_ v: Int) -> String { v == 0 ? "E" : v > 0 ? "+\(v)" : "\(v)" }
+
+                let thruText = played > 0 ? "Thru \(played)" : "—"
+                let a1 = (g.matchPlayTeamA ?? []).filter { activeSeats.contains($0) }
+                let b1 = (g.matchPlayTeamB ?? []).filter { activeSeats.contains($0) }
+
+                if g.isDualMatch {
+                    let a2 = (g.matchPlayTeamA2 ?? []).filter { activeSeats.contains($0) }
+                    let b2 = (g.matchPlayTeamB2 ?? []).filter { activeSeats.contains($0) }
+                    liveSummaryPlayerLabel?.text = "Best Ball"
+                    liveSummaryWolfLabel?.text   = "M1: \(toParStr(teamBestBallToPar(a1))) / \(toParStr(teamBestBallToPar(b1)))"
+                    liveSummarySkinsLabel?.text  = "M2: \(toParStr(teamBestBallToPar(a2))) / \(toParStr(teamBestBallToPar(b2)))"
+                    liveSummaryNassauLabel?.text = thruText
+                } else {
+                    let aTP = teamBestBallToPar(a1)
+                    let bTP = teamBestBallToPar(b1)
+                    let aName = a1.compactMap { g.playerNames[safe: $0]?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.first ?? "A"
+                    let bName = b1.compactMap { g.playerNames[safe: $0]?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.first ?? "B"
+                    let diff = aTP - bTP
+                    let leadText = diff < 0 ? "\(aName) leads \(abs(diff))" : diff > 0 ? "\(bName) leads \(diff)" : "Even"
+                    liveSummaryPlayerLabel?.text = "Best Ball"
+                    liveSummaryWolfLabel?.text   = "\(aName): \(toParStr(aTP))"
+                    liveSummarySkinsLabel?.text  = "\(bName): \(toParStr(bTP))"
+                    liveSummaryNassauLabel?.text = "\(leadText) · \(thruText)"
+                }
+                return
+            }
 
             func matchStatus(teamA: [Int], teamB: [Int]) -> String {
                 let refSeat = teamA.first ?? 0
@@ -4514,6 +4666,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshProxButtons()
         refreshScoreFieldsForCurrentHole()
         refreshMoneyFieldsForCurrentHole()
+        if GameManager.shared.currentGame?.tournamentGameType == "scramble" {
+            playerRowCardViews.dropFirst().forEach { $0.isHidden = true }
+            wolfButtons.sorted { $0.tag < $1.tag }.dropFirst().forEach { $0.isHidden = true }
+            proxButtons.sorted { $0.tag < $1.tag }.dropFirst().forEach { $0.isHidden = true }
+        }
     }
     
     private func setMoneyField(_ field: UITextField, to value: Int) {
@@ -4526,6 +4683,25 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func refreshMoneyFieldsForCurrentHole() {
         guard let g = GameManager.shared.currentGame else { return }
         let h = g.hole
+        if g.tournamentGameType == "scramble" {
+            let field = playerMoneyFields.sorted { $0.tag < $1.tag }.first
+            if let gross = g.scores[safe: 0].flatMap({ $0[safe: h] }) ?? nil,
+               let f = field {
+                let par = g.courseParToPass[safe: h % STANDARD_HOLES] ?? 4
+                let diff = gross - par
+                f.text = diff == 0 ? "E" : (diff > 0 ? "+\(diff)" : "\(diff)")
+                f.textColor = diff < 0
+                    ? UIColor(red: 0.08, green: 0.58, blue: 0.15, alpha: 1)
+                    : (diff > 0 ? .systemRed : .label)
+                f.backgroundColor = .clear
+            } else {
+                field?.text = "-"
+                field?.textColor = .secondaryLabel
+                field?.backgroundColor = .clear
+            }
+            playerMoneyFields.dropFirst().forEach { $0.text = ""; $0.backgroundColor = .clear }
+            return
+        }
         if g.resolvedGameType == .tournament {
             if showingStablefordPoints {
                 refreshTournamentHolePoints(g: g, hole: h)
@@ -4649,6 +4825,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
 
     @objc private func scoreChanged(_ sender: UITextField) {
+        sender.backgroundColor = .secondarySystemBackground
         let seat = sender.tag
         let val = Int(sender.text ?? "")          // nil if blank or non-numeric
 
@@ -4785,7 +4962,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard GameViewController.shownLiveCodePromptForSession != gameId else { print("DEBUG livePrompt: guard FAILED — already shown for gameId=\(gameId)"); return }
         print("DEBUG livePrompt: showing popup — gameId=\(gameId) code=\(g.liveSessionCode ?? "nil")")
         GameViewController.shownLiveCodePromptForSession = gameId
+        showLiveCodePrompt()
+    }
 
+    @objc private func liveWolfTapped() {
+        showLiveCodePrompt()
+    }
+
+    private func showLiveCodePrompt() {
+        guard let g = GameManager.shared.currentGame else { return }
         if let code = g.liveSessionCode, !code.isEmpty {
             let ac = UIAlertController(
                 title: "Send Live Wolf Code?",
@@ -4816,6 +5001,220 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
             present(ac, animated: true)
         }
+    }
+
+    @objc private func tournamentAttachTapped() {
+        let ac = UIAlertController(
+            title: "Join Tournament",
+            message: "Enter the tournament code to link this round.",
+            preferredStyle: .alert
+        )
+        ac.addTextField { tf in
+            tf.placeholder = "Tournament code"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType = .no
+            tf.returnKeyType = .done
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
+            guard let self,
+                  let raw = ac.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !raw.isEmpty else { return }
+            self.attachToTournament(code: raw.uppercased())
+        })
+        present(ac, animated: true)
+    }
+
+    private func attachToTournament(code: String) {
+        if let existing = GameManager.shared.currentGame?.tournamentCode,
+           !existing.isEmpty, existing != code {
+            let warn = UIAlertController(
+                title: "Replace Tournament?",
+                message: "This round is already linked to \(existing). Replace it with \(code)?",
+                preferredStyle: .alert
+            )
+            warn.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            warn.addAction(UIAlertAction(title: "Replace", style: .destructive) { [weak self] _ in
+                self?.performTournamentAttach(code: code)
+            })
+            present(warn, animated: true)
+            return
+        }
+        performTournamentAttach(code: code)
+    }
+
+    private func performTournamentAttach(code: String) {
+        Task {
+            do {
+                let record = try await SupabaseService.shared.fetchTournament(code: code)
+                await MainActor.run { self.confirmAndAttach(record: record) }
+            } catch {
+                await MainActor.run {
+                    let ac = UIAlertController(
+                        title: "Tournament Not Found",
+                        message: "No tournament with code \"\(code)\" was found. Check the code and try again.",
+                        preferredStyle: .alert
+                    )
+                    ac.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(ac, animated: true)
+                }
+            }
+        }
+    }
+
+    private func confirmAndAttach(record: TournamentRecord) {
+        let typeName: String
+        switch record.gameType {
+        case "wolf":       typeName = "Wolf"
+        case "stableford": typeName = "Stableford"
+        case "skins":      typeName = "Skins"
+        case "scramble":   typeName = "Scramble"
+        default:           typeName = record.gameType.capitalized
+        }
+        let ac = UIAlertController(
+            title: "Join \"\(record.name)\"?",
+            message: "\(typeName) tournament. Your current players and scores will be kept.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
+            self?.applyTournamentAttach(record: record)
+        })
+        present(ac, animated: true)
+    }
+
+    private func applyTournamentAttach(record: TournamentRecord) {
+        let groupCode         = UUID().uuidString
+        let tournamentMatchId = UUID().uuidString
+        GameManager.shared.update { g in
+            g.tournamentCode         = record.code
+            g.groupCode              = groupCode
+            g.tournamentMatchId      = tournamentMatchId
+            g.tournamentName         = record.name
+            g.tournamentGameType     = record.gameType
+            g.tournamentScoringType  = record.scoring
+            g.tournamentDay          = record.currentDay ?? 1
+            g.tournamentIsCreator    = (record.createdBy == DeviceID.id)
+            g.tournamentIsOrganizer  = g.tournamentIsCreator
+                || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
+            g.tournamentPotAmount    = record.potAmount
+            g.tournamentCarryTies    = record.carryTies
+            if record.gameType == "skins", let stake = record.stake {
+                var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
+                skins.settings.skinValue = stake
+                g.skinsState = skins
+            } else if record.gameType == "wolf", let wolfStake = record.wolfStake {
+                g.wolfStake = wolfStake
+                g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
+            }
+            g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+            g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
+            g.tournamentStablefordEnabled = record.stablefordEnabled
+            g.gameType = nil
+            switch record.gameType {
+            case "stableford": g.gameType = .tournament
+            case "wolf":
+                switch record.wolfVariant {
+                case "2pt":     g.gameType = .wolf
+                case "lowball": g.gameType = .wolfLowBall
+                default:        g.gameType = .sixPointScotch  // "6pt" or nil → 6-point
+                }
+            default: break
+            }
+        }
+        let joinDay = record.currentDay ?? 1
+        UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
+        GameManager.shared.saveCurrent()
+        let isOrg = (record.createdBy == DeviceID.id)
+            || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
+        TournamentHistoryStore.shared.record(
+            code: record.code, name: record.name,
+            gameType: record.gameType, day: joinDay, isOrganizer: isOrg)
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+        applyGameTypeUI()
+        paintEverythingForCurrentHole()
+
+        if record.gameType == "scramble" {
+            // Snapshot active player names now — they drive the roster's player list on the
+            // leaderboard. The leaderboard reads these from the roster's group_code field
+            // (pipe-separated), populated by findOrCreateScrambleTeam. Without this step
+            // only the team name (seat 0) would appear as a group of 1 in the leaderboard.
+            let activePlayers = activePlayerNamesForTournament()
+            let ac = UIAlertController(
+                title: "Team Name",
+                message: "Enter your team name for this Scramble tournament.",
+                preferredStyle: .alert
+            )
+            ac.addTextField { tf in
+                tf.placeholder = "e.g. Team Alpha"
+                tf.autocapitalizationType = .words
+                tf.autocorrectionType = .no
+                tf.returnKeyType = .done
+            }
+            ac.addAction(UIAlertAction(title: "Skip", style: .cancel) { [weak self] _ in
+                self?.showTournamentJoinedToast(name: record.name)
+            })
+            ac.addAction(UIAlertAction(title: "Register", style: .default) { [weak self] _ in
+                guard let self else { return }
+                let teamName = (ac.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !teamName.isEmpty else { self.showTournamentJoinedToast(name: record.name); return }
+                self.registerScrambleTeamAndFinish(
+                    tournamentCode: record.code, teamName: teamName,
+                    playerNames: activePlayers, tournamentName: record.name)
+            })
+            present(ac, animated: true)
+        } else {
+            showTournamentJoinedToast(name: record.name)
+        }
+    }
+
+    // Returns the names of all currently active players in seat order — the same
+    // set that drives the visible (non-greyed) scoring rows.
+    private func activePlayerNamesForTournament() -> [String] {
+        guard let g = GameManager.shared.currentGame else { return [] }
+        return (0..<min(MAX_PLAYERS, g.playerActivated.count)).compactMap { seat -> String? in
+            guard g.playerActivated[seat] else { return nil }
+            let n = g.playerNames[safe: seat] ?? ""
+            return n.isEmpty ? nil : n
+        }
+    }
+
+    private func registerScrambleTeamAndFinish(tournamentCode: String, teamName: String,
+                                                playerNames: [String], tournamentName: String) {
+        Task {
+            do {
+                _ = try await SupabaseService.shared.findOrCreateScrambleTeam(
+                    tournamentCode: tournamentCode, teamName: teamName, playerNames: playerNames)
+                await MainActor.run {
+                    GameManager.shared.update { g in
+                        g.scrambleTeamName = teamName
+                        g.playerNames[0]   = teamName
+                    }
+                    GameManager.shared.saveCurrent()
+                    self.showTournamentJoinedToast(name: tournamentName)
+                }
+            } catch {
+                await MainActor.run {
+                    let ac = UIAlertController(
+                        title: "Registration Failed",
+                        message: "Couldn't register your team. You can continue — the team name will be set on your first score submission.",
+                        preferredStyle: .alert
+                    )
+                    ac.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(ac, animated: true)
+                }
+            }
+        }
+    }
+
+    private func showTournamentJoinedToast(name: String) {
+        let toast = UIAlertController(
+            title: "Joined!",
+            message: "This round is now linked to \"\(name)\".",
+            preferredStyle: .alert
+        )
+        toast.addAction(UIAlertAction(title: "OK", style: .default))
+        present(toast, animated: true)
     }
 
     @objc private func moneyChanged(_ sender: UITextField) {
@@ -4858,8 +5257,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func layoutBottomControls() {
         guard let sup = pressedPushed2.superview, pressedPushed2.frame != .zero else { return }
 
-        let leading: CGFloat = 32
-        let totalW:  CGFloat = 346
+        let hInset:  CGFloat = 8
+        let leading: CGFloat = sup.safeAreaInsets.left + hInset
+        let totalW:  CGFloat = sup.bounds.width - leading - sup.safeAreaInsets.right - hInset
         let row1Y    = pressedPushed2.frame.minY
 
         // Separator line between score area and button controls
@@ -4923,18 +5323,19 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let strip = makeLiveSummaryStrip()
             strip.heightAnchor.constraint(equalToConstant: 40).isActive = true
             vStack.addArrangedSubview(strip)
+            liveSummaryStrip = strip
 
             // ── Row 4: Update Scores (full width) ────────────────────────────
             var usCfg = UIButton.Configuration.filled()
             usCfg.title = "Update Scores"
             usCfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
             usCfg.baseForegroundColor = .white
-            usCfg.cornerStyle = .large
+            usCfg.cornerStyle = .medium
             usCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var a = attrs; a.font = UIFont.systemFont(ofSize: 17, weight: .semibold); return a
             }
             UpdateScores.configuration = usCfg
-            UpdateScores.heightAnchor.constraint(equalToConstant: 44).isActive = true
+            UpdateScores.heightAnchor.constraint(equalToConstant: 40).isActive = true
             vStack.addArrangedSubview(UpdateScores)
 
             // ── Row 5: Game Results (gold) | stepper | $2.00 ─────────────────
@@ -4977,6 +5378,34 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             row6.heightAnchor.constraint(equalToConstant: 32).isActive = true
             vStack.addArrangedSubview(row6)
 
+            // ── Row 7: Live Wolf | Tournament ────────────────────────────────
+            var lwCfg = UIButton.Configuration.plain()
+            lwCfg.baseForegroundColor = .label
+            lwCfg.background.backgroundColor = UIColor.systemGray4
+            lwCfg.background.cornerRadius = 8
+            lwCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+                var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
+            }
+            lwCfg.title = "Live Wolf"
+            let liveWolfBtn = UIButton(configuration: lwCfg)
+            liveWolfBtn.addTarget(self, action: #selector(liveWolfTapped), for: .touchUpInside)
+
+            var tnCfg = UIButton.Configuration.plain()
+            tnCfg.baseForegroundColor = .label
+            tnCfg.background.backgroundColor = UIColor.systemGray4
+            tnCfg.background.cornerRadius = 8
+            tnCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+                var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
+            }
+            tnCfg.title = "Tournament"
+            let tournamentBtn = UIButton(configuration: tnCfg)
+            tournamentBtn.addTarget(self, action: #selector(tournamentAttachTapped), for: .touchUpInside)
+
+            let row7 = UIStackView(arrangedSubviews: [liveWolfBtn, tournamentBtn])
+            row7.axis = .horizontal; row7.spacing = 6; row7.distribution = .fillEqually
+            row7.heightAnchor.constraint(equalToConstant: 32).isActive = true
+            vStack.addArrangedSubview(row7)
+
             // Strip labels are nil during viewDidLoad refresh calls; populate now that they exist
             refreshLiveSummaryStrip()
 
@@ -4987,10 +5416,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
 
         // Update frame every layout pass (handles rotation / safe-area changes)
-        // Normal:     44 + 8 + 44 + 8 + 40 + 8 + 44 + 8 + 40 + 8 + 32 = 284
+        // Normal:     44 + 8 + 44 + 8 + 40 + 8 + 44 + 8 + 40 + 8 + 32 + 8 + 32 = 324
         // Match Play: rows 1+2 hidden → subtract 44 + 8 + 44 + 8 = 104
-        let isMatchPlay = GameManager.shared.currentGame?.resolvedGameType == .matchPlay
-        let stackHeight: CGFloat = isMatchPlay ? 180 : 284
+        let isMatchPlay = GameManager.shared.currentGame?.resolvedGameType.isMatchPlay == true
+        let stackHeight: CGFloat = isMatchPlay ? 220 : 324
         bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: stackHeight)
         sup.bringSubviewToFront(bottomStackView!)
     }

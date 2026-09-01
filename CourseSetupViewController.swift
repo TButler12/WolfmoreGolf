@@ -36,6 +36,12 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
             target: self,
             action: #selector(saveCourseTapped)
         )
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            title: "Tee Sets",
+            style: .plain,
+            target: self,
+            action: #selector(teeSetsTapped)
+        )
 
         CourseLibrary.shared.seedIfNeeded()
         loadInitialCourse()
@@ -84,8 +90,10 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         activeCourseID = c.id
         applyToUIAndModel(pars: c.pars, hcs: c.hcs)
         GameManager.shared.update { g in
-            g.course.name = c.name
-            g.course.id   = c.id
+            g.course.name    = c.name
+            g.course.id      = c.id
+            g.course.teeSets = c.teeSets ?? []
+            g.playerTeeSetIndex = Array(repeating: 0, count: MAX_PLAYERS)
         }
         CourseLibrary.shared.selectedCourseID = c.id
     }
@@ -173,7 +181,8 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
                 country: country,
                 state: state,
                 architect: nil,
-                type: type
+                type: type,
+                teeSets: GameManager.shared.currentGame?.course.teeSets ?? []
             )
 
             CourseLibrary.shared.upsert(newCourse)
@@ -344,6 +353,92 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         let hcs  = hcSorted.map  { max(1, min(STANDARD_HOLES, Int($0.text ?? "") ?? 1)) }
 
         return (pars, hcs)
+    }
+
+    // MARK: - Tee Sets
+
+    @objc private func teeSetsTapped() {
+        let teeSets = GameManager.shared.currentGame?.course.teeSets ?? []
+        let ac = UIAlertController(title: "Tee Sets", message: teeSets.isEmpty ? "No alternate tee sets saved for this course." : nil, preferredStyle: .actionSheet)
+        for ts in teeSets {
+            let hcSummary = ts.hcs.prefix(6).map { String($0) }.joined(separator: ",") + (ts.hcs.count > 6 ? "…" : "")
+            ac.addAction(UIAlertAction(title: "\(ts.name)  (SI: \(hcSummary))", style: .default) { [weak self] _ in
+                self?.manageTeeSet(ts)
+            })
+        }
+        ac.addAction(UIAlertAction(title: "+ Add Tee Set", style: .default) { [weak self] _ in
+            self?.addTeeSetFlow()
+        })
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = ac.popoverPresentationController {
+            pop.barButtonItem = navigationItem.leftBarButtonItem
+        }
+        present(ac, animated: true)
+    }
+
+    private func manageTeeSet(_ ts: TeeSet) {
+        let ac = UIAlertController(title: ts.name, message: nil, preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            GameManager.shared.update { g in
+                g.course.teeSets.removeAll { $0.id == ts.id }
+                // Clear any player assignments to the deleted tee set
+                for i in g.playerTeeSetIndex.indices {
+                    if g.playerTeeSetIndex[i] != 0 {
+                        let idx = g.playerTeeSetIndex[i] - 1
+                        if idx >= g.course.teeSets.count { g.playerTeeSetIndex[i] = 0 }
+                    }
+                }
+            }
+            if let pop = ac.popoverPresentationController {
+                pop.barButtonItem = self?.navigationItem.leftBarButtonItem
+            }
+        })
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = ac.popoverPresentationController {
+            pop.barButtonItem = navigationItem.leftBarButtonItem
+        }
+        present(ac, animated: true)
+    }
+
+    private func addTeeSetFlow() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let alert = UIAlertController(
+            title: "Add Tee Set",
+            message: "Leave HC/Par blank to copy from main course.",
+            preferredStyle: .alert
+        )
+        alert.addTextField { tf in
+            tf.placeholder = "Name (e.g., Red Tees)"
+            tf.autocapitalizationType = .words
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Stroke Indices — 18 values, comma-separated"
+            tf.keyboardType = .numbersAndPunctuation
+        }
+        alert.addTextField { tf in
+            tf.placeholder = "Pars — 18 values, comma-separated (optional)"
+            tf.keyboardType = .numbersAndPunctuation
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Add", style: .default) { [weak self] _ in
+            guard self != nil else { return }
+            let name = alert.textFields?[0].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !name.isEmpty else { return }
+
+            func parseList(_ text: String?, fallback: [Int]) -> [Int] {
+                guard let t = text, !t.isEmpty else { return fallback }
+                let vals = t.components(separatedBy: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+                guard !vals.isEmpty else { return fallback }
+                let padded = vals + Array(fallback.dropFirst(vals.count))
+                return Array(padded.prefix(STANDARD_HOLES))
+            }
+
+            let hcs  = parseList(alert.textFields?[1].text, fallback: g.courseHCToPass)
+            let pars = parseList(alert.textFields?[2].text, fallback: g.courseParToPass)
+            let newTS = TeeSet(name: name, pars: pars, hcs: hcs)
+            GameManager.shared.update { g in g.course.teeSets.append(newTS) }
+        })
+        present(alert, animated: true)
     }
 
     // MARK: - Home button

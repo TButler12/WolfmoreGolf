@@ -135,7 +135,7 @@ struct GameData: Codable {
     var totalHoles: Int { matchPlay36Holes ? 36 : STANDARD_HOLES }
 
     var isDualMatch: Bool {
-        guard resolvedGameType == .matchPlay,
+        guard resolvedGameType.isMatchPlay,
               let a2 = matchPlayTeamA2, let b2 = matchPlayTeamB2 else { return false }
         return !a2.isEmpty && !b2.isEmpty
     }
@@ -143,6 +143,8 @@ struct GameData: Codable {
     var playerNames: [String] = Array(repeating: "", count: MAX_PLAYERS)
     var hcPlayers: [Int] = Array(repeating: 0, count: MAX_PLAYERS)
     var playerActivated: [Bool] = Array(repeating: false, count: MAX_PLAYERS)
+    // Index into course.teeSets; 0 = course default, 1+ = course.teeSets[index-1]
+    var playerTeeSetIndex: [Int] = Array(repeating: 0, count: MAX_PLAYERS)
 
     var hole: Int = 0
     var tournamentStartHole: Int = 0  // 0 = front nine (hole 1), 9 = back nine (hole 10)
@@ -288,5 +290,33 @@ extension GameData {
 extension Collection {
     subscript(safe index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil
+    }
+}
+
+extension GameData {
+    // Par for a hole considering the player's assigned tee set (0 = course default).
+    func parForHole(_ hole: Int, player: Int) -> Int {
+        let idx = playerTeeSetIndex[safe: player] ?? 0
+        if idx > 0, let ts = course.teeSets[safe: idx - 1], hole < ts.pars.count {
+            return ts.pars[hole]
+        }
+        return courseParToPass[safe: hole] ?? 4
+    }
+
+    // Stroke index for a hole considering the player's assigned tee set.
+    // Always returns a value in 1...STANDARD_HOLES.
+    func hcForHole(_ hole: Int, player: Int) -> Int {
+        let idx = playerTeeSetIndex[safe: player] ?? 0
+        if idx > 0, let ts = course.teeSets[safe: idx - 1], hole < ts.hcs.count {
+            let raw = ts.hcs[hole]
+            return max(1, min(STANDARD_HOLES, raw == 0 ? STANDARD_HOLES : raw))
+        }
+        let raw = courseHCToPass[safe: hole] ?? STANDARD_HOLES
+        return max(1, min(STANDARD_HOLES, raw == 0 ? STANDARD_HOLES : raw))
+    }
+
+    // True when the player is using a non-default tee set.
+    func isUsingAltTee(player: Int) -> Bool {
+        (playerTeeSetIndex[safe: player] ?? 0) > 0
     }
 }

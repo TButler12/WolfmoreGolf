@@ -10,6 +10,10 @@ final class TournamentRosterPickerViewController: UIViewController {
     var onSelect: ((String, Int) -> Void)?
     // Called when a checked player is tapped to deselect them.
     var onDeselect: ((String) -> Void)?
+    // Called when user taps "Use My Players Instead" in the empty-roster state.
+    var onUseMyPlayers: (() -> Void)?
+    // Called when user taps "Add Player" in the empty-roster state.
+    var onAddManually: (() -> Void)?
     // Absolute player ceiling — set by presenter.
     var maxPlayers: Int = 5
     // Names already in FriendStore with preselectForRound = true (device owner excluded).
@@ -240,16 +244,34 @@ final class TournamentRosterPickerViewController: UIViewController {
 extension TournamentRosterPickerViewController: UITableViewDataSource, UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        isLoading ? 0 : max(filtered.count, 1)
+        if isLoading { return 0 }
+        if filtered.isEmpty && allEntries.isEmpty { return 2 }  // Use My Players + Add Player
+        return max(filtered.count, 1)
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
         if filtered.isEmpty {
+            // True empty roster: show actionable fallback options
+            if allEntries.isEmpty {
+                var c = cell.defaultContentConfiguration()
+                if indexPath.row == 0 {
+                    c.text = "Use My Players Instead"
+                    c.textProperties.color = .systemBlue
+                    cell.accessoryType = .disclosureIndicator
+                    cell.selectionStyle = .default
+                } else {
+                    c.text = "Add Player"
+                    c.textProperties.color = .systemBlue
+                    cell.accessoryType = .disclosureIndicator
+                    cell.selectionStyle = .default
+                }
+                cell.contentConfiguration = c
+                return cell
+            }
+            // Roster exists but search returned nothing
             var c = cell.defaultContentConfiguration()
-            c.text = allEntries.isEmpty
-                ? "No roster loaded — use Add manually below"
-                : "No matches"
+            c.text = "No matches"
             c.textProperties.color = .secondaryLabel
             cell.contentConfiguration = c
             cell.selectionStyle = .none
@@ -283,6 +305,11 @@ extension TournamentRosterPickerViewController: UITableViewDataSource, UITableVi
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        if filtered.isEmpty && allEntries.isEmpty {
+            if indexPath.row == 0 { onUseMyPlayers?() }
+            else                  { onAddManually?() }
+            return
+        }
         guard !filtered.isEmpty else { return }
         let entry = filtered[indexPath.row]
         // Block taps on players claimed by another group — but always allow deselecting own picks

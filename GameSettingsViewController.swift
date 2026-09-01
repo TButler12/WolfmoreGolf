@@ -25,6 +25,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private weak var matchPlayTeamsInner: UIStackView?
     private weak var matchPlay36Switch: UISwitch?
     private weak var dualMatchSwitch: UISwitch?
+    private weak var matchPlaySubModeSegment: UISegmentedControl?
     private weak var goLiveButton: UIButton?
     private var scrollView: UIScrollView!
     private var contentStack: UIStackView!
@@ -261,6 +262,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             case .wolf:           segment.selectedSegmentIndex = 1
             case .wolfLowBall:    segment.selectedSegmentIndex = 2
             case .matchPlay:      segment.selectedSegmentIndex = 3
+            case .bestBall:       segment.selectedSegmentIndex = 3
             case .hammer:         segment.selectedSegmentIndex = 0
             case .tournament:     break
             }
@@ -287,20 +289,22 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         case 0: newType = .sixPointScotch
         case 1: newType = .wolf
         case 2: newType = .wolfLowBall
-        default: newType = .matchPlay
+        default:
+            // Keep .bestBall if already in that sub-mode; default to .matchPlay for new switches.
+            newType = (GameManager.shared.currentGame?.resolvedGameType == .bestBall) ? .bestBall : .matchPlay
         }
         GameManager.shared.update { g in
             g.gameType = newType
             g.normalize()
             if newType != .sixPointScotch { g.isUmbrella = false }
-            // Auto-set stake to $1 when switching to Match Play
-            if newType == .matchPlay {
+            // Auto-set stake to $1 when switching to Match Play / Best Ball
+            if newType.isMatchPlay {
                 g.baseGameStake = 1
                 g.gameHoleDollarsArray = Array(repeating: 1.0, count: g.totalHoles)
                 g.holeBaseAmount       = Array(repeating: 1.0, count: g.totalHoles)
             }
-            // Initialize default team split when switching to Match Play
-            if newType == .matchPlay, g.matchPlayTeamA == nil {
+            // Initialize default team split when switching to Match Play / Best Ball
+            if newType.isMatchPlay, g.matchPlayTeamA == nil {
                 let active = g.playerNames.enumerated()
                     .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                     .map { $0.offset }
@@ -309,7 +313,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 g.matchPlayTeamB = Array(active.dropFirst(half))
             }
         }
-        if newType == .matchPlay { baseStakeField.text = "1" }
+        if newType.isMatchPlay { baseStakeField.text = "1" }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         umbrellaButton.alpha = (sender.selectedSegmentIndex == 0) ? 1.0 : 0.4
         refreshMatchPlayUI()
@@ -427,6 +431,28 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
         guard let g = GameManager.shared.currentGame else { return }
 
+        // ── Sub-mode: Match Play (holes up/down) vs Best Ball (stroke total) ──
+        let subModeSeg = UISegmentedControl(items: ["Match Play", "Best Ball"])
+        subModeSeg.selectedSegmentIndex = (g.resolvedGameType == .bestBall) ? 1 : 0
+        subModeSeg.backgroundColor          = .systemGray6
+        subModeSeg.selectedSegmentTintColor = .wolfMoreGreen
+        subModeSeg.setTitleTextAttributes([
+            .foregroundColor: UIColor.secondaryLabel,
+            .font: UIFont.systemFont(ofSize: 13, weight: .regular)
+        ], for: .normal)
+        subModeSeg.setTitleTextAttributes([
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
+        ], for: .selected)
+        subModeSeg.addTarget(self, action: #selector(matchPlaySubModeChanged(_:)), for: .valueChanged)
+        matchPlaySubModeSegment = subModeSeg
+        inner.addArrangedSubview(subModeSeg)
+
+        let sep0 = UIView()
+        sep0.backgroundColor = .separator
+        sep0.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        inner.addArrangedSubview(sep0)
+
         // ── 36-Hole toggle ───────────────────────────────────────────────────
         let switchLbl = UILabel()
         switchLbl.text = "36-Hole Round"
@@ -462,18 +488,26 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         dualLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         dualLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
+        let isBestBall = g.resolvedGameType == .bestBall
+
         let dualSw = UISwitch()
         dualSw.onTintColor = .wolfMoreGreen
         dualSw.isOn = g.isDualMatch
+        dualSw.isEnabled = !isBestBall
+        dualSw.alpha = isBestBall ? 0.4 : 1.0
         dualSw.addTarget(self, action: #selector(dualMatchToggled(_:)), for: .valueChanged)
         dualMatchSwitch = dualSw
+
+        dualLbl.alpha = isBestBall ? 0.4 : 1.0
 
         let dualRow = UIStackView(arrangedSubviews: [dualLbl, dualSw])
         dualRow.axis = .horizontal; dualRow.alignment = .center; dualRow.spacing = 8
         inner.addArrangedSubview(dualRow)
 
         let dualNote = UILabel()
-        dualNote.text = "Two matches at once (e.g. McTommy vs Test AND G vs Y)."
+        dualNote.text = isBestBall
+            ? "Not available for Best Ball — needs 2+ players per team."
+            : "Two matches at once (e.g. McTommy vs Test AND G vs Y)."
         dualNote.font = UIFont.systemFont(ofSize: 12)
         dualNote.textColor = .secondaryLabel
         dualNote.numberOfLines = 0
@@ -610,6 +644,26 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             g.matchPlayTeamB2 = b2.sorted()
         }
         // Rebuild all segment controls so the displaced player's control also updates visually.
+        refreshMatchPlayTeamsContent()
+    }
+
+    @objc private func matchPlaySubModeChanged(_ sender: UISegmentedControl) {
+        let newType: GameType = (sender.selectedSegmentIndex == 1) ? .bestBall : .matchPlay
+        GameManager.shared.update { g in
+            g.gameType = newType
+            // Dual Match requires 2+ players per team — incompatible with Best Ball.
+            if newType == .bestBall, g.isDualMatch {
+                var a1 = g.matchPlayTeamA ?? []
+                var b1 = g.matchPlayTeamB ?? []
+                for s in (g.matchPlayTeamA2 ?? []) where !a1.contains(s) { a1.append(s) }
+                for s in (g.matchPlayTeamB2 ?? []) where !b1.contains(s) { b1.append(s) }
+                g.matchPlayTeamA  = a1.sorted()
+                g.matchPlayTeamB  = b1.sorted()
+                g.matchPlayTeamA2 = nil
+                g.matchPlayTeamB2 = nil
+            }
+        }
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
         refreshMatchPlayTeamsContent()
     }
 

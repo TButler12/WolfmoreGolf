@@ -47,7 +47,9 @@ struct CourseProfile: Codable, Equatable {
     var resortBrand: String?
     var promo: LocationPromo?
     var routing: CourseRouting = .eighteenStandard
-    
+    // Optional so synthesized Decodable uses decodeIfPresent — old saves without this key decode safely.
+    var teeSets: [TeeSet]? = nil
+
     init(
         id: UUID = UUID(),
         name: String,
@@ -66,7 +68,8 @@ struct CourseProfile: Codable, Equatable {
         venueType: VenueType? = nil,
         resortBrand: String? = nil,
         promo: LocationPromo? = nil,
-        routing: CourseRouting = .eighteenStandard
+        routing: CourseRouting = .eighteenStandard,
+        teeSets: [TeeSet]? = nil
     ) {
         self.id = id
         self.name = name
@@ -86,9 +89,10 @@ struct CourseProfile: Codable, Equatable {
         self.resortBrand = resortBrand
         self.promo = promo
         self.routing = routing
+        self.teeSets = teeSets
     }
-    
-    
+
+
 }
 // =======================================================
 // MARK: - Built-in raw data (pars / hcs / optional tees)
@@ -105,6 +109,8 @@ let WOLFMORE_HCS:  [Int] = [4,8,14,10,16,2,18,6,12,11,3,15,1,13,7,17,9,5]
 private let BILTMORE_CC_ID = UUID(uuidString: "11111111-1111-1111-1111-111111111126")!
 let BILTMORE_CC_PARS: [Int] = [4,4,4,4,3,5,3,4,4, 4,4,3,4,4,5,3,4,5]
 let BILTMORE_CC_HCS:  [Int] = [4,8,14,10,16,2,18,6,12, 11,3,15,1,13,7,17,9,5]
+let BILTMORE_CC_RED_PARS: [Int] = [5,4,4,5,3,5,3,4,4, 4,4,3,5,4,5,3,4,5]  // par 74, red tees
+let BILTMORE_CC_RED_HCS:  [Int] = [11,5,3,9,17,1,15,13,7, 14,2,18,12,6,10,16,8,4]
 let BILTMORE_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6900, rating: 74.8, slope: 138),
     TeeInfo(teeName: "Blue",  yardage: 6700, rating: 73.3, slope: 134),
@@ -11420,7 +11426,7 @@ private enum BuiltIns {
         let resortBrand: String?
         let promo: LocationPromo?    // ✅ ADD (not String)
         let routing: CourseRouting
-        
+        let teeSets: [TeeSet]?
     }
 
     private static func c(
@@ -11441,7 +11447,8 @@ private enum BuiltIns {
         venueType: VenueType? = nil,
         resortBrand: String? = nil,
         promo: LocationPromo? = nil,
-        routing: CourseRouting = .eighteenStandard   // 👈 ADD
+        routing: CourseRouting = .eighteenStandard,   // 👈 ADD
+        teeSets: [TeeSet]? = nil
     ) -> BuiltInCourse {
         .init(
             id: id,
@@ -11461,7 +11468,8 @@ private enum BuiltIns {
             venueType: venueType,
             resortBrand: resortBrand,
             promo: promo,
-            routing: routing   // 👈 ADD
+            routing: routing,   // 👈 ADD
+            teeSets: teeSets
         )
     }
     private static func profile(from b: BuiltInCourse) -> CourseProfile {
@@ -11483,7 +11491,8 @@ private enum BuiltIns {
             venueType: b.venueType,
             resortBrand: b.resortBrand,
             promo: b.promo,
-            routing: b.routing   // 👈 ADD THIS
+            routing: b.routing,   // 👈 ADD THIS
+            teeSets: b.teeSets
         )
     }
     private static let all: [BuiltInCourse] = [
@@ -11535,7 +11544,8 @@ private enum BuiltIns {
             phone: "(847) 381-1960",
             website: "https://www.biltmore-cc.com",
             address: "160 Biltmore Drive, North Barrington, IL 60010",
-            isWolfApproved: true
+            isWolfApproved: true,
+            teeSets: [TeeSet(name: "Red", pars: BILTMORE_CC_RED_PARS, hcs: BILTMORE_CC_RED_HCS)]
         ),
         c(
             ELGIN_CC_ID,
@@ -20646,7 +20656,9 @@ final class CourseLibrary {
             isWolfApproved: incoming.isWolfApproved ?? base?.isWolfApproved,
             venueType: incoming.venueType ?? base?.venueType,
             resortBrand: incoming.resortBrand ?? base?.resortBrand,
-            promo: incoming.promo ?? base?.promo
+            promo: incoming.promo ?? base?.promo,
+            routing: incoming.routing,
+            teeSets: incoming.teeSets ?? base?.teeSets
         )
     }
     private func load() {

@@ -426,6 +426,17 @@ final class TeeGameSetupViewController: UIViewController {
                             g.tournamentStablefordEnabled = record.stablefordEnabled
                             g.stablefordBaseline        = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
                             g.stablefordCountingPlayers = record.stablefordTeamCount ?? 3
+                            g.gameType = nil
+                            switch record.gameType {
+                            case "stableford": g.gameType = .tournament
+                            case "wolf":
+                                switch record.wolfVariant {
+                                case "2pt":     g.gameType = .wolf
+                                case "lowball": g.gameType = .wolfLowBall
+                                default:        g.gameType = .sixPointScotch
+                                }
+                            default: break
+                            }
                             if record.gameType == "skins", let stake = record.stake {
                                 var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                                 skins.settings.skinValue = stake

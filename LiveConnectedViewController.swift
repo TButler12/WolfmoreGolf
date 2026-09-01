@@ -410,7 +410,8 @@ final class LiveConnectedViewController: UITableViewController {
                                        }) {
                                         g.course = Course(id: profile.id, name: profile.name,
                                                          pars: Array(profile.pars.prefix(STANDARD_HOLES)),
-                                                         holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)))
+                                                         holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)),
+                                                         teeSets: profile.teeSets ?? [])
                                     }
                                     g.scrambleTeamName   = teamName
                                     g.playerNames[0]     = teamName

@@ -46,7 +46,7 @@ extension GameManager {
         let wolfTeam:    [Int]
         let nonWolfTeam: [Int]
 
-        if mode == .matchPlay {
+        if mode.isMatchPlay {
             let teamA = (g.matchPlayTeamA ?? []).filter { activeSeats.contains($0) }
             let teamB = (g.matchPlayTeamB ?? []).filter { activeSeats.contains($0) }
             wolfTeam    = teamA
@@ -71,12 +71,10 @@ extension GameManager {
         // Hole constants — wrap index for 36-hole rounds (holes 19–36 mirror course holes 1–18)
         let courseH = hole % STANDARD_HOLES
         let par   = g.courseParToPass[safe: courseH] ?? 4
-        let rawSI = g.courseHCToPass[safe: courseH] ?? STANDARD_HOLES
-        let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI)) // 1…18 (0 → 18)
 
         // Stake — matchPlay uses flat stake (no hammer); all other modes include hammer multiplier
         let baseStake  = (g.gameHoleDollarsArray[safe: hole] ?? 2.0)
-        let hammerMult = (mode == .matchPlay) ? 1.0 : g.hammerMultiplier(for: hole)
+        let hammerMult = mode.isMatchPlay ? 1.0 : g.hammerMultiplier(for: hole)
         let stake      = baseStake * hammerMult
 
         // Point values by mode
@@ -87,6 +85,7 @@ extension GameManager {
             case .wolf:           return 1
             case .wolfLowBall:    return 0   // low ball only
             case .matchPlay:      return 0   // low ball only
+            case .bestBall:       return 0   // stroke total, no per-hole pts
             case .hammer:         return 2   // treat like scotch scoring
             case .tournament:     return 0   // tournament — no wolf payouts
             }
@@ -110,15 +109,17 @@ extension GameManager {
             let gScore = (s < g.scores.count && hole < g.scores[s].count) ? (g.scores[s][hole] ?? 99) : 99
             gross[s] = gScore
 
+            let playerSI = g.hcForHole(courseH, player: s)
             let S = max(0, g.hcPlayers[s] - baseHC)
-            let pops = strokesGiven(delta: S, strokeIndex: si)
+            let pops = strokesGiven(delta: S, strokeIndex: playerSI)
             net[s] = (gScore < 99) ? (gScore - pops) : 99
         }
 
         // ---------------------------------------------------------
         //  DUAL MATCH: two independent matches scored simultaneously
         // ---------------------------------------------------------
-        if mode == .matchPlay, g.isDualMatch {
+        if mode.isMatchPlay, g.isDualMatch {
+            if mode == .bestBall { return Array(repeating: 0.0, count: MAX_PLAYERS) }
             func oneMatch(teamA: [Int], teamB: [Int]) -> [Double] {
                 let aMin = teamA.map { net[$0] ?? 99 }.min() ?? 99
                 let bMin = teamB.map { net[$0] ?? 99 }.min() ?? 99
@@ -169,8 +170,8 @@ extension GameManager {
         // ---------------------------------------------------------
         //  6-POINT ONLY: Birdie / Eagle
         // ---------------------------------------------------------
-        func teamHasBirdie(_ team: [Int]) -> Int { team.contains { (gross[$0] ?? 99) <= par - 1 } ? 1 : 0 }
-        func teamHasEagle(_ team: [Int]) -> Int  { team.contains { (gross[$0] ?? 99) <= par - 2 } ? 1 : 0 }
+        func teamHasBirdie(_ team: [Int]) -> Int { team.contains { (gross[$0] ?? 99) <= g.parForHole(courseH, player: $0) - 1 } ? 1 : 0 }
+        func teamHasEagle(_ team: [Int]) -> Int  { team.contains { (gross[$0] ?? 99) <= g.parForHole(courseH, player: $0) - 2 } ? 1 : 0 }
 
         let wolfBirdie = mode.isScotch ? teamHasBirdie(wolfTeam) : 0
         let wolfEagle  = mode.isScotch ? teamHasEagle(wolfTeam)  : 0
@@ -229,7 +230,7 @@ extension GameManager {
             wolfTeamScore = wolfLowBall + wolfLowTotal
             nonTeamScore  = nonLowBall  + nonLowTotal
 
-        case .wolfLowBall, .matchPlay:
+        case .wolfLowBall, .matchPlay, .bestBall:
             // Low ball only: 1 point max per hole
             wolfTeamScore = wolfLowBall
             nonTeamScore  = nonLowBall
@@ -263,6 +264,8 @@ extension GameManager {
         // ---------------------------------------------------------
         //  PAYOUTS (whole-dollar)
         // ---------------------------------------------------------
+        if mode == .bestBall { return Array(repeating: 0.0, count: MAX_PLAYERS) }
+
         var payouts = Array(repeating: 0.0, count: MAX_PLAYERS)
 
         guard diff != 0 else { return payouts }

@@ -731,8 +731,7 @@ enum NassauEngine {
         holeIndex: Int,
         match: NassauMatch
     ) -> Int {
-        let rawSI = gameData.course.holeHandicaps[safe: holeIndex] ?? STANDARD_HOLES
-        let si = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
+        let si = gameData.hcForHole(holeIndex, player: playerIndex)
 
         let participants = Array(Set(match.team1PlayerIndexes + match.team2PlayerIndexes))
             .filter { idx in

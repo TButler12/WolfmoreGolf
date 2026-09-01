@@ -296,6 +296,7 @@ private func formatTags(_ g: GameData) -> String {
     case .wolf:           tags.append("Wolf 2-Pt")
     case .wolfLowBall:    tags.append("Wolf LowBall")
     case .matchPlay:      tags.append("Match Play")
+    case .bestBall:       tags.append("Best Ball")
     case .sixPointScotch: tags.append("6-Pt Scotch")
     case .hammer:         tags.append("Hammer")
     case .tournament:

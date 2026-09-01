@@ -32,6 +32,9 @@ final class WolfSpectatorViewController: UIViewController {
     private var tabTopToToolbar: NSLayoutConstraint?
     private let statusBanner     = UILabel()
 
+    private let formatBannerLabel = UILabel()
+    private var formatBannerHeight: NSLayoutConstraint?
+
     private let namesHeaderView  = UIView()
     private let cachedHeaderCell = WolfHoleCell(style: .default, reuseIdentifier: nil)
     private let tableView        = UITableView(frame: .zero, style: .insetGrouped)
@@ -49,6 +52,7 @@ final class WolfSpectatorViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupTabBar()
         setupStatusBanner()
+        setupFormatBanner()
         setupNamesHeader()
         setupTableView()
         setupLoadingView()
@@ -160,13 +164,31 @@ final class WolfSpectatorViewController: UIViewController {
         ])
     }
 
+    private func setupFormatBanner() {
+        formatBannerLabel.translatesAutoresizingMaskIntoConstraints = false
+        formatBannerLabel.textAlignment   = .center
+        formatBannerLabel.font            = .systemFont(ofSize: 12, weight: .semibold)
+        formatBannerLabel.textColor       = .secondaryLabel
+        formatBannerLabel.backgroundColor = .systemGroupedBackground
+        formatBannerLabel.numberOfLines   = 2
+        view.addSubview(formatBannerLabel)
+        let h = formatBannerLabel.heightAnchor.constraint(equalToConstant: 0)
+        formatBannerHeight = h
+        NSLayoutConstraint.activate([
+            formatBannerLabel.topAnchor.constraint(equalTo: statusBanner.bottomAnchor),
+            formatBannerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            formatBannerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            h,
+        ])
+    }
+
     private func setupNamesHeader() {
         namesHeaderView.translatesAutoresizingMaskIntoConstraints = false
         namesHeaderView.backgroundColor = .systemGroupedBackground
         namesHeaderView.isHidden = true
         view.addSubview(namesHeaderView)
         NSLayoutConstraint.activate([
-            namesHeaderView.topAnchor.constraint(equalTo: statusBanner.bottomAnchor),
+            namesHeaderView.topAnchor.constraint(equalTo: formatBannerLabel.bottomAnchor),
             namesHeaderView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 36),
             namesHeaderView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -36),
             namesHeaderView.heightAnchor.constraint(equalToConstant: 44),
@@ -383,11 +405,46 @@ final class WolfSpectatorViewController: UIViewController {
         }
     }
 
+    private var currentSessionIsBestBall: Bool {
+        currentHoleResults.values.contains { $0.decision == "bestball" }
+    }
+    private var currentSessionIsMatchPlay: Bool {
+        currentHoleResults.values.contains { $0.decision == "matchplay" || $0.decision == "bestball" }
+    }
+
+    private func applyFormatBanner(session: WolfSession, results: [WolfHoleResult]) {
+        let isBB = results.contains { $0.decision == "bestball" }
+        let isMP = isBB || results.contains { $0.decision == "matchplay" }
+        guard isMP, let first = results.first(where: { $0.wolfSlot != nil }) else {
+            formatBannerHeight?.constant = 0
+            formatBannerLabel.text = nil
+            return
+        }
+        let names = session.playerNames
+        let teamASeats = [first.wolfSlot, first.partnerSlot].compactMap { $0 }
+        let teamBSeats = names.indices.filter { !teamASeats.contains($0) }
+
+        func short(_ seat: Int) -> String {
+            guard seat < names.count else { return "P\(seat+1)" }
+            let n = names[seat].trimmingCharacters(in: .whitespaces)
+            return n.components(separatedBy: " ").first ?? n
+        }
+        let aNames = teamASeats.map(short).joined(separator: " & ")
+        let bNames = teamBSeats.map(short).joined(separator: " & ")
+        let formatName = isBB ? "Best Ball" : "Match Play"
+        let pairing = (!aNames.isEmpty && !bNames.isEmpty) ? "\(aNames) vs \(bNames)" : ""
+        formatBannerLabel.text = pairing.isEmpty ? formatName : "\(formatName)  ·  \(pairing)"
+        formatBannerHeight?.constant = 36
+    }
+
     private func applyCurrentSession() {
         guard let session = currentSession else { return }
         applySessionStatus(session.status)
-        let isMP = currentHoleResults.values.contains { $0.decision == "matchplay" }
-        cachedHeaderCell.configureAsHeader(playerNames: session.playerNames, isMatchPlay: isMP)
+        let results = Array(currentHoleResults.values)
+        let isBB = results.contains { $0.decision == "bestball" }
+        let isMP = isBB || results.contains { $0.decision == "matchplay" }
+        cachedHeaderCell.configureAsHeader(playerNames: session.playerNames, isMatchPlay: isMP, isBestBall: isBB)
+        applyFormatBanner(session: session, results: results)
         namesHeaderView.isHidden = false
         tableView.reloadData()
     }
@@ -434,9 +491,12 @@ final class WolfSpectatorViewController: UIViewController {
             guard let self else { return }
             self.holeResultsBySessionId[sessionId, default: [:]][result.hole] = result
             if self.currentSession?.id == sessionId {
-                let isMP = self.currentHoleResults.values.contains { $0.decision == "matchplay" }
+                let results = Array(self.currentHoleResults.values)
+                let isBB = results.contains { $0.decision == "bestball" }
+                let isMP = isBB || results.contains { $0.decision == "matchplay" }
                 if let sess = self.currentSession {
-                    self.cachedHeaderCell.configureAsHeader(playerNames: sess.playerNames, isMatchPlay: isMP)
+                    self.cachedHeaderCell.configureAsHeader(playerNames: sess.playerNames, isMatchPlay: isMP, isBestBall: isBB)
+                    self.applyFormatBanner(session: sess, results: results)
                 }
                 self.tableView.reloadData()
             }
@@ -668,12 +728,22 @@ extension WolfSpectatorViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: WolfHoleCell.reuseID, for: indexPath) as! WolfHoleCell
         guard let session = currentSession else { return cell }
         let allResults = Array(currentHoleResults.values)
-        let isMatchPlay = allResults.contains { $0.decision == "matchplay" }
+        let isBestBall  = allResults.contains { $0.decision == "bestball" }
+        let isMatchPlay = isBestBall || allResults.contains { $0.decision == "matchplay" }
         let totalHoles = totalHolesForCurrentSession
         let is36 = totalHoles == 36
         let pc = session.playerNames.count
         let summaryBase = totalHoles
         let summaryRow = indexPath.row - summaryBase
+
+        // Team A seats derived from first result that has a wolfSlot (same for every hole in Match/BB).
+        let firstMP = allResults.first(where: { $0.wolfSlot != nil })
+        let teamASeats = [firstMP?.wolfSlot, firstMP?.partnerSlot].compactMap { $0 }
+
+        // Course pars for Best Ball to-par calculation.
+        let coursePars: [Int] = CourseLibrary.shared.courses
+            .first(where: { $0.name.trimmingCharacters(in: .whitespaces) == session.courseName.trimmingCharacters(in: .whitespaces) })?.pars
+            ?? Array(repeating: 4, count: STANDARD_HOLES)
 
         if summaryRow >= 0 {
             if is36 {
@@ -684,7 +754,8 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 case 3: cell.configureAsScoreSubtotal(label: "2nd 18", holes: 19...36, results: allResults, playerCount: pc)
                 case 4: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
                 case 5:
-                    if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc) }
+                    if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc,
+                                                                      isBestBall: isBestBall, coursePars: coursePars, teamASeats: teamASeats) }
                     else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
                 case 6: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
                 default: break
@@ -694,7 +765,8 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 case 0: cell.configureAsScoreSubtotal(label: "F9",    holes: 1...9,  results: allResults, playerCount: pc)
                 case 1: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
                 case 2:
-                    if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc) }
+                    if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc,
+                                                                      isBestBall: isBestBall, coursePars: coursePars, teamASeats: teamASeats) }
                     else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
                 case 3: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
                 default: break
@@ -719,56 +791,75 @@ extension WolfSpectatorViewController: UITableViewDataSource {
             // Running match score for match play (from Team A / wolfSlot perspective)
             var matchStatus: String? = nil
             if isMatchPlay {
-                var m1AWins = 0, m1BWins = 0
-                var m2AWins = 0, m2BWins = 0
-                var m2AnchorSeat: Int? = nil
+                if isBestBall {
+                    // Best Ball: accumulate team best-gross-vs-par through this hole.
+                    // teamASeats/coursePars computed above in the data source.
+                    let teamBSeats = session.playerNames.indices.filter { !teamASeats.contains($0) }
+                    var aSum = 0, bSum = 0
+                    for h in 1...hole {
+                        guard let r = currentHoleResults[h], let scores = r.scores else { continue }
+                        let courseH = (h - 1) % STANDARD_HOLES
+                        let par = courseH < coursePars.count ? coursePars[courseH] : 4
+                        let aBest = teamASeats.compactMap { $0 < scores.count && scores[$0] > 0 ? scores[$0] : nil }.min()
+                        let bBest = teamBSeats.compactMap { $0 < scores.count && scores[$0] > 0 ? scores[$0] : nil }.min()
+                        if let a = aBest { aSum += a - par }
+                        if let b = bBest { bSum += b - par }
+                    }
+                    func toParStr(_ v: Int) -> String { v == 0 ? "E" : v > 0 ? "+\(v)" : "\(v)" }
+                    let diff = aSum - bSum  // negative = A leads, positive = B leads
+                    if diff < 0      { matchStatus = "A \(abs(diff))" }
+                    else if diff > 0 { matchStatus = "B \(diff)" }
+                    else             { matchStatus = "E" }
+                } else {
+                    // Match Play: accumulate hole wins/losses from money deltas.
+                    var m1AWins = 0, m1BWins = 0
+                    var m2AWins = 0, m2BWins = 0
+                    var m2AnchorSeat: Int? = nil
 
-                for h in 1...hole {
-                    guard let r = currentHoleResults[h] else { continue }
-                    let deltas = r.moneyDeltas ?? r.payouts ?? []
-                    if let ws = r.wolfSlot, ws < deltas.count {
-                        let m1ADelta = deltas[ws]
-                        if m1ADelta > 0.001 { m1AWins += 1 } else if m1ADelta < -0.001 { m1BWins += 1 }
+                    for h in 1...hole {
+                        guard let r = currentHoleResults[h] else { continue }
+                        let deltas = r.moneyDeltas ?? r.payouts ?? []
+                        if let ws = r.wolfSlot, ws < deltas.count {
+                            let m1ADelta = deltas[ws]
+                            if m1ADelta > 0.001 { m1AWins += 1 } else if m1ADelta < -0.001 { m1BWins += 1 }
 
-                        // M2 only exists in dual match (1v1+1v1). A 2v2 single match has
-                        // partnerSlot set (Team A has 2 players), so skip M2 for those.
-                        // For 1v1-style: find M1 Team B via opposing delta, then any remaining
-                        // players with non-zero deltas belong to Match 2.
-                        if r.partnerSlot == nil && abs(m1ADelta) > 0.001 {
-                            let m1TeamBSeat = (0..<min(playerCount, deltas.count)).first {
-                                $0 != ws && abs(deltas[$0] + m1ADelta) < 0.001
-                            }
-                            let m1AllSeats = Set([ws, m1TeamBSeat].compactMap { $0 })
-                            let m2Seats = (0..<min(playerCount, deltas.count)).filter {
-                                !m1AllSeats.contains($0) && abs(deltas[$0]) > 0.001
-                            }
-                            if !m2Seats.isEmpty {
-                                if m2AnchorSeat == nil { m2AnchorSeat = m2Seats.min() }
-                                if let anchor = m2AnchorSeat, anchor < deltas.count {
-                                    let d = deltas[anchor]
-                                    if d > 0.001 { m2AWins += 1 } else if d < -0.001 { m2BWins += 1 }
+                            // M2 only exists in dual match (1v1+1v1). A 2v2 single match has
+                            // partnerSlot set (Team A has 2 players), so skip M2 for those.
+                            if r.partnerSlot == nil && abs(m1ADelta) > 0.001 {
+                                let m1TeamBSeat = (0..<min(playerCount, deltas.count)).first {
+                                    $0 != ws && abs(deltas[$0] + m1ADelta) < 0.001
+                                }
+                                let m1AllSeats = Set([ws, m1TeamBSeat].compactMap { $0 })
+                                let m2Seats = (0..<min(playerCount, deltas.count)).filter {
+                                    !m1AllSeats.contains($0) && abs(deltas[$0]) > 0.001
+                                }
+                                if !m2Seats.isEmpty {
+                                    if m2AnchorSeat == nil { m2AnchorSeat = m2Seats.min() }
+                                    if let anchor = m2AnchorSeat, anchor < deltas.count {
+                                        let d = deltas[anchor]
+                                        if d > 0.001 { m2AWins += 1 } else if d < -0.001 { m2BWins += 1 }
+                                    }
                                 }
                             }
+                        } else if let tw = r.teamWon {
+                            if tw { m1AWins += 1 } else { m1BWins += 1 }
                         }
-                    } else if let tw = r.teamWon {
-                        if tw { m1AWins += 1 } else { m1BWins += 1 }
                     }
-                }
 
-                func statusString(aWins: Int, bWins: Int, aLabel: String, bLabel: String) -> String {
-                    let diff = aWins - bWins
-                    if diff == 0     { return "AS" }
-                    if diff > 0      { return "\(aLabel) \(diff)↑" }
-                    return "\(bLabel) \(abs(diff))↑"
-                }
+                    func statusString(aWins: Int, bWins: Int, aLabel: String, bLabel: String) -> String {
+                        let diff = aWins - bWins
+                        if diff == 0 { return "AS" }
+                        if diff > 0  { return "\(aLabel) \(diff)↑" }
+                        return "\(bLabel) \(abs(diff))↑"
+                    }
 
-                let m1Status = statusString(aWins: m1AWins, bWins: m1BWins, aLabel: "A", bLabel: "B")
-                if m2AnchorSeat != nil {
-                    // Dual match — show both on two lines
-                    let m2Status = statusString(aWins: m2AWins, bWins: m2BWins, aLabel: "C", bLabel: "D")
-                    matchStatus = "\(m1Status)\n\(m2Status)"
-                } else {
-                    matchStatus = m1Status
+                    let m1Status = statusString(aWins: m1AWins, bWins: m1BWins, aLabel: "A", bLabel: "B")
+                    if m2AnchorSeat != nil {
+                        let m2Status = statusString(aWins: m2AWins, bWins: m2BWins, aLabel: "C", bLabel: "D")
+                        matchStatus = "\(m1Status)\n\(m2Status)"
+                    } else {
+                        matchStatus = m1Status
+                    }
                 }
             }
 
@@ -961,11 +1052,11 @@ private final class WolfHoleCell: UITableViewCell {
         l.widthAnchor.constraint(equalToConstant: width).isActive = true
     }
 
-    func configureAsHeader(playerNames: [String], isMatchPlay: Bool = false) {
+    func configureAsHeader(playerNames: [String], isMatchPlay: Bool = false, isBestBall: Bool = false) {
         holePressLevel = 0
         holeLabel.text        = "Hole"
         holeLabel.textColor   = .secondaryLabel
-        decisionLabel.text    = isMatchPlay ? "MP" : ""
+        decisionLabel.text    = isBestBall ? "BB" : isMatchPlay ? "MP" : ""
         decisionLabel.textColor = .secondaryLabel
         decisionLabel.font    = .systemFont(ofSize: 10, weight: .semibold)
 
@@ -1149,9 +1240,12 @@ private final class WolfHoleCell: UITableViewCell {
         }
     }
 
-    func configureAsMatchPlayTotals(results: [WolfHoleResult], playerCount: Int) {
+    func configureAsMatchPlayTotals(results: [WolfHoleResult], playerCount: Int,
+                                     isBestBall: Bool = false,
+                                     coursePars: [Int] = [],
+                                     teamASeats: [Int] = []) {
         holePressLevel = 0
-        holeLabel.text      = "Match"
+        holeLabel.text      = isBestBall ? "BB" : "Match"
         holeLabel.textColor = .secondaryLabel
         holeLabel.font      = .systemFont(ofSize: 13, weight: .semibold)
         moneyRow.isHidden   = true
@@ -1159,14 +1253,37 @@ private final class WolfHoleCell: UITableViewCell {
         skinsRow.isHidden   = true
         decisionLabel.text  = ""
 
-        // Tally each player's match result from their own moneyDeltas.
-        // This works for both single match and dual simultaneous matches: a positive
-        // delta means that player won their hole, negative means they lost.
+        if isBestBall {
+            // Best Ball footer: show each team's cumulative best-gross-vs-par total.
+            let teamBSeats = (0..<playerCount).filter { !teamASeats.contains($0) }
+            var aSum = 0, bSum = 0
+            for r in results {
+                guard let scores = r.scores else { continue }
+                let courseH = (r.hole - 1) % STANDARD_HOLES
+                let par = courseH < coursePars.count ? coursePars[courseH] : 4
+                let aBest = teamASeats.compactMap { $0 < scores.count && scores[$0] > 0 ? scores[$0] : nil }.min()
+                let bBest = teamBSeats.compactMap { $0 < scores.count && scores[$0] > 0 ? scores[$0] : nil }.min()
+                if let a = aBest { aSum += a - par }
+                if let b = bBest { bSum += b - par }
+            }
+            func toParStr(_ v: Int) -> String { v == 0 ? "E" : v > 0 ? "+\(v)" : "\(v)" }
+            for (i, col) in scoreCols.enumerated() {
+                guard i < playerCount else { col.text = ""; continue }
+                col.font = .systemFont(ofSize: 13, weight: .bold)
+                let isTeamA = teamASeats.contains(i)
+                let total   = isTeamA ? aSum : bSum
+                let str     = toParStr(total)
+                col.text      = str
+                col.textColor = total < 0 ? .systemGreen : total > 0 ? .systemRed : .secondaryLabel
+            }
+            return
+        }
+
+        // Match Play: tally each player's hole wins/losses from moneyDeltas.
         var wins  = Array(repeating: 0, count: playerCount)
         var losses = Array(repeating: 0, count: playerCount)
         for r in results {
             guard let deltas = r.moneyDeltas ?? r.payouts else {
-                // Fall back to teamWon flag for older results that lack per-player deltas
                 if let tw = r.teamWon, let ws = r.wolfSlot, ws < playerCount {
                     if tw { wins[ws] += 1 } else { losses[ws] += 1 }
                 }
@@ -1176,7 +1293,6 @@ private final class WolfHoleCell: UITableViewCell {
                 if d > 0.001 { wins[i] += 1 } else if d < -0.001 { losses[i] += 1 }
             }
         }
-
         for (i, col) in scoreCols.enumerated() {
             guard i < playerCount else { col.text = ""; continue }
             let diff = wins[i] - losses[i]

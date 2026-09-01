@@ -673,6 +673,10 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             parts.append(state)
         }
 
+        if !(course.teeSets?.isEmpty ?? true) {
+            parts.append("Alt Tees")
+        }
+
         cell.detailTextLabel?.text = parts.joined(separator: " • ")
         cell.detailTextLabel?.textColor = .secondaryLabel
         cell.detailTextLabel?.numberOfLines = 2

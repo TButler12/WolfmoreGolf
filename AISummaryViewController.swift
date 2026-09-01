@@ -4,37 +4,31 @@ import MessageUI
 // MARK: - Summary Style
 
 enum SummaryStyle: Int, CaseIterable {
-    case lockerRoom, trashTalk, statistical, punchline, prizeFighter, highlights
+    case trashTalk, statistical, punchline, highlights
 
     var emoji: String {
         switch self {
-        case .lockerRoom:   return "🍺"
         case .trashTalk:    return "😂"
         case .statistical:  return "📊"
         case .punchline:    return "💀"
-        case .prizeFighter: return "🥊"
         case .highlights:   return "⭐️"
         }
     }
 
     var title: String {
         switch self {
-        case .lockerRoom:   return "Locker Room"
         case .trashTalk:    return "Trash Talk"
         case .statistical:  return "Statistical"
         case .punchline:    return "Punch Line"
-        case .prizeFighter: return "Prize Fighter"
         case .highlights:   return "Highlights"
         }
     }
 
     var subtitle: String {
         switch self {
-        case .lockerRoom:   return "Casual & fun — how the guys actually talk after a round"
         case .trashTalk:    return "Roast the loser, brutal but funny"
         case .statistical:  return "Data-focused performance breakdown"
         case .punchline:    return "Short, savage, funny — 5 lines max, no mercy"
-        case .prizeFighter: return "Ali vs Frazier — someone's getting knocked out"
         case .highlights:   return "Key moments — birdies, blow-ups, and clutch shots"
         }
     }
@@ -59,14 +53,6 @@ enum SummaryStyle: Int, CaseIterable {
         let birdieNote = "IMPORTANT: When mentioning birdies, only reference natural gross birdies — a score of one under par on the hole before any handicap strokes. Do not call a net birdie a birdie.\n"
         let prefix = birdieNote + stablefordNote + tournamentNote + matchPlayNote
         switch self {
-        case .lockerRoom:
-            return prefix + """
-            You're one of the golf group texting the post-round recap to the group chat. \
-            Casual, funny, exactly how golfers talk after 18. Name names, give everyone grief. \
-            Reference specific holes and decisions — celebrate the winner, rag on the loser. \
-            Format: write in short bursts separated by blank lines, like messages in a group chat. \
-            Each burst is 1-2 sentences. Keep it loose, not polished.
-            """
         case .trashTalk:
             return prefix + """
             You are a savage but funny roaster. Roast the biggest loser, celebrate the winner. \
@@ -82,16 +68,6 @@ enum SummaryStyle: Int, CaseIterable {
             Find the most interesting patterns and outliers. Professional tone, tight sentences. \
             Format: use short paragraphs separated by blank lines — one paragraph per player or theme. \
             Think ESPN Stats & Info meets Golf Digest analytics.
-            """
-        case .prizeFighter:
-            return prefix + """
-            You are a trash-talking boxing announcer calling this golf round like it's Ali vs Frazier. \
-            Keep it short — 3 punchy paragraphs separated by blank lines: front nine, back nine, final verdict. \
-            Every bad hole is a knockdown. Every collapse is a TKO. Every double bogey is a glass jaw exposed. \
-            Drop Ali-era language hard: 'down goes Frazier', 'punch drunk', 'corner threw in the towel', \
-            'took a standing eight count', 'the ref should've stopped it', 'floated like a butterfly stung like a bee'. \
-            Name every player. The worst performer got destroyed in the early rounds and never recovered — say so brutally. \
-            The winner is the undisputed heavyweight champion. Make it savage, funny, and short. Ding ding.
             """
         case .punchline:
             return prefix + """
@@ -125,7 +101,7 @@ private enum GameContextBuilder {
     }
 
     static func isMatchPlay(_ g: GameData) -> Bool {
-        g.resolvedGameType == .matchPlay
+        g.resolvedGameType.isMatchPlay
     }
 
     static func build(from g: GameData, includeSkins: Bool = false) -> String {
