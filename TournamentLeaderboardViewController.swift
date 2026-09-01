@@ -610,12 +610,13 @@ final class TournamentLeaderboardViewController: UIViewController {
             if (teamPts[r.matchId] ?? -1) < pts { teamPts[r.matchId] = pts }
             teamHoles[r.matchId] = (teamHoles[r.matchId] ?? 0) + 1
         }
-        // Build display label from wolf/stableford player names in the same matchId
+        // Build display label from wolf/stableford player names in the same matchId.
+        // Show all group members, not just the counting-N, to match the Groups tab.
         let playerRowsByMatch = Dictionary(grouping: deduped.filter {
             $0.gameType == "stableford" && ($0.day ?? 1) == currentDay
         }, by: { $0.matchId })
         for (mid, prows) in playerRowsByMatch {
-            let names = Array(Set(prows.map { $0.playerName })).sorted().prefix(3)
+            let names = Array(Set(prows.map { $0.playerName })).sorted()
             teamLabel[mid] = names.joined(separator: ", ")
         }
         stablefordTeamData = teamPts.sorted {
