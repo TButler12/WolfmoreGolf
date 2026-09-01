@@ -243,63 +243,7 @@ final class TeeGamesViewController: UIViewController {
 
     @discardableResult
     private func setupJoinedGame(record: TournamentRecord) -> String {
-        if GameManager.shared.currentGame == nil {
-            _ = GameManager.shared.loadLastOpened(notify: false)
-        }
-        if GameManager.shared.currentGame == nil {
-            GameManager.shared.startNewGame()
-        }
-        let groupCode         = UUID().uuidString
-        let tournamentMatchId = UUID().uuidString
-        GameManager.shared.update { g in
-            g.tournamentCode         = record.code
-            g.groupCode              = groupCode
-            g.tournamentMatchId      = tournamentMatchId
-            g.tournamentName         = record.name
-            g.tournamentGameType     = record.gameType
-            g.tournamentScoringType  = record.scoring
-            g.tournamentDay          = record.currentDay ?? 1
-            g.tournamentIsCreator    = (record.createdBy == DeviceID.id)
-            g.tournamentIsOrganizer  = g.tournamentIsCreator
-                || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
-            g.tournamentPotAmount    = record.potAmount
-            g.tournamentCarryTies    = record.carryTies
-            if record.gameType == "skins", let stake = record.stake {
-                var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
-                skins.settings.skinValue = stake
-                g.skinsState = skins
-            } else if record.gameType == "wolf", let wolfStake = record.wolfStake {
-                g.wolfStake = wolfStake
-                g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
-            }
-            g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
-            g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
-            g.tournamentStablefordEnabled = record.stablefordEnabled
-            // Always reset gameType first so stale values from a prior session don't carry over
-            g.gameType = nil
-            switch record.gameType {
-            case "stableford": g.gameType = .tournament
-            case "wolf":
-                switch record.wolfVariant {
-                case "2pt":     g.gameType = .wolf
-                case "lowball": g.gameType = .wolfLowBall
-                default:        g.gameType = .sixPointScotch  // "6pt" or nil → 6-point
-                }
-            default: break  // skins/scramble resolved via tournamentGameType
-            }
-        }
-        let joinDay = record.currentDay ?? 1
-        UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
-        GameManager.shared.saveCurrent()
-        let isOrg = (record.createdBy == DeviceID.id)
-            || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
-        TournamentHistoryStore.shared.record(
-            code: record.code, name: record.name,
-            gameType: record.gameType, day: joinDay, isOrganizer: isOrg)
-        NotificationCenter.default.post(name: .reloadUI, object: nil)
-        #if DEBUG
-        print("🏆 joined tournament: code=\(record.code) groupCode=\(groupCode) matchId=\(tournamentMatchId)")
-        #endif
+        let (groupCode, _) = GameManager.applyTournamentJoin(record: record)
         return groupCode
     }
 

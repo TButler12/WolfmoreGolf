@@ -318,78 +318,14 @@ final class LiveConnectedViewController: UITableViewController {
     }
 
     private func applyJoinedTournament(record: TournamentRecord) {
-        if GameManager.shared.currentGame == nil {
-            _ = GameManager.shared.loadLastOpened(notify: false)
-        }
-        if GameManager.shared.currentGame == nil {
-            GameManager.shared.startNewGame()
-        }
-        // Reuse IDs if rejoining the same tournament on the same day — preserves roster claims
-        // and submitted score rows. Generate fresh IDs only for a new day or first join.
-        let liveDay = record.currentDay ?? 1
-        let existing = TournamentHistoryStore.shared.all().first { $0.code == record.code }
-        let isSameDay = existing?.lastDay == liveDay
-        let groupCode: String
-        let tournamentMatchId: String
-        if isSameDay, let savedGroup = existing?.groupCode, let savedMatch = existing?.tournamentMatchId {
-            groupCode = savedGroup
-            tournamentMatchId = savedMatch
-        } else {
-            groupCode = UUID().uuidString
-            tournamentMatchId = UUID().uuidString
-        }
-        GameManager.shared.update { g in
-            g.tournamentCode         = record.code
-            g.groupCode              = groupCode
-            g.tournamentMatchId      = tournamentMatchId
-            g.tournamentName         = record.name
-            g.tournamentGameType     = record.gameType
-            g.tournamentScoringType  = record.scoring
-            g.tournamentDay          = record.currentDay ?? 1
-            g.tournamentIsCreator    = (record.createdBy == DeviceID.id)
-            g.tournamentIsOrganizer  = g.tournamentIsCreator
-                || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
-            g.tournamentPotAmount    = record.potAmount
-            g.tournamentCarryTies    = record.carryTies
-            if record.gameType == "skins", let stake = record.stake {
-                var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
-                skins.settings.skinValue = stake
-                g.skinsState = skins
-            } else if record.gameType == "wolf", let wolfStake = record.wolfStake {
-                g.wolfStake = wolfStake
-                g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
-            }
-            g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
-            g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
-            g.tournamentStablefordEnabled = record.stablefordEnabled
-            if record.gameType == "wolf" {
-                switch record.wolfVariant {
-                case "2pt":       g.gameType = .wolf
-                case "lowball":   g.gameType = .wolfLowBall
-                case "matchplay": g.gameType = .matchPlay
-                default:          g.gameType = .sixPointScotch
-                }
-                if let ps = record.pressStyle  { g.pressStyle  = ps == "additive" ? .additive : .doubling }
-                if let hs = record.hammerStyle { g.hammerStyle = hs == "additive" ? .additive : .doubling }
-            }
-        }
-        let joinDay = record.currentDay ?? 1
-        UserDefaults.standard.set(joinDay, forKey: "lastTournamentDay_\(record.code)")
-        GameManager.shared.saveCurrent()
-        let isOrg = GameManager.shared.currentGame?.tournamentIsOrganizer == true
-        TournamentHistoryStore.shared.record(
-            code: record.code, name: record.name,
-            gameType: record.gameType, day: joinDay, isOrganizer: isOrg,
-            groupCode: groupCode, tournamentMatchId: tournamentMatchId)
-        NotificationCenter.default.post(name: .reloadUI, object: nil)
+        GameManager.applyTournamentJoin(record: record)
 
         let presenter = self.navigationController?.presentingViewController ?? presentingViewController
         let sb = UIStoryboard(name: "Main", bundle: nil)
 
         if record.gameType == "scramble" {
             // Scramble: skip roster picker — show team entry form, then go straight to scoring.
-            let tCode       = record.code
-            let tCourseName = record.courseName
+            let tCode = record.code
             dismiss(animated: true) {
                 guard let presenter else { return }
                 let entryVC = ScrambleTeamEntryViewController()
@@ -403,16 +339,6 @@ final class LiveConnectedViewController: UITableViewController {
                                 tournamentCode: tCode, teamName: teamName, playerNames: playerNames)
                             await MainActor.run {
                                 GameManager.shared.update { g in
-                                    if let courseName = tCourseName,
-                                       let profile = CourseLibrary.shared.courses.first(where: {
-                                           $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
-                                               .caseInsensitiveCompare(courseName.trimmingCharacters(in: .whitespacesAndNewlines)) == .orderedSame
-                                       }) {
-                                        g.course = Course(id: profile.id, name: profile.name,
-                                                         pars: Array(profile.pars.prefix(STANDARD_HOLES)),
-                                                         holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)),
-                                                         teeSets: profile.teeSets ?? [])
-                                    }
                                     g.scrambleTeamName   = teamName
                                     g.playerNames[0]     = teamName
                                     for i in g.playerActivated.indices { g.playerActivated[i] = false }

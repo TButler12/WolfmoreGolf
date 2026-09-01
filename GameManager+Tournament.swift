@@ -7,6 +7,89 @@ import Foundation
 
 extension GameManager {
 
+    // MARK: - Tournament join
+
+    /// Single shared join path for all entry points (scoring-page button, Live & Tournaments,
+    /// LiveConnectedViewController). Handles same-day ID reuse, all game-state writes, course
+    /// update from the organizer's courseName, and history recording.
+    @discardableResult
+    static func applyTournamentJoin(record: TournamentRecord) -> (groupCode: String, matchId: String) {
+        if shared.currentGame == nil { _ = shared.loadLastOpened(notify: false) }
+        if shared.currentGame == nil { shared.startNewGame() }
+
+        let liveDay = record.currentDay ?? 1
+        let existing = TournamentHistoryStore.shared.all().first { $0.code == record.code }
+        let isSameDay = existing?.lastDay == liveDay
+        let groupCode: String
+        let matchId: String
+        if isSameDay, let sg = existing?.groupCode, let sm = existing?.tournamentMatchId {
+            groupCode = sg; matchId = sm
+        } else {
+            groupCode = UUID().uuidString; matchId = UUID().uuidString
+        }
+
+        shared.update { g in
+            g.tournamentCode        = record.code
+            g.groupCode             = groupCode
+            g.tournamentMatchId     = matchId
+            g.tournamentName        = record.name
+            g.tournamentGameType    = record.gameType
+            g.tournamentScoringType = record.scoring
+            g.tournamentDay         = liveDay
+            g.tournamentIsCreator   = (record.createdBy == DeviceID.id)
+            g.tournamentIsOrganizer = g.tournamentIsCreator
+                || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
+            g.tournamentPotAmount   = record.potAmount
+            g.tournamentCarryTies   = record.carryTies
+            if record.gameType == "skins", let stake = record.stake {
+                var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
+                skins.settings.skinValue = stake
+                g.skinsState = skins
+            } else if record.gameType == "wolf", let wolfStake = record.wolfStake {
+                g.wolfStake = wolfStake
+                g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
+            }
+            g.stablefordBaseline        = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+            g.stablefordCountingPlayers = record.stablefordTeamCount ?? 3
+            g.tournamentStablefordEnabled = record.stablefordEnabled
+            g.gameType = nil
+            switch record.gameType {
+            case "stableford": g.gameType = .tournament
+            case "wolf":
+                switch record.wolfVariant {
+                case "2pt":       g.gameType = .wolf
+                case "lowball":   g.gameType = .wolfLowBall
+                case "matchplay": g.gameType = .matchPlay
+                default:          g.gameType = .sixPointScotch
+                }
+                if let ps = record.pressStyle  { g.pressStyle  = ps == "additive" ? .additive : .doubling }
+                if let hs = record.hammerStyle { g.hammerStyle = hs == "additive" ? .additive : .doubling }
+            default: break
+            }
+            // Update course for all game types when the organizer specified one.
+            if let courseName = record.courseName,
+               let profile = CourseLibrary.shared.courses.first(where: {
+                   $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                       .caseInsensitiveCompare(courseName.trimmingCharacters(in: .whitespacesAndNewlines)) == .orderedSame
+               }) {
+                g.course = Course(id: profile.id, name: profile.name,
+                                  pars: Array(profile.pars.prefix(STANDARD_HOLES)),
+                                  holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)),
+                                  teeSets: profile.teeSets ?? [])
+            }
+        }
+
+        UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(record.code)")
+        shared.saveCurrent()
+        let isOrg = shared.currentGame?.tournamentIsOrganizer == true
+        TournamentHistoryStore.shared.record(
+            code: record.code, name: record.name,
+            gameType: record.gameType, day: liveDay, isOrganizer: isOrg,
+            groupCode: groupCode, tournamentMatchId: matchId)
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+        return (groupCode, matchId)
+    }
+
     // MARK: - Stableford helpers
 
     /// Returns handicap strokes received on a hole for Stableford.
