@@ -290,7 +290,7 @@ private extension RulesViewController {
         • You can change game modes mid-round if you want to mix it up
 
         From the scoring page, two buttons give direct access to live features:
-        • Live Wolf — start or share a live spectator session (replaces the old Game Settings flow)
+        • Live Wolf — start or share a live spectator session
         • Tournament — join or view the current tournament leaderboard
         """)
 
