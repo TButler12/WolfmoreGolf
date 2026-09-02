@@ -281,7 +281,7 @@ private extension RulesViewController {
         • Wolf (2 Point)
         • Wolf (1 Point)
         • Hammer
-        • Wolf Live (real-time spectator mode)
+        • Live Wolf (real-time spectator mode)
         • Match Play
         • Best Ball
         • Scramble (tournament format — see SCRAMBLE below)
