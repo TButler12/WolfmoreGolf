@@ -5,11 +5,14 @@ final class ScrambleTeamEntryViewController: UIViewController {
     var allowSkip = false
     /// Called when the user taps Continue with a valid team name.
     /// The VC does not dismiss itself — the caller handles async work and navigation.
-    var submit: ((_ vc: ScrambleTeamEntryViewController, _ teamName: String, _ playerNames: [String]) -> Void)?
+    var submit: ((_ vc: ScrambleTeamEntryViewController, _ teamName: String, _ playerNames: [String], _ startingHole: Int) -> Void)?
     var onSkip: (() -> Void)?
 
     private let teamNameField = UITextField()
     private let playerFields  = (0..<4).map { _ in UITextField() }
+
+    private var startingHoleValue: Int = 1
+    private let startingHoleLabel = UILabel()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -77,6 +80,7 @@ final class ScrambleTeamEntryViewController: UIViewController {
         stack.addArrangedSubview(intro)
 
         stack.addArrangedSubview(makeRow("Team Name", field: teamNameField, placeholder: "e.g. Team Alpha"))
+        stack.addArrangedSubview(makeStartingHoleRow())
 
         let playersHeader = UILabel()
         playersHeader.text = "PLAYERS (OPTIONAL)"
@@ -116,6 +120,39 @@ final class ScrambleTeamEntryViewController: UIViewController {
         playerFields.last?.addTarget(self, action: #selector(continueTapped), for: .editingDidEndOnExit)
     }
 
+    private func makeStartingHoleRow() -> UIView {
+        let label = UILabel()
+        label.text = "Starting Hole"
+        label.font = .preferredFont(forTextStyle: .subheadline)
+        label.textColor = .secondaryLabel
+
+        let minusBtn = UIButton(type: .system)
+        minusBtn.setTitle("−", for: .normal)
+        minusBtn.titleLabel?.font = .systemFont(ofSize: 24, weight: .medium)
+        minusBtn.addTarget(self, action: #selector(holeDecrement), for: .touchUpInside)
+
+        startingHoleLabel.text = "1"
+        startingHoleLabel.font = .monospacedDigitSystemFont(ofSize: 17, weight: .regular)
+        startingHoleLabel.textAlignment = .center
+        startingHoleLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let plusBtn = UIButton(type: .system)
+        plusBtn.setTitle("+", for: .normal)
+        plusBtn.titleLabel?.font = .systemFont(ofSize: 24, weight: .medium)
+        plusBtn.addTarget(self, action: #selector(holeIncrement), for: .touchUpInside)
+
+        let stepperRow = UIStackView(arrangedSubviews: [minusBtn, startingHoleLabel, plusBtn])
+        stepperRow.axis = .horizontal
+        stepperRow.alignment = .center
+        stepperRow.distribution = .fill
+        stepperRow.spacing = 12
+
+        let outer = UIStackView(arrangedSubviews: [label, stepperRow])
+        outer.axis = .vertical
+        outer.spacing = 6
+        return outer
+    }
+
     private func makeRow(_ title: String, field: UITextField, placeholder: String) -> UIView {
         let label = UILabel()
         label.text = title
@@ -126,6 +163,16 @@ final class ScrambleTeamEntryViewController: UIViewController {
         stack.axis = .vertical
         stack.spacing = 6
         return stack
+    }
+
+    @objc private func holeDecrement() {
+        if startingHoleValue > 1 { startingHoleValue -= 1 }
+        startingHoleLabel.text = "\(startingHoleValue)"
+    }
+
+    @objc private func holeIncrement() {
+        if startingHoleValue < 18 { startingHoleValue += 1 }
+        startingHoleLabel.text = "\(startingHoleValue)"
     }
 
     @objc private func fieldReturn(_ sender: UITextField) {
@@ -148,7 +195,7 @@ final class ScrambleTeamEntryViewController: UIViewController {
             .compactMap { $0.text?.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
         view.endEditing(true)
-        submit?(self, teamName, playerNames)
+        submit?(self, teamName, playerNames, startingHoleValue)
     }
 
     @objc private func skipTapped() {

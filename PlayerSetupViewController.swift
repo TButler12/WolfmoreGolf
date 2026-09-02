@@ -59,6 +59,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
                 g.course.teeSets = []
             }
             // Reset any playerTeeSetIndex that is now out of bounds.
+            // Index 0 = Default, 1..setCount = teeSets[0]..teeSets[setCount-1]; > setCount is invalid.
             let setCount = g.course.teeSets.count
             for i in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[i] > setCount {
                 g.playerTeeSetIndex[i] = 0

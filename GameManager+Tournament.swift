@@ -83,6 +83,11 @@ extension GameManager {
                                   pars: Array(profile.pars.prefix(STANDARD_HOLES)),
                                   holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)),
                                   teeSets: profile.teeSets ?? [])
+                // Reset any tee-set indices that are out of bounds for the new course.
+                let setCount = g.course.teeSets.count
+                for i in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[i] > setCount {
+                    g.playerTeeSetIndex[i] = 0
+                }
             }
         }
 

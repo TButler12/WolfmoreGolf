@@ -650,6 +650,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         buildTournamentBanner()
         updateStablefordToggleVisibility()
         refreshHoleInfoHeader()
+        // Toggle visibility (and showingStablefordPoints) is now correct — repaint so
+        // Stableford pts appear immediately instead of waiting for the first hole advance.
+        paintEverythingForCurrentHole()
     }
 
     private func buildTournamentBanner() {
@@ -1545,7 +1548,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             showScrambleRunningScore(g: g)
             return
         }
-        if g.resolvedGameType == .tournament {
+        if g.resolvedGameType == .tournament || g.tournamentGameType == "stableford" {
             if showingStablefordPoints {
                 refreshTournamentTotalPoints(g: g)
             } else {
@@ -2235,8 +2238,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             nassauButton?.isHidden = true
             liveNassauButton?.isHidden = true
             liveSummaryStrip?.isHidden = true
-            standingsHeaderButton?.setTitle("Scramble", for: .normal)
-            standingsHeaderButton?.isHidden = false
+            standingsHeaderButton?.isHidden = true
             applyScrambleSlotVisibility(isScramble: true)
             updateStablefordToggleVisibility()
             return
@@ -2297,10 +2299,21 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let showToggle = g.resolvedGameType == .tournament
             || g.tournamentStablefordEnabled == true
             || g.tournamentGameType == "stableford"
+        let isPureStableford = g.tournamentGameType == "stableford"
+            || (g.resolvedGameType == .tournament && g.tournamentGameType == nil)
         if showToggle && toggle.isHidden {
             toggle.isHidden = false
             navRowTopHidden?.isActive  = false
             navRowTopVisible?.isActive = true
+            // Default to Pts for pure Stableford tournaments (no money component).
+            if isPureStableford {
+                toggle.selectedSegmentIndex = 1
+                showingStablefordPoints = true
+            }
+        } else if showToggle && !toggle.isHidden && isPureStableford && !showingStablefordPoints {
+            // Toggle already visible but stuck on Money — auto-correct to Pts.
+            toggle.selectedSegmentIndex = 1
+            showingStablefordPoints = true
         } else if !showToggle && !toggle.isHidden {
             toggle.isHidden = true
             navRowTopVisible?.isActive = false
@@ -3725,12 +3738,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 // 5e-stableford) Individual pts per player + one team row per hole.
                 // Runs for pure Stableford AND for hybrid Wolf/Skins + stableford_enabled tournaments.
                 if isPureStableford || (g.tournamentStablefordEnabled == true) {
+                    struct SFPlayerRow {
+                        let seat: Int; let name: String; let gross: Int; let strokes: Int
+                        let holePts: Int; let totalPts: Int; let playerHc: Int
+                    }
                     for backfillHole in backfillRange {
                         let holeHc = g.course.holeHandicaps[safe: backfillHole] ?? (backfillHole + 1)
                         let range: [Int] = startH <= backfillHole
                             ? Array(startH...backfillHole)
                             : Array(startH..<g.totalHoles) + Array(0...backfillHole)
 
+                        // Pre-compute all values synchronously before concurrent submission.
+                        var playerRows: [SFPlayerRow] = []
                         for seat in 0..<min(MAX_PLAYERS, g.playerActivated.count) {
                             guard g.playerActivated[seat],
                                   seat < g.scores.count,
@@ -3741,7 +3760,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                             let playerSI = g.hcForHole(backfillHole, player: seat)
                             let playerPar = g.parForHole(backfillHole, player: seat)
                             let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: playerSI)
-
                             let holePts = GameManager.shared.stablefordPoints(
                                 grossScore: gross, par: playerPar, playerHC: playerHc,
                                 strokeIndex: playerSI, baseline: g.stablefordBaseline) ?? 0
@@ -3753,49 +3771,59 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                                     grossScore: sc, par: p, playerHC: playerHc,
                                     strokeIndex: si, baseline: g.stablefordBaseline) ?? 0)
                             }
-
-                            do {
-                                try await SupabaseService.shared.submitTournamentHoleScore(
-                                    playerSlot:     seat,
-                                    playerName:     name,
-                                    hole:           backfillHole,
-                                    grossScore:     gross,
-                                    netScore:       gross - strokes,
-                                    holeMoney:      Double(holePts),
-                                    totalMoney:     Double(totalPts),
-                                    holeHc:         holeHc,
-                                    playerHc:       playerHc,
-                                    tournamentCode: tCode,
-                                    groupCode:      gCode,
-                                    day:            effectiveDay,
-                                    game_type:      "stableford"
-                                )
-                            } catch {
-                                print("ERROR 5e-stableford write seat=\(seat) hole=\(backfillHole+1): \(error)")
-                            }
+                            playerRows.append(SFPlayerRow(seat: seat, name: name, gross: gross,
+                                strokes: strokes, holePts: holePts, totalPts: totalPts, playerHc: playerHc))
                         }
-
-                        // One team row per hole — best-N pts aggregated from active players.
                         let teamHolePts  = GameManager.shared.teamHoleScore(hole: backfillHole, game: g)
                         let teamTotalPts = range.reduce(0) { $0 + GameManager.shared.teamHoleScore(hole: $1, game: g) }
-                        do {
-                            try await SupabaseService.shared.submitTournamentHoleScore(
-                                playerSlot:     0,
-                                playerName:     "Team",
-                                hole:           backfillHole,
-                                grossScore:     0,
-                                netScore:       0,
-                                holeMoney:      Double(teamHolePts),
-                                totalMoney:     Double(teamTotalPts),
-                                holeHc:         holeHc,
-                                playerHc:       0,
-                                tournamentCode: tCode,
-                                groupCode:      gCode,
-                                day:            effectiveDay,
-                                game_type:      "stableford_team"
-                            )
-                        } catch {
-                            print("ERROR 5e-stableford team write hole=\(backfillHole+1): \(error)")
+
+                        // Submit individual + team rows concurrently so they land simultaneously,
+                        // preventing the leaderboard from seeing individual data before team data.
+                        await withTaskGroup(of: Void.self) { group in
+                            for row in playerRows {
+                                group.addTask {
+                                    do {
+                                        try await SupabaseService.shared.submitTournamentHoleScore(
+                                            playerSlot:     row.seat,
+                                            playerName:     row.name,
+                                            hole:           backfillHole,
+                                            grossScore:     row.gross,
+                                            netScore:       row.gross - row.strokes,
+                                            holeMoney:      Double(row.holePts),
+                                            totalMoney:     Double(row.totalPts),
+                                            holeHc:         holeHc,
+                                            playerHc:       row.playerHc,
+                                            tournamentCode: tCode,
+                                            groupCode:      gCode,
+                                            day:            effectiveDay,
+                                            game_type:      "stableford"
+                                        )
+                                    } catch {
+                                        print("ERROR 5e-stableford write seat=\(row.seat) hole=\(backfillHole+1): \(error)")
+                                    }
+                                }
+                            }
+                            group.addTask {
+                                do {
+                                    try await SupabaseService.shared.submitTournamentHoleScore(
+                                        playerSlot:     0,
+                                        playerName:     "Team",
+                                        hole:           backfillHole,
+                                        grossScore:     0,
+                                        netScore:       0,
+                                        holeMoney:      Double(teamHolePts),
+                                        totalMoney:     Double(teamTotalPts),
+                                        holeHc:         holeHc,
+                                        playerHc:       0,
+                                        tournamentCode: tCode,
+                                        groupCode:      gCode,
+                                        day:            effectiveDay,
+                                        game_type:      "stableford_team"
+                                    )
+                                } catch {
+                                    print("ERROR 5e-stableford team write hole=\(backfillHole+1): \(error)")
+                                }
+                            }
                         }
                     }
                 }
@@ -4707,7 +4735,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             playerMoneyFields.dropFirst().forEach { $0.text = ""; $0.backgroundColor = .clear }
             return
         }
-        if g.resolvedGameType == .tournament {
+        if g.resolvedGameType == .tournament || g.tournamentGameType == "stableford" {
             if showingStablefordPoints {
                 refreshTournamentHolePoints(g: g, hole: h)
             } else {
@@ -4776,8 +4804,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         for s in 0..<playerSlots {
             let seat = order[safe: s] ?? s
             let hc   = g.hcPlayers[safe: seat] ?? 0
-            let par  = g.courseParToPass[safe: hole] ?? 4
-            let si   = g.courseHCToPass[safe: hole] ?? (hole + 1)
+            let par  = g.parForHole(hole, player: seat)
+            let si   = g.hcForHole(hole, player: seat)
             let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
             let pts = GameManager.shared.stablefordPoints(
                 grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
@@ -4933,10 +4961,41 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
               let g = GameManager.shared.currentGame,
               let code = g.tournamentCode else { return }
         let knownDay = g.tournamentDay ?? 1
+        let isOrganizer = g.tournamentIsOrganizer == true
         Task { [weak self] in
             guard let self,
-                  let liveDay = try? await SupabaseService.shared.fetchTournament(code: code).currentDay,
-                  liveDay > knownDay else { return }
+                  let record = try? await SupabaseService.shared.fetchTournament(code: code) else { return }
+
+            // Sync course for non-organizer groups whose course doesn't match the tournament's.
+            if !isOrganizer,
+               let courseName = record.courseName,
+               let profile = CourseLibrary.shared.courses.first(where: {
+                   $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                       .caseInsensitiveCompare(courseName.trimmingCharacters(in: .whitespacesAndNewlines)) == .orderedSame
+               }) {
+                let currentCourseName = GameManager.shared.currentGame?.course.name ?? ""
+                if currentCourseName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    .caseInsensitiveCompare(profile.name.trimmingCharacters(in: .whitespacesAndNewlines)) != .orderedSame {
+                    GameManager.shared.update { g in
+                        g.course = Course(id: profile.id, name: profile.name,
+                                          pars: Array(profile.pars.prefix(STANDARD_HOLES)),
+                                          holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)),
+                                          teeSets: profile.teeSets ?? [])
+                        let setCount = g.course.teeSets.count
+                        for i in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[i] > setCount {
+                            g.playerTeeSetIndex[i] = 0
+                        }
+                        // Fix gameType for old-build groups that joined before it was persisted.
+                        if g.tournamentGameType == "stableford" && g.gameType != .tournament {
+                            g.gameType = .tournament
+                        }
+                    }
+                    await MainActor.run { self.paintEverythingForCurrentHole() }
+                }
+            }
+
+            // Check for day advance.
+            guard let liveDay = record.currentDay, liveDay > knownDay else { return }
             await MainActor.run {
                 guard !self.newDayAlertShown, self.presentedViewController == nil else { return }
                 self.newDayAlertShown = true
@@ -5115,6 +5174,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 tf.placeholder = "e.g. Team Alpha"
                 tf.autocapitalizationType = .words
                 tf.autocorrectionType = .no
+                tf.returnKeyType = .next
+            }
+            ac.addTextField { tf in
+                tf.placeholder = "Starting hole (1–18)"
+                tf.keyboardType = .numberPad
                 tf.returnKeyType = .done
             }
             ac.addAction(UIAlertAction(title: "Skip", style: .cancel) { [weak self] _ in
@@ -5124,6 +5188,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 guard let self else { return }
                 let teamName = (ac.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !teamName.isEmpty else { self.showTournamentJoinedToast(name: record.name); return }
+                let holeInput = Int(ac.textFields?[1].text ?? "") ?? 1
+                let holeIndex = max(0, min(17, holeInput - 1))
+                GameManager.shared.update { g in
+                    g.hole = holeIndex
+                    g.startHole = holeIndex
+                }
+                self.currentHole = holeIndex
+                self.paintEverythingForCurrentHole()
                 self.registerScrambleTeamAndFinish(
                     tournamentCode: record.code, teamName: teamName,
                     playerNames: activePlayers, tournamentName: record.name)

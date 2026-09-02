@@ -309,11 +309,13 @@ final class TournamentLeaderboardViewController: UIViewController {
         // Auto-detect Stableford from actual row data (handles tournaments created before Stableford support).
         rowsDetectedStableford = allRows.contains { $0.gameType == "stableford" }
 
-        // ── Deduplicate: one row per (playerName, day, hole, game_type) ──
+        // ── Deduplicate: one row per (matchId, playerName, day, hole, game_type) ──
+        // matchId is required so multiple groups' stableford_team rows (all named "Team")
+        // don't collapse into one — each group has a distinct matchId.
         let deduped: [TournamentHoleScoreRow] = {
             var seen = Set<String>()
             return allRows.filter {
-                seen.insert("\($0.playerName)|\($0.day ?? 1)|\($0.hole)|\($0.gameType ?? "wolf")").inserted
+                seen.insert("\($0.matchId)|\($0.playerName)|\($0.day ?? 1)|\($0.hole)|\($0.gameType ?? "wolf")").inserted
             }
         }()
 

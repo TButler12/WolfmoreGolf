@@ -330,7 +330,7 @@ final class LiveConnectedViewController: UITableViewController {
                 guard let presenter else { return }
                 let entryVC = ScrambleTeamEntryViewController()
                 entryVC.allowSkip = false
-                entryVC.submit = { vc, teamName, playerNames in
+                entryVC.submit = { vc, teamName, playerNames, startingHole in
                     let spinner = UIAlertController(title: nil, message: "Setting up team…", preferredStyle: .alert)
                     vc.present(spinner, animated: true)
                     Task {
@@ -338,6 +338,7 @@ final class LiveConnectedViewController: UITableViewController {
                             _ = try await SupabaseService.shared.findOrCreateScrambleTeam(
                                 tournamentCode: tCode, teamName: teamName, playerNames: playerNames)
                             await MainActor.run {
+                                let holeIndex = max(0, min(17, startingHole - 1))
                                 GameManager.shared.update { g in
                                     g.scrambleTeamName   = teamName
                                     g.playerNames[0]     = teamName
@@ -345,6 +346,8 @@ final class LiveConnectedViewController: UITableViewController {
                                     g.playerActivated[0] = true
                                     // Wipe previous round's scores so the new game starts clean.
                                     g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                                    g.hole      = holeIndex
+                                    g.startHole = holeIndex
                                 }
                                 GameManager.shared.seedScoresWithParsForActivePlayers()
                                 GameManager.shared.saveCurrent()

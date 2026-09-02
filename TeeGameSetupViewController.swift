@@ -488,7 +488,7 @@ final class TeeGameSetupViewController: UIViewController {
         entryVC.onSkip = { [weak self] in
             self?.navigationController?.dismiss(animated: true)
         }
-        entryVC.submit = { [weak self] vc, teamName, playerNames in
+        entryVC.submit = { [weak self] vc, teamName, playerNames, startingHole in
             guard let self else { return }
             let spinner = UIAlertController(title: nil, message: "Setting up team…", preferredStyle: .alert)
             vc.present(spinner, animated: true)
@@ -498,6 +498,7 @@ final class TeeGameSetupViewController: UIViewController {
                     _ = try await SupabaseService.shared.findOrCreateScrambleTeam(
                         tournamentCode: code, teamName: teamName, playerNames: playerNames)
                     await MainActor.run {
+                        let holeIndex = max(0, min(17, startingHole - 1))
                         GameManager.shared.update { g in
                             g.scrambleTeamName   = teamName
                             g.playerNames[0]     = teamName
@@ -505,6 +506,8 @@ final class TeeGameSetupViewController: UIViewController {
                             g.playerActivated[0] = true
                             // Wipe previous round's scores so the new game starts clean.
                             g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                            g.hole      = holeIndex
+                            g.startHole = holeIndex
                         }
                         GameManager.shared.seedScoresWithParsForActivePlayers()
                         GameManager.shared.saveCurrent()
