@@ -225,6 +225,23 @@ private extension RulesViewController {
         • To add a custom course: tap the course picker, then tap 'Add Course' — enter the course name, then set par and handicap for each hole. Custom courses are saved and available for all future rounds.
         """)
 
+        header("TEE SELECTION")
+        body("""
+        Players in the same group can play from different tees — WolfMore scores each player against their own tee's pars and handicap ratings.
+
+        • On the pre-round player setup screen, tap "Default" next to any player's name to choose their tee
+        • Available tees are pulled from the selected course (e.g. Blue, White, Red)
+        • "Default" means the course's standard tee is used for that player
+        • Each player's tee choice is saved and remembered for future rounds on that course
+
+        How it affects scoring:
+        • Handicap strokes are allocated based on each player's tee stroke index, not a shared index
+        • In Stableford tournaments, points are calculated against that player's tee pars
+        • Wolf, Nassau, and Skins all honor per-player tee pars and handicaps automatically
+
+        Tee selection is optional — if everyone plays the same tee, leave all players set to Default.
+        """)
+
         header("SCORING")
         body("""
         Enter scores → Select options → Update Scores
@@ -312,6 +329,10 @@ private extension RulesViewController {
         • Each group plays as a team — enter the team's score for each hole
         • Net scoring: team handicap is applied automatically based on the players in the group
         • The leaderboard ranks teams by cumulative score across all holes
+
+        Starting hole:
+        • If your group starts on a hole other than 1 (e.g. a shotgun start), set Starting Hole when entering your team name
+        • Scoring and the leaderboard will track from your starting hole forward
 
         Scramble is a tournament-only format — it requires creating or joining a tournament via Live & Tournaments before starting a round.
         """)
@@ -496,6 +517,11 @@ private extension RulesViewController {
         • Organizer selects how many scores count per hole: Best 2, Best 3, or All 4
         • Handicaps are applied automatically based on each player's stroke index
         • The real-time leaderboard shows hole-by-hole points, front/back 9 totals, and overall standings
+
+        Tee selection:
+        • Each player can play from a different set of tees (see TEE SELECTION)
+        • Points are calculated against that player's tee pars — a player on Women's Red is scored against Red pars, not the default tee
+        • Set each player's tee on the pre-round player setup screen before starting
 
         The scorecard highlights each gross score with a color — gold for eagle, green for birdie, pink for bogey, and red for double bogey or worse.
         """)
