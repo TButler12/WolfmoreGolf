@@ -58,8 +58,8 @@ enum SummaryStyle: Int, CaseIterable {
             Focus on how the match(es) played out: who was up or down, key turning-point holes, clutch wins, and the final result. \
             Do NOT mention money, dollar amounts, prize totals, or Nassau — match play is purely holes up or down.\n
             """ : ""
-        // Applied to every style: birdie always means a natural gross birdie (scored below par before handicap)
-        let birdieNote = "IMPORTANT: When mentioning birdies, only reference natural gross birdies — a score of one under par on the hole before any handicap strokes. Do not call a net birdie a birdie.\n"
+        // Applied to every style: birdies, eagles, and holes-in-one must always be gross scores, never net.
+        let birdieNote = "IMPORTANT: When highlighting birdies, eagles, or holes-in-one, only reference gross scores — the actual strokes taken before any handicap adjustment. Never call a net birdie a birdie, never call a net eagle an eagle, and never call a net hole-in-one a hole-in-one. If a player made a score only by virtue of handicap strokes, do not describe it as a birdie or eagle.\n"
         let prefix = birdieNote + stablefordNote + tournamentNote + scrambleNote + matchPlayNote
         switch self {
         case .trashTalk:
