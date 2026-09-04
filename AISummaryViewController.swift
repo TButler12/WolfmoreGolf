@@ -33,16 +33,25 @@ enum SummaryStyle: Int, CaseIterable {
         }
     }
 
-    func systemPrompt(isStableford: Bool = false, isTournament: Bool = false, isMatchPlay: Bool = false) -> String {
+    func systemPrompt(isStableford: Bool = false, isTournament: Bool = false, isMatchPlay: Bool = false, isScramble: Bool = false) -> String {
         let stablefordNote = isStableford ? """
             IMPORTANT: This is a Stableford round — individual points-based scoring. \
             Focus on points earned per hole, standout individual performances, and the final leaderboard. \
             Do NOT mention Wolf, Lone Wolf, Nassau, Skins, Hammers, or money — none of those apply here.\n
             """ : ""
-        let tournamentNote = isTournament ? """
+        let tournamentNote = (isTournament && !isScramble) ? """
             IMPORTANT: This is a multi-group tournament. Data includes all groups and an overall money leaderboard. \
             Structure your recap in two parts: (1) a brief summary of each group's round, calling out standout moments; \
             (2) the overall tournament leaderboard with commentary on who's up, who's down, and who had the biggest swing.\n
+            """ : ""
+        let scrambleNote = isScramble ? """
+            IMPORTANT: This is a Scramble tournament — team stroke play. All players hit, the best shot is selected, \
+            and everyone plays from that spot. Scores are shown relative to par: negative = under par (good), \
+            positive = over par (bad), E = even. The leaderboard ranks teams from lowest to highest cumulative score vs par. \
+            Structure your recap in two parts: (1) highlight each team's round — their best holes, birdies made, \
+            pars saved, any blow-up holes; (2) the overall leaderboard with commentary on who's leading, \
+            who's struggling, and any close battles. \
+            Do NOT mention Wolf, Lone Wolf, Nassau, Skins, Hammers, or dollar amounts — this is pure team stroke play.\n
             """ : ""
         let matchPlayNote = isMatchPlay ? """
             IMPORTANT: This is a Match Play game — score is measured in holes won/lost, not strokes or net score. \
@@ -51,7 +60,7 @@ enum SummaryStyle: Int, CaseIterable {
             """ : ""
         // Applied to every style: birdie always means a natural gross birdie (scored below par before handicap)
         let birdieNote = "IMPORTANT: When mentioning birdies, only reference natural gross birdies — a score of one under par on the hole before any handicap strokes. Do not call a net birdie a birdie.\n"
-        let prefix = birdieNote + stablefordNote + tournamentNote + matchPlayNote
+        let prefix = birdieNote + stablefordNote + tournamentNote + scrambleNote + matchPlayNote
         switch self {
         case .trashTalk:
             return prefix + """
@@ -409,27 +418,44 @@ private enum TournamentContextBuilder {
         lines.append("GAME TYPE: \(gameType)")
         lines.append("")
 
-        // Aggregate per-player totals (take the highest-hole totalMoney as their current standing)
+        let isScramble = gameType.lowercased() == "scramble"
+
+        // Aggregate per-team/player totals.
+        // Scramble: holeMoney/totalMoney are always 0 — use cumulative netScore (gross - par) instead.
+        // All other formats: use totalMoney from the latest submitted hole.
         var playerTotals: [String: Double] = [:]
         var playerHolesPlayed: [String: Int] = [:]
-        for row in dayRows {
-            let name = row.playerName
-            playerHolesPlayed[name] = max(playerHolesPlayed[name] ?? 0, row.hole)
-            if let total = row.totalMoney {
-                // totalMoney on the latest hole is the running total
-                if row.hole >= (playerHolesPlayed[name] ?? 0) {
+        if isScramble {
+            var netSums: [String: Double] = [:]
+            for row in dayRows {
+                let name = row.playerName
+                playerHolesPlayed[name] = max(playerHolesPlayed[name] ?? 0, row.hole)
+                if let net = row.netScore { netSums[name, default: 0] += Double(net) }
+            }
+            playerTotals = netSums
+        } else {
+            for row in dayRows {
+                let name = row.playerName
+                playerHolesPlayed[name] = max(playerHolesPlayed[name] ?? 0, row.hole)
+                if let total = row.totalMoney, row.hole >= (playerHolesPlayed[name] ?? 0) {
                     playerTotals[name] = total
                 }
             }
         }
 
-        // Overall leaderboard
-        let leaderboard = playerTotals.sorted { $0.value > $1.value }
-        lines.append("OVERALL LEADERBOARD (\(leaderboard.count) players):")
+        func vsParLabel(_ val: Double) -> String {
+            let n = Int(val.rounded())
+            if n == 0 { return "E" }
+            return n > 0 ? "+\(n)" : "\(n)"
+        }
+
+        // Overall leaderboard — Scramble sorts ascending (lower score = better), others descending.
+        let leaderboard = playerTotals.sorted { isScramble ? $0.value < $1.value : $0.value > $1.value }
+        lines.append("OVERALL LEADERBOARD (\(leaderboard.count) \(isScramble ? "teams" : "players")):")
         for (i, (name, total)) in leaderboard.enumerated() {
             let holes = playerHolesPlayed[name] ?? 0
-            let sign = total >= 0 ? "+" : ""
-            lines.append("  #\(i + 1) \(name): \(sign)$\(Int(total.rounded())) (thru \(holes))")
+            let standing = isScramble ? vsParLabel(total) : { let s = total >= 0 ? "+" : ""; return "\(s)$\(Int(total.rounded()))" }()
+            lines.append("  #\(i + 1) \(name): \(standing) (thru \(holes))")
         }
         lines.append("")
 
@@ -442,7 +468,7 @@ private enum TournamentContextBuilder {
             let playerNames = Array(Set(groupRows.map { $0.playerName })).sorted()
             let maxHole = groupRows.map { $0.hole }.max() ?? 0
             lines.append("")
-            lines.append("  Players: \(playerNames.joined(separator: ", ")) | Thru hole \(maxHole)")
+            lines.append("  \(isScramble ? "Team" : "Players"): \(playerNames.joined(separator: ", ")) | Thru hole \(maxHole)")
 
             // Hole-by-hole for this group
             let holesInGroup = Array(Set(groupRows.map { $0.hole })).sorted()
@@ -452,11 +478,17 @@ private enum TournamentContextBuilder {
                 let par = (hole - 1) < coursePars.count ? coursePars[hole - 1] : 4
                 var parts: [String] = []
                 for row in holeRows {
-                    var part = "\(row.playerName): \(row.grossScore) gross"
-                    if let net = row.netScore { part += "/\(net) net" }
-                    if let money = row.holeMoney, money != 0 {
-                        let sign = money >= 0 ? "+" : ""
-                        part += " (\(sign)$\(Int(money.rounded())))"
+                    var part: String
+                    if isScramble {
+                        let netStr = row.netScore.map { vsParLabel(Double($0)) } ?? "–"
+                        part = "\(row.playerName): \(row.grossScore) (\(netStr))"
+                    } else {
+                        part = "\(row.playerName): \(row.grossScore) gross"
+                        if let net = row.netScore { part += "/\(net) net" }
+                        if let money = row.holeMoney, money != 0 {
+                            let sign = money >= 0 ? "+" : ""
+                            part += " (\(sign)$\(Int(money.rounded())))"
+                        }
                     }
                     parts.append(part)
                 }
@@ -464,8 +496,9 @@ private enum TournamentContextBuilder {
             }
 
             // Group running totals
-            lines.append("    Running totals: " + playerNames.compactMap { name -> String? in
+            lines.append("    Running total: " + playerNames.compactMap { name -> String? in
                 guard let total = playerTotals[name] else { return nil }
+                if isScramble { return "\(name) \(vsParLabel(total))" }
                 let sign = total >= 0 ? "+" : ""
                 return "\(name) \(sign)$\(Int(total.rounded()))"
             }.joined(separator: ", "))
@@ -677,9 +710,10 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
 
         let note = noteField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let isTournament = game.tournamentCode != nil
+        let isScramble   = isTournament && (game.tournamentGameType == "scramble")
         let isMatchPlay  = !isTournament && GameContextBuilder.isMatchPlay(game)
         let isStableford = !isTournament && !isMatchPlay && GameContextBuilder.isStableford(game)
-        let systemPrompt = style.systemPrompt(isStableford: isStableford, isTournament: isTournament, isMatchPlay: isMatchPlay)
+        let systemPrompt = style.systemPrompt(isStableford: isStableford, isTournament: isTournament, isMatchPlay: isMatchPlay, isScramble: isScramble)
 
         Task {
             do {
