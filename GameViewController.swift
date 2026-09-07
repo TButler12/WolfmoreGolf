@@ -298,7 +298,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         setupToggleButton(rollPushed,     onColor: .label, offColor: .systemOrange, onTitle: "Roll",    offTitle: "Roll")
         setupToggleButton(rerollPushed,   onColor: .label, offColor: .systemOrange, onTitle: "Re-Roll", offTitle: "Re-Roll")
         setupToggleButton(alonePushed,    onColor: .label, offColor: .systemOrange, onTitle: "Double",   offTitle: "Alone")
-        setupToggleButton(pressedPushed2, onColor: .label, offColor: .systemOrange, onTitle: "Press",   offTitle: "Press")
+        setupToggleButton(pressedPushed2, onColor: .label, offColor: .systemOrange, onTitle: "PRESS",   offTitle: "PRESS")
+        pressedPushed2.titleLabel?.font = UIFont.systemFont(ofSize: 17, weight: .heavy)
 
         // --- Score fields ---
         for (i, f) in scoreFields.enumerated() {
@@ -5334,6 +5335,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             )
             pressStepperContainer = pc; pressTitleLabel = ptlbl; pressLevelLabel = plbl
             pressMinusButton = pminus; pressPlusButton = pplus
+            ptlbl.text = "PRESS"
+            ptlbl.font = UIFont.systemFont(ofSize: 14, weight: .heavy)
             addHelp(to: pc, title: "Press", message: "__press__") // message built dynamically in handleHelpLongPress
             let _initHole = max(0, min((GameManager.shared.currentGame?.totalHoles ?? STANDARD_HOLES) - 1, GameManager.shared.currentGame?.hole ?? 0))
             let _initPressLevel = GameManager.shared.currentGame?.pressLevel[safe: _initHole] ?? 0
