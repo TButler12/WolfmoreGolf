@@ -5350,6 +5350,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             )
             hammerStepperContainer = hc; hammerTitleLabel = htlbl; hammerLevelLabel = hlbl
             hammerMinusButton = hminus; hammerPlusButton = hplus
+            htlbl.text = "HAMMER"
+            htlbl.font = UIFont.systemFont(ofSize: 14, weight: .heavy)
             addHelp(to: hc, title: "Hammer", message: "__hammer__") // message built dynamically in handleHelpLongPress
             paintHammerUIForCurrentHole()
             hammerButton.isHidden = true; rejectHammerButton.isHidden = true
