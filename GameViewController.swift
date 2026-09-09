@@ -504,15 +504,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         infoBtn.layer.cornerRadius = 18
         infoBtn.clipsToBounds = true
         infoBtn.tintColor = .white
-        let infoCfg = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+        let infoCfg = UIImage.SymbolConfiguration(pointSize: 20, weight: .semibold)
         infoBtn.setImage(UIImage(systemName: "info.circle", withConfiguration: infoCfg), for: .normal)
         infoBtn.addTarget(self, action: #selector(scoringPageInfoTapped), for: .touchUpInside)
         header.addSubview(infoBtn)
         NSLayoutConstraint.activate([
             infoBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
             infoBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
-            infoBtn.widthAnchor.constraint(equalToConstant: 36),
-            infoBtn.heightAnchor.constraint(equalToConstant: 36),
+            infoBtn.widthAnchor.constraint(equalToConstant: 44),
+            infoBtn.heightAnchor.constraint(equalToConstant: 44),
         ])
 
         // Standings button (top-right, left of info button — only shown for local Stableford)
@@ -566,9 +566,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         ])
         courseHeaderLabel = courseLabel
 
-        // Standings pill: sits right of the course label, vertically centred on it.
+        // Standings pill: sits below the course label, trailing edge aligned to header.
         NSLayoutConstraint.activate([
-            standingsBtn.centerYAnchor.constraint(equalTo: courseLabel.centerYAnchor),
+            standingsBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 4),
             standingsBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
         ])
 
