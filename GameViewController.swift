@@ -1424,7 +1424,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         let ac = UIAlertController(
             title: "Change Base $ Bet",
-            message: "Applies to remaining holes only. Holes already scored are not affected.",
+            message: "Applies to all 18 holes.",
             preferredStyle: .alert)
         ac.addTextField { tf in
             tf.keyboardType = .decimalPad
@@ -1438,18 +1438,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                   let entered = Double(text), entered >= 0.5 else { return }
             let amount = (entered * 2.0).rounded() / 2.0   // snap to $0.50 increments
             GameManager.shared.update { g in
-                if g.gameHoleDollarsArray.count != STANDARD_HOLES {
-                    g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES)
-                }
-                if g.holeBaseAmount.count != STANDARD_HOLES {
-                    g.holeBaseAmount = Array(repeating: 2.0, count: STANDARD_HOLES)
-                }
-                // Only update holes that haven't been committed — never retroactively
-                // change settled holes where money has already been calculated.
-                for hole in 0..<STANDARD_HOLES where g.holeCommitted[safe: hole] != true {
-                    g.gameHoleDollarsArray[hole] = amount
-                    g.holeBaseAmount[hole]       = amount
-                }
+                g.gameHoleDollarsArray = Array(repeating: amount, count: STANDARD_HOLES)
+                g.holeBaseAmount       = Array(repeating: amount, count: STANDARD_HOLES)
             }
             GameManager.shared.saveCurrent()
             self.refreshForCurrentHole()
