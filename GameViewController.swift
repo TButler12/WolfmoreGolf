@@ -1407,11 +1407,55 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         sheet.addAction(UIAlertAction(title: "Change Handicap", style: .default) { [weak self] _ in
             self?.changeHandicap()
         })
+        sheet.addAction(UIAlertAction(title: "Change Base $ Bet", style: .default) { [weak self] _ in
+            self?.changeBaseStake()
+        })
         sheet.addAction(UIAlertAction(title: "Pass Game to Another Phone", style: .default) { [weak self] _ in
             self?.passGame()
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet, from: scoringInfoButton)
+    }
+
+    private func changeBaseStake() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let current = g.gameHoleDollarsArray[safe: g.hole] ?? 2.0
+        let currentStr = current == current.rounded() ? String(Int(current)) : String(format: "%.2f", current)
+
+        let ac = UIAlertController(
+            title: "Change Base $ Bet",
+            message: "Applies to remaining holes only. Holes already scored are not affected.",
+            preferredStyle: .alert)
+        ac.addTextField { tf in
+            tf.keyboardType = .decimalPad
+            tf.placeholder  = "e.g. 5"
+            tf.text         = currentStr
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Apply", style: .default) { [weak self] _ in
+            guard let self,
+                  let text = ac.textFields?.first?.text?.trimmingCharacters(in: .whitespaces),
+                  let entered = Double(text), entered >= 0.5 else { return }
+            let amount = (entered * 2.0).rounded() / 2.0   // snap to $0.50 increments
+            GameManager.shared.update { g in
+                if g.gameHoleDollarsArray.count != STANDARD_HOLES {
+                    g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES)
+                }
+                if g.holeBaseAmount.count != STANDARD_HOLES {
+                    g.holeBaseAmount = Array(repeating: 2.0, count: STANDARD_HOLES)
+                }
+                // Only update holes that haven't been committed — never retroactively
+                // change settled holes where money has already been calculated.
+                for hole in 0..<STANDARD_HOLES where g.holeCommitted[safe: hole] != true {
+                    g.gameHoleDollarsArray[hole] = amount
+                    g.holeBaseAmount[hole]       = amount
+                }
+            }
+            GameManager.shared.saveCurrent()
+            self.refreshForCurrentHole()
+            self.paintEverythingForCurrentHole()
+        })
+        present(ac, animated: true)
     }
 
     private func changeHandicap() {
