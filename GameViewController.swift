@@ -130,6 +130,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private let holeStatsSwitch = UISwitch()
     private var hasPromptedForThisHole = false
     private var hasPromptedFront9Submit = false
+    private var pressBack9TipShown = false
     private var proxButtons: [UIButton] { [p0, p1, p2, p3, p4] }
 
     private var currentHole: Int = 0
@@ -1833,6 +1834,54 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
     }
 
+    private func showPressBack9TipIfNeeded() {
+        guard !pressBack9TipShown else { return }
+        guard let g = GameManager.shared.currentGame,
+              g.tournamentCode == nil,
+              !g.resolvedGameType.isMatchPlay else { return }
+        pressBack9TipShown = true
+
+        let banner = UIView()
+        banner.backgroundColor = UIColor.systemOrange
+        banner.layer.cornerRadius = 12
+        banner.layer.shadowColor = UIColor.black.cgColor
+        banner.layer.shadowOpacity = 0.18
+        banner.layer.shadowRadius = 8
+        banner.layer.shadowOffset = CGSize(width: 0, height: 3)
+        banner.alpha = 0
+        banner.translatesAutoresizingMaskIntoConstraints = false
+
+        let label = UILabel()
+        label.text = "Press the points? 👊"
+        label.font = UIFont.systemFont(ofSize: 16, weight: .bold)
+        label.textColor = .white
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        banner.addSubview(label)
+        view.addSubview(banner)
+        view.bringSubviewToFront(banner)
+
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: banner.topAnchor, constant: 12),
+            label.bottomAnchor.constraint(equalTo: banner.bottomAnchor, constant: -12),
+            label.leadingAnchor.constraint(equalTo: banner.leadingAnchor, constant: 20),
+            label.trailingAnchor.constraint(equalTo: banner.trailingAnchor, constant: -20),
+            banner.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            banner.widthAnchor.constraint(lessThanOrEqualTo: view.widthAnchor, constant: -40),
+            banner.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+        ])
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+            UIView.animate(withDuration: 0.3) { banner.alpha = 1 }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.3) {
+            UIView.animate(withDuration: 0.4, animations: { banner.alpha = 0 }) { _ in
+                banner.removeFromSuperview()
+            }
+        }
+    }
+
     @objc private func playerRowLongPressed(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began,
               let pressedLabel = gesture.view as? UILabel,
@@ -2797,6 +2846,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
         hasPromptedForThisHole = false
+        if currentHole == 9 { showPressBack9TipIfNeeded() }
     }
 
     // Put near the top of GameViewController
