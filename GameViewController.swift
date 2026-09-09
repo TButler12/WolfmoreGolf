@@ -4908,11 +4908,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let fg: UIColor   = .white
         let minusFG       = pressLevel == 0 ? UIColor.white.withAlphaComponent(0.4) : .white
 
-        // Highlight the + button yellow on the back 9 (hole 10+) for Wolf games when
-        // no press is active — subtle nudge that a press is available.
-        let isWolfGame = g.map { $0.resolvedGameType.isWolf } ?? false
-        let onBack9    = (g?.hole ?? 0) >= 9
-        let plusFG: UIColor = (isWolfGame && onBack9 && pressLevel == 0)
+        // Highlight the + button yellow on the back 9 (hole 10+) when no press is active —
+        // subtle nudge that a press is available. Applies whenever the press stepper is shown
+        // (Six-Point Scotch, Wolf 2pt, Wolf LowBall) but not tournaments or match play.
+        let isTournament = g?.tournamentCode != nil
+        let isMatchPlay  = g.map { $0.resolvedGameType.isMatchPlay } ?? false
+        let onBack9      = (g?.hole ?? 0) >= 9
+        let plusFG: UIColor = (!isTournament && !isMatchPlay && onBack9 && pressLevel == 0)
             ? .systemYellow : fg
 
         container.backgroundColor  = bg
