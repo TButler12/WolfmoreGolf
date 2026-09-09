@@ -4891,7 +4891,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
               let levelLabel = pressLevelLabel,
               let minusBtn = pressMinusButton else { return }
 
-        let pressStyle = GameManager.shared.currentGame?.pressStyle ?? .additive
+        let g = GameManager.shared.currentGame
+        let pressStyle = g?.pressStyle ?? .additive
         let multiplierText: String
         if pressLevel == 0 {
             multiplierText = "–"
@@ -4907,11 +4908,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let fg: UIColor   = .white
         let minusFG       = pressLevel == 0 ? UIColor.white.withAlphaComponent(0.4) : .white
 
+        // Highlight the + button yellow on the back 9 (hole 10+) for Wolf games when
+        // no press is active — subtle nudge that a press is available.
+        let isWolfGame = g.map { $0.resolvedGameType.isWolf } ?? false
+        let onBack9    = (g?.hole ?? 0) >= 9
+        let plusFG: UIColor = (isWolfGame && onBack9 && pressLevel == 0)
+            ? .systemYellow : fg
+
         container.backgroundColor  = bg
         pressTitleLabel?.textColor = fg
         levelLabel.textColor       = fg
         minusBtn.tintColor         = minusFG
-        pressPlusButton?.tintColor = fg
+        pressPlusButton?.tintColor = plusFG
     }
     @discardableResult
     private func showGameOnboardingIfNeeded() -> Bool {
