@@ -143,6 +143,42 @@ private let CEDAR_RAPIDS_CC_ID = UUID(uuidString: "8A9C62C7-2D5E-4B6F-9B6D-4F1C2
 let CEDAR_RAPIDS_PARS: [Int] = [4,4,4,4,3,5,4,3,5, 4,4,3,4,4,5,4,4,4]
 let CEDAR_RAPIDS_HCS:  [Int] = [11,3,7,5,15,17,1,13,9, 12,4,14,10,18,6,16,2,8]
 
+// MARK: Twin Pines Golf Course — Cedar Rapids, IA
+private let TWIN_PINES_GC_ID = UUID(uuidString: "A1B1504C-0000-4000-8000-000000000001")!
+let TWIN_PINES_GC_PARS: [Int] = [4,5,4,3,5,4,4,3,4, 4,5,3,5,4,4,4,3,4]
+let TWIN_PINES_GC_HCS:  [Int] = [5,3,13,15,1,9,7,17,11, 18,2,14,6,8,10,4,16,12]
+let TWIN_PINES_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White", yardage: 5776, rating: 66.7, slope: 105),
+]
+
+// MARK: Donald K. Gardner Memorial Golf Course — Marion, IA
+private let GARDNER_GC_ID = UUID(uuidString: "D0A1D4EA-0000-4000-8000-000000000001")!
+let GARDNER_GC_PARS: [Int] = [4,5,4,3,4,5,4,3,4, 4,5,4,3,4,4,5,3,4]
+let GARDNER_GC_HCS:  [Int] = [9,15,13,11,5,17,1,7,3, 6,18,12,14,10,2,8,16,4]
+let GARDNER_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6670, rating: 72.4, slope: 118),
+]
+
+// MARK: Ellis Park Golf Club — Cedar Rapids, IA
+private let ELLIS_PARK_GC_ID = UUID(uuidString: "E111504C-0000-4000-8000-000000000001")!
+let ELLIS_PARK_GC_PARS: [Int] = [4,4,5,3,4,4,4,3,5, 4,3,5,4,3,4,4,5,4]
+let ELLIS_PARK_GC_HCS:  [Int] = [12,6,16,2,8,14,4,10,18, 17,13,5,7,3,15,11,9,1]
+let ELLIS_PARK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",       yardage: 6498, rating: 71.4, slope: 125),
+    TeeInfo(teeName: "White",      yardage: 6145, rating: 69.9, slope: 121),
+    TeeInfo(teeName: "White/Gold", yardage: 5816, rating: 68.0, slope: 119),
+    TeeInfo(teeName: "Gold",       yardage: 5470, rating: 66.3, slope: 114),
+    TeeInfo(teeName: "Red",        yardage: 4798, rating: 68.1, slope: 114),
+]
+
+// MARK: Elmcrest Country Club — Cedar Rapids, IA
+private let ELMCREST_CC_ID = UUID(uuidString: "E1C1E5CC-0000-4000-8000-000000000001")!
+let ELMCREST_CC_PARS: [Int] = [4,5,3,4,3,4,5,3,4, 3,5,4,4,3,5,4,3,4]
+let ELMCREST_CC_HCS:  [Int] = [6,12,16,14,18,2,10,8,4, 13,15,3,5,9,11,1,17,7]
+let ELMCREST_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6550, rating: 71.5, slope: 129),
+]
+
 // MARK: Wynstone GC (Silver)
 private let WYNSTONE_SILVER_ID = UUID(uuidString: "22222222-2222-2222-2222-222222222222")!
 let WYNSTONE_SILVER_PARS: [Int] = [4,4,5,3,4,4,3,4,5, 4,3,5,4,3,4,4,4,5]
@@ -8132,6 +8168,87 @@ let DISNEY_OSPREY_RIDGE_TEES: [TeeInfo] = [
 
 // MARK: - Waldorf Astoria Golf Club Orlando
 
+// MARK: Orange County National — Crooked Cat — Winter Garden, FL
+private let OCN_CROOKED_CAT_ID = UUID(uuidString: "0CA4CC47-0000-4000-8000-000000000001")!
+let OCN_CROOKED_CAT_PARS: [Int] = [5,4,4,5,4,3,4,3,4, 4,4,4,3,5,3,4,5,4]
+let OCN_CROOKED_CAT_HCS:  [Int] = [17,3,13,1,11,15,7,5,9, 10,12,2,4,18,14,6,16,8]
+let OCN_CROOKED_CAT_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7388),
+]
+
+// MARK: Orange County National — Panther Lake — Winter Garden, FL
+private let OCN_PANTHER_LAKE_ID = UUID(uuidString: "0CA4AA47-0000-4000-8000-000000000001")!
+let OCN_PANTHER_LAKE_PARS: [Int] = [4,5,4,3,4,3,5,4,4, 5,3,4,4,5,3,4,3,5]
+let OCN_PANTHER_LAKE_HCS:  [Int] = [7,11,1,13,9,17,5,15,3, 16,2,12,4,6,8,14,18,10]
+let OCN_PANTHER_LAKE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7269),
+]
+
+// MARK: World Woods Golf Club — Pine Barrens — Brooksville, FL
+private let WORLD_WOODS_PINE_BARRENS_ID = UUID(uuidString: "D00DEB4E-0000-4000-8000-000000000001")!
+let WORLD_WOODS_PINE_BARRENS_PARS: [Int] = [4,4,3,5,4,5,3,4,4, 3,4,4,4,5,4,3,4,4]
+let WORLD_WOODS_PINE_BARRENS_HCS:  [Int] = [16,4,18,2,8,14,12,10,6, 17,15,1,7,9,13,5,11,3]
+let WORLD_WOODS_PINE_BARRENS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7259),
+]
+
+// MARK: Hammock Beach Resort — Ocean Course — Palm Coast, FL
+private let HAMMOCK_BEACH_OCEAN_ID = UUID(uuidString: "AA4B0CE4-0000-4000-8000-000000000001")!
+let HAMMOCK_BEACH_OCEAN_PARS: [Int] = [4,5,4,3,4,5,4,3,4, 5,4,3,4,5,4,4,3,4]
+let HAMMOCK_BEACH_OCEAN_HCS:  [Int] = [15,9,11,13,3,7,5,17,1, 10,14,16,6,12,4,8,18,2]
+let HAMMOCK_BEACH_OCEAN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7201),
+]
+
+private let REUNION_LEGACY_PALMER_ID = UUID(uuidString: "AEA10F0E-0000-4000-8000-000000000001")!
+let REUNION_LEGACY_PALMER_PARS: [Int] = [4,3,5,4,3,4,4,4,5, 5,4,4,4,3,5,3,4,4]
+let REUNION_LEGACY_PALMER_HCS:  [Int] = [5,11,9,15,13,7,17,1,3, 6,14,8,2,18,12,16,10,4]
+let REUNION_LEGACY_PALMER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6916),
+]
+
+private let REUNION_WATSON_ID = UUID(uuidString: "AEA107A1-0000-4000-8000-000000000001")!
+let REUNION_WATSON_PARS: [Int] = [5,4,3,4,4,4,3,5,4, 4,4,3,4,5,3,4,5,4]
+let REUNION_WATSON_HCS:  [Int] = [5,9,17,1,3,15,11,7,13, 2,10,16,14,18,12,4,8,6]
+let REUNION_WATSON_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7136, rating: 75.0, slope: 136),
+]
+
+private let REUNION_NICKLAUS_ID = UUID(uuidString: "AEA10C1A-0000-4000-8000-000000000001")!
+let REUNION_NICKLAUS_PARS: [Int] = [4,4,5,4,3,5,4,3,4, 4,3,4,4,4,5,3,4,5]
+let REUNION_NICKLAUS_HCS:  [Int] = [17,1,5,3,7,13,9,15,11, 4,18,6,10,2,12,8,14,16]
+let REUNION_NICKLAUS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7215, rating: 74.8, slope: 140),
+]
+
+private let GRAND_CYPRESS_LINKS_ID = UUID(uuidString: "6C4AD5E5-0000-4000-8000-000000000001")!
+let GRAND_CYPRESS_LINKS_PARS: [Int] = [4,5,3,4,4,5,3,4,4, 4,4,3,4,4,5,3,5,4]
+let GRAND_CYPRESS_LINKS_HCS:  [Int] = [13,7,15,3,5,9,17,1,11, 10,6,8,4,12,2,18,16,14]
+let GRAND_CYPRESS_LINKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6773),
+]
+
+private let OLD_PALM_GC_ID = UUID(uuidString: "0AADAA01-0000-4000-8000-000000000001")!
+let OLD_PALM_GC_PARS: [Int] = [4,3,4,5,4,3,4,4,5, 4,3,5,4,4,3,4,5,4]
+let OLD_PALM_GC_HCS:  [Int] = [11,9,17,1,7,15,3,13,5, 6,14,10,12,2,16,8,18,4]
+let OLD_PALM_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7417),
+]
+
+private let ISLEWORTH_GCC_ID = UUID(uuidString: "151E0041-0000-4000-8000-000000000001")!
+let ISLEWORTH_GCC_PARS: [Int] = [4,3,5,4,3,4,5,4,4, 4,3,4,5,4,3,4,5,4]
+let ISLEWORTH_GCC_HCS:  [Int] = [13,3,1,5,15,11,17,9,7, 6,12,10,8,14,16,18,4,2]
+let ISLEWORTH_GCC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7577),
+]
+
+private let CABOT_CITRUS_ROOST_ID = UUID(uuidString: "CA00700A-0000-4000-8000-000000000001")!
+let CABOT_CITRUS_ROOST_PARS: [Int] = [4,3,5,4,4,4,4,3,5, 4,5,4,4,3,4,5,3,4]
+let CABOT_CITRUS_ROOST_HCS:  [Int] = [3,15,11,7,1,17,5,13,9, 14,8,2,6,18,10,12,16,4]
+let CABOT_CITRUS_ROOST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7543),
+]
+
 private let WALDORF_ASTORIA_ORLANDO_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000014")!
 
 let WALDORF_ASTORIA_ORLANDO_PARS: [Int] = [
@@ -9190,23 +9307,6 @@ let STERLING_HILLS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue",  yardage: 5953, rating: 69.2, slope: 122),
     TeeInfo(teeName: "White", yardage: 5558, rating: 67.5, slope: 117),
     TeeInfo(teeName: "Red",   yardage: 4590)
-]
-
-// MARK: The Classic Club
-private let THE_CLASSIC_CLUB_ID = UUID(uuidString: "C1ACCA01-0001-4001-8001-000000000001")!
-
-let THE_CLASSIC_CLUB_PARS: [Int] = [
-    4,3,4,5,4,3,4,4,5,
-    4,4,3,4,5,4,4,3,5
-]
-
-let THE_CLASSIC_CLUB_HCS: [Int] = [
-    15,17,7,5,9,13,3,11,1,
-    4,6,16,12,8,14,10,18,2
-]
-
-let THE_CLASSIC_CLUB_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Black", yardage: 7322, rating: 75.9, slope: 142)
 ]
 
 // MARK: United States Naval Academy Golf Club
@@ -10501,6 +10601,54 @@ let WORTHINGTON_MANOR_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Silver",       yardage: 5086, rating: 69.7, slope: 128)
 ]
 
+// MARK: Wilmington Country Club (North) — Wilmington, DE
+private let WILMINGTON_CC_NORTH_ID = UUID(uuidString: "D1CC0048-0000-4000-8000-000000000001")!
+let WILMINGTON_CC_NORTH_PARS: [Int] = [4,4,4,4,5,4,3,4,3, 5,3,4,4,4,4,3,4,5]
+let WILMINGTON_CC_NORTH_HCS:  [Int] = [11,13,5,1,9,7,17,3,15, 2,14,10,6,18,4,16,12,8]
+let WILMINGTON_CC_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6322, rating: 70.5, slope: 128),
+]
+
+// MARK: Peninsula Golf & Country Club — Millsboro, DE
+private let PENINSULA_GCC_DE_ID = UUID(uuidString: "AEDE0000-0000-4000-8000-000000000001")!
+let PENINSULA_GCC_DE_PARS: [Int] = [4,5,4,4,3,4,5,4,3, 5,4,4,3,4,4,3,4,5]
+let PENINSULA_GCC_DE_HCS:  [Int] = [6,12,18,10,8,2,16,14,4, 13,11,5,9,1,17,15,3,7]
+let PENINSULA_GCC_DE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 7302, rating: 75.0, slope: 149),
+    TeeInfo(teeName: "Gold",       yardage: 6601, rating: 71.8, slope: 141),
+    TeeInfo(teeName: "Silver",     yardage: 6248, rating: 70.1, slope: 138),
+    TeeInfo(teeName: "Tournament", yardage: 5994, rating: 68.7, slope: 132),
+    TeeInfo(teeName: "Hybrid",     yardage: 5707, rating: 67.7, slope: 126),
+]
+
+// MARK: Baywood Greens — Long Neck, DE
+private let BAYWOOD_GREENS_ID = UUID(uuidString: "BAA000D6-0000-4000-8000-000000000001")!
+let BAYWOOD_GREENS_PARS: [Int] = [4,4,4,4,5,3,5,3,4, 4,3,4,5,4,3,5,4,4]
+let BAYWOOD_GREENS_HCS:  [Int] = [13,11,3,1,5,15,7,17,9, 4,16,18,14,2,12,10,8,6]
+let BAYWOOD_GREENS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",         yardage: 6983, rating: 74.0, slope: 144),
+    TeeInfo(teeName: "Black",        yardage: 6491, rating: 72.1, slope: 140),
+    TeeInfo(teeName: "White",        yardage: 6088, rating: 70.2, slope: 134),
+    TeeInfo(teeName: "White/Yellow", yardage: 5533, rating: 67.6, slope: 122),
+    TeeInfo(teeName: "Yellow",       yardage: 5171, rating: 65.7, slope: 111),
+]
+
+// MARK: Bidermann Golf Club — Greenville, DE
+private let BIDERMANN_GC_ID = UUID(uuidString: "B1DE4A44-0000-4000-8000-000000000001")!
+let BIDERMANN_GC_PARS: [Int] = [4,5,4,3,4,5,4,3,4, 4,3,5,4,4,5,3,4,4]
+let BIDERMANN_GC_HCS:  [Int] = [17,15,3,11,1,13,9,7,5, 4,18,14,12,2,16,10,8,6]
+let BIDERMANN_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7033, rating: 74.4, slope: 143),
+]
+
+// MARK: Wilmington Country Club (South) — Wilmington, DE
+private let WILMINGTON_CC_SOUTH_ID = UUID(uuidString: "D1CC504A-0000-4000-8000-000000000001")!
+let WILMINGTON_CC_SOUTH_PARS: [Int] = [4,4,5,3,4,4,3,4,4, 4,4,4,3,5,4,5,3,4]
+let WILMINGTON_CC_SOUTH_HCS:  [Int] = [11,9,1,15,5,13,17,3,7, 14,18,6,16,2,10,8,12,4]
+let WILMINGTON_CC_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7488, rating: 75.9, slope: 142),
+]
+
 // MARK: Back Creek Golf Club — Middletown, DE
 private let BACK_CREEK_GC_ID = UUID(uuidString: "19709001-0001-0001-0001-000000000001")!
 let BACK_CREEK_GC_PARS: [Int] = [4,3,4,4,5,4,4,3,4, 4,5,4,4,3,4,5,3,4]   // par 71
@@ -11316,6 +11464,25 @@ let OAK_HILLS_PARK_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 6317, rating: 70.4, slope: 132),
 ]
 
+// MARK: The Club at River Oaks — Sherman, CT  (par 72)
+private let CLUB_RIVER_OAKS_ID = UUID(uuidString: "C1AE40A0-0000-4000-8000-000000000001")!
+let CLUB_RIVER_OAKS_PARS: [Int] = [4,5,4,3,4,4,5,3,4, 3,4,4,5,4,3,5,3,5]
+let CLUB_RIVER_OAKS_HCS:  [Int] = [15,3,5,13,11,17,1,7,9, 8,6,14,4,16,18,12,10,2]
+let CLUB_RIVER_OAKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6465, rating: 72.3, slope: 134),
+]
+
+// MARK: Candlewood Valley Country Club — New Milford, CT  (par 71)
+private let CANDLEWOOD_VALLEY_CC_ID = UUID(uuidString: "CA4DCC06-0000-4000-8000-000000000001")!
+let CANDLEWOOD_VALLEY_CC_PARS: [Int] = [4,4,3,4,4,4,4,4,4, 5,4,3,3,4,5,4,4,4]
+let CANDLEWOOD_VALLEY_CC_HCS:  [Int] = [17,11,15,1,5,3,13,7,9, 16,8,18,14,4,10,2,6,12]
+let CANDLEWOOD_VALLEY_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6388, rating: 72.1, slope: 127),
+    TeeInfo(teeName: "White", yardage: 6032, rating: 70.7, slope: 122),
+    TeeInfo(teeName: "Gold",  yardage: 4998, rating: 66.7, slope: 112),
+    TeeInfo(teeName: "Red",   yardage: 4758, rating: 68.5, slope: 113),
+]
+
 // MARK: Bretwood Golf Course — Keene, NH  (par 72)
 private let BRETWOOD_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000224")!
 let BRETWOOD_GC_PARS: [Int] = [4,5,3,4,5,4,5,3,4, 4,4,4,3,4,4,3,5,4]
@@ -11591,6 +11758,45 @@ private enum BuiltIns {
             address: "550 27th St Dr SE, Cedar Rapids, IA 52403",
             isWolfApproved: false
         ),
+
+        c(TWIN_PINES_GC_ID, "Twin Pines Golf Course", TWIN_PINES_GC_PARS, TWIN_PINES_GC_HCS,
+          TWIN_PINES_GC_TEES,
+          country: "USA",
+          state: "IA",
+          type: "Public",
+          phone: "(319) 286-5583",
+          address: "3800 42nd St NE, Cedar Rapids, IA 52402",
+          isWolfApproved: false),
+
+        c(GARDNER_GC_ID, "Donald K. Gardner Memorial Golf Course", GARDNER_GC_PARS, GARDNER_GC_HCS,
+          GARDNER_GC_TEES,
+          country: "USA",
+          state: "IA",
+          architect: "Herman Thompson",
+          type: "Public",
+          phone: "(319) 286-5586",
+          address: "5101 Old Golf Course Rd, Marion, IA 52302",
+          isWolfApproved: false),
+
+        c(ELLIS_PARK_GC_ID, "Ellis Park Golf Club", ELLIS_PARK_GC_PARS, ELLIS_PARK_GC_HCS,
+          ELLIS_PARK_GC_TEES,
+          country: "USA",
+          state: "IA",
+          architect: "William B. Langford",
+          type: "Semi-Private",
+          phone: "(319) 286-5589",
+          address: "1401 Zika Avenue NW, Cedar Rapids, IA 52405",
+          isWolfApproved: false),
+
+        c(ELMCREST_CC_ID, "Elmcrest Country Club", ELMCREST_CC_PARS, ELMCREST_CC_HCS,
+          ELMCREST_CC_TEES,
+          country: "USA",
+          state: "IA",
+          type: "Private",
+          phone: "(319) 366-8401",
+          website: "https://www.elmcrestcountryclub.com",
+          address: "1 Zach Johnson Dr. NE, Cedar Rapids, IA 52402",
+          isWolfApproved: false),
 
         c(WYNSTONE_SILVER_ID, "Wynstone", WYNSTONE_SILVER_PARS, WYNSTONE_SILVER_HCS,
           country: "USA",
@@ -17088,6 +17294,53 @@ private enum BuiltIns {
             phone: "(301) 874-5400",
             address: "Dickerson, MD 20842"
         ),
+        c(WILMINGTON_CC_NORTH_ID, "Wilmington Country Club (North)", WILMINGTON_CC_NORTH_PARS, WILMINGTON_CC_NORTH_HCS,
+          WILMINGTON_CC_NORTH_TEES,
+          country: "USA",
+          state: "DE",
+          architect: "Dick Wilson",
+          type: "Private",
+          address: "4825 Kennett Pike, Wilmington, DE 19807",
+          isWolfApproved: false),
+
+        c(PENINSULA_GCC_DE_ID, "Peninsula Golf & Country Club", PENINSULA_GCC_DE_PARS, PENINSULA_GCC_DE_HCS,
+          PENINSULA_GCC_DE_TEES,
+          country: "USA",
+          state: "DE",
+          type: "Private",
+          phone: "(302) 945-4768",
+          website: "https://www.peninsula-delaware.com",
+          address: "32981 Peninsula Esplanade, Millsboro, DE 19966",
+          isWolfApproved: false),
+
+        c(BAYWOOD_GREENS_ID, "Baywood Greens", BAYWOOD_GREENS_PARS, BAYWOOD_GREENS_HCS,
+          BAYWOOD_GREENS_TEES,
+          country: "USA",
+          state: "DE",
+          type: "Public",
+          phone: "(302) 947-9800",
+          website: "https://www.baywoodgreens.com",
+          address: "Long Neck Rd, Long Neck, DE 19966",
+          isWolfApproved: false),
+
+        c(BIDERMANN_GC_ID, "Bidermann Golf Club", BIDERMANN_GC_PARS, BIDERMANN_GC_HCS,
+          BIDERMANN_GC_TEES,
+          country: "USA",
+          state: "DE",
+          architect: "Dick Wilson",
+          type: "Private",
+          address: "601 Adams Dam Rd, Wilmington, DE 19807",
+          isWolfApproved: false),
+
+        c(WILMINGTON_CC_SOUTH_ID, "Wilmington Country Club (South)", WILMINGTON_CC_SOUTH_PARS, WILMINGTON_CC_SOUTH_HCS,
+          WILMINGTON_CC_SOUTH_TEES,
+          country: "USA",
+          state: "DE",
+          architect: "Robert Trent Jones Sr.",
+          type: "Private",
+          address: "4825 Kennett Pike, Wilmington, DE 19807",
+          isWolfApproved: false),
+
         c(
             BACK_CREEK_GC_ID,
             "Back Creek Golf Club",
@@ -17806,6 +18059,116 @@ private enum BuiltIns {
             address: "14224 Bonnet Creek Resort Ln, Orlando, FL 32821",
             resortBrand: "Waldorf Astoria"
         ),
+
+        c(OCN_CROOKED_CAT_ID, "Orange County National (Crooked Cat)", OCN_CROOKED_CAT_PARS, OCN_CROOKED_CAT_HCS,
+          OCN_CROOKED_CAT_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Orlando",
+          architect: "Dave Harman",
+          type: "Public",
+          phone: "(407) 656-2626",
+          website: "https://www.ocngolf.com",
+          address: "16301 Phil Ritson Way, Winter Garden, FL 34787",
+          isWolfApproved: false),
+
+        c(OCN_PANTHER_LAKE_ID, "Orange County National (Panther Lake)", OCN_PANTHER_LAKE_PARS, OCN_PANTHER_LAKE_HCS,
+          OCN_PANTHER_LAKE_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Orlando",
+          architect: "Dave Harman",
+          type: "Public",
+          phone: "(407) 656-2626",
+          website: "https://www.ocngolf.com",
+          address: "16301 Phil Ritson Way, Winter Garden, FL 34787",
+          isWolfApproved: false),
+
+        c(WORLD_WOODS_PINE_BARRENS_ID, "World Woods Golf Club (Pine Barrens)", WORLD_WOODS_PINE_BARRENS_PARS, WORLD_WOODS_PINE_BARRENS_HCS,
+          WORLD_WOODS_PINE_BARRENS_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio",
+          type: "Public",
+          phone: "(352) 796-5500",
+          website: "https://www.worldwoodsgolf.com",
+          address: "17590 Ponce de Leon Blvd, Brooksville, FL 34614",
+          isWolfApproved: false),
+
+        c(HAMMOCK_BEACH_OCEAN_ID, "Hammock Beach Resort (Ocean Course)", HAMMOCK_BEACH_OCEAN_PARS, HAMMOCK_BEACH_OCEAN_HCS,
+          HAMMOCK_BEACH_OCEAN_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus",
+          type: "Resort",
+          phone: "(386) 246-5500",
+          website: "https://www.hammockbeach.com",
+          address: "200 Ocean Crest Drive, Palm Coast, FL 32137",
+          isWolfApproved: false),
+
+        c(REUNION_LEGACY_PALMER_ID, "Reunion Resort (Legacy Course)", REUNION_LEGACY_PALMER_PARS, REUNION_LEGACY_PALMER_HCS,
+          REUNION_LEGACY_PALMER_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Arnold Palmer",
+          type: "Resort",
+          address: "7593 Gathering Dr, Reunion, FL 34747",
+          isWolfApproved: false),
+
+        c(REUNION_WATSON_ID, "Reunion Resort (Watson Course)", REUNION_WATSON_PARS, REUNION_WATSON_HCS,
+          REUNION_WATSON_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Watson",
+          type: "Resort",
+          address: "7593 Gathering Dr, Reunion, FL 34747",
+          isWolfApproved: false),
+
+        c(REUNION_NICKLAUS_ID, "Reunion Resort (Nicklaus Course)", REUNION_NICKLAUS_PARS, REUNION_NICKLAUS_HCS,
+          REUNION_NICKLAUS_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus",
+          type: "Resort",
+          address: "7593 Gathering Dr, Reunion, FL 34747",
+          isWolfApproved: false),
+
+        c(GRAND_CYPRESS_LINKS_ID, "Grand Cypress Golf Club (Links Course)", GRAND_CYPRESS_LINKS_PARS, GRAND_CYPRESS_LINKS_HCS,
+          GRAND_CYPRESS_LINKS_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus",
+          type: "Resort",
+          address: "1 N Jacaranda St, Orlando, FL 32836",
+          isWolfApproved: false),
+
+        c(OLD_PALM_GC_ID, "Old Palm Golf Club", OLD_PALM_GC_PARS, OLD_PALM_GC_HCS,
+          OLD_PALM_GC_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Raymond Floyd",
+          type: "Private",
+          address: "11190 Old Palm Dr, Palm Beach Gardens, FL 33418",
+          isWolfApproved: false),
+
+        c(ISLEWORTH_GCC_ID, "Isleworth Golf & Country Club", ISLEWORTH_GCC_PARS, ISLEWORTH_GCC_HCS,
+          ISLEWORTH_GCC_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Arnold Palmer & Ed Seay",
+          type: "Private",
+          address: "6100 Deacon Dr, Windermere, FL 34786",
+          isWolfApproved: false),
+
+        c(CABOT_CITRUS_ROOST_ID, "Cabot Citrus Farms (The Roost)", CABOT_CITRUS_ROOST_PARS, CABOT_CITRUS_ROOST_HCS,
+          CABOT_CITRUS_ROOST_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Mike Nuzzo",
+          type: "Resort",
+          address: "9200 Broad St, Brooksville, FL 34601",
+          isWolfApproved: false),
+
         c(
             TPC_SAN_ANTONIO_CANYONS_ID,
             "TPC San Antonio (AT&T Canyons Course)",
@@ -20250,6 +20613,26 @@ private enum BuiltIns {
           address: "165 Fillow Street, Norwalk, CT 06850"
         ),
 
+        c(CLUB_RIVER_OAKS_ID, "The Club at River Oaks", CLUB_RIVER_OAKS_PARS, CLUB_RIVER_OAKS_HCS,
+          CLUB_RIVER_OAKS_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Robert McNeil",
+          type: "Private",
+          phone: "(860) 354-3330",
+          address: "2 Evans Hill Rd, Sherman, CT 06784",
+          isWolfApproved: false),
+
+        c(CANDLEWOOD_VALLEY_CC_ID, "Candlewood Valley Country Club", CANDLEWOOD_VALLEY_CC_PARS, CANDLEWOOD_VALLEY_CC_HCS,
+          CANDLEWOOD_VALLEY_CC_TEES,
+          country: "USA",
+          state: "CT",
+          type: "Public",
+          phone: "(860) 354-9359",
+          website: "https://www.candlewoodvalleygolf.com",
+          address: "401 Danbury Road, New Milford, CT 06776",
+          isWolfApproved: false),
+
         // -------------------------
         // New Hampshire
         // -------------------------
@@ -20470,20 +20853,6 @@ private enum BuiltIns {
             type: "Public",
             website: "https://sterlinghillsgolf.com",
             address: "901 Sterling Hills Drive, Camarillo, CA 93010"
-        ),
-        c(
-            THE_CLASSIC_CLUB_ID,
-            "The Classic Club",
-            THE_CLASSIC_CLUB_PARS,
-            THE_CLASSIC_CLUB_HCS,
-            THE_CLASSIC_CLUB_TEES,
-            country: "USA",
-            state: "CA",
-            architect: "Arnold Palmer",
-            type: "Public",
-            phone: "(760) 601-3600",
-            website: "https://classicclubgolf.com",
-            address: "75-200 Classic Club Blvd, Palm Desert, CA 92211"
         ),
         ]
 

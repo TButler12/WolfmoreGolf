@@ -2260,6 +2260,26 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         playerRowCardViews.dropFirst().forEach { $0.isHidden = isScramble }
     }
 
+    private func applyInactiveSlotVisibility() {
+        guard let g = GameManager.shared.currentGame else { return }
+        let teamSlot = stablefordTeamSlotIndex(for: g)
+        let sortedScore  = scoreFields.sorted       { $0.tag < $1.tag }
+        let sortedNames  = playerNameLabels.sorted  { $0.tag < $1.tag }
+        let sortedMoney  = playerMoneyFields.sorted { $0.tag < $1.tag }
+        let sortedTotals = totalMoneyLabels.sorted  { $0.tag < $1.tag }
+        for i in 0..<MAX_PLAYERS {
+            let isTeamSlot = (teamSlot == i)
+            let hide = !isTeamSlot && !(g.playerActivated[safe: i] ?? false)
+            if i < sortedScore.count  { sortedScore[i].isHidden  = hide }
+            if i < sortedNames.count  { sortedNames[i].isHidden  = hide }
+            if i < sortedMoney.count  { sortedMoney[i].isHidden  = hide }
+            if i < sortedTotals.count { sortedTotals[i].isHidden = hide }
+            if i < wolfButtons.count  { wolfButtons[i].isHidden  = hide }
+            if i < proxButtons.count  { proxButtons[i].isHidden  = hide }
+            if i < playerRowCardViews.count { playerRowCardViews[i].isHidden = hide }
+        }
+    }
+
     private func applyGameTypeUI() {
         guard let g = GameManager.shared.currentGame else { return }
         let t = g.resolvedGameType
@@ -2286,7 +2306,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // before setupJoinedGame began setting gameType.
         let isPureStableford = (t == .tournament || g.tournamentGameType == "stableford")
             && g.tournamentStablefordEnabled != true
-        liveSummaryStrip?.isHidden = isPureStableford
+        liveSummaryStrip?.isHidden = true // temporarily hidden (was: isPureStableford)
         standingsHeaderButton?.setTitle("Stableford", for: .normal)
 
         wolfControlsStack.isHidden   = !t.isWolf
@@ -2326,6 +2346,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         standingsHeaderButton?.isHidden = !isStablefordTournament
 
         updateStablefordToggleVisibility()
+        applyInactiveSlotVisibility()
     }
 
     private func updateStablefordToggleVisibility() {
@@ -5429,6 +5450,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             strip.heightAnchor.constraint(equalToConstant: 40).isActive = true
             vStack.addArrangedSubview(strip)
             liveSummaryStrip = strip
+            strip.isHidden = true  // temporarily hidden
 
             // ── Row 4: Update Scores (full width) ────────────────────────────
             var usCfg = UIButton.Configuration.filled()
