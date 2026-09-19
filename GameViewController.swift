@@ -432,7 +432,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        showGameOnboardingIfNeeded()
+        showFirstGameTipIfNeeded()
         showMuteTipBannerIfNeeded()
         startNewDayPollingIfNeeded()
     }
@@ -805,12 +805,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func refreshHoleInfoHeader() {
         guard let g = GameManager.shared.currentGame else { return }
         let h = max(0, min(g.totalHoles - 1, g.hole))
-        let courseH = h % STANDARD_HOLES  // wraps for holes 19–36 to mirror course holes 1–18
+        let courseH = g.courseHoleIndex(for: h)
         let par = g.courseParToPass[safe: courseH] ?? 4
         let rawSI = g.course.holeHandicaps[safe: courseH] ?? (courseH + 1)
         let si = max(1, min(STANDARD_HOLES, rawSI == 0 ? (courseH + 1) : rawSI))
 
-        holeInfoLabel?.text = "Hole \(h + 1)  ·  Par \(par)  ·  HC \(si)"
+        holeInfoLabel?.text = "Hole \(courseH + 1)  ·  Par \(par)  ·  HC \(si)"
 
         let storedName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
         courseHeaderLabel?.text = storedName.isEmpty ? "Custom Course" : storedName
@@ -1398,6 +1398,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     @objc private func scoringPageInfoTapped() {
         let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(title: "How to Play", style: .default) { [weak self] _ in
+            guard let self else { return }
+            let vc = HowToPlayViewController()
+            vc.modalPresentationStyle = .formSheet
+            vc.sheetPresentationController?.detents = [.large()]
+            vc.sheetPresentationController?.prefersGrabberVisible = true
+            self.present(vc, animated: true)
+        })
         sheet.addAction(UIAlertAction(title: "Scoring Tips", style: .default) { [weak self] _ in
             self?.showScoringTips()
         })
@@ -1689,7 +1697,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         var anyScore = false
         for h in 0..<g.totalHoles {
             guard let gross = g.scores[safe: 0].flatMap({ $0[safe: h] }) ?? nil else { continue }
-            let par = g.courseParToPass[safe: h % STANDARD_HOLES] ?? 4
+            let par = g.courseParToPass[safe: g.courseHoleIndex(for: h)] ?? 4
             toPar += gross - par
             anyScore = true
         }
@@ -1905,7 +1913,21 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
-        let baseHC = activeSeats.compactMap { $0 < g.hcPlayers.count ? g.hcPlayers[$0] : nil }.min() ?? 0
+        let roundBaseHC  = activeSeats.compactMap { $0 < g.hcPlayers.count ? g.hcPlayers[$0] : nil }.min() ?? 0
+
+        // For 1 vs 1 dual-match, each player's dot baseline is the lower HC in their specific pairing.
+        func dotBaseHC(for seat: Int) -> Int {
+            guard g.isDualMatch else { return roundBaseHC }
+            let pairings: [([Int], [Int])] = [
+                (g.matchPlayTeamA  ?? [], g.matchPlayTeamB  ?? []),
+                (g.matchPlayTeamA2 ?? [], g.matchPlayTeamB2 ?? [])
+            ]
+            for (a, b) in pairings where (a + b).contains(seat) {
+                return (a + b).compactMap { g.hcPlayers[safe: $0] }.min() ?? roundBaseHC
+            }
+            return roundBaseHC
+        }
+
         let sortedNameLabels = playerNameLabels.sorted(by: { $0.tag < $1.tag })
 
         let nameGreen = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
@@ -1934,9 +1956,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             var greenPops = 0
             var onAltTee  = false
             if isActive {
-                let si = g.hcForHole(hole, player: seat)
+                let courseH  = g.courseHoleIndex(for: hole)
+                let si = g.hcForHole(courseH, player: seat)
                 let playerHC = seat < g.hcPlayers.count ? g.hcPlayers[seat] : 0
-                let delta    = max(0, playerHC - baseHC)
+                let delta    = max(0, playerHC - dotBaseHC(for: seat))
                 redPops      = GameManager.shared.absoluteStrokesGiven(playerHC: delta, strokeIndex: si)
                 if isTournament || g.tournamentStablefordEnabled == true {
                     greenPops = GameManager.shared.absoluteStrokesGiven(playerHC: playerHC, strokeIndex: si)
@@ -2332,8 +2355,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         case .sixPointScotch: gameModeSegment.selectedSegmentIndex = 0
         case .wolf:           gameModeSegment.selectedSegmentIndex = 1
         case .wolfLowBall:    gameModeSegment.selectedSegmentIndex = 2
-        case .matchPlay:      gameModeSegment.selectedSegmentIndex = -1  // no match in 3-item segment
-        case .bestBall:       gameModeSegment.selectedSegmentIndex = -1  // no match in 3-item segment
+        case .matchPlay, .fourball, .bestBall:
+                              gameModeSegment.selectedSegmentIndex = -1  // no match in 3-item segment
         case .hammer:         gameModeSegment.selectedSegmentIndex = 0
         case .tournament:     break
         }
@@ -2771,10 +2794,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 scoreFields[s].backgroundColor = UIColor.systemGray6
                 continue
             }
-            let seat = order[safe: s] ?? s
-            let v = (seat < g.scores.count && h < g.scores[seat].count) ? g.scores[seat][h] : nil
+            let seat    = order[safe: s] ?? s
             let isActive = g.playerActivated[safe: seat] ?? true
-            scoreFields[s].text = v.map(String.init) ?? ""
+            let courseH = g.courseHoleIndex(for: h)
+            let par     = g.parForHole(courseH, player: seat)
+            // Only show a stored score if the hole was committed this round;
+            // otherwise default to par so stale values from previous rounds don't appear.
+            let committed = g.holeCommitted[safe: h] == true
+            let v = committed ? ((seat < g.scores.count && h < g.scores[seat].count) ? g.scores[seat][h] : nil) : nil
+            scoreFields[s].text = v.map(String.init) ?? String(par)
             scoreFields[s].isEnabled = isActive
             scoreFields[s].alpha = isActive ? 1.0 : 0.4
             scoreFields[s].tag = seat
@@ -4070,7 +4098,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     let holePayouts   = g.playerMoney.map { $0[safe: backfillHole] ?? 0.0 }
                     // "matchplay"/"bestball" signal the format to spectators; Wolf uses alone/reroll/roll.
                     let decision: String? = g.resolvedGameType == .bestBall ? "bestball" :
-                        g.resolvedGameType == .matchPlay ? "matchplay" :
+                        (g.resolvedGameType == .matchPlay || g.resolvedGameType == .fourball) ? "matchplay" :
                         wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
                     let holeHammer    = Int(g.hammerMultiplier(for: backfillHole))
 
@@ -4760,6 +4788,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             wolfButtons.sorted { $0.tag < $1.tag }.dropFirst().forEach { $0.isHidden = true }
             proxButtons.sorted { $0.tag < $1.tag }.dropFirst().forEach { $0.isHidden = true }
         }
+        applyInactiveSlotVisibility()
     }
     
     private func setMoneyField(_ field: UITextField, to value: Int) {
@@ -4858,11 +4887,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }.count
         let playerSlots = min(activeCount, playerMoneyFields.count, MAX_PLAYERS)
         for s in 0..<playerSlots {
-            let seat = order[safe: s] ?? s
-            let hc   = g.hcPlayers[safe: seat] ?? 0
-            let par  = g.parForHole(hole, player: seat)
-            let si   = g.hcForHole(hole, player: seat)
-            let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
+            let seat    = order[safe: s] ?? s
+            let hc      = g.hcPlayers[safe: seat] ?? 0
+            let courseH = g.courseHoleIndex(for: hole)
+            let par     = g.parForHole(courseH, player: seat)
+            let si      = g.hcForHole(courseH, player: seat)
+            let gross   = (seat < g.scores.count) ? g.scores[seat][hole] : nil
             let pts = GameManager.shared.stablefordPoints(
                 grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
                 baseline: g.stablefordBaseline
@@ -4992,35 +5022,27 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
     }
-    @discardableResult
-    private func showGameOnboardingIfNeeded() -> Bool {
-        let key = "onboarding_game_shown"
+    private func showFirstGameTipIfNeeded() {
+        let key = "onboarding_first_game_v2"
         let defaults = UserDefaults.standard
-
-        if defaults.bool(forKey: key) { return false }
+        if defaults.bool(forKey: key) { return }
 
         let ac = UIAlertController(
-            title: "How to Score a Hole",
+            title: "Ready to Score",
             message: """
-    Enter each player’s score.
+Activate the golfers for this round in Player Setup, then set your stake and game type in Game Settings.
 
-    Set Prox if needed and choose the Wolf player.
-
-    Tap Update Scores to calculate the hole.
-    """,
+When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores after each hole.
+""",
             preferredStyle: .alert
         )
-
-        ac.addAction(UIAlertAction(title: "Got It", style: .default))
-
-        ac.addAction(UIAlertAction(title: "Later", style: .cancel))
-
+        ac.addAction(UIAlertAction(title: "Got It", style: .default) { _ in
+            defaults.set(true, forKey: key)
+        })
         ac.addAction(UIAlertAction(title: "Don’t Show Again", style: .destructive) { _ in
             defaults.set(true, forKey: key)
         })
-
         present(ac, animated: true)
-        return true
     }
 
     // MARK: - New-day detection

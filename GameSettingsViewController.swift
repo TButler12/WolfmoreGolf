@@ -24,6 +24,9 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private weak var matchPlayTeamsSection: UIStackView?
     private weak var matchPlayTeamsInner: UIStackView?
     private weak var matchPlay36Switch: UISwitch?
+    private weak var nineHoleSwitch: UISwitch?
+    private weak var nineHoleStartingHoleLabel: UILabel?
+    private weak var nineHoleHalfNoteLabel: UILabel?
     private weak var dualMatchSwitch: UISwitch?
     private weak var matchPlaySubModeSegment: UISegmentedControl?
     private weak var goLiveButton: UIButton?
@@ -262,6 +265,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             case .wolf:           segment.selectedSegmentIndex = 1
             case .wolfLowBall:    segment.selectedSegmentIndex = 2
             case .matchPlay:      segment.selectedSegmentIndex = 3
+            case .fourball:       segment.selectedSegmentIndex = 3
             case .bestBall:       segment.selectedSegmentIndex = 3
             case .hammer:         segment.selectedSegmentIndex = 0
             case .tournament:     break
@@ -408,7 +412,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Match Play Teams
 
     private func installMatchPlayTeamsSection() {
-        let header = sectionHeader("Match Play Teams")
+        let header = sectionHeader("Match Play Format")
 
         let inner = UIStackView()
         inner.axis    = .vertical
@@ -431,9 +435,10 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
         guard let g = GameManager.shared.currentGame else { return }
 
-        // ── Sub-mode: Match Play (holes up/down) vs Best Ball (stroke total) ──
-        let subModeSeg = UISegmentedControl(items: ["Match Play", "Best Ball"])
-        subModeSeg.selectedSegmentIndex = (g.resolvedGameType == .bestBall) ? 1 : 0
+        // ── Sub-mode: Individual / Fourball / FB Stroke Play ──
+        let subModeSeg = UISegmentedControl(items: ["Individual", "Fourball", "FB Stroke Play"])
+        subModeSeg.selectedSegmentIndex = g.resolvedGameType == .fourball ? 1
+                                        : g.resolvedGameType == .bestBall  ? 2 : 0
         subModeSeg.backgroundColor          = .systemGray6
         subModeSeg.selectedSegmentTintColor = .wolfMoreGreen
         subModeSeg.setTitleTextAttributes([
@@ -453,61 +458,128 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         sep0.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
         inner.addArrangedSubview(sep0)
 
-        // ── 36-Hole toggle ───────────────────────────────────────────────────
-        let switchLbl = UILabel()
-        switchLbl.text = "36-Hole Round"
-        switchLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        switchLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        // ── 9-Hole Match toggle (hidden when 36-hole is active) ──────────────
+        if !g.matchPlay36Holes {
+            let nineLbl = UILabel()
+            nineLbl.text = "9-Hole Match"
+            nineLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+            nineLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
-        let sw = UISwitch()
-        sw.onTintColor = .wolfMoreGreen
-        sw.isOn = g.matchPlay36Holes
-        sw.addTarget(self, action: #selector(matchPlay36Toggled(_:)), for: .valueChanged)
-        matchPlay36Switch = sw
+            let nineSw = UISwitch()
+            nineSw.onTintColor = .wolfMoreGreen
+            nineSw.isOn = g.isNineHoleMatch
+            nineSw.addTarget(self, action: #selector(nineHoleMatchToggled(_:)), for: .valueChanged)
+            nineHoleSwitch = nineSw
 
-        let switchRow = UIStackView(arrangedSubviews: [switchLbl, sw])
-        switchRow.axis = .horizontal; switchRow.alignment = .center; switchRow.spacing = 8
-        inner.addArrangedSubview(switchRow)
+            let nineRow = UIStackView(arrangedSubviews: [nineLbl, nineSw])
+            nineRow.axis = .horizontal; nineRow.alignment = .center; nineRow.spacing = 8
+            inner.addArrangedSubview(nineRow)
 
-        let switchNote = UILabel()
-        switchNote.text = "Holes 19–36 replay the same course as holes 1–18."
-        switchNote.font = UIFont.systemFont(ofSize: 12)
-        switchNote.textColor = .secondaryLabel
-        switchNote.numberOfLines = 0
-        inner.addArrangedSubview(switchNote)
+            let nineNote = UILabel()
+            nineNote.text = "Confined to front 9 or back 9 based on starting hole."
+            nineNote.font = UIFont.systemFont(ofSize: 12)
+            nineNote.textColor = .secondaryLabel
+            nineNote.numberOfLines = 0
+            inner.addArrangedSubview(nineNote)
 
-        // ── Separator ────────────────────────────────────────────────────────
-        let sep = UIView()
-        sep.backgroundColor = .separator
-        sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
-        inner.addArrangedSubview(sep)
+            if g.isNineHoleMatch {
+                let shLbl = UILabel()
+                shLbl.text = "Starting Hole"
+                shLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+                shLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+                let valLbl = UILabel()
+                valLbl.text = "\(g.nineHoleStartingHole)"
+                valLbl.font = UIFont.systemFont(ofSize: 15)
+                valLbl.textColor = .label
+                valLbl.textAlignment = .right
+                valLbl.widthAnchor.constraint(equalToConstant: 28).isActive = true
+                nineHoleStartingHoleLabel = valLbl
+
+                let stepper = UIStepper()
+                stepper.minimumValue = 1
+                stepper.maximumValue = Double(STANDARD_HOLES)
+                stepper.stepValue = 1
+                stepper.value = Double(g.nineHoleStartingHole)
+                stepper.addTarget(self, action: #selector(nineHoleStartingHoleChanged(_:)), for: .valueChanged)
+
+                let shRow = UIStackView(arrangedSubviews: [shLbl, valLbl, stepper])
+                shRow.axis = .horizontal; shRow.alignment = .center; shRow.spacing = 8
+                inner.addArrangedSubview(shRow)
+
+                let isFront = g.nineHoleStartingHole <= 9
+                let seq = g.nineHoleSequence.map { $0 + 1 }.map { "\($0)" }.joined(separator: ", ")
+                let halfNote = UILabel()
+                halfNote.text = "\(isFront ? "Front" : "Back") 9 · Hole order: \(seq)"
+                halfNote.font = UIFont.systemFont(ofSize: 12)
+                halfNote.textColor = .secondaryLabel
+                halfNote.numberOfLines = 0
+                nineHoleHalfNoteLabel = halfNote
+                inner.addArrangedSubview(halfNote)
+            }
+
+            let sepNine = UIView()
+            sepNine.backgroundColor = .separator
+            sepNine.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+            inner.addArrangedSubview(sepNine)
+        }
+
+        // ── 36-Hole toggle (hidden when 9-hole match is active) ──────────────
+        if !g.isNineHoleMatch {
+            let switchLbl = UILabel()
+            switchLbl.text = "36-Hole Round"
+            switchLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+            switchLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+            let sw = UISwitch()
+            sw.onTintColor = .wolfMoreGreen
+            sw.isOn = g.matchPlay36Holes
+            sw.addTarget(self, action: #selector(matchPlay36Toggled(_:)), for: .valueChanged)
+            matchPlay36Switch = sw
+
+            let switchRow = UIStackView(arrangedSubviews: [switchLbl, sw])
+            switchRow.axis = .horizontal; switchRow.alignment = .center; switchRow.spacing = 8
+            inner.addArrangedSubview(switchRow)
+
+            let switchNote = UILabel()
+            switchNote.text = "Holes 19–36 replay the same course as holes 1–18."
+            switchNote.font = UIFont.systemFont(ofSize: 12)
+            switchNote.textColor = .secondaryLabel
+            switchNote.numberOfLines = 0
+            inner.addArrangedSubview(switchNote)
+
+            let sep = UIView()
+            sep.backgroundColor = .separator
+            sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+            inner.addArrangedSubview(sep)
+        }
 
         // ── Dual Match toggle ────────────────────────────────────────────────
         let dualLbl = UILabel()
-        dualLbl.text = "Dual Match"
+        dualLbl.text = "1 vs 1"
         dualLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         dualLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
-        let isBestBall = g.resolvedGameType == .bestBall
+        let isIndividual = g.resolvedGameType == .matchPlay
 
         let dualSw = UISwitch()
         dualSw.onTintColor = .wolfMoreGreen
         dualSw.isOn = g.isDualMatch
-        dualSw.isEnabled = !isBestBall
-        dualSw.alpha = isBestBall ? 0.4 : 1.0
+        dualSw.isEnabled = isIndividual
+        dualSw.alpha = isIndividual ? 1.0 : 0.4
         dualSw.addTarget(self, action: #selector(dualMatchToggled(_:)), for: .valueChanged)
         dualMatchSwitch = dualSw
 
-        dualLbl.alpha = isBestBall ? 0.4 : 1.0
+        dualLbl.alpha = isIndividual ? 1.0 : 0.4
 
         let dualRow = UIStackView(arrangedSubviews: [dualLbl, dualSw])
         dualRow.axis = .horizontal; dualRow.alignment = .center; dualRow.spacing = 8
         inner.addArrangedSubview(dualRow)
 
         let dualNote = UILabel()
-        dualNote.text = isBestBall
-            ? "Not available for Best Ball — needs 2+ players per team."
-            : "Two matches at once (e.g. McTommy vs Test AND G vs Y)."
+        dualNote.text = isIndividual
+            ? "Two simultaneous 1v1 matches (e.g. McTommy vs Bob AND Todd vs G)."
+            : "Only available in Individual mode."
         dualNote.font = UIFont.systemFont(ofSize: 12)
         dualNote.textColor = .secondaryLabel
         dualNote.numberOfLines = 0
@@ -648,11 +720,34 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     }
 
     @objc private func matchPlaySubModeChanged(_ sender: UISegmentedControl) {
-        let newType: GameType = (sender.selectedSegmentIndex == 1) ? .bestBall : .matchPlay
+        let newType: GameType
+        switch sender.selectedSegmentIndex {
+        case 1:  newType = .fourball
+        case 2:  newType = .bestBall
+        default: newType = .matchPlay
+        }
         GameManager.shared.update { g in
             g.gameType = newType
-            // Dual Match requires 2+ players per team — incompatible with Best Ball.
-            if newType == .bestBall, g.isDualMatch {
+            if newType == .matchPlay, !g.isDualMatch {
+                // Default 1 vs 1 to ON when switching to Individual.
+                let teamA = (g.matchPlayTeamA ?? []).sorted()
+                let teamB = (g.matchPlayTeamB ?? []).sorted()
+                let active = g.playerNames.indices.filter {
+                    g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }.sorted()
+                let notInMatch1 = active.filter { !Set(teamA + teamB).contains($0) }
+                if !notInMatch1.isEmpty {
+                    let half = max(1, notInMatch1.count / 2)
+                    g.matchPlayTeamA2 = Array(notInMatch1.prefix(half))
+                    g.matchPlayTeamB2 = Array(notInMatch1.suffix(from: half))
+                } else {
+                    g.matchPlayTeamA  = teamA.count > 0 ? [teamA[0]] : []
+                    g.matchPlayTeamB  = teamB.count > 0 ? [teamB[0]] : []
+                    g.matchPlayTeamA2 = teamA.count > 1 ? Array(teamA.dropFirst()) : []
+                    g.matchPlayTeamB2 = teamB.count > 1 ? Array(teamB.dropFirst()) : []
+                }
+            } else if newType != .matchPlay, g.isDualMatch {
+                // 1 vs 1 only available in Individual — clear it for Fourball / FB Stroke Play.
                 var a1 = g.matchPlayTeamA ?? []
                 var b1 = g.matchPlayTeamB ?? []
                 for s in (g.matchPlayTeamA2 ?? []) where !a1.contains(s) { a1.append(s) }
@@ -663,6 +758,9 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 g.matchPlayTeamB2 = nil
             }
         }
+        if let sw = dualMatchSwitch {
+            sw.setOn(newType == .matchPlay, animated: true)
+        }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         refreshMatchPlayTeamsContent()
     }
@@ -670,26 +768,26 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     @objc private func dualMatchToggled(_ sender: UISwitch) {
         GameManager.shared.update { g in
             if sender.isOn {
-                let teamA = (g.matchPlayTeamA ?? []).sorted()
-                let teamB = (g.matchPlayTeamB ?? []).sorted()
-                let inMatch1 = Set(teamA + teamB)
+                // Default: pair players in natural seat order.
+                // Seat 0 vs Seat 1 = Match 1, Seat 2 vs Seat 3 = Match 2.
                 let active = g.playerNames.indices.filter {
                     g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
                 }.sorted()
-                let notInMatch1 = active.filter { !inMatch1.contains($0) }
-
-                if !notInMatch1.isEmpty {
-                    // Spare players not yet in Match 1 — seed Match 2 from them
-                    let half = max(1, notInMatch1.count / 2)
-                    g.matchPlayTeamA2 = Array(notInMatch1.prefix(half))
-                    g.matchPlayTeamB2 = Array(notInMatch1.suffix(from: half))
-                } else {
-                    // All players are in Match 1 (2v2) — split into two 1v1 matches.
-                    // Keep the first player from each side in Match 1; move the rest to Match 2.
-                    g.matchPlayTeamA  = teamA.count > 0 ? [teamA[0]] : []
-                    g.matchPlayTeamB  = teamB.count > 0 ? [teamB[0]] : []
-                    g.matchPlayTeamA2 = teamA.count > 1 ? Array(teamA.dropFirst()) : (teamB.count > 1 ? [] : [])
-                    g.matchPlayTeamB2 = teamB.count > 1 ? Array(teamB.dropFirst()) : []
+                if active.count >= 4 {
+                    g.matchPlayTeamA  = [active[0]]
+                    g.matchPlayTeamB  = [active[1]]
+                    g.matchPlayTeamA2 = [active[2]]
+                    g.matchPlayTeamB2 = [active[3]]
+                } else if active.count == 3 {
+                    g.matchPlayTeamA  = [active[0]]
+                    g.matchPlayTeamB  = [active[1]]
+                    g.matchPlayTeamA2 = [active[2]]
+                    g.matchPlayTeamB2 = []
+                } else if active.count >= 2 {
+                    g.matchPlayTeamA  = [active[0]]
+                    g.matchPlayTeamB  = [active[1]]
+                    g.matchPlayTeamA2 = []
+                    g.matchPlayTeamB2 = []
                 }
             } else {
                 // Merge Match 2 players back into Match 1 before clearing
@@ -709,9 +807,38 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     @objc private func matchPlay36Toggled(_ sender: UISwitch) {
         GameManager.shared.update { g in
             g.matchPlay36Holes = sender.isOn
+            if sender.isOn { g.isNineHoleMatch = false }
             g.extendToTotalHoles()
         }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
+        refreshMatchPlayTeamsContent()
+    }
+
+    @objc private func nineHoleMatchToggled(_ sender: UISwitch) {
+        GameManager.shared.update { g in
+            g.isNineHoleMatch = sender.isOn
+            if sender.isOn {
+                g.matchPlay36Holes = false
+                g.hole = 0
+                g.startHole = nil
+                g.scores        = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                g.holeCommitted = Array(repeating: false, count: STANDARD_HOLES)
+            }
+        }
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+        refreshMatchPlayTeamsContent()
+    }
+
+    @objc private func nineHoleStartingHoleChanged(_ sender: UIStepper) {
+        let val = Int(sender.value)
+        GameManager.shared.update { g in
+            g.nineHoleStartingHole = val
+            g.hole = 0
+            g.startHole = nil
+            g.scores        = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+            g.holeCommitted = Array(repeating: false, count: STANDARD_HOLES)
+        }
+        refreshMatchPlayTeamsContent()
     }
 
     // MARK: - Go Live

@@ -42,17 +42,38 @@ final class WolfScorecardRenderer {
     // MARK: - Public entry point
 
     func render() -> UIImage {
-        let players   = buildPlayers()
-        let pars      = (0..<STANDARD_HOLES).map { game.courseParToPass[safe: $0] ?? 4 }
-        let bbTeams   = buildBestBallTeams(players: players, pars: pars)
-        let mpStatus  = buildMatchPlayStatus(players: players, pars: pars)
+        let players = buildPlayers()
+        let pars    = (0..<STANDARD_HOLES).map { game.courseParToPass[safe: $0] ?? 4 }
+        let bbTeams = buildBestBallTeams(players: players, pars: pars)
 
-        let teamsLine: String? = mpStatus.map { "Teams: \($0.teamALabel) vs. \($0.teamBLabel)" }
+        // Build match statuses (1 for single match, 2 for dual 1v1).
+        var mpStatuses: [MatchPlayStatusData] = []
+        if game.resolvedGameType == .matchPlay {
+            let isDual = game.isDualMatch
+            if let s = buildMatchPlayStatus(
+                rawTeamA: game.matchPlayTeamA ?? [], rawTeamB: game.matchPlayTeamB ?? [],
+                players: players, pars: pars, matchLabel: isDual ? "Match 1" : "Match") {
+                mpStatuses.append(s)
+            }
+            if isDual, let s = buildMatchPlayStatus(
+                rawTeamA: game.matchPlayTeamA2 ?? [], rawTeamB: game.matchPlayTeamB2 ?? [],
+                players: players, pars: pars, matchLabel: "Match 2") {
+                mpStatuses.append(s)
+            }
+        }
+
+        let teamsLine: String?
+        if mpStatuses.count == 2 {
+            teamsLine = "M1: \(mpStatuses[0].teamALabel) vs. \(mpStatuses[0].teamBLabel)   M2: \(mpStatuses[1].teamALabel) vs. \(mpStatuses[1].teamBLabel)"
+        } else {
+            teamsLine = mpStatuses.first.map { "Teams: \($0.teamALabel) vs. \($0.teamBLabel)" }
+        }
+
         let docHdrH: CGFloat   = teamsLine != nil ? 114 : 96
         let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
-        let extraRows = bbTeams.count + (mpStatus != nil ? 1 : 0)
+        let extraRows = bbTeams.count + mpStatuses.count
         let gridH   = hdrH + parH + CGFloat(totalPlayerRows + extraRows) * playerH
-        let footerH: CGFloat = mpStatus != nil ? 60 : 40
+        let footerH: CGFloat = !mpStatuses.isEmpty ? 60 : 40
         let totalH  = docHdrH + gridH + footerH
 
         let fmt = UIGraphicsImageRendererFormat()
@@ -66,8 +87,14 @@ final class WolfScorecardRenderer {
 
             var y: CGFloat = 0
             y = drawDocHeader(y: y, players: players, teamsLine: teamsLine)
-            y = drawGrid(y: y, players: players, pars: pars, bbTeams: bbTeams, mpStatus: mpStatus)
-            drawFooter(y: y, matchResult: mpStatus?.finalResult)
+            y = drawGrid(y: y, players: players, pars: pars, bbTeams: bbTeams, mpStatuses: mpStatuses)
+            let footerResult: String?
+            if mpStatuses.count == 2 {
+                footerResult = "M1: \(mpStatuses[0].finalResult)  ·  M2: \(mpStatuses[1].finalResult)"
+            } else {
+                footerResult = mpStatuses.first?.finalResult
+            }
+            drawFooter(y: y, matchResult: footerResult)
         }
     }
 
@@ -83,14 +110,33 @@ final class WolfScorecardRenderer {
 
     private func buildPlayers() -> [PlayerData] {
         let is36 = game.matchPlay36Holes
-        let cap  = min(game.playerNames.count, game.playerActivated.count)
+
+        // For 9-hole games, map 0-based course hole index → match position so scores
+        // land in the correct physical-hole column of the 18-column card.
+        let nineSeqMap: [Int: Int]? = game.isNineHoleMatch ? {
+            var m = [Int: Int]()
+            for (mp, ch) in game.nineHoleSequence.enumerated() { m[ch] = mp }
+            return m
+        }() : nil
+
+        let cap = min(game.playerNames.count, game.playerActivated.count)
         return (0..<cap).compactMap { seat -> PlayerData? in
             guard game.playerActivated[seat] else { return nil }
             let name = game.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else { return nil }
-            let hc    = game.hcPlayers[safe: seat] ?? 0
-            let gross = (0..<STANDARD_HOLES).map { h -> Int? in
-                seat < game.scores.count ? game.scores[seat][h] : nil
+            let hc = game.hcPlayers[safe: seat] ?? 0
+            let gross: [Int?]
+            if let seqMap = nineSeqMap {
+                gross = (0..<STANDARD_HOLES).map { courseH -> Int? in
+                    guard let mp = seqMap[courseH] else { return nil }
+                    guard game.holeCommitted[safe: mp] == true else { return nil }
+                    return game.scores[safe: seat]?[safe: mp] ?? nil
+                }
+            } else {
+                gross = (0..<STANDARD_HOLES).map { h -> Int? in
+                    guard game.holeCommitted[safe: h] == true else { return nil }
+                    return game.scores[safe: seat]?[safe: h] ?? nil
+                }
             }
             let gross2: [Int?]? = is36 ? (STANDARD_HOLES..<(2 * STANDARD_HOLES)).map { h -> Int? in
                 guard seat < game.scores.count, h < game.scores[seat].count else { return nil }
@@ -131,7 +177,7 @@ final class WolfScorecardRenderer {
                 var bestNet = Int.max
                 var bestGross: Int? = nil
                 for s in seats {
-                    guard let g = (s < game.scores.count ? game.scores[s][h] : nil) else { continue }
+                    guard let g = game.scores[safe: s]?[safe: h] ?? nil else { continue }
                     let net = g - strokesGiven(seat: s, holeIdx: h)
                     if net < bestNet { bestNet = net; bestGross = g }
                 }
@@ -160,6 +206,7 @@ final class WolfScorecardRenderer {
     // MARK: - Match Play status builder
 
     private struct MatchPlayStatusData {
+        let matchLabel:    String     // "Match", "Match 1", "Match 2"
         let teamALabel:    String
         let teamBLabel:    String
         let statusPerHole: [String?]  // 18 elements, nil = hole not yet scored
@@ -169,12 +216,12 @@ final class WolfScorecardRenderer {
         let finalResult:   String     // full footer text
     }
 
-    private func buildMatchPlayStatus(players: [PlayerData], pars: [Int]) -> MatchPlayStatusData? {
-        guard game.resolvedGameType == .matchPlay else { return nil }
-
+    private func buildMatchPlayStatus(rawTeamA: [Int], rawTeamB: [Int],
+                                       players: [PlayerData], pars: [Int],
+                                       matchLabel: String) -> MatchPlayStatusData? {
         let activeSeats = players.map { $0.seat }
-        let teamA = (game.matchPlayTeamA ?? []).filter { activeSeats.contains($0) }
-        let teamB = (game.matchPlayTeamB ?? []).filter { activeSeats.contains($0) }
+        let teamA = rawTeamA.filter { activeSeats.contains($0) }
+        let teamB = rawTeamB.filter { activeSeats.contains($0) }
         guard !teamA.isEmpty, !teamB.isEmpty else { return nil }
 
         let baseHC = activeSeats.compactMap { game.hcPlayers[safe: $0] }.min() ?? 0
@@ -200,19 +247,28 @@ final class WolfScorecardRenderer {
         let teamALabel = teamA.map { playerName($0) }.joined(separator: " & ")
         let teamBLabel = teamB.map { playerName($0) }.joined(separator: " & ")
 
+        // For 9-hole, iterate match positions (playing order) so scores land at
+        // physical course-hole positions in statusPerHole.
+        let nineSeq: [Int]? = game.isNineHoleMatch ? game.nineHoleSequence : nil
+        let totalMatchHoles = nineSeq != nil ? 9 : STANDARD_HOLES
+
         var runningLead = 0
         var statusPerHole = [String?](repeating: nil, count: STANDARD_HOLES)
-        var decisiveHole: Int? = nil
-        var decisiveLead = 0
+        var decisiveData: (lead: Int, remaining: Int)? = nil
         var holesPlayed  = 0
 
-        for h in 0..<STANDARD_HOLES {
+        for i in 0..<totalMatchHoles {
+            let h        = nineSeq?[i] ?? i   // 0-based course hole index
+            let scoreIdx = i                   // match position == score array index
+
             let aN = teamA.compactMap { s -> Int? in
-                guard let g = (s < game.scores.count ? game.scores[s][h] : nil) else { return nil }
+                guard game.holeCommitted[safe: scoreIdx] == true else { return nil }
+                guard let g = game.scores[safe: s]?[safe: scoreIdx] ?? nil else { return nil }
                 return g - strokes(seat: s, h: h)
             }.min()
             let bN = teamB.compactMap { s -> Int? in
-                guard let g = (s < game.scores.count ? game.scores[s][h] : nil) else { return nil }
+                guard game.holeCommitted[safe: scoreIdx] == true else { return nil }
+                guard let g = game.scores[safe: s]?[safe: scoreIdx] ?? nil else { return nil }
                 return g - strokes(seat: s, h: h)
             }.min()
             guard let aN, let bN else { break }
@@ -220,29 +276,29 @@ final class WolfScorecardRenderer {
             if aN < bN      { runningLead += 1 }
             else if bN < aN { runningLead -= 1 }
 
-            holesPlayed = h + 1
-            let remaining = STANDARD_HOLES - holesPlayed
-            if decisiveHole == nil && abs(runningLead) > remaining {
-                decisiveHole = h; decisiveLead = runningLead
+            holesPlayed = i + 1
+            let remaining = totalMatchHoles - holesPlayed
+            if decisiveData == nil && abs(runningLead) > remaining {
+                decisiveData = (runningLead, remaining)
             }
             statusPerHole[h] = leadStr(runningLead)
         }
 
-        let outStatus = holesPlayed >= 9  ? statusPerHole[8]  : nil
-        let inStatus  = holesPlayed >= 18 ? statusPerHole[17] : nil
+        // OUT/IN subtotals only make sense for standard 18-hole games.
+        let outStatus = (nineSeq == nil && holesPlayed >= 9)  ? statusPerHole[8]  : nil
+        let inStatus  = (nineSeq == nil && holesPlayed >= 18) ? statusPerHole[17] : nil
 
         let shortResult: String
         let finalResult: String
         if holesPlayed == 0 {
             shortResult = "—"; finalResult = "—"
-        } else if let dh = decisiveHole {
-            let margin    = abs(decisiveLead)
-            let remaining = STANDARD_HOLES - (dh + 1)
-            let winner    = decisiveLead > 0 ? teamALabel : teamBLabel
-            shortResult = remaining == 0 ? "\(margin) UP" : "\(margin)&\(remaining)"
-            finalResult = remaining == 0 ? "\(winner) won \(margin) UP"
-                                         : "\(winner) won \(margin)&\(remaining)"
-        } else if holesPlayed == STANDARD_HOLES {
+        } else if let dd = decisiveData {
+            let margin = abs(dd.lead)
+            let winner = dd.lead > 0 ? teamALabel : teamBLabel
+            shortResult = dd.remaining == 0 ? "\(margin) UP" : "\(margin)&\(dd.remaining)"
+            finalResult = dd.remaining == 0 ? "\(winner) won \(margin) UP"
+                                            : "\(winner) won \(margin)&\(dd.remaining)"
+        } else if holesPlayed == totalMatchHoles {
             if runningLead == 0 {
                 shortResult = "AS"; finalResult = "All Square"
             } else {
@@ -256,6 +312,7 @@ final class WolfScorecardRenderer {
         }
 
         return MatchPlayStatusData(
+            matchLabel:    matchLabel,
             teamALabel:    teamALabel,
             teamBLabel:    teamBLabel,
             statusPerHole: statusPerHole,
@@ -305,7 +362,7 @@ final class WolfScorecardRenderer {
     @discardableResult
     private func drawGrid(y: CGFloat, players: [PlayerData], pars: [Int],
                           bbTeams: [BestBallTeamData] = [],
-                          mpStatus: MatchPlayStatusData? = nil) -> CGFloat {
+                          mpStatuses: [MatchPlayStatusData] = []) -> CGFloat {
 
         // Column x-positions: ci 0=name, 1-9=h1-9, 10=OUT, 11-19=h10-18, 20=IN, 21=TOT
         var colXs = [CGFloat](repeating: 0, count: 22)
@@ -329,18 +386,36 @@ final class WolfScorecardRenderer {
         func isSumm(_ ci: Int) -> Bool { ci == 10 || ci == 20 || ci == 21 }
 
         // Wolf team membership per hole: [hole][seat] → Bool
+        // Only applies to wolf-style game types; Match Play and Best Ball use pairing colors instead.
+        let applyWolfColoring = game.resolvedGameType != .matchPlay && game.resolvedGameType != .bestBall
         let wolfMask = game.wolfMaskByHole
 
+        // Dual-match pairing seat sets — used for player row color coding.
+        let match1Seats = Set((game.matchPlayTeamA ?? []) + (game.matchPlayTeamB ?? []))
+        let match2Seats = Set((game.matchPlayTeamA2 ?? []) + (game.matchPlayTeamB2 ?? []))
+        let isDualMatchCard = !match2Seats.isEmpty
+
         // Colors
-        let hdrBg      = UIColor(white: 0.88, alpha: 1)
-        let parBg      = UIColor(white: 0.93, alpha: 1)
-        let summBg     = UIColor(white: 0.85, alpha: 1)
-        let wolfTeamBg = UIColor(red: 1.00, green: 0.86, blue: 0.86, alpha: 1)  // soft red
-        let packBg     = UIColor(red: 0.88, green: 0.92, blue: 1.00, alpha: 1)  // soft blue
-        let altBg      = UIColor(white: 0.972, alpha: 1)
-        let gridLine   = UIColor(white: 0.76, alpha: 1)
-        let dotGray    = UIColor(white: 0.65, alpha: 1)
-        let boldSumm   = UIFont.systemFont(ofSize: 13, weight: .bold)
+        let hdrBg        = UIColor(white: 0.88, alpha: 1)
+        let parBg        = UIColor(white: 0.93, alpha: 1)
+        let summBg       = UIColor(white: 0.85, alpha: 1)
+        let wolfTeamBg   = UIColor(red: 1.00, green: 0.86, blue: 0.86, alpha: 1)  // soft red
+        let packBg       = UIColor(red: 0.88, green: 0.92, blue: 1.00, alpha: 1)  // soft blue
+        let altBg        = UIColor(white: 0.972, alpha: 1)
+        let gridLine     = UIColor(white: 0.76, alpha: 1)
+        let dotGray      = UIColor(white: 0.65, alpha: 1)
+        let boldSumm     = UIFont.systemFont(ofSize: 13, weight: .bold)
+        // Match pairing row tints — applied to player rows when dual-match is active.
+        let match1TitleClr = UIColor(red: 0.20, green: 0.44, blue: 0.70, alpha: 1)
+        let match2TitleClr = UIColor(red: 0.56, green: 0.28, blue: 0.00, alpha: 1)
+        let match1RowBg  = UIColor(red: 0.88, green: 0.93, blue: 1.00, alpha: 1)  // soft blue
+        let match2RowBg  = UIColor(red: 1.00, green: 0.92, blue: 0.82, alpha: 1)  // soft amber
+
+        // Starting hole column highlight — only for 9-hole games.
+        let startHoleBg  = UIColor(red: 1.00, green: 0.82, blue: 0.86, alpha: 1)  // soft rose
+        let startCourseH: Int? = game.isNineHoleMatch ? (game.nineHoleStartingHole - 1) : nil
+        // ci 1-9 → courseH 0-8, ci 11-19 → courseH 9-17
+        let startColCI: Int? = startCourseH.map { ch in ch < 9 ? ch + 1 : ch + 2 }
 
         let front = Array(0..<9)
         let back  = Array(9..<18)
@@ -357,8 +432,9 @@ final class WolfScorecardRenderer {
 
         // ── Header row ────────────────────────────────────────
         for ci in 0..<22 {
+            let isStartCol = startColCI.map { $0 == ci } ?? false
             fill(x: colXs[ci], y: ry, w: colW(ci), h: hdrH,
-                 color: isSumm(ci) ? summBg : hdrBg)
+                 color: isStartCol ? startHoleBg : (isSumm(ci) ? summBg : hdrBg))
             if ci > 0 {
                 let weight: UIFont.Weight = isSumm(ci) ? .bold : .semibold
                 drawCell(headers[ci],
@@ -379,8 +455,9 @@ final class WolfScorecardRenderer {
             + ["\(backPar)", "\(frontPar + backPar)"]
 
         for ci in 0..<22 {
+            let isStartCol = startColCI.map { $0 == ci } ?? false
             fill(x: colXs[ci], y: ry, w: colW(ci), h: parH,
-                 color: isSumm(ci) ? summBg : parBg)
+                 color: isStartCol ? startHoleBg : (isSumm(ci) ? summBg : parBg))
             drawCell(parTexts[ci],
                      x: colXs[ci], y: ry, w: colW(ci), h: parH,
                      font: .systemFont(ofSize: 12, weight: isSumm(ci) ? .semibold : .regular),
@@ -404,10 +481,12 @@ final class WolfScorecardRenderer {
                 if let localH = hIdx(ci) {
                     let gameH = localH + holeOffset
                     let mask  = gameH < wolfMask.count ? wolfMask[gameH] : []
-                    let wolfCalled = mask.contains(true)
+                    let wolfCalled = applyWolfColoring && mask.contains(true)
                     if wolfCalled {
                         let onWolfTeam = seat < mask.count && mask[seat]
                         bg = onWolfTeam ? wolfTeamBg : packBg
+                    } else if startColCI.map({ $0 == ci }) ?? false {
+                        bg = startHoleBg
                     } else {
                         bg = rowBg
                     }
@@ -475,7 +554,15 @@ final class WolfScorecardRenderer {
         }
 
         for (pi, player) in players.enumerated() {
-            let rowBg = pi % 2 == 1 ? altBg : UIColor.white
+            // Dual-match: tint each player's row by their match pairing.
+            let rowBg: UIColor
+            if isDualMatchCard && match1Seats.contains(player.seat) {
+                rowBg = match1RowBg
+            } else if isDualMatchCard && match2Seats.contains(player.seat) {
+                rowBg = match2RowBg
+            } else {
+                rowBg = pi % 2 == 1 ? altBg : UIColor.white
+            }
             // Round 1
             drawPlayerRow(gross: player.gross, holeOffset: 0, seat: player.seat, rowBg: rowBg,
                           nameLabel: player.name,
@@ -565,40 +652,42 @@ final class WolfScorecardRenderer {
             ry += playerH
         }
 
-        // ── Match Play status row ─────────────────────────────
-        if let mp = mpStatus {
-            let mpBg       = UIColor(red: 0.88, green: 0.93, blue: 1.00, alpha: 1)  // soft blue
-            let mpUpClr    = UIColor(red: 0.10, green: 0.50, blue: 0.18, alpha: 1)  // green = Team A up
-            let mpDnClr    = UIColor(red: 0.72, green: 0.12, blue: 0.12, alpha: 1)  // red = Team B up
-            let mpAsClr    = UIColor(white: 0.48, alpha: 1)
-            let mpTitleClr = UIColor(red: 0.20, green: 0.44, blue: 0.70, alpha: 1)
+        // ── Match Play status rows (one per match, two for dual 1v1) ─────
+        let mpUpClr = UIColor(red: 0.10, green: 0.50, blue: 0.18, alpha: 1)
+        let mpDnClr = UIColor(red: 0.72, green: 0.12, blue: 0.12, alpha: 1)
+        let mpAsClr = UIColor(white: 0.48, alpha: 1)
 
-            func mpStatusColor(_ s: String) -> UIColor {
-                if s.hasPrefix("+") { return mpUpClr }
-                if s.hasPrefix("-") { return mpDnClr }
-                return mpAsClr
-            }
+        func mpStatusColor(_ s: String) -> UIColor {
+            if s.hasPrefix("+") { return mpUpClr }
+            if s.hasPrefix("-") { return mpDnClr }
+            return mpAsClr
+        }
+
+        for (idx, mp) in mpStatuses.enumerated() {
+            let mpBg      = idx == 0 ? match1RowBg : match2RowBg
+            let titleClr  = idx == 0 ? match1TitleClr : match2TitleClr
 
             gridLine.setFill()
             UIRectFill(CGRect(x: hPad, y: ry, width: gridW, height: 1.0))
 
             for ci in 0..<22 {
                 let w = colW(ci)
+                let isStartCol = startColCI.map { $0 == ci } ?? false
                 fill(x: colXs[ci], y: ry, w: w, h: playerH,
-                     color: isSumm(ci) ? summBg : mpBg)
+                     color: isSumm(ci) ? summBg : (isStartCol ? startHoleBg : mpBg))
 
                 switch ci {
                 case 0:
                     let nameH: CGFloat = playerH * 0.60
                     let subH:  CGFloat = playerH - nameH
-                    drawCell("Match",
+                    drawCell(mp.matchLabel,
                              x: colXs[ci], y: ry, w: w, h: nameH,
                              font: .systemFont(ofSize: 12, weight: .bold),
-                             color: mpTitleClr, leftAlign: true)
+                             color: titleClr, leftAlign: true)
                     drawCell("+ = \(mp.teamALabel)",
                              x: colXs[ci], y: ry + nameH, w: w, h: subH,
                              font: .systemFont(ofSize: 9, weight: .regular),
-                             color: mpTitleClr, leftAlign: true)
+                             color: titleClr, leftAlign: true)
 
                 case 10:
                     let s = mp.outStatus ?? "·"
@@ -611,10 +700,9 @@ final class WolfScorecardRenderer {
                              font: boldSumm, color: mp.inStatus != nil ? mpStatusColor(s) : dotGray)
 
                 case 21:
-                    // shortResult is decisive notation ("3&2", "2 UP", "AS") — always show in title blue
                     drawCell(mp.shortResult, x: colXs[ci], y: ry, w: w, h: playerH,
                              font: .systemFont(ofSize: 11, weight: .bold),
-                             color: mp.shortResult == "AS" ? mpAsClr : mpTitleClr)
+                             color: mp.shortResult == "AS" ? mpAsClr : titleClr)
 
                 default:
                     if let localH = hIdx(ci) {
@@ -632,7 +720,7 @@ final class WolfScorecardRenderer {
         gridLine.setFill()
         var lineY = y
         let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
-        let extraRows = bbTeams.count + (mpStatus != nil ? 1 : 0)
+        let extraRows = bbTeams.count + mpStatuses.count
         for step in [hdrH, parH] + Array(repeating: playerH, count: totalPlayerRows + extraRows) {
             UIRectFill(CGRect(x: hPad, y: lineY, width: gridW, height: 0.5))
             lineY += step

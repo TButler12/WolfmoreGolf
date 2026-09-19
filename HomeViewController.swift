@@ -227,6 +227,14 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         header.addSubview(editBtn)
         editCourseButton = editBtn
 
+        // Course info button (ⓘ) — sits between course name and pencil
+        let infoBtn = UIButton(type: .system)
+        infoBtn.setImage(UIImage(systemName: "info.circle"), for: .normal)
+        infoBtn.tintColor = .white
+        infoBtn.addTarget(self, action: #selector(courseInfoTapped), for: .touchUpInside)
+        infoBtn.translatesAutoresizingMaskIntoConstraints = false
+        header.addSubview(infoBtn)
+
         // Course name button (tappable to pick course)
         let courseBtn = UIButton(type: .system)
         courseBtn.contentHorizontalAlignment = .leading
@@ -270,13 +278,19 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             logoView.heightAnchor.constraint(equalToConstant: 68),
             logoView.widthAnchor.constraint(equalToConstant: 68),
 
-            // Edit pencil: vertically centered with course button row, pinned right
-            editBtn.topAnchor.constraint(equalTo: courseBtn.topAnchor),
+            // Edit pencil: top-right, pinned to trailing edge
+            editBtn.topAnchor.constraint(equalTo: logoView.bottomAnchor, constant: 10),
             editBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -pad),
-            editBtn.widthAnchor.constraint(equalToConstant: 32),
-            editBtn.heightAnchor.constraint(equalToConstant: 32),
+            editBtn.widthAnchor.constraint(equalToConstant: 30),
+            editBtn.heightAnchor.constraint(equalToConstant: 30),
 
-            // Course name: below logo
+            // Info button: directly below the pencil, same trailing column
+            infoBtn.topAnchor.constraint(equalTo: editBtn.bottomAnchor, constant: 6),
+            infoBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -pad),
+            infoBtn.widthAnchor.constraint(equalToConstant: 30),
+            infoBtn.heightAnchor.constraint(equalToConstant: 30),
+
+            // Course name: below logo, stops short of the button column
             courseBtn.topAnchor.constraint(equalTo: logoView.bottomAnchor, constant: 10),
             courseBtn.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: pad),
             courseBtn.trailingAnchor.constraint(equalTo: editBtn.leadingAnchor, constant: -8),
@@ -672,10 +686,13 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         let statsBtn = makeChip(title: "Stats", systemImage: "chart.bar.fill")
         statsBtn.addTarget(self, action: #selector(statsTapped(_:)), for: .touchUpInside)
 
+        let helpBtn = makeChip(title: "How to Play", systemImage: "questionmark.circle.fill")
+        helpBtn.addTarget(self, action: #selector(howToPlayTapped(_:)), for: .touchUpInside)
+
         let moreBtn = makeChip(title: "More", systemImage: "ellipsis.circle.fill")
         moreBtn.addTarget(self, action: #selector(moreTapped(_:)), for: .touchUpInside)
 
-        let stack = UIStackView(arrangedSubviews: [statsBtn, moreBtn])
+        let stack = UIStackView(arrangedSubviews: [statsBtn, helpBtn, moreBtn])
         stack.axis = .horizontal
         stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
@@ -836,6 +853,11 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             .foregroundColor: UIColor.white
         ])
         cfg.attributedTitle = AttributedString(courseName, attributes: titleAttrs)
+        let subtitleAttrs = AttributeContainer([
+            .font: UIFont.systemFont(ofSize: 11, weight: .regular),
+            .foregroundColor: UIColor.white.withAlphaComponent(0.6)
+        ])
+        cfg.attributedSubtitle = AttributedString("Change Course?", attributes: subtitleAttrs)
         cfg.image = UIImage(systemName: "chevron.down")?
             .withConfiguration(UIImage.SymbolConfiguration(pointSize: 13, weight: .medium))
         cfg.imagePlacement = .trailing
@@ -930,8 +952,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         case .wolf:           gameLabel = "Wolf"
         case .wolfLowBall:    gameLabel = "Wolf LowBall"
         case .sixPointScotch: gameLabel = "6-Point Scotch"
-        case .matchPlay:      gameLabel = "Match Play"
-        case .bestBall:       gameLabel = "Best Ball"
+        case .matchPlay:      gameLabel = "Individual"
+        case .fourball:       gameLabel = "Fourball"
+        case .bestBall:       gameLabel = "FB Stroke Play"
         case .hammer:         gameLabel = "Hammer"
         case .tournament:     gameLabel = "Stableford"
         }
@@ -1008,12 +1031,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     private func runPostNamePrompts() {
-        guard presentedViewController == nil else { return }
-        if !didPromptHomeCourse && !hasHomeCourseSet() {
-            runHomeCoursePromptIfNeeded()
-            return
-        }
-        runOnboardingIfNeeded()
+        // All post-name prompts removed — home-course and contacts tips are no longer shown.
     }
 
     private func runOnboardingIfNeeded() {
@@ -1061,36 +1079,56 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         ac.addAction(UIAlertAction(title: "Use This Name", style: .default) { [weak self] _ in
             guard let self = self else { completion(); return }
             let raw = (ac.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-            if raw.contains(" ") && raw.split(separator: " ").count >= 2 {
-                self.confirmFullNameUsage(typedName: raw, completion: completion)
-                return
-            }
             if !raw.isEmpty {
                 ProfileStore.name = raw
                 self.updateWelcome()
                 UINotificationFeedbackGenerator().notificationOccurred(.success)
+                self.showHomeCourseNudgeBanner()
             }
             completion()
         })
         present(ac, animated: true)
     }
 
-    private func confirmFullNameUsage(typedName: String, completion: @escaping () -> Void) {
-        let ac = UIAlertController(
-            title: "Use \"\(typedName)\" on every scorecard?",
-            message: "Most golfers prefer a shorter nickname here so it fits cleanly in the scorecard row.",
-            preferredStyle: .alert
-        )
-        ac.addAction(UIAlertAction(title: "Pick a Nickname Instead", style: .cancel) { [weak self] _ in
-            self?.promptForName(completion: completion)
-        })
-        ac.addAction(UIAlertAction(title: "Use \"\(typedName)\"", style: .default) { [weak self] _ in
-            ProfileStore.name = typedName
-            self?.updateWelcome()
-            UINotificationFeedbackGenerator().notificationOccurred(.success)
-            completion()
-        })
-        present(ac, animated: true)
+    private func showHomeCourseNudgeBanner() {
+        let banner = UIView()
+        banner.backgroundColor = UIColor(red: 0.10, green: 0.22, blue: 0.16, alpha: 0.92)
+        banner.layer.cornerRadius = 12
+        banner.layer.borderWidth = 1
+        banner.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
+        banner.translatesAutoresizingMaskIntoConstraints = false
+        banner.alpha = 0
+
+        let label = UILabel()
+        label.text = "Set a Home Course to track Hole Stats and Friend Stats — tap to set it now"
+        label.font = .systemFont(ofSize: 16, weight: .medium)
+        label.textColor = .white
+        label.numberOfLines = 0
+        label.textAlignment = .center
+        label.translatesAutoresizingMaskIntoConstraints = false
+        banner.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: banner.topAnchor, constant: 14),
+            label.bottomAnchor.constraint(equalTo: banner.bottomAnchor, constant: -14),
+            label.leadingAnchor.constraint(equalTo: banner.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(equalTo: banner.trailingAnchor, constant: -16),
+        ])
+
+        view.addSubview(banner)
+        NSLayoutConstraint.activate([
+            banner.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            banner.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            banner.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+        ])
+
+        let tap = UITapGestureRecognizer(target: self, action: #selector(openCourseSetup))
+        banner.addGestureRecognizer(tap)
+        banner.isUserInteractionEnabled = true
+
+        UIView.animate(withDuration: 0.3) { banner.alpha = 1 }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+            UIView.animate(withDuration: 0.5, animations: { banner.alpha = 0 }) { _ in banner.removeFromSuperview() }
+        }
     }
 
     // MARK: - Home Course Prompt
@@ -1119,11 +1157,13 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         )
         ac.addAction(UIAlertAction(title: "Not now", style: .cancel) { [weak self] _ in
             self?.didPromptHomeCourse = true
+            UserDefaults.standard.set(true, forKey: "onboarding_home_course")
             self?.setEditCourseGlow(false)
             self?.runOnboardingIfNeeded()
         })
         ac.addAction(UIAlertAction(title: "Yes", style: .default) { [weak self] _ in
             self?.didPromptHomeCourse = true
+            UserDefaults.standard.set(true, forKey: "onboarding_home_course")
             self?.setEditCourseGlow(false)
             self?.openCourseSetup(nil)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
@@ -1259,6 +1299,16 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     @objc private func editCourseTapped(_ sender: UIButton) {
         openCourseSetup(sender)
+    }
+
+    @objc private func courseInfoTapped() {
+        let ac = UIAlertController(
+            title: "Change Course",
+            message: "Tap the course name or the ✏️ pencil to browse and select a different course.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Got It", style: .default))
+        present(ac, animated: true)
     }
 
     // MARK: - Reset Snapshot Banner
@@ -1464,11 +1514,23 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     // MARK: - More
 
+    @objc private func howToPlayTapped(_ sender: UIButton) {
+        let ac = UIAlertController(title: "How to Play", message: nil, preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "How to Play Walkthrough", style: .default) { [weak self] _ in self?.openHowToPlay() })
+        ac.addAction(UIAlertAction(title: "Explore the Rules",       style: .default) { [weak self] _ in self?.openRules() })
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = ac.popoverPresentationController {
+            pop.sourceView = sender
+            pop.sourceRect = sender.bounds
+            pop.permittedArrowDirections = [.up, .down]
+        }
+        present(ac, animated: true)
+    }
+
     @objc private func moreTapped(_ sender: UIButton) {
         let ac = UIAlertController(title: "More", message: nil, preferredStyle: .actionSheet)
         ac.addAction(UIAlertAction(title: "Manage Players",    style: .default) { [weak self] _ in self?.presentManagePlayers() })
         ac.addAction(UIAlertAction(title: "Past Games",        style: .default) { [weak self] _ in self?.openPastGames() })
-        ac.addAction(UIAlertAction(title: "Explore the Rules", style: .default) { [weak self] _ in self?.openRules() })
         ac.addAction(UIAlertAction(title: "Delete History",    style: .destructive) { [weak self] _ in
             guard let self else { return }
             self.deleteHistoryTapped(sender)
@@ -1563,6 +1625,16 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             wrap.modalPresentationStyle = .fullScreen
             present(wrap, animated: true)
         }
+    }
+
+    private func openHowToPlay() {
+        let vc = HowToPlayViewController()
+        vc.modalPresentationStyle = .formSheet
+        if #available(iOS 16.0, *) {
+            vc.sheetPresentationController?.detents = [.large()]
+            vc.sheetPresentationController?.prefersGrabberVisible = true
+        }
+        present(vc, animated: true)
     }
 
     // MARK: - Delete History

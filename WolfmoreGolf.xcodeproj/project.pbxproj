@@ -92,6 +92,7 @@
 		F6A010012FA0000000000AE1 /* WolfActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A010002FA0000000000AE1 /* WolfActions.swift */; };
 		F6D041842F611C3200CABD08 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F6D041822F611C3200CABD08 /* Main.storyboard */; };
 		F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D351512EC0313E00CE24F9 /* RulesViewController.swift */; };
+		F6H2P1012FC0000000000HTP /* HowToPlayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6H2P1002FC0000000000HTP /* HowToPlayViewController.swift */; };
 		F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */; };
 		F6D541682F63B3C40020588F /* NassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D541672F63B3C40020588F /* NassauViewController.swift */; };
 		F6D5416A2F646D880020588F /* NassauModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D541692F646D880020588F /* NassauModel.swift */; };
@@ -229,6 +230,7 @@
 		F6D041832F611C3200CABD08 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WolfmoreGolf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6D351512EC0313E00CE24F9 /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
+		F6H2P1002FC0000000000HTP /* HowToPlayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayViewController.swift; sourceTree = "<group>"; };
 		F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerSeat.swift; sourceTree = "<group>"; };
 		F6D541672F63B3C40020588F /* NassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauViewController.swift; sourceTree = "<group>"; };
 		F6D541692F646D880020588F /* NassauModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauModel.swift; sourceTree = "<group>"; };
@@ -376,6 +378,7 @@
 				F6D6A4992EC786BC0000F576 /* Friend.swift */,
 				F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */,
 				F6D351512EC0313E00CE24F9 /* RulesViewController.swift */,
+				F6H2P1002FC0000000000HTP /* HowToPlayViewController.swift */,
 				F63960482F60D62500EC0C30 /* Course.swift */,
 				F639604C2F60D62500EC0C30 /* GameData.swift */,
 				F639604A2F60D62500EC0C30 /* CourseStore.swift */,
@@ -671,6 +674,7 @@
 				F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */,
 				F6D5417A2F7498150020588F /* TextGroup.swift in Sources */,
 				F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */,
+				F6H2P1012FC0000000000HTP /* HowToPlayViewController.swift in Sources */,
 				F6E007F72F80182400763694 /* SkinsViewController.swift in Sources */,
 				F6E007FD2F80182400763694 /* SkinsSettingsViewController.swift in Sources */,
 				F511D9CB8F68D9D9B0341314 /* StablefordRulesSetupViewController.swift in Sources */,

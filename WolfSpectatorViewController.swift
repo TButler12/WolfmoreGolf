@@ -712,11 +712,49 @@ extension WolfSpectatorViewController: UITableViewDataSource {
     /// Rounds the max hole seen in results up to the nearest multiple of 18,
     /// so a 36-hole match shows 36 rows as soon as hole 19 data arrives.
     private var totalHolesForCurrentSession: Int {
+        if currentSession?.nineHoleMatch == true { return 9 }
         guard let maxHole = currentHoleResults.keys.max() else { return STANDARD_HOLES }
         return ((maxHole + STANDARD_HOLES - 1) / STANDARD_HOLES) * STANDARD_HOLES
     }
 
-    private var summaryRowCount: Int { totalHolesForCurrentSession == 36 ? 7 : 4 }
+    private var isNineHoleSession: Bool { currentSession?.nineHoleMatch == true }
+
+    /// Maps a 1-based match position (1–9) to the physical 1-based course hole number.
+    private func physicalHole(matchPosition: Int) -> Int {
+        guard isNineHoleSession else { return matchPosition }
+        // Prefer the DB value; fall back to the local game's starting hole if the session
+        // was created before the nine_hole_starting_hole column existed in the schema.
+        let startHole = currentSession?.nineHoleStartingHole
+            ?? GameManager.shared.currentGame?.nineHoleStartingHole
+            ?? 1
+        let start   = max(1, min(STANDARD_HOLES, startHole))
+        let isFront = start <= 9
+        let base    = isFront ? 1 : 10
+        let idx     = matchPosition - 1   // 0-based
+        return base + (start - base + idx) % 9
+    }
+
+    /// For 9-hole sessions: the 9 physical holes in ascending numeric order (1–9 or 10–18).
+    private var nineHolePhysicalHoles: [Int] {
+        let startHole = currentSession?.nineHoleStartingHole
+            ?? GameManager.shared.currentGame?.nineHoleStartingHole ?? 1
+        let start = max(1, min(STANDARD_HOLES, startHole))
+        return start <= 9 ? Array(1...9) : Array(10...18)
+    }
+
+    /// Reverse of physicalHole: given a physical hole (1-based) returns the match position (1-based).
+    private func matchPositionForPhysical(_ ph: Int) -> Int {
+        for mp in 1...9 {
+            if physicalHole(matchPosition: mp) == ph { return mp }
+        }
+        return 1
+    }
+
+    private var summaryRowCount: Int {
+        let isBB = currentHoleResults.values.contains { $0.decision == "bestball" }
+        if isNineHoleSession       { return isBB ? 4 : 3 }
+        return totalHolesForCurrentSession == 36 ? (isBB ? 8 : 7) : (isBB ? 5 : 4)
+    }
 
     func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
@@ -740,13 +778,30 @@ extension WolfSpectatorViewController: UITableViewDataSource {
         let firstMP = allResults.first(where: { $0.wolfSlot != nil })
         let teamASeats = [firstMP?.wolfSlot, firstMP?.partnerSlot].compactMap { $0 }
 
-        // Course pars for Best Ball to-par calculation.
-        let coursePars: [Int] = CourseLibrary.shared.courses
-            .first(where: { $0.name.trimmingCharacters(in: .whitespaces) == session.courseName.trimmingCharacters(in: .whitespaces) })?.pars
-            ?? Array(repeating: 4, count: STANDARD_HOLES)
+        // Course pars + hole HCs for Best Ball net calculation.
+        let matchedCourse = CourseLibrary.shared.courses
+            .first(where: { $0.name.trimmingCharacters(in: .whitespaces) == session.courseName.trimmingCharacters(in: .whitespaces) })
+        let coursePars: [Int] = matchedCourse?.pars ?? Array(repeating: 4, count: STANDARD_HOLES)
+        let courseHCs:  [Int] = matchedCourse?.hcs  ?? Array(1...STANDARD_HOLES)
 
         if summaryRow >= 0 {
-            if is36 {
+            if isNineHoleSession {
+                switch summaryRow {
+                case 0: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
+                case 1:
+                    if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc,
+                                                                      isBestBall: isBestBall, coursePars: coursePars, courseHCs: courseHCs,
+                                                                      teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
+                    else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
+                case 2:
+                    if isBestBall { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
+                                                                       coursePars: coursePars, courseHCs: courseHCs,
+                                                                       teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
+                    else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
+                case 3: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
+                default: break
+                }
+            } else if is36 {
                 switch summaryRow {
                 case 0: cell.configureAsScoreSubtotal(label: "F9",     holes: 1...9,  results: allResults, playerCount: pc)
                 case 1: cell.configureAsScoreSubtotal(label: "1st 18", holes: 1...18, results: allResults, playerCount: pc)
@@ -755,9 +810,15 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 case 4: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
                 case 5:
                     if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc,
-                                                                      isBestBall: isBestBall, coursePars: coursePars, teamASeats: teamASeats) }
+                                                                      isBestBall: isBestBall, coursePars: coursePars, courseHCs: courseHCs,
+                                                                      teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
                     else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
-                case 6: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
+                case 6:
+                    if isBestBall { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
+                                                                       coursePars: coursePars, courseHCs: courseHCs,
+                                                                       teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
+                    else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
+                case 7: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
                 default: break
                 }
             } else {
@@ -766,9 +827,15 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 case 1: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
                 case 2:
                     if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc,
-                                                                      isBestBall: isBestBall, coursePars: coursePars, teamASeats: teamASeats) }
+                                                                      isBestBall: isBestBall, coursePars: coursePars, courseHCs: courseHCs,
+                                                                      teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
                     else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
-                case 3: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
+                case 3:
+                    if isBestBall { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
+                                                                       coursePars: coursePars, courseHCs: courseHCs,
+                                                                       teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
+                    else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
+                case 4: cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames)
                 default: break
                 }
             }
@@ -776,32 +843,55 @@ extension WolfSpectatorViewController: UITableViewDataSource {
         }
 
         // Hole rows
-        let hole = indexPath.row + 1  // 1-based
-        if hole < 1 { return cell }
+        // For 9-hole sessions rows are in physical order (1–9 or 10–18);
+        // for all other sessions rows are in match/playing order.
+        let displayHole: Int
+        let matchPos: Int   // 1-based match position used for result lookups
+        if isNineHoleSession {
+            displayHole = nineHolePhysicalHoles[indexPath.row]
+            matchPos    = matchPositionForPhysical(displayHole)
+        } else {
+            matchPos    = indexPath.row + 1
+            displayHole = physicalHole(matchPosition: matchPos)
+        }
         do {
             let playerCount = session.playerNames.count
             var cumulative = Array(repeating: 0.0, count: playerCount)
-            for h in 1...hole {
+            for h in 1...matchPos {
                 guard let r = currentHoleResults[h] else { continue }
                 let deltas = r.moneyDeltas ?? r.payouts ?? []
                 for (i, v) in deltas.enumerated() where i < playerCount { cumulative[i] += v }
             }
-            let hasCumulative = currentHoleResults[hole] != nil
+            let hasCumulative = currentHoleResults[matchPos] != nil
 
             // Running match score for match play (from Team A / wolfSlot perspective)
             var matchStatus: String? = nil
             if isMatchPlay {
                 if isBestBall {
-                    // Best Ball: accumulate team best-gross-vs-par through this hole.
-                    // teamASeats/coursePars computed above in the data source.
+                    // Best Ball: accumulate team best-NET-vs-par through this match position.
                     let teamBSeats = session.playerNames.indices.filter { !teamASeats.contains($0) }
+                    let hcs = session.playerHandicaps ?? []
+                    let baseHC = hcs.isEmpty ? 0 : (hcs.min() ?? 0)
+                    func bbPops(seat: Int, si: Int) -> Int {
+                        guard !hcs.isEmpty, seat < hcs.count else { return 0 }
+                        let delta = max(0, hcs[seat] - baseHC)
+                        if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
+                        return 1 + (si <= delta - STANDARD_HOLES ? 1 : 0)
+                    }
                     var aSum = 0, bSum = 0
-                    for h in 1...hole {
+                    for h in 1...matchPos {
                         guard let r = currentHoleResults[h], let scores = r.scores else { continue }
-                        let courseH = (h - 1) % STANDARD_HOLES
+                        let courseH = isNineHoleSession ? physicalHole(matchPosition: h) - 1 : (h - 1) % STANDARD_HOLES
                         let par = courseH < coursePars.count ? coursePars[courseH] : 4
-                        let aBest = teamASeats.compactMap { $0 < scores.count && scores[$0] > 0 ? scores[$0] : nil }.min()
-                        let bBest = teamBSeats.compactMap { $0 < scores.count && scores[$0] > 0 ? scores[$0] : nil }.min()
+                        let si  = courseH < courseHCs.count ? max(1, courseHCs[courseH]) : STANDARD_HOLES
+                        let aBest = teamASeats.compactMap { seat -> Int? in
+                            guard seat < scores.count, scores[seat] > 0 else { return nil }
+                            return scores[seat] - bbPops(seat: seat, si: si)
+                        }.min()
+                        let bBest = teamBSeats.compactMap { seat -> Int? in
+                            guard seat < scores.count, scores[seat] > 0 else { return nil }
+                            return scores[seat] - bbPops(seat: seat, si: si)
+                        }.min()
                         if let a = aBest { aSum += a - par }
                         if let b = bBest { bSum += b - par }
                     }
@@ -816,7 +906,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                     var m2AWins = 0, m2BWins = 0
                     var m2AnchorSeat: Int? = nil
 
-                    for h in 1...hole {
+                    for h in 1...matchPos {
                         guard let r = currentHoleResults[h] else { continue }
                         let deltas = r.moneyDeltas ?? r.payouts ?? []
                         if let ws = r.wolfSlot, ws < deltas.count {
@@ -863,9 +953,11 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 }
             }
 
-            cell.configure(hole: hole, result: currentHoleResults[hole], playerNames: session.playerNames,
+            cell.configure(hole: displayHole, result: currentHoleResults[matchPos],
+                           playerNames: session.playerNames,
                            cumulativeTotals: hasCumulative ? cumulative : [],
-                           matchStatus: matchStatus)
+                           matchStatus: matchStatus,
+                           teamASeats: isBestBall ? teamASeats : [])
         }
         return cell
     }
@@ -1243,7 +1335,9 @@ private final class WolfHoleCell: UITableViewCell {
     func configureAsMatchPlayTotals(results: [WolfHoleResult], playerCount: Int,
                                      isBestBall: Bool = false,
                                      coursePars: [Int] = [],
-                                     teamASeats: [Int] = []) {
+                                     courseHCs: [Int] = [],
+                                     teamASeats: [Int] = [],
+                                     playerHandicaps: [Int] = []) {
         holePressLevel = 0
         holeLabel.text      = isBestBall ? "BB" : "Match"
         holeLabel.textColor = .secondaryLabel
@@ -1254,15 +1348,29 @@ private final class WolfHoleCell: UITableViewCell {
         decisionLabel.text  = ""
 
         if isBestBall {
-            // Best Ball footer: show each team's cumulative best-gross-vs-par total.
+            // Best Ball footer: show each team's cumulative best-NET-vs-par total.
             let teamBSeats = (0..<playerCount).filter { !teamASeats.contains($0) }
+            let baseHC = playerHandicaps.isEmpty ? 0 : (playerHandicaps.min() ?? 0)
+            func bbPops(seat: Int, si: Int) -> Int {
+                guard !playerHandicaps.isEmpty, seat < playerHandicaps.count else { return 0 }
+                let delta = max(0, playerHandicaps[seat] - baseHC)
+                if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
+                return 1 + (si <= delta - STANDARD_HOLES ? 1 : 0)
+            }
             var aSum = 0, bSum = 0
             for r in results {
                 guard let scores = r.scores else { continue }
                 let courseH = (r.hole - 1) % STANDARD_HOLES
                 let par = courseH < coursePars.count ? coursePars[courseH] : 4
-                let aBest = teamASeats.compactMap { $0 < scores.count && scores[$0] > 0 ? scores[$0] : nil }.min()
-                let bBest = teamBSeats.compactMap { $0 < scores.count && scores[$0] > 0 ? scores[$0] : nil }.min()
+                let si  = courseH < courseHCs.count ? max(1, courseHCs[courseH]) : STANDARD_HOLES
+                let aBest = teamASeats.compactMap { seat -> Int? in
+                    guard seat < scores.count, scores[seat] > 0 else { return nil }
+                    return scores[seat] - bbPops(seat: seat, si: si)
+                }.min()
+                let bBest = teamBSeats.compactMap { seat -> Int? in
+                    guard seat < scores.count, scores[seat] > 0 else { return nil }
+                    return scores[seat] - bbPops(seat: seat, si: si)
+                }.min()
                 if let a = aBest { aSum += a - par }
                 if let b = bBest { bSum += b - par }
             }
@@ -1310,8 +1418,57 @@ private final class WolfHoleCell: UITableViewCell {
         }
     }
 
+    func configureAsBestBallNetTotals(results: [WolfHoleResult], playerCount: Int,
+                                      coursePars: [Int] = [],
+                                      courseHCs: [Int] = [],
+                                      teamASeats: [Int] = [],
+                                      playerHandicaps: [Int] = []) {
+        holePressLevel = 0
+        holeLabel.text      = "BB Net"
+        holeLabel.textColor = .secondaryLabel
+        holeLabel.font      = .systemFont(ofSize: 12, weight: .regular)
+        moneyRow.isHidden   = true
+        gameRow.isHidden    = true
+        skinsRow.isHidden   = true
+        decisionLabel.text  = ""
+
+        let teamBSeats = (0..<playerCount).filter { !teamASeats.contains($0) }
+        let baseHC = playerHandicaps.isEmpty ? 0 : (playerHandicaps.min() ?? 0)
+        func bbPops(seat: Int, si: Int) -> Int {
+            guard !playerHandicaps.isEmpty, seat < playerHandicaps.count else { return 0 }
+            let delta = max(0, playerHandicaps[seat] - baseHC)
+            if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
+            return 1 + (si <= delta - STANDARD_HOLES ? 1 : 0)
+        }
+        var aTotal = 0, bTotal = 0, aHoles = 0, bHoles = 0
+        for r in results {
+            guard let scores = r.scores else { continue }
+            let courseH = (r.hole - 1) % STANDARD_HOLES
+            let si = courseH < courseHCs.count ? max(1, courseHCs[courseH]) : STANDARD_HOLES
+            let aBest = teamASeats.compactMap { seat -> Int? in
+                guard seat < scores.count, scores[seat] > 0 else { return nil }
+                return scores[seat] - bbPops(seat: seat, si: si)
+            }.min()
+            let bBest = teamBSeats.compactMap { seat -> Int? in
+                guard seat < scores.count, scores[seat] > 0 else { return nil }
+                return scores[seat] - bbPops(seat: seat, si: si)
+            }.min()
+            if let a = aBest { aTotal += a; aHoles += 1 }
+            if let b = bBest { bTotal += b; bHoles += 1 }
+        }
+        for (i, col) in scoreCols.enumerated() {
+            guard i < playerCount else { col.text = ""; continue }
+            col.font      = .systemFont(ofSize: 12, weight: .bold)
+            col.textColor = .secondaryLabel
+            let isTeamA = teamASeats.contains(i)
+            let total   = isTeamA ? aTotal : bTotal
+            let holes   = isTeamA ? aHoles : bHoles
+            col.text = holes > 0 ? "\(total)" : ""
+        }
+    }
+
     func configure(hole: Int, result: WolfHoleResult?, playerNames: [String], cumulativeTotals: [Double] = [],
-                   matchStatus: String? = nil) {
+                   matchStatus: String? = nil, teamASeats: [Int] = []) {
         holePressLevel       = result?.wolfPlayer ?? 0
         holeLabel.text       = "\(hole)"
         holeLabel.textColor  = holePressLevel > 0 ? .systemOrange : .label
@@ -1339,17 +1496,27 @@ private final class WolfHoleCell: UITableViewCell {
         decisionLabel.font = .systemFont(ofSize: 11, weight: .semibold)
         }
 
-        // Match play: scores only + match status; no $ / G$ / SK rows
+        // Match play / Best Ball: scores only + match status; no $ / G$ / SK rows
         if matchStatus != nil {
             let deltas = result?.moneyDeltas ?? result?.payouts ?? []
+            let isBB = !teamASeats.isEmpty
             for (i, col) in scoreCols.enumerated() {
                 col.font = .systemFont(ofSize: 16, weight: .semibold)
+                col.layer.cornerRadius  = isBB ? 4 : 0
+                col.layer.masksToBounds = isBB
+                if isBB {
+                    col.backgroundColor = teamASeats.contains(i)
+                        ? UIColor.systemYellow.withAlphaComponent(0.22)
+                        : UIColor.systemBlue.withAlphaComponent(0.15)
+                } else {
+                    col.backgroundColor = .clear
+                }
                 if let r = result, let scores = r.scores, i < scores.count, scores[i] > 0 {
                     col.text = "\(scores[i])"
                     let delta = i < deltas.count ? deltas[i] : 0.0
-                    if delta > 0.001      { col.textColor = .systemGreen }
+                    if delta > 0.001       { col.textColor = .systemGreen }
                     else if delta < -0.001 { col.textColor = .systemRed }
-                    else                  { col.textColor = .label }
+                    else                   { col.textColor = .label }
                 } else {
                     col.text      = "—"
                     col.textColor = .tertiaryLabel
@@ -1376,6 +1543,9 @@ private final class WolfHoleCell: UITableViewCell {
 
         for (i, col) in scoreCols.enumerated() {
             col.font = .systemFont(ofSize: 16, weight: .semibold)
+            col.backgroundColor     = .clear
+            col.layer.cornerRadius  = 0
+            col.layer.masksToBounds = false
             if let r = result, let scores = r.scores, i < scores.count, scores[i] > 0 {
                 col.text      = "\(scores[i])"
                 col.textColor = wolfTeamIndices.contains(i) ? .systemOrange : .label
