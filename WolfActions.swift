@@ -257,12 +257,19 @@ enum WolfActions {
                 guard g.playerActivated[safe: s] == true else { return nil }
                 return g.playerNames[safe: s] ?? ""
             }
+            let handicaps = (0..<MAX_PLAYERS).compactMap { s -> Int? in
+                guard g.playerActivated[safe: s] == true else { return nil }
+                return g.hcPlayers[safe: s] ?? 0
+            }
             let course = g.course.name.isEmpty ? "Custom Course" : g.course.name
             Task {
                 do {
                     let session = try await SupabaseService.shared.createWolfSession(
                         playerNames: names,
-                        courseName: course
+                        courseName: course,
+                        playerHandicaps: handicaps,
+                        nineHoleMatch: g.isNineHoleMatch,
+                        nineHoleStartingHole: g.nineHoleStartingHole
                     )
                     GameManager.shared.update { g in
                         g.liveSessionId = session.id

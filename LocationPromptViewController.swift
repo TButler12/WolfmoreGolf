@@ -48,7 +48,7 @@ final class LocationPromptViewController: UIViewController {
     }
 
     private static func shouldShow(shownCount: Int) -> Bool {
-        guard shownCount > 0 else { return true }   // first time ever
+        guard shownCount > 0 else { return distinctRoundsCount() >= 1 }  // first time: wait for first round
         #if DEBUG
         // Version-change trigger: debug only, for fast manual testing.
         if appVersion() != (UserDefaults.standard.string(forKey: lastVersionKey) ?? "") {
@@ -67,7 +67,8 @@ final class LocationPromptViewController: UIViewController {
         let vc = LocationPromptViewController()
         vc.modalPresentationStyle = .pageSheet
         if let sheet = vc.sheetPresentationController {
-            sheet.detents = [.large()]
+            let isUS = Locale.current.region?.identifier == "US"
+            sheet.detents = isUS ? [.medium()] : [.large()]
             sheet.prefersGrabberVisible = true
         }
         presenter.present(vc, animated: true)
@@ -81,6 +82,9 @@ final class LocationPromptViewController: UIViewController {
         ud.set(appVersion(), forKey: lastVersionKey)
         #endif
     }
+
+    private let isDefaultUS = Locale.current.region?.identifier == "US"
+    private var showingFullForm = false
 
     private let stack         = UIStackView()
     private let countryField  = UITextField()
@@ -159,16 +163,102 @@ final class LocationPromptViewController: UIViewController {
     // MARK: - Layout
 
     private func buildLayout() {
+        if isDefaultUS {
+            buildUSCompactLayout()
+        } else {
+            buildFullLayout()
+        }
+    }
+
+    private func buildUSCompactLayout() {
         stack.axis = .vertical
         stack.spacing = 16
         stack.alignment = .fill
         stack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(stack)
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 36),
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 24),
             stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
             stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
         ])
+
+        let titleLabel = UILabel()
+        titleLabel.text = "Help Us Improve WolfMore"
+        titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 0
+
+        let bodyLabel = UILabel()
+        bodyLabel.text = "What state do you play in most? We use this to prioritize new courses."
+        bodyLabel.font = .systemFont(ofSize: 14)
+        bodyLabel.textColor = .secondaryLabel
+        bodyLabel.textAlignment = .center
+        bodyLabel.numberOfLines = 0
+
+        // State picker only
+        statePicker.dataSource = self
+        statePicker.delegate   = self
+        statePicker.tag        = 2
+        stateField.inputView        = statePicker
+        stateField.inputAccessoryView = makeToolbar(#selector(statePickerDone))
+        stateField.text         = selectedState
+        stateField.borderStyle  = .roundedRect
+        stateField.font         = .systemFont(ofSize: 16)
+        stateField.tintColor    = .clear
+
+        let stateStack = UIStackView(arrangedSubviews: [makeFieldLabel("State"), stateField])
+        stateStack.axis = .vertical
+        stateStack.spacing = 6
+
+        submitBtn.setTitle("Submit", for: .normal)
+        submitBtn.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        submitBtn.backgroundColor = green
+        submitBtn.setTitleColor(.white, for: .normal)
+        submitBtn.layer.cornerRadius = 12
+        submitBtn.heightAnchor.constraint(equalToConstant: 50).isActive = true
+        submitBtn.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
+
+        let notUSBtn = UIButton(type: .system)
+        notUSBtn.setTitle("I'm outside the US", for: .normal)
+        notUSBtn.titleLabel?.font = .systemFont(ofSize: 14)
+        notUSBtn.setTitleColor(.secondaryLabel, for: .normal)
+        notUSBtn.addTarget(self, action: #selector(expandToFullForm), for: .touchUpInside)
+
+        let laterBtn = UIButton(type: .system)
+        laterBtn.setTitle("Skip", for: .normal)
+        laterBtn.titleLabel?.font = .systemFont(ofSize: 16)
+        laterBtn.setTitleColor(.secondaryLabel, for: .normal)
+        laterBtn.addTarget(self, action: #selector(skipTapped), for: .touchUpInside)
+
+        spinner.hidesWhenStopped = true
+
+        [titleLabel, bodyLabel, stateStack, submitBtn, spinner, notUSBtn, laterBtn]
+            .forEach { stack.addArrangedSubview($0) }
+    }
+
+    @objc private func expandToFullForm() {
+        guard !showingFullForm else { return }
+        showingFullForm = true
+        stack.arrangedSubviews.forEach { stack.removeArrangedSubview($0); $0.removeFromSuperview() }
+        buildFullLayout()
+        if let sheet = sheetPresentationController {
+            sheet.animateChanges { sheet.selectedDetentIdentifier = .large }
+        }
+    }
+
+    private func buildFullLayout() {
+        stack.axis = .vertical
+        stack.spacing = 16
+        stack.alignment = .fill
+        if stack.superview == nil {
+            stack.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(stack)
+            NSLayoutConstraint.activate([
+                stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 36),
+                stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+                stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            ])
+        }
 
         let globeLabel = UILabel()
         globeLabel.text = "🌍"
@@ -328,6 +418,10 @@ final class LocationPromptViewController: UIViewController {
     @objc private func regionPickerDone()  { regionField.resignFirstResponder() }
     @objc private func statePickerDone()   { stateField.resignFirstResponder() }
 
+    private func regionForState(_ state: String) -> String? {
+        regionStates.first(where: { $0.value.contains(state) })?.key
+    }
+
     @objc private func submitTapped() {
         countryField.resignFirstResponder()
         regionField.resignFirstResponder()
@@ -336,9 +430,9 @@ final class LocationPromptViewController: UIViewController {
 
         let country = selectedCountry
         let isUS    = country == "United States"
-        let region  = isUS ? selectedRegion : nil
+        let region  = isUS ? (showingFullForm ? selectedRegion : regionForState(selectedState)) : nil
         let state   = isUS ? selectedState  : nil
-        let zip     = isUS ? zipField.text?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty : nil
+        let zip     = isUS && showingFullForm ? zipField.text?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty : nil
 
         setLoading(true)
         Task {

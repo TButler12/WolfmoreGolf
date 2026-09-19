@@ -787,7 +787,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         updateCourseLabel()
-        showPlayerSetupOnboardingIfNeeded()
         startEditStakeBlink()
     }
 

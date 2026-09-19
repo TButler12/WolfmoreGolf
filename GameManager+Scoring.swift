@@ -68,8 +68,8 @@ extension GameManager {
         let numWolf    = wolfTeam.count
         let numNonWolf = nonWolfTeam.count
 
-        // Hole constants — wrap index for 36-hole rounds (holes 19–36 mirror course holes 1–18)
-        let courseH = hole % STANDARD_HOLES
+        // Map match position to course hole (handles 36-hole mirror and 9-hole sequence)
+        let courseH = g.courseHoleIndex(for: hole)
         let par   = g.courseParToPass[safe: courseH] ?? 4
 
         // Stake — matchPlay uses flat stake (no hammer); all other modes include hammer multiplier
@@ -85,6 +85,7 @@ extension GameManager {
             case .wolf:           return 1
             case .wolfLowBall:    return 0   // low ball only
             case .matchPlay:      return 0   // low ball only
+            case .fourball:       return 0   // team best-ball wins hole only
             case .bestBall:       return 0   // stroke total, no per-hole pts
             case .hammer:         return 2   // treat like scotch scoring
             case .tournament:     return 0   // tournament — no wolf payouts
@@ -119,10 +120,27 @@ extension GameManager {
         //  DUAL MATCH: two independent matches scored simultaneously
         // ---------------------------------------------------------
         if mode.isMatchPlay, g.isDualMatch {
-            if mode == .bestBall { return Array(repeating: 0.0, count: MAX_PLAYERS) }
+            if mode == .bestBall || mode == .fourball { return Array(repeating: 0.0, count: MAX_PLAYERS) }
+
+            // Per-pairing net: strokes relative to the lower HC player in this specific match,
+            // not the round-wide baseline (which would penalise the high-HC player in a weak pairing).
+            func pairingNet(teamA: [Int], teamB: [Int]) -> [Int: Int] {
+                let seats = teamA + teamB
+                let pairingBase = seats.compactMap { g.hcPlayers[safe: $0] }.min() ?? 0
+                var n: [Int: Int] = [:]
+                for s in seats {
+                    let gScore = (s < g.scores.count && hole < g.scores[s].count) ? (g.scores[s][hole] ?? 99) : 99
+                    let si = g.hcForHole(courseH, player: s)
+                    let pops = strokesGiven(delta: max(0, (g.hcPlayers[safe: s] ?? 0) - pairingBase), strokeIndex: si)
+                    n[s] = (gScore < 99) ? (gScore - pops) : 99
+                }
+                return n
+            }
+
             func oneMatch(teamA: [Int], teamB: [Int]) -> [Double] {
-                let aMin = teamA.map { net[$0] ?? 99 }.min() ?? 99
-                let bMin = teamB.map { net[$0] ?? 99 }.min() ?? 99
+                let pNet = pairingNet(teamA: teamA, teamB: teamB)
+                let aMin = teamA.map { pNet[$0] ?? 99 }.min() ?? 99
+                let bMin = teamB.map { pNet[$0] ?? 99 }.min() ?? 99
                 var p = Array(repeating: 0.0, count: MAX_PLAYERS)
                 guard aMin != bMin else { return p }
                 let perPayer = Int(stake.rounded())
@@ -230,7 +248,7 @@ extension GameManager {
             wolfTeamScore = wolfLowBall + wolfLowTotal
             nonTeamScore  = nonLowBall  + nonLowTotal
 
-        case .wolfLowBall, .matchPlay, .bestBall:
+        case .wolfLowBall, .matchPlay, .fourball, .bestBall:
             // Low ball only: 1 point max per hole
             wolfTeamScore = wolfLowBall
             nonTeamScore  = nonLowBall

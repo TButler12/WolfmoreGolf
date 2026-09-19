@@ -337,48 +337,98 @@ private final class ScorecardCell: UITableViewCell {
 // MARK: - StatsRowCell
 
 private final class StatsRowCell: UITableViewCell {
-    private let nameLabel  = UILabel()
-    private let firLabel   = UILabel()
-    private let girLabel   = UILabel()
-    private let puttsLabel = UILabel()
+
+    private let nameLabel = UILabel()
+
+    // Each stat tile: title label on top, value label below
+    private let firTitle   = makeStatTitle("FIR")
+    private let firValue   = makeStatValue()
+    private let girTitle   = makeStatTitle("GIR")
+    private let girValue   = makeStatValue()
+    private let puttsTitle = makeStatTitle("PUTTS")
+    private let puttsValue = makeStatValue()
+
+    private static func makeStatTitle(_ text: String) -> UILabel {
+        let l = UILabel()
+        l.text      = text
+        l.font      = .systemFont(ofSize: 10, weight: .semibold)
+        l.textColor = .tertiaryLabel
+        l.textAlignment = .center
+        return l
+    }
+    private static func makeStatValue() -> UILabel {
+        let l = UILabel()
+        l.font      = .systemFont(ofSize: 17, weight: .semibold)
+        l.textColor = .label
+        l.textAlignment = .center
+        l.adjustsFontSizeToFitWidth = true
+        l.minimumScaleFactor = 0.8
+        return l
+    }
+
+    private func makeTile(title: UILabel, value: UILabel) -> UIView {
+        let tile = UIView()
+        tile.backgroundColor = .secondarySystemGroupedBackground
+        tile.layer.cornerRadius = 10
+        tile.layer.masksToBounds = true
+
+        let stack = UIStackView(arrangedSubviews: [title, value])
+        stack.axis      = .vertical
+        stack.spacing   = 2
+        stack.alignment = .center
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        tile.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: tile.topAnchor, constant: 8),
+            stack.bottomAnchor.constraint(equalTo: tile.bottomAnchor, constant: -8),
+            stack.leadingAnchor.constraint(equalTo: tile.leadingAnchor, constant: 4),
+            stack.trailingAnchor.constraint(equalTo: tile.trailingAnchor, constant: -4)
+        ])
+        return tile
+    }
 
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         selectionStyle = .none
 
-        nameLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
-        nameLabel.adjustsFontForContentSizeCategory = true
+        nameLabel.font = .systemFont(ofSize: 15, weight: .semibold)
+        nameLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        for lbl in [firLabel, girLabel, puttsLabel] {
-            lbl.font      = UIFont.preferredFont(forTextStyle: .subheadline)
-            lbl.textColor = .secondaryLabel
-            lbl.textAlignment = .center
-            lbl.adjustsFontForContentSizeCategory = true
+        let firTile   = makeTile(title: firTitle,   value: firValue)
+        let girTile   = makeTile(title: girTitle,   value: girValue)
+        let puttsTile = makeTile(title: puttsTitle, value: puttsValue)
+
+        for tile in [firTile, girTile, puttsTile] {
+            tile.translatesAutoresizingMaskIntoConstraints = false
         }
 
-        let stack = UIStackView(arrangedSubviews: [nameLabel, firLabel, girLabel, puttsLabel])
-        stack.axis    = .horizontal
-        stack.spacing = 0
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(stack)
+        let tileRow = UIStackView(arrangedSubviews: [firTile, girTile, puttsTile])
+        tileRow.axis         = .horizontal
+        tileRow.spacing      = 10
+        tileRow.distribution = .fillEqually
+        tileRow.translatesAutoresizingMaskIntoConstraints = false
+
+        let outer = UIStackView(arrangedSubviews: [nameLabel, tileRow])
+        outer.axis    = .vertical
+        outer.spacing = 10
+        outer.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(outer)
 
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
-            stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            stack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            stack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
-            firLabel.widthAnchor.constraint(equalToConstant: 68),
-            girLabel.widthAnchor.constraint(equalToConstant: 68),
-            puttsLabel.widthAnchor.constraint(equalToConstant: 72),
+            outer.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            outer.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+            outer.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            outer.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
+            tileRow.heightAnchor.constraint(equalToConstant: 56)
         ])
     }
     required init?(coder: NSCoder) { fatalError() }
 
     func configure(with row: PlayerRow) {
         nameLabel.text  = row.isMe ? "\(row.name) (You)" : row.name
-        firLabel.text   = row.firPct.map   { "FIR \($0)" }    ?? "FIR —"
-        girLabel.text   = row.girPct.map   { "GIR \($0)" }    ?? "GIR —"
-        puttsLabel.text = row.puttTotal.map { "\($0) putts" }  ?? "— putts"
+        firValue.text   = row.firPct   ?? "—"
+        girValue.text   = row.girPct   ?? "—"
+        puttsValue.text = row.puttTotal.map { "\($0)" } ?? "—"
     }
 }
 

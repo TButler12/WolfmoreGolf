@@ -7712,6 +7712,94 @@ let PALATINE_HILLS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold",       yardage: 5251, rating: 65.7, slope: 112)
 ]
 
+// MARK: - Woodway Country Club — Darien, CT
+// Par 71 | Designed by Willie Park, Jr. | Est. 1916
+
+private let WOODWAY_CC_ID = UUID(uuidString: "B4C5D6E7-F8A9-4B01-C2D3-100000000202")!
+
+let WOODWAY_CC_PARS: [Int] = [
+    4,4,3,4,5,4,4,4,3,   // Front 9 — OUT 35
+    4,4,3,4,5,4,4,4,4    // Back 9  — IN  36
+]
+
+let WOODWAY_CC_HCS: [Int] = [
+    15,3,13,9,5,1,7,11,17,
+    6,16,18,14,2,10,4,12,8
+]
+
+let WOODWAY_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 6906, rating: 74.0, slope: 140),
+    TeeInfo(teeName: "Blue",       yardage: 6605, rating: 72.7, slope: 138),
+    TeeInfo(teeName: "Blue/White", yardage: 6424, rating: 71.9, slope: 136),
+    TeeInfo(teeName: "White",      yardage: 6238, rating: 70.7, slope: 135),
+    TeeInfo(teeName: "Green",      yardage: 5481, rating: 73.3, slope: 137)
+]
+
+// MARK: - Round Hill Club — Greenwich, CT
+// Par 71 | Designed by Walter Travis (1924), Robert Trent Jones (1963), Ken Dye (1997)
+
+private let ROUND_HILL_CLUB_ID = UUID(uuidString: "C5D6E7F8-A9B0-4C12-D3E4-100000000203")!
+
+let ROUND_HILL_CLUB_PARS: [Int] = [
+    4,5,3,4,4,3,4,4,4,   // Front 9 — OUT 35
+    4,3,4,4,4,5,5,3,4    // Back 9  — IN  36
+]
+
+let ROUND_HILL_CLUB_HCS: [Int] = [
+    13,7,15,1,9,17,11,5,3,
+    16,18,8,12,2,10,4,14,6
+]
+
+let ROUND_HILL_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6740, rating: 73.3, slope: 142),
+    TeeInfo(teeName: "White", yardage: 6341, rating: 71.2, slope: 135),
+    TeeInfo(teeName: "Red",   yardage: 5552, rating: 73.4, slope: 133),
+    TeeInfo(teeName: "Green", yardage: 5029, rating: 70.4, slope: 124)
+]
+
+// MARK: - Stanwich Club — Greenwich, CT
+// Par 72 | Designed by William Gordon | #1 Course in CT (Golf Digest 2021-22)
+
+private let STANWICH_CLUB_ID = UUID(uuidString: "A1B2C3D4-E5F6-4789-ABCD-100000000201")!
+
+let STANWICH_CLUB_PARS: [Int] = [
+    4,4,4,3,5,4,4,3,5,   // Front 9 — OUT 36
+    4,4,4,3,5,4,3,5,4    // Back 9  — IN  36
+]
+
+let STANWICH_CLUB_HCS: [Int] = [
+    11,7,9,15,1,13,5,17,3,
+    14,4,10,16,12,6,18,2,8
+]
+
+let STANWICH_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Witch", yardage: 7445, rating: 76.6, slope: 145),
+    TeeInfo(teeName: "Gold",  yardage: 7015, rating: 74.7, slope: 141),
+    TeeInfo(teeName: "Blue",  yardage: 6619, rating: 72.9, slope: 138),
+    TeeInfo(teeName: "Combo", yardage: 6352, rating: 71.6, slope: 134),
+    TeeInfo(teeName: "White", yardage: 6131, rating: 70.8, slope: 132),
+    TeeInfo(teeName: "Red",   yardage: 5686, rating: 74.1, slope: 132)
+]
+
+// MARK: - Yale Golf Course — New Haven, CT
+// Par 70 | Designed by Charles Blair Macdonald | Opened 1926 | Centennial 2026
+
+private let YALE_GC_ID = UUID(uuidString: "C3A7F1B2-8E4D-4A09-B6C5-100000000200")!
+
+let YALE_GC_PARS: [Int] = [
+    4,4,4,4,3,4,4,4,3,   // Front 9 — OUT 34
+    4,4,4,3,4,3,5,4,5    // Back 9  — IN  36
+]
+
+let YALE_GC_HCS: [Int] = [
+    5,15,11,1,17,3,13,7,9,
+    2,14,8,10,12,18,16,4,6
+]
+
+let YALE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7054, rating: 74.7, slope: 144)
+]
+
 // MARK: - Prairie Isle Golf Club — Prairie Grove, IL
 // Par 72 | Designed by Gordon Cunningham | Opened 1994
 
@@ -7732,6 +7820,17 @@ let PRAIRIE_ISLE_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "White",  yardage: 6255, rating: 70.2, slope: 122),
     TeeInfo(teeName: "Silver", yardage: 5623, rating: 67.4, slope: 115),
     TeeInfo(teeName: "Red",    yardage: 5251, rating: 70.0, slope: 120)
+]
+
+// MARK: Rolling Green Country Club — Arlington Heights, IL
+private let ROLLING_GREEN_CC_IL_ID = UUID(uuidString: "D3F7A4B8-0000-4000-8000-000000000001")!
+let ROLLING_GREEN_CC_IL_PARS: [Int] = [4,5,4,4,3,5,3,4,4, 4,3,4,4,5,5,4,3,4]
+let ROLLING_GREEN_CC_IL_HCS:  [Int] = [13,1,9,11,7,3,17,15,5, 4,16,10,8,2,14,18,12,6]
+let ROLLING_GREEN_CC_IL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6537, rating: 72.1, slope: 135),
+    TeeInfo(teeName: "White", yardage: 6411, rating: 71.5, slope: 132),
+    TeeInfo(teeName: "Gold",  yardage: 5344),
+    TeeInfo(teeName: "Red",   yardage: 5342),
 ]
 
 // MARK: - Wynstone Golf Club
@@ -10709,6 +10808,185 @@ let MERION_WEST_HCS: [Int] = [
 
 let MERION_WEST_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Back", yardage: 6019, rating: 69.9, slope: 129)
+]
+
+// MARK: Saucon Valley CC (Old Course) — Bethlehem, PA
+private let SAUCON_VALLEY_OLD_ID = UUID(uuidString: "5AEC0001-0000-4000-8000-000000000001")!
+let SAUCON_VALLEY_OLD_PARS: [Int] = [5,4,4,3,4,5,4,4,3, 4,3,4,4,3,5,4,4,4]
+let SAUCON_VALLEY_OLD_HCS:  [Int] = [7,3,9,17,11,1,5,13,15, 10,18,6,14,16,2,8,4,12]
+let SAUCON_VALLEY_OLD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7126, rating: 74.9, slope: 142),
+    TeeInfo(teeName: "Blue",  yardage: 6800, rating: 73.4, slope: 136),
+    TeeInfo(teeName: "White", yardage: 6337, rating: 71.4, slope: 132),
+]
+
+// MARK: Saucon Valley CC (Grace Course) — Bethlehem, PA
+private let SAUCON_VALLEY_GRACE_ID = UUID(uuidString: "5AEC6ACE-0000-4000-8000-000000000001")!
+let SAUCON_VALLEY_GRACE_PARS: [Int] = [5,4,3,5,3,4,4,4,4, 5,3,4,4,3,5,4,4,4]
+let SAUCON_VALLEY_GRACE_HCS:  [Int] = [15,3,11,13,17,7,1,9,5, 6,8,16,12,18,14,2,4,10]
+let SAUCON_VALLEY_GRACE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7091, rating: 73.9, slope: 139),
+    TeeInfo(teeName: "Blue",  yardage: 6684, rating: 72.3, slope: 134),
+    TeeInfo(teeName: "White", yardage: 6302, rating: 70.4, slope: 132),
+    TeeInfo(teeName: "Green", yardage: 5616, rating: 67.5, slope: 129),
+    TeeInfo(teeName: "Gold",  yardage: 5274, rating: 72.0, slope: 131),
+]
+
+// MARK: Saucon Valley CC (Weyhill Course) — Bethlehem, PA
+private let SAUCON_VALLEY_WEYHILL_ID = UUID(uuidString: "5AEC3E11-0000-4000-8000-000000000001")!
+let SAUCON_VALLEY_WEYHILL_PARS: [Int] = [4,3,4,4,3,5,4,4,5, 4,4,5,4,3,4,3,4,5]
+let SAUCON_VALLEY_WEYHILL_HCS:  [Int] = [7,15,1,11,9,3,13,5,17, 4,8,14,10,16,2,18,12,6]
+let SAUCON_VALLEY_WEYHILL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 7099, rating: 75.0, slope: 148),
+    TeeInfo(teeName: "White", yardage: 6482, rating: 71.9, slope: 142),
+    TeeInfo(teeName: "Green", yardage: 6067, rating: 69.4, slope: 136),
+    TeeInfo(teeName: "Gold",  yardage: 5268, rating: 71.3, slope: 127),
+]
+
+// MARK: Huntingdon Valley CC (Centennial Nine) — Huntingdon Valley, PA
+// 9-hole course registered as 18 holes (played twice); HCs use odd/even split
+private let HUNTINGDON_VALLEY_CC_ID = UUID(uuidString: "14CDC0A1-0000-4000-8000-000000000001")!
+let HUNTINGDON_VALLEY_CC_PARS: [Int] = [4,3,4,4,4,4,5,3,4, 4,3,4,4,4,4,5,3,4]
+let HUNTINGDON_VALLEY_CC_HCS:  [Int] = [11,17,5,7,3,15,1,13,9, 12,18,6,8,4,16,2,14,10]
+let HUNTINGDON_VALLEY_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Green", yardage: 3638),
+    TeeInfo(teeName: "Red",   yardage: 3407),
+    TeeInfo(teeName: "Black", yardage: 2927),
+    TeeInfo(teeName: "White", yardage: 2581),
+    TeeInfo(teeName: "Gold",  yardage: 2552),
+]
+
+// MARK: Sunnehanna Country Club — Johnstown, PA
+private let SUNNEHANNA_CC_ID = UUID(uuidString: "5AAAE4AA-0000-4000-8000-000000000001")!
+let SUNNEHANNA_CC_PARS: [Int] = [4,4,4,4,3,4,3,4,5, 3,5,4,4,4,3,5,3,4]
+let SUNNEHANNA_CC_HCS:  [Int] = [7,3,9,13,15,5,17,11,1, 18,12,6,10,16,2,14,4,8]
+let SUNNEHANNA_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6941, rating: 73.9, slope: 133),
+]
+
+// MARK: Lehigh Country Club — Allentown, PA
+private let LEHIGH_CC_ID = UUID(uuidString: "1E4146CC-0000-4000-8000-000000000001")!
+let LEHIGH_CC_PARS: [Int] = [4,4,3,4,4,5,3,4,4, 4,5,4,3,4,4,3,4,4]
+let LEHIGH_CC_HCS:  [Int] = [7,11,9,17,1,13,15,3,5, 6,12,10,14,16,2,18,4,8]
+let LEHIGH_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6851, rating: 73.0, slope: 132),
+    TeeInfo(teeName: "Blue",  yardage: 6415, rating: 70.5, slope: 128),
+    TeeInfo(teeName: "White", yardage: 5614, rating: 66.7, slope: 125),
+    TeeInfo(teeName: "Red",   yardage: 5369, rating: 70.8, slope: 123),
+]
+
+// MARK: Whitemarsh Valley Country Club — Lafayette Hill, PA
+private let WHITEMARSH_VALLEY_CC_ID = UUID(uuidString: "D14E4A11-0000-4000-8000-000000000001")!
+let WHITEMARSH_VALLEY_CC_PARS: [Int] = [4,4,5,3,5,4,4,4,3, 4,5,3,4,4,4,3,5,4]
+let WHITEMARSH_VALLEY_CC_HCS:  [Int] = [13,3,11,5,15,9,1,7,17, 8,4,10,14,12,2,18,16,6]
+let WHITEMARSH_VALLEY_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6902, rating: 74.0, slope: 140),
+    TeeInfo(teeName: "White", yardage: 6494, rating: 72.1, slope: 135),
+    TeeInfo(teeName: "Green", yardage: 6057, rating: 70.3, slope: 129),
+    TeeInfo(teeName: "Gold",  yardage: 5611, rating: 74.1, slope: 135),
+    TeeInfo(teeName: "Red",   yardage: 5151, rating: 71.1, slope: 100),
+]
+
+// MARK: Gulph Mills Golf Club — King of Prussia, PA
+private let GULPH_MILLS_GC_ID = UUID(uuidString: "6AA1111A-0000-4000-8000-000000000001")!
+let GULPH_MILLS_GC_PARS: [Int] = [4,4,4,3,4,3,5,4,4, 4,4,5,4,3,4,4,3,5]
+let GULPH_MILLS_GC_HCS:  [Int] = [3,7,1,17,11,15,5,13,9, 2,12,6,4,16,10,8,14,18]
+let GULPH_MILLS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6627, rating: 72.6, slope: 139),
+    TeeInfo(teeName: "White",  yardage: 6214, rating: 70.5, slope: 131),
+    TeeInfo(teeName: "Yellow", yardage: 5735, rating: 68.2, slope: 123),
+]
+
+// MARK: Laurel Valley Golf Club — Ligonier, PA
+private let LAUREL_VALLEY_GC_ID = UUID(uuidString: "1AA4E1A1-0000-4000-8000-000000000001")!
+let LAUREL_VALLEY_GC_PARS: [Int] = [4,4,5,4,3,5,4,3,4, 4,5,4,4,3,4,4,3,5]
+let LAUREL_VALLEY_GC_HCS:  [Int] = [11,7,9,3,13,17,5,15,1, 4,12,8,6,14,16,2,18,10]
+let LAUREL_VALLEY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Pink",  yardage: 7406, rating: 76.4, slope: 140),
+    TeeInfo(teeName: "Black", yardage: 6973),
+    TeeInfo(teeName: "Blue",  yardage: 6754),
+    TeeInfo(teeName: "White", yardage: 6326),
+    TeeInfo(teeName: "Green", yardage: 5807),
+    TeeInfo(teeName: "Red",   yardage: 5257),
+]
+
+// MARK: Stonewall Links — Elverson, PA
+private let STONEWALL_LINKS_ID = UUID(uuidString: "A6B0C7D1-0000-4000-8000-000000000001")!
+let STONEWALL_LINKS_PARS: [Int] = [5,4,5,4,3,4,3,4,3, 4,5,4,4,4,3,4,3,4]
+let STONEWALL_LINKS_HCS:  [Int] = [15,9,3,1,11,7,17,5,13, 10,2,8,6,14,16,12,18,4]
+let STONEWALL_LINKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6980),
+    TeeInfo(teeName: "Blue",  yardage: 6384),
+    TeeInfo(teeName: "White", yardage: 6047),
+    TeeInfo(teeName: "Green", yardage: 5357),
+]
+
+// MARK: Stonewall Links North Course — Elverson, PA
+private let STONEWALL_LINKS_NORTH_ID = UUID(uuidString: "B7C1D8E2-0000-4000-8000-000000000001")!
+let STONEWALL_LINKS_NORTH_PARS: [Int] = [4,3,5,4,4,3,4,5,3, 4,4,4,3,4,4,4,3,5]
+let STONEWALL_LINKS_NORTH_HCS:  [Int] = [13,15,1,7,9,17,5,3,11, 10,14,16,12,8,4,2,18,6]
+let STONEWALL_LINKS_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6825),
+    TeeInfo(teeName: "Blue",  yardage: 6312),
+    TeeInfo(teeName: "White", yardage: 5886),
+    TeeInfo(teeName: "Green", yardage: 5194),
+]
+
+// MARK: Applebrook Golf Club — Malvern, PA
+private let APPLEBROOK_GC_ID = UUID(uuidString: "C8D2E9F3-0000-4000-8000-000000000001")!
+let APPLEBROOK_GC_PARS: [Int] = [5,4,4,4,3,4,4,5,3, 5,3,4,4,4,3,5,3,4]
+let APPLEBROOK_GC_HCS:  [Int] = [15,9,17,3,11,5,1,7,13, 16,18,12,2,6,8,10,14,4]
+let APPLEBROOK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",         yardage: 6942, rating: 73.5, slope: 135),
+    TeeInfo(teeName: "Composite",     yardage: 6566, rating: 71.9, slope: 130),
+    TeeInfo(teeName: "Orange",        yardage: 6304, rating: 70.6, slope: 128),
+    TeeInfo(teeName: "Gold",          yardage: 5853, rating: 68.6, slope: 124),
+    TeeInfo(teeName: "Fwd Composite", yardage: 5320, rating: 66.3, slope: 120),
+    TeeInfo(teeName: "White",         yardage: 4891, rating: 64.2, slope: 116),
+]
+
+// MARK: White Manor Country Club — Malvern, PA
+private let WHITE_MANOR_CC_ID = UUID(uuidString: "D9E3F0A4-0000-4000-8000-000000000001")!
+let WHITE_MANOR_CC_PARS: [Int] = [4,4,3,4,4,5,4,3,4, 4,5,3,4,3,4,4,5,4]
+let WHITE_MANOR_CC_HCS:  [Int] = [5,1,15,7,13,9,17,11,3, 8,10,16,2,18,14,6,12,4]
+let WHITE_MANOR_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Silver", yardage: 7055, rating: 74.6, slope: 148),
+    TeeInfo(teeName: "Bronze", yardage: 6600, rating: 72.7, slope: 135),
+    TeeInfo(teeName: "Black",  yardage: 6250, rating: 70.6, slope: 135),
+    TeeInfo(teeName: "Green",  yardage: 5650, rating: 67.9, slope: 123),
+    TeeInfo(teeName: "Blue",   yardage: 5150, rating: 69.9, slope: 123),
+]
+
+// MARK: Talamore Country Club — Ambler, PA
+private let TALAMORE_CC_ID = UUID(uuidString: "E0F4A1B5-0000-4000-8000-000000000001")!
+let TALAMORE_CC_PARS: [Int] = [4,4,4,3,5,4,4,3,4, 4,4,3,5,3,4,4,4,5]
+let TALAMORE_CC_HCS:  [Int] = [4,6,8,18,2,10,12,14,16, 9,5,15,1,17,3,13,11,7]
+let TALAMORE_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6641, rating: 73.3, slope: 144),
+    TeeInfo(teeName: "Gold",  yardage: 6217, rating: 71.4, slope: 140),
+    TeeInfo(teeName: "Blue",  yardage: 5707, rating: 68.7, slope: 136),
+    TeeInfo(teeName: "White", yardage: 5156, rating: 66.0, slope: 132),
+    TeeInfo(teeName: "Green", yardage: 4386, rating: 63.1, slope: 125),
+]
+
+// MARK: Rolling Green Golf Club — Springfield, PA
+private let ROLLING_GREEN_GC_PA_ID = UUID(uuidString: "E4A8B5C9-0000-4000-8000-000000000001")!
+let ROLLING_GREEN_GC_PA_PARS: [Int] = [4,4,3,4,4,3,5,4,5, 3,4,4,4,3,4,3,5,5]
+let ROLLING_GREEN_GC_PA_HCS:  [Int] = [9,3,15,7,11,13,17,1,5, 12,4,14,2,8,6,18,16,10]
+let ROLLING_GREEN_GC_PA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 6736, rating: 73.0, slope: 143),
+    TeeInfo(teeName: "Green",  yardage: 6307, rating: 71.1, slope: 136),
+    TeeInfo(teeName: "White",  yardage: 5723, rating: 68.6, slope: 131),
+    TeeInfo(teeName: "Silver", yardage: 5059, rating: 65.4, slope: 124),
+    TeeInfo(teeName: "Orange", yardage: 4545, rating: 64.1, slope: 118),
+]
+
+// MARK: Philadelphia Country Club (Spring/Mill) — Gladwyne, PA
+private let PHILADELPHIA_CC_ID = UUID(uuidString: "F5B9C6D0-0000-4000-8000-000000000001")!
+let PHILADELPHIA_CC_PARS: [Int] = [4,4,5,4,3,5,3,4,4, 4,3,5,4,4,3,4,4,4]
+let PHILADELPHIA_CC_HCS:  [Int] = [17,7,3,11,15,1,9,5,13, 8,18,2,10,6,16,14,4,12]
+let PHILADELPHIA_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7223, rating: 75.1, slope: 142),
 ]
 
 // MARK: Keswick Club — Keswick, VA
@@ -17750,6 +18028,40 @@ private enum BuiltIns {
           website: "https://www.palatinehills.org",
           address: "512 W. Northwest Hwy, Palatine, IL 60067"),
 
+        c(STANWICH_CLUB_ID, "Stanwich Club", STANWICH_CLUB_PARS, STANWICH_CLUB_HCS, STANWICH_CLUB_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "William Gordon",
+          type: "Private",
+          website: "https://www.stanwich.org",
+          address: "888 North Street, Greenwich, CT 06831",
+          isWolfApproved: true),
+
+        c(WOODWAY_CC_ID, "Woodway Country Club", WOODWAY_CC_PARS, WOODWAY_CC_HCS, WOODWAY_CC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Willie Park, Jr.",
+          type: "Private",
+          phone: "(203) 322-1661",
+          website: "https://www.woodway.org",
+          address: "540 Hoyt Street, Darien, CT 06820"),
+
+        c(ROUND_HILL_CLUB_ID, "Round Hill Club", ROUND_HILL_CLUB_PARS, ROUND_HILL_CLUB_HCS, ROUND_HILL_CLUB_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Walter Travis / Robert Trent Jones / Ken Dye",
+          type: "Private",
+          address: "70 Round Hill Road, Greenwich, CT 06831"),
+
+        c(YALE_GC_ID, "Yale Golf Course", YALE_GC_PARS, YALE_GC_HCS, YALE_GC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Charles Blair Macdonald",
+          type: "Private",
+          phone: "+1 203-432-0895",
+          website: "https://thecourseatyale.org",
+          address: "New Haven, CT 06515"),
+
         c(PRAIRIE_ISLE_GC_ID, "Prairie Isle Golf Club", PRAIRIE_ISLE_GC_PARS, PRAIRIE_ISLE_GC_HCS, PRAIRIE_ISLE_GC_TEES,
           country: "USA",
           state: "IL",
@@ -17758,6 +18070,15 @@ private enum BuiltIns {
           phone: "(815) 356-0202",
           website: "https://www.prairieislegc.com",
           address: "2216 Route 176, Prairie Grove, IL 60012"),
+
+        c(ROLLING_GREEN_CC_IL_ID, "Rolling Green Country Club", ROLLING_GREEN_CC_IL_PARS, ROLLING_GREEN_CC_IL_HCS,
+          ROLLING_GREEN_CC_IL_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "William H. Diddel",
+          type: "Private",
+          address: "Arlington Heights, IL",
+          isWolfApproved: false),
 
         c(
             WYNSTONE_GC_ID,
@@ -19979,6 +20300,164 @@ private enum BuiltIns {
             type: "Private",
             address: "450 Ardmore Ave., Ardmore, PA 19003"
         ),
+        c(SUNNEHANNA_CC_ID, "Sunnehanna Country Club", SUNNEHANNA_CC_PARS, SUNNEHANNA_CC_HCS,
+          SUNNEHANNA_CC_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "A.W. Tillinghast",
+          type: "Private",
+          phone: "(814) 255-4121",
+          address: "1000 Sunnehanna Drive, Johnstown, PA 15905",
+          isWolfApproved: false),
+
+        c(LEHIGH_CC_ID, "Lehigh Country Club", LEHIGH_CC_PARS, LEHIGH_CC_HCS,
+          LEHIGH_CC_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "William S. Flynn",
+          type: "Private",
+          address: "3272 Lehigh Street, Allentown, PA 18103",
+          isWolfApproved: false),
+
+        c(WHITEMARSH_VALLEY_CC_ID, "Whitemarsh Valley Country Club", WHITEMARSH_VALLEY_CC_PARS, WHITEMARSH_VALLEY_CC_HCS,
+          WHITEMARSH_VALLEY_CC_TEES,
+          country: "USA",
+          state: "PA",
+          region: "Philadelphia",
+          architect: "George C. Thomas Jr.",
+          type: "Private",
+          phone: "(215) 233-3901",
+          address: "815 Thomas Road, Lafayette Hill, PA 19444",
+          isWolfApproved: false),
+
+        c(GULPH_MILLS_GC_ID, "Gulph Mills Golf Club", GULPH_MILLS_GC_PARS, GULPH_MILLS_GC_HCS,
+          GULPH_MILLS_GC_TEES,
+          country: "USA",
+          state: "PA",
+          region: "Philadelphia",
+          architect: "William S. Flynn",
+          type: "Private",
+          phone: "(610) 828-0717",
+          address: "200 Swedeland Road, King of Prussia, PA 19406",
+          isWolfApproved: false),
+
+        c(HUNTINGDON_VALLEY_CC_ID, "Huntingdon Valley CC (Centennial Nine)", HUNTINGDON_VALLEY_CC_PARS, HUNTINGDON_VALLEY_CC_HCS,
+          HUNTINGDON_VALLEY_CC_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "William S. Flynn",
+          type: "Private",
+          phone: "(215) 657-1610",
+          address: "2295 Country Club Drive, Huntingdon Valley, PA 19006",
+          isWolfApproved: false),
+
+        c(SAUCON_VALLEY_OLD_ID, "Saucon Valley CC (Old Course)", SAUCON_VALLEY_OLD_PARS, SAUCON_VALLEY_OLD_HCS,
+          SAUCON_VALLEY_OLD_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "Herbert Strong",
+          type: "Private",
+          phone: "(610) 758-7150",
+          address: "2050 Saucon Valley Road, Bethlehem, PA 18015",
+          isWolfApproved: false),
+
+        c(SAUCON_VALLEY_GRACE_ID, "Saucon Valley CC (Grace Course)", SAUCON_VALLEY_GRACE_PARS, SAUCON_VALLEY_GRACE_HCS,
+          SAUCON_VALLEY_GRACE_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "William Gordon",
+          type: "Private",
+          phone: "(610) 758-7150",
+          address: "2050 Saucon Valley Road, Bethlehem, PA 18015",
+          isWolfApproved: false),
+
+        c(SAUCON_VALLEY_WEYHILL_ID, "Saucon Valley CC (Weyhill Course)", SAUCON_VALLEY_WEYHILL_PARS, SAUCON_VALLEY_WEYHILL_HCS,
+          SAUCON_VALLEY_WEYHILL_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "William Gordon",
+          type: "Private",
+          phone: "(610) 758-7150",
+          address: "2050 Saucon Valley Road, Bethlehem, PA 18015",
+          isWolfApproved: false),
+
+        c(LAUREL_VALLEY_GC_ID, "Laurel Valley Golf Club", LAUREL_VALLEY_GC_PARS, LAUREL_VALLEY_GC_HCS,
+          LAUREL_VALLEY_GC_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "Dick Wilson",
+          type: "Private",
+          phone: "(724) 238-9555",
+          address: "175 Palmer Dr, Ligonier, PA 15658",
+          isWolfApproved: false),
+
+        c(ROLLING_GREEN_GC_PA_ID, "Rolling Green Golf Club", ROLLING_GREEN_GC_PA_PARS, ROLLING_GREEN_GC_PA_HCS,
+          ROLLING_GREEN_GC_PA_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "William S. Flynn",
+          type: "Private",
+          phone: "(610) 544-4500",
+          address: "280 N. State Rd., Springfield, PA 19064",
+          isWolfApproved: false),
+
+        c(PHILADELPHIA_CC_ID, "Philadelphia Country Club (Spring/Mill)", PHILADELPHIA_CC_PARS, PHILADELPHIA_CC_HCS,
+          PHILADELPHIA_CC_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "William S. Flynn",
+          type: "Private",
+          phone: "(610) 525-6000",
+          address: "1601 Spring Mill Road, Gladwyne, PA 19035",
+          isWolfApproved: false),
+
+        c(STONEWALL_LINKS_ID, "Stonewall Links", STONEWALL_LINKS_PARS, STONEWALL_LINKS_HCS,
+          STONEWALL_LINKS_TEES,
+          country: "USA",
+          state: "PA",
+          type: "Private",
+          phone: "(610) 286-3030",
+          address: "375 Bulltown Road, Elverson, PA 19520",
+          isWolfApproved: false),
+
+        c(STONEWALL_LINKS_NORTH_ID, "Stonewall Links (North)", STONEWALL_LINKS_NORTH_PARS, STONEWALL_LINKS_NORTH_HCS,
+          STONEWALL_LINKS_NORTH_TEES,
+          country: "USA",
+          state: "PA",
+          type: "Private",
+          phone: "(610) 286-3030",
+          address: "375 Bulltown Road, Elverson, PA 19520",
+          isWolfApproved: false),
+
+        c(APPLEBROOK_GC_ID, "Applebrook Golf Club", APPLEBROOK_GC_PARS, APPLEBROOK_GC_HCS,
+          APPLEBROOK_GC_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "Gil Hanse",
+          type: "Private",
+          phone: "(610) 647-7660",
+          address: "100 Line Road, Malvern, PA 19355",
+          isWolfApproved: false),
+
+        c(WHITE_MANOR_CC_ID, "White Manor Country Club", WHITE_MANOR_CC_PARS, WHITE_MANOR_CC_HCS,
+          WHITE_MANOR_CC_TEES,
+          country: "USA",
+          state: "PA",
+          architect: "Bobby Weed",
+          type: "Private",
+          phone: "(610) 647-1070",
+          address: "831 Providence Road, Malvern, PA 19355",
+          isWolfApproved: false),
+
+        c(TALAMORE_CC_ID, "Talamore Country Club", TALAMORE_CC_PARS, TALAMORE_CC_HCS,
+          TALAMORE_CC_TEES,
+          country: "USA",
+          state: "PA",
+          type: "Private",
+          phone: "(215) 641-1300",
+          address: "723 Talamore Drive, Ambler, PA 19002",
+          isWolfApproved: false),
+
         c(
             FOWLERS_MILL_ID,
             "Fowler's Mill Golf Course",

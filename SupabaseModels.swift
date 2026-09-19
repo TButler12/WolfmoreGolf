@@ -99,13 +99,19 @@ struct WolfSession: Codable {
     let courseName: String
     let status: String
     let createdAt: String?
+    let playerHandicaps: [Int]?
+    let nineHoleMatch: Bool?
+    let nineHoleStartingHole: Int?
 
     enum CodingKeys: String, CodingKey {
         case id, code, status
-        case hostName    = "host_name"
-        case playerNames = "player_names"
-        case courseName  = "course_name"
-        case createdAt   = "created_at"
+        case hostName             = "host_name"
+        case playerNames          = "player_names"
+        case courseName           = "course_name"
+        case createdAt            = "created_at"
+        case playerHandicaps      = "player_handicaps"
+        case nineHoleMatch        = "nine_hole_match"
+        case nineHoleStartingHole = "nine_hole_starting_hole"
     }
 }
 

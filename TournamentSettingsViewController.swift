@@ -389,7 +389,7 @@ final class TournamentSettingsViewController: UIViewController {
             switch g.resolvedGameType {
             case .wolf:       wolfScoringSegment.selectedSegmentIndex = 1
             case .wolfLowBall: wolfScoringSegment.selectedSegmentIndex = 2
-            case .matchPlay, .bestBall: wolfScoringSegment.selectedSegmentIndex = 3
+            case .matchPlay, .fourball, .bestBall: wolfScoringSegment.selectedSegmentIndex = 3
             default:                    wolfScoringSegment.selectedSegmentIndex = 0
             }
             pressStyleSegment.selectedSegmentIndex  = (g.pressStyle  == .additive) ? 1 : 0

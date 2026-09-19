@@ -49,6 +49,13 @@ final class HowToPlayViewController: UIViewController {
             badges: ["Scores", "Roll / Press / Alone", "Prox", "ⓘ Menu"]
         ),
         HowToPlayPage(
+            systemImage: "chart.bar.fill",
+            symbolColor: UIColor(red: 0.25, green: 0.45, blue: 0.70, alpha: 1),
+            title: "Stats & Hole Tracking",
+            body: "After entering scores, tap Hole Stats on the scoring screen to log Fairways in Regulation (FIR), Greens in Regulation (GIR), and total putts for that hole. WolfMore will prompt you automatically after each hole — or tap the Hole Stats button any time to fill it in.\n\nTo review your stats, tap Stats on the Home screen. Select a past round to see a full scorecard plus your FIR %, GIR %, and total putts broken out per player. Your lifetime averages accumulate across all saved rounds.",
+            badges: ["Hole Stats", "FIR", "GIR", "Putts", "Past Games"]
+        ),
+        HowToPlayPage(
             systemImage: "antenna.radiowaves.left.and.right",
             symbolColor: UIColor(red: 0.10, green: 0.45, blue: 0.30, alpha: 1),
             title: "Share Your Round Live",

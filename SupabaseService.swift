@@ -389,17 +389,21 @@ final class SupabaseService {
 
     // MARK: - Wolf Live session
 
-    func createWolfSession(playerNames: [String], courseName: String) async throws -> WolfSession {
+    func createWolfSession(playerNames: [String], courseName: String, playerHandicaps: [Int] = [],
+                           nineHoleMatch: Bool = false, nineHoleStartingHole: Int = 1) async throws -> WolfSession {
         let code = generateCode()
         let hostName = ProfileStore.name ?? ""
         let response: PostgrestResponse<WolfSession> = try await client
             .from("wolf_sessions")
             .insert([
-                "code":         AnyJSON.string(code),
-                "host_name":    AnyJSON.string(hostName),
-                "player_names": AnyJSON.array(playerNames.map { .string($0) }),
-                "course_name":  AnyJSON.string(courseName),
-                "status":       AnyJSON.string("active")
+                "code":                    AnyJSON.string(code),
+                "host_name":               AnyJSON.string(hostName),
+                "player_names":            AnyJSON.array(playerNames.map { .string($0) }),
+                "course_name":             AnyJSON.string(courseName),
+                "status":                  AnyJSON.string("active"),
+                "player_handicaps":        AnyJSON.array(playerHandicaps.map { .integer($0) }),
+                "nine_hole_match":         AnyJSON.bool(nineHoleMatch),
+                "nine_hole_starting_hole": AnyJSON.integer(nineHoleStartingHole)
             ] as [String: AnyJSON])
             .select()
             .single()

@@ -295,8 +295,9 @@ private func formatTags(_ g: GameData) -> String {
     switch g.resolvedGameType {
     case .wolf:           tags.append("Wolf 2-Pt")
     case .wolfLowBall:    tags.append("Wolf LowBall")
-    case .matchPlay:      tags.append("Match Play")
-    case .bestBall:       tags.append("Best Ball")
+    case .matchPlay:      tags.append("Individual")
+    case .fourball:       tags.append("Fourball")
+    case .bestBall:       tags.append("FB Stroke Play")
     case .sixPointScotch: tags.append("6-Pt Scotch")
     case .hammer:         tags.append("Hammer")
     case .tournament:
@@ -311,6 +312,8 @@ private func formatTags(_ g: GameData) -> String {
             tags.append("Tournament")
         }
     }
+    if g.isNineHoleMatch  { tags.append("9-Hole") }
+    if g.matchPlay36Holes { tags.append("36-Hole") }
     if g.nassauState != nil { tags.append("Nassau") }
     if g.skinsState  != nil { tags.append("Skins") }
     return tags.joined(separator: " · ")

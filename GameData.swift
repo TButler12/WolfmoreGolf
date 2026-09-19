@@ -131,8 +131,30 @@ struct GameData: Codable {
     var matchPlayTeamB2: [Int]? = nil
     // Match Play 36-hole round: plays the same 18-hole course twice back-to-back
     var matchPlay36Holes: Bool = false
+    // 9-Hole Match: confined to one half of the course, starting hole determines front/back
+    var isNineHoleMatch: Bool = false
+    var nineHoleStartingHole: Int = 1  // 1-based physical hole (1–18)
 
-    var totalHoles: Int { matchPlay36Holes ? 36 : STANDARD_HOLES }
+    var totalHoles: Int {
+        if isNineHoleMatch  { return 9 }
+        return matchPlay36Holes ? 36 : STANDARD_HOLES
+    }
+
+    /// 0-based course hole indices in playing order for a 9-hole match.
+    var nineHoleSequence: [Int] {
+        let start = max(1, min(STANDARD_HOLES, nineHoleStartingHole))
+        let isFront = start <= 9
+        let base = isFront ? 1 : 10
+        return (0..<9).map { i in base + (start - base + i) % 9 - 1 }
+    }
+
+    /// Maps a 0-based match position to the 0-based course hole index for par/HC/yardage lookups.
+    func courseHoleIndex(for matchHole: Int) -> Int {
+        if isNineHoleMatch {
+            return nineHoleSequence[safe: matchHole] ?? (matchHole % STANDARD_HOLES)
+        }
+        return matchHole % STANDARD_HOLES
+    }
 
     var isDualMatch: Bool {
         guard resolvedGameType.isMatchPlay,
