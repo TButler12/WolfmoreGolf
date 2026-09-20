@@ -30,6 +30,9 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private weak var dualMatchSwitch: UISwitch?
     private weak var matchPlaySubModeSegment: UISegmentedControl?
     private weak var goLiveButton: UIButton?
+    private weak var teamTeeSwitch: UISwitch?
+    private weak var teamTeeConfigureButton: UIButton?
+    private weak var skinsCarryoverSegment: UISegmentedControl?
     private var scrollView: UIScrollView!
     private var contentStack: UIStackView!
 
@@ -85,6 +88,8 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         installHammerStyleSegment()
         installMatchPlayTeamsSection()
         refreshMatchPlayUI()
+        installTeamTeeSection()
+        installSkinsCarryoverSection()
         installGoLiveButton()
         NotificationCenter.default.addObserver(self, selector: #selector(refreshGoLiveButton), name: .reloadUI, object: nil)
         saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
@@ -839,6 +844,148 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             g.holeCommitted = Array(repeating: false, count: STANDARD_HOLES)
         }
         refreshMatchPlayTeamsContent()
+    }
+
+    // MARK: - Team Tee Game
+
+    private func installTeamTeeSection() {
+        let g = GameManager.shared.currentGame
+        let inTournament = g?.tournamentCode != nil
+
+        var subviews: [UIView] = [sectionHeader("Team Tee Game")]
+
+        if inTournament {
+            // Read-only: show what the organizer configured.
+            let info = UILabel()
+            info.numberOfLines = 0
+            info.font = .preferredFont(forTextStyle: .footnote)
+            info.textColor = .secondaryLabel
+            if let tt = g?.teamTeeSettings, tt.isEnabled {
+                let modeStr: String
+                switch tt.countMode {
+                case .fixed: modeStr = "Fixed, count \(tt.fixedCount)"
+                case .byPar: modeStr = "By Par (3s:\(tt.par3Count) 4s:\(tt.par4Count) 5s:\(tt.par5Count))"
+                }
+                info.text = "Set by tournament organizer — \(modeStr)"
+            } else {
+                info.text = "Team Tee Game not enabled for this tournament."
+            }
+            subviews.append(info)
+        } else {
+            // Standalone: editable toggle + configure button.
+            let isEnabled = g?.teamTeeSettings?.isEnabled ?? false
+
+            let sw = UISwitch()
+            sw.isOn = isEnabled
+            sw.addTarget(self, action: #selector(teamTeeSwitchChanged(_:)), for: .valueChanged)
+            teamTeeSwitch = sw
+
+            let rowLbl = UILabel()
+            rowLbl.text = "Track Team Tee Game"
+            rowLbl.font = .systemFont(ofSize: 16)
+            rowLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            let toggleRow = UIStackView(arrangedSubviews: [rowLbl, sw])
+            toggleRow.axis = .horizontal
+            toggleRow.alignment = .center
+            toggleRow.spacing = 8
+
+            let cfg = UIButton(type: .system)
+            cfg.setTitle("Configure Count Rules →", for: .normal)
+            cfg.titleLabel?.font = .systemFont(ofSize: 14)
+            cfg.contentHorizontalAlignment = .left
+            cfg.addTarget(self, action: #selector(teamTeeConfigureTapped), for: .touchUpInside)
+            cfg.isHidden = !isEnabled
+            teamTeeConfigureButton = cfg
+
+            let note = UILabel()
+            note.text = "Scores the lowest N net scores per hole across the foursome, computed automatically from scores already entered."
+            note.font = .preferredFont(forTextStyle: .caption1)
+            note.textColor = .secondaryLabel
+            note.numberOfLines = 0
+
+            subviews += [toggleRow, cfg, note]
+        }
+
+        let section = UIStackView(arrangedSubviews: subviews)
+        section.axis = .vertical
+        section.spacing = 8
+
+        let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
+        contentStack.insertArrangedSubview(section, at: insertIndex)
+    }
+
+    private func installSkinsCarryoverSection() {
+        let g = GameManager.shared.currentGame
+        let isSkinsTournament = g?.tournamentGameType == "skins"
+        let hasLocalSkins = g?.skinsState?.settings.isEnabled == true
+        guard isSkinsTournament || hasLocalSkins else { return }
+
+        let inTournament = g?.tournamentCode != nil
+        var subviews: [UIView] = [sectionHeader("Skins: Tie Handling")]
+
+        if inTournament {
+            let info = UILabel()
+            info.numberOfLines = 0
+            info.font = .preferredFont(forTextStyle: .footnote)
+            info.textColor = .secondaryLabel
+            let carries = g?.tournamentCarryTies == true
+            info.text = "Set by tournament organizer — \(carries ? "Carryover: tied holes carry their value to the next hole" : "No carryover: tied holes have no skin winner")"
+            subviews.append(info)
+        } else {
+            let seg = UISegmentedControl(items: ["No Carry", "Carry Ties"])
+            seg.selectedSegmentIndex = (g?.skinsState?.settings.carryoversEnabled == true) ? 1 : 0
+            seg.addTarget(self, action: #selector(skinsCarryoverChanged(_:)), for: .valueChanged)
+            skinsCarryoverSegment = seg
+
+            let note = UILabel()
+            note.text = "No Carry: tied holes have no skin winner. Carry Ties: a tie rolls the skin value into the next hole."
+            note.font = .preferredFont(forTextStyle: .caption1)
+            note.textColor = .secondaryLabel
+            note.numberOfLines = 0
+
+            subviews += [seg, note]
+        }
+
+        let section = UIStackView(arrangedSubviews: subviews)
+        section.axis = .vertical
+        section.spacing = 8
+
+        let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
+        contentStack.insertArrangedSubview(section, at: insertIndex)
+    }
+
+    @objc private func skinsCarryoverChanged(_ seg: UISegmentedControl) {
+        GameManager.shared.update { g in
+            if g.skinsState == nil { g.skinsState = SkinsEngine.makeDefaultState() }
+            g.skinsState?.settings.carryoversEnabled = (seg.selectedSegmentIndex == 1)
+        }
+    }
+
+    @objc private func teamTeeSwitchChanged(_ sw: UISwitch) {
+        GameManager.shared.update { g in
+            if g.teamTeeSettings == nil {
+                g.teamTeeSettings = TeamTeeSettings()
+            }
+            g.teamTeeSettings?.isEnabled = sw.isOn
+        }
+        teamTeeConfigureButton?.isHidden = !sw.isOn
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+    }
+
+    @objc private func teamTeeConfigureTapped() {
+        let g = GameManager.shared.currentGame
+        let current = g?.teamTeeSettings ?? TeamTeeSettings()
+        let activePlayers = (0..<MAX_PLAYERS).filter {
+            (g?.playerActivated[$0] ?? false) &&
+            !(g?.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        }.count
+        let vc = TeamTeeSetupViewController(settings: current, maxCount: max(1, activePlayers))
+        vc.onSave = { [weak self] updated in
+            GameManager.shared.update { g in g.teamTeeSettings = updated }
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
+            self?.teamTeeSwitch?.isOn = updated.isEnabled
+        }
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     // MARK: - Go Live

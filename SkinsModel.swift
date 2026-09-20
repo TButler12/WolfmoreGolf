@@ -24,7 +24,7 @@ struct SkinsSettings: Codable {
     var mode: SkinsMode = .automatic
     var scoringMode: SkinsScoringMode = .net
     var skinValue: Double = 1.0
-    var carryoversEnabled: Bool = true
+    var carryoversEnabled: Bool = false
     // When set, overrides per-skin stake: payout = (skinsWon / totalSkins) × potAmount
     var potAmount: Double? = nil
 }

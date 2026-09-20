@@ -11,6 +11,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private struct SkinsRow    { let rank: Int; let name: String; let skinsWon: Int; let holesPlayed: Int; let potPayout: Double? }
     private struct PtsRow      { let rank: Int; let name: String; let dayPts: Int;   let holesPlayed: Int }
     private struct ScrambleRow { let rank: Int; let name: String; let toPar: Int; let grossTotal: Int; let holesPlayed: Int }
+    private struct TeamTeeRow  { let rank: Int; let name: String; let groupTotal: Int; let holesCompleted: Int; let containsCurrentUser: Bool }
 
     // MARK: - State
     let tournamentCode: String
@@ -26,6 +27,10 @@ final class TournamentLeaderboardViewController: UIViewController {
     private var scrambleData:             [ScrambleRow] = []
     private var rosterEntries:            [TournamentRosterEntry] = []
     private var scrambleRosterPlayers:    [String: [String]] = [:]  // teamName → player name list
+    private var teamTeeData:      [TeamTeeRow] = []
+    private var teamTeeTotal:     Int = 0
+    private var teamTeeHoles:     Int = 0
+    private var teamTeeGrossData: [ScoreRow]  = []
 
     // Local overrides — set at init from GameData so server record mismatches don't break display.
     private let localGameType: String?
@@ -62,6 +67,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private var playerOffsets: [String: Double] = [:]
     private var allDayOffsets: [String: Double] = [:]
     private var selectedGameType: String = "wolf"
+    private var teeGameSubTab:   Int     = 0   // 0=Team Net, 1=Individual Net, 2=Individual Gross
 
     private var currentUserName: String? {
         let n = ProfileStore.name?.trimmingCharacters(in: .whitespaces) ?? ""
@@ -80,6 +86,7 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let potBannerLabel  = UILabel()
     private let moneyPtsToggle  = UISegmentedControl(items: ["$ Money", "Pts"])
     private let segment         = UISegmentedControl(items: ["Money", "Net Score", "Groups", "Tournament"])
+    private let teeGameSegment  = UISegmentedControl(items: ["Team Net", "Individual Net", "Individual Gross"])
     private let dayPicker       = UISegmentedControl()
     private let gameTypePicker  = UISegmentedControl(items: ["Wolf", "Net Skins", "Gross Skins"])
     private let tableView       = UITableView(frame: .zero, style: .plain)
@@ -541,11 +548,22 @@ final class TournamentLeaderboardViewController: UIViewController {
         }
 
         // ── Score ──
+        // When Tee Game tab is active, "team_tee" matches no Supabase rows, so re-filter using
+        // the tournament's primary game type — the same source Wolf → Net Score reads from.
+        let scoreGrouped: [String: [TournamentHoleScoreRow]]
+        if selectedGameType == "team_tee" {
+            let primaryType = record?.gameType ?? GameManager.shared.currentGame?.tournamentGameType ?? "wolf"
+            let scoreRows = deduped.filter { ($0.day ?? 1) == currentDay && ($0.gameType ?? "wolf") == primaryType }
+            scoreGrouped = Dictionary(grouping: scoreRows, by: { $0.playerName })
+        } else {
+            scoreGrouped = grouped
+        }
+
         var netSums:   [String: Int] = [:]
         var grossSums: [String: Int] = [:]
         var sHoles:    [String: Int] = [:]
         for player in fieldPlayers { netSums[player] = 0; grossSums[player] = 0; sHoles[player] = 0 }
-        for (player, playerRows) in grouped {
+        for (player, playerRows) in scoreGrouped {
             netSums[player]   = playerRows.reduce(0) { $0 + ($1.netScore ?? $1.grossScore) }
             grossSums[player] = playerRows.reduce(0) { $0 + $1.grossScore }
             sHoles[player]    = playerRows.count
@@ -560,6 +578,18 @@ final class TournamentLeaderboardViewController: UIViewController {
         }.enumerated().map { i, kv in
             ScoreRow(rank: i+1, name: kv.key, netTotal: kv.value,
                      grossTotal: grossSums[kv.key] ?? 0, holesPlayed: sHoles[kv.key] ?? 0)
+        }
+
+        // Gross-sorted view of the same data (for Tee Game → Individual Gross sub-tab).
+        teamTeeGrossData = grossSums.sorted {
+            let aHoles = sHoles[$0.key] ?? 0
+            let bHoles = sHoles[$1.key] ?? 0
+            if aHoles > 0 && bHoles == 0 { return true }
+            if aHoles == 0 && bHoles > 0 { return false }
+            return $0.value < $1.value
+        }.enumerated().map { i, kv in
+            ScoreRow(rank: i+1, name: kv.key, netTotal: netSums[kv.key] ?? 0,
+                     grossTotal: kv.value, holesPlayed: sHoles[kv.key] ?? 0)
         }
 
         // ── Groups: from full deduped set (not day-filtered); exclude synthetic team rows ──
@@ -664,6 +694,69 @@ final class TournamentLeaderboardViewController: UIViewController {
                 scrambleRosterPlayers[entry.canonicalName] = names
             }
         }
+
+        // ── Team Tee (cross-group: one row per playing group, ranked by running net total) ──
+        teamTeeData  = []
+        teamTeeTotal = 0
+        teamTeeHoles = 0
+        let ttSettings = record?.teamTeeSettings
+            ?? GameManager.shared.currentGame?.teamTeeSettings
+        if let settings = ttSettings, settings.isEnabled {
+            // Use the tournament's primary game type rows (same set Wolf/Net Score reads from).
+            let primaryType = record?.gameType ?? GameManager.shared.currentGame?.tournamentGameType ?? "wolf"
+            let baseRows = deduped.filter {
+                ($0.gameType ?? "wolf") == primaryType && ($0.day ?? 1) == currentDay
+            }
+
+            // Build hole→par from the tournament's course so byPar count mode works correctly.
+            var holePar: [Int: Int] = [:]
+            if let courseName = record?.courseName,
+               let profile = CourseLibrary.shared.courses.first(where: {
+                   $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
+                       .caseInsensitiveCompare(courseName.trimmingCharacters(in: .whitespacesAndNewlines)) == .orderedSame
+               }) {
+                for (i, par) in profile.pars.prefix(18).enumerated() { holePar[i + 1] = par }
+            }
+
+            let me = ProfileStore.name?.trimmingCharacters(in: .whitespaces) ?? ""
+            let byMatch = Dictionary(grouping: baseRows, by: { $0.matchId })
+
+            struct GroupResult { let members: [String]; let total: Int; let holes: Int; let containsMe: Bool }
+            var groupResults: [GroupResult] = []
+
+            for (_, matchRows) in byMatch {
+                let members = Array(Set(matchRows.map { $0.playerName })).sorted()
+                guard !members.isEmpty else { continue }
+                let byHole = Dictionary(grouping: matchRows, by: { $0.hole })
+                var groupTotal = 0
+                var holesCompleted = 0
+
+                for hole in 1...18 {
+                    let holeRows = byHole[hole] ?? []
+                    // Require all group members to have submitted before counting the hole.
+                    guard holeRows.count == members.count else { continue }
+                    let nets = holeRows.map { $0.netScore ?? $0.grossScore }
+                    let countN = settings.count(forPar: holePar[hole] ?? 4)
+                    groupTotal += nets.sorted().prefix(min(countN, nets.count)).reduce(0, +)
+                    holesCompleted += 1
+                }
+
+                guard holesCompleted > 0 else { continue }
+                groupResults.append(GroupResult(
+                    members: members, total: groupTotal, holes: holesCompleted,
+                    containsMe: !me.isEmpty && members.contains(me)))
+            }
+
+            teamTeeData = groupResults
+                .sorted { $0.total < $1.total }   // lower net is better
+                .enumerated()
+                .map { i, g in
+                    TeamTeeRow(rank: i + 1,
+                               name: g.members.joined(separator: ", "),
+                               groupTotal: g.total, holesCompleted: g.holes,
+                               containsCurrentUser: g.containsMe)
+                }
+        }
     }
 
     private func updateDayPicker() {
@@ -687,13 +780,24 @@ final class TournamentLeaderboardViewController: UIViewController {
     }
 
     @objc private func gameTypePickerChanged() {
+        let hasTeamTee = record?.teamTeeSettings?.isEnabled == true
+            || GameManager.shared.currentGame?.teamTeeSettings?.isEnabled == true
         switch gameTypePicker.selectedSegmentIndex {
-        case 1:  selectedGameType = "skins"
-        case 2:  selectedGameType = "gross_skins"
-        default: selectedGameType = "wolf"
+        case 1:                  selectedGameType = "skins"
+        case 2:                  selectedGameType = "gross_skins"
+        case 3 where hasTeamTee: selectedGameType = "team_tee"
+        default:                 selectedGameType = "wolf"
         }
+        let isTeeGame = selectedGameType == "team_tee"
+        segment.isHidden       = isTeeGame
+        teeGameSegment.isHidden = !isTeeGame
         recompute()
         applyHeader()
+        tableView.reloadData()
+    }
+
+    @objc private func teeGameSubTabChanged() {
+        teeGameSubTab = teeGameSegment.selectedSegmentIndex
         tableView.reloadData()
     }
 
@@ -744,7 +848,11 @@ final class TournamentLeaderboardViewController: UIViewController {
         moneyPtsToggle.isHidden = true   // shown only when both modes are active
         moneyPtsToggle.addTarget(self, action: #selector(moneyPtsToggleChanged), for: .valueChanged)
 
-        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, potBannerLabel, moneyPtsToggle, gameTypePicker, dayPicker, segment])
+        teeGameSegment.selectedSegmentIndex = 0
+        teeGameSegment.isHidden = true
+        teeGameSegment.addTarget(self, action: #selector(teeGameSubTabChanged), for: .valueChanged)
+
+        let vStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, liveRow, potBannerLabel, moneyPtsToggle, gameTypePicker, teeGameSegment, dayPicker, segment])
         vStack.axis = .vertical; vStack.spacing = 6
         vStack.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(vStack)
@@ -819,7 +927,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         let missingNote    = dayPlayerCount < playerCount ? " (\(dayPlayerCount) scored)" : ""
         statsLabel.text = "· \(playerCount) player\(playerCount == 1 ? "" : "s")\(missingNote) · \(groupCount) group\(groupCount == 1 ? "" : "s") · \(holesCompleted)h"
 
-        if let pot = rec.potAmount, pot > 0 {
+        if let pot = rec.potAmount, pot > 0, selectedGameType != "team_tee" {
             let scoring    = rec.scoring
             let totalSkins = skinsData.reduce(0) { $0 + $1.skinsWon }
 
@@ -871,8 +979,9 @@ final class TournamentLeaderboardViewController: UIViewController {
         while segment.numberOfSegments > 0 { segment.removeSegment(at: 0, animated: false) }
 
         if hasScrambleFormat {
-            moneyPtsToggle.isHidden = true
-            gameTypePicker.isHidden = true
+            moneyPtsToggle.isHidden  = true
+            gameTypePicker.isHidden  = true
+            teeGameSegment.isHidden  = true
             segment.insertSegment(withTitle: "Leaderboard", at: 0, animated: false)
             segment.insertSegment(withTitle: "Groups",      at: 1, animated: false)
             segment.selectedSegmentIndex = 0
@@ -892,11 +1001,37 @@ final class TournamentLeaderboardViewController: UIViewController {
             segment.insertSegment(withTitle: "Groups",     at: 2, animated: false)
             segment.insertSegment(withTitle: "Tournament", at: 3, animated: false)
             gameTypePicker.isHidden = false
+
+            // Rebuild gameTypePicker to conditionally include Tee Game.
+            while gameTypePicker.numberOfSegments > 0 { gameTypePicker.removeSegment(at: 0, animated: false) }
+            gameTypePicker.insertSegment(withTitle: "Wolf",        at: 0, animated: false)
+            gameTypePicker.insertSegment(withTitle: "Net Skins",   at: 1, animated: false)
+            gameTypePicker.insertSegment(withTitle: "Gross Skins", at: 2, animated: false)
+            let teamTeeActive = record?.teamTeeSettings?.isEnabled == true
+                || GameManager.shared.currentGame?.teamTeeSettings?.isEnabled == true
+            if teamTeeActive {
+                gameTypePicker.insertSegment(withTitle: "Tee Game", at: 3, animated: false)
+            } else if selectedGameType == "team_tee" {
+                selectedGameType = "wolf"
+            }
+            switch selectedGameType {
+            case "skins":       gameTypePicker.selectedSegmentIndex = 1
+            case "gross_skins": gameTypePicker.selectedSegmentIndex = 2
+            case "team_tee":    gameTypePicker.selectedSegmentIndex = 3
+            default:            gameTypePicker.selectedSegmentIndex = 0
+            }
+
+            let isTeeGame = selectedGameType == "team_tee"
+            segment.isHidden        = isTeeGame
+            teeGameSegment.isHidden = !isTeeGame
+            teeGameSegment.selectedSegmentIndex = teeGameSubTab
         } else {
             segment.insertSegment(withTitle: "Individual", at: 0, animated: false)
             segment.insertSegment(withTitle: "Team",       at: 1, animated: false)
             segment.insertSegment(withTitle: "Groups",     at: 2, animated: false)
-            gameTypePicker.isHidden = true
+            gameTypePicker.isHidden  = true
+            segment.isHidden         = false
+            teeGameSegment.isHidden  = true
         }
         segment.selectedSegmentIndex = 0
     }
@@ -913,7 +1048,18 @@ final class TournamentLeaderboardViewController: UIViewController {
 
 extension TournamentLeaderboardViewController: UITableViewDataSource, UITableViewDelegate {
 
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return nil
+    }
+
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if selectedGameType == "team_tee" {
+            switch teeGameSubTab {
+            case 1:  return scoreData.count
+            case 2:  return teamTeeGrossData.count
+            default: return teamTeeData.count
+            }
+        }
         if hasScrambleFormat {
             switch segment.selectedSegmentIndex {
             case 0: return scrambleData.count
@@ -943,6 +1089,27 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                    cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let me = currentUserName
         let i  = indexPath.row
+
+        if selectedGameType == "team_tee" {
+            let cell = tableView.dequeueReusableCell(withIdentifier: "score", for: indexPath) as! LeaderboardScoreCell
+            switch teeGameSubTab {
+            case 1:
+                let r = scoreData[i]
+                cell.configure(rank: r.rank, name: r.name, netTotal: r.netTotal,
+                               grossTotal: r.grossTotal, holesPlayed: r.holesPlayed, isCurrentUser: r.name == me,
+                               showStrokes: true)
+            case 2:
+                let r = teamTeeGrossData[i]
+                cell.configureGross(rank: r.rank, name: r.name, grossTotal: r.grossTotal,
+                                    netTotal: r.netTotal, holesPlayed: r.holesPlayed, isCurrentUser: r.name == me)
+            default:
+                let r = teamTeeData[i]
+                cell.configureTeamTeeGroup(rank: r.rank, members: r.name,
+                                           groupTotal: r.groupTotal, holesCompleted: r.holesCompleted,
+                                           containsCurrentUser: r.containsCurrentUser)
+            }
+            return cell
+        }
 
         if hasScrambleFormat {
             switch segment.selectedSegmentIndex {
@@ -1034,6 +1201,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        guard selectedGameType != "team_tee" else { return }
 
         // Groups tap — scramble uses index 1; Money/Pts modes use index 2.
         let groupsSegmentIdx = hasScrambleFormat ? 1 : 2
@@ -1059,7 +1227,7 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                 let allDayRows = allRows.filter { $0.gameType == selectedGameType && ($0.day ?? 1) == detailDay }
                 let byHole2 = Dictionary(grouping: allDayRows, by: { $0.hole })
                 let carryoversAllowed = record?.carryTies == true
-                var wonHoles: [(hole: Int, count: Int)] = []
+                var wonHoles: [(hole: Int, count: Int, gross: Int, net: Int)] = []
                 var carried2 = 0
                 for hole in 1...18 {
                     let holeRows = byHole2[hole] ?? []
@@ -1072,7 +1240,12 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                     if winners.count == 1 {
                         let winner = winners[0].name
                         let earned = 1 + carried2
-                        if winner == row.name { wonHoles.append((hole, earned)) }
+                        if winner == row.name {
+                            let winRow = holeRows.first { $0.playerName == winner }
+                            let g = winRow?.grossScore ?? 0
+                            let n = winRow?.netScore ?? g
+                            wonHoles.append((hole, earned, g, n))
+                        }
                         carried2 = 0
                     } else if carryoversAllowed {
                         carried2 += 1
@@ -1083,14 +1256,24 @@ extension TournamentLeaderboardViewController: UITableViewDataSource, UITableVie
                     message = "No skins won yet"
                 } else {
                     let totalSkins = wonHoles.reduce(0) { $0 + $1.count }
-                    let lines = wonHoles.map { hole, count -> String in
-                        let skinWord = count == 1 ? "skin" : "skins"
-                        let carryovers = count - 1
+                    let lines = wonHoles.map { item -> String in
+                        let skinWord = item.count == 1 ? "skin" : "skins"
+                        let carryovers = item.count - 1
+                        let strokes = item.gross - item.net
+                        let scoreDetail: String
+                        if useGross2 {
+                            scoreDetail = " · Gross \(item.gross)"
+                        } else if strokes > 0 {
+                            let strokeWord = strokes == 1 ? "stroke" : "strokes"
+                            scoreDetail = " · Gross \(item.gross), \(strokes) \(strokeWord), Net \(item.net)"
+                        } else {
+                            scoreDetail = " · Gross \(item.gross), Net \(item.net)"
+                        }
                         if carryoversAllowed && carryovers > 0 {
                             let cWord = carryovers == 1 ? "carryover" : "carryovers"
-                            return "Hole \(hole): \(count) \(skinWord) (included \(carryovers) \(cWord))"
+                            return "Hole \(item.hole): \(item.count) \(skinWord) (\(carryovers) \(cWord))\(scoreDetail)"
                         }
-                        return "Hole \(hole): \(count) \(skinWord)"
+                        return "Hole \(item.hole): \(item.count) \(skinWord)\(scoreDetail)"
                     }
                     let totalWord = totalSkins == 1 ? "skin" : "skins"
                     message = "Won skins on:\n\(lines.joined(separator: "\n"))\n\n\(totalSkins) \(totalWord) total"
@@ -1309,16 +1492,45 @@ private final class LeaderboardScoreCell: UITableViewCell {
     }
     required init?(coder: NSCoder) { fatalError() }
 
-    func configure(rank: Int, name: String, netTotal: Int, grossTotal: Int, holesPlayed: Int, isCurrentUser: Bool) {
+    func configure(rank: Int, name: String, netTotal: Int, grossTotal: Int, holesPlayed: Int, isCurrentUser: Bool, showStrokes: Bool = false) {
         let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
         rankLabel.text       = "#\(rank)"
         rankLabel.textColor  = rank == 1 ? gold : .secondaryLabel
         nameLabel.text       = name
         netLabel.text        = "\(netTotal)"
         netLabel.textColor   = .label
-        grossLabel.text      = "Gross: \(grossTotal)"
+        if showStrokes {
+            let strokes = grossTotal - netTotal
+            grossLabel.text = strokes > 0 ? "Gross: \(grossTotal) · \(strokes) strk" : "Gross: \(grossTotal)"
+        } else {
+            grossLabel.text = "Gross: \(grossTotal)"
+        }
         holesLabel.text      = "\(holesPlayed)h"
         backgroundColor      = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
+    }
+
+    func configureGross(rank: Int, name: String, grossTotal: Int, netTotal: Int, holesPlayed: Int, isCurrentUser: Bool) {
+        let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
+        rankLabel.text      = "#\(rank)"
+        rankLabel.textColor = rank == 1 ? gold : .secondaryLabel
+        nameLabel.text      = name
+        netLabel.text       = "\(grossTotal)"
+        netLabel.textColor  = .label
+        grossLabel.text     = "Net: \(netTotal)"
+        holesLabel.text     = "\(holesPlayed)h"
+        backgroundColor     = isCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
+    }
+
+    func configureTeamTeeGroup(rank: Int, members: String, groupTotal: Int, holesCompleted: Int, containsCurrentUser: Bool) {
+        let gold = UIColor(red: 0.85, green: 0.65, blue: 0.13, alpha: 1.0)
+        rankLabel.text      = "#\(rank)"
+        rankLabel.textColor = rank == 1 ? gold : .secondaryLabel
+        nameLabel.text      = members
+        netLabel.text       = "\(groupTotal)"
+        netLabel.textColor  = .label
+        grossLabel.text     = "Thru \(holesCompleted)"
+        holesLabel.text     = "\(holesCompleted)h"
+        backgroundColor     = containsCurrentUser ? UIColor.systemYellow.withAlphaComponent(0.25) : .systemBackground
     }
 
     func configureScramble(rank: Int, name: String, toPar: Int, grossTotal: Int, holesPlayed: Int, isCurrentUser: Bool) {

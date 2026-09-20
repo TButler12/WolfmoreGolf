@@ -18,6 +18,7 @@ struct GameData: Codable {
 
     var nassauState: NassauState?
     var skinsState: SkinsState?
+    var teamTeeSettings: TeamTeeSettings?
 
     // Stable UUID for history upsert — generated once per game session, nil on legacy saves
     var historyGameID: UUID? = nil

@@ -253,6 +253,13 @@ struct TournamentRecord: Codable {
     let wolfVariant: String?    // "6pt" | "2pt" | "lowball"
     let pressStyle: String?     // "doubling" | "additive"
     let hammerStyle: String?    // "doubling" | "additive"
+    // Team Tee Game settings (nil when not configured for this tournament)
+    let teamTeeEnabled:    Bool?
+    let teamTeeCountMode:  String?  // "fixed" | "byPar"
+    let teamTeeFixedCount: Int?
+    let teamTeePar3Count:  Int?
+    let teamTeePar4Count:  Int?
+    let teamTeePar5Count:  Int?
 
     enum CodingKeys: String, CodingKey {
         case id, code, name, stake, scoring
@@ -272,6 +279,24 @@ struct TournamentRecord: Codable {
         case wolfVariant         = "wolf_variant"
         case pressStyle          = "press_style"
         case hammerStyle         = "hammer_style"
+        case teamTeeEnabled      = "team_tee_enabled"
+        case teamTeeCountMode    = "team_tee_count_mode"
+        case teamTeeFixedCount   = "team_tee_fixed_count"
+        case teamTeePar3Count    = "team_tee_par3_count"
+        case teamTeePar4Count    = "team_tee_par4_count"
+        case teamTeePar5Count    = "team_tee_par5_count"
+    }
+
+    var teamTeeSettings: TeamTeeSettings? {
+        guard teamTeeEnabled == true else { return nil }
+        var s = TeamTeeSettings()
+        s.isEnabled  = true
+        s.countMode  = teamTeeCountMode == "fixed" ? .fixed : .byPar
+        s.fixedCount = teamTeeFixedCount ?? 2
+        s.par3Count  = teamTeePar3Count  ?? 4
+        s.par4Count  = teamTeePar4Count  ?? 3
+        s.par5Count  = teamTeePar5Count  ?? 2
+        return s
     }
 }
 

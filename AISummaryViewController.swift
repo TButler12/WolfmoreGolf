@@ -380,6 +380,26 @@ private enum GameContextBuilder {
             }
         }
 
+        // Team Tee Game
+        if let ttSettings = g.teamTeeSettings, ttSettings.isEnabled,
+           let ttResult = TeamTeeEngine.recalculate(gameData: g),
+           ttResult.holesCompleted > 0 {
+            let modeDesc: String = {
+                switch ttSettings.countMode {
+                case .fixed: return "Fixed \(ttSettings.fixedCount) of \(ttResult.seats.count)"
+                case .byPar: return "By Par (3→\(ttSettings.par3Count) / 4→\(ttSettings.par4Count) / 5→\(ttSettings.par5Count))"
+                }
+            }()
+            lines.append("TEAM TEE GAME (\(modeDesc)):")
+            lines.append("  Total: \(ttResult.runningTotal) over \(ttResult.holesCompleted) holes")
+            for seat in ttResult.seats {
+                let name    = g.playerNames[safe: seat] ?? "P\(seat + 1)"
+                let counted = ttResult.holeResults.compactMap { $0 }.filter { $0.countedSeats.contains(seat) }.count
+                lines.append("  \(name): counted on \(counted) of \(ttResult.holesCompleted) holes")
+            }
+            lines.append("")
+        }
+
         // Money totals
         lines.append("FINAL MONEY:")
         var totalsByPlayer: [(name: String, total: Double)] = []

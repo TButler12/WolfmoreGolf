@@ -73,6 +73,9 @@ extension GameManager {
                 if let hs = record.hammerStyle { g.hammerStyle = hs == "additive" ? .additive : .doubling }
             default: break
             }
+            // Inherit Team Tee settings from the tournament record (nil disables it).
+            g.teamTeeSettings = record.teamTeeSettings
+
             // Update course for all game types when the organizer specified one.
             if let courseName = record.courseName,
                let profile = CourseLibrary.shared.courses.first(where: {

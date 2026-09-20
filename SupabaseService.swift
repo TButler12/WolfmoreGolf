@@ -629,7 +629,8 @@ final class SupabaseService {
         courseName: String,
         stablefordBaseline: String? = nil,
         stablefordTeamCount: Int? = nil,
-        stablefordEnabled: Bool? = nil
+        stablefordEnabled: Bool? = nil,
+        teamTeeSettings: TeamTeeSettings? = nil
     ) async throws -> TournamentRecord {
         let code = generateCode()
         var payload: [String: AnyJSON] = [
@@ -646,6 +647,14 @@ final class SupabaseService {
         if let b = stablefordBaseline { payload["stableford_baseline"] = AnyJSON.string(b) }
         if let t = stablefordTeamCount { payload["stableford_team_count"] = AnyJSON.double(Double(t)) }
         if let se = stablefordEnabled, se { payload["stableford_enabled"] = AnyJSON.bool(true) }
+        if let tt = teamTeeSettings, tt.isEnabled {
+            payload["team_tee_enabled"]     = .bool(true)
+            payload["team_tee_count_mode"]  = .string(tt.countMode.rawValue)
+            payload["team_tee_fixed_count"] = .integer(tt.fixedCount)
+            payload["team_tee_par3_count"]  = .integer(tt.par3Count)
+            payload["team_tee_par4_count"]  = .integer(tt.par4Count)
+            payload["team_tee_par5_count"]  = .integer(tt.par5Count)
+        }
 
         let response: PostgrestResponse<TournamentRecord> = try await client
             .from("tournaments")

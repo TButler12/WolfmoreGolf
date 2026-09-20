@@ -77,6 +77,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private weak var liveSummaryNassauLabel: UILabel?
     private weak var liveSummaryPlayerLabel: UILabel?
     private weak var liveSummaryStrip: UIView?
+
+    // Team Tee Game live UI
+    private weak var teamTeeSeg: UISegmentedControl?
+    private weak var teamTeePeek: UILabel?
+    private weak var teamTeeContainer: UIStackView?
+    private var teamTeeTabIndex = 0
     
     @IBOutlet weak var rerollPushed: UIButton!
     
@@ -1988,9 +1994,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
             // Pts tab: show absolute strokes (blue) that feed the Stableford net score calculation.
             // Money tab: show delta strokes (red) for the Wolf/Scotch pops system.
+            // Net Skins / Team Tee tournaments also use absolute strokes for their handicapping.
             let hasStablefordComponent = g.resolvedGameType == .tournament || g.tournamentStablefordEnabled == true
-            let popsToShow = (hasStablefordComponent && showingStablefordPoints) ? greenPops : redPops
-            let dotColor: UIColor = (hasStablefordComponent && showingStablefordPoints)
+            let isAbsoluteStrokeContext = (hasStablefordComponent && showingStablefordPoints)
+                || (g.tournamentCode != nil && (g.tournamentGameType == "skins" || g.teamTeeSettings?.isEnabled == true))
+            let popsToShow = isAbsoluteStrokeContext ? greenPops : redPops
+            let dotColor: UIColor = isAbsoluteStrokeContext
                 ? .systemBlue
                 : (onAltTee ? .systemOrange : .systemRed)
             let redDotsStr = popsToShow > 0 ? " " + String(repeating: "•", count: popsToShow) : ""
@@ -3928,7 +3937,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
                 let scoringMode = g.tournamentScoringType ?? "net"
                 let skinPasses: [(useGross: Bool, gameType: String, effectivePot: Double?)]
-                if scoringMode == "gross" {
+                // Scramble has already returned early above. Everything that isn't a dedicated
+                // Skins tournament is Wolf-style — write both net and gross overlays regardless
+                // of the exact tournamentGameType string ("wolf", nil, or any future variant).
+                let isSkinsTournament = g.tournamentGameType == "skins"
+                if !isSkinsTournament {
+                    // Wolf (and any non-skins) tournament: always surface both passes as overlays.
+                    // No skins pot in Wolf, so effectivePot is nil for both.
+                    skinPasses = [(false, "skins", nil), (true, "gross_skins", nil)]
+                } else if scoringMode == "gross" {
                     skinPasses = [(true,  "gross_skins", basePot)]
                 } else if scoringMode == "both_combined" {
                     // Combined Pool: pot allocated by leaderboard based on total skins across both types.
@@ -3948,8 +3965,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     skinPasses = [(false, "skins",       half),
                                   (true,  "gross_skins", half)]
                 } else {
-                    // "net" (default)
-                    skinPasses = [(false, "skins",       basePot)]
+                    // "net" (default) — also write gross_skins so the Gross Skins leaderboard
+                    // tab is populated. tournamentGameType can be stale/wrong (e.g., a Wolf
+                    // tournament stored as "skins" in the DB), so we can't rely on the Wolf
+                    // branch above to catch every case. Writing gross_skins here is always safe:
+                    // no pot is attached, so it costs nothing extra for Skins-net tournaments.
+                    skinPasses = [(false, "skins",       basePot),
+                                  (true,  "gross_skins", nil)]
                 }
 
                 for pass in skinPasses {
@@ -4657,6 +4679,103 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         } else {
             liveSummaryNassauLabel?.text = "Nassau —"
         }
+
+        refreshTeamTeeUI()
+    }
+
+    // MARK: - Team Tee Game live UI
+
+    @objc private func teamTeeTabChanged(_ seg: UISegmentedControl) {
+        teamTeeTabIndex = seg.selectedSegmentIndex
+        refreshTeamTeeUI()
+        view.setNeedsLayout()  // recalculate bottomStackView frame for Team Tee rows
+    }
+
+    private func refreshTeamTeeUI() {
+        guard let g = GameManager.shared.currentGame else { return }
+        guard let ttSeg = teamTeeSeg else { return }   // elements not yet installed
+
+        let enabled = g.teamTeeSettings?.isEnabled == true
+        ttSeg.isHidden = !enabled
+        teamTeePeek?.isHidden = true
+        teamTeeContainer?.isHidden = true
+
+        guard enabled else { return }
+
+        let result = TeamTeeEngine.recalculate(gameData: g)
+        let total  = result?.runningTotal ?? 0
+        let thru   = result?.holesCompleted ?? 0
+        let peekText = thru > 0 ? "Team Tee: \(total) thru \(thru)" : "Team Tee: no holes completed yet"
+
+        if teamTeeTabIndex == 0 {
+            // Individual tab — show peek strip
+            teamTeePeek?.text = peekText
+            teamTeePeek?.isHidden = false
+        } else {
+            // Team Game tab — show team player rows
+            teamTeeContainer?.isHidden = false
+            rebuildTeamTeeContainer(result: result, game: g)
+        }
+    }
+
+    private func rebuildTeamTeeContainer(result: TeamTeeResult?, game g: GameData) {
+        guard let container = teamTeeContainer else { return }
+        container.arrangedSubviews.forEach { $0.removeFromSuperview() }
+
+        let lastResult = result?.lastCompletedResult
+        let activeSeats = result?.seats ?? []
+
+        for seat in activeSeats {
+            let name = g.playerNames[safe: seat] ?? "P\(seat + 1)"
+            let netTotal = result?.netTotal(for: seat) ?? 0
+            let counted  = lastResult?.countedSeats.contains(seat) ?? false
+
+            let dotStr  = counted ? "●" : "○"
+            let dotLbl  = UILabel()
+            dotLbl.text = dotStr
+            dotLbl.font = .systemFont(ofSize: 14)
+            dotLbl.textColor = counted ? .systemGreen : .tertiaryLabel
+            dotLbl.widthAnchor.constraint(equalToConstant: 18).isActive = true
+
+            let nameLbl = UILabel()
+            nameLbl.text = name
+            nameLbl.font = .systemFont(ofSize: 14, weight: .medium)
+            nameLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+            let grossTotal: Int = {
+                guard seat < g.scores.count else { return 0 }
+                return result?.holeResults.compactMap { $0 }.compactMap { hr -> Int? in
+                    let mp = hr.holeIndex
+                    return (mp < g.scores[seat].count) ? g.scores[seat][mp] : nil
+                }.reduce(0, +) ?? 0
+            }()
+            let strokes = grossTotal - netTotal
+
+            let netLbl = UILabel()
+            netLbl.text = strokes > 0 ? "\(netTotal) (−\(strokes))" : "\(netTotal)"
+            netLbl.font = .monospacedDigitSystemFont(ofSize: 14, weight: .regular)
+            netLbl.textColor = .secondaryLabel
+            netLbl.textAlignment = .right
+
+            let row = UIStackView(arrangedSubviews: [dotLbl, nameLbl, netLbl])
+            row.axis = .horizontal
+            row.alignment = .center
+            row.spacing = 6
+            row.layoutMargins = UIEdgeInsets(top: 4, left: 8, bottom: 4, right: 8)
+            row.isLayoutMarginsRelativeArrangement = true
+            container.addArrangedSubview(row)
+        }
+
+        // Team total footer
+        let totalValue = result?.runningTotal ?? 0
+        let thru = result?.holesCompleted ?? 0
+        let footerLbl = UILabel()
+        footerLbl.text = thru > 0 ? "Team: \(totalValue)  ·  \(thru) holes" : "Team: —"
+        footerLbl.font = .systemFont(ofSize: 12, weight: .semibold)
+        footerLbl.textColor = .secondaryLabel
+        footerLbl.textAlignment = .right
+        footerLbl.layoutMargins = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 8)
+        container.addArrangedSubview(footerLbl)
     }
 
     @IBAction func statsTapped(_ sender: UIButton) {
@@ -5474,6 +5593,29 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             liveSummaryStrip = strip
             strip.isHidden = true  // temporarily hidden
 
+            // ── Row 3.5: Team Tee Game — segmented control + peek + player rows ─
+            let ttSeg = UISegmentedControl(items: ["Individual", "Team Game"])
+            ttSeg.selectedSegmentIndex = 0
+            ttSeg.addTarget(self, action: #selector(teamTeeTabChanged(_:)), for: .valueChanged)
+            ttSeg.isHidden = true
+            vStack.addArrangedSubview(ttSeg)
+            teamTeeSeg = ttSeg
+
+            let peekLbl = UILabel()
+            peekLbl.font = .systemFont(ofSize: 12)
+            peekLbl.textColor = .secondaryLabel
+            peekLbl.textAlignment = .center
+            peekLbl.isHidden = true
+            vStack.addArrangedSubview(peekLbl)
+            teamTeePeek = peekLbl
+
+            let ttContainer = UIStackView()
+            ttContainer.axis = .vertical
+            ttContainer.spacing = 2
+            ttContainer.isHidden = true
+            vStack.addArrangedSubview(ttContainer)
+            teamTeeContainer = ttContainer
+
             // ── Row 4: Update Scores (full width) ────────────────────────────
             var usCfg = UIButton.Configuration.filled()
             usCfg.title = "Update Scores"
@@ -5567,8 +5709,26 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         // Update frame every layout pass (handles rotation / safe-area changes)
         // Normal:     44 + 8 + 44 + 8 + 40 + 8 + 44 + 8 + 40 + 8 + 32 + 8 + 32 = 324
         // Match Play: rows 1+2 hidden → subtract 44 + 8 + 44 + 8 = 104
+        // Team Tee rows are additive: seg (34+8) + peek (16+8) or container (players × 28 + footer 20 + 8)
         let isMatchPlay = GameManager.shared.currentGame?.resolvedGameType.isMatchPlay == true
-        let stackHeight: CGFloat = isMatchPlay ? 220 : 324
+        var stackHeight: CGFloat = isMatchPlay ? 220 : 324
+
+        if let g = GameManager.shared.currentGame,
+           g.teamTeeSettings?.isEnabled == true,
+           teamTeeSeg?.isHidden == false {
+            stackHeight += 34 + 8  // segmented control row
+            if teamTeeTabIndex == 0 {
+                stackHeight += 16 + 8  // peek label
+            } else {
+                let activeCount = (0..<MAX_PLAYERS).filter { seat in
+                    (seat < g.playerActivated.count && g.playerActivated[seat]) &&
+                    (seat < g.playerNames.count &&
+                     !g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }.count
+                stackHeight += CGFloat(activeCount) * 28 + 20 + 8  // player rows + footer + spacing
+            }
+        }
+
         bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: stackHeight)
         sup.bringSubviewToFront(bottomStackView!)
     }

@@ -69,9 +69,11 @@ final class WolfScorecardRenderer {
             teamsLine = mpStatuses.first.map { "Teams: \($0.teamALabel) vs. \($0.teamBLabel)" }
         }
 
+        let teamTeeRow = buildTeamTeeRow()
+
         let docHdrH: CGFloat   = teamsLine != nil ? 114 : 96
         let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
-        let extraRows = bbTeams.count + mpStatuses.count
+        let extraRows = bbTeams.count + mpStatuses.count + (teamTeeRow != nil ? 1 : 0)
         let gridH   = hdrH + parH + CGFloat(totalPlayerRows + extraRows) * playerH
         let footerH: CGFloat = !mpStatuses.isEmpty ? 60 : 40
         let totalH  = docHdrH + gridH + footerH
@@ -87,7 +89,8 @@ final class WolfScorecardRenderer {
 
             var y: CGFloat = 0
             y = drawDocHeader(y: y, players: players, teamsLine: teamsLine)
-            y = drawGrid(y: y, players: players, pars: pars, bbTeams: bbTeams, mpStatuses: mpStatuses)
+            y = drawGrid(y: y, players: players, pars: pars, bbTeams: bbTeams,
+                         mpStatuses: mpStatuses, teamTeeRow: teamTeeRow)
             let footerResult: String?
             if mpStatuses.count == 2 {
                 footerResult = "M1: \(mpStatuses[0].finalResult)  ·  M2: \(mpStatuses[1].finalResult)"
@@ -144,6 +147,34 @@ final class WolfScorecardRenderer {
             } : nil
             return PlayerData(seat: seat, name: name, hc: hc, gross: gross, gross2: gross2)
         }
+    }
+
+    // MARK: - Team Tee Game row builder
+
+    private struct TeamTeeRowData {
+        let modeLabel: String    // e.g. "Fixed 2" or "By Par 4/3/2"
+        let netPerHole: [Int?]   // 18 elements — nil = hole not committed
+    }
+
+    private func buildTeamTeeRow() -> TeamTeeRowData? {
+        guard let settings = game.teamTeeSettings, settings.isEnabled else { return nil }
+        guard let result = TeamTeeEngine.recalculate(gameData: game), result.holesCompleted > 0 else { return nil }
+
+        let modeLabel: String = {
+            switch settings.countMode {
+            case .fixed: return "Fixed \(settings.fixedCount)"
+            case .byPar: return "By Par \(settings.par3Count)/\(settings.par4Count)/\(settings.par5Count)"
+            }
+        }()
+
+        var netPerHole: [Int?] = Array(repeating: nil, count: STANDARD_HOLES)
+        for mp in 0..<game.totalHoles {
+            let ch = game.courseHoleIndex(for: mp)
+            if ch < STANDARD_HOLES, let hr = result.holeResults[safe: mp] {
+                netPerHole[ch] = hr?.netScore
+            }
+        }
+        return TeamTeeRowData(modeLabel: modeLabel, netPerHole: netPerHole)
     }
 
     // MARK: - Best Ball team data builder
@@ -362,7 +393,8 @@ final class WolfScorecardRenderer {
     @discardableResult
     private func drawGrid(y: CGFloat, players: [PlayerData], pars: [Int],
                           bbTeams: [BestBallTeamData] = [],
-                          mpStatuses: [MatchPlayStatusData] = []) -> CGFloat {
+                          mpStatuses: [MatchPlayStatusData] = [],
+                          teamTeeRow: TeamTeeRowData? = nil) -> CGFloat {
 
         // Column x-positions: ci 0=name, 1-9=h1-9, 10=OUT, 11-19=h10-18, 20=IN, 21=TOT
         var colXs = [CGFloat](repeating: 0, count: 22)
@@ -716,11 +748,78 @@ final class WolfScorecardRenderer {
             ry += playerH
         }
 
+        // ── Team Tee Game row ─────────────────────────────────
+        if let ttr = teamTeeRow {
+            let ttBg       = UIColor(red: 0.88, green: 0.94, blue: 1.00, alpha: 1)  // soft sky blue
+            let ttLabelClr = UIColor(red: 0.10, green: 0.30, blue: 0.60, alpha: 1)
+            let (frontNets, hasFront) = rangeSum(ttr.netPerHole, front)
+            let (backNets,  hasBack)  = rangeSum(ttr.netPerHole, back)
+
+            gridLine.setFill()
+            UIRectFill(CGRect(x: hPad, y: ry, width: gridW, height: 1.0))
+
+            for ci in 0..<22 {
+                let w = colW(ci)
+                let bg: UIColor = isSumm(ci) ? summBg : ttBg
+                fill(x: colXs[ci], y: ry, w: w, h: playerH, color: bg)
+
+                switch ci {
+                case 0:
+                    let nameH: CGFloat = playerH * 0.60
+                    let subH:  CGFloat = playerH - nameH
+                    drawCell("Team Tee",
+                             x: colXs[ci], y: ry, w: w, h: nameH,
+                             font: .systemFont(ofSize: 11, weight: .bold),
+                             color: ttLabelClr, leftAlign: true)
+                    drawCell(ttr.modeLabel,
+                             x: colXs[ci], y: ry + nameH, w: w, h: subH,
+                             font: .systemFont(ofSize: 9, weight: .regular),
+                             color: ttLabelClr, leftAlign: true)
+
+                case 10:
+                    drawCell(hasFront ? "\(frontNets)" : "·",
+                             x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: boldSumm, color: hasFront ? ttLabelClr : dotGray)
+
+                case 20:
+                    drawCell(hasBack ? "\(backNets)" : "·",
+                             x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: boldSumm, color: hasBack ? ttLabelClr : dotGray)
+
+                case 21:
+                    let (totTxt, totClr): (String, UIColor)
+                    switch (hasFront, hasBack) {
+                    case (true, true):  (totTxt, totClr) = ("\(frontNets + backNets)", ttLabelClr)
+                    case (true, false): (totTxt, totClr) = ("\(frontNets)", ttLabelClr)
+                    case (false, true): (totTxt, totClr) = ("\(backNets)", ttLabelClr)
+                    default:            (totTxt, totClr) = ("·", dotGray)
+                    }
+                    drawCell(totTxt, x: colXs[ci], y: ry, w: w, h: playerH,
+                             font: boldSumm, color: totClr)
+
+                default:
+                    if let localH = hIdx(ci) {
+                        if let net = ttr.netPerHole[localH] {
+                            drawCell("\(net)",
+                                     x: colXs[ci], y: ry, w: w, h: playerH,
+                                     font: .systemFont(ofSize: 14, weight: .bold),
+                                     color: ttLabelClr)
+                        } else {
+                            drawCell("·", x: colXs[ci], y: ry, w: w, h: playerH,
+                                     font: .systemFont(ofSize: 11, weight: .regular),
+                                     color: dotGray)
+                        }
+                    }
+                }
+            }
+            ry += playerH
+        }
+
         // ── Grid lines ────────────────────────────────────────
         gridLine.setFill()
         var lineY = y
         let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
-        let extraRows = bbTeams.count + mpStatuses.count
+        let extraRows = bbTeams.count + mpStatuses.count + (teamTeeRow != nil ? 1 : 0)
         for step in [hdrH, parH] + Array(repeating: playerH, count: totalPlayerRows + extraRows) {
             UIRectFill(CGRect(x: hPad, y: lineY, width: gridW, height: 0.5))
             lineY += step

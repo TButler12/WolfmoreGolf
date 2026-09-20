@@ -25,6 +25,11 @@ final class TeeGameSetupViewController: UIViewController {
     private let potLabel     = UILabel()
     private let carryLabel   = UILabel()
 
+    private let teamTeeRow   = UIView()
+    private weak var teamTeeToggleSwitch: UISwitch?
+    private weak var teamTeeConfigBtn: UIButton?
+    private var pendingTeamTeeSettings = TeamTeeSettings()
+
     private let baselineControl   = UISegmentedControl(items: ["Par", "Bogey"])
     private let teamCountControl  = UISegmentedControl(items: ["Best 2", "Best 3", "All 4"])
     private let stablefordSwitch  = UISwitch()
@@ -242,6 +247,53 @@ final class TeeGameSetupViewController: UIViewController {
         ])
         scrambleRow.isHidden = true
         stack.addArrangedSubview(scrambleRow)
+
+        // Team Tee Game (Wolf and Skins only)
+        let ttLabel = UILabel()
+        ttLabel.text = "Also track Team Tee Game"
+        ttLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        ttLabel.textColor = .secondaryLabel
+        ttLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let ttSw = UISwitch()
+        ttSw.isOn = false
+        ttSw.addTarget(self, action: #selector(teamTeeSwitchChanged), for: .valueChanged)
+        teamTeeToggleSwitch = ttSw
+
+        let ttToggleRow = UIStackView(arrangedSubviews: [ttLabel, ttSw])
+        ttToggleRow.axis = .horizontal
+        ttToggleRow.alignment = .center
+        ttToggleRow.spacing = 8
+
+        let ttCfgBtn = UIButton(type: .system)
+        ttCfgBtn.setTitle("Configure Count Rules →", for: .normal)
+        ttCfgBtn.titleLabel?.font = .systemFont(ofSize: 14)
+        ttCfgBtn.contentHorizontalAlignment = .left
+        ttCfgBtn.addTarget(self, action: #selector(teamTeeConfigureTapped), for: .touchUpInside)
+        ttCfgBtn.isHidden = true
+        teamTeeConfigBtn = ttCfgBtn
+
+        let ttNote = UILabel()
+        ttNote.text = "Scores the lowest N net scores per hole across the group, computed automatically."
+        ttNote.font = UIFont.preferredFont(forTextStyle: .footnote)
+        ttNote.textColor = .secondaryLabel
+        ttNote.numberOfLines = 0
+
+        let ttSection = UIStackView(arrangedSubviews: [ttToggleRow, ttCfgBtn, ttNote])
+        ttSection.axis = .vertical
+        ttSection.spacing = 8
+
+        teamTeeRow.translatesAutoresizingMaskIntoConstraints = false
+        teamTeeRow.addSubview(ttSection)
+        ttSection.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            ttSection.topAnchor.constraint(equalTo: teamTeeRow.topAnchor),
+            ttSection.leadingAnchor.constraint(equalTo: teamTeeRow.leadingAnchor),
+            ttSection.trailingAnchor.constraint(equalTo: teamTeeRow.trailingAnchor),
+            ttSection.bottomAnchor.constraint(equalTo: teamTeeRow.bottomAnchor),
+        ])
+        teamTeeRow.isHidden = true
+        stack.addArrangedSubview(teamTeeRow)
     }
 
     private func setupCreateButton() {
@@ -305,10 +357,27 @@ final class TeeGameSetupViewController: UIViewController {
         stablefordToggleRow.isHidden = isStableford || isScramble
         stablefordRow.isHidden       = (!isStableford && !stablefordSwitch.isOn) || isScramble
         scrambleRow.isHidden         = !isScramble
+        teamTeeRow.isHidden          = isScramble || isStableford
     }
 
     @objc private func stablefordSwitchChanged() {
         stablefordRow.isHidden = !stablefordSwitch.isOn
+    }
+
+    @objc private func teamTeeSwitchChanged() {
+        pendingTeamTeeSettings.isEnabled = teamTeeToggleSwitch?.isOn == true
+        teamTeeConfigBtn?.isHidden = !(teamTeeToggleSwitch?.isOn == true)
+    }
+
+    @objc private func teamTeeConfigureTapped() {
+        let g = GameManager.shared.currentGame
+        let activePlayers = (0..<MAX_PLAYERS).filter {
+            (g?.playerActivated[$0] ?? false) &&
+            !(g?.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        }.count
+        let vc = TeamTeeSetupViewController(settings: pendingTeamTeeSettings, maxCount: max(1, activePlayers))
+        vc.onSave = { [weak self] updated in self?.pendingTeamTeeSettings = updated }
+        navigationController?.pushViewController(vc, animated: true)
     }
 
 
@@ -369,6 +438,8 @@ final class TeeGameSetupViewController: UIViewController {
             carryTies = (carryIdx == 1)
         }
 
+        let ttSettings: TeamTeeSettings? = (teamTeeToggleSwitch?.isOn == true) ? pendingTeamTeeSettings : nil
+
         var sfBaseline: String? = nil
         var sfTeamCount: Int? = nil
         var sfEnabled: Bool? = nil
@@ -407,7 +478,8 @@ final class TeeGameSetupViewController: UIViewController {
                     courseName: courseName,
                     stablefordBaseline: sfBaseline,
                     stablefordTeamCount: sfTeamCount,
-                    stablefordEnabled: sfEnabled
+                    stablefordEnabled: sfEnabled,
+                    teamTeeSettings: ttSettings
                 )
 
                 await MainActor.run {
@@ -426,6 +498,7 @@ final class TeeGameSetupViewController: UIViewController {
                             g.tournamentStablefordEnabled = record.stablefordEnabled
                             g.stablefordBaseline        = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
                             g.stablefordCountingPlayers = record.stablefordTeamCount ?? 3
+                            g.teamTeeSettings           = record.teamTeeSettings
                             g.gameType = nil
                             switch record.gameType {
                             case "stableford": g.gameType = .tournament
