@@ -8657,7 +8657,7 @@ let GREY_OAKS_PINE_TEES: [TeeInfo] = [
 ]
 
 // MARK: - Grey Oaks Country Club (Palm Course) — Naples, FL
-// Par 72 | Private
+// Par 72 | Designed by Clifton, Ezell & Clifton (1999) / Tim Liddy | Private
 
 private let GREY_OAKS_PALM_ID = UUID(uuidString: "C8D9E0F1-A2B3-4846-C6D7-10000000021B")!
 
@@ -19102,6 +19102,7 @@ private enum BuiltIns {
         c(GREY_OAKS_PALM_ID, "Grey Oaks Country Club (Palm Course)", GREY_OAKS_PALM_PARS, GREY_OAKS_PALM_HCS, GREY_OAKS_PALM_TEES,
           country: "USA",
           state: "FL",
+          architect: "Clifton, Ezell & Clifton / Tim Liddy",
           type: "Private",
           phone: "(239) 262-3741",
           address: "2400 Grey Oaks Drive North, Naples, FL 34105"),
