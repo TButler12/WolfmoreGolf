@@ -64,7 +64,7 @@ final class TeamTeeSetupViewController: UIViewController {
 
         // Mode
         stack.addArrangedSubview(sectionHeader("Count Mode"))
-        let seg = UISegmentedControl(items: ["Fixed", "By Par"])
+        let seg = UISegmentedControl(items: ["Fixed", "4-3-2"])
         seg.addTarget(self, action: #selector(modeChanged(_:)), for: .valueChanged)
         modeSeg = seg
         stack.addArrangedSubview(seg)

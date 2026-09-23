@@ -617,7 +617,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         var sfHoles: [String: Int] = [:]
         for r in sfIndividualRows {
             let pts = Int((r.totalMoney ?? 0).rounded())
-            if (sfPts[r.playerName] ?? -1) < pts { sfPts[r.playerName] = pts }
+            if (sfPts[r.playerName] ?? Int.min) < pts { sfPts[r.playerName] = pts }
             sfHoles[r.playerName] = (sfHoles[r.playerName] ?? 0) + 1
         }
         stablefordIndividualData = sfPts.sorted {
@@ -639,7 +639,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         var teamLabel: [String: String] = [:] // matchId → display label (player names)
         for r in sfTeamRows {
             let pts = Int((r.totalMoney ?? 0).rounded())
-            if (teamPts[r.matchId] ?? -1) < pts { teamPts[r.matchId] = pts }
+            if (teamPts[r.matchId] ?? Int.min) < pts { teamPts[r.matchId] = pts }
             teamHoles[r.matchId] = (teamHoles[r.matchId] ?? 0) + 1
         }
         // Build display label from wolf/stableford player names in the same matchId.
@@ -1010,7 +1010,7 @@ final class TournamentLeaderboardViewController: UIViewController {
             let teamTeeActive = record?.teamTeeSettings?.isEnabled == true
                 || GameManager.shared.currentGame?.teamTeeSettings?.isEnabled == true
             if teamTeeActive {
-                gameTypePicker.insertSegment(withTitle: "Tee Game", at: 3, animated: false)
+                gameTypePicker.insertSegment(withTitle: "Net/Gross", at: 3, animated: false)
             } else if selectedGameType == "team_tee" {
                 selectedGameType = "wolf"
             }

@@ -12,7 +12,7 @@ final class TeeGamesViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Tee Games"
+        title = "Tournaments"
         view.backgroundColor = .systemBackground
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close,
@@ -32,10 +32,10 @@ final class TeeGamesViewController: UIViewController {
     // MARK: - Setup
 
     private func setupStack() {
-        let createBtn = makeButton(title: "Create Tee Game", subtitle: "Set up a new tournament and get a join code", color: UIColor(red: 0.22, green: 0.62, blue: 0.34, alpha: 1.0))
+        let createBtn = makeButton(title: "Create Tournament", subtitle: "Set up a new tournament and get a join code", color: UIColor(red: 0.22, green: 0.62, blue: 0.34, alpha: 1.0))
         createBtn.addTarget(self, action: #selector(createTapped), for: .touchUpInside)
 
-        let joinBtn = makeButton(title: "Join Tee Game", subtitle: "Enter a 6-letter code to join an existing tournament", color: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0))
+        let joinBtn = makeButton(title: "Join Tournament", subtitle: "Enter a 6-letter code to join an existing tournament", color: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0))
         joinBtn.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
 
         let rejoinBtn = makeButton(title: "Rejoin Tournament", subtitle: "", color: UIColor(red: 0.72, green: 0.45, blue: 0.08, alpha: 1.0))
@@ -161,7 +161,7 @@ final class TeeGamesViewController: UIViewController {
 
     @objc private func joinTapped() {
         let ac = UIAlertController(
-            title: "Join Tee Game",
+            title: "Join Tournament",
             message: "Enter the 6-letter code from the tournament organizer.",
             preferredStyle: .alert
         )
@@ -410,6 +410,19 @@ final class TeeGamesViewController: UIViewController {
                     g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
                     g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
                     g.tournamentStablefordEnabled = record.stablefordEnabled
+                    g.stablefordMode = StablefordMode(rawValue: record.stablefordMode ?? "standard") ?? .standard
+                    if g.stablefordMode == .modified {
+                        g.modifiedStablefordTable = ModifiedStablefordTable(
+                            doubleEagleOrBetter: record.modifiedSfDoubleEagle  ??  8,
+                            eagleOrBetter:       record.modifiedSfEagle        ??  4,
+                            birdie:              record.modifiedSfBirdie       ??  2,
+                            par:                 record.modifiedSfPar          ??  0,
+                            bogey:               record.modifiedSfBogey        ?? -1,
+                            doubleBogeyOrWorse:  record.modifiedSfDoubleBogey  ?? -3
+                        )
+                    } else {
+                        g.modifiedStablefordTable = ModifiedStablefordTable()
+                    }
                     g.gameType = nil
                     switch record.gameType {
                     case "stableford": g.gameType = .tournament

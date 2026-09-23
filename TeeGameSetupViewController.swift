@@ -14,6 +14,10 @@ final class TeeGameSetupViewController: UIViewController {
     private let carryTiesControl = UISegmentedControl(items: ["No Carry", "Carry Ties"])
     private let createButton     = UIButton(type: .system)
 
+    private let wolfScoringControl  = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "LowBall"])
+    private let wolfRow             = UIView()
+    private let wolfStakeField      = UITextField()
+    private let wolfStakeRow        = UIView()
     private let stakeRow            = UIView()
     private let potRow              = UIView()
     private let carryRow            = UIView()
@@ -28,17 +32,21 @@ final class TeeGameSetupViewController: UIViewController {
     private let teamTeeRow   = UIView()
     private weak var teamTeeToggleSwitch: UISwitch?
     private weak var teamTeeConfigBtn: UIButton?
+    private weak var teamTeeSummaryLabel: UILabel?
     private var pendingTeamTeeSettings = TeamTeeSettings()
 
     private let baselineControl   = UISegmentedControl(items: ["Par", "Bogey"])
     private let teamCountControl  = UISegmentedControl(items: ["Best 2", "Best 3", "All 4"])
     private let stablefordSwitch  = UISwitch()
+    private let sfModeControl       = UISegmentedControl(items: ["Standard", "Modified"])
+    private weak var sfModifiedStack: UIStackView?
+    private var sfStepperValues     = [0: 8, 1: 4, 2: 2, 3: 0, 4: -1, 5: -3]  // 0=dblEagle, 1=eagle, 2=birdie, 3=par, 4=bogey, 5=dblBogey
 
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "Create Tee Game"
+        title = "Create Tournament"
         view.backgroundColor = .systemBackground
         setupTapToDismiss()
         setupScrollView()
@@ -121,6 +129,44 @@ final class TeeGameSetupViewController: UIViewController {
         stack.addArrangedSubview(formatRow)
         gameTypeControl.selectedSegmentIndex = 0
         gameTypeControl.addTarget(self, action: #selector(gameTypeChanged), for: .valueChanged)
+
+        // Wolf Scoring Options (Wolf format only)
+        wolfScoringControl.selectedSegmentIndex = 0
+        let wolfInner = labeled("Wolf Scoring", control: wolfScoringControl)
+        wolfInner.translatesAutoresizingMaskIntoConstraints = false
+        wolfRow.translatesAutoresizingMaskIntoConstraints = false
+        wolfRow.addSubview(wolfInner)
+        NSLayoutConstraint.activate([
+            wolfInner.topAnchor.constraint(equalTo: wolfRow.topAnchor),
+            wolfInner.leadingAnchor.constraint(equalTo: wolfRow.leadingAnchor),
+            wolfInner.trailingAnchor.constraint(equalTo: wolfRow.trailingAnchor),
+            wolfInner.bottomAnchor.constraint(equalTo: wolfRow.bottomAnchor),
+        ])
+        stack.addArrangedSubview(wolfRow)
+
+        // Base Stake (Wolf format only)
+        let wolfStakeLabel = UILabel()
+        wolfStakeLabel.text = "Base Stake ($ per hole)"
+        wolfStakeLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
+        wolfStakeLabel.textColor = .secondaryLabel
+        wolfStakeField.placeholder = "e.g. 2"
+        wolfStakeField.borderStyle = .roundedRect
+        wolfStakeField.keyboardType = .decimalPad
+        wolfStakeField.inputAccessoryView = makeNumberPadToolbar()
+        let wolfStakeStack = UIStackView(arrangedSubviews: [wolfStakeLabel, wolfStakeField])
+        wolfStakeStack.axis = .vertical
+        wolfStakeStack.spacing = 6
+        wolfStakeRow.translatesAutoresizingMaskIntoConstraints = false
+        wolfStakeRow.addSubview(wolfStakeStack)
+        wolfStakeStack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            wolfStakeStack.topAnchor.constraint(equalTo: wolfStakeRow.topAnchor),
+            wolfStakeStack.leadingAnchor.constraint(equalTo: wolfStakeRow.leadingAnchor),
+            wolfStakeStack.trailingAnchor.constraint(equalTo: wolfStakeRow.trailingAnchor),
+            wolfStakeStack.bottomAnchor.constraint(equalTo: wolfStakeRow.bottomAnchor),
+        ])
+        wolfStakeRow.isHidden = true
+        stack.addArrangedSubview(wolfStakeRow)
 
         // "Also track Stableford points" toggle (Wolf/Skins only — hidden for pure Stableford format)
         let sfToggleLabel = UILabel()
@@ -212,9 +258,18 @@ final class TeeGameSetupViewController: UIViewController {
         // Stableford rules (Stableford format only)
         baselineControl.selectedSegmentIndex = 0
         teamCountControl.selectedSegmentIndex = 1
+        sfModeControl.selectedSegmentIndex = 0
+        sfModeControl.addTarget(self, action: #selector(sfModeChanged), for: .valueChanged)
+
+        let modStack = buildModifiedSFStack()
+        sfModifiedStack = modStack
+        modStack.isHidden = true
+
         let sfStack = UIStackView(arrangedSubviews: [
             labeled("Scoring Baseline", control: baselineControl),
             labeled("Scores That Count Per Hole", control: teamCountControl),
+            labeled("Scoring Mode", control: sfModeControl),
+            modStack,
         ])
         sfStack.axis = .vertical
         sfStack.spacing = 16
@@ -248,9 +303,9 @@ final class TeeGameSetupViewController: UIViewController {
         scrambleRow.isHidden = true
         stack.addArrangedSubview(scrambleRow)
 
-        // Team Tee Game (Wolf and Skins only)
+        // Team Scoring (Wolf and Skins only)
         let ttLabel = UILabel()
-        ttLabel.text = "Also track Team Tee Game"
+        ttLabel.text = "Also track Team Scoring"
         ttLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
         ttLabel.textColor = .secondaryLabel
         ttLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -274,10 +329,11 @@ final class TeeGameSetupViewController: UIViewController {
         teamTeeConfigBtn = ttCfgBtn
 
         let ttNote = UILabel()
-        ttNote.text = "Scores the lowest N net scores per hole across the group, computed automatically."
+        ttNote.text = teamTeeSummaryText()
         ttNote.font = UIFont.preferredFont(forTextStyle: .footnote)
         ttNote.textColor = .secondaryLabel
         ttNote.numberOfLines = 0
+        teamTeeSummaryLabel = ttNote
 
         let ttSection = UIStackView(arrangedSubviews: [ttToggleRow, ttCfgBtn, ttNote])
         ttSection.axis = .vertical
@@ -348,9 +404,12 @@ final class TeeGameSetupViewController: UIViewController {
     // MARK: - Actions
 
     @objc private func gameTypeChanged() {
+        let isWolf       = gameTypeControl.selectedSegmentIndex == 0
         let isScramble   = gameTypeControl.selectedSegmentIndex == 3
         let isSkins      = gameTypeControl.selectedSegmentIndex == 1
         let isStableford = gameTypeControl.selectedSegmentIndex == 2
+        wolfRow.isHidden             = !isWolf
+        wolfStakeRow.isHidden        = !isWolf
         stakeRow.isHidden            = !isSkins
         potRow.isHidden              = !isSkins
         carryRow.isHidden            = !isSkins
@@ -362,11 +421,13 @@ final class TeeGameSetupViewController: UIViewController {
 
     @objc private func stablefordSwitchChanged() {
         stablefordRow.isHidden = !stablefordSwitch.isOn
+        sfModifiedStack?.isHidden = (sfModeControl.selectedSegmentIndex != 1)
     }
 
     @objc private func teamTeeSwitchChanged() {
         pendingTeamTeeSettings.isEnabled = teamTeeToggleSwitch?.isOn == true
         teamTeeConfigBtn?.isHidden = !(teamTeeToggleSwitch?.isOn == true)
+        teamTeeSummaryLabel?.text = teamTeeSummaryText()
     }
 
     @objc private func teamTeeConfigureTapped() {
@@ -376,8 +437,27 @@ final class TeeGameSetupViewController: UIViewController {
             !(g?.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
         }.count
         let vc = TeamTeeSetupViewController(settings: pendingTeamTeeSettings, maxCount: max(1, activePlayers))
-        vc.onSave = { [weak self] updated in self?.pendingTeamTeeSettings = updated }
+        vc.onSave = { [weak self] updated in
+            self?.pendingTeamTeeSettings = updated
+            self?.teamTeeSummaryLabel?.text = self?.teamTeeSummaryText()
+        }
         navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func teamTeeSummaryText() -> String {
+        let g = GameManager.shared.currentGame
+        let activePlayers = (0..<MAX_PLAYERS).filter {
+            (g?.playerActivated[$0] ?? false) &&
+            !(g?.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
+        }.count
+        let total = max(2, activePlayers)
+        let s = pendingTeamTeeSettings
+        switch s.countMode {
+        case .fixed:
+            return "Counts the best \(s.fixedCount) of \(total) net scores on every hole."
+        case .byPar:
+            return "\(s.par3Count)-\(s.par4Count)-\(s.par5Count) scoring — counts \(s.par3Count) of \(total) on par-3s, \(s.par4Count) of \(total) on par-4s, \(s.par5Count) of \(total) on par-5s."
+        }
     }
 
 
@@ -394,12 +474,13 @@ final class TeeGameSetupViewController: UIViewController {
 
     @objc private func createTapped() {
         // Capture all control values before endEditing to avoid any responder-chain side-effects
-        let name        = nameField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let gameIdx     = gameTypeControl.selectedSegmentIndex
-        let stakeText   = stakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let potText     = potField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        let carryIdx    = carryTiesControl.selectedSegmentIndex
-        let courseName  = GameManager.shared.currentGame?.course.name ?? ""
+        let name          = nameField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let gameIdx       = gameTypeControl.selectedSegmentIndex
+        let wolfScoringIdx = wolfScoringControl.selectedSegmentIndex
+        let stakeText     = stakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let potText       = potField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let carryIdx      = carryTiesControl.selectedSegmentIndex
+        let courseName    = GameManager.shared.currentGame?.course.name ?? ""
 
         view.endEditing(true)
 
@@ -414,6 +495,24 @@ final class TeeGameSetupViewController: UIViewController {
         case 1: gameType = "skins"
         case 2: gameType = "stableford"
         default: gameType = "scramble"
+        }
+
+        var wolfVariant: String? = nil
+        var wolfStake: Double? = nil
+        if gameType == "wolf" {
+            switch wolfScoringIdx {
+            case 1:  wolfVariant = "2pt"
+            case 2:  wolfVariant = "lowball"
+            default: wolfVariant = "6pt"
+            }
+            let wolfStakeText = wolfStakeField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if !wolfStakeText.isEmpty {
+                guard let ws = Double(wolfStakeText), ws > 0 else {
+                    showError("Please enter a valid base stake amount.")
+                    return
+                }
+                wolfStake = ws
+            }
         }
 
         let scoringType = "net"
@@ -443,6 +542,8 @@ final class TeeGameSetupViewController: UIViewController {
         var sfBaseline: String? = nil
         var sfTeamCount: Int? = nil
         var sfEnabled: Bool? = nil
+        var sfMode: String? = nil
+        var sfModifiedTable: ModifiedStablefordTable? = nil
 
         if gameType == "stableford" {
             // Pure Stableford format — baseline and team count always apply.
@@ -452,6 +553,17 @@ final class TeeGameSetupViewController: UIViewController {
             case 2:  sfTeamCount = 4
             default: sfTeamCount = 3
             }
+            if sfModeControl.selectedSegmentIndex == 1 {
+                sfMode = "modified"
+                sfModifiedTable = ModifiedStablefordTable(
+                    doubleEagleOrBetter: sfStepperValues[0] ??  8,
+                    eagleOrBetter:       sfStepperValues[1] ??  4,
+                    birdie:              sfStepperValues[2] ??  2,
+                    par:                 sfStepperValues[3] ??  0,
+                    bogey:               sfStepperValues[4] ?? -1,
+                    doubleBogeyOrWorse:  sfStepperValues[5] ?? -3
+                )
+            }
         } else if stablefordSwitch.isOn {
             // Hybrid: Wolf/Skins primary format + Stableford overlay.
             sfEnabled   = true
@@ -460,6 +572,17 @@ final class TeeGameSetupViewController: UIViewController {
             case 0:  sfTeamCount = 2
             case 2:  sfTeamCount = 4
             default: sfTeamCount = 3
+            }
+            if sfModeControl.selectedSegmentIndex == 1 {
+                sfMode = "modified"
+                sfModifiedTable = ModifiedStablefordTable(
+                    doubleEagleOrBetter: sfStepperValues[0] ??  8,
+                    eagleOrBetter:       sfStepperValues[1] ??  4,
+                    birdie:              sfStepperValues[2] ??  2,
+                    par:                 sfStepperValues[3] ??  0,
+                    bogey:               sfStepperValues[4] ?? -1,
+                    doubleBogeyOrWorse:  sfStepperValues[5] ?? -3
+                )
             }
         }
 
@@ -479,7 +602,11 @@ final class TeeGameSetupViewController: UIViewController {
                     stablefordBaseline: sfBaseline,
                     stablefordTeamCount: sfTeamCount,
                     stablefordEnabled: sfEnabled,
-                    teamTeeSettings: ttSettings
+                    stablefordMode: sfMode,
+                    modifiedSfTable: sfModifiedTable,
+                    teamTeeSettings: ttSettings,
+                    wolfVariant: wolfVariant,
+                    wolfStake: wolfStake
                 )
 
                 await MainActor.run {
@@ -498,15 +625,29 @@ final class TeeGameSetupViewController: UIViewController {
                             g.tournamentStablefordEnabled = record.stablefordEnabled
                             g.stablefordBaseline        = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
                             g.stablefordCountingPlayers = record.stablefordTeamCount ?? 3
+                            g.stablefordMode = StablefordMode(rawValue: record.stablefordMode ?? "standard") ?? .standard
+                            if g.stablefordMode == .modified {
+                                g.modifiedStablefordTable = ModifiedStablefordTable(
+                                    doubleEagleOrBetter: record.modifiedSfDoubleEagle  ??  8,
+                                    eagleOrBetter:       record.modifiedSfEagle        ??  4,
+                                    birdie:              record.modifiedSfBirdie       ??  2,
+                                    par:                 record.modifiedSfPar          ??  0,
+                                    bogey:               record.modifiedSfBogey        ?? -1,
+                                    doubleBogeyOrWorse:  record.modifiedSfDoubleBogey  ?? -3
+                                )
+                            } else {
+                                g.modifiedStablefordTable = ModifiedStablefordTable()
+                            }
                             g.teamTeeSettings           = record.teamTeeSettings
                             g.gameType = nil
                             switch record.gameType {
                             case "stableford": g.gameType = .tournament
                             case "wolf":
                                 switch record.wolfVariant {
-                                case "2pt":     g.gameType = .wolf
-                                case "lowball": g.gameType = .wolfLowBall
-                                default:        g.gameType = .sixPointScotch
+                                case "2pt":       g.gameType = .wolf
+                                case "lowball":   g.gameType = .wolfLowBall
+                                case "matchplay": g.gameType = .matchPlay
+                                default:          g.gameType = .sixPointScotch
                                 }
                             default: break
                             }
@@ -514,6 +655,11 @@ final class TeeGameSetupViewController: UIViewController {
                                 var skins = g.skinsState ?? SkinsEngine.makeDefaultState()
                                 skins.settings.skinValue = stake
                                 g.skinsState = skins
+                            } else if record.gameType == "wolf", let ws = record.wolfStake {
+                                g.wolfStake = ws
+                                g.baseGameStake = Int(ws)
+                                g.gameHoleDollarsArray = Array(repeating: ws, count: STANDARD_HOLES)
+                                g.holeBaseAmount       = Array(repeating: ws, count: STANDARD_HOLES)
                             }
                         }
                         GameManager.shared.saveCurrent()
@@ -610,10 +756,72 @@ final class TeeGameSetupViewController: UIViewController {
         navigationController?.pushViewController(entryVC, animated: true)
     }
 
+    // MARK: - Modified Stableford helpers
+
+    private func buildModifiedSFStack() -> UIStackView {
+        let labels   = ["Double Eagle+", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey+"]
+        let defaults = [8, 4, 2, 0, -1, -3]
+        let rows = (0..<6).map { i -> UIView in
+            sfStepperValues[i] = defaults[i]
+            return makeSFStepperRow(label: labels[i], value: defaults[i], tag: i)
+        }
+        let stack = UIStackView(arrangedSubviews: rows)
+        stack.axis = .vertical
+        stack.spacing = 10
+        return stack
+    }
+
+    private func makeSFStepperRow(label text: String, value: Int, tag: Int) -> UIView {
+        let nameLabel = UILabel()
+        nameLabel.text = text
+        nameLabel.font = .systemFont(ofSize: 14)
+        nameLabel.textColor = .secondaryLabel
+        nameLabel.setContentHuggingPriority(.required, for: .horizontal)
+
+        let valueLabel = UILabel()
+        valueLabel.text = sfPointString(value)
+        valueLabel.font = .monospacedDigitSystemFont(ofSize: 15, weight: .semibold)
+        valueLabel.textColor = value >= 0 ? .systemGreen : .systemRed
+        valueLabel.textAlignment = .center
+        valueLabel.tag = tag + 100
+        valueLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 40).isActive = true
+
+        let stepper = UIStepper()
+        stepper.minimumValue = -10
+        stepper.maximumValue = 10
+        stepper.stepValue = 1
+        stepper.value = Double(value)
+        stepper.tag = tag
+        stepper.addTarget(self, action: #selector(sfStepperChanged(_:)), for: .valueChanged)
+
+        let row = UIStackView(arrangedSubviews: [nameLabel, valueLabel, stepper])
+        row.axis = .horizontal
+        row.spacing = 8
+        row.alignment = .center
+        return row
+    }
+
+    private func sfPointString(_ v: Int) -> String { v > 0 ? "+\(v)" : "\(v)" }
+
+    @objc private func sfModeChanged() {
+        let isModified = sfModeControl.selectedSegmentIndex == 1
+        sfModifiedStack?.isHidden = !isModified
+    }
+
+    @objc private func sfStepperChanged(_ stepper: UIStepper) {
+        let v = Int(stepper.value)
+        sfStepperValues[stepper.tag] = v
+        if let row = stepper.superview as? UIStackView,
+           let lbl = row.arrangedSubviews.compactMap({ $0 as? UILabel }).first(where: { $0.tag == stepper.tag + 100 }) {
+            lbl.text = sfPointString(v)
+            lbl.textColor = v >= 0 ? .systemGreen : .systemRed
+        }
+    }
+
     private func showSuccess(code: String) {
         let ac = UIAlertController(
             title: "Tournament Created!",
-            message: "Share this code with your group:\n\n\(code)\n\nThey can join from the Tee Games screen.",
+            message: "Share this code with your group:\n\n\(code)\n\nThey can join from the Tournaments screen.",
             preferredStyle: .alert
         )
         ac.addAction(UIAlertAction(title: "Copy Code", style: .default) { [weak self] _ in

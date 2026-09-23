@@ -530,7 +530,7 @@ private extension RulesViewController {
         body("""
         Auction-based tournament format where teams are bid on before play begins.
 
-        • Access Calcutta via Tee Games on the home screen
+        • Access Calcutta via Tournaments on the home screen
         • Create an event, enter team rosters, and record the bid amount won at auction for each team
         • The total pot is the sum of all bids
 
