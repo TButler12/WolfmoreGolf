@@ -14,8 +14,14 @@ extension GameManager {
     /// update from the organizer's courseName, and history recording.
     @discardableResult
     static func applyTournamentJoin(record: TournamentRecord) -> (groupCode: String, matchId: String) {
-        if shared.currentGame == nil { _ = shared.loadLastOpened(notify: false) }
-        if shared.currentGame == nil { shared.startNewGame() }
+        shared.activeSlot = .tournament
+        if !shared.loadTournamentSlot(notify: false) {
+            // No tournament slot yet — seed from local slot as structural template;
+            // applyTournamentJoin will overwrite all tournament-specific fields.
+            _ = shared.loadLastOpened(notify: false)
+            shared.activeSlot = .tournament
+            if shared.currentGame == nil { shared.currentGame = GameData() }
+        }
 
         let liveDay = record.currentDay ?? 1
         let existing = TournamentHistoryStore.shared.all().first { $0.code == record.code }
@@ -28,13 +34,29 @@ extension GameManager {
             groupCode = UUID().uuidString; matchId = UUID().uuidString
         }
 
+        // Preserve progress ONLY when the game already carries this exact tournament code
+        // and it's the same day (i.e. the user is resuming mid-round). Any identity change —
+        // standalone → tournament, or tournament A → tournament B — always starts clean,
+        // regardless of same-day history keyed only on the incoming code.
+        let alreadyInThisTournament = (shared.currentGame?.tournamentCode == record.code)
+        let shouldPreserve = alreadyInThisTournament && isSameDay
+
+        // Standalone round with committed holes is about to be replaced — snapshot it so
+        // the "Restore?" banner appears on the home screen and the round is fully recoverable.
+        if !shouldPreserve,
+           let current = shared.currentGame,
+           current.tournamentCode == nil,
+           current.holeCommitted.contains(true) {
+            ResetSnapshotStore.shared.saveFromCurrentGame()
+        }
+
         shared.update { g in
-            // Wipe scores and hole state from any previous round so stale data from a
-            // different course never appears in the newly joined session.
             let holes = g.totalHoles
-            g.scores        = Array(repeating: Array(repeating: nil, count: holes), count: MAX_PLAYERS)
-            g.holeCommitted = Array(repeating: false, count: holes)
-            g.hole          = 0
+            if !shouldPreserve {
+                g.scores        = Array(repeating: Array(repeating: nil, count: holes), count: MAX_PLAYERS)
+                g.holeCommitted = Array(repeating: false, count: holes)
+                g.hole          = 0
+            }
 
             g.tournamentCode        = record.code
             g.groupCode             = groupCode
@@ -54,11 +76,26 @@ extension GameManager {
                 g.skinsState = skins
             } else if record.gameType == "wolf", let wolfStake = record.wolfStake {
                 g.wolfStake = wolfStake
+                g.baseGameStake = Int(wolfStake)
                 g.gameHoleDollarsArray = Array(repeating: wolfStake, count: STANDARD_HOLES)
+                g.holeBaseAmount       = Array(repeating: wolfStake, count: STANDARD_HOLES)
             }
             g.stablefordBaseline        = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
             g.stablefordCountingPlayers = record.stablefordTeamCount ?? 3
             g.tournamentStablefordEnabled = record.stablefordEnabled
+            g.stablefordMode = StablefordMode(rawValue: record.stablefordMode ?? "standard") ?? .standard
+            if g.stablefordMode == .modified {
+                g.modifiedStablefordTable = ModifiedStablefordTable(
+                    doubleEagleOrBetter: record.modifiedSfDoubleEagle  ??  8,
+                    eagleOrBetter:       record.modifiedSfEagle        ??  4,
+                    birdie:              record.modifiedSfBirdie       ??  2,
+                    par:                 record.modifiedSfPar          ??  0,
+                    bogey:               record.modifiedSfBogey        ?? -1,
+                    doubleBogeyOrWorse:  record.modifiedSfDoubleBogey  ?? -3
+                )
+            } else {
+                g.modifiedStablefordTable = ModifiedStablefordTable()
+            }
             g.gameType = nil
             switch record.gameType {
             case "stableford": g.gameType = .tournament
@@ -115,22 +152,31 @@ extension GameManager {
         return 1 + ((strokeIndex <= (hc - 18)) ? 1 : 0)
     }
 
-    /// Returns Stableford points for one player on one hole.
-    /// Returns nil if gross score is nil (hole not yet played).
-    /// Par mode: eagle=3, birdie=2, par=1, bogey+=0.
-    /// Bogey mode: birdie+=3, par=2, bogey=1, double+=0. Both modes cap at 3.
+    /// Standard mode: par baseline = eagle=3, birdie=2, par=1, bogey+=0; bogey baseline shifts +1.
+    /// Modified mode: uses the configurable per-bucket table (negative values allowed).
     func stablefordPoints(
         grossScore: Int?,
         par: Int,
         playerHC: Int,
         strokeIndex: Int,
-        baseline: StablefordBaseline = .par
+        baseline: StablefordBaseline = .par,
+        mode: StablefordMode = .standard,
+        modifiedTable: ModifiedStablefordTable? = nil
     ) -> Int? {
         guard let gross = grossScore else { return nil }
         let strokes = absoluteStrokesGiven(playerHC: playerHC, strokeIndex: strokeIndex)
         let net = gross - strokes
+        let diff = net - par
+        if mode == .modified, let table = modifiedTable {
+            if diff <= -3 { return table.doubleEagleOrBetter }
+            if diff == -2 { return table.eagleOrBetter }
+            if diff == -1 { return table.birdie }
+            if diff ==  0 { return table.par }
+            if diff ==  1 { return table.bogey }
+            return table.doubleBogeyOrWorse
+        }
         let offset = baseline == .bogey ? 1 : 0
-        return min(3, max(0, 1 + offset - (net - par)))
+        return min(3, max(0, 1 + offset - diff))
     }
 
     /// Returns total Stableford points for a player across all played holes.
@@ -144,7 +190,8 @@ extension GameManager {
             let hc    = game.hcPlayers[safe: playerIndex] ?? 0
             let gross = (playerIndex < game.scores.count) ? game.scores[playerIndex][hole] : nil
             if let pts = stablefordPoints(grossScore: gross, par: par, playerHC: hc,
-                                          strokeIndex: si, baseline: game.stablefordBaseline) {
+                                          strokeIndex: si, baseline: game.stablefordBaseline,
+                                          mode: game.stablefordMode, modifiedTable: game.modifiedStablefordTable) {
                 total += pts
             }
         }
@@ -176,7 +223,8 @@ extension GameManager {
             let hc    = game.hcPlayers[safe: seat] ?? 0
             let gross = (seat < game.scores.count) ? game.scores[seat][hole] : nil
             return stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
-                                    baseline: game.stablefordBaseline)
+                                    baseline: game.stablefordBaseline,
+                                    mode: game.stablefordMode, modifiedTable: game.modifiedStablefordTable)
         }
         let n = max(1, min(game.stablefordCountingPlayers, pts.count))
         return pts.sorted(by: >).prefix(n).reduce(0, +)

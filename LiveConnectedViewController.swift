@@ -750,11 +750,13 @@ final class LiveConnectedViewController: UITableViewController {
     }
 
     private func applyCoOrgJoin(record: TournamentRecord) {
-        if GameManager.shared.currentGame == nil {
+        GameManager.shared.activeSlot = .tournament
+        if !GameManager.shared.loadTournamentSlot(notify: false) {
             _ = GameManager.shared.loadLastOpened(notify: false)
+            GameManager.shared.activeSlot = .tournament
         }
         if GameManager.shared.currentGame == nil {
-            GameManager.shared.startNewGame()
+            GameManager.shared.currentGame = GameData()
         }
         let groupCode = UUID().uuidString
         let matchId   = UUID().uuidString
@@ -773,6 +775,19 @@ final class LiveConnectedViewController: UITableViewController {
             g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
             g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
             g.tournamentStablefordEnabled = record.stablefordEnabled
+            g.stablefordMode = StablefordMode(rawValue: record.stablefordMode ?? "standard") ?? .standard
+            if g.stablefordMode == .modified {
+                g.modifiedStablefordTable = ModifiedStablefordTable(
+                    doubleEagleOrBetter: record.modifiedSfDoubleEagle  ??  8,
+                    eagleOrBetter:       record.modifiedSfEagle        ??  4,
+                    birdie:              record.modifiedSfBirdie       ??  2,
+                    par:                 record.modifiedSfPar          ??  0,
+                    bogey:               record.modifiedSfBogey        ?? -1,
+                    doubleBogeyOrWorse:  record.modifiedSfDoubleBogey  ?? -3
+                )
+            } else {
+                g.modifiedStablefordTable = ModifiedStablefordTable()
+            }
         }
         let coOrgDay = record.currentDay ?? 1
         UserDefaults.standard.set(coOrgDay, forKey: "lastTournamentDay_\(record.code)")
