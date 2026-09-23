@@ -8572,7 +8572,10 @@ private let HAMMOCK_BEACH_OCEAN_ID = UUID(uuidString: "AA4B0CE4-0000-4000-8000-0
 let HAMMOCK_BEACH_OCEAN_PARS: [Int] = [4,5,4,3,4,5,4,3,4, 5,4,3,4,5,4,4,3,4]
 let HAMMOCK_BEACH_OCEAN_HCS:  [Int] = [15,9,11,13,3,7,5,17,1, 10,14,16,6,12,4,8,18,2]
 let HAMMOCK_BEACH_OCEAN_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Black", yardage: 7201),
+    TeeInfo(teeName: "Black", yardage: 7201, rating: 77.0, slope: 147),
+    TeeInfo(teeName: "Gold",  yardage: 6723, rating: 74.8, slope: 142),
+    TeeInfo(teeName: "Blue",  yardage: 6371, rating: 73.2, slope: 135),
+    TeeInfo(teeName: "White", yardage: 5811, rating: 70.1, slope: 130)
 ]
 
 private let REUNION_LEGACY_PALMER_ID = UUID(uuidString: "AEA10F0E-0000-4000-8000-000000000001")!
@@ -8615,6 +8618,40 @@ let ISLEWORTH_GCC_PARS: [Int] = [4,3,5,4,3,4,5,4,4, 4,3,4,5,4,3,4,5,4]
 let ISLEWORTH_GCC_HCS:  [Int] = [13,3,1,5,15,11,17,9,7, 6,12,10,8,14,16,18,4,2]
 let ISLEWORTH_GCC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 7577),
+]
+
+// MARK: - Hammock Beach Golf Resort (Conservatory Course) — Palm Coast, FL
+// Par 72 | Designed by Tom Watson | Resort
+
+private let HAMMOCK_BEACH_CONSERVATORY_ID = UUID(uuidString: "A6B7C8D9-E0F1-4624-A4B5-100000000219")!
+
+let HAMMOCK_BEACH_CONSERVATORY_PARS: [Int] = [
+    4,4,3,5,4,4,4,3,5,   // Front 9 — OUT 36
+    5,4,3,4,4,4,4,3,5    // Back 9  — IN  36
+]
+let HAMMOCK_BEACH_CONSERVATORY_HCS: [Int] = [
+    12,6,16,4,8,10,2,18,14,
+    1,7,15,3,5,13,11,17,9
+]
+let HAMMOCK_BEACH_CONSERVATORY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7740, rating: 77.5, slope: 144)
+]
+
+// MARK: - Grey Oaks Country Club (Pine Course) — Naples, FL
+// Par 72 | Private
+
+private let GREY_OAKS_PINE_ID = UUID(uuidString: "B7C8D9E0-F1A2-4735-B5C6-10000000021A")!
+
+let GREY_OAKS_PINE_PARS: [Int] = [
+    5,3,5,4,4,3,4,4,4,   // Front 9 — OUT 36
+    4,5,3,4,4,4,4,3,5    // Back 9  — IN  36
+]
+let GREY_OAKS_PINE_HCS: [Int] = [
+    15,7,11,1,9,17,5,13,3,
+    6,8,10,16,2,14,12,18,4
+]
+let GREY_OAKS_PINE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7120, rating: 74.8, slope: 143)
 ]
 
 // MARK: - Innisbrook Resort — Palm Harbor, FL
@@ -19004,6 +19041,22 @@ private enum BuiltIns {
           website: "https://www.hammockbeach.com",
           address: "200 Ocean Crest Drive, Palm Coast, FL 32137",
           isWolfApproved: false),
+
+        c(HAMMOCK_BEACH_CONSERVATORY_ID, "Hammock Beach Resort (Conservatory Course)", HAMMOCK_BEACH_CONSERVATORY_PARS, HAMMOCK_BEACH_CONSERVATORY_HCS, HAMMOCK_BEACH_CONSERVATORY_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Watson",
+          type: "Resort",
+          phone: "(866) 841-0287",
+          website: "https://www.hammockbeach.com",
+          address: "200 Ocean Crest Drive, Palm Coast, FL 32137"),
+
+        c(GREY_OAKS_PINE_ID, "Grey Oaks Country Club (Pine Course)", GREY_OAKS_PINE_PARS, GREY_OAKS_PINE_HCS, GREY_OAKS_PINE_TEES,
+          country: "USA",
+          state: "FL",
+          type: "Private",
+          phone: "(239) 262-5550",
+          address: "2400 Grey Oaks Drive North, Naples, FL 34105"),
 
         c(REUNION_LEGACY_PALMER_ID, "Reunion Resort (Legacy Course)", REUNION_LEGACY_PALMER_PARS, REUNION_LEGACY_PALMER_HCS,
           REUNION_LEGACY_PALMER_TEES,
