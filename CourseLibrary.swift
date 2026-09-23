@@ -7754,6 +7754,25 @@ let WEE_BURN_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 7141, rating: 76.0, slope: 146)
 ]
 
+// MARK: - Race Brook Country Club — Orange, CT
+// Par 71 | Designed by Robert D. Pryde
+
+private let RACE_BROOK_CC_ID = UUID(uuidString: "A9B0C1D2-E3F4-4056-B7C8-100000000207")!
+
+let RACE_BROOK_CC_PARS: [Int] = [
+    4,3,5,4,5,4,4,4,3,   // Front 9 — OUT 36
+    5,3,3,4,5,3,4,4,4    // Back 9  — IN  35
+]
+
+let RACE_BROOK_CC_HCS: [Int] = [
+    7,15,9,13,11,5,3,1,17,
+    4,10,14,18,8,16,2,12,6
+]
+
+let RACE_BROOK_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6502, rating: 71.0, slope: 129)
+]
+
 // MARK: - TPC River Highlands — Cromwell, CT
 // Par 70 | Designed by Bobby Weed | Home of the Travelers Championship (PGA Tour)
 
@@ -18193,6 +18212,15 @@ private enum BuiltIns {
           architect: "Devereaux Emmet",
           type: "Private",
           address: "410 Hollow Tree Ridge Road, Darien, CT 06820"),
+
+        c(RACE_BROOK_CC_ID, "Race Brook Country Club", RACE_BROOK_CC_PARS, RACE_BROOK_CC_HCS, RACE_BROOK_CC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Robert D. Pryde",
+          type: "Private",
+          phone: "(203) 389-9521",
+          website: "https://www.racebrook.org",
+          address: "246 Derby Ave, Orange, CT 06477"),
 
         c(TPC_RIVER_HIGHLANDS_ID, "TPC River Highlands", TPC_RIVER_HIGHLANDS_PARS, TPC_RIVER_HIGHLANDS_HCS, TPC_RIVER_HIGHLANDS_TEES,
           country: "USA",
