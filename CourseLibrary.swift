@@ -7754,6 +7754,188 @@ let WEE_BURN_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 7141, rating: 76.0, slope: 146)
 ]
 
+// MARK: - Golf Club of Avon — Avon, CT  (27-hole: Blue, Red, White nines)
+// Est. 1925 | Three 18-hole combinations
+
+private let GOLF_CLUB_AVON_BR_ID  = UUID(uuidString: "B0C1D2E3-F4A5-4167-C8D9-100000000208")!
+private let GOLF_CLUB_AVON_RW_ID  = UUID(uuidString: "C1D2E3F4-A5B6-4278-D9EA-100000000209")!
+private let GOLF_CLUB_AVON_WB_ID  = UUID(uuidString: "D2E3F4A5-B6C7-4389-EAFB-10000000020A")!
+
+// Blue/Red — par 71
+let GOLF_CLUB_AVON_BR_PARS: [Int] = [
+    4,4,4,4,4,3,5,3,4,   // Blue nine — OUT 35
+    4,3,5,3,5,3,4,4,5    // Red nine  — IN  36
+]
+let GOLF_CLUB_AVON_BR_HCS: [Int] = [
+    15,1,9,5,11,13,7,17,3,
+    12,14,2,16,8,18,10,4,6
+]
+let GOLF_CLUB_AVON_BR_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6507, rating: 71.3, slope: 127),
+    TeeInfo(teeName: "Gold",   yardage: 6192, rating: 69.7, slope: 126),
+    TeeInfo(teeName: "Silver", yardage: 5779, rating: 67.9, slope: 121),
+    TeeInfo(teeName: "Copper", yardage: 5158, rating: 65.1, slope: 115)
+]
+
+// Red/White — par 71
+let GOLF_CLUB_AVON_RW_PARS: [Int] = [
+    4,3,5,3,5,3,4,4,5,   // Red nine   — OUT 36
+    4,3,4,3,4,4,4,4,5    // White nine — IN  35
+]
+let GOLF_CLUB_AVON_RW_HCS: [Int] = [
+    11,13,1,15,7,17,9,3,5,
+    4,18,10,16,12,14,8,2,6
+]
+let GOLF_CLUB_AVON_RW_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6568, rating: 71.9, slope: 127),
+    TeeInfo(teeName: "Gold",   yardage: 6274, rating: 70.4, slope: 126),
+    TeeInfo(teeName: "Silver", yardage: 5779, rating: 68.4, slope: 120),
+    TeeInfo(teeName: "Copper", yardage: 5022, rating: 65.4, slope: 114)
+]
+
+// White/Blue — par 71 (Blue nine hole 4 plays from alternate tee at 531 yds = par 5)
+let GOLF_CLUB_AVON_WB_PARS: [Int] = [
+    4,3,4,3,4,4,4,4,5,   // White nine — OUT 35
+    4,4,4,5,4,3,5,3,4    // Blue nine  — IN  36
+]
+let GOLF_CLUB_AVON_WB_HCS: [Int] = [
+    3,17,9,15,1,13,7,11,5,
+    16,2,10,6,12,14,8,18,4
+]
+let GOLF_CLUB_AVON_WB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6665, rating: 72.3, slope: 127),
+    TeeInfo(teeName: "Gold",   yardage: 6356, rating: 70.7, slope: 126),
+    TeeInfo(teeName: "Silver", yardage: 5793, rating: 68.3, slope: 120),
+    TeeInfo(teeName: "Copper", yardage: 4973, rating: 66.7, slope: 116)
+]
+
+// MARK: - Country Club of Farmington — Farmington, CT
+// Par 71 | Est. 1892
+
+private let CCF_ID = UUID(uuidString: "E3F4A5B6-C7D8-4490-FBA0-10000000020B")!
+
+let CCF_PARS: [Int] = [
+    4,3,5,3,4,5,4,3,5,   // Front 9 — OUT 36
+    5,4,3,4,4,4,4,4,3    // Back 9  — IN  35
+]
+
+let CCF_HCS: [Int] = [
+    16,8,6,18,4,12,2,14,10,
+    13,3,17,11,5,9,1,7,15
+]
+
+let CCF_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6580, rating: 72.2, slope: 139)
+]
+
+// MARK: - Hartford Golf Club — Hartford, WI
+// Par 72 | Designed by Nugent/Killian | Est. 1928
+
+private let HARTFORD_GC_ID = UUID(uuidString: "F4A5B6C7-D8E9-4501-A0B1-10000000020C")!
+
+let HARTFORD_GC_PARS: [Int] = [
+    4,4,5,3,4,5,4,3,4,   // Front 9 — OUT 36
+    5,3,5,4,4,4,4,3,4    // Back 9  — IN  36
+]
+
+let HARTFORD_GC_HCS: [Int] = [
+    7,5,1,15,11,3,13,17,9,
+    4,16,2,14,12,6,8,18,10
+]
+
+let HARTFORD_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6519, rating: 71.2, slope: 122)
+]
+
+// MARK: - Great River Golf Club — Milford, CT
+// Par 72 | Designed by Tommy Fazio | Semi-Private
+
+private let GREAT_RIVER_GC_ID = UUID(uuidString: "A5B6C7D8-E9FA-4D12-B2C3-10000000020D")!
+
+let GREAT_RIVER_GC_PARS: [Int] = [
+    4,3,5,4,4,5,4,3,4,   // Front 9 — OUT 36
+    3,4,4,5,4,3,4,5,4    // Back 9  — IN  36
+]
+let GREAT_RIVER_GC_HCS: [Int] = [
+    15,17,5,3,11,13,1,7,9,
+    14,10,2,16,6,18,4,8,12
+]
+let GREAT_RIVER_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "SHU Championship", yardage: 7103, rating: 75.4, slope: 146)
+]
+
+// MARK: - Black Hall Club — Old Lyme, CT
+// Par 71
+
+private let BLACK_HALL_CLUB_ID = UUID(uuidString: "B6C7D8E9-FAB0-4E23-C3D4-10000000020E")!
+
+let BLACK_HALL_CLUB_PARS: [Int] = [
+    4,5,4,4,4,4,3,4,3,   // Front 9 — OUT 35
+    4,5,4,3,5,4,4,3,4    // Back 9  — IN  36
+]
+let BLACK_HALL_CLUB_HCS: [Int] = [
+    11,13,1,5,7,9,17,3,15,
+    16,10,2,12,8,4,6,18,14
+]
+let BLACK_HALL_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6691, rating: 72.9, slope: 138),
+    TeeInfo(teeName: "Blue",   yardage: 6265, rating: 71.0, slope: 132),
+    TeeInfo(teeName: "White",  yardage: 5866, rating: 69.2, slope: 129),
+    TeeInfo(teeName: "Silver", yardage: 5575, rating: 68.2, slope: 126),
+    TeeInfo(teeName: "Gold",   yardage: 4965, rating: 64.5, slope: 119)
+]
+
+// MARK: - Patterson Club — Fairfield, CT
+// Par 71 | Designed by Robert Trent Jones Sr | Private
+
+private let PATTERSON_CLUB_ID = UUID(uuidString: "C7D8E9FA-B0C1-4F34-D4E5-10000000020F")!
+
+let PATTERSON_CLUB_PARS: [Int] = [
+    4,4,3,4,5,3,4,4,5,   // Front 9 — OUT 36
+    4,5,3,4,3,4,4,4,4    // Back 9  — IN  35
+]
+let PATTERSON_CLUB_HCS: [Int] = [
+    10,4,18,6,2,14,16,8,12,
+    13,3,17,7,15,5,1,11,9
+]
+let PATTERSON_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6894, rating: 73.9, slope: 134)
+]
+
+// MARK: - Country Club of Fairfield — Fairfield, CT
+// Par 70 | Designed by Seth Raynor | Private
+
+private let CC_FAIRFIELD_ID = UUID(uuidString: "D8E9FAB0-C1D2-4045-E5F6-100000000210")!
+
+let CC_FAIRFIELD_PARS: [Int] = [
+    5,4,4,3,4,4,4,5,3,   // Front 9 — OUT 36
+    5,3,4,4,3,4,4,3,4    // Back 9  — IN  34
+]
+let CC_FAIRFIELD_HCS: [Int] = [
+    9,3,11,17,7,1,13,5,15,
+    8,18,12,2,16,6,4,14,10
+]
+let CC_FAIRFIELD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6442, rating: 71.0, slope: 123)
+]
+
+// MARK: - New Haven Country Club — Hamden, CT
+// Par 70 | Designed by Robert Pryde (1898) / Willie Park Jr. (1920) | Private
+
+private let NEW_HAVEN_CC_ID = UUID(uuidString: "E9FAB0C1-D2E3-4156-F6A7-100000000211")!
+
+let NEW_HAVEN_CC_PARS: [Int] = [
+    4,3,4,4,4,4,4,4,3,   // Front 9 — OUT 34
+    5,4,3,4,4,4,4,3,5    // Back 9  — IN  36
+]
+let NEW_HAVEN_CC_HCS: [Int] = [
+    8,16,10,14,4,6,2,12,18,
+    11,1,17,3,5,13,9,15,7
+]
+let NEW_HAVEN_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6560, rating: 71.8, slope: 131)
+]
+
 // MARK: - Race Brook Country Club — Orange, CT
 // Par 71 | Designed by Robert D. Pryde
 
@@ -18230,6 +18412,74 @@ private enum BuiltIns {
           phone: "(860) 635-5000",
           website: "https://www.tpc.com/riverhighlands",
           address: "One Golf Club Road, Cromwell, CT 06416"),
+
+        c(GOLF_CLUB_AVON_BR_ID, "Golf Club of Avon (Blue/Red)", GOLF_CLUB_AVON_BR_PARS, GOLF_CLUB_AVON_BR_HCS, GOLF_CLUB_AVON_BR_TEES,
+          country: "USA",
+          state: "CT",
+          type: "Private",
+          address: "95 Country Club Road, Avon, CT 06001"),
+
+        c(GOLF_CLUB_AVON_RW_ID, "Golf Club of Avon (Red/White)", GOLF_CLUB_AVON_RW_PARS, GOLF_CLUB_AVON_RW_HCS, GOLF_CLUB_AVON_RW_TEES,
+          country: "USA",
+          state: "CT",
+          type: "Private",
+          address: "95 Country Club Road, Avon, CT 06001"),
+
+        c(GOLF_CLUB_AVON_WB_ID, "Golf Club of Avon (White/Blue)", GOLF_CLUB_AVON_WB_PARS, GOLF_CLUB_AVON_WB_HCS, GOLF_CLUB_AVON_WB_TEES,
+          country: "USA",
+          state: "CT",
+          type: "Private",
+          address: "95 Country Club Road, Avon, CT 06001"),
+
+        c(CCF_ID, "Country Club of Farmington", CCF_PARS, CCF_HCS, CCF_TEES,
+          country: "USA",
+          state: "CT",
+          type: "Private",
+          address: "770 Farmington Ave, Farmington, CT 06032"),
+
+        c(HARTFORD_GC_ID, "Hartford Golf Club", HARTFORD_GC_PARS, HARTFORD_GC_HCS, HARTFORD_GC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Nugent / Killian",
+          type: "Private",
+          address: "134 S Main St, West Hartford, CT 06107"),
+
+        c(GREAT_RIVER_GC_ID, "Great River Golf Club", GREAT_RIVER_GC_PARS, GREAT_RIVER_GC_HCS, GREAT_RIVER_GC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Tommy Fazio",
+          type: "Semi-Private",
+          phone: "(203) 701-6920",
+          address: "130 Coram Lane, Milford, CT 06461"),
+
+        c(BLACK_HALL_CLUB_ID, "Black Hall Club", BLACK_HALL_CLUB_PARS, BLACK_HALL_CLUB_HCS, BLACK_HALL_CLUB_TEES,
+          country: "USA",
+          state: "CT",
+          type: "Private",
+          address: "49 Buttonball Road, Old Lyme, CT 06371"),
+
+        c(PATTERSON_CLUB_ID, "Patterson Club", PATTERSON_CLUB_PARS, PATTERSON_CLUB_HCS, PATTERSON_CLUB_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Robert Trent Jones Sr.",
+          type: "Private",
+          phone: "(203) 255-2121",
+          address: "1118 Cross Highway, Fairfield, CT 06824"),
+
+        c(CC_FAIRFIELD_ID, "Country Club of Fairfield", CC_FAIRFIELD_PARS, CC_FAIRFIELD_HCS, CC_FAIRFIELD_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Seth Raynor",
+          type: "Private",
+          address: "936 Sasco Hill Road, Fairfield, CT 06824"),
+
+        c(NEW_HAVEN_CC_ID, "New Haven Country Club", NEW_HAVEN_CC_PARS, NEW_HAVEN_CC_HCS, NEW_HAVEN_CC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Robert Pryde / Willie Park Jr.",
+          type: "Private",
+          phone: "(203) 248-4488",
+          address: "160 Hartford Tpke, Hamden, CT 06517"),
 
         c(ROUND_HILL_CLUB_ID, "Round Hill Club", ROUND_HILL_CLUB_PARS, ROUND_HILL_CLUB_HCS, ROUND_HILL_CLUB_TEES,
           country: "USA",
