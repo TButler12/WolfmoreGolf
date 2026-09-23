@@ -9112,6 +9112,32 @@ let BLUE_MOUND_GCC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6854, rating: 72.9, slope: 133)
 ]
 
+// MARK: - Lake Arrowhead Golf Club - Pines Course (Nekoosa, WI)
+private let LAKE_ARROWHEAD_PINES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000238")!
+let LAKE_ARROWHEAD_PINES_PARS: [Int] = [4,5,4,3,4,4,3,4,5, 4,5,4,4,3,4,5,3,4]
+let LAKE_ARROWHEAD_PINES_HCS:  [Int] = [9,5,13,17,7,11,15,1,3, 8,10,12,16,14,2,6,18,4]
+let LAKE_ARROWHEAD_PINES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6628, rating: 72.0, slope: 139),
+    TeeInfo(teeName: "White", yardage: 6182, rating: 70.0, slope: 128),
+    TeeInfo(teeName: "Red",   yardage: 5213, rating: 70.1, slope: 122),
+]
+
+// MARK: - Stevens Point Country Club (Stevens Point, WI)
+private let STEVENS_POINT_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000240")!
+let STEVENS_POINT_CC_PARS: [Int] = [4,4,5,3,4,4,4,5,3, 4,4,4,3,5,5,4,3,4]
+let STEVENS_POINT_CC_HCS:  [Int] = [13,9,3,15,11,5,7,1,17, 14,10,4,16,8,2,6,18,12]
+let STEVENS_POINT_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6929, rating: 73.8, slope: 139),
+]
+
+// MARK: - Lake Arrowhead Golf Club - Lakes Course (Nekoosa, WI)
+private let LAKE_ARROWHEAD_LAKES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000239")!
+let LAKE_ARROWHEAD_LAKES_PARS: [Int] = [4,4,3,5,4,4,3,4,5, 4,4,5,3,4,4,3,5,4]
+let LAKE_ARROWHEAD_LAKES_HCS:  [Int] = [9,11,17,7,13,1,15,3,5, 12,10,8,16,6,14,18,2,4]
+let LAKE_ARROWHEAD_LAKES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7135, rating: 74.7, slope: 132),
+]
+
 private let PAAKO_RIDGE_1_18_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5005")!
 private let PAAKO_RIDGE_10_27_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5006")!
 private let PAAKO_RIDGE_1_9_19_27_ID = UUID(uuidString: "A82E1B33-5F94-4B2C-9F32-6D2F0B9C5007")!
@@ -11844,6 +11870,61 @@ let CAROLINA_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "White", yardage: 5724, rating: 68.9, slope: 127),
     TeeInfo(teeName: "Green", yardage: 5236, rating: 66.4, slope: 116),
     TeeInfo(teeName: "Red",   yardage: 4740, rating: 64.2, slope: 113),
+]
+
+// MARK: - ThunderHawk Golf Club (Beach Park, IL)
+private let THUNDERHAWK_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000237")!
+let THUNDERHAWK_GC_PARS: [Int] = [4,5,3,4,4,3,5,4,4, 4,5,4,3,4,3,5,3,5]
+let THUNDERHAWK_GC_HCS:  [Int] = [17,5,9,3,7,11,15,13,1, 14,16,4,8,12,18,2,10,6]
+let THUNDERHAWK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7031, rating: 74.6, slope: 143),
+]
+
+// MARK: - Randall Oaks Golf Club (West Dundee, IL)
+private let RANDALL_OAKS_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000236")!
+let RANDALL_OAKS_GC_PARS: [Int] = [4,3,4,4,5,3,4,4,5, 4,4,4,3,4,5,4,3,4]
+let RANDALL_OAKS_GC_HCS:  [Int] = [7,15,13,17,1,11,9,5,3, 6,2,16,18,10,4,8,14,12]
+let RANDALL_OAKS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6598, rating: 71.5, slope: 132),
+]
+
+// MARK: - Royal Melbourne Country Club (Long Grove, IL)
+private let ROYAL_MELBOURNE_CC_IL_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000232")!
+let ROYAL_MELBOURNE_CC_IL_PARS: [Int] = [5,4,4,5,3,4,4,3,4, 3,4,4,4,3,5,4,5,4]
+let ROYAL_MELBOURNE_CC_IL_HCS:  [Int] = [9,11,5,1,17,15,3,13,7, 18,10,4,14,16,8,12,2,6]
+let ROYAL_MELBOURNE_CC_IL_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Shark", yardage: 6731, rating: 74.1, slope: 145),
+]
+
+// MARK: - Pine Meadow Golf Club (Mundelein, IL)
+private let PINE_MEADOW_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000233")!
+let PINE_MEADOW_GC_PARS: [Int] = [4,5,4,5,3,4,4,3,4, 4,4,3,5,4,5,4,3,4]
+let PINE_MEADOW_GC_HCS:  [Int] = [13,11,5,7,15,1,3,17,9, 6,12,16,4,8,2,14,18,10]
+let PINE_MEADOW_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7218, rating: 74.9, slope: 140),
+]
+
+// MARK: - The Preserve at Oak Meadows (DuPage County, IL)
+private let PRESERVE_OAK_MEADOWS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000234")!
+let PRESERVE_OAK_MEADOWS_PARS: [Int] = [4,5,3,4,5,4,4,3,4, 3,4,4,5,4,5,4,3,4]
+let PRESERVE_OAK_MEADOWS_HCS:  [Int] = [11,1,15,13,9,7,5,17,3, 8,10,12,2,14,4,16,18,6]
+let PRESERVE_OAK_MEADOWS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6631),
+    TeeInfo(teeName: "Blue",  yardage: 6213),
+    TeeInfo(teeName: "White", yardage: 5700),
+    TeeInfo(teeName: "Red",   yardage: 4906),
+]
+
+// MARK: - The Highlands of Elgin (Elgin, IL)
+private let HIGHLANDS_ELGIN_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000235")!
+let HIGHLANDS_ELGIN_PARS: [Int] = [4,5,4,3,4,5,3,4,4, 4,4,5,4,5,3,4,3,4]
+let HIGHLANDS_ELGIN_HCS:  [Int] = [12,2,16,18,10,4,14,8,6, 11,1,5,17,7,15,3,13,9]
+let HIGHLANDS_ELGIN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 7000),
+    TeeInfo(teeName: "Black/Gold", yardage: 6786),
+    TeeInfo(teeName: "Gold",       yardage: 6365),
+    TeeInfo(teeName: "Silver",     yardage: 5625),
+    TeeInfo(teeName: "White",      yardage: 4901),
 ]
 
 // =======================================================
@@ -18071,6 +18152,51 @@ private enum BuiltIns {
           website: "https://www.prairieislegc.com",
           address: "2216 Route 176, Prairie Grove, IL 60012"),
 
+        c(ROYAL_MELBOURNE_CC_IL_ID, "Royal Melbourne Country Club", ROYAL_MELBOURNE_CC_IL_PARS, ROYAL_MELBOURNE_CC_IL_HCS, ROYAL_MELBOURNE_CC_IL_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "Greg Norman",
+          type: "Private",
+          address: "4700 Royal Melbourne Drive, Long Grove, IL 60047"),
+
+        c(PINE_MEADOW_GC_ID, "Pine Meadow Golf Club", PINE_MEADOW_GC_PARS, PINE_MEADOW_GC_HCS, PINE_MEADOW_GC_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "William Flynn",
+          type: "Public",
+          phone: "(847) 566-4653",
+          address: "1 Pine Meadow Ln, Mundelein, IL 60060"),
+
+        c(PRESERVE_OAK_MEADOWS_ID, "The Preserve at Oak Meadows", PRESERVE_OAK_MEADOWS_PARS, PRESERVE_OAK_MEADOWS_HCS, PRESERVE_OAK_MEADOWS_TEES,
+          country: "USA",
+          state: "IL",
+          type: "Public",
+          phone: "(630) 595-0071",
+          address: "DuPage County, IL"),
+
+        c(HIGHLANDS_ELGIN_ID, "The Highlands of Elgin", HIGHLANDS_ELGIN_PARS, HIGHLANDS_ELGIN_HCS, HIGHLANDS_ELGIN_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "Keith R. Foster",
+          type: "Public",
+          phone: "(847) 931-5950",
+          address: "875 Sports Way, Elgin, IL 60123"),
+
+        c(THUNDERHAWK_GC_ID, "ThunderHawk Golf Club", THUNDERHAWK_GC_PARS, THUNDERHAWK_GC_HCS, THUNDERHAWK_GC_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "Robert Trent Jones Jr",
+          type: "Public",
+          address: "Beach Park, IL"),
+
+        c(RANDALL_OAKS_GC_ID, "Randall Oaks Golf Club", RANDALL_OAKS_GC_PARS, RANDALL_OAKS_GC_HCS, RANDALL_OAKS_GC_TEES,
+          country: "USA",
+          state: "IL",
+          architect: "William J. Spear",
+          type: "Municipal",
+          phone: "(847) 428-5661",
+          address: "4101 Binnie Road, West Dundee, IL 60118"),
+
         c(ROLLING_GREEN_CC_IL_ID, "Rolling Green Country Club", ROLLING_GREEN_CC_IL_PARS, ROLLING_GREEN_CC_IL_HCS,
           ROLLING_GREEN_CC_IL_TEES,
           country: "USA",
@@ -19134,6 +19260,29 @@ private enum BuiltIns {
             website: "https://www.bluemoundgcc.com",
             address: "Wauwatosa, WI 53205"
         ),
+        c(LAKE_ARROWHEAD_PINES_ID, "Lake Arrowhead Golf Club - Pines Course", LAKE_ARROWHEAD_PINES_PARS, LAKE_ARROWHEAD_PINES_HCS, LAKE_ARROWHEAD_PINES_TEES,
+          country: "USA",
+          state: "WI",
+          architect: "Killian & Nugent",
+          type: "Resort",
+          phone: "(715) 325-2968",
+          address: "1195 Apache Lane, Nekoosa, WI 54457"),
+
+        c(LAKE_ARROWHEAD_LAKES_ID, "Lake Arrowhead Golf Club - Lakes Course", LAKE_ARROWHEAD_LAKES_PARS, LAKE_ARROWHEAD_LAKES_HCS, LAKE_ARROWHEAD_LAKES_TEES,
+          country: "USA",
+          state: "WI",
+          architect: "Killian & Nugent",
+          type: "Resort",
+          phone: "(715) 325-2200",
+          address: "1472 Apache Ave, Nekoosa, WI 54457"),
+
+        c(STEVENS_POINT_CC_ID, "Stevens Point Country Club", STEVENS_POINT_CC_PARS, STEVENS_POINT_CC_HCS, STEVENS_POINT_CC_TEES,
+          country: "USA",
+          state: "WI",
+          architect: "Larry Packard",
+          type: "Private",
+          phone: "(715) 345-8900",
+          address: "1628 Country Club Drive, Stevens Point, WI 54481"),
         c(
             PAAKO_RIDGE_1_18_ID,
             "Paako Ridge Golf Club (1–18)",

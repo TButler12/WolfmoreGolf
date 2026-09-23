@@ -30,6 +30,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         case resortBrand
         case trump
         case omni
+        case custom
     }
     private enum LocationGrouping {
         case state
@@ -276,6 +277,14 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         })
 
         ac.addAction(UIAlertAction(
+            title: activeFilter == .custom ? "✓ Filter: Custom" : "Filter: Custom",
+            style: .default
+        ) { [weak self] _ in
+            self?.activeFilter = .custom
+            self?.applySearchSortAndFilter()
+        })
+
+        ac.addAction(UIAlertAction(
             title: locationGrouping == .state ? "✓ Group By: State" : "Group By: State",
             style: .default
         ) { [weak self] _ in
@@ -360,6 +369,8 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
             return isTrumpCourse(course)
         case .omni:
             return isOmniCourse(course)
+        case .custom:
+            return !CourseLibrary.shared.isBuiltIn(id: course.id)
         }
     }
     // MARK: - Grouping
