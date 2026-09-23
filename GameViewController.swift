@@ -387,7 +387,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let nonNil = zip(g.scores[seat].prefix(STANDARD_HOLES), g.holeCommitted.prefix(STANDARD_HOLES))
                 .filter { score, committed in score != nil && committed }
                 .count
-            print("🗄 autoSave '\(name)' seat\(seat): \(nonNil) committed non-nil scores")
         }
 
         RoundStore.shared.upsertAllPlayersFromCurrentGame(gameID: gameID)
