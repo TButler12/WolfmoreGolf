@@ -3,8 +3,9 @@ import Foundation
 
 // MARK: - Notification Names
 extension Notification.Name {
-    static let reloadUI       = Notification.Name("ReloadUI")
-    static let snapshotSaved  = Notification.Name("SnapshotSaved")
+    static let reloadUI          = Notification.Name("ReloadUI")
+    static let snapshotSaved     = Notification.Name("SnapshotSaved")
+    static let gameStateDidChange = Notification.Name("GameStateDidChange")
 }
 
 // MARK: - GameManager
@@ -16,15 +17,31 @@ final class GameManager {
     var canRandomizeTeams = false   // Only true right after a Reset
     var randomizeUnlocked: Bool = false   // locked by default
 
-    private init() {}
-    
-    // Single save slot (no external store, no ids)
-    private let currentKey = "currentGame_v1"
-    
+    private init() {
+        performSlotMigrationIfNeeded()
+    }
+
+    // Persistence keys
+    private let currentKey    = "currentGame_v1"
+    private let tournamentKey = "tournamentGame_v1"
+    private let migrationKey  = "slotMigration_v1"
+
     // In-memory model
     var currentGame: GameData?
-    var hasActiveGame: Bool {
-        return currentGame != nil
+    var hasActiveGame: Bool { return currentGame != nil }
+
+    enum ActiveSlot { case local, tournament }
+    var activeSlot: ActiveSlot = .local
+
+    // One-time migration: if the legacy currentGame_v1 was a tournament game, copy it to
+    // tournamentGame_v1 so the two-slot model starts with correct data distribution.
+    private func performSlotMigrationIfNeeded() {
+        guard !UserDefaults.standard.bool(forKey: migrationKey) else { return }
+        defer { UserDefaults.standard.set(true, forKey: migrationKey) }
+        guard let data = UserDefaults.standard.data(forKey: currentKey),
+              let g = try? JSONDecoder().decode(GameData.self, from: data),
+              g.tournamentCode != nil else { return }
+        UserDefaults.standard.set(data, forKey: tournamentKey)
     }
     
     // MARK: - Create / Load / Save
@@ -34,6 +51,7 @@ final class GameManager {
         if let sessionId = currentGame?.liveSessionId {
             Task { try? await SupabaseService.shared.archiveWolfSession(id: sessionId) }
         }
+        activeSlot = .local
         var g = baselineNewGame(named: name)
         currentGame = g
         saveCurrent()
@@ -41,19 +59,22 @@ final class GameManager {
     }
     
     
-    /// Save current game to UserDefaults (no notify here).
+    /// Save current game to UserDefaults (no notify here). Routes to the active slot.
     func saveCurrent() {
-        guard var g = currentGame
-        else { return }
+        guard let g = currentGame else { return }
         do {
             let data = try JSONEncoder().encode(g)
-            UserDefaults.standard.set(data, forKey: currentKey)
+            let key = activeSlot == .tournament ? tournamentKey : currentKey
+            UserDefaults.standard.set(data, forKey: key)
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .gameStateDidChange, object: nil)
+            }
         } catch {
             print("💾 Save failed:", error)
         }
     }
     
-    /// Load the single saved game (if any), normalize, and optionally notify UI.
+    /// Load the local slot into currentGame and set activeSlot = .local.
     @discardableResult
     func loadLastOpened(notify: Bool = true) -> Bool {
         guard let data = UserDefaults.standard.data(forKey: currentKey) else { return false }
@@ -61,11 +82,56 @@ final class GameManager {
             var g = try JSONDecoder().decode(GameData.self, from: data)
             normalizeShapes(&g)
             currentGame = g
+            activeSlot = .local
             if notify { requestReload() }
             return true
         } catch {
             print("📦 Load failed:", error)
             return false
+        }
+    }
+
+    /// Load the tournament slot into currentGame and set activeSlot = .tournament.
+    @discardableResult
+    func loadTournamentSlot(notify: Bool = false) -> Bool {
+        guard let data = UserDefaults.standard.data(forKey: tournamentKey) else { return false }
+        do {
+            var g = try JSONDecoder().decode(GameData.self, from: data)
+            normalizeShapes(&g)
+            currentGame = g
+            activeSlot = .tournament
+            if notify { requestReload() }
+            return true
+        } catch {
+            print("📦 Load tournament slot failed:", error)
+            return false
+        }
+    }
+
+    /// Local-slot game data read fresh from UserDefaults — no side-effects on currentGame/activeSlot.
+    var localGameData: GameData? {
+        guard let data = UserDefaults.standard.data(forKey: currentKey),
+              var g = try? JSONDecoder().decode(GameData.self, from: data) else { return nil }
+        normalizeShapes(&g)
+        return g
+    }
+
+    /// Tournament-slot game data read fresh from UserDefaults — no side-effects.
+    var tournamentGameData: GameData? {
+        guard let data = UserDefaults.standard.data(forKey: tournamentKey),
+              var g = try? JSONDecoder().decode(GameData.self, from: data) else { return nil }
+        normalizeShapes(&g)
+        return g
+    }
+
+    /// Mutate and re-persist the tournament slot without touching activeSlot or currentGame.
+    /// Safe to call from background tasks — never disrupts an in-progress local round.
+    func patchTournamentSlot(_ mutate: (inout GameData) -> Void) {
+        guard let data = UserDefaults.standard.data(forKey: tournamentKey),
+              var g = try? JSONDecoder().decode(GameData.self, from: data) else { return }
+        mutate(&g)
+        if let newData = try? JSONEncoder().encode(g) {
+            UserDefaults.standard.set(newData, forKey: tournamentKey)
         }
     }
     
@@ -97,7 +163,6 @@ final class GameManager {
     /// Start a fresh round but keep: course (pars/HC), roster (names/HC/active), rosterNames.
     func resetForNewRoundPreservingCourseAndRoster() {
         guard let old = currentGame else { return }
-
         if let sessionId = old.liveSessionId {
             Task { try? await SupabaseService.shared.archiveWolfSession(id: sessionId) }
         }
@@ -149,7 +214,7 @@ final class GameManager {
         }
         // If you want to keep the existing per-hole stakes, uncomment:
         // fresh.gameHoleDollarsArray = old.gameHoleDollarsArray
-        
+        activeSlot = .local
         currentGame = fresh
         saveCurrent()
         requestReload()
@@ -220,7 +285,7 @@ final class GameManager {
             g.courseParToPass = savedPars
             g.courseHCToPass  = savedHCs
         }
-        
+        activeSlot = .local
         currentGame = g
         saveCurrent()
         NotificationCenter.default.post(name: .reloadUI, object: nil)
@@ -469,12 +534,8 @@ extension GameManager {
 }
 extension GameManager {
 
-    /// True if there is a saved/continue-able game on this device
+    /// True if the local slot has a saved game (does not consider the tournament slot).
     var hasSavedGame: Bool {
-        // If it's already loaded in memory, yes
-        if currentGame != nil { return true }
-
-        // Otherwise check the actual save slot
-        return UserDefaults.standard.data(forKey: "currentGame_v1") != nil
+        return UserDefaults.standard.data(forKey: currentKey) != nil
     }
 }
