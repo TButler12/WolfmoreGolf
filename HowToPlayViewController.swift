@@ -45,7 +45,7 @@ final class HowToPlayViewController: UIViewController {
             systemImage: "pencil.and.list.clipboard",
             symbolColor: UIColor(red: 0.20, green: 0.44, blue: 0.70, alpha: 1),
             title: "Score Each Hole",
-            body: "Enter strokes for every player in the Update Scores grid. Toggle Roll, Press, or Alone to adjust the stake. Tap Prox to award closest-to-pin.\n\nTap the ⓘ button (top-right of the scoring screen) mid-round for quick access to Scoring Tips, Change Course, Change Handicap, Change Base $ Bet, and Pass Game to Another Phone — so you can fix anything without leaving the hole.",
+            body: "Enter strokes for every player in the Update Scores grid. Toggle Roll, Press, or Alone to adjust the stake. Tap Prox to award closest-to-pin.\n\nStroke dots next to each score show exactly how many handicap strokes that player earned on the hole, so it's clear at a glance why net differs from gross.\n\nTap the ⓘ button (top-right of the scoring screen) mid-round for quick access to Scoring Tips, Change Course, Change Handicap, Change Base $ Bet, and Pass Game to Another Phone — so you can fix anything without leaving the hole.",
             badges: ["Scores", "Roll / Press / Alone", "Prox", "ⓘ Menu"]
         ),
         HowToPlayPage(
@@ -66,8 +66,15 @@ final class HowToPlayViewController: UIViewController {
             systemImage: "person.3.sequence.fill",
             symbolColor: UIColor(red: 0.35, green: 0.18, blue: 0.55, alpha: 1),
             title: "Host a Tournament",
-            body: "From Home, tap Live & Tournaments → Create Tournament to set up a new event. Choose a format: Wolf (team scoring), Skins (hole-by-hole pot), Stableford (points vs par), or Scramble (best-ball team drive) — then WolfMore generates a join code.\n\nShare that code with your group; they tap Join Tournament and enter it to hop in. Running a big field? Generate a Co-Organizer Code so someone else can help manage scoring and settings alongside you.",
+            body: "From Home, tap Live & Tournaments → Create Tournament to set up a new event. Choose a format: Wolf (team scoring), Skins (hole-by-hole pot), Stableford (points vs par), or Scramble (best-ball team drive) — then WolfMore generates a join code.\n\nShare that code with your group; they tap Join Tournament and enter it to hop in. Players can also join mid-round: from the scoring screen, tap the Join Tournament button and paste the code there. Running a big field? Generate a Co-Organizer Code so someone else can help manage scoring and settings alongside you.\n\nAs organizer, you set the course and scoring rules once at setup — everyone who joins automatically plays under the same settings, and they stay locked for the tournament. This keeps every group's results genuinely comparable instead of quietly drifting apart.",
             badges: ["Wolf", "Skins", "Stableford", "Scramble", "Co-Organizer"]
+        ),
+        HowToPlayPage(
+            systemImage: "slider.horizontal.3",
+            symbolColor: UIColor(red: 0.18, green: 0.42, blue: 0.52, alpha: 1),
+            title: "Tournament Scoring Options",
+            body: "Wolf and Skins tournaments can also track Team Scoring — a team net-scoring competition that runs alongside your main format, across every group. The organizer picks the team size at setup (a fixed count, or 4-3-2 by par); find team and individual results on the Leaderboard under Team Scoring.\n\nHosting Stableford? Choose Standard points, or switch to Modified Stableford to set your own point values for double bogey, bogey, par, birdie, and eagle — handy for tournaments that already have their own house scoring system.",
+            badges: ["Team Scoring", "Team Net", "Stableford", "Modified Points"]
         ),
         HowToPlayPage(
             systemImage: "dot.radiowaves.left.and.right",
