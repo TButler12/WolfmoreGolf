@@ -7754,6 +7754,28 @@ let WEE_BURN_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 7141, rating: 76.0, slope: 146)
 ]
 
+// MARK: - TPC River Highlands — Cromwell, CT
+// Par 70 | Designed by Bobby Weed | Home of the Travelers Championship (PGA Tour)
+
+private let TPC_RIVER_HIGHLANDS_ID = UUID(uuidString: "E7F8A9B0-C1D2-4E34-F5A6-100000000205")!
+
+let TPC_RIVER_HIGHLANDS_PARS: [Int] = [
+    4,4,4,4,3,5,4,3,4,   // Front 9 — OUT 35
+    4,3,4,5,4,4,3,4,4    // Back 9  — IN  35
+]
+
+let TPC_RIVER_HIGHLANDS_HCS: [Int] = [
+    7,15,9,5,17,1,3,13,11,
+    10,18,12,4,8,16,14,2,6
+]
+
+let TPC_RIVER_HIGHLANDS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 6852, rating: 73.0, slope: 131),
+    TeeInfo(teeName: "Blue",  yardage: 6518, rating: 71.5, slope: 127),
+    TeeInfo(teeName: "Green", yardage: 6146, rating: 69.6, slope: 126),
+    TeeInfo(teeName: "White", yardage: 5873, rating: 68.7, slope: 123)
+]
+
 // MARK: - Round Hill Club — Greenwich, CT
 // Par 71 | Designed by Walter Travis (1924), Robert Trent Jones (1963), Ken Dye (1997)
 
@@ -11855,6 +11877,25 @@ let ITASCA_CC_PARS: [Int] = [4,4,4,3,5,3,4,4,5, 3,4,4,5,4,4,5,3,4]
 let ITASCA_CC_HCS:  [Int] = [5,11,9,17,1,13,3,15,7, 12,2,14,16,4,10,8,18,6]
 let ITASCA_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold", yardage: 6815, rating: 73.3, slope: 139),
+]
+
+// MARK: - Eagle Brook Country Club — Geneva, IL
+// Par 72
+
+private let EAGLE_BROOK_CC_ID = UUID(uuidString: "F8A9B0C1-D2E3-4F45-A6B7-100000000206")!
+
+let EAGLE_BROOK_CC_PARS: [Int] = [
+    4,5,3,4,3,4,5,4,4,   // Front 9 — OUT 36
+    4,4,5,4,4,3,5,3,4    // Back 9  — IN  36
+]
+
+let EAGLE_BROOK_CC_HCS: [Int] = [
+    3,13,15,17,7,5,9,1,11,
+    2,14,16,8,6,18,12,10,4
+]
+
+let EAGLE_BROOK_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6766, rating: 73.2, slope: 138)
 ]
 
 // MARK: - Carolina Golf Club
@@ -18153,6 +18194,15 @@ private enum BuiltIns {
           type: "Private",
           address: "410 Hollow Tree Ridge Road, Darien, CT 06820"),
 
+        c(TPC_RIVER_HIGHLANDS_ID, "TPC River Highlands", TPC_RIVER_HIGHLANDS_PARS, TPC_RIVER_HIGHLANDS_HCS, TPC_RIVER_HIGHLANDS_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Bobby Weed",
+          type: "Private",
+          phone: "(860) 635-5000",
+          website: "https://www.tpc.com/riverhighlands",
+          address: "One Golf Club Road, Cromwell, CT 06416"),
+
         c(ROUND_HILL_CLUB_ID, "Round Hill Club", ROUND_HILL_CLUB_PARS, ROUND_HILL_CLUB_HCS, ROUND_HILL_CLUB_TEES,
           country: "USA",
           state: "CT",
@@ -21335,6 +21385,13 @@ private enum BuiltIns {
           phone: "(630) 773-1800",
           website: "https://www.itascacountryclub.com",
           address: "400 E Orchard St, Itasca, IL 60143"
+        ),
+        c(EAGLE_BROOK_CC_ID, "Eagle Brook Country Club",
+          EAGLE_BROOK_CC_PARS, EAGLE_BROOK_CC_HCS, EAGLE_BROOK_CC_TEES,
+          country: "USA", state: "IL",
+          type: "Private",
+          phone: "(630) 208-4653",
+          address: "2288 Fargo Blvd., Geneva, IL 60134"
         ),
         c(CAROLINA_GC_ID, "Carolina Golf Club",
           CAROLINA_GC_PARS, CAROLINA_GC_HCS, CAROLINA_GC_TEES,
