@@ -7847,6 +7847,23 @@ let HARTFORD_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 6519, rating: 71.2, slope: 122)
 ]
 
+// MARK: - Wallingford Country Club — Wallingford, CT
+// Par 71 | Designed by Al Zikorus (1961) / Mark Mungeam (2025) | Private
+
+private let WALLINGFORD_CC_ID = UUID(uuidString: "A0B1C2D3-E4F5-4068-A7B8-100000000213")!
+
+let WALLINGFORD_CC_PARS: [Int] = [
+    4,4,4,3,5,3,4,4,4,   // Front 9 — OUT 35
+    4,3,4,5,4,5,3,4,4    // Back 9  — IN  36
+]
+let WALLINGFORD_CC_HCS: [Int] = [
+    11,9,1,15,5,17,3,7,13,
+    16,18,10,2,8,4,14,12,6
+]
+let WALLINGFORD_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6447, rating: 71.4, slope: 129)
+]
+
 // MARK: - Hop Meadow Country Club — Simsbury, CT
 // Par 72 | Designed by Geoffrey Cornish | Private
 
@@ -18497,6 +18514,14 @@ private enum BuiltIns {
           type: "Private",
           phone: "(203) 248-4488",
           address: "160 Hartford Tpke, Hamden, CT 06517"),
+
+        c(WALLINGFORD_CC_ID, "Wallingford Country Club", WALLINGFORD_CC_PARS, WALLINGFORD_CC_HCS, WALLINGFORD_CC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Al Zikorus / Mark Mungeam",
+          type: "Private",
+          phone: "(203) 269-9320",
+          address: "195 Long Hill Rd, Wallingford, CT 06492"),
 
         c(HOP_MEADOW_CC_ID, "Hop Meadow Country Club", HOP_MEADOW_CC_PARS, HOP_MEADOW_CC_HCS, HOP_MEADOW_CC_TEES,
           country: "USA",
