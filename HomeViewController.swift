@@ -7,7 +7,13 @@
 import UIKit
 import MessageUI
 
-final class ViewController: UIViewController, MFMailComposeViewControllerDelegate {
+final class ViewController: UIViewController,
+                            MFMailComposeViewControllerDelegate,
+                            UIAdaptivePresentationControllerDelegate {
+
+    func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+        refreshInProgressCard()
+    }
 
     // MARK: - Layout references (programmatic)
     private weak var headerCourseButton: UIButton?
@@ -26,6 +32,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private weak var tournamentInfoNameLabel: UILabel?
     private weak var tournamentInfoSubtitleLabel: UILabel?
     private weak var tournamentGroupButton: UIButton?
+    private weak var tournamentContinueButton: UIButton?
     private weak var editCourseButton: UIButton?
     private weak var tournamentButton: UIButton?
     private weak var liveConnectedButton: UIButton?
@@ -70,9 +77,6 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         buildLayout()
 
         setupPremiumBadge()
-        #if DEBUG
-        setupDebugButton()
-        #endif
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(refreshPremiumBadge),
@@ -91,6 +95,30 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             name: .snapshotSaved,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleGameStateDidChange),
+            name: .gameStateDidChange,
+            object: nil
+        )
+    }
+
+    // saveCurrent() fires several times per action; coalesce to one refresh per run loop.
+    private var cardRefreshPending = false
+    @objc private func handleGameStateDidChange() {
+        guard !cardRefreshPending else { return }
+        cardRefreshPending = true
+        DispatchQueue.main.async { [weak self] in
+            self?.cardRefreshPending = false
+            self?.refreshInProgressCard()
+        }
+    }
+
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        if segue.identifier == "showPlayerSetup" {
+            // For the sheet-presentation path, hook swipe-down dismissal.
+            segue.destination.presentationController?.delegate = self
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -344,6 +372,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         let detailLbl = UILabel()
         detailLbl.font = .systemFont(ofSize: 14, weight: .regular)
         detailLbl.textColor = forestGreen.withAlphaComponent(0.75)
+        detailLbl.numberOfLines = 0
         detailLbl.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(detailLbl)
         inProgressDetailLabel = detailLbl
@@ -476,6 +505,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         let subtitleLbl = UILabel()
         subtitleLbl.font = .systemFont(ofSize: 13, weight: .regular)
         subtitleLbl.textColor = UIColor.white.withAlphaComponent(0.75)
+        subtitleLbl.numberOfLines = 0
         subtitleLbl.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(subtitleLbl)
         tournamentInfoSubtitleLabel = subtitleLbl
@@ -495,7 +525,16 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         groupBtn.translatesAutoresizingMaskIntoConstraints = false
         tournamentGroupButton = groupBtn
 
-        let btnRow = UIStackView(arrangedSubviews: [lbBtn, groupBtn])
+        let continueBtn = UIButton(type: .system)
+        continueBtn.setTitle("Continue Round", for: .normal)
+        continueBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        continueBtn.tintColor = goldColor
+        continueBtn.addTarget(self, action: #selector(tournamentContinueTapped), for: .touchUpInside)
+        continueBtn.translatesAutoresizingMaskIntoConstraints = false
+        continueBtn.isHidden = true
+        tournamentContinueButton = continueBtn
+
+        let btnRow = UIStackView(arrangedSubviews: [lbBtn, groupBtn, continueBtn])
         btnRow.axis = .horizontal
         btnRow.spacing = 20
         btnRow.translatesAutoresizingMaskIntoConstraints = false
@@ -523,15 +562,53 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     @objc private func tournamentCardLeaderboardTapped() {
-        guard let code = GameManager.shared.currentGame?.tournamentCode else { return }
-        let gameType  = GameManager.shared.currentGame?.tournamentGameType
-        let sfEnabled = GameManager.shared.currentGame?.tournamentStablefordEnabled ?? false
+        guard let g = GameManager.shared.tournamentGameData,
+              let code = g.tournamentCode else { return }
+        let gameType  = g.tournamentGameType
+        let sfEnabled = g.tournamentStablefordEnabled ?? false
         let vc = TournamentLeaderboardViewController(code: code, gameType: gameType, stablefordEnabled: sfEnabled)
         navigationController?.pushViewController(vc, animated: true)
     }
 
+    @objc private func tournamentContinueTapped() {
+        guard let code = GameManager.shared.tournamentGameData?.tournamentCode, !code.isEmpty else { return }
+
+        let spinner = UIAlertController(title: nil, message: "Loading tournament…", preferredStyle: .alert)
+        present(spinner, animated: true)
+
+        Task { [weak self] in
+            guard let self else { return }
+
+            let record: TournamentRecord
+            do {
+                record = try await SupabaseService.shared.fetchTournament(code: code)
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let alert = UIAlertController(
+                            title: "Connection Error",
+                            message: "Couldn't reach the server. Check your connection and try again.",
+                            preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(alert, animated: true)
+                    }
+                }
+                return
+            }
+
+            await MainActor.run {
+                GameManager.applyTournamentJoin(record: record)
+                spinner.dismiss(animated: false) {
+                    let sb = UIStoryboard(name: "Main", bundle: nil)
+                    let game = sb.instantiateViewController(withIdentifier: "GameViewController")
+                    self.navigationController?.pushViewController(game, animated: true)
+                }
+            }
+        }
+    }
+
     @objc private func tournamentCardGroupTapped() {
-        guard let g = GameManager.shared.currentGame,
+        guard let g = GameManager.shared.tournamentGameData,
               let code = g.tournamentCode else { return }
 
         if g.tournamentGameType == "scramble" { return }
@@ -573,19 +650,37 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
                 if isOrg { try? await SupabaseService.shared.clearRosterClaims(code: record.code) }
             }
 
-            GameManager.shared.update { g in
-                g.tournamentDay         = liveDay
-                g.tournamentMatchId     = newMatchId
-                g.tournamentScoringType = record.scoring
-                g.tournamentPotAmount   = record.potAmount
-                g.tournamentCarryTies   = record.carryTies
-                g.tournamentGameType    = record.gameType
-                g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
-                g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
-                g.tournamentStablefordEnabled = record.stablefordEnabled
+            await MainActor.run {
+                // All GameManager mutations on main thread to avoid racing a local-round session
+                GameManager.shared.activeSlot = .tournament
+                _ = GameManager.shared.loadTournamentSlot(notify: false)
+                GameManager.shared.update { g in
+                    g.tournamentDay         = liveDay
+                    g.tournamentMatchId     = newMatchId
+                    g.tournamentScoringType = record.scoring
+                    g.tournamentPotAmount   = record.potAmount
+                    g.tournamentCarryTies   = record.carryTies
+                    g.tournamentGameType    = record.gameType
+                    g.stablefordBaseline          = StablefordBaseline(rawValue: record.stablefordBaseline ?? "par") ?? .par
+                    g.stablefordCountingPlayers   = record.stablefordTeamCount ?? 3
+                    g.tournamentStablefordEnabled = record.stablefordEnabled
+                    g.stablefordMode = StablefordMode(rawValue: record.stablefordMode ?? "standard") ?? .standard
+                    if g.stablefordMode == .modified {
+                        g.modifiedStablefordTable = ModifiedStablefordTable(
+                            doubleEagleOrBetter: record.modifiedSfDoubleEagle  ??  8,
+                            eagleOrBetter:       record.modifiedSfEagle        ??  4,
+                            birdie:              record.modifiedSfBirdie       ??  2,
+                            par:                 record.modifiedSfPar          ??  0,
+                            bogey:               record.modifiedSfBogey        ?? -1,
+                            doubleBogeyOrWorse:  record.modifiedSfDoubleBogey  ?? -3
+                        )
+                    } else {
+                        g.modifiedStablefordTable = ModifiedStablefordTable()
+                    }
+                }
+                UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
+                GameManager.shared.saveCurrent()
             }
-            UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
-            GameManager.shared.saveCurrent()
 
             await MainActor.run {
                 spinner.dismiss(animated: false) {
@@ -795,30 +890,41 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
 
     private func refreshTournamentInfoCard() {
         guard let card = tournamentInfoCard else { return }
-        if GameManager.shared.currentGame == nil {
-            _ = GameManager.shared.loadLastOpened(notify: false)
-        }
-        guard let g = GameManager.shared.currentGame,
+        guard let g = GameManager.shared.tournamentGameData,
               let code = g.tournamentCode, !code.isEmpty else {
             card.isHidden = true
             return
         }
         tournamentInfoNameLabel?.text = g.tournamentName ?? "Tournament"
         let day = g.tournamentDay ?? 1
-        tournamentInfoSubtitleLabel?.text = "Day \(day) · Code: \(code)"
+        let courseName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let coursePrefix = courseName.isEmpty ? "" : "\(courseName) · "
+        tournamentInfoSubtitleLabel?.text = "\(coursePrefix)Day \(day) · Code: \(code)"
         tournamentGroupButton?.isHidden = (g.tournamentGameType == "scramble")
+        let hasProgress = g.holeCommitted.contains(true) || g.hole > 0
+        tournamentContinueButton?.isHidden = !hasProgress
         card.isHidden = false
 
-        // Background fetch to catch stale day (e.g. day advanced while app was idle)
+        // Background fetch to catch stale day (e.g. day advanced while app was idle).
+        // Uses patchTournamentSlot so it never touches activeSlot or currentGame —
+        // safe to run concurrently with a local-round GameVC session.
         Task { [weak self] in
             guard let liveDay = try? await SupabaseService.shared.fetchTournament(code: code).currentDay,
                   liveDay != day else { return }
-            GameManager.shared.update { g in g.tournamentDay = liveDay }
+            GameManager.shared.patchTournamentSlot { g in g.tournamentDay = liveDay }
             UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
             await MainActor.run {
-                self?.tournamentInfoSubtitleLabel?.text = "Day \(liveDay) · Code: \(code)"
+                self?.tournamentInfoSubtitleLabel?.text = "\(coursePrefix)Day \(liveDay) · Code: \(code)"
             }
         }
+    }
+
+    private func resetBannerText(for entry: ResetSnapshotStore.Entry) -> String {
+        let fmt = DateFormatter()
+        fmt.timeStyle = .short
+        let course = entry.gameData.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let prefix = course.isEmpty ? "" : "\(course) · "
+        return "\(prefix)Game reset at \(fmt.string(from: entry.savedAt)) — Restore?"
     }
 
     private func refreshResetBanner() {
@@ -828,9 +934,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             banner.isHidden = true
             return
         }
-        let fmt = DateFormatter()
-        fmt.timeStyle = .short
-        resetBannerLabel?.text = "Game reset at \(fmt.string(from: entry.savedAt)) — Restore?"
+        resetBannerLabel?.text = resetBannerText(for: entry)
         // If a fresh reset just happened, leave the banner hidden so viewDidAppear can animate it in
         if !ResetSnapshotStore.shared.needsAttentionOnNextAppearance {
             banner.isHidden = false
@@ -838,9 +942,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     private func refreshHeaderDisplay() {
-        // Course name
+        // Course name from local slot (header is context for new-round setup)
         let courseName: String
-        if let g = GameManager.shared.currentGame {
+        if let g = GameManager.shared.localGameData {
             let stored = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
             courseName = stored.isEmpty ? (CourseLibrary.shared.selectedCourseName ?? "Choose Course") : stored
         } else {
@@ -898,15 +1002,8 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     private func refreshInProgressCard() {
         guard let card = inProgressCard else { return }
 
-        if !GameManager.shared.hasSavedGame {
-            card.isHidden = true
-            return
-        }
-
-        if GameManager.shared.currentGame == nil {
-            _ = GameManager.shared.loadLastOpened(notify: false)
-        }
-        guard let g = GameManager.shared.currentGame else {
+        // Local slot only; hide if it carries a tournament code (migration artefact or stale state).
+        guard let g = GameManager.shared.localGameData, g.tournamentCode == nil else {
             card.isHidden = true
             return
         }
@@ -926,7 +1023,22 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         } else {
             inProgressCaptionLabel?.text = "ROUND IN PROGRESS"
             inProgressTitleLabel?.text = "Continue \(inProgressDayLabel())"
-            inProgressDetailLabel?.text = played > 0 ? "Through hole \(played) of 18" : "Hole 1 of 18 — not yet started"
+            // If the current hole has already been committed (Update Scores pressed but Next
+            // not yet tapped), advance by one so the label matches where Continue resumes.
+            let rawHole = g.hole + 1  // 1-indexed
+            let alreadyCommitted = g.holeCommitted[safe: g.hole] == true
+            let currentHole = alreadyCommitted ? rawHole + 1 : rawHole
+            let courseName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            let coursePrefix = courseName.isEmpty ? "" : "\(courseName) · "
+            if played > 0 && currentHole > played {
+                inProgressDetailLabel?.text = "\(coursePrefix)On hole \(currentHole) of 18"
+            } else if played > 0 {
+                inProgressDetailLabel?.text = "\(coursePrefix)Through hole \(played) of 18"
+            } else if g.hole > 0 {
+                inProgressDetailLabel?.text = "\(coursePrefix)On hole \(currentHole) of 18"
+            } else {
+                inProgressDetailLabel?.text = "\(coursePrefix)Hole 1 of 18 — not yet started"
+            }
             inProgressDetailLabel?.isHidden = false
         }
 
@@ -1223,8 +1335,11 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
                 return
             }
 
-            guard let currentGame = GameManager.shared.currentGame else {
+            // Course picker always operates on the local slot.
+            let localGame = GameManager.shared.localGameData
+            guard let currentGame = localGame else {
                 CourseLibrary.shared.selectedCourseID = id
+                _ = GameManager.shared.loadLastOpened(notify: false)
                 GameManager.shared.update { g in
                     g.course.pars          = Array(newCourse.pars.prefix(STANDARD_HOLES))
                     g.course.holeHandicaps = Array(newCourse.hcs.prefix(STANDARD_HOLES))
@@ -1251,6 +1366,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             )
             alert.addAction(UIAlertAction(title: "Switch", style: .default) { _ in
                 CourseLibrary.shared.selectedCourseID = id
+                _ = GameManager.shared.loadLastOpened(notify: false)
                 GameManager.shared.update { g in
                     g.course.pars          = Array(newCourse.pars.prefix(STANDARD_HOLES))
                     g.course.holeHandicaps = Array(newCourse.hcs.prefix(STANDARD_HOLES))
@@ -1317,9 +1433,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         resetBannerDismissedThisVisit = false
         guard let banner = resetBannerCard,
               let entry = ResetSnapshotStore.shared.load() else { return }
-        let fmt = DateFormatter()
-        fmt.timeStyle = .short
-        resetBannerLabel?.text = "Game reset at \(fmt.string(from: entry.savedAt)) — Restore?"
+        resetBannerLabel?.text = resetBannerText(for: entry)
         guard banner.isHidden else { return }
         ResetSnapshotStore.shared.needsAttentionOnNextAppearance = false
         banner.alpha = 0
@@ -1354,7 +1468,9 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         ac.addAction(UIAlertAction(title: "Swap Rounds", style: .default) { [weak self] _ in
             guard let self else { return }
-            // Circular swap: save current first so it becomes available to restore next time
+            // Circular swap: load local slot so saveFromCurrentGame captures the right round,
+            // then restore the snapshot back into the local slot.
+            _ = GameManager.shared.loadLastOpened(notify: false)
             ResetSnapshotStore.shared.saveFromCurrentGame()
             ResetSnapshotStore.shared.restore(entry: entry)
             self.refreshResetBanner()
@@ -1373,6 +1489,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     // MARK: - Play Game
 
     @objc private func inProgressCardTapped() {
+        _ = GameManager.shared.loadLastOpened(notify: false)
         performSegue(withIdentifier: "showPlayerSetup", sender: self)
     }
 
@@ -1382,12 +1499,12 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             return
         }
         var message = "This will delete your previous game data."
-        if GameManager.shared.currentGame?.liveSessionId != nil {
+        if GameManager.shared.localGameData?.liveSessionId != nil {
             message += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
         }
         let ac = UIAlertController(title: "Start New Game?", message: message, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
-            let ids = GameManager.shared.currentGame?.remoteMatchIds ?? []
+            let ids = GameManager.shared.localGameData?.remoteMatchIds ?? []
             Task { for id in ids { try? await SupabaseService.shared.archiveMatch(id: id) } }
             ResetSnapshotStore.shared.saveFromCurrentGame()
             GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
@@ -1398,17 +1515,18 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     private func confirmStartNewGame() {
-        let isTournamentActive = (GameManager.shared.currentGame?.resolvedGameType == .tournament)
-            && (GameManager.shared.currentGame?.holeCommitted.contains(true) ?? false)
+        let localGame = GameManager.shared.localGameData
+        let isTournamentActive = (localGame?.resolvedGameType == .tournament)
+            && (localGame?.holeCommitted.contains(true) ?? false)
         var message = isTournamentActive
             ? "This will delete your current Stableford round."
             : "This will delete your previous game data."
-        if GameManager.shared.currentGame?.liveSessionId != nil {
+        if localGame?.liveSessionId != nil {
             message += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
         }
         let ac = UIAlertController(title: "Start New Game?", message: message, preferredStyle: .alert)
         ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
-            let idsToArchive = GameManager.shared.currentGame?.remoteMatchIds ?? []
+            let idsToArchive = GameManager.shared.localGameData?.remoteMatchIds ?? []
             Task { for id in idsToArchive { try? await SupabaseService.shared.archiveMatch(id: id) } }
             ResetSnapshotStore.shared.saveFromCurrentGame()
             GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
@@ -1665,16 +1783,17 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     // MARK: - Tournament
 
     @objc private func tournamentTapped() {
-        if GameManager.shared.currentGame == nil {
-            _ = GameManager.shared.loadLastOpened(notify: false)
-        }
-        let current = GameManager.shared.currentGame
+        // Use local slot only — live tournament state lives in tournamentGameData.
+        let current = GameManager.shared.localGameData
+        let isLocalStableford = current?.resolvedGameType == .tournament
+            && current?.tournamentCode == nil
 
-        if current?.resolvedGameType == .tournament {
+        if isLocalStableford {
             let hasHolesPlayed = current?.holeCommitted.contains(true) ?? false
             if hasHolesPlayed {
                 let ac = UIAlertController(title: "Tournament in Progress", message: nil, preferredStyle: .actionSheet)
                 ac.addAction(UIAlertAction(title: "Continue Tournament", style: .default) { [weak self] _ in
+                    _ = GameManager.shared.loadLastOpened(notify: false)
                     self?.performSegue(withIdentifier: "showPlayerSetup", sender: self)
                 })
                 ac.addAction(UIAlertAction(title: "New Tournament", style: .destructive) { [weak self] _ in
@@ -1689,7 +1808,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             } else {
                 launchTournament()
             }
-        } else if GameManager.shared.hasSavedGame {
+        } else if current != nil {
             let ac = UIAlertController(
                 title: "Start Stableford?",
                 message: "This will delete your previous game data.",
@@ -1719,10 +1838,11 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
     }
 
     private func launchTournament() {
-        if GameManager.shared.currentGame == nil {
-            GameManager.shared.startNewGame()
+        if GameManager.shared.localGameData == nil {
+            GameManager.shared.startNewGame()   // sets activeSlot = .local
         } else {
-            GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
+            _ = GameManager.shared.loadLastOpened(notify: false)
+            GameManager.shared.resetForNewRoundPreservingCourseAndRoster()  // sets activeSlot = .local
         }
         GameManager.shared.update { g in
             g.gameType = .tournament
@@ -1750,7 +1870,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             return
         }
         var message = "Your current game data will be cleared. Continue?"
-        if GameManager.shared.currentGame?.liveSessionId != nil {
+        if GameManager.shared.localGameData?.liveSessionId != nil {
             message += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
         }
         let alert = UIAlertController(title: "Quick Start", message: message, preferredStyle: .alert)
@@ -1766,7 +1886,7 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
         let rawName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         let name = (rawName.isEmpty || rawName == "Player 1") ? "Player 1" : rawName
 
-        let idsToArchive = GameManager.shared.currentGame?.remoteMatchIds ?? []
+        let idsToArchive = GameManager.shared.localGameData?.remoteMatchIds ?? []
         Task { for id in idsToArchive { try? await SupabaseService.shared.archiveMatch(id: id) } }
 
         GameManager.shared.startNewGame(name: "New Game")
@@ -1918,49 +2038,6 @@ final class ViewController: UIViewController, MFMailComposeViewControllerDelegat
             present(PaywallViewController(feature: lowestFeature), animated: true)
         }
     }
-
-    // MARK: - Debug
-
-    #if DEBUG
-    private func setupDebugButton() {
-        let btn = UIBarButtonItem(title: "🧪", style: .plain, target: self, action: #selector(debugTapped))
-        navigationItem.rightBarButtonItem = btn
-    }
-
-    @objc private func debugTapped() {
-        let ac = UIAlertController(title: "🧪 Debug", message: nil, preferredStyle: .actionSheet)
-
-        ac.addAction(UIAlertAction(title: "Trigger location prompt (25-round rule)", style: .default) { _ in
-            let currentRounds = Set(RoundStore.shared.rounds.map(\.gameID)).count
-            let fakeRoundsAtDismissal = max(0, currentRounds - 25)
-            UserDefaults.standard.set(fakeRoundsAtDismissal, forKey: "locationPrompt_roundsAtLastDismissal")
-            // Ensure shownCount > 0 so the first-time trigger doesn't fire (we're testing the 25-round path)
-            if UserDefaults.standard.integer(forKey: "locationPrompt_shownCount") == 0 {
-                UserDefaults.standard.set(1, forKey: "locationPrompt_shownCount")
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                LocationPromptViewController.showIfNeeded(from: self)
-            }
-        })
-
-        ac.addAction(UIAlertAction(title: "Reset location prompt (show as first-time)", style: .destructive) { _ in
-            UserDefaults.standard.removeObject(forKey: "locationPrompt_shownCount")
-            UserDefaults.standard.removeObject(forKey: "locationPrompt_roundsAtLastDismissal")
-            UserDefaults.standard.removeObject(forKey: "locationPrompt_lastDismissedVersion")
-            UserDefaults.standard.removeObject(forKey: "locationPrompt_cleanupV2Done")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
-                LocationPromptViewController.showIfNeeded(from: self)
-            }
-        })
-
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-
-        if let pop = ac.popoverPresentationController {
-            pop.barButtonItem = navigationItem.rightBarButtonItem
-        }
-        present(ac, animated: true)
-    }
-    #endif
 
     // MARK: - Colors
 
