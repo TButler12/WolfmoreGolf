@@ -7735,6 +7735,25 @@ let WOODWAY_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green",      yardage: 5481, rating: 73.3, slope: 137)
 ]
 
+// MARK: - Wee Burn Country Club — Darien, CT
+// Par 72 | Designed by Devereaux Emmet
+
+private let WEE_BURN_CC_ID = UUID(uuidString: "D6E7F8A9-B0C1-4D23-E4F5-100000000204")!
+
+let WEE_BURN_CC_PARS: [Int] = [
+    4,4,4,3,4,5,3,4,4,   // Front 9 — OUT 35
+    5,4,4,4,4,3,4,4,5    // Back 9  — IN  37
+]
+
+let WEE_BURN_CC_HCS: [Int] = [
+    5,7,1,13,3,11,17,15,9,
+    18,4,14,10,8,12,2,16,6
+]
+
+let WEE_BURN_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7141, rating: 76.0, slope: 146)
+]
+
 // MARK: - Round Hill Club — Greenwich, CT
 // Par 71 | Designed by Walter Travis (1924), Robert Trent Jones (1963), Ken Dye (1997)
 
@@ -18126,6 +18145,13 @@ private enum BuiltIns {
           phone: "(203) 322-1661",
           website: "https://www.woodway.org",
           address: "540 Hoyt Street, Darien, CT 06820"),
+
+        c(WEE_BURN_CC_ID, "Wee Burn Country Club", WEE_BURN_CC_PARS, WEE_BURN_CC_HCS, WEE_BURN_CC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Devereaux Emmet",
+          type: "Private",
+          address: "410 Hollow Tree Ridge Road, Darien, CT 06820"),
 
         c(ROUND_HILL_CLUB_ID, "Round Hill Club", ROUND_HILL_CLUB_PARS, ROUND_HILL_CLUB_HCS, ROUND_HILL_CLUB_TEES,
           country: "USA",
