@@ -8638,7 +8638,7 @@ let HAMMOCK_BEACH_CONSERVATORY_TEES: [TeeInfo] = [
 ]
 
 // MARK: - Grey Oaks Country Club (Pine Course) — Naples, FL
-// Par 72 | Private
+// Par 72 | Designed by Andrew Green | Private
 
 private let GREY_OAKS_PINE_ID = UUID(uuidString: "B7C8D9E0-F1A2-4735-B5C6-10000000021A")!
 
@@ -19094,6 +19094,7 @@ private enum BuiltIns {
         c(GREY_OAKS_PINE_ID, "Grey Oaks Country Club (Pine Course)", GREY_OAKS_PINE_PARS, GREY_OAKS_PINE_HCS, GREY_OAKS_PINE_TEES,
           country: "USA",
           state: "FL",
+          architect: "Andrew Green",
           type: "Private",
           phone: "(239) 262-5550",
           address: "2400 Grey Oaks Drive North, Naples, FL 34105"),
