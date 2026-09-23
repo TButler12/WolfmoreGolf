@@ -321,7 +321,8 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             _ = RoundStore.shared.recordFromCurrentGame(
                 playerNameOverride: name,
                 gameID: sharedGameID,
-                date: sharedDate
+                date: sharedDate,
+                forceCount: true
             )
         }
     }

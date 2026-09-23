@@ -9,7 +9,7 @@ final class LocationPromptViewController: UIViewController {
     private static let cleanupDoneKey       = "locationPrompt_cleanupV2Done"
 
     private static func distinctRoundsCount() -> Int {
-        Set(RoundStore.shared.rounds.map(\.gameID)).count
+        Set(RoundStore.shared.visibleRows(isPro: true).map(\.gameID)).count
     }
 
     private static func appVersion() -> String {

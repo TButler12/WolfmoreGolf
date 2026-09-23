@@ -212,8 +212,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     // $ Money / Pts toggle (Stableford mode only)
     private weak var stablefordToggle: UISegmentedControl?
-    private var navRowTopHidden:  NSLayoutConstraint?   // prevBtn pinned to courseLabel
-    private var navRowTopVisible: NSLayoutConstraint?   // prevBtn pinned to toggle
     private var showingStablefordPoints = false
 
     private weak var liveNassauButton: UIButton?
@@ -532,10 +530,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         standingsBtn.contentEdgeInsets = UIEdgeInsets(top: 5, left: 14, bottom: 5, right: 14)
         standingsBtn.addTarget(self, action: #selector(standingsTapped), for: .touchUpInside)
         standingsBtn.isHidden = true
-        header.addSubview(standingsBtn)
         standingsHeaderButton = standingsBtn
-        // Positioned below the course name label, trailing — clear of the title and ⓘ button.
-        // Constraints referencing courseLabel are set after courseLabel is created below.
+        // Added to toggleRowStack below alongside the $ Money / Pts toggle.
 
         // Hole info label (centered, white, bold 17)
         let infoLabel = UILabel()
@@ -570,12 +566,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             courseLabel.trailingAnchor.constraint(lessThanOrEqualTo: header.trailingAnchor, constant: -60),
         ])
         courseHeaderLabel = courseLabel
-
-        // Standings pill: sits below the course label, trailing edge aligned to header.
-        NSLayoutConstraint.activate([
-            standingsBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 4),
-            standingsBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
-        ])
 
         // Hole navigation row (Prev pill | dots | Next pill)
         let ghostPillBG = UIColor.white.withAlphaComponent(0.15)
@@ -616,24 +606,24 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         toggle.translatesAutoresizingMaskIntoConstraints = false
         toggle.addTarget(self, action: #selector(stablefordDisplayToggled(_:)), for: .valueChanged)
         toggle.isHidden = true
-        header.addSubview(toggle)
+        toggle.widthAnchor.constraint(equalToConstant: 180).isActive = true
         stablefordToggle = toggle
 
-        NSLayoutConstraint.activate([
-            toggle.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 8),
-            toggle.centerXAnchor.constraint(equalTo: header.centerXAnchor),
-            toggle.widthAnchor.constraint(equalToConstant: 180),
-        ])
-
-        // Two competing top constraints for the nav row — only one active at a time
-        let navHidden  = prevBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 10)
-        let navVisible = prevBtn.topAnchor.constraint(equalTo: toggle.bottomAnchor, constant: 8)
-        navHidden.isActive = true
-        navRowTopHidden  = navHidden
-        navRowTopVisible = navVisible
+        // Toggle row: $ Money/Pts control + Stableford standings pill side-by-side.
+        // UIStackView collapses hidden items, so the row shrinks to zero when both are hidden.
+        let toggleRowStack = UIStackView(arrangedSubviews: [toggle, standingsBtn])
+        toggleRowStack.axis = .horizontal
+        toggleRowStack.spacing = 8
+        toggleRowStack.alignment = .center
+        toggleRowStack.translatesAutoresizingMaskIntoConstraints = false
+        header.addSubview(toggleRowStack)
 
         NSLayoutConstraint.activate([
+            toggleRowStack.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 8),
+            toggleRowStack.centerXAnchor.constraint(equalTo: header.centerXAnchor),
+
             prevBtn.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
+            prevBtn.topAnchor.constraint(equalTo: toggleRowStack.bottomAnchor, constant: 8),
             prevBtn.heightAnchor.constraint(equalToConstant: 32),
 
             nextBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
@@ -1448,8 +1438,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         ac.addAction(UIAlertAction(title: "Apply", style: .default) { [weak self] _ in
             guard let self,
                   let text = ac.textFields?.first?.text?.trimmingCharacters(in: .whitespaces),
-                  let entered = Double(text), entered >= 0.5 else { return }
-            let amount = (entered * 2.0).rounded() / 2.0   // snap to $0.50 increments
+                  let entered = Double(text), entered >= 1 else { return }
+            let amount = entered.rounded()   // snap to $1 increments
             GameManager.shared.update { g in
                 g.gameHoleDollarsArray = Array(repeating: amount, count: STANDARD_HOLES)
                 g.holeBaseAmount       = Array(repeating: amount, count: STANDARD_HOLES)
@@ -1798,9 +1788,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             var amount = g.gameHoleDollarsArray[h]
             if amount <= 0 { amount = 2.0 }
 
-            // ✅ Apply delta, clamp, snap to 0.5
+            // ✅ Apply delta, clamp, snap to $1
             amount = max(1.0, amount + delta)
-            amount = (amount * 2.0).rounded() / 2.0
+            amount = amount.rounded()
 
             g.gameHoleDollarsArray[h] = amount
             // Track the pure base when no multipliers are distorting the displayed value
@@ -2395,30 +2385,32 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func updateStablefordToggleVisibility() {
         guard let g = GameManager.shared.currentGame else { return }
-        guard let toggle = stablefordToggle else { return }
         let showToggle = g.resolvedGameType == .tournament
             || g.tournamentStablefordEnabled == true
             || g.tournamentGameType == "stableford"
         let isPureStableford = g.tournamentGameType == "stableford"
             || (g.resolvedGameType == .tournament && g.tournamentGameType == nil)
-        if showToggle && toggle.isHidden {
-            toggle.isHidden = false
-            navRowTopHidden?.isActive  = false
-            navRowTopVisible?.isActive = true
-            // Default to Pts for pure Stableford tournaments (no money component).
-            if isPureStableford {
-                toggle.selectedSegmentIndex = 1
-                showingStablefordPoints = true
-            }
-        } else if showToggle && !toggle.isHidden && isPureStableford && !showingStablefordPoints {
-            // Toggle already visible but stuck on Money — auto-correct to Pts.
-            toggle.selectedSegmentIndex = 1
+
+        // Pure Stableford: always Pts mode, no toggle needed.
+        // Set showingStablefordPoints before the toggle nil-guard so the first paint
+        // in viewWillAppear (before viewDidLayoutSubviews installs the header) is correct.
+        if isPureStableford {
             showingStablefordPoints = true
-        } else if !showToggle && !toggle.isHidden {
-            toggle.isHidden = true
-            navRowTopVisible?.isActive = false
-            navRowTopHidden?.isActive  = true
+            stablefordToggle?.isHidden = true
+            return
+        }
+
+        // Hybrid Wolf+Stableford or non-Stableford: toggle controls the display.
+        guard let toggle = stablefordToggle else { return }
+
+        if showToggle {
+            toggle.isHidden = false
+            // Default to $ Money (showingStablefordPoints stays false)
+        } else {
+            // Not a Stableford context: reset points mode unconditionally so a GameVC
+            // that transitions from a tournament to a Wolf game can never stay stuck on Pts.
             showingStablefordPoints = false
+            toggle.isHidden = true
             toggle.selectedSegmentIndex = 0
         }
     }
@@ -2878,7 +2870,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             var amount = g.gameHoleDollarsArray[hole]
             if amount == 0 { amount = 2.0 }             // default if somehow unset
             amount = max(1.0, amount)                   // minimum 1.0
-            amount = (amount * 2.0).rounded() / 2.0     // snap to 0.50
+            amount = amount.rounded()                   // snap to $1
             g.gameHoleDollarsArray = Array(repeating: amount, count: STANDARD_HOLES)
             g.holeBaseAmount = Array(repeating: amount, count: STANDARD_HOLES)
         }
@@ -3050,15 +3042,15 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         paintEverythingForCurrentHole()
     }
     @IBAction private func plusPointDollarsTapped(_ sender: UIButton) {
-        stepDollars(by: 0.5)
+        stepDollars(by: 1)
     }
 
     @IBAction private func minusPointDollarsTapped(_ sender: UIButton) {
-        stepDollars(by: -0.5)
+        stepDollars(by: -1)
     }
 
     @objc private func dollarStepperChanged(_ sender: UIStepper) {
-        let snapped = (sender.value * 2).rounded() / 2.0
+        let snapped = sender.value.rounded()
         sender.value = snapped
         GameManager.shared.update { g in
             g.normalize(holes: STANDARD_HOLES)
@@ -5432,17 +5424,27 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     }
 
     private func applyTournamentAttach(record: TournamentRecord) {
-        GameManager.applyTournamentJoin(record: record)
-        // Re-seed with the now-correct tournament course. viewDidLoad already seeded with the
-        // pre-join course, so any score that was par on the old course but should be a different
-        // par on the tournament course needs to be re-evaluated. Only fills nil slots, so scores
-        // already entered by the player are preserved. Stableford skipped: nil = unplayed there.
-        if GameManager.shared.currentGame?.resolvedGameType != .tournament {
-            GameManager.shared.seedScoresWithParsForActivePlayers()
+        let gameID = GameManager.uncountedProgressForTournamentJoin(record: record)
+        let doJoin: () -> Void = { [weak self] in
+            guard let self else { return }
+            GameManager.applyTournamentJoin(record: record)
+            // Re-seed with the now-correct tournament course. viewDidLoad already seeded with the
+            // pre-join course, so any score that was par on the old course but should be a different
+            // par on the tournament course needs to be re-evaluated. Only fills nil slots, so scores
+            // already entered by the player are preserved. Stableford skipped: nil = unplayed there.
+            if GameManager.shared.currentGame?.resolvedGameType != .tournament {
+                GameManager.shared.seedScoresWithParsForActivePlayers()
+            }
+            self.applyGameTypeUI()
+            self.paintEverythingForCurrentHole()
+            self.applyTournamentAttachPostJoin(record: record)
         }
-        applyGameTypeUI()
-        paintEverythingForCurrentHole()
+        if !presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doJoin) {
+            doJoin()
+        }
+    }
 
+    private func applyTournamentAttachPostJoin(record: TournamentRecord) {
         if record.gameType == "scramble" {
             // Snapshot active player names now — they drive the roster's player list on the
             // leaderboard. The leaderboard reads these from the roster's group_code field
@@ -5697,9 +5699,9 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             plusPointDollars.isHidden  = true
 
             let stepper = UIStepper()
-            stepper.minimumValue = 0.5
+            stepper.minimumValue = 1
             stepper.maximumValue = 100
-            stepper.stepValue    = 0.5
+            stepper.stepValue    = 1
             stepper.value        = 2.0
             stepper.addTarget(self, action: #selector(dollarStepperChanged(_:)), for: .valueChanged)
             dollarStepper = stepper

@@ -481,7 +481,8 @@ extension RoundStore {
                 wolfCalledPerHole: Array(repeating: false, count: STANDARD_HOLES),
                 wolfTeamWonPerHole: Array(repeating: false, count: STANDARD_HOLES),
                 umbieWonPerHole: Array(repeating: false, count: STANDARD_HOLES),
-                gameTypePerHole: Array(repeating: .tournament, count: STANDARD_HOLES)
+                gameTypePerHole: Array(repeating: .tournament, count: STANDARD_HOLES),
+                isCounted: true
             )
             add(summary)
         }

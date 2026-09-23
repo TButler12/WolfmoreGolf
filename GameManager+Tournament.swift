@@ -234,4 +234,26 @@ extension GameManager {
     func runningTeamStablefordTotal(game: GameData, upThrough: Int? = nil) -> Int {
         committedHoles(game: game, upThrough: upThrough).reduce(0) { $0 + teamHoleScore(hole: $1, game: game) }
     }
+
+    // MARK: - Save-before-join helper
+
+    /// Returns the local game's historyGameID if joining this tournament would discard standalone
+    /// uncounted Wolf/scoring progress, nil otherwise. Pass the result to
+    /// `presentSaveRoundDialogIfNeeded(gameID:onConfirmed:)` before calling `applyTournamentJoin`.
+    static func uncountedProgressForTournamentJoin(record: TournamentRecord) -> UUID? {
+        // Only standalone (non-tournament) local rounds can have uncounted auto-save rows.
+        guard let local = shared.localGameData,
+              local.tournamentCode == nil,
+              let gameID = local.historyGameID,
+              RoundStore.shared.hasUncountedProgress(gameID: gameID) else { return nil }
+
+        // If the join would preserve existing progress (same tournament, same day), no dialog needed.
+        let existing = TournamentHistoryStore.shared.all().first { $0.code == record.code }
+        let liveDay  = record.currentDay ?? 1
+        let isSameDay = existing?.lastDay == liveDay
+        let alreadyIn = (local.tournamentCode == record.code)
+        guard !(alreadyIn && isSameDay) else { return nil }
+
+        return gameID
+    }
 }

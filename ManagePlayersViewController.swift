@@ -643,14 +643,22 @@ final class ManagePlayersViewController: UIViewController,
             )
             ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             ac.addAction(UIAlertAction(title: "Start New Round", style: .destructive) { [weak self] _ in
-                if GameManager.shared.currentGame != nil {
-                    GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
-                    GameManager.shared.canRandomizeTeams = true
-                } else {
-                    GameManager.shared.startNewGame(name: "New Game")
+                guard let self else { return }
+                let gameID = GameManager.shared.currentGame?.historyGameID
+                let doReset: () -> Void = { [weak self] in
+                    guard let self else { return }
+                    if GameManager.shared.currentGame != nil {
+                        GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
+                        GameManager.shared.canRandomizeTeams = true
+                    } else {
+                        GameManager.shared.startNewGame(name: "New Game")
+                    }
+                    self.clearStaleTournamentPreselects(keeping: active)
+                    self.configureGameRosterAndPresentRoundNav(with: active)
                 }
-                self?.clearStaleTournamentPreselects(keeping: active)
-                self?.configureGameRosterAndPresentRoundNav(with: active)
+                if !self.presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doReset) {
+                    doReset()
+                }
             })
             present(ac, animated: true)
         } else {

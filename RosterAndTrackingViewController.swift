@@ -489,7 +489,7 @@ extension FriendTrackStore {
 extension RosterAndTrackingViewController {
 
     @objc func trackFriendsTapped() {
-        let allRounds = RoundStore.shared.rounds
+        let allRounds = RoundStore.shared.visibleRows(isPro: true)
         guard !allRounds.isEmpty else {
             let ac = UIAlertController(
                 title: "Player History",

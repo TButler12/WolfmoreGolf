@@ -1231,22 +1231,24 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func performConfirmedReset() {
-        ResetSnapshotStore.shared.saveFromCurrentGame()
-        GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
-        GameManager.shared.canRandomizeTeams = true
-
-        GameManager.shared.update { g in
-            self.ensureModelHasCapacity(&g)
+        let gameID = GameManager.shared.currentGame?.historyGameID
+        let doReset: () -> Void = { [weak self] in
+            guard let self else { return }
+            ResetSnapshotStore.shared.saveFromCurrentGame()
+            GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
+            GameManager.shared.canRandomizeTeams = true
+            GameManager.shared.update { g in self.ensureModelHasCapacity(&g) }
+            self.populateFromModel()
+            self.recalcStrokesFromModel()
+            self.enforceActivationCap()
+            self.updateGoButtonEnabled()
+            self.refreshRandomizeEnabled()
+            self.updateCourseLabel()
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
         }
-
-        populateFromModel()
-        recalcStrokesFromModel()
-        enforceActivationCap()
-        updateGoButtonEnabled()
-        refreshRandomizeEnabled()
-        updateCourseLabel()
-
-        UINotificationFeedbackGenerator().notificationOccurred(.success)
+        if !presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doReset) {
+            doReset()
+        }
     }
 
     @IBAction private func goToGameTapped(_ sender: Any) {

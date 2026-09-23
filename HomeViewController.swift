@@ -597,11 +597,17 @@ final class ViewController: UIViewController,
             }
 
             await MainActor.run {
-                GameManager.applyTournamentJoin(record: record)
-                spinner.dismiss(animated: false) {
-                    let sb = UIStoryboard(name: "Main", bundle: nil)
-                    let game = sb.instantiateViewController(withIdentifier: "GameViewController")
-                    self.navigationController?.pushViewController(game, animated: true)
+                let gameID = GameManager.uncountedProgressForTournamentJoin(record: record)
+                let doJoin: () -> Void = {
+                    GameManager.applyTournamentJoin(record: record)
+                    spinner.dismiss(animated: false) {
+                        let sb = UIStoryboard(name: "Main", bundle: nil)
+                        let game = sb.instantiateViewController(withIdentifier: "GameViewController")
+                        self.navigationController?.pushViewController(game, animated: true)
+                    }
+                }
+                if !self.presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doJoin) {
+                    doJoin()
                 }
             }
         }
@@ -1498,24 +1504,36 @@ final class ViewController: UIViewController,
             presentManagePlayers()
             return
         }
-        var message = "This will delete your previous game data."
-        if GameManager.shared.localGameData?.liveSessionId != nil {
-            message += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
-        }
-        let ac = UIAlertController(title: "Start New Game?", message: message, preferredStyle: .alert)
-        ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
+        let gameID = GameManager.shared.localGameData?.historyGameID
+        let doReset: () -> Void = { [weak self] in
             let ids = GameManager.shared.localGameData?.remoteMatchIds ?? []
             Task { for id in ids { try? await SupabaseService.shared.archiveMatch(id: id) } }
             ResetSnapshotStore.shared.saveFromCurrentGame()
             GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
             self?.presentManagePlayers()
-        })
+        }
+        if presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doReset) { return }
+        var message = "This will delete your previous game data."
+        if GameManager.shared.localGameData?.liveSessionId != nil {
+            message += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
+        }
+        let ac = UIAlertController(title: "Start New Game?", message: message, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { _ in doReset() })
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(ac, animated: true)
     }
 
     private func confirmStartNewGame() {
         let localGame = GameManager.shared.localGameData
+        let gameID = localGame?.historyGameID
+        let doReset: () -> Void = { [weak self] in
+            let idsToArchive = GameManager.shared.localGameData?.remoteMatchIds ?? []
+            Task { for id in idsToArchive { try? await SupabaseService.shared.archiveMatch(id: id) } }
+            ResetSnapshotStore.shared.saveFromCurrentGame()
+            GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
+            self?.presentManagePlayers()
+        }
+        if presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doReset) { return }
         let isTournamentActive = (localGame?.resolvedGameType == .tournament)
             && (localGame?.holeCommitted.contains(true) ?? false)
         var message = isTournamentActive
@@ -1525,13 +1543,7 @@ final class ViewController: UIViewController,
             message += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
         }
         let ac = UIAlertController(title: "Start New Game?", message: message, preferredStyle: .alert)
-        ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { [weak self] _ in
-            let idsToArchive = GameManager.shared.localGameData?.remoteMatchIds ?? []
-            Task { for id in idsToArchive { try? await SupabaseService.shared.archiveMatch(id: id) } }
-            ResetSnapshotStore.shared.saveFromCurrentGame()
-            GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
-            self?.presentManagePlayers()
-        })
+        ac.addAction(UIAlertAction(title: "Start New Game", style: .destructive) { _ in doReset() })
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(ac, animated: true)
     }
@@ -1838,28 +1850,33 @@ final class ViewController: UIViewController,
     }
 
     private func launchTournament() {
-        if GameManager.shared.localGameData == nil {
-            GameManager.shared.startNewGame()   // sets activeSlot = .local
-        } else {
-            _ = GameManager.shared.loadLastOpened(notify: false)
-            GameManager.shared.resetForNewRoundPreservingCourseAndRoster()  // sets activeSlot = .local
+        let gameID = GameManager.shared.localGameData?.historyGameID
+        let doProceed: () -> Void = { [weak self] in
+            guard let self else { return }
+            if GameManager.shared.localGameData == nil {
+                GameManager.shared.startNewGame()
+            } else {
+                _ = GameManager.shared.loadLastOpened(notify: false)
+                GameManager.shared.resetForNewRoundPreservingCourseAndRoster()
+            }
+            GameManager.shared.update { g in
+                g.gameType = .tournament
+                g.tournamentGameType = "stableford"
+                g.tournamentCode        = nil
+                g.groupCode             = nil
+                g.tournamentMatchId     = nil
+                g.tournamentIsOrganizer = false
+                g.tournamentIsCreator   = false
+            }
+            let rulesVC = StablefordRulesSetupViewController()
+            rulesVC.onStart = { [weak self] in self?.presentManagePlayers() }
+            let nav = UINavigationController(rootViewController: rulesVC)
+            nav.modalPresentationStyle = .formSheet
+            self.present(nav, animated: true)
         }
-        GameManager.shared.update { g in
-            g.gameType = .tournament
-            g.tournamentGameType = "stableford"
-            // Clear any stale online-tournament state so ManagePlayersVC treats this
-            // as a local game (no roster fetch, no tournament-code gating).
-            g.tournamentCode        = nil
-            g.groupCode             = nil
-            g.tournamentMatchId     = nil
-            g.tournamentIsOrganizer = false
-            g.tournamentIsCreator   = false
+        if !presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doProceed) {
+            doProceed()
         }
-        let rulesVC = StablefordRulesSetupViewController()
-        rulesVC.onStart = { [weak self] in self?.presentManagePlayers() }
-        let nav = UINavigationController(rootViewController: rulesVC)
-        nav.modalPresentationStyle = .formSheet
-        present(nav, animated: true)
     }
 
     // MARK: - Quick Start
@@ -1869,15 +1886,18 @@ final class ViewController: UIViewController,
             doQuickStart()
             return
         }
+        let gameID = GameManager.shared.localGameData?.historyGameID
+        let doReset: () -> Void = { [weak self] in
+            ResetSnapshotStore.shared.saveFromCurrentGame()
+            self?.doQuickStart()
+        }
+        if presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doReset) { return }
         var message = "Your current game data will be cleared. Continue?"
         if GameManager.shared.localGameData?.liveSessionId != nil {
             message += "\n\nYou have an active Live Wolf broadcast — starting a new game will end it for anyone watching."
         }
         let alert = UIAlertController(title: "Quick Start", message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "Clear & Start", style: .destructive) { [weak self] _ in
-            ResetSnapshotStore.shared.saveFromCurrentGame()
-            self?.doQuickStart()
-        })
+        alert.addAction(UIAlertAction(title: "Clear & Start", style: .destructive) { _ in doReset() })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
     }
@@ -2089,5 +2109,37 @@ extension ViewController {
             wrap.modalPresentationStyle = .fullScreen
             present(wrap, animated: true)
         }
+    }
+}
+
+// MARK: - Save-before-reset dialog (shared by all VCs that can start a new round)
+
+extension UIViewController {
+
+    /// Shows "Save this round?" if the game has uncounted in-progress holes.
+    /// Returns true if the dialog was presented (caller should bail out of its own confirm flow).
+    /// Returns false if there is no uncounted progress (caller should show its own confirm).
+    /// Cancel always aborts; Save marks the round counted; Discard deletes uncounted rows.
+    @discardableResult
+    func presentSaveRoundDialogIfNeeded(gameID: UUID?, onConfirmed: @escaping () -> Void) -> Bool {
+        guard let gid = gameID,
+              RoundStore.shared.hasUncountedProgress(gameID: gid) else { return false }
+
+        let alert = UIAlertController(
+            title: "Save this round?",
+            message: "You have holes recorded that haven't been counted in your stats yet.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Save", style: .default) { _ in
+            RoundStore.shared.markGameCounted(gameID: gid)
+            onConfirmed()
+        })
+        alert.addAction(UIAlertAction(title: "Discard", style: .destructive) { _ in
+            RoundStore.shared.deleteUncountedRows(gameID: gid)
+            onConfirmed()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+        return true
     }
 }

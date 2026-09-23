@@ -51,6 +51,9 @@ final class GameManager {
         if let sessionId = currentGame?.liveSessionId {
             Task { try? await SupabaseService.shared.archiveWolfSession(id: sessionId) }
         }
+        if let oldID = currentGame?.historyGameID {
+            RoundStore.shared.deleteUncountedRows(gameID: oldID)
+        }
         activeSlot = .local
         var g = baselineNewGame(named: name)
         currentGame = g
@@ -165,6 +168,9 @@ final class GameManager {
         guard let old = currentGame else { return }
         if let sessionId = old.liveSessionId {
             Task { try? await SupabaseService.shared.archiveWolfSession(id: sessionId) }
+        }
+        if let oldID = old.historyGameID {
+            RoundStore.shared.deleteUncountedRows(gameID: oldID)
         }
 
         let keepCoursePar   = old.courseParToPass

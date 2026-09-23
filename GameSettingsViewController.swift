@@ -1238,10 +1238,11 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             .replacingOccurrences(of: "$", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
-        guard let stake = Double(clean), stake > 0 else {
-            showAlert(title: "Invalid Stake", message: "Enter a valid dollar amount greater than 0.")
+        guard let stakeRaw = Double(clean), stakeRaw >= 1 else {
+            showAlert(title: "Invalid Stake", message: "Enter a whole dollar amount of $1 or more.")
             return
         }
+        let stake = stakeRaw.rounded()   // snap to $1
 
         GameManager.shared.update { g in
             g.baseGameStake = Int(stake)

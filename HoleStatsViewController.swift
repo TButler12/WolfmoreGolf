@@ -181,10 +181,9 @@ final class HoleStatsViewController: UITableViewController {
         // Only allow newest 10 games for Free users
         let allowedGames = RoundStore.shared.visibleGameIDs(isPro: isPro)
 
-        // Filter rows by course + entitlement
-        let allRows = RoundStore.shared.rounds.filter {
-            $0.courseID == courseID &&
-            (isPro || allowedGames.contains($0.gameID))
+        // Filter rows by course + entitlement (visibleRows already filters to isCounted)
+        let allRows = RoundStore.shared.visibleRows(isPro: isPro).filter {
+            $0.courseID == courseID
         }
 
         guard !allRows.isEmpty else {
