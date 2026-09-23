@@ -8651,7 +8651,47 @@ let GREY_OAKS_PINE_HCS: [Int] = [
     6,8,10,16,2,14,12,18,4
 ]
 let GREY_OAKS_PINE_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Championship", yardage: 7120, rating: 74.8, slope: 143)
+    TeeInfo(teeName: "I",   yardage: 7120, rating: 74.8, slope: 143),
+    TeeInfo(teeName: "II",  yardage: 6564, rating: 72.9, slope: 139),
+    TeeInfo(teeName: "III", yardage: 6196, rating: 71.6, slope: 136)
+]
+
+// MARK: - Grey Oaks Country Club (Palm Course) — Naples, FL
+// Par 72 | Private
+
+private let GREY_OAKS_PALM_ID = UUID(uuidString: "C8D9E0F1-A2B3-4846-C6D7-10000000021B")!
+
+let GREY_OAKS_PALM_PARS: [Int] = [
+    4,3,4,5,4,3,4,5,4,   // Front 9 — OUT 36
+    4,4,3,4,3,5,4,5,4    // Back 9  — IN  36
+]
+let GREY_OAKS_PALM_HCS: [Int] = [
+    15,11,13,9,5,17,1,7,3,
+    16,6,18,4,12,10,14,2,8
+]
+let GREY_OAKS_PALM_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "I",   yardage: 6882, rating: 74.5, slope: 143),
+    TeeInfo(teeName: "II",  yardage: 6476, rating: 72.9, slope: 139),
+    TeeInfo(teeName: "III", yardage: 6196, rating: 71.6, slope: 136)
+]
+
+// MARK: - Grey Oaks Country Club (Estuary Course) — Naples, FL
+// Par 72 | Private
+
+private let GREY_OAKS_ESTUARY_ID = UUID(uuidString: "D9E0F1A2-B3C4-4957-D7E8-10000000021C")!
+
+let GREY_OAKS_ESTUARY_PARS: [Int] = [
+    4,4,5,5,4,4,3,4,3,   // Front 9 — OUT 36
+    4,5,3,5,3,4,4,3,5    // Back 9  — IN  36
+]
+let GREY_OAKS_ESTUARY_HCS: [Int] = [
+    13,3,9,5,1,7,15,11,17,
+    6,2,18,4,10,16,14,12,8
+]
+let GREY_OAKS_ESTUARY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "I",   yardage: 6680, rating: 73.3, slope: 145),
+    TeeInfo(teeName: "II",  yardage: 6354, rating: 71.7, slope: 137),
+    TeeInfo(teeName: "III", yardage: 5954, rating: 70.1, slope: 130)
 ]
 
 // MARK: - Innisbrook Resort — Palm Harbor, FL
@@ -19057,6 +19097,20 @@ private enum BuiltIns {
           type: "Private",
           phone: "(239) 262-5550",
           address: "2400 Grey Oaks Drive North, Naples, FL 34105"),
+
+        c(GREY_OAKS_PALM_ID, "Grey Oaks Country Club (Palm Course)", GREY_OAKS_PALM_PARS, GREY_OAKS_PALM_HCS, GREY_OAKS_PALM_TEES,
+          country: "USA",
+          state: "FL",
+          type: "Private",
+          phone: "(239) 262-3741",
+          address: "2400 Grey Oaks Drive North, Naples, FL 34105"),
+
+        c(GREY_OAKS_ESTUARY_ID, "Grey Oaks Country Club (Estuary Course)", GREY_OAKS_ESTUARY_PARS, GREY_OAKS_ESTUARY_HCS, GREY_OAKS_ESTUARY_TEES,
+          country: "USA",
+          state: "FL",
+          type: "Private",
+          phone: "(239) 263-8421",
+          address: "1600 Estuary Drive, Naples, FL 34105"),
 
         c(REUNION_LEGACY_PALMER_ID, "Reunion Resort (Legacy Course)", REUNION_LEGACY_PALMER_PARS, REUNION_LEGACY_PALMER_HCS,
           REUNION_LEGACY_PALMER_TEES,
