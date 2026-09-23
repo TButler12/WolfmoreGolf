@@ -8676,7 +8676,7 @@ let GREY_OAKS_PALM_TEES: [TeeInfo] = [
 ]
 
 // MARK: - Grey Oaks Country Club (Estuary Course) — Naples, FL
-// Par 72 | Private
+// Par 72 | Lloyd Clifton / Bob Cupp (2002) / Bruce Howard & Tim Liddy (2018) | Private
 
 private let GREY_OAKS_ESTUARY_ID = UUID(uuidString: "D9E0F1A2-B3C4-4957-D7E8-10000000021C")!
 
@@ -19110,6 +19110,7 @@ private enum BuiltIns {
         c(GREY_OAKS_ESTUARY_ID, "Grey Oaks Country Club (Estuary Course)", GREY_OAKS_ESTUARY_PARS, GREY_OAKS_ESTUARY_HCS, GREY_OAKS_ESTUARY_TEES,
           country: "USA",
           state: "FL",
+          architect: "Lloyd Clifton / Bob Cupp / Bruce Howard & Tim Liddy",
           type: "Private",
           phone: "(239) 263-8421",
           address: "1600 Estuary Drive, Naples, FL 34105"),
