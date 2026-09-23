@@ -4,6 +4,40 @@ enum StablefordBaseline: String, Codable {
     case par, bogey
 }
 
+enum StablefordMode: String, Codable {
+    case standard
+    case modified
+}
+
+struct ModifiedStablefordTable: Codable, Equatable {
+    var doubleEagleOrBetter: Int =  8
+    var eagleOrBetter:       Int =  4
+    var birdie:              Int =  2
+    var par:                 Int =  0
+    var bogey:               Int = -1
+    var doubleBogeyOrWorse:  Int = -3
+
+    init(doubleEagleOrBetter: Int = 8, eagleOrBetter: Int = 4, birdie: Int = 2,
+         par: Int = 0, bogey: Int = -1, doubleBogeyOrWorse: Int = -3) {
+        self.doubleEagleOrBetter = doubleEagleOrBetter
+        self.eagleOrBetter       = eagleOrBetter
+        self.birdie              = birdie
+        self.par                 = par
+        self.bogey               = bogey
+        self.doubleBogeyOrWorse  = doubleBogeyOrWorse
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        doubleEagleOrBetter = (try? c.decode(Int.self, forKey: .doubleEagleOrBetter)) ?? 8
+        eagleOrBetter       = (try? c.decode(Int.self, forKey: .eagleOrBetter))       ?? 4
+        birdie              = (try? c.decode(Int.self, forKey: .birdie))              ?? 2
+        par                 = (try? c.decode(Int.self, forKey: .par))                 ?? 0
+        bogey               = (try? c.decode(Int.self, forKey: .bogey))               ?? -1
+        doubleBogeyOrWorse  = (try? c.decode(Int.self, forKey: .doubleBogeyOrWorse))  ?? -3
+    }
+}
+
 enum HammerStyle: String, Codable {
     case doubling  // traditional Wolf: ×2, ×4, ×8...
     case additive  // TGL style: stake grows linearly (+base each tap)
@@ -52,6 +86,8 @@ struct GameData: Codable {
     // Optional so old saves (missing these keys) decode safely; use computed wrappers below.
     var stablefordBaselineOpt: StablefordBaseline? = nil
     var stablefordCountingPlayersOpt: Int? = nil
+    var stablefordModeOpt: StablefordMode?       = nil
+    var modifiedStablefordTable: ModifiedStablefordTable = ModifiedStablefordTable()
     // When true, Stableford rows are co-submitted alongside the primary money format (hybrid).
     var tournamentStablefordEnabled: Bool? = nil
     // Scramble: the team name this scorer is submitting for (nil = not in a scramble tournament).
@@ -307,6 +343,10 @@ extension GameData {
     var stablefordCountingPlayers: Int {
         get { stablefordCountingPlayersOpt ?? 3 }
         mutating set { stablefordCountingPlayersOpt = newValue }
+    }
+    var stablefordMode: StablefordMode {
+        get { stablefordModeOpt ?? .standard }
+        mutating set { stablefordModeOpt = newValue }
     }
 }
 
