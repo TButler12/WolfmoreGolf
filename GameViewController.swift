@@ -1995,21 +1995,32 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             // Pts tab: show absolute strokes (blue) that feed the Stableford net score calculation.
             // Money tab: show delta strokes (red) for the Wolf/Scotch pops system.
             // Net Skins / Team Tee tournaments also use absolute strokes for their handicapping.
+            // In tournaments, show both local-match (red) and full-HC (green) dots side by side.
             let hasStablefordComponent = g.resolvedGameType == .tournament || g.tournamentStablefordEnabled == true
             let isAbsoluteStrokeContext = (hasStablefordComponent && showingStablefordPoints)
                 || (g.tournamentCode != nil && (g.tournamentGameType == "skins" || g.teamTeeSettings?.isEnabled == true))
-            let popsToShow = isAbsoluteStrokeContext ? greenPops : redPops
-            let dotColor: UIColor = isAbsoluteStrokeContext
-                ? .systemBlue
-                : (onAltTee ? .systemOrange : .systemRed)
-            let redDotsStr = popsToShow > 0 ? " " + String(repeating: "•", count: popsToShow) : ""
+            let inTournament = g.tournamentCode != nil
 
-            if !redDotsStr.isEmpty {
+            var dotRuns: [(text: String, color: UIColor)] = []
+            if inTournament {
+                let redStr   = redPops   > 0 ? " " + String(repeating: "•", count: redPops)   : ""
+                let greenStr = greenPops > 0 ? " " + String(repeating: "•", count: greenPops) : ""
+                if !redStr.isEmpty   { dotRuns.append((redStr,   onAltTee ? .systemOrange : .systemRed)) }
+                if !greenStr.isEmpty { dotRuns.append((greenStr, .systemGreen)) }
+            } else {
+                let popsToShow = isAbsoluteStrokeContext ? greenPops : redPops
+                let dotColor: UIColor = isAbsoluteStrokeContext ? .systemBlue : (onAltTee ? .systemOrange : .systemRed)
+                let singleStr = popsToShow > 0 ? " " + String(repeating: "•", count: popsToShow) : ""
+                if !singleStr.isEmpty { dotRuns.append((singleStr, dotColor)) }
+            }
+            let allDotsStr = dotRuns.map { $0.text }.joined()
+
+            if !allDotsStr.isEmpty {
                 // Reserve space for dots at a fixed size, then shrink/truncate name into what's left.
                 // This guarantees dots are always fully visible regardless of name length.
                 let dotPt   = nominalPt * 1.4
                 let dotFont = UIFont.systemFont(ofSize: dotPt)
-                let dotW    = (redDotsStr as NSString).size(withAttributes: [.font: dotFont]).width
+                let dotW    = (allDotsStr as NSString).size(withAttributes: [.font: dotFont]).width
                 let nameW   = max(20, colWidth - dotW)
 
                 var pt = nominalPt
@@ -2040,10 +2051,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     .font: boldMin,
                     .foregroundColor: nameGreen
                 ])
-                combined.append(NSAttributedString(string: redDotsStr, attributes: [
-                    .font: dotFont,
-                    .foregroundColor: dotColor
-                ]))
+                for run in dotRuns {
+                    combined.append(NSAttributedString(string: run.text, attributes: [
+                        .font: dotFont,
+                        .foregroundColor: run.color
+                    ]))
+                }
                 label.attributedText = combined
             } else {
                 label.numberOfLines = 1
@@ -2621,10 +2634,37 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 m.scores[seat][hole] = val
             }
         }
+        if !(tf.text ?? "").isEmpty { tf.layer.borderWidth = 0 }
         //DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
         //    self?.maybePromptForHoleStats()
        // }
     }
+
+    private func showEnterScoresMessage() {
+        let lbl = UILabel()
+        lbl.text = "Enter all scores first"
+        lbl.font = .systemFont(ofSize: 14, weight: .medium)
+        lbl.textColor = .white
+        lbl.backgroundColor = UIColor.systemRed.withAlphaComponent(0.9)
+        lbl.textAlignment = .center
+        lbl.layer.cornerRadius = 8
+        lbl.layer.masksToBounds = true
+        lbl.translatesAutoresizingMaskIntoConstraints = false
+        lbl.alpha = 0
+        view.addSubview(lbl)
+        NSLayoutConstraint.activate([
+            lbl.centerXAnchor.constraint(equalTo: UpdateScores.centerXAnchor),
+            lbl.bottomAnchor.constraint(equalTo: UpdateScores.topAnchor, constant: -6),
+            lbl.widthAnchor.constraint(equalToConstant: 220),
+            lbl.heightAnchor.constraint(equalToConstant: 34)
+        ])
+        UIView.animate(withDuration: 0.2, animations: { lbl.alpha = 1.0 }) { _ in
+            UIView.animate(withDuration: 0.4, delay: 1.1, options: [], animations: { lbl.alpha = 0 }) { _ in
+                lbl.removeFromSuperview()
+            }
+        }
+    }
+
     // MARK: - Quick Help (Long-press)
 
     private struct HelpItem {
@@ -2807,11 +2847,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let isActive = g.playerActivated[safe: seat] ?? true
             let courseH = g.courseHoleIndex(for: h)
             let par     = g.parForHole(courseH, player: seat)
-            // Only show a stored score if the hole was committed this round;
-            // otherwise default to par so stale values from previous rounds don't appear.
-            let committed = g.holeCommitted[safe: h] == true
-            let v = committed ? ((seat < g.scores.count && h < g.scores[seat].count) ? g.scores[seat][h] : nil) : nil
-            scoreFields[s].text = v.map(String.init) ?? String(par)
+            scoreFields[s].layer.borderWidth = 0
+            let v = (seat < g.scores.count && h < g.scores[seat].count) ? g.scores[seat][h] : nil
+            if !scoreFields[s].isFirstResponder {
+                scoreFields[s].text = v.map(String.init) ?? String(par)
+            }
             scoreFields[s].isEnabled = isActive
             scoreFields[s].alpha = isActive ? 1.0 : 0.4
             scoreFields[s].tag = seat
@@ -2872,6 +2912,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     
     @IBAction func previousHoleTapped(_ sender: UIButton) {
+        view.endEditing(true)
         let total = GameManager.shared.currentGame?.totalHoles ?? STANDARD_HOLES
         currentHole = (currentHole - 1 + total) % total
         GameManager.shared.update { $0.hole = currentHole }
@@ -2882,6 +2923,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     @IBAction func nextHoleTapped(_ sender: UIButton) {
+        view.endEditing(true)
         let total = GameManager.shared.currentGame?.totalHoles ?? STANDARD_HOLES
         currentHole = (currentHole + 1) % total
         GameManager.shared.update { $0.hole = currentHole }
@@ -3545,6 +3587,25 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let hole = snap.hole
         guard (0..<snap.totalHoles).contains(hole) else { return }
 
+        // Block commit if any active player has no score entered
+        let valOrder = displayOrder
+        let valTeamSlot = stablefordTeamSlotIndex(for: snap)
+        let valSlots = min(scoreFields.count, MAX_PLAYERS)
+        var missingScore = false
+        for s in 0..<valSlots {
+            if let ts = valTeamSlot, s == ts { continue }
+            let seat = valOrder[safe: s] ?? s
+            guard snap.playerActivated[safe: seat] == true else { continue }
+            if (scoreFields[s].text ?? "").isEmpty {
+                scoreFields[s].layer.borderWidth = 2
+                scoreFields[s].layer.borderColor = UIColor.systemRed.cgColor
+                scoreFields[s].layer.cornerRadius = 6
+                scoreFields[s].layer.masksToBounds = true
+                missingScore = true
+            }
+        }
+        if missingScore { showEnterScoresMessage(); return }
+
         // ✅ use global flag (true = mute double everywhere)
         let umbrellaMuted = (snap.resolvedGameType == .sixPointScotch) ? snap.isUmbrella : false
 
@@ -3855,14 +3916,16 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                             let strokes  = GameManager.shared.absoluteStrokesGiven(playerHC: playerHc, strokeIndex: playerSI)
                             let holePts = GameManager.shared.stablefordPoints(
                                 grossScore: gross, par: playerPar, playerHC: playerHc,
-                                strokeIndex: playerSI, baseline: g.stablefordBaseline) ?? 0
+                                strokeIndex: playerSI, baseline: g.stablefordBaseline,
+                                mode: g.stablefordMode, modifiedTable: g.modifiedStablefordTable) ?? 0
                             let totalPts = range.reduce(0) { sum, h in
                                 guard h < g.scores[seat].count, let sc = g.scores[seat][h] else { return sum }
                                 let p  = g.parForHole(h, player: seat)
                                 let si = g.hcForHole(h, player: seat)
                                 return sum + (GameManager.shared.stablefordPoints(
                                     grossScore: sc, par: p, playerHC: playerHc,
-                                    strokeIndex: si, baseline: g.stablefordBaseline) ?? 0)
+                                    strokeIndex: si, baseline: g.stablefordBaseline,
+                                    mode: g.stablefordMode, modifiedTable: g.modifiedStablefordTable) ?? 0)
                             }
                             playerRows.append(SFPlayerRow(seat: seat, name: name, gross: gross,
                                 strokes: strokes, holePts: holePts, totalPts: totalPts, playerHc: playerHc))
@@ -5014,7 +5077,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             let gross   = (seat < g.scores.count) ? g.scores[seat][hole] : nil
             let pts = GameManager.shared.stablefordPoints(
                 grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
-                baseline: g.stablefordBaseline
+                baseline: g.stablefordBaseline,
+                mode: g.stablefordMode, modifiedTable: g.modifiedStablefordTable
             ) ?? 0
             setMoneyField(playerMoneyFields[s], to: pts)
             playerMoneyFields[s].tag = seat
@@ -5688,7 +5752,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             tnCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
             }
-            tnCfg.title = "Tournament"
+            tnCfg.title = "Join Tournament"
             let tournamentBtn = UIButton(configuration: tnCfg)
             tournamentBtn.addTarget(self, action: #selector(tournamentAttachTapped), for: .touchUpInside)
 
