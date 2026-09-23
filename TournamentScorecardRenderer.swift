@@ -92,7 +92,8 @@ final class TournamentScorecardRenderer {
                 let si    = game.courseHCToPass[safe: h] ?? (h + 1)
                 let gross = (seat < game.scores.count) ? game.scores[seat][h] : nil
                 return gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
-                                           baseline: game.stablefordBaseline)
+                                           baseline: game.stablefordBaseline,
+                                           mode: game.stablefordMode, modifiedTable: game.modifiedStablefordTable)
             }
             let gross: [Int?] = (0..<STANDARD_HOLES).map { h in
                 guard filledHoles.contains(h) else { return nil }

@@ -630,7 +630,11 @@ final class SupabaseService {
         stablefordBaseline: String? = nil,
         stablefordTeamCount: Int? = nil,
         stablefordEnabled: Bool? = nil,
-        teamTeeSettings: TeamTeeSettings? = nil
+        stablefordMode: String? = nil,
+        modifiedSfTable: ModifiedStablefordTable? = nil,
+        teamTeeSettings: TeamTeeSettings? = nil,
+        wolfVariant: String? = nil,
+        wolfStake: Double? = nil
     ) async throws -> TournamentRecord {
         let code = generateCode()
         var payload: [String: AnyJSON] = [
@@ -647,6 +651,17 @@ final class SupabaseService {
         if let b = stablefordBaseline { payload["stableford_baseline"] = AnyJSON.string(b) }
         if let t = stablefordTeamCount { payload["stableford_team_count"] = AnyJSON.double(Double(t)) }
         if let se = stablefordEnabled, se { payload["stableford_enabled"] = AnyJSON.bool(true) }
+        if let m = stablefordMode, m == "modified" {
+            payload["stableford_mode"] = AnyJSON.string(m)
+            if let t = modifiedSfTable {
+                payload["modified_sf_double_eagle"] = AnyJSON.integer(t.doubleEagleOrBetter)
+                payload["modified_sf_eagle"]        = AnyJSON.integer(t.eagleOrBetter)
+                payload["modified_sf_birdie"]       = AnyJSON.integer(t.birdie)
+                payload["modified_sf_par"]          = AnyJSON.integer(t.par)
+                payload["modified_sf_bogey"]        = AnyJSON.integer(t.bogey)
+                payload["modified_sf_double_bogey"] = AnyJSON.integer(t.doubleBogeyOrWorse)
+            }
+        }
         if let tt = teamTeeSettings, tt.isEnabled {
             payload["team_tee_enabled"]     = .bool(true)
             payload["team_tee_count_mode"]  = .string(tt.countMode.rawValue)
@@ -655,6 +670,8 @@ final class SupabaseService {
             payload["team_tee_par4_count"]  = .integer(tt.par4Count)
             payload["team_tee_par5_count"]  = .integer(tt.par5Count)
         }
+        if let variant = wolfVariant { payload["wolf_variant"] = .string(variant) }
+        if let ws = wolfStake        { payload["wolf_stake"]   = .double(ws) }
 
         let response: PostgrestResponse<TournamentRecord> = try await client
             .from("tournaments")

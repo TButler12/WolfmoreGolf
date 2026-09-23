@@ -157,7 +157,8 @@ private enum GameContextBuilder {
                 let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
                 let strokes = gm.absoluteStrokesGiven(playerHC: hc, strokeIndex: si)
                 let pts = gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
-                                              baseline: g.stablefordBaseline) ?? 0
+                                              baseline: g.stablefordBaseline,
+                                              mode: g.stablefordMode, modifiedTable: g.modifiedStablefordTable) ?? 0
                 allPts.append(pts)
                 let grossStr = gross.map(String.init) ?? "–"
                 let netStr   = gross.map { "\($0 - strokes)" } ?? "–"

@@ -150,7 +150,8 @@ final class TournamentSummaryViewController: UIViewController {
                 let gross = (seat < game.scores.count) ? game.scores[seat][hole] : nil
                 if let pts = gm.stablefordPoints(
                     grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
-                    baseline: game.stablefordBaseline
+                    baseline: game.stablefordBaseline,
+                    mode: game.stablefordMode, modifiedTable: game.modifiedStablefordTable
                 ) {
                     pointsPerHole[hole] = pts
                     total += pts
@@ -452,7 +453,8 @@ extension RoundStore {
                 let si    = g.courseHCToPass[safe: hole] ?? (hole + 1)
                 let gross = (seat < g.scores.count) ? g.scores[seat][hole] : nil
                 let pts   = gm.stablefordPoints(grossScore: gross, par: par, playerHC: hc, strokeIndex: si,
-                                                baseline: g.stablefordBaseline) ?? 0
+                                                baseline: g.stablefordBaseline,
+                                                mode: g.stablefordMode, modifiedTable: g.modifiedStablefordTable) ?? 0
                 ptsPerHole[hole] = pts
                 total += pts
             }

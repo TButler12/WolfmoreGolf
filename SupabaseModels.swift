@@ -249,6 +249,13 @@ struct TournamentRecord: Codable {
     let stablefordTeamCount: Int?      // 2, 3, or 4 — best-N scores count per hole
     // When true, Stableford rows are submitted alongside the primary money format (hybrid mode).
     let stablefordEnabled: Bool?
+    let stablefordMode: String?          // "standard" or "modified" (nil = standard)
+    let modifiedSfDoubleEagle: Int?
+    let modifiedSfDoubleBogey: Int?
+    let modifiedSfBogey:       Int?
+    let modifiedSfPar:         Int?
+    let modifiedSfBirdie:      Int?
+    let modifiedSfEagle:       Int?
     // Wolf-specific organizer settings
     let wolfVariant: String?    // "6pt" | "2pt" | "lowball"
     let pressStyle: String?     // "doubling" | "additive"
@@ -276,6 +283,13 @@ struct TournamentRecord: Codable {
         case stablefordBaseline  = "stableford_baseline"
         case stablefordTeamCount = "stableford_team_count"
         case stablefordEnabled   = "stableford_enabled"
+        case stablefordMode        = "stableford_mode"
+        case modifiedSfDoubleEagle = "modified_sf_double_eagle"
+        case modifiedSfDoubleBogey = "modified_sf_double_bogey"
+        case modifiedSfBogey       = "modified_sf_bogey"
+        case modifiedSfPar         = "modified_sf_par"
+        case modifiedSfBirdie      = "modified_sf_birdie"
+        case modifiedSfEagle       = "modified_sf_eagle"
         case wolfVariant         = "wolf_variant"
         case pressStyle          = "press_style"
         case hammerStyle         = "hammer_style"

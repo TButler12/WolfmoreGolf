@@ -33,6 +33,9 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private weak var teamTeeSwitch: UISwitch?
     private weak var teamTeeConfigureButton: UIButton?
     private weak var skinsCarryoverSegment: UISegmentedControl?
+    private weak var sfModeSegment: UISegmentedControl?
+    private weak var sfModifiedSettingsStack: UIStackView?
+    private var sfSettingsStepperValues: [Int: Int] = [0: 8, 1: 4, 2: 2, 3: 0, 4: -1, 5: -3]
     private var scrollView: UIScrollView!
     private var contentStack: UIStackView!
 
@@ -82,6 +85,9 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         }
 
         refreshCourseLabel()
+        if GameManager.shared.currentGame?.tournamentCode != nil {
+            changeCourseButton.isHidden = true
+        }
         refreshUmbrellaButtonUI()
         installWolfScoringSegment()
         installPressStyleSegment()
@@ -90,6 +96,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         refreshMatchPlayUI()
         installTeamTeeSection()
         installSkinsCarryoverSection()
+        installModifiedStablefordSection()
         installGoLiveButton()
         NotificationCenter.default.addObserver(self, selector: #selector(refreshGoLiveButton), name: .reloadUI, object: nil)
         saveButton.configuration = wmStyledButton(title: "Save", style: .primary)
@@ -150,14 +157,30 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         contentStack = main
 
         // Stake section
-        let stakeField = UITextField()
-        stakeField.borderStyle = .roundedRect
-        stakeField.font = UIFont.preferredFont(forTextStyle: .body)
-        stakeField.adjustsFontForContentSizeCategory = true
-        stakeField.translatesAutoresizingMaskIntoConstraints = false
-        stakeField.heightAnchor.constraint(equalToConstant: 44).isActive = true
-        baseStakeField = stakeField
-        main.addArrangedSubview(vSection("Base Stake ($)", body: stakeField))
+        let g0 = GameManager.shared.currentGame
+        let stakeInTournament = g0?.tournamentCode != nil && g0?.tournamentGameType == "wolf"
+        if stakeInTournament {
+            let info = UILabel()
+            info.numberOfLines = 0
+            info.font = .preferredFont(forTextStyle: .footnote)
+            info.textColor = .secondaryLabel
+            let stakeVal = g0?.baseGameStake ?? 2
+            info.text = "Set by tournament organizer — $\(stakeVal) per hole"
+            main.addArrangedSubview(vSection("Base Stake", body: info))
+            let dummy = UITextField()
+            dummy.text = String(stakeVal)
+            dummy.isHidden = true
+            baseStakeField = dummy
+        } else {
+            let stakeField = UITextField()
+            stakeField.borderStyle = .roundedRect
+            stakeField.font = UIFont.preferredFont(forTextStyle: .body)
+            stakeField.adjustsFontForContentSizeCategory = true
+            stakeField.translatesAutoresizingMaskIntoConstraints = false
+            stakeField.heightAnchor.constraint(equalToConstant: 44).isActive = true
+            baseStakeField = stakeField
+            main.addArrangedSubview(vSection("Base Stake ($)", body: stakeField))
+        }
 
         // Umbrella button
         let umbrella = UIButton(type: .system)
@@ -246,50 +269,70 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Wolf Scoring segment
 
     private func installWolfScoringSegment() {
-        let header = sectionHeader("Wolf Scoring Options")
+        let g = GameManager.shared.currentGame
+        let inTournament = g?.tournamentCode != nil
 
-        let segment = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "LowBall", "Match Play"])
-        segment.addTarget(self, action: #selector(wolfScoringChanged(_:)), for: .valueChanged)
+        var subviews: [UIView] = [sectionHeader("Wolf Scoring Options")]
 
-        segment.backgroundColor = .systemGray6
-        segment.selectedSegmentTintColor = .wolfMoreGreen
-        segment.setTitleTextAttributes([
-            .foregroundColor: UIColor.secondaryLabel,
-            .font: UIFont.systemFont(ofSize: 13, weight: .regular)
-        ], for: .normal)
-        segment.setTitleTextAttributes([
-            .foregroundColor: UIColor.white,
-            .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
-        ], for: .selected)
-        segment.layer.borderColor = UIColor.systemGray4.cgColor
-        segment.layer.borderWidth = 1
-
-        if let g = GameManager.shared.currentGame {
-            switch g.resolvedGameType {
-            case .sixPointScotch: segment.selectedSegmentIndex = 0
-            case .wolf:           segment.selectedSegmentIndex = 1
-            case .wolfLowBall:    segment.selectedSegmentIndex = 2
-            case .matchPlay:      segment.selectedSegmentIndex = 3
-            case .fourball:       segment.selectedSegmentIndex = 3
-            case .bestBall:       segment.selectedSegmentIndex = 3
-            case .hammer:         segment.selectedSegmentIndex = 0
-            case .tournament:     break
+        if inTournament {
+            let info = UILabel()
+            info.numberOfLines = 0
+            info.font = .preferredFont(forTextStyle: .footnote)
+            info.textColor = .secondaryLabel
+            let variantName: String
+            switch g?.resolvedGameType {
+            case .wolf:        variantName = "Wolf 2pt"
+            case .wolfLowBall: variantName = "LowBall"
+            case .matchPlay:   variantName = "Match Play"
+            default:           variantName = "6-Point Scotch"
             }
-            // Disable Match Play for odd player counts (teams need equal sides)
-            let activePlayers = g.playerNames.enumerated()
-                .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-                .count
-            if activePlayers % 2 != 0 { segment.setEnabled(false, forSegmentAt: 3) }
+            info.text = "Set by tournament organizer — \(variantName)"
+            subviews.append(info)
+        } else {
+            let segment = UISegmentedControl(items: ["6-Point", "Wolf 2pt", "LowBall", "Match Play"])
+            segment.addTarget(self, action: #selector(wolfScoringChanged(_:)), for: .valueChanged)
+
+            segment.backgroundColor = .systemGray6
+            segment.selectedSegmentTintColor = .wolfMoreGreen
+            segment.setTitleTextAttributes([
+                .foregroundColor: UIColor.secondaryLabel,
+                .font: UIFont.systemFont(ofSize: 13, weight: .regular)
+            ], for: .normal)
+            segment.setTitleTextAttributes([
+                .foregroundColor: UIColor.white,
+                .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
+            ], for: .selected)
+            segment.layer.borderColor = UIColor.systemGray4.cgColor
+            segment.layer.borderWidth = 1
+
+            if let g {
+                switch g.resolvedGameType {
+                case .sixPointScotch: segment.selectedSegmentIndex = 0
+                case .wolf:           segment.selectedSegmentIndex = 1
+                case .wolfLowBall:    segment.selectedSegmentIndex = 2
+                case .matchPlay:      segment.selectedSegmentIndex = 3
+                case .fourball:       segment.selectedSegmentIndex = 3
+                case .bestBall:       segment.selectedSegmentIndex = 3
+                case .hammer:         segment.selectedSegmentIndex = 0
+                case .tournament:     break
+                }
+                // Disable Match Play for odd player counts (teams need equal sides)
+                let activePlayers = g.playerNames.enumerated()
+                    .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                    .count
+                if activePlayers % 2 != 0 { segment.setEnabled(false, forSegmentAt: 3) }
+            }
+
+            subviews.append(segment)
+            wolfScoringSegment = segment
         }
 
-        let wolfSection = UIStackView(arrangedSubviews: [header, segment])
+        let wolfSection = UIStackView(arrangedSubviews: subviews)
         wolfSection.axis = .vertical
         wolfSection.spacing = 8
 
         let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
         contentStack.insertArrangedSubview(wolfSection, at: insertIndex)
-
-        wolfScoringSegment = segment
     }
 
     @objc private func wolfScoringChanged(_ sender: UISegmentedControl) {
@@ -864,7 +907,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 let modeStr: String
                 switch tt.countMode {
                 case .fixed: modeStr = "Fixed, count \(tt.fixedCount)"
-                case .byPar: modeStr = "By Par (3s:\(tt.par3Count) 4s:\(tt.par4Count) 5s:\(tt.par5Count))"
+                case .byPar: modeStr = "\(tt.par3Count)-\(tt.par4Count)-\(tt.par5Count) by par"
                 }
                 info.text = "Set by tournament organizer — \(modeStr)"
             } else {
@@ -952,6 +995,126 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
         let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
         contentStack.insertArrangedSubview(section, at: insertIndex)
+    }
+
+    // MARK: - Modified Stableford Section
+
+    private func installModifiedStablefordSection() {
+        let g = GameManager.shared.currentGame
+        let isStablefordActive = g?.gameType == .tournament
+            || g?.tournamentGameType == "stableford"
+            || g?.tournamentStablefordEnabled == true
+        guard isStablefordActive else { return }
+
+        let inTournament = g?.tournamentCode != nil
+        var subviews: [UIView] = [sectionHeader("Stableford Scoring Mode")]
+
+        if inTournament {
+            let info = UILabel()
+            info.numberOfLines = 0
+            info.font = .preferredFont(forTextStyle: .footnote)
+            info.textColor = .secondaryLabel
+            let mode = g?.stablefordMode ?? .standard
+            if mode == .modified, let t = g.flatMap({ Optional($0.modifiedStablefordTable) }) {
+                info.text = "Set by tournament organizer — Modified: Dbl Eagle+ = \(sfPtStr(t.doubleEagleOrBetter)), Eagle = \(sfPtStr(t.eagleOrBetter)), Birdie = \(sfPtStr(t.birdie)), Par = \(sfPtStr(t.par)), Bogey = \(sfPtStr(t.bogey)), Double+ = \(sfPtStr(t.doubleBogeyOrWorse))"
+            } else {
+                info.text = "Set by tournament organizer — Standard Stableford"
+            }
+            subviews.append(info)
+        } else {
+            let seg = UISegmentedControl(items: ["Standard", "Modified"])
+            seg.selectedSegmentIndex = (g?.stablefordMode == .modified) ? 1 : 0
+            seg.addTarget(self, action: #selector(sfModeSegmentChanged(_:)), for: .valueChanged)
+            sfModeSegment = seg
+            subviews.append(seg)
+
+            let modStack = buildModifiedSFStack()
+            sfModifiedSettingsStack = modStack
+            modStack.isHidden = (g?.stablefordMode != .modified)
+            subviews.append(modStack)
+        }
+
+        let section = UIStackView(arrangedSubviews: subviews)
+        section.axis = .vertical
+        section.spacing = 8
+        let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
+        contentStack.insertArrangedSubview(section, at: insertIndex)
+    }
+
+    private func sfPtStr(_ v: Int) -> String { v > 0 ? "+\(v)" : "\(v)" }
+
+    @objc private func sfModeSegmentChanged(_ seg: UISegmentedControl) {
+        let isModified = seg.selectedSegmentIndex == 1
+        sfModifiedSettingsStack?.isHidden = !isModified
+        GameManager.shared.update { g in
+            g.stablefordMode = isModified ? .modified : .standard
+        }
+    }
+
+    @objc private func sfSettingsStepperChanged(_ stepper: UIStepper) {
+        let v = Int(stepper.value)
+        sfSettingsStepperValues[stepper.tag] = v
+        if let row = stepper.superview as? UIStackView,
+           let lbl = row.arrangedSubviews.compactMap({ $0 as? UILabel }).first(where: { $0.tag == stepper.tag + 100 }) {
+            lbl.text = sfPtStr(v)
+            lbl.textColor = v >= 0 ? .systemGreen : .systemRed
+        }
+        GameManager.shared.update { g in
+            var t = g.modifiedStablefordTable
+            switch stepper.tag {
+            case 0: t.doubleEagleOrBetter = v
+            case 1: t.eagleOrBetter       = v
+            case 2: t.birdie              = v
+            case 3: t.par                 = v
+            case 4: t.bogey               = v
+            case 5: t.doubleBogeyOrWorse  = v
+            default: break
+            }
+            g.modifiedStablefordTable = t
+        }
+    }
+
+    private func buildModifiedSFStack() -> UIStackView {
+        let g = GameManager.shared.currentGame
+        let t = g?.modifiedStablefordTable ?? ModifiedStablefordTable()
+        let labels = ["Double Eagle+", "Eagle", "Birdie", "Par", "Bogey", "Double Bogey+"]
+        let values = [t.doubleEagleOrBetter, t.eagleOrBetter, t.birdie, t.par, t.bogey, t.doubleBogeyOrWorse]
+        sfSettingsStepperValues = Dictionary(uniqueKeysWithValues: zip(0..<6, values))
+        let rows = (0..<6).map { i in makeSFSettingsStepperRow(label: labels[i], value: values[i], tag: i) }
+        let stack = UIStackView(arrangedSubviews: rows)
+        stack.axis    = .vertical
+        stack.spacing = 10
+        return stack
+    }
+
+    private func makeSFSettingsStepperRow(label text: String, value: Int, tag: Int) -> UIView {
+        let nameLabel = UILabel()
+        nameLabel.text = text
+        nameLabel.font = .systemFont(ofSize: 14)
+        nameLabel.textColor = .secondaryLabel
+        nameLabel.setContentHuggingPriority(.required, for: .horizontal)
+
+        let valueLabel = UILabel()
+        valueLabel.text = sfPtStr(value)
+        valueLabel.font = .monospacedDigitSystemFont(ofSize: 15, weight: .semibold)
+        valueLabel.textColor = value >= 0 ? .systemGreen : .systemRed
+        valueLabel.textAlignment = .center
+        valueLabel.tag = tag + 100
+        valueLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 40).isActive = true
+
+        let stepper = UIStepper()
+        stepper.minimumValue = -10
+        stepper.maximumValue = 10
+        stepper.stepValue = 1
+        stepper.value = Double(value)
+        stepper.tag = tag
+        stepper.addTarget(self, action: #selector(sfSettingsStepperChanged(_:)), for: .valueChanged)
+
+        let row = UIStackView(arrangedSubviews: [nameLabel, valueLabel, stepper])
+        row.axis      = .horizontal
+        row.spacing   = 8
+        row.alignment = .center
+        return row
     }
 
     @objc private func skinsCarryoverChanged(_ seg: UISegmentedControl) {
@@ -1061,6 +1224,16 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func saveSettings() {
+        let inWolfTournament = GameManager.shared.currentGame?.tournamentCode != nil
+            && GameManager.shared.currentGame?.tournamentGameType == "wolf"
+
+        if inWolfTournament {
+            GameManager.shared.update { g in g.isUmbrella = umbrellaMuted }
+            GameManager.shared.saveCurrent()
+            navigationController?.popViewController(animated: true)
+            return
+        }
+
         let clean = (baseStakeField.text ?? "")
             .replacingOccurrences(of: "$", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
