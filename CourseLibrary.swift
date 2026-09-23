@@ -8620,10 +8620,9 @@ let ISLEWORTH_GCC_TEES: [TeeInfo] = [
 // MARK: - Innisbrook Resort — Palm Harbor, FL
 // Designed by Larry Packard | Resort
 
-private let INNISBROOK_SOUTH_ID      = UUID(uuidString: "B1C2D3E4-F5A6-4179-B9C0-100000000214")!
-private let INNISBROOK_COPPERHEAD_ID = UUID(uuidString: "C2D3E4F5-A6B7-4280-C0D1-100000000215")!
-private let INNISBROOK_ISLAND_ID     = UUID(uuidString: "D3E4F5A6-B7C8-4391-D1E2-100000000216")!
-private let INNISBROOK_NORTH_ID      = UUID(uuidString: "E4F5A6B7-C8D9-4402-E2F3-100000000217")!
+private let INNISBROOK_SOUTH_ID  = UUID(uuidString: "B1C2D3E4-F5A6-4179-B9C0-100000000214")!
+private let INNISBROOK_ISLAND_ID = UUID(uuidString: "D3E4F5A6-B7C8-4391-D1E2-100000000216")!
+private let INNISBROOK_NORTH_ID  = UUID(uuidString: "E4F5A6B7-C8D9-4402-E2F3-100000000217")!
 
 // South — par 71
 let INNISBROOK_SOUTH_PARS: [Int] = [
@@ -8637,21 +8636,6 @@ let INNISBROOK_SOUTH_HCS: [Int] = [
 let INNISBROOK_SOUTH_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6620, rating: 71.2, slope: 125),
     TeeInfo(teeName: "Green", yardage: 6340, rating: 68.8, slope: 122)
-]
-
-// Copperhead — par 71
-let INNISBROOK_COPPERHEAD_PARS: [Int] = [
-    5,4,4,3,5,4,4,3,4,   // Front 9 — OUT 36
-    4,5,4,3,5,3,4,4,3    // Back 9  — IN  35
-]
-let INNISBROOK_COPPERHEAD_HCS: [Int] = [
-    5,11,7,17,1,3,13,15,9,
-    8,6,12,18,2,14,4,16,10
-]
-let INNISBROOK_COPPERHEAD_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Black", yardage: 7209, rating: 75.6, slope: 144),
-    TeeInfo(teeName: "Green", yardage: 6624, rating: 73.0, slope: 138),
-    TeeInfo(teeName: "White", yardage: 6243, rating: 71.2, slope: 134)
 ]
 
 // Island — par 72
@@ -19085,15 +19069,6 @@ private enum BuiltIns {
           isWolfApproved: false),
 
         c(INNISBROOK_SOUTH_ID, "Innisbrook Resort (South Course)", INNISBROOK_SOUTH_PARS, INNISBROOK_SOUTH_HCS, INNISBROOK_SOUTH_TEES,
-          country: "USA",
-          state: "FL",
-          architect: "Larry Packard",
-          type: "Resort",
-          phone: "(866) 951-4216",
-          website: "https://www.innisbrookgolfresort.com",
-          address: "36750 US Hwy 19 N, Palm Harbor, FL 34684"),
-
-        c(INNISBROOK_COPPERHEAD_ID, "Innisbrook Resort (Copperhead Course)", INNISBROOK_COPPERHEAD_PARS, INNISBROOK_COPPERHEAD_HCS, INNISBROOK_COPPERHEAD_TEES,
           country: "USA",
           state: "FL",
           architect: "Larry Packard",
