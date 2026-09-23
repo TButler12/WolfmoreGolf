@@ -7847,6 +7847,23 @@ let HARTFORD_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 6519, rating: 71.2, slope: 122)
 ]
 
+// MARK: - Hop Meadow Country Club — Simsbury, CT
+// Par 72 | Designed by Geoffrey Cornish | Private
+
+private let HOP_MEADOW_CC_ID = UUID(uuidString: "FAB0C1D2-E3F4-4267-A7B8-100000000212")!
+
+let HOP_MEADOW_CC_PARS: [Int] = [
+    4,5,3,4,4,5,4,4,3,   // Front 9 — OUT 36
+    4,5,3,4,4,4,4,3,5    // Back 9  — IN  36
+]
+let HOP_MEADOW_CC_HCS: [Int] = [
+    7,9,17,5,11,13,1,3,15,
+    10,2,16,12,8,4,18,14,6
+]
+let HOP_MEADOW_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6915, rating: 74.2, slope: 136)
+]
+
 // MARK: - Great River Golf Club — Milford, CT
 // Par 72 | Designed by Tommy Fazio | Semi-Private
 
@@ -18480,6 +18497,14 @@ private enum BuiltIns {
           type: "Private",
           phone: "(203) 248-4488",
           address: "160 Hartford Tpke, Hamden, CT 06517"),
+
+        c(HOP_MEADOW_CC_ID, "Hop Meadow Country Club", HOP_MEADOW_CC_PARS, HOP_MEADOW_CC_HCS, HOP_MEADOW_CC_TEES,
+          country: "USA",
+          state: "CT",
+          architect: "Geoffrey Cornish",
+          type: "Private",
+          phone: "(860) 658-7623",
+          address: "85 Firetown Road, Simsbury, CT 06070"),
 
         c(ROUND_HILL_CLUB_ID, "Round Hill Club", ROUND_HILL_CLUB_PARS, ROUND_HILL_CLUB_HCS, ROUND_HILL_CLUB_TEES,
           country: "USA",
