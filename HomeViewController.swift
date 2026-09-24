@@ -573,12 +573,13 @@ final class ViewController: UIViewController,
     @objc private func tournamentContinueTapped() {
         guard let code = GameManager.shared.tournamentGameData?.tournamentCode, !code.isEmpty else { return }
 
+        // applyTournamentJoin writes to the tournament slot only — local round is untouched.
+        // No save dialog needed on this path.
         let spinner = UIAlertController(title: nil, message: "Loading tournament…", preferredStyle: .alert)
         present(spinner, animated: true)
 
         Task { [weak self] in
             guard let self else { return }
-
             let record: TournamentRecord
             do {
                 record = try await SupabaseService.shared.fetchTournament(code: code)
@@ -595,19 +596,12 @@ final class ViewController: UIViewController,
                 }
                 return
             }
-
             await MainActor.run {
-                let gameID = GameManager.uncountedProgressForTournamentJoin(record: record)
-                let doJoin: () -> Void = {
-                    GameManager.applyTournamentJoin(record: record)
-                    spinner.dismiss(animated: false) {
-                        let sb = UIStoryboard(name: "Main", bundle: nil)
-                        let game = sb.instantiateViewController(withIdentifier: "GameViewController")
-                        self.navigationController?.pushViewController(game, animated: true)
-                    }
-                }
-                if !self.presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doJoin) {
-                    doJoin()
+                GameManager.applyTournamentJoin(record: record)
+                spinner.dismiss(animated: false) {
+                    let sb = UIStoryboard(name: "Main", bundle: nil)
+                    let game = sb.instantiateViewController(withIdentifier: "GameViewController")
+                    self.navigationController?.pushViewController(game, animated: true)
                 }
             }
         }

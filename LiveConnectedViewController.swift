@@ -318,14 +318,7 @@ final class LiveConnectedViewController: UITableViewController {
     }
 
     private func applyJoinedTournament(record: TournamentRecord) {
-        let gameID = GameManager.uncountedProgressForTournamentJoin(record: record)
-        let doJoin: () -> Void = { [weak self] in
-            guard let self else { return }
-            self.performJoinedTournament(record: record)
-        }
-        if !presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doJoin) {
-            doJoin()
-        }
+        performJoinedTournament(record: record)
     }
 
     private func performJoinedTournament(record: TournamentRecord) {

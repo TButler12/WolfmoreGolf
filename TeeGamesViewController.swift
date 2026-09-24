@@ -248,18 +248,11 @@ final class TeeGamesViewController: UIViewController {
     }
 
     private func applyJoinedTournament(record: TournamentRecord) {
-        let gameID = GameManager.uncountedProgressForTournamentJoin(record: record)
-        let doJoin: () -> Void = { [weak self] in
-            guard let self else { return }
-            self.setupJoinedGame(record: record)
-            if record.gameType == "scramble" {
-                self.showScrambleTeamNameEntry(tournamentCode: record.code)
-            } else {
-                self.dismiss(animated: true)
-            }
-        }
-        if !presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doJoin) {
-            doJoin()
+        setupJoinedGame(record: record)
+        if record.gameType == "scramble" {
+            showScrambleTeamNameEntry(tournamentCode: record.code)
+        } else {
+            dismiss(animated: true)
         }
     }
 

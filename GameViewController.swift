@@ -5419,24 +5419,17 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     }
 
     private func applyTournamentAttach(record: TournamentRecord) {
-        let gameID = GameManager.uncountedProgressForTournamentJoin(record: record)
-        let doJoin: () -> Void = { [weak self] in
-            guard let self else { return }
-            GameManager.applyTournamentJoin(record: record)
-            // Re-seed with the now-correct tournament course. viewDidLoad already seeded with the
-            // pre-join course, so any score that was par on the old course but should be a different
-            // par on the tournament course needs to be re-evaluated. Only fills nil slots, so scores
-            // already entered by the player are preserved. Stableford skipped: nil = unplayed there.
-            if GameManager.shared.currentGame?.resolvedGameType != .tournament {
-                GameManager.shared.seedScoresWithParsForActivePlayers()
-            }
-            self.applyGameTypeUI()
-            self.paintEverythingForCurrentHole()
-            self.applyTournamentAttachPostJoin(record: record)
+        GameManager.applyTournamentJoin(record: record)
+        // Re-seed with the now-correct tournament course. viewDidLoad already seeded with the
+        // pre-join course, so any score that was par on the old course but should be a different
+        // par on the tournament course needs to be re-evaluated. Only fills nil slots, so scores
+        // already entered by the player are preserved. Stableford skipped: nil = unplayed there.
+        if GameManager.shared.currentGame?.resolvedGameType != .tournament {
+            GameManager.shared.seedScoresWithParsForActivePlayers()
         }
-        if !presentSaveRoundDialogIfNeeded(gameID: gameID, onConfirmed: doJoin) {
-            doJoin()
-        }
+        applyGameTypeUI()
+        paintEverythingForCurrentHole()
+        applyTournamentAttachPostJoin(record: record)
     }
 
     private func applyTournamentAttachPostJoin(record: TournamentRecord) {
