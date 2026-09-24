@@ -1390,12 +1390,12 @@ let MOORTOWN_GC_PARS: [Int] = [
 ]
 
 let MOORTOWN_GC_HCS: [Int] = [
-    1,2,3,4,5,6,7,8,9,
-    10,11,12,13,14,15,16,17,18
+    13,3,5,17,11,1,9,15,7,
+    16,14,6,2,12,10,4,18,8
 ]
 
 let MOORTOWN_GC_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Blue", yardage: 7301, rating: 70.0, slope: 113)
+    TeeInfo(teeName: "Black", yardage: 7001, rating: 74.8, slope: 141)
 ]
 
 // MARK: Carnoustie Golf Links — Carnoustie, Scotland
