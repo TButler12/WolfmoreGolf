@@ -89,7 +89,7 @@ struct GameData: Codable {
     var stablefordBaselineOpt: StablefordBaseline? = nil
     var stablefordCountingPlayersOpt: Int? = nil
     var stablefordModeOpt: StablefordMode?       = nil
-    var modifiedStablefordTable: ModifiedStablefordTable = ModifiedStablefordTable()
+    var modifiedStablefordTable: ModifiedStablefordTable? = nil
     // When true, Stableford rows are co-submitted alongside the primary money format (hybrid).
     var tournamentStablefordEnabled: Bool? = nil
     // Scramble: the team name this scorer is submitting for (nil = not in a scramble tournament).
@@ -171,8 +171,8 @@ struct GameData: Codable {
     // Match Play 36-hole round: plays the same 18-hole course twice back-to-back
     var matchPlay36Holes: Bool = false
     // 9-Hole Match: confined to one half of the course, starting hole determines front/back
-    var isNineHoleMatch: Bool = false
-    var nineHoleStartingHole: Int = 1  // 1-based physical hole (1–18)
+    var isNineHoleMatchOpt: Bool? = nil
+    var nineHoleStartingHoleOpt: Int? = nil
 
     var totalHoles: Int {
         if isNineHoleMatch  { return 9 }
@@ -205,7 +205,7 @@ struct GameData: Codable {
     var hcPlayers: [Int] = Array(repeating: 0, count: MAX_PLAYERS)
     var playerActivated: [Bool] = Array(repeating: false, count: MAX_PLAYERS)
     // Index into course.teeSets; 0 = course default, 1+ = course.teeSets[index-1]
-    var playerTeeSetIndex: [Int] = Array(repeating: 0, count: MAX_PLAYERS)
+    var playerTeeSetIndexOpt: [Int]? = nil
 
     var hole: Int = 0
     var tournamentStartHole: Int = 0  // 0 = front nine (hole 1), 9 = back nine (hole 10)
@@ -349,6 +349,18 @@ extension GameData {
     var stablefordMode: StablefordMode {
         get { stablefordModeOpt ?? .standard }
         mutating set { stablefordModeOpt = newValue }
+    }
+    var isNineHoleMatch: Bool {
+        get { isNineHoleMatchOpt ?? false }
+        mutating set { isNineHoleMatchOpt = newValue }
+    }
+    var nineHoleStartingHole: Int {
+        get { nineHoleStartingHoleOpt ?? 1 }
+        mutating set { nineHoleStartingHoleOpt = newValue }
+    }
+    var playerTeeSetIndex: [Int] {
+        get { playerTeeSetIndexOpt ?? Array(repeating: 0, count: MAX_PLAYERS) }
+        mutating set { playerTeeSetIndexOpt = newValue }
     }
 }
 

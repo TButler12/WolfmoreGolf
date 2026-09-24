@@ -122,7 +122,7 @@ final class StablefordRulesSetupViewController: UIViewController {
         modeSegment.selectedSegmentIndex = isModified ? 1 : 0
         if isModified {
             modifiedStack?.isHidden = false
-            let t = g.modifiedStablefordTable
+            let t = g.modifiedStablefordTable ?? ModifiedStablefordTable()
             sfStepperValues = [0: t.doubleEagleOrBetter, 1: t.eagleOrBetter, 2: t.birdie, 3: t.par, 4: t.bogey, 5: t.doubleBogeyOrWorse]
             updateStepperUI()
             hintLabel?.text = "Points are fully configurable. Negative values allowed."

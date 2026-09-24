@@ -1015,7 +1015,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             info.font = .preferredFont(forTextStyle: .footnote)
             info.textColor = .secondaryLabel
             let mode = g?.stablefordMode ?? .standard
-            if mode == .modified, let t = g.flatMap({ Optional($0.modifiedStablefordTable) }) {
+            if mode == .modified, let t = g.flatMap({ $0.modifiedStablefordTable }) {
                 info.text = "Set by tournament organizer — Modified: Dbl Eagle+ = \(sfPtStr(t.doubleEagleOrBetter)), Eagle = \(sfPtStr(t.eagleOrBetter)), Birdie = \(sfPtStr(t.birdie)), Par = \(sfPtStr(t.par)), Bogey = \(sfPtStr(t.bogey)), Double+ = \(sfPtStr(t.doubleBogeyOrWorse))"
             } else {
                 info.text = "Set by tournament organizer — Standard Stableford"
@@ -1060,7 +1060,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             lbl.textColor = v >= 0 ? .systemGreen : .systemRed
         }
         GameManager.shared.update { g in
-            var t = g.modifiedStablefordTable
+            var t = g.modifiedStablefordTable ?? ModifiedStablefordTable()
             switch stepper.tag {
             case 0: t.doubleEagleOrBetter = v
             case 1: t.eagleOrBetter       = v
