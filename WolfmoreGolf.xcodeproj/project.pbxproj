@@ -92,10 +92,6 @@
 		F6A010012FA0000000000AE1 /* WolfActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6A010002FA0000000000AE1 /* WolfActions.swift */; };
 		F6D041842F611C3200CABD08 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = F6D041822F611C3200CABD08 /* Main.storyboard */; };
 		F6D351522EC0313E00CE24F9 /* RulesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D351512EC0313E00CE24F9 /* RulesViewController.swift */; };
-		F6H2P1012FC0000000000HTP /* HowToPlayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6H2P1002FC0000000000HTP /* HowToPlayViewController.swift */; };
-		F6TT01012FC0000000000TM0 /* TeamTeeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6TT01002FC0000000000TM0 /* TeamTeeModel.swift */; };
-		F6TT01012FC0000000000TE0 /* TeamTeeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6TT01002FC0000000000TE0 /* TeamTeeEngine.swift */; };
-		F6TT01012FC0000000000TSV /* TeamTeeSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6TT01002FC0000000000TSV /* TeamTeeSetupViewController.swift */; };
 		F6D3518E2EC1187400CE24F9 /* OwnerSeat.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */; };
 		F6D541682F63B3C40020588F /* NassauViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D541672F63B3C40020588F /* NassauViewController.swift */; };
 		F6D5416A2F646D880020588F /* NassauModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D541692F646D880020588F /* NassauModel.swift */; };
@@ -133,6 +129,10 @@
 		F6E008232F8E62C600763694 /* RoundHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008222F8E62C600763694 /* RoundHistoryStore.swift */; };
 		F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */; };
 		F6E218102F75D25C00A95B52 /* NassauSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */; };
+		F6H2P1012FC0000000000HTP /* HowToPlayViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6H2P1002FC0000000000HTP /* HowToPlayViewController.swift */; };
+		F6TT01012FC0000000000TE0 /* TeamTeeEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6TT01002FC0000000000TE0 /* TeamTeeEngine.swift */; };
+		F6TT01012FC0000000000TM0 /* TeamTeeModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6TT01002FC0000000000TM0 /* TeamTeeModel.swift */; };
+		F6TT01012FC0000000000TSV /* TeamTeeSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6TT01002FC0000000000TSV /* TeamTeeSetupViewController.swift */; };
 		FF06AA07BB08CC09DD10EE11 /* CalcuttaManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE05FF06AA07BB08CC09DD10 /* CalcuttaManagerViewController.swift */; };
 		LC01B2C3D4E5F607182930AA /* LiveConnectedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */; };
 		LP01B2C3D4E5F607182930AF /* LocationPromptViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */; };
@@ -233,10 +233,6 @@
 		F6D041832F611C3200CABD08 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WolfmoreGolf.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6D351512EC0313E00CE24F9 /* RulesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RulesViewController.swift; sourceTree = "<group>"; };
-		F6H2P1002FC0000000000HTP /* HowToPlayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayViewController.swift; sourceTree = "<group>"; };
-		F6TT01002FC0000000000TM0 /* TeamTeeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeModel.swift; sourceTree = "<group>"; };
-		F6TT01002FC0000000000TE0 /* TeamTeeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeEngine.swift; sourceTree = "<group>"; };
-		F6TT01002FC0000000000TSV /* TeamTeeSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeSetupViewController.swift; sourceTree = "<group>"; };
 		F6D3518D2EC1187400CE24F9 /* OwnerSeat.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OwnerSeat.swift; sourceTree = "<group>"; };
 		F6D541672F63B3C40020588F /* NassauViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauViewController.swift; sourceTree = "<group>"; };
 		F6D541692F646D880020588F /* NassauModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauModel.swift; sourceTree = "<group>"; };
@@ -273,6 +269,10 @@
 		F6E008262F8FFDC000763694 /* RemoteMatchesViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteMatchesViewController.swift; sourceTree = "<group>"; };
 		F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauSettingsViewController.swift; sourceTree = "<group>"; };
 		F6F213F02F60F6D700809504 /* WolfmoreGolf.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = WolfmoreGolf.xcodeproj; sourceTree = "<group>"; };
+		F6H2P1002FC0000000000HTP /* HowToPlayViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayViewController.swift; sourceTree = "<group>"; };
+		F6TT01002FC0000000000TE0 /* TeamTeeEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeEngine.swift; sourceTree = "<group>"; };
+		F6TT01002FC0000000000TM0 /* TeamTeeModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeModel.swift; sourceTree = "<group>"; };
+		F6TT01002FC0000000000TSV /* TeamTeeSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeSetupViewController.swift; sourceTree = "<group>"; };
 		F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardViewController.swift; sourceTree = "<group>"; };
 		FF93F31CFC2F49EC8E51DB61 /* RestorePastRoundViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorePastRoundViewController.swift; sourceTree = "<group>"; };
 		LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveConnectedViewController.swift; sourceTree = "<group>"; };
@@ -732,7 +732,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 62;
+				CURRENT_PROJECT_VERSION = 63;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -747,7 +747,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.2;
+				MARKETING_VERSION = 3.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -773,7 +773,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 62;
+				CURRENT_PROJECT_VERSION = 63;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -788,7 +788,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.2;
+				MARKETING_VERSION = 3.0.3;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
