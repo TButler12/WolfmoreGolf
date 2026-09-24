@@ -309,8 +309,13 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
         let editLink = makeEditStakeLink()
         editStakeLinkButton = editLink
-        main.addArrangedSubview(editLink)
-        main.setCustomSpacing(4, after: editLink)
+        let nassauLink = makeLiveNassauLink()
+        let linkRow = UIStackView(arrangedSubviews: [editLink, nassauLink])
+        linkRow.axis = .horizontal
+        linkRow.distribution = .fillEqually
+        linkRow.spacing = 8
+        main.addArrangedSubview(linkRow)
+        main.setCustomSpacing(4, after: linkRow)
 
         main.addArrangedSubview(goBtn)
         main.setCustomSpacing(10, after: goBtn)
@@ -675,6 +680,31 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         return btn
     }
     
+    private func makeLiveNassauLink() -> UIButton {
+        let green = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+        var cfg = UIButton.Configuration.plain()
+        cfg.image = UIImage(systemName: "dot.radiowaves.left.and.right")?
+            .withConfiguration(UIImage.SymbolConfiguration(pointSize: 13, weight: .medium))
+        cfg.imagePadding = 6
+        cfg.imagePlacement = .leading
+        cfg.baseForegroundColor = green
+        cfg.attributedTitle = AttributedString("Remote Nassau", attributes: AttributeContainer([
+            .font: UIFont.systemFont(ofSize: 17, weight: .medium),
+            .foregroundColor: green
+        ]))
+        cfg.contentInsets = .zero
+        let btn = UIButton(configuration: cfg)
+        btn.contentHorizontalAlignment = .center
+        btn.addTarget(self, action: #selector(liveNassauLinkTapped), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        btn.heightAnchor.constraint(greaterThanOrEqualToConstant: 36).isActive = true
+        return btn
+    }
+
+    @objc private func liveNassauLinkTapped() {
+        WolfActions.presentRemoteNassau(from: self)
+    }
+
     @IBAction func gameSettingsTapped(_ sender: UIButton) {
         guard let g = GameManager.shared.currentGame else { return }
 
