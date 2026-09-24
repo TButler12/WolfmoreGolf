@@ -100,9 +100,22 @@ enum WolfActions {
                         games: ["nassau"]
                     )
                     GameManager.shared.update { g in
+                        if g.remoteNassauSideMap == nil {
+                            var seeded: [String: String] = [:]
+                            if let existingSide = g.remoteNassauSide {
+                                for id in g.remoteMatchIds { seeded[id] = existingSide }
+                                if let single = g.remoteMatchId, !g.remoteMatchIds.contains(single) {
+                                    seeded[single] = existingSide
+                                }
+                            }
+                            g.remoteNassauSideMap = seeded
+                        }
                         g.remoteMatchId    = match.id
                         g.remoteNassauSide = "A"
                         if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
+                        var sideMap = g.remoteNassauSideMap ?? [:]
+                        sideMap[match.id] = "A"
+                        g.remoteNassauSideMap = sideMap
                     }
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
                     await MainActor.run {
@@ -160,9 +173,22 @@ enum WolfActions {
                         .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                     let match = try await SupabaseService.shared.joinMatch(code: code, courseB: joinerCourse)
                     GameManager.shared.update { g in
+                        if g.remoteNassauSideMap == nil {
+                            var seeded: [String: String] = [:]
+                            if let existingSide = g.remoteNassauSide {
+                                for id in g.remoteMatchIds { seeded[id] = existingSide }
+                                if let single = g.remoteMatchId, !g.remoteMatchIds.contains(single) {
+                                    seeded[single] = existingSide
+                                }
+                            }
+                            g.remoteNassauSideMap = seeded
+                        }
                         g.remoteMatchId    = match.id
                         g.remoteNassauSide = "B"
                         if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
+                        var sideMap = g.remoteNassauSideMap ?? [:]
+                        sideMap[match.id] = "B"
+                        g.remoteNassauSideMap = sideMap
                     }
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
                     SupabaseService.shared.subscribeToResults(matchId: match.id) { _ in }
@@ -211,7 +237,17 @@ enum WolfActions {
     }
 
     private static func showLiveMatchError(_ error: Error, code: String? = nil, from presenter: UIViewController) {
-        let msg = code.map { "Could not find match with code \($0)." } ?? error.localizedDescription
+        let ns = error as NSError
+        let underlying = ns.userInfo[NSUnderlyingErrorKey] as? NSError
+        print("[LiveMatchError] type=\(type(of: error)) domain=\(ns.domain) code=\(ns.code) underlying=\(underlying.map { "\($0.domain)/\($0.code)" } ?? "nil") desc=\(ns.localizedDescription)")
+
+        func isNetwork(_ e: NSError) -> Bool { e.domain == NSURLErrorDomain }
+        let isOurError     = ns.domain == "WolfmoreGolf"
+        let isNetworkError = isNetwork(ns) || underlying.map(isNetwork) == true
+        let msg: String
+        if isOurError      { msg = error.localizedDescription }
+        else if isNetworkError { msg = "Couldn't connect. Check your signal and try again." }
+        else               { msg = code.map { "Could not find match with code \($0)." } ?? error.localizedDescription }
         let alert = UIAlertController(title: "Live Match Error", message: msg, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
         presenter.present(alert, animated: true)

@@ -70,6 +70,7 @@ final class LiveNassauViewController: UIViewController {
         refreshTimer = nil
         if let id = match?.id {
             SupabaseService.shared.unsubscribeFromHoleScores(matchId: id)
+            SupabaseService.shared.unsubscribeFromRemoteNassauHoles(matchId: id)
         }
     }
 
@@ -135,7 +136,13 @@ final class LiveNassauViewController: UIViewController {
         }
         Task {
             do {
-                let prior = try await SupabaseService.shared.fetchHoleScores(matchId: matchId)
+                let nassau = try await SupabaseService.shared.fetchRemoteNassauHoles(matchId: matchId)
+                let prior: [HoleScoreRecord]
+                if nassau.isEmpty {
+                    prior = try await SupabaseService.shared.fetchHoleScores(matchId: matchId)
+                } else {
+                    prior = nassau.map { $0.toHoleScoreRecord() }
+                }
                 await MainActor.run {
                     self.receivedScores = prior
                     self.rebuildStandings()
@@ -168,10 +175,10 @@ final class LiveNassauViewController: UIViewController {
             self.setStatus(live: true)
         }
 
-        SupabaseService.shared.subscribeToHoleScores(matchId: matchId, onScore: scoreCallback)
+        SupabaseService.shared.subscribeToRemoteNassauHoles(matchId: matchId, onScore: scoreCallback)
         Task {
             try? await Task.sleep(nanoseconds: 500_000_000)
-            SupabaseService.shared.subscribeToHoleScoreUpdates(matchId: matchId, onScore: scoreCallback)
+            SupabaseService.shared.subscribeToRemoteNassauHoleUpdates(matchId: matchId, onScore: scoreCallback)
         }
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { [weak self] in
@@ -257,110 +264,139 @@ final class LiveNassauViewController: UIViewController {
 
     // MARK: - Standings calculation
 
-    // Build a 2-player synthetic GameData for one specific owner/opponent pairing.
-    // Scores from other players in receivedScores are ignored for this pairing.
-    private func buildSyntheticGame(ownerName: String, opponentName: String) -> GameData? {
-        guard !ownerName.isEmpty else { return nil }
-        let ownerLower    = ownerName.lowercased()
-        let opponentLower = opponentName.lowercased()
-
-        var g = GameData()
-        g.playerNames[0]     = ownerName
-        g.playerNames[1]     = opponentName.isEmpty ? "Opponent" : opponentName
-        g.playerActivated[0] = true
-        g.playerActivated[1] = true
-
-        func hcRank(_ s: HoleScoreRecord) -> Int { s.holeHc ?? (s.hole + 1) }
-
-        var ownerScores: [HoleScoreRecord] = []
-        var oppScores:   [HoleScoreRecord] = []
-        for s in receivedScores {
-            guard s.hole >= 0, s.hole < STANDARD_HOLES,
-                  let pn = s.playerName, !pn.isEmpty else { continue }
-            let pnLower = pn.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-            if      pnLower == ownerLower    { ownerScores.append(s) }
-            else if pnLower == opponentLower { oppScores.append(s)   }
+    // Running status from already-computed PairedHole results.
+    // Skips uncommitted holes; +1 per owner win, -1 per opponent win.
+    private func runningStatus(from pairs: [PairedHole]) -> [Int] {
+        var current = 0
+        var result: [Int] = []
+        for ph in pairs {
+            guard ph.hostScore != nil, ph.opponentScore != nil else { continue }
+            current += ph.netResult
+            result.append(current)
         }
-        // Slot-based fallback for Remote Nassau: side A→slot 0, side B→slot 1.
-        // Kicks in when name matching misses a side (e.g. opponent name not yet in match record).
-        if ownerScores.isEmpty || oppScores.isEmpty {
-            // remoteNassauSide is set at create("A")/join("B") time — more reliable than amHost name comparison.
-            let mySide  = GameManager.shared.currentGame?.remoteNassauSide ?? (amHost ? "A" : "B")
-            let mySlot  = mySide == "A" ? 0 : 1
-            let oppSlot = 1 - mySlot
-            let slotOwner = receivedScores.filter { $0.playerSlot == mySlot  && $0.hole >= 0 && $0.hole < STANDARD_HOLES }
-            let slotOpp   = receivedScores.filter { $0.playerSlot == oppSlot && $0.hole >= 0 && $0.hole < STANDARD_HOLES }
-            if ownerScores.isEmpty && !slotOwner.isEmpty { ownerScores = slotOwner }
-            if oppScores.isEmpty   && !slotOpp.isEmpty   { oppScores   = slotOpp   }
-        }
+        return result
+    }
 
-        g.hcPlayers[0] = ownerScores.first?.playerHc ?? 0
-        g.hcPlayers[1] = oppScores.first?.playerHc   ?? 0
+    private struct PressInfo {
+        let startPos: Int    // 1-based overall position (front: 1–9, back: 10–18)
+        let endPos: Int
+        let stake: Double
+        var runningStatus: [Int] = []
+    }
 
-        var holeHCs = Array(repeating: STANDARD_HOLES, count: STANDARD_HOLES)
+    // Matches NassauEngine.buildPressesForSegment: next-hole start, max 3 per segment, no press-on-press.
+    private func detectPresses(
+        pairs: [PairedHole],
+        holeOffset: Int,        // 0 for front, 9 for back
+        segmentEndPos: Int,     // 9 for front, 18 for back
+        trigger: Int,
+        stake: Double
+    ) -> [PressInfo] {
+        let maxPresses = 3
+        var presses: [PressInfo] = []
+        var current = 0
+        var prevAbs = 0
 
-        // Always pair by physical hole number: H1 vs H1, H2 vs H2, etc.
-        for s in ownerScores {
-            guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
-            g.scores[0][s.hole] = s.grossScore
-            holeHCs[s.hole] = hcRank(s)
-        }
-        for s in oppScores {
-            guard s.hole >= 0, s.hole < STANDARD_HOLES else { continue }
-            g.scores[1][s.hole] = s.grossScore
-        }
-        // A hole is committed (counts toward Nassau) only when both players have scored it.
-        for i in 0..<STANDARD_HOLES {
-            g.holeCommitted[i] = g.scores[0][i] != nil && g.scores[1][i] != nil
+        for (idx, ph) in pairs.enumerated() {
+            guard ph.hostScore != nil, ph.opponentScore != nil else { continue }
+            current += ph.netResult
+            let pos1Based  = holeOffset + idx + 1
+            let currentAbs = abs(current)
+
+            if prevAbs < trigger && currentAbs >= trigger && presses.count < maxPresses {
+                let startPos = pos1Based + 1   // next-hole rule
+                if startPos <= segmentEndPos {
+                    presses.append(PressInfo(startPos: startPos, endPos: segmentEndPos, stake: stake))
+                }
+            }
+            prevAbs = currentAbs
         }
 
-        g.course.holeHandicaps = holeHCs
+        return presses.map { p in
+            var info = p
+            let startIdx = max(0, p.startPos - 1 - holeOffset)
+            let endIdx   = min(pairs.count - 1, p.endPos - 1 - holeOffset)
+            if startIdx <= endIdx {
+                info.runningStatus = runningStatus(from: Array(pairs[startIdx...endIdx]))
+            }
+            return info
+        }
+    }
 
-        var state = NassauEngine.makeDefaultState(playerNames: g.playerNames, activeFlags: g.playerActivated)
-        if let stake   = match?.stake                                                     { state.settings.baseStake = stake }
-        if let pm      = match?.pressMode, let mode = NassauPressMode(rawValue: pm)       { state.settings.pressMode = mode }
-        if let trigger = match?.trigger                                                    { state.settings.autoPressTriggerDown = trigger }
-        g.nassauState = state
-        return g
+    // Result text for a segment or press, matching NassauEngine.summarizeSegment.
+    private func segmentResultText(status: [Int], complete: Bool, t1: String, t2: String) -> String {
+        let final = status.last ?? 0
+        if complete {
+            if final > 0 { return "\(t1) won \(final) up" }
+            if final < 0 { return "\(t2) won \(abs(final)) up" }
+            return "Halved"
+        } else {
+            if final > 0 { return "\(t1) \(final) up" }
+            if final < 0 { return "\(t2) \(abs(final)) up" }
+            return "All Square"
+        }
+    }
+
+    // Signed money delta from owner's perspective; 0 when incomplete or tied.
+    private func segmentMoney(status: [Int], complete: Bool, stake: Double) -> Double {
+        guard complete, let final = status.last else { return 0 }
+        if final > 0 { return  stake }
+        if final < 0 { return -stake }
+        return 0
     }
 
     private func buildPairingSection(ownerName: String, opponentName: String) -> PairingSection? {
-        guard let g = buildSyntheticGame(ownerName: ownerName, opponentName: opponentName),
-              var state = g.nassauState else { return nil }
+        let frontPairs = buildPairedHoles(ownerName: ownerName, opponentName: opponentName, front: true)
+        let backPairs  = buildPairedHoles(ownerName: ownerName, opponentName: opponentName, front: false)
+        guard !frontPairs.isEmpty || !backPairs.isEmpty else { return nil }
 
-        NassauEngine.recalculate(state: &state, gameData: g)
+        let frontStatus   = runningStatus(from: frontPairs)
+        let backStatus    = runningStatus(from: backPairs)
+        let overallStatus = runningStatus(from: frontPairs + backPairs)
 
-        let t1 = g.playerNames[0].isEmpty ? "P1" : g.playerNames[0]
-        let t2 = g.playerNames[1].isEmpty ? "P2" : g.playerNames[1]
+        let stake     = match?.stake ?? 1.0
+        let trigger   = match?.trigger ?? 2
+        let pressMode = match.flatMap { NassauPressMode(rawValue: $0.pressMode ?? "") } ?? .auto
 
-        guard let m = state.oneVsOneMatches.first ?? state.twoVsTwoMatches.first else { return nil }
+        let frontCommitted    = frontPairs.filter { $0.hostScore != nil && $0.opponentScore != nil }.count
+        let backCommitted     = backPairs.filter  { $0.hostScore != nil && $0.opponentScore != nil }.count
+        let isFrontComplete   = frontCommitted == 9
+        let isBackComplete    = backCommitted  == 9
+        let isOverallComplete = isFrontComplete && isBackComplete
+
+        let t1 = ownerName.isEmpty    ? "P1" : ownerName
+        let t2 = opponentName.isEmpty ? "P2" : opponentName
 
         var rows: [SegmentRow] = [
-            makeRow("Front 9",  status: m.frontStatusByHole,   t1: t1, t2: t2,
-                    complete: NassauEngine.isFrontComplete(gameData: g),   stake: m.stake),
-            makeRow("Back 9",   status: m.backStatusByHole,    t1: t1, t2: t2,
-                    complete: NassauEngine.isBackComplete(gameData: g),    stake: m.stake),
-            makeRow("18 Holes", status: m.overallStatusByHole, t1: t1, t2: t2,
-                    complete: NassauEngine.isOverallComplete(gameData: g), stake: m.stake),
+            makeRow("Front 9",  status: frontStatus,   t1: t1, t2: t2, complete: isFrontComplete,   stake: stake),
+            makeRow("Back 9",   status: backStatus,    t1: t1, t2: t2, complete: isBackComplete,    stake: stake),
+            makeRow("18 Holes", status: overallStatus, t1: t1, t2: t2, complete: isOverallComplete, stake: stake),
         ]
-        for (i, press) in m.presses.enumerated() {
-            let label = "Press \(i + 1) · H\(press.startHole)-\(press.endHole)"
-            rows.append(makeRow(label, status: press.runningStatus, t1: t1, t2: t2,
-                                complete: NassauEngine.isPressComplete(press, gameData: g),
-                                stake: press.stake))
+
+        if pressMode == .auto {
+            let posLabel     = isSameCourse ? "H" : "#"
+            let frontPresses = detectPresses(pairs: frontPairs, holeOffset: 0, segmentEndPos: 9,
+                                              trigger: trigger, stake: stake)
+            let backPresses  = detectPresses(pairs: backPairs,  holeOffset: 9, segmentEndPos: 18,
+                                              trigger: trigger, stake: stake)
+            for (i, p) in (frontPresses + backPresses).enumerated() {
+                let pressComplete = p.endPos <= 9 ? isFrontComplete : isBackComplete
+                let label = "Press \(i + 1) · \(posLabel)\(p.startPos)–\(p.endPos)"
+                rows.append(makeRow(label, status: p.runningStatus, t1: t1, t2: t2,
+                                    complete: pressComplete, stake: p.stake))
+            }
         }
 
         let courseA = amHost ? (match?.courseA ?? "") : (match?.courseB ?? "")
         let courseB = amHost ? (match?.courseB ?? "") : (match?.courseA ?? "")
-
         let title: String
-        if !courseA.isEmpty && !courseB.isEmpty {
+        if !courseA.isEmpty && !courseB.isEmpty && courseA.lowercased() != courseB.lowercased() {
             title = "\(t1) (\(courseA)) vs \(t2) (\(courseB))"
         } else {
             title = "\(t1) vs \(t2)"
         }
         return PairingSection(title: title, rows: rows,
-                              isOverallComplete: NassauEngine.isOverallComplete(gameData: g),
+                              isOverallComplete: isOverallComplete,
                               ownerName: ownerName, opponentName: opponentName)
     }
 
@@ -416,10 +452,9 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - Scorecard detail
 
     // Builds HC-paired hole data for Front 9 (front=true) or Back 9 (front=false).
-    // Mirrors buildSyntheticGame: sort each player's scores hardest-first, then zip
-    // positionally so "HC Pos 1" = each player's hardest submitted hole.
-    // Using positional zipping (not a shared HC rank key) handles the case where
-    // players are on different holes or one player is missing holeHc data.
+    // Same course: pairs by physical hole number. Different courses: sorts each player's
+    // scores by HC rank and pairs positionally (hardest vs hardest), so both devices
+    // produce identical output from the same receivedScores regardless of who is "owner".
     func buildPairedHoles(ownerName: String, opponentName: String, front: Bool) -> [PairedHole] {
         let ownerLower    = ownerName.lowercased()
         let opponentLower = opponentName.lowercased()
@@ -437,7 +472,7 @@ final class LiveNassauViewController: UIViewController {
             if      pnLower == ownerLower    { ownerScores.append(s) }
             else if pnLower == opponentLower { oppScores.append(s)   }
         }
-        // Slot-based fallback (same logic as buildSyntheticGame)
+        // Slot-based fallback: side A→slot 0, side B→slot 1
         if ownerScores.isEmpty || oppScores.isEmpty {
             // remoteNassauSide is set at create("A")/join("B") time — more reliable than amHost name comparison.
             let mySide  = GameManager.shared.currentGame?.remoteNassauSide ?? (amHost ? "A" : "B")
@@ -458,6 +493,13 @@ final class LiveNassauViewController: UIViewController {
         let hostDelta = max(0, hostHc - baseHC)
         let oppDelta  = max(0, oppHc  - baseHC)
 
+        // Look up each player's CourseProfile for par-relative hole comparison.
+        let ownerCourseName = amHost ? (match?.courseA ?? "") : (match?.courseB ?? "")
+        let oppCourseName   = amHost ? (match?.courseB ?? "") : (match?.courseA ?? "")
+        func normCourse(_ s: String) -> String { s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+        let ownerProfile = CourseLibrary.shared.courses.first { normCourse($0.name) == normCourse(ownerCourseName) }
+        let oppProfile   = CourseLibrary.shared.courses.first { normCourse($0.name) == normCourse(oppCourseName)   }
+
         func makePairedHole(rank: Int, o: HoleScoreRecord?, p: HoleScoreRecord?) -> PairedHole {
             let rawSI = o?.holeHc ?? p?.holeHc ?? (rank + 1)
             let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
@@ -465,21 +507,22 @@ final class LiveNassauViewController: UIViewController {
             let oppStrokes  = NassauEngine.pops(for: oppDelta,  strokeIndex: si)
             let hostNet: Int? = o.map { $0.grossScore - hostStrokes }
             let oppNet:  Int? = p.map { $0.grossScore - oppStrokes  }
-            let net: Int = {
-                guard let hn = hostNet, let on = oppNet else { return 0 }
-                return on - hn
-            }()
+            let hostPar = o.flatMap { ownerProfile?.pars[safe: $0.hole] }
+            let oppPar  = p.flatMap { oppProfile?.pars[safe: $0.hole]   }
             return PairedHole(
                 hcRank: rank + 1,
                 hostPhysicalHole: (o?.hole ?? rank) + 1,
                 hostScore: o?.grossScore,
                 hostNetScore: hostNet,
                 hostStrokes: hostStrokes,
+                hostPar: hostPar,
                 opponentPhysicalHole: (p?.hole ?? rank) + 1,
                 opponentScore: p?.grossScore,
                 opponentNetScore: oppNet,
                 opponentStrokes: oppStrokes,
-                netResult: net
+                opponentPar: oppPar,
+                netResult: RemoteNassauScorer.holeWinner(netHost: hostNet, netOpp: oppNet,
+                                                          parHost: hostPar, parOpp: oppPar)
             )
         }
 
@@ -526,21 +569,57 @@ final class LiveNassauViewController: UIViewController {
             pairingArgs = [(owner: me, opponent: host)]
         }
 
+        let stake     = match?.stake ?? 1.0
+        let trigger   = match?.trigger ?? 2
+        let pressMode = match.flatMap { NassauPressMode(rawValue: $0.pressMode ?? "") } ?? .auto
+        let posLabel  = isSameCourse ? "H" : "#"
+
         var bodyParts: [String] = []
         for pair in pairingArgs {
-            guard let g = buildSyntheticGame(ownerName: pair.owner, opponentName: pair.opponent),
-                  var state = g.nassauState else { continue }
-            NassauEngine.recalculate(state: &state, gameData: g)
-            let summaries = NassauEngine.finalSummaries(state: state, playerNames: g.playerNames, gameData: g)
-            for s in summaries {
-                var lines = [s.matchTitle]
-                if let f = s.front9    { lines.append("  Front 9: \(f.resultText)") }
-                if let b = s.back9     { lines.append("  Back 9:  \(b.resultText)") }
-                if let o = s.overall18 { lines.append("  18 Hole: \(o.resultText)") }
-                for p in s.presses     { lines.append("  \(p.title): \(p.resultText)") }
-                lines.append("  Net: \(s.totalMoneyText)")
-                bodyParts.append(lines.joined(separator: "\n"))
+            let t1 = pair.owner.isEmpty    ? "P1" : pair.owner
+            let t2 = pair.opponent.isEmpty ? "P2" : pair.opponent
+
+            let frontPairs = buildPairedHoles(ownerName: pair.owner, opponentName: pair.opponent, front: true)
+            let backPairs  = buildPairedHoles(ownerName: pair.owner, opponentName: pair.opponent, front: false)
+            guard !frontPairs.isEmpty || !backPairs.isEmpty else { continue }
+
+            let frontStatus   = runningStatus(from: frontPairs)
+            let backStatus    = runningStatus(from: backPairs)
+            let overallStatus = runningStatus(from: frontPairs + backPairs)
+
+            let isFrontComplete   = frontPairs.filter { $0.hostScore != nil && $0.opponentScore != nil }.count == 9
+            let isBackComplete    = backPairs.filter  { $0.hostScore != nil && $0.opponentScore != nil }.count == 9
+            let isOverallComplete = isFrontComplete && isBackComplete
+
+            var lines = ["\(t1) vs \(t2)"]
+            lines.append("  Front 9: \(segmentResultText(status: frontStatus,   complete: isFrontComplete,   t1: t1, t2: t2))")
+            lines.append("  Back 9:  \(segmentResultText(status: backStatus,    complete: isBackComplete,    t1: t1, t2: t2))")
+            lines.append("  18 Hole: \(segmentResultText(status: overallStatus, complete: isOverallComplete, t1: t1, t2: t2))")
+
+            var totalMoney = segmentMoney(status: frontStatus,   complete: isFrontComplete,   stake: stake)
+                           + segmentMoney(status: backStatus,    complete: isBackComplete,    stake: stake)
+                           + segmentMoney(status: overallStatus, complete: isOverallComplete, stake: stake)
+
+            if pressMode == .auto {
+                let frontPresses = detectPresses(pairs: frontPairs, holeOffset: 0, segmentEndPos: 9,
+                                                  trigger: trigger, stake: stake)
+                let backPresses  = detectPresses(pairs: backPairs,  holeOffset: 9, segmentEndPos: 18,
+                                                  trigger: trigger, stake: stake)
+                for (i, p) in (frontPresses + backPresses).enumerated() {
+                    let pressComplete = p.endPos <= 9 ? isFrontComplete : isBackComplete
+                    let label = "Press \(i + 1) · \(posLabel)\(p.startPos)–\(p.endPos)"
+                    lines.append("  \(label): \(segmentResultText(status: p.runningStatus, complete: pressComplete, t1: t1, t2: t2))")
+                    totalMoney += segmentMoney(status: p.runningStatus, complete: pressComplete, stake: p.stake)
+                }
             }
+
+            let netText: String
+            if totalMoney > 0      { netText = "\(t1) +\(money(totalMoney))" }
+            else if totalMoney < 0 { netText = "\(t2) +\(money(-totalMoney))" }
+            else                   { netText = "Even" }
+            lines.append("  Net: \(netText)")
+
+            bodyParts.append(lines.joined(separator: "\n"))
         }
 
         let body = bodyParts.joined(separator: "\n\n")

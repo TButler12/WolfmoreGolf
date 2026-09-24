@@ -56,35 +56,44 @@ final class SupabaseService {
 
     // MARK: - Join match (applies host's Nassau settings to local state)
     func joinMatch(code: String, courseB: String = "") async throws -> MatchRecord {
-        let response: PostgrestResponse<MatchRecord> = try await client
+        let response: PostgrestResponse<[MatchRecord]> = try await client
             .from("matches")
             .select()
             .eq("code", value: code.uppercased())
-            .single()
+            .neq("status", value: "finished")
+            .neq("status", value: "cancelled")
+            .order("created_at", ascending: false)
+            .limit(1)
             .execute()
-        let match = response.value
-
-        let currentOpponents = match.opponentNames ?? []
-        if currentOpponents.count >= 5 {
-            throw NSError(domain: "WolfmoreGolf", code: 400,
-                          userInfo: [NSLocalizedDescriptionKey: "Match is full (maximum 5 opponents)"])
+        guard let match = response.value.first else {
+            throw NSError(domain: "WolfmoreGolf", code: 404,
+                          userInfo: [NSLocalizedDescriptionKey: "Could not find match."])
         }
 
+        let currentOpponents = match.opponentNames ?? []
         let myName = ProfileStore.name ?? ""
-        let playerSlot = currentOpponents.count + 1   // host=0, first joiner=1, etc.
-        let newOpponents = currentOpponents + [myName]
+        let isRejoin = !myName.isEmpty &&
+            currentOpponents.contains(where: { $0.lowercased() == myName.lowercased() })
 
-        // Append joiner to opponent_names; record joiner's course for same-course detection
-        var updateFields: [String: AnyJSON] = [
-            "opponent_name":  AnyJSON.string(myName),
-            "opponent_names": AnyJSON.array(newOpponents.map { .string($0) })
-        ]
-        if !courseB.isEmpty { updateFields["course_b"] = AnyJSON.string(courseB) }
-        try await client
-            .from("matches")
-            .update(updateFields)
-            .eq("id", value: match.id)
-            .execute()
+        if !isRejoin {
+            if currentOpponents.count >= 1 {
+                throw NSError(domain: "WolfmoreGolf", code: 400,
+                              userInfo: [NSLocalizedDescriptionKey: "This match is already in progress. Ask your opponent to start a new match."])
+            }
+
+            // Append joiner to opponent_names; record joiner's course for same-course detection
+            let newOpponents = currentOpponents + [myName]
+            var updateFields: [String: AnyJSON] = [
+                "opponent_name":  AnyJSON.string(myName),
+                "opponent_names": AnyJSON.array(newOpponents.map { .string($0) })
+            ]
+            if !courseB.isEmpty { updateFields["course_b"] = AnyJSON.string(courseB) }
+            try await client
+                .from("matches")
+                .update(updateFields)
+                .eq("id", value: match.id)
+                .execute()
+        }
 
         GameManager.shared.update { g in
             var state = g.nassauState ?? NassauState()
@@ -148,33 +157,6 @@ final class SupabaseService {
             "handicap":  String(handicap),
             "slot":      String(slot)
         ]).execute()
-    }
-
-    // MARK: - Submit hole score
-    // playerName defaults to the device owner; pass an explicit name when submitting other players' scores.
-    func submitHoleScore(
-        matchId: String,
-        playerSlot: Int,
-        hole: Int,
-        grossScore: Int,
-        playerName: String? = nil,
-        holeHc: Int? = nil,
-        playerHc: Int? = nil
-    ) async throws {
-        let name = playerName ?? ProfileStore.name ?? ""
-        let g = GameManager.shared.currentGame
-        var payload: [String: AnyJSON] = [
-            "match_id":        .string(matchId),
-            "player_slot":     .string(String(playerSlot)),
-            "hole":            .string(String(hole)),
-            "gross_score":     .string(String(grossScore)),
-            "player_name":     .string(name),
-            "tournament_code": g?.tournamentCode.map { .string($0) } ?? .null,
-            "group_code":      g?.groupCode.map { .string($0) } ?? .null
-        ]
-        if let hc = holeHc   { payload["hole_hc"]   = .string(String(hc)) }
-        if let hc = playerHc { payload["player_hc"] = .string(String(hc)) }
-        try await client.from("hole_scores").upsert(payload, onConflict: "match_id,player_slot,hole").execute()
     }
 
     // MARK: - Tournament per-hole scores
@@ -341,6 +323,75 @@ final class SupabaseService {
 
     func unsubscribeFromHoleScores(matchId: String) {
         for key in ["ins-\(matchId)", "upd-\(matchId)"] {
+            if let ch = holeScoreChannels.removeValue(forKey: key) {
+                Task { await ch.unsubscribe() }
+            }
+        }
+    }
+
+    // MARK: - Subscribe to remote Nassau hole scores (remote_nassau_hole_scores table)
+    func subscribeToRemoteNassauHoles(
+        matchId: String,
+        onScore: @escaping (HoleScoreRecord) -> Void
+    ) {
+        let channel = client.channel("rni-\(matchId)-\(UUID().uuidString)")
+        holeScoreChannels["rni-\(matchId)"] = channel
+
+        channel.onPostgresChange(
+            InsertAction.self,
+            schema: "public",
+            table: "remote_nassau_hole_scores",
+            filter: "match_id=eq.\(matchId)"
+        ) { action in
+            if let record = try? action.decodeRecord(
+                as: RemoteNassauHoleScore.self,
+                decoder: JSONDecoder()
+            ) {
+                DispatchQueue.main.async { onScore(record.toHoleScoreRecord()) }
+            }
+        }
+
+        Task {
+            do {
+                try await channel.subscribeWithError()
+            } catch {
+                print("ERROR remote_nassau_hole_scores INSERT subscribe failed: \(error)")
+            }
+        }
+    }
+
+    func subscribeToRemoteNassauHoleUpdates(
+        matchId: String,
+        onScore: @escaping (HoleScoreRecord) -> Void
+    ) {
+        let channel = client.channel("rnu-\(matchId)-\(UUID().uuidString)")
+        holeScoreChannels["rnu-\(matchId)"] = channel
+
+        channel.onPostgresChange(
+            UpdateAction.self,
+            schema: "public",
+            table: "remote_nassau_hole_scores",
+            filter: "match_id=eq.\(matchId)"
+        ) { action in
+            if let record = try? action.decodeRecord(
+                as: RemoteNassauHoleScore.self,
+                decoder: JSONDecoder()
+            ) {
+                DispatchQueue.main.async { onScore(record.toHoleScoreRecord()) }
+            }
+        }
+
+        Task {
+            do {
+                try await channel.subscribeWithError()
+            } catch {
+                print("ERROR remote_nassau_hole_scores UPDATE subscribe failed: \(error)")
+            }
+        }
+    }
+
+    func unsubscribeFromRemoteNassauHoles(matchId: String) {
+        for key in ["rni-\(matchId)", "rnu-\(matchId)"] {
             if let ch = holeScoreChannels.removeValue(forKey: key) {
                 Task { await ch.unsubscribe() }
             }

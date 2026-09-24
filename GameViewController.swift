@@ -3703,41 +3703,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
-        // 5b) Live Nassau score sync — submit owner's score to all active remote matches
-        if let g = GameManager.shared.currentGame {
-            let matchIds: [String] = {
-                let ids = g.remoteMatchIds
-                if !ids.isEmpty { return ids }
-                return g.remoteMatchId.map { [$0] } ?? []
-            }()
-            if !matchIds.isEmpty {
-                let ownerSlot = myPlayerIndex(in: g) ?? 0
-                if ownerSlot < g.scores.count, let gross = g.scores[ownerSlot][hole] {
-                    let ownerName = g.playerNames[ownerSlot]
-                    let hc       = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
-                    let playerHc = g.hcPlayers[safe: ownerSlot] ?? 0
-                    print("🏆 tournament debug: tournamentCode=\(GameManager.shared.currentGame?.tournamentCode ?? "nil") groupCode=\(GameManager.shared.currentGame?.groupCode ?? "nil")")
-                    Task {
-                        for matchId in matchIds {
-                            do {
-                                try await SupabaseService.shared.submitHoleScore(
-                                    matchId: matchId,
-                                    playerSlot: ownerSlot,
-                                    hole: hole,
-                                    grossScore: gross,
-                                    playerName: ownerName,
-                                    holeHc: hc,
-                                    playerHc: playerHc
-                                )
-                            } catch {
-                                print("ERROR submitHoleScore failed: \(error)")
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
         // 5c) Remote Nassau per-hole write — upsert into remote_nassau_hole_scores
         if let g = GameManager.shared.currentGame {
             let matchIds: [String] = {
@@ -3750,12 +3715,21 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             print("DEBUG 5c remoteMatchId=\(g.remoteMatchId ?? "nil") remoteMatchIds=\(g.remoteMatchIds) matchIds=\(matchIds) ownerSlot=\(ownerSlot) gross=\(String(describing: gross5c))")
             if !matchIds.isEmpty {
                 if let gross = gross5c {
-                    let side      = g.remoteNassauSide ?? (ownerSlot == 0 ? "A" : "B")
                     let hc        = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
                     let playerHc  = g.hcPlayers[safe: ownerSlot] ?? 0
                     let ownerName = g.playerNames[safe: ownerSlot] ?? (ProfileStore.name ?? "")
                     Task {
                         for matchId in matchIds {
+                            let side: String?
+                            if let map = g.remoteNassauSideMap {
+                                side = map[matchId]
+                            } else {
+                                side = g.remoteNassauSide  // old save: same side for all matches
+                            }
+                            guard let side else {
+                                print("ERROR remote nassau write skipped — side unknown for matchId \(matchId)")
+                                continue
+                            }
                             print("DEBUG remote nassau writing: matchId=\(matchId) side=\(side) hole=\(hole + 1) score=\(gross) hc=\(hc) playerHc=\(playerHc) name=\(ownerName)")
                             do {
                                 try await SupabaseService.shared.submitRemoteNassauHole(
@@ -4435,30 +4409,51 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             GameManager.shared.saveCurrent()
             self.refreshForCurrentHole()
 
-            // Live Supabase submission (no-op when not in a live match)
+            // Remote Nassau correction — only when the device owner's score is being corrected
             if let g = GameManager.shared.currentGame, let gross = score {
-                let matchIds: [String] = {
-                    let ids = g.remoteMatchIds
-                    if !ids.isEmpty { return ids }
-                    return g.remoteMatchId.map { [$0] } ?? []
-                }()
-                if !matchIds.isEmpty {
-                    let hc       = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
-                    let playerHc = g.hcPlayers[safe: playerIndex] ?? 0
-                    let name     = g.playerNames[safe: playerIndex] ?? (ProfileStore.name ?? "")
-                    Task {
-                        for matchId in matchIds {
-                            try? await SupabaseService.shared.submitHoleScore(
-                                matchId: matchId,
-                                playerSlot: playerIndex,
-                                hole: hole,
-                                grossScore: gross,
-                                playerName: name,
-                                holeHc: hc,
-                                playerHc: playerHc
-                            )
+                if let ownerSlot = self.myPlayerIndex(in: g) {
+                    if playerIndex == ownerSlot {
+                        let matchIds: [String] = {
+                            let ids = g.remoteMatchIds
+                            if !ids.isEmpty { return ids }
+                            return g.remoteMatchId.map { [$0] } ?? []
+                        }()
+                        if !matchIds.isEmpty {
+                            let hc       = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
+                            let playerHc = g.hcPlayers[safe: playerIndex] ?? 0
+                            let name     = g.playerNames[safe: playerIndex] ?? (ProfileStore.name ?? "")
+                            Task {
+                                for matchId in matchIds {
+                                    let side: String?
+                                    if let map = g.remoteNassauSideMap {
+                                        side = map[matchId]
+                                    } else {
+                                        side = g.remoteNassauSide  // old save: same side for all matches
+                                    }
+                                    guard let side else {
+                                        print("ERROR remote nassau correction skipped — side unknown for matchId \(matchId)")
+                                        continue
+                                    }
+                                    do {
+                                        try await SupabaseService.shared.submitRemoteNassauHole(
+                                            matchId:    matchId,
+                                            side:       side,
+                                            hole:       hole + 1,
+                                            grossScore: gross,
+                                            handicap:   hc,
+                                            playerHc:   playerHc,
+                                            playerName: name
+                                        )
+                                    } catch {
+                                        print("ERROR remote nassau correction write FAILED: \(error)")
+                                    }
+                                }
+                            }
                         }
                     }
+                    // else: correcting another player's score — silently skip Remote Nassau write
+                } else {
+                    print("ERROR remote nassau correction skipped — owner slot unknown")
                 }
             }
 

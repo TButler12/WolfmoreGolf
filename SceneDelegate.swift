@@ -182,9 +182,22 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                             .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                         let match = try await SupabaseService.shared.joinMatch(code: code, courseB: joinerCourse)
                         GameManager.shared.update { g in
+                            if g.remoteNassauSideMap == nil {
+                                var seeded: [String: String] = [:]
+                                if let existingSide = g.remoteNassauSide {
+                                    for id in g.remoteMatchIds { seeded[id] = existingSide }
+                                    if let single = g.remoteMatchId, !g.remoteMatchIds.contains(single) {
+                                        seeded[single] = existingSide
+                                    }
+                                }
+                                g.remoteNassauSideMap = seeded
+                            }
                             g.remoteMatchId    = match.id
                             g.remoteNassauSide = "B"
                             if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
+                            var sideMap = g.remoteNassauSideMap ?? [:]
+                            sideMap[match.id] = "B"
+                            g.remoteNassauSideMap = sideMap
                         }
                         SupabaseService.shared.subscribeToResults(matchId: match.id) { _ in }
                         await MainActor.run {

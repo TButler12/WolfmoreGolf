@@ -2,15 +2,17 @@ import UIKit
 
 struct PairedHole {
     let hcRank: Int
-    let hostPhysicalHole: Int    // 1-based for display
-    let hostScore: Int?          // gross
-    let hostNetScore: Int?       // gross minus strokes
-    let hostStrokes: Int         // HC strokes received on this hole
+    let hostPhysicalHole: Int      // 1-based for display
+    let hostScore: Int?            // gross
+    let hostNetScore: Int?         // gross minus strokes
+    let hostStrokes: Int           // HC strokes received on this hole
+    let hostPar: Int?              // from CourseLibrary; nil when course not in library
     let opponentPhysicalHole: Int
-    let opponentScore: Int?      // gross
-    let opponentNetScore: Int?   // gross minus strokes
+    let opponentScore: Int?        // gross
+    let opponentNetScore: Int?     // gross minus strokes
     let opponentStrokes: Int
-    let netResult: Int           // positive = host winning (net)
+    let opponentPar: Int?          // from CourseLibrary; nil when course not in library
+    let netResult: Int             // +1 = owner wins, -1 = opponent wins, 0 = tie or uncommitted
 }
 
 final class NassauScorecardViewController: UIViewController {
@@ -288,32 +290,30 @@ final class PairedHoleCell: UITableViewCell {
         ownerScrLbl.text = scoreText(gross: hole.hostScore,     net: hole.hostNetScore,     strokes: hole.hostStrokes)
         oppScrLbl.text   = scoreText(gross: hole.opponentScore, net: hole.opponentNetScore, strokes: hole.opponentStrokes)
 
-        // Winner comparison on net scores; fall back to gross if net unavailable
-        let ownerCompare = hole.hostNetScore     ?? hole.hostScore
-        let oppCompare   = hole.opponentNetScore ?? hole.opponentScore
-
-        if let h = ownerCompare, let o = oppCompare {
-            if h < o {
-                resultLbl.text        = ownerName
-                resultLbl.textColor   = .systemGreen
-                ownerScrLbl.textColor = .systemGreen
-                oppScrLbl.textColor   = .label
-            } else if h > o {
-                resultLbl.text        = opponentName
-                resultLbl.textColor   = .systemRed
-                ownerScrLbl.textColor = .label
-                oppScrLbl.textColor   = .systemRed
-            } else {
+        switch hole.netResult {
+        case 1:
+            resultLbl.text        = ownerName
+            resultLbl.textColor   = .systemGreen
+            ownerScrLbl.textColor = .systemGreen
+            oppScrLbl.textColor   = .label
+        case -1:
+            resultLbl.text        = opponentName
+            resultLbl.textColor   = .systemRed
+            ownerScrLbl.textColor = .label
+            oppScrLbl.textColor   = .systemRed
+        default:
+            let bothScored = hole.hostScore != nil && hole.opponentScore != nil
+            if bothScored {
                 resultLbl.text        = "Halved"
                 resultLbl.textColor   = .secondaryLabel
                 ownerScrLbl.textColor = .label
                 oppScrLbl.textColor   = .label
+            } else {
+                resultLbl.text        = "—"
+                resultLbl.textColor   = .tertiaryLabel
+                ownerScrLbl.textColor = hole.hostScore     != nil ? .label : .tertiaryLabel
+                oppScrLbl.textColor   = hole.opponentScore != nil ? .label : .tertiaryLabel
             }
-        } else {
-            resultLbl.text        = "—"
-            resultLbl.textColor   = .tertiaryLabel
-            ownerScrLbl.textColor = hole.hostScore     != nil ? .label : .tertiaryLabel
-            oppScrLbl.textColor   = hole.opponentScore != nil ? .label : .tertiaryLabel
         }
     }
 

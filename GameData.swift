@@ -63,6 +63,8 @@ struct GameData: Codable {
     var remoteMatchIds: [String] = []
     // "A" if this player created the match, "B" if they joined — determines remote_nassau_hole_scores side
     var remoteNassauSide: String? = nil
+    // Per-match side map (matchId → "A"/"B"). nil on old saves; migrate from remoteNassauSide at read time.
+    var remoteNassauSideMap: [String: String]? = nil
     // Wolf Live session ID and shareable code (nil = not broadcasting)
     var liveSessionId: String? = nil
     var liveSessionCode: String? = nil

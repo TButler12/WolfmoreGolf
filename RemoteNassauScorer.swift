@@ -22,6 +22,8 @@ struct RemoteHoleResult: Codable {
     let grossB: Int?
     let netA: Int?
     let netB: Int?
+    let parA: Int?
+    let parB: Int?
     let strokesA: Int
     let strokesB: Int
     let winner: RemoteHoleWinner
@@ -38,6 +40,23 @@ struct RemoteNassauResult: Codable {
 }
 
 enum RemoteNassauScorer {
+
+    // +1 = owner/host wins, -1 = opponent wins, 0 = tie or missing scores.
+    // Compares net scores relative to each player's own par when both pars are available;
+    // falls back to raw net when a par is missing.
+    static func holeWinner(netHost: Int?, netOpp: Int?, parHost: Int?, parOpp: Int?) -> Int {
+        guard let hn = netHost, let on = netOpp else { return 0 }
+        if let ph = parHost, let po = parOpp {
+            let relH = hn - ph
+            let relO = on - po
+            if relH < relO { return 1 }
+            if relO < relH { return -1 }
+            return 0
+        }
+        if hn < on { return 1 }
+        if on < hn { return -1 }
+        return 0
+    }
 
     static func score(playerA: SharedRound, playerB: SharedRound, stakePerBet: Int) -> RemoteNassauResult {
         var results: [RemoteHoleResult] = []
@@ -59,14 +78,21 @@ enum RemoteNassauScorer {
             let netA = grossA.map { $0 - aPops }
             let netB = grossB.map { $0 - bPops }
 
+            let parA = playerA.pars[safe: i]
+            let parB = playerB.pars[safe: i]
+
             let winner: RemoteHoleWinner
             if let netA, let netB {
-                if netA < netB {
-                    winner = .playerA
-                } else if netB < netA {
-                    winner = .playerB
+                if let parA, let parB {
+                    let relA = netA - parA
+                    let relB = netB - parB
+                    if relA < relB { winner = .playerA }
+                    else if relB < relA { winner = .playerB }
+                    else { winner = .tie }
                 } else {
-                    winner = .tie
+                    if netA < netB { winner = .playerA }
+                    else if netB < netA { winner = .playerB }
+                    else { winner = .tie }
                 }
             } else {
                 winner = .noResult
@@ -82,6 +108,8 @@ enum RemoteNassauScorer {
                     grossB: grossB,
                     netA: netA,
                     netB: netB,
+                    parA: parA,
+                    parB: parB,
                     strokesA: aPops,
                     strokesB: bPops,
                     winner: winner
@@ -218,14 +246,21 @@ enum RemoteNassauScorer {
         let netA = grossA.map { $0 - aPops }
         let netB = grossB.map { $0 - bPops }
 
+        let parA = playerA.pars[safe: aIndex]
+        let parB = playerB.pars[safe: bIndex]
+
         let winner: RemoteHoleWinner
         if let netA, let netB {
-            if netA < netB {
-                winner = .playerA
-            } else if netB < netA {
-                winner = .playerB
+            if let parA, let parB {
+                let relA = netA - parA
+                let relB = netB - parB
+                if relA < relB { winner = .playerA }
+                else if relB < relA { winner = .playerB }
+                else { winner = .tie }
             } else {
-                winner = .tie
+                if netA < netB { winner = .playerA }
+                else if netB < netA { winner = .playerB }
+                else { winner = .tie }
             }
         } else {
             winner = .noResult
@@ -240,6 +275,8 @@ enum RemoteNassauScorer {
             grossB: grossB,
             netA: netA,
             netB: netB,
+            parA: parA,
+            parB: parB,
             strokesA: aPops,
             strokesB: bPops,
             winner: winner
