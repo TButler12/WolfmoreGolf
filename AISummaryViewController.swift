@@ -26,7 +26,7 @@ enum SummaryStyle: Int, CaseIterable {
 
     var subtitle: String {
         switch self {
-        case .trashTalk:    return "Roast the loser, brutal but funny"
+        case .trashTalk:    return "Roast the loser, no mercy"
         case .statistical:  return "Data-focused performance breakdown"
         case .punchline:    return "Short, savage, funny — 5 lines max, no mercy"
         case .highlights:   return "Key moments — birdies, blow-ups, and clutch shots"
@@ -1005,6 +1005,24 @@ extension AISummaryViewController: UITableViewDataSource, UITableViewDelegate {
         let cell = tableView.dequeueReusableCell(withIdentifier: StyleCell.reuseID, for: indexPath) as! StyleCell
         cell.configure(style: style)
         return cell
+    }
+
+    func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
+        guard section == 0 else { return nil }
+        let label = UILabel()
+        label.text = "Add a personal note (optional)"
+        label.font = .systemFont(ofSize: 13, weight: .semibold)
+        label.textColor = UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        let container = UIView()
+        container.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+            label.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+            label.topAnchor.constraint(equalTo: container.topAnchor, constant: 8),
+            label.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -4),
+        ])
+        return container
     }
 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
