@@ -28,19 +28,19 @@ extension GameManager {
     ///   - umbePressed: true if Umbrella is pressed (disables doubling at ≥6)
     func computeHolePayout(hole: Int, umbePressed: Bool, modeOverride: GameType? = nil) -> [Double] {
         guard let g = currentGame, (0..<g.totalHoles).contains(hole) else {
-            return Array(repeating: 0.0, count: MAX_PLAYERS)
+            return Array(repeating: 0.0, count: WOLF_MAX_PLAYERS)
         }
 
         let mode = modeOverride ?? g.resolvedGameType
 
         // Seats shown on the Game screen
-        let seatsRange = 0..<min(MAX_PLAYERS, min(g.playerActivated.count, g.hcPlayers.count, g.playerNames.count))
+        let seatsRange = 0..<min(WOLF_MAX_PLAYERS, min(g.playerActivated.count, g.hcPlayers.count, g.playerNames.count))
 
         // Active seats with a non-empty name
         let activeSeats = seatsRange.filter {
             g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }
-        if activeSeats.isEmpty { return Array(repeating: 0.0, count: MAX_PLAYERS) }
+        if activeSeats.isEmpty { return Array(repeating: 0.0, count: WOLF_MAX_PLAYERS) }
 
         // Teams — matchPlay uses fixed assignments; other modes use per-hole wolfButtonStatus
         let wolfTeam:    [Int]
@@ -53,16 +53,14 @@ extension GameManager {
             nonWolfTeam = teamB
         } else {
             var wolfSeats = Set<Int>()
-            if g.wolfButtonStatus.count >= MAX_PLAYERS, (g.wolfButtonStatus.first?.count ?? 0) > hole {
-                for s in activeSeats where g.wolfButtonStatus[s][hole] { wolfSeats.insert(s) }
-            }
+            for s in activeSeats where g.wolfButtonStatus[safe: s]?[safe: hole] ?? false { wolfSeats.insert(s) }
             wolfTeam    = activeSeats.filter { wolfSeats.contains($0) }
             nonWolfTeam = activeSeats.filter { !wolfSeats.contains($0) }
         }
 
         // Need both sides or money math becomes nonsense
         guard !wolfTeam.isEmpty, !nonWolfTeam.isEmpty else {
-            return Array(repeating: 0.0, count: MAX_PLAYERS)
+            return Array(repeating: 0.0, count: WOLF_MAX_PLAYERS)
         }
 
         let numWolf    = wolfTeam.count
@@ -120,7 +118,7 @@ extension GameManager {
         //  DUAL MATCH: two independent matches scored simultaneously
         // ---------------------------------------------------------
         if mode.isMatchPlay, g.isDualMatch {
-            if mode == .bestBall || mode == .fourball { return Array(repeating: 0.0, count: MAX_PLAYERS) }
+            if mode == .bestBall || mode == .fourball { return Array(repeating: 0.0, count: WOLF_MAX_PLAYERS) }
 
             // Per-pairing net: strokes relative to the lower HC player in this specific match,
             // not the round-wide baseline (which would penalise the high-HC player in a weak pairing).
@@ -141,7 +139,7 @@ extension GameManager {
                 let pNet = pairingNet(teamA: teamA, teamB: teamB)
                 let aMin = teamA.map { pNet[$0] ?? 99 }.min() ?? 99
                 let bMin = teamB.map { pNet[$0] ?? 99 }.min() ?? 99
-                var p = Array(repeating: 0.0, count: MAX_PLAYERS)
+                var p = Array(repeating: 0.0, count: WOLF_MAX_PLAYERS)
                 guard aMin != bMin else { return p }
                 let perPayer = Int(stake.rounded())
                 guard perPayer != 0 else { return p }
@@ -169,8 +167,8 @@ extension GameManager {
             let b2 = (g.matchPlayTeamB2 ?? []).filter { activeSeats.contains($0) }
             let p1 = oneMatch(teamA: a1, teamB: b1)
             let p2 = oneMatch(teamA: a2, teamB: b2)
-            var combined = Array(repeating: 0.0, count: MAX_PLAYERS)
-            for i in 0..<MAX_PLAYERS { combined[i] = p1[i] + p2[i] }
+            var combined = Array(repeating: 0.0, count: WOLF_MAX_PLAYERS)
+            for i in 0..<WOLF_MAX_PLAYERS { combined[i] = p1[i] + p2[i] }
             return combined
         }
 
@@ -282,9 +280,9 @@ extension GameManager {
         // ---------------------------------------------------------
         //  PAYOUTS (whole-dollar)
         // ---------------------------------------------------------
-        if mode == .bestBall { return Array(repeating: 0.0, count: MAX_PLAYERS) }
+        if mode == .bestBall { return Array(repeating: 0.0, count: WOLF_MAX_PLAYERS) }
 
-        var payouts = Array(repeating: 0.0, count: MAX_PLAYERS)
+        var payouts = Array(repeating: 0.0, count: WOLF_MAX_PLAYERS)
 
         guard diff != 0 else { return payouts }
 

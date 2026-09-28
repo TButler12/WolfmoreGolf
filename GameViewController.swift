@@ -2085,10 +2085,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             b.tag = seat
             let isSeatActive = g.playerActivated[safe: seat] ?? true
             b.alpha = isSeatActive ? 1.0 : 0.4
-            guard (0..<WOLF_MAX_PLAYERS).contains(seat),
-                  g.wolfButtonStatus.count >= MAX_PLAYERS,
-                  hole < (g.wolfButtonStatus[safe: seat]?.count ?? 0) else { continue }
-            let isOn = g.wolfButtonStatus[seat][hole]
+            guard (0..<WOLF_MAX_PLAYERS).contains(seat) else { continue }
+            let isOn = g.wolfButtonStatus[safe: seat]?[safe: hole] ?? false
             applyWolfStyle(b, isOn: isOn)
         }
     }
@@ -3700,7 +3698,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 g.playerMoney = Array(repeating: Array(repeating: 0, count: totalH), count: WOLF_MAX_PLAYERS)
             }
 
-            let seats = min(MAX_PLAYERS, playerMoneyFields.count, g.playerMoney.count, payouts.count)
+            let seats = min(WOLF_MAX_PLAYERS, g.playerMoney.count, payouts.count)
             for s in 0..<seats {
                 g.playerMoney[s][hole] = payouts[s]
             }
@@ -3708,7 +3706,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         // 5b) Cascade: re-run payouts for any later committed standings holes
         if let g = GameManager.shared.currentGame, g.resolvedGameType.isWolf {
-            let activeCount = g.playerActivated.prefix(MAX_PLAYERS)
+            let activeCount = g.playerActivated.prefix(WOLF_MAX_PLAYERS)
                 .enumerated()
                 .filter { g.playerActivated[$0.offset] &&
                     !g.playerNames[$0.offset].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -3724,7 +3722,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         umbePressed: umbrellaMuted
                     )
                     GameManager.shared.update { g2 in
-                        let seats = min(MAX_PLAYERS, g2.playerMoney.count, laterPayouts.count)
+                        let seats = min(WOLF_MAX_PLAYERS, g2.playerMoney.count, laterPayouts.count)
                         for s in 0..<seats {
                             if g2.playerMoney[s].count > laterHole {
                                 g2.playerMoney[s][laterHole] = laterPayouts[s]

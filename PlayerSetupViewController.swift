@@ -24,7 +24,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet private weak var minusPointDollars: UIButton?
 
     // MARK: - Constants
-    private let capacity = 5
+    private var capacity: Int { GameManager.shared.currentGame?.activePlayerLimit ?? MAX_PLAYERS }
     private var maxActive: Int { capacity }
     private weak var editStakeLinkButton: UIButton?
     private weak var stablefordToggleSwitch: UISwitch?
@@ -903,7 +903,6 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private func ensureModelHasCapacity(_ g: inout GameData) {
         func resize<T>(_ arr: inout [T], fill: T) {
             if arr.count < capacity { arr += Array(repeating: fill, count: capacity - arr.count) }
-            if arr.count > capacity { arr = Array(arr.prefix(capacity)) }
         }
         resize(&g.playerNames, fill: "")
         resize(&g.hcPlayers, fill: 0)
