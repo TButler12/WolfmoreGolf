@@ -300,15 +300,12 @@ extension GameManager {
         let remainder   = totalDollars % numWolf
 
         // The calling wolf (primary) always gets the larger absolute share of an odd split.
-        // On hole h the calling wolf is activeSeats[h % count] — the standard rotation.
         let sortedWolfTeam = wolfTeam.sorted()
         let oddRecipient: Int? = {
             guard remainder > 0 else { return sortedWolfTeam.first }
             guard sortedWolfTeam.count > 1 else { return sortedWolfTeam.first }
-            let callingWolfSeat = activeSeats[hole % activeSeats.count]
+            let callingWolfSeat = designatedWolfSeat(hole: hole, game: g, activeSeats: activeSeats)
             if sortedWolfTeam.contains(callingWolfSeat) { return callingWolfSeat }
-            // Calling wolf is always on the wolf team — if not, that is a separate bug.
-            print("⚠️ computeHolePayout: calling wolf seat \(callingWolfSeat) not in wolfTeam \(sortedWolfTeam) on hole \(hole + 1)")
             return sortedWolfTeam.first
         }()
 
@@ -324,6 +321,34 @@ extension GameManager {
 
         return payouts
     }
+    /// Returns the seat of the designated (calling) wolf for `hole`.
+    /// Rotation holes use the standard cycle; standings holes go to the player
+    /// with the lowest cumulative money total through prior holes, with a
+    /// backward running-total scan as tie-break.
+    private func designatedWolfSeat(hole: Int, game: GameData, activeSeats: [Int]) -> Int {
+        guard !activeSeats.isEmpty else { return 0 }
+        let count = activeSeats.count
+        let boundary = (game.totalHoles / count) * count
+
+        // Rotation holes: standard cycle
+        if hole < boundary {
+            return activeSeats[hole % count]
+        }
+
+        // Standings holes: player with the lowest cumulative total leads.
+        // Tie-break: scan backward through prior holes comparing running totals
+        // at each point — lowest at the latest differing hole wins.
+        let sorted = activeSeats.sorted { a, b in
+            for k in stride(from: hole - 1, through: 0, by: -1) {
+                let ra = (0...k).reduce(0.0) { $0 + (game.playerMoney[safe: a]?[safe: $1] ?? 0.0) }
+                let rb = (0...k).reduce(0.0) { $0 + (game.playerMoney[safe: b]?[safe: $1] ?? 0.0) }
+                if ra != rb { return ra < rb }
+            }
+            return a < b  // fully tied: lower seat index first
+        }
+        return sorted.first ?? activeSeats[0]
+    }
+
     func proxPercent(seat: Int,
                      gameTypePerHole: [GameType],
                      proxWinnerSeatPerHole: [Int?]) -> Double {

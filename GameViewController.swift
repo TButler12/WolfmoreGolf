@@ -3703,6 +3703,35 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             }
         }
 
+        // 5b) Cascade: re-run payouts for any later committed standings holes
+        if let g = GameManager.shared.currentGame, g.resolvedGameType.isWolf {
+            let activeCount = g.playerActivated.prefix(MAX_PLAYERS)
+                .enumerated()
+                .filter { g.playerActivated[$0.offset] &&
+                    !g.playerNames[$0.offset].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+                .count
+            if activeCount > 0 {
+                let totalH = g.totalHoles
+                let boundary = (totalH / activeCount) * activeCount
+                for laterHole in (hole + 1)..<totalH {
+                    guard laterHole >= boundary,
+                          g.holeCommitted[safe: laterHole] == true else { continue }
+                    let laterPayouts = GameManager.shared.computeHolePayout(
+                        hole: laterHole,
+                        umbePressed: umbrellaMuted
+                    )
+                    GameManager.shared.update { g2 in
+                        let seats = min(MAX_PLAYERS, g2.playerMoney.count, laterPayouts.count)
+                        for s in 0..<seats {
+                            if g2.playerMoney[s].count > laterHole {
+                                g2.playerMoney[s][laterHole] = laterPayouts[s]
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         // 5c) Remote Nassau per-hole write — upsert into remote_nassau_hole_scores
         if let g = GameManager.shared.currentGame {
             let matchIds: [String] = {
