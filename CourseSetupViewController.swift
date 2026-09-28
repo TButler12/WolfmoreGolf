@@ -93,7 +93,7 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
             g.course.name    = c.name
             g.course.id      = c.id
             g.course.teeSets = c.teeSets ?? []
-            g.playerTeeSetIndex = Array(repeating: 0, count: MAX_PLAYERS)
+            g.playerTeeSetIndex = Array(repeating: 0, count: WOLF_MAX_PLAYERS)
         }
         CourseLibrary.shared.selectedCourseID = c.id
     }

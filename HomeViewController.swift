@@ -1905,9 +1905,9 @@ final class ViewController: UIViewController,
 
         GameManager.shared.startNewGame(name: "New Game")
         GameManager.shared.update { g in
-            g.playerNames     = Array(repeating: "",    count: MAX_PLAYERS)
-            g.hcPlayers       = Array(repeating: 0,     count: MAX_PLAYERS)
-            g.playerActivated = Array(repeating: false, count: MAX_PLAYERS)
+            g.playerNames     = Array(repeating: "",    count: WOLF_MAX_PLAYERS)
+            g.hcPlayers       = Array(repeating: 0,     count: WOLF_MAX_PLAYERS)
+            g.playerActivated = Array(repeating: false, count: WOLF_MAX_PLAYERS)
 
             g.playerNames[0]     = name
             g.hcPlayers[0]       = ProfileStore.myHC

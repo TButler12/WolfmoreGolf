@@ -869,7 +869,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 g.matchPlay36Holes = false
                 g.hole = 0
                 g.startHole = nil
-                g.scores        = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                g.scores        = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
                 g.holeCommitted = Array(repeating: false, count: STANDARD_HOLES)
             }
         }
@@ -883,7 +883,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             g.nineHoleStartingHole = val
             g.hole = 0
             g.startHole = nil
-            g.scores        = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+            g.scores        = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
             g.holeCommitted = Array(repeating: false, count: STANDARD_HOLES)
         }
         refreshMatchPlayTeamsContent()

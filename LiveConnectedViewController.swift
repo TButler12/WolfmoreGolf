@@ -349,7 +349,7 @@ final class LiveConnectedViewController: UITableViewController {
                                     for i in g.playerActivated.indices { g.playerActivated[i] = false }
                                     g.playerActivated[0] = true
                                     // Wipe previous round's scores so the new game starts clean.
-                                    g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                                    g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
                                     g.hole      = holeIndex
                                     g.startHole = holeIndex
                                 }

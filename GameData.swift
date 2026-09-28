@@ -124,16 +124,16 @@ struct GameData: Codable {
     var previousPressedPushedToggleArray: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
     var gameHoleDollarsArray: [Double] = Array(repeating: 2.0, count: STANDARD_HOLES)
 
-    // 5 players × 18 holes; nil = no score entered yet
+    // WOLF_MAX_PLAYERS × 18 holes; nil = no score entered yet
     var scores: [[Int?]] = Array(
         repeating: Array(repeating: nil, count: STANDARD_HOLES),
-        count: MAX_PLAYERS
+        count: WOLF_MAX_PLAYERS
     )
 
     // Per-player payout per hole
     var playerMoney: [[Double]] = Array(
         repeating: Array(repeating: 0, count: STANDARD_HOLES),
-        count: MAX_PLAYERS
+        count: WOLF_MAX_PLAYERS
     )
 
     var rosterNames: [String] = []
@@ -201,9 +201,9 @@ struct GameData: Codable {
         return !a2.isEmpty && !b2.isEmpty
     }
 
-    var playerNames: [String] = Array(repeating: "", count: MAX_PLAYERS)
-    var hcPlayers: [Int] = Array(repeating: 0, count: MAX_PLAYERS)
-    var playerActivated: [Bool] = Array(repeating: false, count: MAX_PLAYERS)
+    var playerNames: [String] = Array(repeating: "", count: WOLF_MAX_PLAYERS)
+    var hcPlayers: [Int] = Array(repeating: 0, count: WOLF_MAX_PLAYERS)
+    var playerActivated: [Bool] = Array(repeating: false, count: WOLF_MAX_PLAYERS)
     // Index into course.teeSets; 0 = course default, 1+ = course.teeSets[index-1]
     var playerTeeSetIndexOpt: [Int]? = nil
 
@@ -218,17 +218,17 @@ struct GameData: Codable {
 
     var fairwayHit: [[Bool?]] = Array(
         repeating: Array(repeating: nil, count: STANDARD_HOLES),
-        count: MAX_PLAYERS
+        count: WOLF_MAX_PLAYERS
     )
 
     var girHit: [[Bool?]] = Array(
         repeating: Array(repeating: nil, count: STANDARD_HOLES),
-        count: MAX_PLAYERS
+        count: WOLF_MAX_PLAYERS
     )
 
     var puttsPerHole: [[Int?]] = Array(
         repeating: Array(repeating: nil, count: STANDARD_HOLES),
-        count: MAX_PLAYERS
+        count: WOLF_MAX_PLAYERS
     )
 
     // MARK: - Course passthrough
@@ -359,8 +359,13 @@ extension GameData {
         mutating set { nineHoleStartingHoleOpt = newValue }
     }
     var playerTeeSetIndex: [Int] {
-        get { playerTeeSetIndexOpt ?? Array(repeating: 0, count: MAX_PLAYERS) }
+        get { playerTeeSetIndexOpt ?? Array(repeating: 0, count: WOLF_MAX_PLAYERS) }
         mutating set { playerTeeSetIndexOpt = newValue }
+    }
+
+    /// Maximum number of players that may be activated for this game type.
+    var activePlayerLimit: Int {
+        resolvedGameType.isWolf ? WOLF_MAX_PLAYERS : MAX_PLAYERS
     }
 }
 

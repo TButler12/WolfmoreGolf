@@ -53,7 +53,7 @@ extension GameManager {
         shared.update { g in
             let holes = g.totalHoles
             if !shouldPreserve {
-                g.scores        = Array(repeating: Array(repeating: nil, count: holes), count: MAX_PLAYERS)
+                g.scores        = Array(repeating: Array(repeating: nil, count: holes), count: WOLF_MAX_PLAYERS)
                 g.holeCommitted = Array(repeating: false, count: holes)
                 g.hole          = 0
             }

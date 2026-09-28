@@ -268,8 +268,8 @@ final class GameManager {
         
         // Round-only reset
         g.hole = 0
-        g.scores               = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
-        g.playerMoney          = Array(repeating: Array(repeating: 0.0, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        g.scores               = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
+        g.playerMoney          = Array(repeating: Array(repeating: 0.0, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
         g.rollApplied          = Array(repeating: false, count: STANDARD_HOLES)
         g.rerollApplied        = Array(repeating: false, count: STANDARD_HOLES)
         g.rerollBaseAmount     = Array(repeating: 0.0, count: STANDARD_HOLES)
@@ -277,7 +277,7 @@ final class GameManager {
         g.pressLevel           = Array(repeating: 0, count: STANDARD_HOLES)
         g.pressInitiatedHole   = nil
         g.proxWinnerPerHole    = Array(repeating: nil, count: STANDARD_HOLES)
-        g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
+        g.wolfButtonStatus     = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
         g.gameHoleDollarsArray = Array(repeating: defaultBet, count: STANDARD_HOLES)
         g.holeBaseAmount       = Array(repeating: defaultBet, count: STANDARD_HOLES)
 
@@ -315,25 +315,25 @@ final class GameManager {
         g.gameName = name
         g.hole = 0
         
-        // Seats (9)
-        g.playerNames     = Array(repeating: "",    count: MAX_PLAYERS)
-        g.hcPlayers       = Array(repeating: 0,     count: MAX_PLAYERS)   // S-column deltas
-        g.playerActivated = Array(repeating: false, count: MAX_PLAYERS)
-        
+        // Seats
+        g.playerNames     = Array(repeating: "",    count: WOLF_MAX_PLAYERS)
+        g.hcPlayers       = Array(repeating: 0,     count: WOLF_MAX_PLAYERS)
+        g.playerActivated = Array(repeating: false, count: WOLF_MAX_PLAYERS)
+
         // Course (18)
         // g.courseParToPass = Array(repeating: 4, count: STANDARD_HOLES)
         // g.courseHCToPass  = Array(1...STANDARD_HOLES)
-        
+
         // Stakes per hole
         g.gameHoleDollarsArray = Array(repeating: 2.0, count: STANDARD_HOLES)
-        
-        // Wolves (5×18) & Prox (seat 0…4 or nil)
-        g.wolfButtonStatus  = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: MAX_PLAYERS)
+
+        // Wolf buttons (WOLF_MAX_PLAYERS×18) & Prox (seat 0…n or nil)
+        g.wolfButtonStatus  = Array(repeating: Array(repeating: false, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
         g.proxWinnerPerHole = Array(repeating: nil, count: STANDARD_HOLES)
-        
-        // Scores & per-player payouts (9×18)
-        g.scores      = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
-        g.playerMoney = Array(repeating: Array(repeating: 0,   count: STANDARD_HOLES), count: MAX_PLAYERS)
+
+        // Scores & per-player payouts (WOLF_MAX_PLAYERS×18)
+        g.scores      = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
+        g.playerMoney = Array(repeating: Array(repeating: 0,   count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
         
         // Press / previous press flags
         g.pressedPushedToggleArray         = Array(repeating: false, count: STANDARD_HOLES)
@@ -360,10 +360,10 @@ final class GameManager {
 
         let h = g.totalHoles  // 18 for normal rounds, 36 for match play 36-hole
 
-        // Seats
-        if g.playerNames.count != MAX_PLAYERS     { g.playerNames     = pad(g.playerNames,     to: MAX_PLAYERS, fill: "") }
-        if g.hcPlayers.count != MAX_PLAYERS       { g.hcPlayers       = pad(g.hcPlayers,       to: MAX_PLAYERS, fill: 0) }
-        if g.playerActivated.count != MAX_PLAYERS { g.playerActivated = pad(g.playerActivated, to: MAX_PLAYERS, fill: false) }
+        // Seats — pad up to WOLF_MAX_PLAYERS; never truncate below (old saves have fewer)
+        if g.playerNames.count < WOLF_MAX_PLAYERS     { g.playerNames     = pad(g.playerNames,     to: WOLF_MAX_PLAYERS, fill: "") }
+        if g.hcPlayers.count < WOLF_MAX_PLAYERS       { g.hcPlayers       = pad(g.hcPlayers,       to: WOLF_MAX_PLAYERS, fill: 0) }
+        if g.playerActivated.count < WOLF_MAX_PLAYERS { g.playerActivated = pad(g.playerActivated, to: WOLF_MAX_PLAYERS, fill: false) }
 
         // Course data always stays at STANDARD_HOLES (18-hole course repeated for 36-hole rounds)
         if g.courseParToPass.count != STANDARD_HOLES { g.courseParToPass = pad(g.courseParToPass, to: STANDARD_HOLES, fill: 4) }
@@ -374,26 +374,27 @@ final class GameManager {
             let baseStake = Double(g.baseGameStake)
             g.gameHoleDollarsArray = pad(g.gameHoleDollarsArray, to: h, fill: baseStake)
         }
-        if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != h {
-            g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: h), count: MAX_PLAYERS)
+        // Expand wolfButtonStatus to WOLF_MAX_PLAYERS rows without losing existing state;
+        // reset entirely only when the hole count changes.
+        if g.wolfButtonStatus.first?.count != h {
+            g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: h), count: WOLF_MAX_PLAYERS)
+        } else if g.wolfButtonStatus.count < WOLF_MAX_PLAYERS {
+            let empty = Array(repeating: false, count: h)
+            while g.wolfButtonStatus.count < WOLF_MAX_PLAYERS { g.wolfButtonStatus.append(empty) }
         }
         if g.proxWinnerPerHole.count != h {
             g.proxWinnerPerHole = Array(repeating: nil, count: h)
         }
-        if g.scores.count != MAX_PLAYERS || g.scores.first?.count != h {
-            if g.scores.count != MAX_PLAYERS {
-                g.scores = Array(repeating: Array(repeating: nil, count: h), count: MAX_PLAYERS)
-            } else {
-                for i in 0..<g.scores.count { g.scores[i] = pad(g.scores[i], to: h, fill: nil) }
-            }
+        // Expand scores/playerMoney to WOLF_MAX_PLAYERS rows; pad each row to h holes.
+        while g.scores.count < WOLF_MAX_PLAYERS {
+            g.scores.append(Array(repeating: nil, count: h))
         }
-        if g.playerMoney.count != MAX_PLAYERS || g.playerMoney.first?.count != h {
-            if g.playerMoney.count != MAX_PLAYERS {
-                g.playerMoney = Array(repeating: Array(repeating: 0.0, count: h), count: MAX_PLAYERS)
-            } else {
-                for i in 0..<g.playerMoney.count { g.playerMoney[i] = pad(g.playerMoney[i], to: h, fill: 0.0) }
-            }
+        for i in 0..<g.scores.count { if g.scores[i].count != h { g.scores[i] = pad(g.scores[i], to: h, fill: nil) } }
+
+        while g.playerMoney.count < WOLF_MAX_PLAYERS {
+            g.playerMoney.append(Array(repeating: 0.0, count: h))
         }
+        for i in 0..<g.playerMoney.count { if g.playerMoney[i].count != h { g.playerMoney[i] = pad(g.playerMoney[i], to: h, fill: 0.0) } }
         if g.pressedPushedToggleArray.count != h {
             g.pressedPushedToggleArray = pad(g.pressedPushedToggleArray, to: h, fill: false)
         }

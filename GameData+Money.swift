@@ -21,7 +21,7 @@ extension GameData {
 }
 extension GameData {
     static let holes = STANDARD_HOLES
-    static let capacity = MAX_PLAYERS
+    static let capacity = WOLF_MAX_PLAYERS
 }
 
 

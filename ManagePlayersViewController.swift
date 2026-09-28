@@ -1073,14 +1073,14 @@ final class ManagePlayersViewController: UIViewController,
         }
 
         GameManager.shared.update { g in
-            if g.playerNames.count != MAX_PLAYERS     { g.playerNames     = Array(repeating: "",    count: MAX_PLAYERS) }
-            if g.hcPlayers.count != MAX_PLAYERS       { g.hcPlayers       = Array(repeating: 0,     count: MAX_PLAYERS) }
-            if g.playerActivated.count != MAX_PLAYERS { g.playerActivated = Array(repeating: false, count: MAX_PLAYERS) }
+            if g.playerNames.count < WOLF_MAX_PLAYERS     { g.playerNames     = Array(repeating: "",    count: WOLF_MAX_PLAYERS) }
+            if g.hcPlayers.count < WOLF_MAX_PLAYERS       { g.hcPlayers       = Array(repeating: 0,     count: WOLF_MAX_PLAYERS) }
+            if g.playerActivated.count < WOLF_MAX_PLAYERS { g.playerActivated = Array(repeating: false, count: WOLF_MAX_PLAYERS) }
 
             // clear old seats first
-            g.playerNames = Array(repeating: "", count: MAX_PLAYERS)
-            g.hcPlayers = Array(repeating: 0, count: MAX_PLAYERS)
-            g.playerActivated = Array(repeating: false, count: MAX_PLAYERS)
+            g.playerNames = Array(repeating: "", count: WOLF_MAX_PLAYERS)
+            g.hcPlayers = Array(repeating: 0, count: WOLF_MAX_PLAYERS)
+            g.playerActivated = Array(repeating: false, count: WOLF_MAX_PLAYERS)
 
             for (seat, friend) in active.enumerated() {
                 g.playerNames[seat]     = friend.name
@@ -1100,8 +1100,8 @@ final class ManagePlayersViewController: UIViewController,
             }
         
 
-            if active.count < MAX_PLAYERS {
-                for seat in active.count..<MAX_PLAYERS {
+            if active.count < WOLF_MAX_PLAYERS {
+                for seat in active.count..<WOLF_MAX_PLAYERS {
                     g.playerNames[seat]     = ""
                     g.hcPlayers[seat]       = 0
                     g.playerActivated[seat] = false
@@ -1126,7 +1126,7 @@ final class ManagePlayersViewController: UIViewController,
                                   pars: Array(profile.pars.prefix(STANDARD_HOLES)),
                                   holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)),
                                   teeSets: profile.teeSets ?? [])
-                g.playerTeeSetIndex = Array(repeating: 0, count: MAX_PLAYERS)
+                g.playerTeeSetIndex = Array(repeating: 0, count: WOLF_MAX_PLAYERS)
             }
         }
 

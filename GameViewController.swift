@@ -2085,8 +2085,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             b.tag = seat
             let isSeatActive = g.playerActivated[safe: seat] ?? true
             b.alpha = isSeatActive ? 1.0 : 0.4
-            guard (0..<MAX_PLAYERS).contains(seat),
-                  g.wolfButtonStatus.count == MAX_PLAYERS,
+            guard (0..<WOLF_MAX_PLAYERS).contains(seat),
+                  g.wolfButtonStatus.count >= MAX_PLAYERS,
                   hole < (g.wolfButtonStatus[safe: seat]?.count ?? 0) else { continue }
             let isOn = g.wolfButtonStatus[seat][hole]
             applyWolfStyle(b, isOn: isOn)
@@ -2618,10 +2618,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         GameManager.shared.update { m in
             let totalH = m.totalHoles
-            if m.scores.count != MAX_PLAYERS || m.scores.first?.count != totalH {
-                m.scores = Array(repeating: Array(repeating: nil, count: totalH), count: MAX_PLAYERS)
+            if m.scores.count < WOLF_MAX_PLAYERS || m.scores.first?.count != totalH {
+                m.scores = Array(repeating: Array(repeating: nil, count: totalH), count: WOLF_MAX_PLAYERS)
             }
-            if (0..<MAX_PLAYERS).contains(seat), (0..<totalH).contains(hole) {
+            if (0..<WOLF_MAX_PLAYERS).contains(seat), (0..<totalH).contains(hole) {
                 m.scores[seat][hole] = val
             }
         }
@@ -2798,8 +2798,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
 
         GameManager.shared.update { g in
-            if g.playerMoney.count < MAX_PLAYERS {
-                g.playerMoney = Array(repeating: Array(repeating: 0.0, count: STANDARD_HOLES), count: MAX_PLAYERS)
+            if g.playerMoney.count < WOLF_MAX_PLAYERS {
+                g.playerMoney = Array(repeating: Array(repeating: 0.0, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
             }
             for s in 0..<payouts.count {
                 if g.playerMoney[s].count < STANDARD_HOLES {
@@ -3080,8 +3080,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         GameManager.shared.update { g in
             let hole = max(0, min(g.totalHoles - 1, g.hole))
             let totalH = g.totalHoles
-            if g.wolfButtonStatus.count != MAX_PLAYERS || g.wolfButtonStatus.first?.count != totalH {
-                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: totalH), count: MAX_PLAYERS)
+            if g.wolfButtonStatus.first?.count != totalH {
+                g.wolfButtonStatus = Array(repeating: Array(repeating: false, count: totalH), count: WOLF_MAX_PLAYERS)
+            } else if g.wolfButtonStatus.count < WOLF_MAX_PLAYERS {
+                let empty = Array(repeating: false, count: totalH)
+                while g.wolfButtonStatus.count < WOLF_MAX_PLAYERS { g.wolfButtonStatus.append(empty) }
             }
             g.wolfButtonStatus[player][hole].toggle()
         }
@@ -3608,8 +3611,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // 1) save scores from UI + mark hole committed
         GameManager.shared.update { g in
             let totalH = g.totalHoles
-            if g.scores.count != MAX_PLAYERS || g.scores.contains(where: { $0.count != totalH }) {
-                g.scores = Array(repeating: Array(repeating: nil, count: totalH), count: MAX_PLAYERS)
+            if g.scores.count < WOLF_MAX_PLAYERS || g.scores.contains(where: { $0.count != totalH }) {
+                g.scores = Array(repeating: Array(repeating: nil, count: totalH), count: WOLF_MAX_PLAYERS)
             }
 
             if g.holeCommitted.count != totalH {
@@ -3693,8 +3696,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // 5) save payouts
         GameManager.shared.update { g in
             let totalH = g.totalHoles
-            if g.playerMoney.count != MAX_PLAYERS || g.playerMoney.contains(where: { $0.count != totalH }) {
-                g.playerMoney = Array(repeating: Array(repeating: 0, count: totalH), count: MAX_PLAYERS)
+            if g.playerMoney.count < WOLF_MAX_PLAYERS || g.playerMoney.contains(where: { $0.count != totalH }) {
+                g.playerMoney = Array(repeating: Array(repeating: 0, count: totalH), count: WOLF_MAX_PLAYERS)
             }
 
             let seats = min(MAX_PLAYERS, playerMoneyFields.count, g.playerMoney.count, payouts.count)
@@ -4413,20 +4416,20 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             GameManager.shared.update { g in
                 g.normalize(holes: STANDARD_HOLES)
 
-                if g.fairwayHit.count != MAX_PLAYERS || g.fairwayHit.contains(where: { $0.count != STANDARD_HOLES }) {
-                    g.fairwayHit = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                if g.fairwayHit.count < WOLF_MAX_PLAYERS || g.fairwayHit.contains(where: { $0.count != STANDARD_HOLES }) {
+                    g.fairwayHit = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
                 }
 
-                if g.girHit.count != MAX_PLAYERS || g.girHit.contains(where: { $0.count != STANDARD_HOLES }) {
-                    g.girHit = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                if g.girHit.count < WOLF_MAX_PLAYERS || g.girHit.contains(where: { $0.count != STANDARD_HOLES }) {
+                    g.girHit = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
                 }
 
-                if g.puttsPerHole.count != MAX_PLAYERS || g.puttsPerHole.contains(where: { $0.count != STANDARD_HOLES }) {
-                    g.puttsPerHole = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                if g.puttsPerHole.count < WOLF_MAX_PLAYERS || g.puttsPerHole.contains(where: { $0.count != STANDARD_HOLES }) {
+                    g.puttsPerHole = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
                 }
 
-                if g.scores.count != MAX_PLAYERS || g.scores.contains(where: { $0.count != STANDARD_HOLES }) {
-                    g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: MAX_PLAYERS)
+                if g.scores.count < WOLF_MAX_PLAYERS || g.scores.contains(where: { $0.count != STANDARD_HOLES }) {
+                    g.scores = Array(repeating: Array(repeating: nil, count: STANDARD_HOLES), count: WOLF_MAX_PLAYERS)
                 }
 
                 g.fairwayHit[playerIndex][hole] = fairwayHit
