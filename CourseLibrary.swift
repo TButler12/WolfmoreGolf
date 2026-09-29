@@ -5487,7 +5487,7 @@ let RTJ_SILVER_LAKES_BACK_HEART_HCS: [Int] = [
     // Heartbreaker even
     16,8,6,12,14,10,4,18,2
 ]
-private let RTJ_SHOALS_FIGHTING_JOE_ID = UUID(uuidString: "G7000001-0000-4444-AAAA-000000000001")!
+private let RTJ_SHOALS_FIGHTING_JOE_ID = UUID(uuidString: "A7000001-0000-4444-AAAA-000000000001")!
 
 let RTJ_SHOALS_FIGHTING_JOE_PARS: [Int] = [
 5,4,4,4,3,4,5,4,3,
@@ -5498,7 +5498,7 @@ let RTJ_SHOALS_FIGHTING_JOE_HCS: [Int] = [
 3,9,7,13,15,5,1,11,17,
 6,14,2,16,10,12,8,4,18
 ]
-private let RTJ_SHOALS_SCHOOLMASTER_ID = UUID(uuidString: "G7000002-0000-4444-BBBB-000000000002")!
+private let RTJ_SHOALS_SCHOOLMASTER_ID = UUID(uuidString: "A7000002-0000-4444-BBBB-000000000002")!
 
 let RTJ_SHOALS_SCHOOLMASTER_PARS: [Int] = [
 4,3,4,5,4,3,4,4,5,
@@ -9926,7 +9926,7 @@ let CONGRESSIONAL_BLUE_TEES: [TeeInfo] = [
 // MARK: - Congressional Country Club (Gold Course) — Bethesda, MD
 // Par 71 | Tom Fazio (2000) | Private
 
-private let CONGRESSIONAL_GOLD_ID = UUID(uuidString: "C09G0104-0001-4001-8001-000000000001")!
+private let CONGRESSIONAL_GOLD_ID = UUID(uuidString: "C09F0104-0001-4001-8001-000000000001")!
 
 let CONGRESSIONAL_GOLD_PARS: [Int] = [
     4,4,3,4,3,5,5,4,4,   // Front 9 — OUT 36
@@ -9947,7 +9947,7 @@ let CONGRESSIONAL_GOLD_TEES: [TeeInfo] = [
 // MARK: - Burning Tree Club — Bethesda, MD
 // Par 71 | Charles Alison & Harry Colt | Private
 
-private let BURNING_TREE_ID = UUID(uuidString: "B11TREE0-0001-4001-8001-000000000001")!
+private let BURNING_TREE_ID = UUID(uuidString: "B111EEA0-0001-4001-8001-000000000001")!
 
 let BURNING_TREE_PARS: [Int] = [
     4,5,3,4,4,4,4,3,5,   // Front 9 — OUT 36
@@ -9964,7 +9964,7 @@ let BURNING_TREE_TEES: [TeeInfo] = [
 // MARK: - Chevy Chase Club — Chevy Chase, MD
 // Par 71 | Donald Ross / Charles Alison / Arthur Hills | Private
 
-private let CHEVY_CHASE_CLUB_ID = UUID(uuidString: "CC4C1UB0-0001-4001-8001-000000000001")!
+private let CHEVY_CHASE_CLUB_ID = UUID(uuidString: "CC4C1AB0-0001-4001-8001-000000000001")!
 
 let CHEVY_CHASE_CLUB_PARS: [Int] = [
     4,4,4,3,4,5,4,5,3,   // Front 9 — OUT 36
@@ -9981,7 +9981,7 @@ let CHEVY_CHASE_CLUB_TEES: [TeeInfo] = [
 // MARK: - Woodmont Country Club (North Course) — Rockville, MD
 // Par 72 | Alfred Tull (1950) / Arthur Hills (1999) | Private | Host: 2020 US Women's Amateur
 
-private let WOODMONT_CC_NORTH_ID = UUID(uuidString: "W00DM0NT-0001-4001-8001-000000000001")!
+private let WOODMONT_CC_NORTH_ID = UUID(uuidString: "A00DA0B1-0001-4001-8001-000000000001")!
 
 let WOODMONT_CC_NORTH_PARS: [Int] = [
     4,3,5,4,5,3,4,4,4,   // Front 9 — OUT 36
@@ -10005,7 +10005,7 @@ let WOODMONT_CC_NORTH_TEES: [TeeInfo] = [
 // MARK: - Rocky Gap Lodge & Golf Resort — Flintstone, MD
 // Par 72 | Jack Nicklaus | Resort
 
-private let ROCKY_GAP_GC_ID = UUID(uuidString: "R0CKY6AP-0001-4001-8001-000000000001")!
+private let ROCKY_GAP_GC_ID = UUID(uuidString: "B0C5B6A1-0001-4001-8001-000000000001")!
 
 let ROCKY_GAP_GC_PARS: [Int] = [
     4,4,4,3,5,3,4,5,4,   // Front 9 — OUT 36
