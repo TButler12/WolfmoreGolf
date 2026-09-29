@@ -2197,6 +2197,29 @@ let AUGUSTA_NATIONAL_TEES: [TeeInfo] = [
 // NOTE: Rating/Slope not shown on your scorecard image.
 // =======================================================
 
+// MARK: - Desert Forest Golf Club — Carefree, AZ
+// Par 72 | Robert "Red" Lawrence | Private
+
+private let DESERT_FOREST_GC_ID = UUID(uuidString: "C5E60006-0001-4001-8001-000000000001")!
+
+let DESERT_FOREST_GC_PARS: [Int] = [
+    4,4,3,4,4,4,5,3,5,   // Front 9 — OUT 36
+    4,5,3,4,4,4,5,3,4    // Back 9  — IN  36
+]
+let DESERT_FOREST_GC_HCS: [Int] = [
+    7,1,15,5,3,11,9,13,17,
+    8,12,10,2,18,6,16,14,4
+]
+let DESERT_FOREST_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 7203),
+    TeeInfo(teeName: "Blue",   yardage: 6933),
+    TeeInfo(teeName: "Black",  yardage: 6522),
+    TeeInfo(teeName: "Silver", yardage: 6064),
+    TeeInfo(teeName: "Green",  yardage: 5606),
+    TeeInfo(teeName: "White",  yardage: 5151),
+    TeeInfo(teeName: "Copper", yardage: 4765),
+]
+
 private let FOREST_HIGHLANDS_MEADOW_ID = UUID(uuidString: "E94A3D13-5CDE-41A6-88B2-3226D8A2A48C")!
 
 let FOREST_HIGHLANDS_MEADOW_PARS: [Int] = [
@@ -13619,6 +13642,21 @@ private enum BuiltIns {
             phone: "(928) 525-5200",
             address: "2425 William Palmer, Flagstaff, AZ 86005"
         ),
+
+        c(
+            DESERT_FOREST_GC_ID,
+            "Desert Forest Golf Club",
+            DESERT_FOREST_GC_PARS,
+            DESERT_FOREST_GC_HCS,
+            DESERT_FOREST_GC_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Robert \"Red\" Lawrence",
+            type: "Private",
+            phone: "(480) 488-4589",
+            address: "37207 N. Mule Train Road, Carefree, AZ 85377"
+        ),
+
         // -------------------------
         // Oregon
         // -------------------------
