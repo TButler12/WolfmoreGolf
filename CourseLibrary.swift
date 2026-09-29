@@ -2197,6 +2197,93 @@ let AUGUSTA_NATIONAL_TEES: [TeeInfo] = [
 // NOTE: Rating/Slope not shown on your scorecard image.
 // =======================================================
 
+// MARK: - Desert Mountain Club — Apache — Scottsdale, AZ
+// Par 72 | Jack Nicklaus | Private | Designed Jan 1996
+
+private let DESERT_MTN_APACHE_ID = UUID(uuidString: "C5E60007-0001-4001-8001-000000000001")!
+
+let DESERT_MTN_APACHE_PARS: [Int] = [
+    4,4,5,4,3,4,4,3,5,   // Front 9 — OUT 36
+    4,4,3,4,3,5,4,5,4    // Back 9  — IN  36
+]
+let DESERT_MTN_APACHE_HCS: [Int] = [
+    2,18,12,6,4,14,10,16,8,
+    1,5,15,9,17,3,11,13,7
+]
+let DESERT_MTN_APACHE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Bear",   yardage: 7347, rating: 74.6, slope: 147),
+    TeeInfo(teeName: "Blue",   yardage: 6796, rating: 72.0, slope: 140),
+    TeeInfo(teeName: "Copper", yardage: 6460, rating: 70.1, slope: 138),
+    TeeInfo(teeName: "White",  yardage: 6289, rating: 69.4, slope: 135),
+    TeeInfo(teeName: "Red",    yardage: 5614, rating: 66.0, slope: 127),
+    TeeInfo(teeName: "Green",  yardage: 4992, rating: 64.9, slope: 113),
+]
+
+// MARK: - Desert Mountain Club — Chiricahua — Scottsdale, AZ
+// Par 72 | Jack Nicklaus | Private | Designed Mar 1999
+
+private let DESERT_MTN_CHIRICAHUA_ID = UUID(uuidString: "C5E60008-0001-4001-8001-000000000001")!
+
+let DESERT_MTN_CHIRICAHUA_PARS: [Int] = [
+    4,3,4,5,4,4,3,5,4,   // Front 9 — OUT 36
+    4,3,5,3,4,5,4,3,5    // Back 9  — IN  36
+]
+let DESERT_MTN_CHIRICAHUA_HCS: [Int] = [
+    3,17,1,11,7,13,5,15,9,
+    6,14,12,18,2,8,4,10,16
+]
+let DESERT_MTN_CHIRICAHUA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Bear",   yardage: 7042, rating: 72.8, slope: 143),
+    TeeInfo(teeName: "Blue",   yardage: 6603, rating: 70.7, slope: 136),
+    TeeInfo(teeName: "Copper", yardage: 6167, rating: 69.2, slope: 130),
+    TeeInfo(teeName: "White",  yardage: 5758, rating: 67.3, slope: 124),
+    TeeInfo(teeName: "Red",    yardage: 5176, rating: 64.3, slope: 116),
+]
+
+// MARK: - Desert Mountain Club — Cochise — Scottsdale, AZ
+// Par 72 | Jack Nicklaus | Private | Designed Mar 1988
+
+private let DESERT_MTN_COCHISE_ID = UUID(uuidString: "C5E60009-0001-4001-8001-000000000001")!
+
+let DESERT_MTN_COCHISE_PARS: [Int] = [
+    5,4,4,3,4,4,3,4,5,   // Front 9 — OUT 36
+    4,3,5,4,4,5,4,4,3    // Back 9  — IN  36
+]
+let DESERT_MTN_COCHISE_HCS: [Int] = [
+    9,3,1,13,7,5,15,11,17,
+    2,10,14,4,16,18,6,12,8
+]
+let DESERT_MTN_COCHISE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Bear",   yardage: 7293, rating: 74.3, slope: 145),
+    TeeInfo(teeName: "Blue",   yardage: 6843, rating: 72.5, slope: 143),
+    TeeInfo(teeName: "Copper", yardage: 6470, rating: 70.5, slope: 135),
+    TeeInfo(teeName: "White",  yardage: 6074, rating: 68.6, slope: 132),
+    TeeInfo(teeName: "Red",    yardage: 5361, rating: 65.5, slope: 126),
+    TeeInfo(teeName: "Green",  yardage: 4475, rating: 66.7, slope: 124),
+]
+
+// MARK: - Desert Mountain Club — Geronimo — Scottsdale, AZ
+// Par 72 | Jack Nicklaus | Private | Designed Dec 1989
+
+private let DESERT_MTN_GERONIMO_ID = UUID(uuidString: "C5E6000A-0001-4001-8001-000000000001")!
+
+let DESERT_MTN_GERONIMO_PARS: [Int] = [
+    5,4,4,3,4,4,3,4,5,   // Front 9 — OUT 36
+    4,3,5,4,4,5,4,4,3    // Back 9  — IN  36
+]
+let DESERT_MTN_GERONIMO_HCS: [Int] = [
+    9,5,3,15,11,13,17,1,7,
+    2,10,14,4,16,18,6,12,8
+]
+let DESERT_MTN_GERONIMO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Bear",   yardage: 7293, rating: 74.3, slope: 145),
+    TeeInfo(teeName: "Blue",   yardage: 6843, rating: 72.5, slope: 143),
+    TeeInfo(teeName: "Copper", yardage: 6470, rating: 70.5, slope: 135),
+    TeeInfo(teeName: "White",  yardage: 6074, rating: 68.6, slope: 132),
+    TeeInfo(teeName: "Red",    yardage: 5361, rating: 65.5, slope: 126),
+    TeeInfo(teeName: "Green",  yardage: 4475, rating: 66.7, slope: 124),
+]
+
 // MARK: - Desert Forest Golf Club — Carefree, AZ
 // Par 72 | Robert "Red" Lawrence | Private
 
@@ -13655,6 +13742,66 @@ private enum BuiltIns {
             type: "Private",
             phone: "(480) 488-4589",
             address: "37207 N. Mule Train Road, Carefree, AZ 85377"
+        ),
+
+        c(
+            DESERT_MTN_APACHE_ID,
+            "Desert Mountain Club (Apache)",
+            DESERT_MTN_APACHE_PARS,
+            DESERT_MTN_APACHE_HCS,
+            DESERT_MTN_APACHE_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(480) 595-4000",
+            website: "https://www.desertmountain.com",
+            address: "37700 Desert Mountain Parkway, Scottsdale, AZ 85262"
+        ),
+
+        c(
+            DESERT_MTN_CHIRICAHUA_ID,
+            "Desert Mountain Club (Chiricahua)",
+            DESERT_MTN_CHIRICAHUA_PARS,
+            DESERT_MTN_CHIRICAHUA_HCS,
+            DESERT_MTN_CHIRICAHUA_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(480) 595-4000",
+            website: "https://www.desertmountain.com",
+            address: "37700 Desert Mountain Parkway, Scottsdale, AZ 85262"
+        ),
+
+        c(
+            DESERT_MTN_COCHISE_ID,
+            "Desert Mountain Club (Cochise)",
+            DESERT_MTN_COCHISE_PARS,
+            DESERT_MTN_COCHISE_HCS,
+            DESERT_MTN_COCHISE_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(480) 595-4000",
+            website: "https://www.desertmountain.com",
+            address: "37700 Desert Mountain Parkway, Scottsdale, AZ 85262"
+        ),
+
+        c(
+            DESERT_MTN_GERONIMO_ID,
+            "Desert Mountain Club (Geronimo)",
+            DESERT_MTN_GERONIMO_PARS,
+            DESERT_MTN_GERONIMO_HCS,
+            DESERT_MTN_GERONIMO_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(480) 595-4000",
+            website: "https://www.desertmountain.com",
+            address: "37700 Desert Mountain Parkway, Scottsdale, AZ 85262"
         ),
 
         // -------------------------
