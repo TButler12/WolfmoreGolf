@@ -345,6 +345,33 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             // Keep .bestBall if already in that sub-mode; default to .matchPlay for new switches.
             newType = (GameManager.shared.currentGame?.resolvedGameType == .bestBall) ? .bestBall : .matchPlay
         }
+
+        // Block switching to a 5-player format when >5 players are active.
+        if !newType.supportsSevenPlayers {
+            let current = GameManager.shared.currentGame
+            let activeCount = (0..<WOLF_MAX_PLAYERS).filter { i in
+                (current?.playerActivated[safe: i] ?? false) &&
+                !(current?.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }.count
+            if activeCount > MAX_PLAYERS {
+                let revert: Int
+                switch current?.resolvedGameType {
+                case .wolf:        revert = 1
+                case .wolfLowBall: revert = 2
+                default:           revert = 0
+                }
+                sender.selectedSegmentIndex = revert
+                let ac = UIAlertController(
+                    title: "Format Not Available",
+                    message: "Match Play supports up to 5 players. You have \(activeCount) active players. Switch to 6-Point, Wolf 2pt, or LowBall, or reduce to 5 or fewer players.",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                present(ac, animated: true)
+                return
+            }
+        }
+
         GameManager.shared.update { g in
             g.gameType = newType
             g.normalize()

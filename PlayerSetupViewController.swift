@@ -1365,6 +1365,22 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     private func pushGameVC() {
+        if let g = GameManager.shared.currentGame, !g.resolvedGameType.supportsSevenPlayers {
+            let activeCount = (0..<WOLF_MAX_PLAYERS).filter { i in
+                (g.playerActivated[safe: i] ?? false) &&
+                !(g.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }.count
+            if activeCount > MAX_PLAYERS {
+                let ac = UIAlertController(
+                    title: "Too Many Players for This Format",
+                    message: "Match Play supports up to 5 players. You have \(activeCount) active players. Open Game Settings and switch to 6-Point, Wolf 2pt, or LowBall, or remove players to continue.",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                present(ac, animated: true)
+                return
+            }
+        }
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let game = sb.instantiateViewController(withIdentifier: "GameViewController")
         navigationController?.pushViewController(game, animated: true)

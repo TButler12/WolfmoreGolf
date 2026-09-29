@@ -198,6 +198,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var ibSubviews: [UIView] = []
     private var storyboardContentShifted = false
 
+    // Scroll container for scoring page — enabled only when 7-player content overflows tab bar
+    private var gameContentScrollView: UIScrollView?
+
     // Hole dot views for the dark green header
     private var holeDotViews: [UIView] = []
     private weak var holeDotContainer: UIView?
@@ -260,6 +263,25 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     override func viewDidLoad() {
         super.viewDidLoad()
         ibSubviews = view.subviews
+
+        // Embed all storyboard views in a scroll view so 7-player content can scroll
+        // above the tab bar on smaller screens. Disabled (acts as plain container) for ≤5 players.
+        let gameScroll = UIScrollView()
+        gameScroll.translatesAutoresizingMaskIntoConstraints = false
+        gameScroll.showsVerticalScrollIndicator = true
+        gameScroll.showsHorizontalScrollIndicator = false
+        gameScroll.isScrollEnabled = false
+        gameScroll.alwaysBounceVertical = false
+        gameScroll.contentInsetAdjustmentBehavior = .never
+        view.addSubview(gameScroll)
+        NSLayoutConstraint.activate([
+            gameScroll.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            gameScroll.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            gameScroll.topAnchor.constraint(equalTo: view.topAnchor),
+            gameScroll.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+        ])
+        for sv in ibSubviews { gameScroll.addSubview(sv) }
+        gameContentScrollView = gameScroll
 
         installUmbieHelp()
         
@@ -4182,7 +4204,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 for backfillHole in 0...hole {
                     guard g.holeCommitted[safe: backfillHole] == true else { continue }
 
-                    let holeScores = (0..<MAX_PLAYERS).map { s -> Int in
+                    let holeScores = (0..<g.activePlayerLimit).map { s -> Int in
                         guard s < g.playerActivated.count, g.playerActivated[s],
                               s < g.scores.count, backfillHole < g.scores[s].count else { return 0 }
                         return g.scores[s][backfillHole] ?? 0
@@ -5373,12 +5395,12 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     private func showLiveCodePrompt() {
         guard let g = GameManager.shared.currentGame else { return }
 
-        // Live Wolf supports up to MAX_PLAYERS (5). With more active players, show a note.
+        // Live Wolf supports up to MAX_PLAYERS for non-Wolf game types; Wolf-family games allow up to 7.
         let activeCount = (0..<g.activePlayerLimit).filter {
             (g.playerActivated[safe: $0] ?? false) &&
             !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }.count
-        if activeCount > MAX_PLAYERS {
+        if !g.resolvedGameType.supportsSevenPlayers && activeCount > MAX_PLAYERS {
             let ac = UIAlertController(
                 title: "Live Wolf",
                 message: "Live Wolf supports up to 5 players. You currently have \(activeCount) active players.",
@@ -6176,8 +6198,12 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
 
         guard activeCount >= 6 else {
             // Move extra rows offscreen (applyInactiveSlotVisibility will also hide them)
-            for slot in 5..<scoreFields.count {
-                moveRowOffscreen(slot: slot)
+            for slot in 5..<scoreFields.count { moveRowOffscreen(slot: slot) }
+            // Restore non-scrolling layout for ≤5 players
+            if let sv = gameContentScrollView, sv.isScrollEnabled {
+                sv.isScrollEnabled = false
+                sv.setContentOffset(.zero, animated: false)
+                sv.contentInset = .zero
             }
             return
         }
@@ -6225,6 +6251,24 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         let lastRowBottom = row0Y + CGFloat(activeCount) * newRowH + 8
         bottomStack.frame.origin.y = lastRowBottom
         bottomSeparator?.frame.origin.y = lastRowBottom - 6
+
+        // Enable scrolling when 7-player content overflows above the tab bar
+        if let sv = gameContentScrollView {
+            let tabBarH: CGFloat = (liveTabBar?.isHidden == false)
+                ? (liveTabBarHeightConstraint?.constant ?? 44) : 0
+            let safeBottom    = view.safeAreaLayoutGuide.layoutFrame.maxY
+            let usableBottom  = safeBottom - tabBarH
+            let contentBottom = lastRowBottom + stackH + 8
+            let needsScroll   = contentBottom > usableBottom
+            let bottomInset   = sv.bounds.height - usableBottom
+            sv.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
+            sv.contentSize = CGSize(width: sv.bounds.width,
+                                    height: needsScroll ? contentBottom : sv.bounds.height)
+            if sv.isScrollEnabled != needsScroll {
+                sv.isScrollEnabled = needsScroll
+                if !needsScroll { sv.setContentOffset(.zero, animated: false) }
+            }
+        }
     }
 
     private func repositionRow(slot i: Int, y: CGFloat, h: CGFloat) {

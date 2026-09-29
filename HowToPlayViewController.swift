@@ -42,6 +42,13 @@ final class HowToPlayViewController: UIViewController {
             badges: ["6-Point", "Wolf 2pt", "LowBall", "Match Play"]
         ),
         HowToPlayPage(
+            systemImage: "person.badge.plus",
+            symbolColor: UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1),
+            title: "6 & 7-Player Wolf",
+            body: "6-Point, Wolf 2pt, and LowBall support up to 7 active players — add a 6th or 7th name on the Player Setup screen and they slot straight in.\n\nWith 6 or 7 players, Skins, Nassau, and Live Wolf are off for the round. Those side games are designed for groups of 5 — Results will show a note explaining why. Match Play is also blocked at more than 5 players; the app will tell you if you try to switch.\n\nStandings holes: players rotate as wolf for as many full rotations as fit in the round (4 players: holes 1–16, 5 players: holes 1–15, 7 players: holes 1–14). On the remaining holes, whoever is down the most money at that point goes first — giving the person who's behind the best chance to earn it back.",
+            badges: ["6-Point", "Wolf 2pt", "LowBall", "Up to 7 Players"]
+        ),
+        HowToPlayPage(
             systemImage: "pencil.and.list.clipboard",
             symbolColor: UIColor(red: 0.20, green: 0.44, blue: 0.70, alpha: 1),
             title: "Score Each Hole",
