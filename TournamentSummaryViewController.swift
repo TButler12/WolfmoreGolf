@@ -131,7 +131,7 @@ final class TournamentSummaryViewController: UIViewController {
     private func buildResults() {
         let gm = GameManager.shared
         let committed = game.holeCommitted
-        let activeSeats = (0..<min(MAX_PLAYERS, game.playerActivated.count)).filter {
+        let activeSeats = (0..<min(game.activePlayerLimit, game.playerActivated.count)).filter {
             game.playerActivated[$0] &&
             !(game.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }

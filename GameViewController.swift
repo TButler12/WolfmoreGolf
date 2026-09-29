@@ -92,23 +92,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     @IBOutlet weak var w2: UIButton!
     @IBOutlet weak var w3: UIButton!
     @IBOutlet weak var w4: UIButton!
-    @IBOutlet weak var w5: UIButton!
-    @IBOutlet weak var w6: UIButton!
-    @IBOutlet weak var w7: UIButton!
-    @IBOutlet weak var w8: UIButton!
-    
-    private var wolfButtons: [UIButton] { [w0, w1, w2, w3, w4] }
-   
+    private weak var w5: UIButton?
+    private weak var w6: UIButton?
+
+    private var wolfButtons: [UIButton] { [w0, w1, w2, w3, w4] + [w5, w6].compactMap { $0 } }
+
     @IBOutlet private weak var p0: UIButton!
     @IBOutlet private weak var p1: UIButton!
     @IBOutlet private weak var p2: UIButton!
     @IBOutlet private weak var p3: UIButton!
     @IBOutlet private weak var p4: UIButton!
-    @IBOutlet private weak var p5: UIButton!
-    @IBOutlet private weak var p6: UIButton!
-    @IBOutlet private weak var p7: UIButton!
-    
-    @IBOutlet private weak var p8: UIButton!
+    private weak var p5: UIButton?
+    private weak var p6: UIButton?
     
     @IBOutlet weak var UpdateScores: UIButton!
     
@@ -136,7 +131,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private let holeStatsSwitch = UISwitch()
     private var hasPromptedForThisHole = false
     private var hasPromptedFront9Submit = false
-    private var proxButtons: [UIButton] { [p0, p1, p2, p3, p4] }
+    private var proxButtons: [UIButton] { [p0, p1, p2, p3, p4] + [p5, p6].compactMap { $0 } }
 
     private var currentHole: Int = 0
 
@@ -193,6 +188,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var playerRowCardViews: [UIView] = []
     private var playerRowCardsInstalled = false
 
+    // Extra scoring rows (seats 5–6) created programmatically for Wolf/Scotch 7-player games
+    private var extraScoringRowsBuilt = false
+
     // One-time mute tip tooltip
     private static let muteTipShownKey = "com.wolfmore.muteLongPressTipShown.v2"
 
@@ -234,8 +232,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var liveContentContainer: UIView?
 
     private var displayOrder: [Int] {
-        let all = Array(0..<MAX_PLAYERS)
-        guard let g = GameManager.shared.currentGame else { return all }
+        guard let g = GameManager.shared.currentGame else { return Array(0..<MAX_PLAYERS) }
+        let limit = g.resolvedGameType.supportsSevenPlayers ? WOLF_MAX_PLAYERS : MAX_PLAYERS
+        let all = Array(0..<limit)
         let active = all.filter { i in
             (g.playerActivated[safe: i] ?? false) &&
             !(g.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -323,6 +322,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             tf.keyboardType = .decimalPad
             tf.adjustsFontSizeToFitWidth = true
             tf.minimumFontSize = 9
+            tf.inputAccessoryView = makeDoneToolbar()
             tf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
         }
         
@@ -450,6 +450,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         layoutBottomControls()
         applyStoryboardShiftIfNeeded()
         refreshPlayerRowCards()
+        let wasBuildDone = extraScoringRowsBuilt
+        buildExtraScoringRowsIfNeeded()
+        if !wasBuildDone && extraScoringRowsBuilt {
+            styleWolfButtons()
+            paintEverythingForCurrentHole()
+            refreshTotalMoneyLabels()
+        }
+        relayoutScoringPage()
         // Z-order: gameHeader first so liveContentContainer lands above it; bar and nassau stay at front.
         if let header = gameHeaderView { view.bringSubviewToFront(header) }
         if let container = liveContentContainer { view.bringSubviewToFront(container) }
@@ -1454,7 +1462,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private func changeHandicap() {
         guard let g = GameManager.shared.currentGame else { return }
         let sheet = UIAlertController(title: "Change Handicap", message: "Select a player", preferredStyle: .actionSheet)
-        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count, g.hcPlayers.count))
+        let hcLimit = g.resolvedGameType.supportsSevenPlayers ? WOLF_MAX_PLAYERS : MAX_PLAYERS
+        let seats = 0..<min(hcLimit, min(g.playerNames.count, g.playerActivated.count, g.hcPlayers.count))
         for seat in seats where g.playerActivated[seat] {
             let name = g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else { continue }
@@ -1629,8 +1638,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let holesToSum = holesFrom(start, to: current)
 
         // Seat × hole matrix padded to totalHoles
+        let maxSeats = g.resolvedGameType.supportsSevenPlayers ? WOLF_MAX_PLAYERS : MAX_PLAYERS
         let money: [[Double]] = g.playerMoney.isEmpty
-            ? Array(repeating: Array(repeating: 0.0, count: total), count: MAX_PLAYERS)
+            ? Array(repeating: Array(repeating: 0.0, count: total), count: maxSeats)
             : g.playerMoney.map { row in
                 row.count >= total ? Array(row.prefix(total))
                                    : row + Array(repeating: 0.0, count: total - row.count)
@@ -2294,21 +2304,30 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func applyInactiveSlotVisibility() {
         guard let g = GameManager.shared.currentGame else { return }
+        let supportsExtra = g.resolvedGameType.supportsSevenPlayers
         let teamSlot = stablefordTeamSlotIndex(for: g)
-        let sortedScore  = scoreFields.sorted       { $0.tag < $1.tag }
-        let sortedNames  = playerNameLabels.sorted  { $0.tag < $1.tag }
-        let sortedMoney  = playerMoneyFields.sorted { $0.tag < $1.tag }
-        let sortedTotals = totalMoneyLabels.sorted  { $0.tag < $1.tag }
-        for i in 0..<MAX_PLAYERS {
-            let isTeamSlot = (teamSlot == i)
-            let hide = !isTeamSlot && !(g.playerActivated[safe: i] ?? false)
-            if i < sortedScore.count  { sortedScore[i].isHidden  = hide }
-            if i < sortedNames.count  { sortedNames[i].isHidden  = hide }
-            if i < sortedMoney.count  { sortedMoney[i].isHidden  = hide }
-            if i < sortedTotals.count { sortedTotals[i].isHidden = hide }
-            if i < wolfButtons.count  { wolfButtons[i].isHidden  = hide }
-            if i < proxButtons.count  { proxButtons[i].isHidden  = hide }
-            if i < playerRowCardViews.count { playerRowCardViews[i].isHidden = hide }
+        let order = displayOrder
+        let slotCount = scoreFields.count  // 5 normally, 7 after extra rows built
+        for slot in 0..<slotCount {
+            let seat = order[safe: slot] ?? slot
+            let isExtraSeat = seat >= MAX_PLAYERS
+            let isTeamSlot = (teamSlot == slot)
+            let isActive = g.playerActivated[safe: seat] ?? false
+            let hide: Bool
+            if isTeamSlot {
+                hide = false
+            } else if isExtraSeat {
+                hide = !supportsExtra || !isActive
+            } else {
+                hide = !isActive
+            }
+            if slot < scoreFields.count       { scoreFields[slot].isHidden       = hide }
+            if slot < playerNameLabels.count  { playerNameLabels[slot].isHidden  = hide }
+            if slot < playerMoneyFields.count { playerMoneyFields[slot].isHidden = hide }
+            if slot < totalMoneyLabels.count  { totalMoneyLabels[slot].isHidden  = hide }
+            if slot < wolfButtons.count       { wolfButtons[slot].isHidden       = hide }
+            if slot < proxButtons.count       { proxButtons[slot].isHidden       = hide }
+            if slot < playerRowCardViews.count { playerRowCardViews[slot].isHidden = hide }
         }
     }
 
@@ -2824,7 +2843,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let order = displayOrder
         let isTournament = g.resolvedGameType == .tournament || g.tournamentCode != nil
         let teamSlot = stablefordTeamSlotIndex(for: g)
-        let slots = min(scoreFields.count, MAX_PLAYERS)
+        let maxScoreSlots = g.resolvedGameType.supportsSevenPlayers ? WOLF_MAX_PLAYERS : MAX_PLAYERS
+        let slots = min(scoreFields.count, maxScoreSlots)
         for s in 0..<slots {
             if let ts = teamSlot, s == ts {
                 scoreFields[s].text = ""
@@ -3073,7 +3093,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     
     @IBAction private func wolfButtonTapped(_ sender: UIButton) {
         let player = sender.tag
-        guard (0..<MAX_PLAYERS).contains(player) else { return }
+        guard (0..<WOLF_MAX_PLAYERS).contains(player) else { return }
 
         GameManager.shared.update { g in
             let hole = max(0, min(g.totalHoles - 1, g.hole))
@@ -3118,7 +3138,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard allowProx else { return }
 
         let player = sender.tag
-        guard (0..<MAX_PLAYERS).contains(player) else { return }
+        guard (0..<WOLF_MAX_PLAYERS).contains(player) else { return }
 
         GameManager.shared.update { g in
             if g.proxWinnerPerHole.count != STANDARD_HOLES { g.proxWinnerPerHole = Array(repeating: nil, count: STANDARD_HOLES) }
@@ -3582,7 +3602,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // Block commit if any active player has no score entered
         let valOrder = displayOrder
         let valTeamSlot = stablefordTeamSlotIndex(for: snap)
-        let valSlots = min(scoreFields.count, MAX_PLAYERS)
+        let valSlots = min(scoreFields.count, snap.activePlayerLimit)
         var missingScore = false
         for s in 0..<valSlots {
             if let ts = valTeamSlot, s == ts { continue }
@@ -3617,10 +3637,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 g.holeCommitted = Array(repeating: false, count: totalH)
             }
 
-            let slots = min(MAX_PLAYERS, scoreFields.count)
+            let slots = min(g.activePlayerLimit, scoreFields.count)
             for s in 0..<slots {
                 let seat = scoreFields[s].tag
-                guard (0..<MAX_PLAYERS).contains(seat) else { continue }
+                guard (0..<g.activePlayerLimit).contains(seat) else { continue }
                 g.scores[seat][hole] = Int(scoreFields[s].text ?? "")
             }
 
@@ -3634,17 +3654,27 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             print("✅ Last round saved at end of hole \(totalH)")
         }
 
-        // 2) recalculate Nassau immediately
+        // 2) recalculate Nassau immediately (skipped for >5-player games where Nassau is disabled)
         GameManager.shared.update { g in
+            let activeSideGameCount = (0..<g.activePlayerLimit).filter {
+                (g.playerActivated[safe: $0] ?? false) &&
+                !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }.count
+            guard activeSideGameCount <= MAX_PLAYERS else { return }
             if var ns = g.nassauState {
                 NassauEngine.recalculate(state: &ns, gameData: g)
                 g.nassauState = ns
             }
         }
 
-        // 2b) recalculate local skins so live bar and results stay current
+        // 2b) recalculate local skins so live bar and results stay current (skipped for >5-player games)
         if GameManager.shared.currentGame?.tournamentCode == nil {
             GameManager.shared.update { g in
+                let activeSideGameCount = (0..<g.activePlayerLimit).filter {
+                    (g.playerActivated[safe: $0] ?? false) &&
+                    !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+                }.count
+                guard activeSideGameCount <= MAX_PLAYERS else { return }
                 if var ss = g.skinsState, ss.settings.isEnabled {
                     SkinsEngine.recalculate(state: &ss, gameData: g)
                     g.skinsState = ss
@@ -4731,8 +4761,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let playerName = g.playerNames[safe: mySeat]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         liveSummaryPlayerLabel?.text = playerName.isEmpty ? nil : playerName
 
-        // Skins: McTommy's net money from skins (not the pot value)
-        if let ss = g.skinsState, ss.settings.isEnabled,
+        // Skins and Nassau: hidden for >5-player games where those side games are disabled.
+        let activeSideGameCount = (0..<g.activePlayerLimit).filter {
+            (g.playerActivated[safe: $0] ?? false) &&
+            !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+        let sideGamesEnabled = activeSideGameCount <= MAX_PLAYERS
+
+        if sideGamesEnabled, let ss = g.skinsState, ss.settings.isEnabled,
            mySeat < ss.moneyWonByPlayer.count {
             let money = ss.moneyWonByPlayer[mySeat]
             let sign  = money > 0 ? "+" : ""
@@ -4741,8 +4777,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             liveSummarySkinsLabel?.text = "Skins —"
         }
 
-        // Nassau: McTommy's standing in their match (flipped if they're team 2)
-        if let ns = g.nassauState, ns.isEnabled {
+        if sideGamesEnabled, let ns = g.nassauState, ns.isEnabled {
             let allMatches = ns.oneVsOneMatches + ns.twoVsTwoMatches
             if let match = allMatches.first(where: {
                 $0.team1PlayerIndexes.contains(mySeat) || $0.team2PlayerIndexes.contains(mySeat)
@@ -5044,7 +5079,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             return
         }
         let order = displayOrder
-        let slots = min(playerMoneyFields.count, MAX_PLAYERS)
+        let maxMoneySlots = g.resolvedGameType.supportsSevenPlayers ? WOLF_MAX_PLAYERS : MAX_PLAYERS
+        let slots = min(playerMoneyFields.count, maxMoneySlots)
         for s in 0..<slots {
             let seat = order[safe: s] ?? s
             let raw: Double = (seat < g.playerMoney.count && h < g.playerMoney[seat].count) ? g.playerMoney[seat][h] : 0.0
@@ -5336,6 +5372,23 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
 
     private func showLiveCodePrompt() {
         guard let g = GameManager.shared.currentGame else { return }
+
+        // Live Wolf supports up to MAX_PLAYERS (5). With more active players, show a note.
+        let activeCount = (0..<g.activePlayerLimit).filter {
+            (g.playerActivated[safe: $0] ?? false) &&
+            !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+        if activeCount > MAX_PLAYERS {
+            let ac = UIAlertController(
+                title: "Live Wolf",
+                message: "Live Wolf supports up to 5 players. You currently have \(activeCount) active players.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+            return
+        }
+
         if let code = g.liveSessionCode, !code.isEmpty {
             let ac = UIAlertController(
                 title: "Send Live Wolf Code?",
@@ -5901,7 +5954,12 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             let isSeatActive = g.playerActivated[safe: seat] ?? true
             let isOn = (winner == seat)
             b.backgroundColor = isOn ? .label : UIColor(red: 0.165, green: 0.478, blue: 0.294, alpha: 1.0)
-            b.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
+            if #available(iOS 15.0, *), var cfg = b.configuration {
+                cfg.baseForegroundColor = isOn ? .systemBackground : .white
+                b.configuration = cfg
+            } else {
+                b.setTitleColor(isOn ? .systemBackground : .white, for: .normal)
+            }
             b.layer.cornerRadius = 10
             b.layer.masksToBounds = true
             b.alpha = isSeatActive ? 1.0 : 0.4
@@ -5941,6 +5999,258 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         } else {
             print("❌ Failed to parse pasted share text")
         }
+    }
+
+    // MARK: - 7-Player Extra Row Layout
+
+    private func buildExtraScoringRowsIfNeeded() {
+        guard !extraScoringRowsBuilt else { return }
+
+        // Wait until storyboard rows have their final frames (after applyStoryboardShiftIfNeeded)
+        guard scoreFields.count == 5,
+              let row4Score  = scoreFields[safe: 4],
+              let row4Money  = playerMoneyFields[safe: 4],
+              let row4Total  = totalMoneyLabels[safe: 4],
+              let row4Name   = playerNameLabels[safe: 4],
+              row4Score.frame != .zero,
+              let sup = row4Score.superview else { return }
+
+        let row4Wolf = wolfButtons[safe: 4]   // w4 — use as x/size template for w5/w6
+        let row4Prox = proxButtons[safe: 4]   // p4
+
+        extraScoringRowsBuilt = true
+        let offY: CGFloat = -300  // offscreen until relayoutScoringPage positions them
+
+        for seat in 5..<WOLF_MAX_PLAYERS {
+            // Score field — copy exact visual style from row4Score
+            let sf = UITextField()
+            sf.tag = seat
+            sf.frame = CGRect(x: row4Score.frame.minX, y: offY,
+                              width: row4Score.frame.width, height: row4Score.frame.height)
+            sf.keyboardType = .numberPad
+            sf.inputAccessoryView = makeDoneToolbar()
+            sf.addTarget(self, action: #selector(scoreEdited(_:)), for: .editingDidEnd)
+            sf.addTarget(self, action: #selector(scoreChanged(_:)), for: .editingChanged)
+            sf.backgroundColor = row4Score.backgroundColor
+            sf.textColor = row4Score.textColor
+            sf.textAlignment = row4Score.textAlignment
+            sf.font = row4Score.font
+            sf.borderStyle = row4Score.borderStyle
+            sf.layer.cornerRadius = row4Score.layer.cornerRadius
+            sup.addSubview(sf)
+            scoreFields.append(sf)
+
+            // Money field — copy exact visual style from row4Money
+            let mf = UITextField()
+            mf.tag = seat
+            mf.frame = CGRect(x: row4Money.frame.minX, y: offY,
+                              width: row4Money.frame.width, height: row4Money.frame.height)
+            mf.keyboardType = .decimalPad
+            mf.textAlignment = row4Money.textAlignment
+            mf.adjustsFontSizeToFitWidth = true
+            mf.minimumFontSize = 9
+            mf.font = row4Money.font
+            mf.textColor = row4Money.textColor
+            mf.backgroundColor = row4Money.backgroundColor
+            mf.borderStyle = row4Money.borderStyle
+            mf.layer.cornerRadius = row4Money.layer.cornerRadius
+            mf.isUserInteractionEnabled = true
+            mf.inputAccessoryView = makeDoneToolbar()
+            mf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
+            sup.addSubview(mf)
+            playerMoneyFields.append(mf)
+
+            // Name label
+            let nl = UILabel()
+            nl.tag = seat
+            nl.frame = CGRect(x: row4Name.frame.minX, y: offY,
+                              width: row4Name.frame.width, height: row4Name.frame.height)
+            nl.font = row4Name.font
+            nl.adjustsFontSizeToFitWidth = true
+            nl.minimumScaleFactor = 0.6
+            nl.lineBreakMode = .byTruncatingTail
+            nl.numberOfLines = 1
+            nl.isUserInteractionEnabled = true
+            let lp = UILongPressGestureRecognizer(target: self, action: #selector(playerRowLongPressed(_:)))
+            lp.minimumPressDuration = 0.6
+            nl.addGestureRecognizer(lp)
+            sup.addSubview(nl)
+            playerNameLabels.append(nl)
+
+            // Total label
+            let tl = UILabel()
+            tl.tag = seat
+            tl.frame = CGRect(x: row4Total.frame.minX, y: offY,
+                              width: row4Total.frame.width, height: row4Total.frame.height)
+            tl.font = row4Total.font
+            tl.textAlignment = row4Total.textAlignment
+            tl.adjustsFontSizeToFitWidth = true
+            tl.minimumScaleFactor = 0.6
+            sup.addSubview(tl)
+            totalMoneyLabels.append(tl)
+
+            // Wolf button (w5 / w6) — copy storyboard configuration from row4Wolf so
+            // font (10pt plain) and title match exactly; styleWolfButtons() updates colors.
+            let wb = UIButton(type: .custom)
+            wb.tag = seat
+            if let r = row4Wolf {
+                wb.frame = CGRect(x: r.frame.minX, y: offY, width: r.frame.width, height: r.frame.height)
+                if #available(iOS 15.0, *) {
+                    wb.configuration = r.configuration  // preserves 10pt plain style + "W" title
+                } else {
+                    wb.setTitle("W", for: .normal)
+                    wb.titleLabel?.font = UIFont.systemFont(ofSize: 10)
+                }
+            } else {
+                wb.frame = CGRect(x: 186, y: offY, width: 36, height: 34)
+                if #available(iOS 15.0, *) {
+                    var cfg = UIButton.Configuration.plain()
+                    cfg.title = "W"
+                    cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { a in
+                        var out = a; out.font = UIFont.systemFont(ofSize: 10); return out
+                    }
+                    wb.configuration = cfg
+                } else {
+                    wb.setTitle("W", for: .normal)
+                    wb.titleLabel?.font = UIFont.systemFont(ofSize: 10)
+                }
+            }
+            wb.addTarget(self, action: #selector(wolfButtonTapped(_:)), for: .touchUpInside)
+            sup.addSubview(wb)
+            if seat == 5 { w5 = wb } else { w6 = wb }
+
+            // Prox button (p5 / p6) — same approach as wolf: copy row4Prox config or
+            // set 10pt font explicitly so the "P" matches storyboard buttons.
+            let pb = UIButton(type: .custom)
+            pb.tag = seat
+            if let r = row4Prox {
+                pb.frame = CGRect(x: r.frame.minX, y: offY, width: r.frame.width, height: r.frame.height)
+                if #available(iOS 15.0, *) {
+                    pb.configuration = r.configuration  // preserves 10pt plain style + "P" title
+                } else {
+                    pb.setTitle("P", for: .normal)
+                    pb.titleLabel?.font = UIFont.systemFont(ofSize: 10)
+                }
+            } else {
+                pb.frame = CGRect(x: 150, y: offY, width: 36, height: 34)
+                if #available(iOS 15.0, *) {
+                    var cfg = UIButton.Configuration.plain()
+                    cfg.title = "P"
+                    cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { a in
+                        var out = a; out.font = UIFont.systemFont(ofSize: 10); return out
+                    }
+                    pb.configuration = cfg
+                } else {
+                    pb.setTitle("P", for: .normal)
+                    pb.titleLabel?.font = UIFont.systemFont(ofSize: 10)
+                }
+            }
+            pb.addTarget(self, action: #selector(proxButtonTapped(_:)), for: .touchUpInside)
+            sup.addSubview(pb)
+            if seat == 5 { p5 = pb } else { p6 = pb }
+
+            // Row card (background stripe)
+            let card = UIView()
+            card.backgroundColor = UIColor.secondarySystemGroupedBackground
+            card.layer.cornerRadius = 8
+            card.layer.borderWidth = 0.5
+            card.layer.borderColor = UIColor.separator.cgColor
+            card.frame = CGRect(x: 0, y: offY - 6, width: sup.bounds.width, height: row4Name.frame.height + 12)
+            sup.insertSubview(card, at: 0)
+            playerRowCardViews.append(card)
+        }
+
+        // Style the new wolf/prox buttons now that w5/w6, p5/p6 are set
+        styleWolfButtons()
+    }
+
+    private func relayoutScoringPage() {
+        guard let g = GameManager.shared.currentGame,
+              g.resolvedGameType.supportsSevenPlayers,
+              extraScoringRowsBuilt else { return }
+
+        let activeCount = (0..<WOLF_MAX_PLAYERS).filter { seat in
+            (g.playerActivated[safe: seat] ?? false) &&
+            !(g.playerNames[safe: seat] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+
+        guard activeCount >= 6 else {
+            // Move extra rows offscreen (applyInactiveSlotVisibility will also hide them)
+            for slot in 5..<scoreFields.count {
+                moveRowOffscreen(slot: slot)
+            }
+            return
+        }
+
+        guard let row0Score = scoreFields[safe: 0],
+              let row4Score = scoreFields[safe: 4],
+              row0Score.frame != .zero,
+              row4Score.frame != .zero,
+              let bottomStack = bottomStackView else { return }
+
+        let originalRowH = (row4Score.frame.minY - row0Score.frame.minY) / 4  // e.g. ~44pt
+        let row0Y = row0Score.frame.minY
+
+        // How much space can the bottom stack give up?
+        let safeBottom = view.safeAreaLayoutGuide.layoutFrame.maxY
+        let stackH = bottomStack.frame.height > 0 ? bottomStack.frame.height : 324
+        let stackBaseY = pressedPushed2.frame.minY  // reset each pass by layoutBottomControls
+        let availablePush = max(0, safeBottom - (stackBaseY + stackH))
+
+        // How much extra height do we need for the extra rows?
+        let extraNeeded = CGFloat(activeCount - 5) * originalRowH
+        let actualPush = min(extraNeeded, availablePush)
+
+        // Resulting row pitch after push; clamp to minimum 36pt
+        let newBandH = 5 * originalRowH + actualPush
+        let newRowH = max(36, newBandH / CGFloat(activeCount))
+
+        let needsCompression = newRowH < originalRowH
+
+        if needsCompression {
+            // Reposition ALL rows (0..activeCount-1) at compressed pitch
+            for i in 0..<activeCount {
+                let newY = row0Y + CGFloat(i) * newRowH
+                repositionRow(slot: i, y: newY, h: row0Score.frame.height)
+            }
+        } else {
+            // Only move extra rows; storyboard rows 0-4 stay at their shifted positions
+            for i in 5..<activeCount {
+                let newY = row0Y + CGFloat(i) * originalRowH
+                repositionRow(slot: i, y: newY, h: row0Score.frame.height)
+            }
+        }
+
+        // Push the bottom stack down so it starts below the last row
+        let lastRowBottom = row0Y + CGFloat(activeCount) * newRowH + 8
+        bottomStack.frame.origin.y = lastRowBottom
+        bottomSeparator?.frame.origin.y = lastRowBottom - 6
+    }
+
+    private func repositionRow(slot i: Int, y: CGFloat, h: CGFloat) {
+        func setY(_ v: UIView?, _ newY: CGFloat, dh: CGFloat = 0) {
+            guard let v else { return }
+            var f = v.frame; f.origin.y = newY + dh; v.frame = f
+        }
+        if i < scoreFields.count       { setY(scoreFields[i],       y) }
+        if i < playerMoneyFields.count { setY(playerMoneyFields[i], y) }
+        if i < playerNameLabels.count  { setY(playerNameLabels[i],  y) }
+        if i < totalMoneyLabels.count  { setY(totalMoneyLabels[i],  y) }
+        if i < wolfButtons.count       { setY(wolfButtons[i],       y) }
+        if i < proxButtons.count       { setY(proxButtons[i],       y) }
+        if i < playerRowCardViews.count { setY(playerRowCardViews[i], y, dh: -6) }
+    }
+
+    private func moveRowOffscreen(slot i: Int) {
+        let offY: CGFloat = -300
+        func setY(_ v: UIView?) { guard let v else { return }; var f = v.frame; f.origin.y = offY; v.frame = f }
+        if i < scoreFields.count       { setY(scoreFields[i]) }
+        if i < playerMoneyFields.count { setY(playerMoneyFields[i]) }
+        if i < playerNameLabels.count  { setY(playerNameLabels[i]) }
+        if i < totalMoneyLabels.count  { setY(totalMoneyLabels[i]) }
+        if i < wolfButtons.count       { setY(wolfButtons[i]) }
+        if i < proxButtons.count       { setY(proxButtons[i]) }
+        if i < playerRowCardViews.count { setY(playerRowCardViews[i]) }
     }
 }
    

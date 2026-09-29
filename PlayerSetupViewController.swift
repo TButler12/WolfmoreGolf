@@ -586,13 +586,19 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let gameType = g.gameType?.displayName ?? "Casual"
         pillsStack.addArrangedSubview(makeSmallPill("\(gameType) $\(g.baseGameStake)", bg: pillBg, fg: pillFg))
 
-        if let ns = g.nassauState {
+        let activeCount = (0..<g.activePlayerLimit).filter {
+            (g.playerActivated[safe: $0] ?? false) &&
+            !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+        let sideGamesActive = activeCount <= MAX_PLAYERS
+
+        if sideGamesActive, let ns = g.nassauState {
             let s = ns.settings.baseStake
             let stakeStr = s.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(s))" : String(format: "%.2f", s)
             pillsStack.addArrangedSubview(makeSmallPill("Nassau $\(stakeStr)", bg: pillBg, fg: pillFg))
         }
 
-        if let ss = g.skinsState {
+        if sideGamesActive, let ss = g.skinsState {
             let v = ss.settings.skinValue
             let stakeStr = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.2f", v)
             pillsStack.addArrangedSubview(makeSmallPill("Skins $\(stakeStr)", bg: pillBg, fg: pillFg))

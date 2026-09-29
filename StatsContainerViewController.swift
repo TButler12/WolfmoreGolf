@@ -79,12 +79,46 @@ final class StatsContainerViewController: UIViewController {
     private func switchTo(index: Int) {
         let newVC: UIViewController
         switch index {
-        case 0: newVC = gameVC
-        case 1: newVC = nassauVC
-        case 2: newVC = skinsVC
-        default: return
+        case 0:
+            newVC = gameVC
+        case 1:
+            newVC = isSideGameOverLimit ? makeSideGamePlaceholder() : nassauVC
+        case 2:
+            newVC = isSideGameOverLimit ? makeSideGamePlaceholder() : skinsVC
+        default:
+            return
         }
         transition(to: newVC)
+    }
+
+    // True when the active player count exceeds what Skins/Nassau support.
+    private var isSideGameOverLimit: Bool {
+        guard let g = GameManager.shared.currentGame else { return false }
+        let active = (0..<g.activePlayerLimit).filter {
+            (g.playerActivated[safe: $0] ?? false) &&
+            !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }.count
+        return active > MAX_PLAYERS
+    }
+
+    private func makeSideGamePlaceholder() -> UIViewController {
+        let vc = UIViewController()
+        vc.view.backgroundColor = .systemBackground
+        let label = UILabel()
+        label.text = "Skins and Nassau support up to 5 players"
+        label.font = UIFont.systemFont(ofSize: 15, weight: .regular)
+        label.textColor = .secondaryLabel
+        label.textAlignment = .center
+        label.numberOfLines = 0
+        label.translatesAutoresizingMaskIntoConstraints = false
+        vc.view.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: vc.view.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: vc.view.centerYAnchor, constant: -40),
+            label.leadingAnchor.constraint(equalTo: vc.view.leadingAnchor, constant: 32),
+            label.trailingAnchor.constraint(equalTo: vc.view.trailingAnchor, constant: -32),
+        ])
+        return vc
     }
 
     private func transition(to newVC: UIViewController) {

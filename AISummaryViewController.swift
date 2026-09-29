@@ -129,7 +129,7 @@ private enum GameContextBuilder {
         lines.append("COURSE: \(courseName.isEmpty ? "Unknown Course" : courseName)")
         lines.append("DATE: \(df.string(from: Date()))")
 
-        let activePlayers: [(seat: Int, name: String, hc: Int)] = (0..<MAX_PLAYERS).compactMap { i in
+        let activePlayers: [(seat: Int, name: String, hc: Int)] = (0..<g.activePlayerLimit).compactMap { i in
             guard i < g.playerNames.count, i < g.playerActivated.count, g.playerActivated[i] else { return nil }
             let name = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else { return nil }
@@ -207,7 +207,7 @@ private enum GameContextBuilder {
         lines.append("COURSE: \(courseName.isEmpty ? "Unknown Course" : courseName)")
         lines.append("DATE: \(df.string(from: Date()))")
 
-        let activePlayers: [(seat: Int, name: String)] = (0..<MAX_PLAYERS).compactMap { i in
+        let activePlayers: [(seat: Int, name: String)] = (0..<g.activePlayerLimit).compactMap { i in
             guard i < g.playerNames.count, i < g.playerActivated.count,
                   g.playerActivated[i] else { return nil }
             let name = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -265,7 +265,7 @@ private enum GameContextBuilder {
         lines.append("COURSE: \(courseName.isEmpty ? "Unknown Course" : courseName)")
         lines.append("DATE: \(df.string(from: Date()))")
 
-        let activePlayers: [(seat: Int, name: String)] = (0..<MAX_PLAYERS).compactMap { i in
+        let activePlayers: [(seat: Int, name: String)] = (0..<g.activePlayerLimit).compactMap { i in
             guard i < g.playerNames.count, i < g.playerActivated.count,
                   g.playerActivated[i] else { return nil }
             let name = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -345,8 +345,8 @@ private enum GameContextBuilder {
             lines.append("")
         }
 
-        // Skins (only included when user opts in via the Include Skins toggle)
-        if includeSkins, let skins = g.skinsState {
+        // Skins (only included when user opts in and ≤5 active players)
+        if includeSkins, activePlayers.count <= MAX_PLAYERS, let skins = g.skinsState {
             let skinResults = skins.resultsByHole.filter { !$0.winningPlayerIndexes.isEmpty }
             if !skinResults.isEmpty {
                 lines.append("SKINS:")
@@ -369,8 +369,8 @@ private enum GameContextBuilder {
             }
         }
 
-        // Nassau
-        if let nassau = g.nassauState, nassau.settings.isEnabled {
+        // Nassau (disabled for >5-player games)
+        if activePlayers.count <= MAX_PLAYERS, let nassau = g.nassauState, nassau.settings.isEnabled {
             let allMatches = nassau.oneVsOneMatches + nassau.twoVsTwoMatches
             if !allMatches.isEmpty {
                 lines.append("NASSAU MATCHES:")
