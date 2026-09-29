@@ -2570,6 +2570,49 @@ let YELLOWSTONE_CLUB_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Pioneer", yardage: 7116, rating: 72.5, slope: 135),
 ]
 
+// MARK: - Whitefish Lake Golf Club — North Course — Whitefish, MT
+// Par 72 | Public
+
+private let WHITEFISH_LAKE_NORTH_ID = UUID(uuidString: "C5E60004-0001-4001-8001-000000000001")!
+
+let WHITEFISH_LAKE_NORTH_PARS: [Int] = [
+    4,4,4,3,5,3,4,4,5,   // Front 9 — OUT 36
+    4,3,4,4,4,3,5,4,5    // Back 9  — IN  36
+]
+let WHITEFISH_LAKE_NORTH_HCS: [Int] = [
+    5,13,1,9,3,17,15,11,7,
+    18,10,2,16,8,14,4,12,6
+]
+let WHITEFISH_LAKE_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6909),
+    TeeInfo(teeName: "Blue",   yardage: 6553),
+    TeeInfo(teeName: "White",  yardage: 6174),
+    TeeInfo(teeName: "Green",  yardage: 5666),
+    TeeInfo(teeName: "Yellow", yardage: 5050),
+    TeeInfo(teeName: "Orange", yardage: 4209),
+]
+
+// MARK: - Whitefish Lake Golf Club — South Course — Whitefish, MT
+// Par 71 | Public
+
+private let WHITEFISH_LAKE_SOUTH_ID = UUID(uuidString: "C5E60005-0001-4001-8001-000000000001")!
+
+let WHITEFISH_LAKE_SOUTH_PARS: [Int] = [
+    4,4,3,4,4,5,3,4,4,   // Front 9 — OUT 35
+    5,4,5,4,4,3,3,4,4    // Back 9  — IN  36
+]
+let WHITEFISH_LAKE_SOUTH_HCS: [Int] = [
+    9,11,17,5,1,13,3,7,15,
+    16,2,10,8,12,6,18,14,4
+]
+let WHITEFISH_LAKE_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6549),
+    TeeInfo(teeName: "Blue",   yardage: 6297),
+    TeeInfo(teeName: "White",  yardage: 5957),
+    TeeInfo(teeName: "Green",  yardage: 5345),
+    TeeInfo(teeName: "Yellow", yardage: 4835),
+]
+
 // MARK: - Old Works Golf Course — Anaconda, MT
 // Par 72 | Jack Nicklaus | Public
 
@@ -14097,6 +14140,34 @@ private enum BuiltIns {
             phone: "(406) 563-5989",
             website: "https://www.playoldworks.com",
             address: "1205 Pizzini Way, Anaconda, MT 59711"
+        ),
+
+        c(
+            WHITEFISH_LAKE_NORTH_ID,
+            "Whitefish Lake Golf Club (North)",
+            WHITEFISH_LAKE_NORTH_PARS,
+            WHITEFISH_LAKE_NORTH_HCS,
+            WHITEFISH_LAKE_NORTH_TEES,
+            country: "USA",
+            state: "MT",
+            type: "Public",
+            phone: "(406) 862-5960",
+            website: "https://www.golfwhitefish.com",
+            address: "1200 US Highway 93, Whitefish, MT 59937"
+        ),
+
+        c(
+            WHITEFISH_LAKE_SOUTH_ID,
+            "Whitefish Lake Golf Club (South)",
+            WHITEFISH_LAKE_SOUTH_PARS,
+            WHITEFISH_LAKE_SOUTH_HCS,
+            WHITEFISH_LAKE_SOUTH_TEES,
+            country: "USA",
+            state: "MT",
+            type: "Public",
+            phone: "(406) 862-5960",
+            website: "https://www.golfwhitefish.com",
+            address: "1200 US Highway 93, Whitefish, MT 59937"
         ),
 
         // -------------------------
