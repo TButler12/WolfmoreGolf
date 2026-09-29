@@ -10019,6 +10019,57 @@ let ROCKY_GAP_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 6876, rating: 73.0, slope: 136),
 ]
 
+// MARK: - Queenstown Harbor (River Course) — Queenstown, MD
+// Par 72 | Lindsay Irvin | Daily-Fee
+
+private let QUEENSTOWN_HARBOR_RIVER_ID = UUID(uuidString: "AAEE5100-0001-4001-8001-000000000001")!
+
+let QUEENSTOWN_HARBOR_RIVER_PARS: [Int] = [
+    4,3,4,4,5,4,5,3,4,   // Front 9 — OUT 36
+    4,5,4,3,4,4,3,4,5    // Back 9  — IN  36
+]
+let QUEENSTOWN_HARBOR_RIVER_HCS: [Int] = [
+    15,17,5,7,11,13,1,9,3,
+    2,10,12,18,8,4,16,14,6
+]
+let QUEENSTOWN_HARBOR_RIVER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Green", yardage: 7037, rating: 73.8, slope: 139),
+]
+
+// MARK: - Queenstown Harbor (Lakes Course) — Queenstown, MD
+// Par 71 | Lindsay Irvin | Daily-Fee
+
+private let QUEENSTOWN_HARBOR_LAKES_ID = UUID(uuidString: "AAEE5200-0001-4001-8001-000000000001")!
+
+let QUEENSTOWN_HARBOR_LAKES_PARS: [Int] = [
+    4,4,3,5,4,4,4,3,4,   // Front 9 — OUT 35
+    4,3,5,4,4,5,4,3,4    // Back 9  — IN  36
+]
+let QUEENSTOWN_HARBOR_LAKES_HCS: [Int] = [
+    15,7,17,5,1,3,9,11,13,
+    8,16,12,2,4,6,14,10,18
+]
+let QUEENSTOWN_HARBOR_LAKES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Green", yardage: 6520, rating: 70.9, slope: 130),
+]
+
+// MARK: - Four Streams Golf Club — Beallsville, MD
+// Par 71 | Private
+
+private let FOUR_STREAMS_GC_ID = UUID(uuidString: "AAEE5300-0001-4001-8001-000000000001")!
+
+let FOUR_STREAMS_GC_PARS: [Int] = [
+    5,4,4,5,3,4,3,4,4,   // Front 9 — OUT 36
+    3,4,4,4,4,3,4,4,5    // Back 9  — IN  35
+]
+let FOUR_STREAMS_GC_HCS: [Int] = [
+    9,5,1,7,17,13,11,15,3,
+    16,2,4,10,14,12,18,8,6
+]
+let FOUR_STREAMS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back", yardage: 7102, rating: 74.5, slope: 138),
+]
+
 // MARK: United States Naval Academy Golf Club
 private let USNA_GC_ID = UUID(uuidString: "ABEF0001-0001-4001-8001-000000000001")!
 
@@ -22267,6 +22318,46 @@ private enum BuiltIns {
             type: "Resort",
             phone: "(301) 784-8400",
             address: "16701 Lakeview Rd NE, Flintstone, MD 21530"
+        ),
+
+        c(
+            QUEENSTOWN_HARBOR_RIVER_ID,
+            "Queenstown Harbor (River Course)",
+            QUEENSTOWN_HARBOR_RIVER_PARS,
+            QUEENSTOWN_HARBOR_RIVER_HCS,
+            QUEENSTOWN_HARBOR_RIVER_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Lindsay Irvin",
+            type: "Public",
+            phone: "(800) 827-5257",
+            address: "310 Links Lane, Queenstown, MD 21658"
+        ),
+
+        c(
+            QUEENSTOWN_HARBOR_LAKES_ID,
+            "Queenstown Harbor (Lakes Course)",
+            QUEENSTOWN_HARBOR_LAKES_PARS,
+            QUEENSTOWN_HARBOR_LAKES_HCS,
+            QUEENSTOWN_HARBOR_LAKES_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Lindsay Irvin",
+            type: "Public",
+            phone: "(800) 827-5257",
+            address: "310 Links Lane, Queenstown, MD 21658"
+        ),
+
+        c(
+            FOUR_STREAMS_GC_ID,
+            "Four Streams Golf Club",
+            FOUR_STREAMS_GC_PARS,
+            FOUR_STREAMS_GC_HCS,
+            FOUR_STREAMS_GC_TEES,
+            country: "USA",
+            state: "MD",
+            type: "Private",
+            address: "Beallsville, MD"
         ),
 
         c(
