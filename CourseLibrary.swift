@@ -2197,6 +2197,72 @@ let AUGUSTA_NATIONAL_TEES: [TeeInfo] = [
 // NOTE: Rating/Slope not shown on your scorecard image.
 // =======================================================
 
+// MARK: - Desert Mountain Club — Outlaw — Scottsdale, AZ
+// Par 72 | Jack Nicklaus | Private | Designed Nov 2003
+
+private let DESERT_MTN_OUTLAW_ID = UUID(uuidString: "C5E6000B-0001-4001-8001-000000000001")!
+
+let DESERT_MTN_OUTLAW_PARS: [Int] = [
+    4,5,4,3,4,3,4,4,5,   // Front 9 — OUT 36
+    4,4,3,5,4,3,5,4,4    // Back 9  — IN  36
+]
+let DESERT_MTN_OUTLAW_HCS: [Int] = [
+    3,9,1,17,11,15,13,5,7,
+    4,12,16,14,18,8,6,10,2
+]
+let DESERT_MTN_OUTLAW_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Bear",   yardage: 7107, rating: 74.7, slope: 149),
+    TeeInfo(teeName: "Blue",   yardage: 6509, rating: 71.7, slope: 143),
+    TeeInfo(teeName: "Copper", yardage: 6312, rating: 70.6, slope: 141),
+    TeeInfo(teeName: "White",  yardage: 6017, rating: 69.3, slope: 134),
+    TeeInfo(teeName: "Red",    yardage: 5131, rating: 65.3, slope: 125),
+    TeeInfo(teeName: "Green",  yardage: 3946, rating: 63.8, slope: 118),
+]
+
+// MARK: - Desert Mountain Club — Renegade — Scottsdale, AZ
+// Par 72 | Jack Nicklaus | Private | Designed Mar 1987
+
+private let DESERT_MTN_RENEGADE_ID = UUID(uuidString: "C5E6000C-0001-4001-8001-000000000001")!
+
+let DESERT_MTN_RENEGADE_PARS: [Int] = [
+    4,4,4,3,5,3,4,4,5,   // Front 9 — OUT 36
+    5,4,3,4,3,5,3,5,4    // Back 9  — IN  36
+]
+let DESERT_MTN_RENEGADE_HCS: [Int] = [
+    9,7,1,3,11,17,13,5,15,
+    4,18,16,2,10,8,14,6,12
+]
+let DESERT_MTN_RENEGADE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Bear", yardage: 7933, rating: 77.7, slope: 150),
+    TeeInfo(teeName: "1",    yardage: 7394, rating: 74.8, slope: 145),
+    TeeInfo(teeName: "2",    yardage: 6977, rating: 72.7, slope: 137),
+    TeeInfo(teeName: "3",    yardage: 6586, rating: 70.7, slope: 133),
+    TeeInfo(teeName: "4",    yardage: 6063, rating: 68.5, slope: 127),
+    TeeInfo(teeName: "5",    yardage: 5641, rating: 66.3, slope: 119),
+    TeeInfo(teeName: "6",    yardage: 5141, rating: 64.7, slope: 110),
+]
+
+// MARK: - No. 7 at Desert Mountain — Scottsdale, AZ
+// Par 54 (all par 3) | Bill Brownlee & Wendell Pickett | Private | Designed 2019
+
+private let DESERT_MTN_NO7_ID = UUID(uuidString: "C5E6000D-0001-4001-8001-000000000001")!
+
+let DESERT_MTN_NO7_PARS: [Int] = [
+    3,3,3,3,3,3,3,3,3,   // Front 9 — OUT 27
+    3,3,3,3,3,3,3,3,3    // Back 9  — IN  27
+]
+let DESERT_MTN_NO7_HCS: [Int] = [
+    13,15,7,5,17,1,9,3,11,
+    4,18,16,8,12,2,6,10,14
+]
+let DESERT_MTN_NO7_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tee 1", yardage: 3004, rating: 55.2, slope: 98),
+    TeeInfo(teeName: "Tee 2", yardage: 2396),
+    TeeInfo(teeName: "Tee 3", yardage: 2210),
+    TeeInfo(teeName: "Tee 4", yardage: 1576),
+    TeeInfo(teeName: "Sandy", yardage: 1608),
+]
+
 // MARK: - Desert Mountain Club — Apache — Scottsdale, AZ
 // Par 72 | Jack Nicklaus | Private | Designed Jan 1996
 
@@ -2282,6 +2348,27 @@ let DESERT_MTN_GERONIMO_TEES: [TeeInfo] = [
     TeeInfo(teeName: "White",  yardage: 6074, rating: 68.6, slope: 132),
     TeeInfo(teeName: "Red",    yardage: 5361, rating: 65.5, slope: 126),
     TeeInfo(teeName: "Green",  yardage: 4475, rating: 66.7, slope: 124),
+]
+
+// MARK: - Mirabel Golf Club — Scottsdale, AZ
+// Par 71 | Tom Fazio | Private
+
+private let MIRABEL_GC_ID = UUID(uuidString: "C5E6000E-0001-4001-8001-000000000001")!
+
+let MIRABEL_GC_PARS: [Int] = [
+    4,5,4,4,4,3,5,3,4,   // Front 9 — OUT 36
+    4,3,4,4,4,3,4,5,4    // Back 9  — IN  35
+]
+let MIRABEL_GC_HCS: [Int] = [
+    11,5,9,1,15,17,7,13,3,
+    6,16,12,8,18,2,14,10,4
+]
+let MIRABEL_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 7147),
+    TeeInfo(teeName: "Copper", yardage: 6564),
+    TeeInfo(teeName: "Silver", yardage: 6142),
+    TeeInfo(teeName: "Maroon", yardage: 5649),
+    TeeInfo(teeName: "Green",  yardage: 4985),
 ]
 
 // MARK: - Desert Forest Golf Club — Carefree, AZ
@@ -13731,6 +13818,21 @@ private enum BuiltIns {
         ),
 
         c(
+            MIRABEL_GC_ID,
+            "Mirabel Golf Club",
+            MIRABEL_GC_PARS,
+            MIRABEL_GC_HCS,
+            MIRABEL_GC_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(480) 437-1500",
+            website: "https://www.mirabel.com",
+            address: "37210 N. Mirabel Club Drive, Scottsdale, AZ 85262"
+        ),
+
+        c(
             DESERT_FOREST_GC_ID,
             "Desert Forest Golf Club",
             DESERT_FOREST_GC_PARS,
@@ -13742,6 +13844,51 @@ private enum BuiltIns {
             type: "Private",
             phone: "(480) 488-4589",
             address: "37207 N. Mule Train Road, Carefree, AZ 85377"
+        ),
+
+        c(
+            DESERT_MTN_OUTLAW_ID,
+            "Desert Mountain Club (Outlaw)",
+            DESERT_MTN_OUTLAW_PARS,
+            DESERT_MTN_OUTLAW_HCS,
+            DESERT_MTN_OUTLAW_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(480) 595-4000",
+            website: "https://www.desertmountain.com",
+            address: "37700 Desert Mountain Parkway, Scottsdale, AZ 85262"
+        ),
+
+        c(
+            DESERT_MTN_RENEGADE_ID,
+            "Desert Mountain Club (Renegade)",
+            DESERT_MTN_RENEGADE_PARS,
+            DESERT_MTN_RENEGADE_HCS,
+            DESERT_MTN_RENEGADE_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(480) 595-4000",
+            website: "https://www.desertmountain.com",
+            address: "37700 Desert Mountain Parkway, Scottsdale, AZ 85262"
+        ),
+
+        c(
+            DESERT_MTN_NO7_ID,
+            "No. 7 at Desert Mountain",
+            DESERT_MTN_NO7_PARS,
+            DESERT_MTN_NO7_HCS,
+            DESERT_MTN_NO7_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Bill Brownlee & Wendell Pickett",
+            type: "Private",
+            phone: "(480) 437-2950",
+            website: "https://www.desertmountain.com",
+            address: "37700 Desert Mountain Parkway, Scottsdale, AZ 85262"
         ),
 
         c(
