@@ -8694,6 +8694,51 @@ let GREY_OAKS_ESTUARY_TEES: [TeeInfo] = [
     TeeInfo(teeName: "III", yardage: 5954, rating: 70.1, slope: 130)
 ]
 
+// MARK: - TwinEagles Club (Eagle Course) — Naples, FL
+// Par 71 | Designed by Steve Smyers | Private
+
+private let TWIN_EAGLES_EAGLE_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000016")!
+
+let TWIN_EAGLES_EAGLE_PARS: [Int] = [
+    4,5,4,3,5,4,4,3,4,   // Front 9 — OUT 36
+    4,3,4,4,5,4,4,3,4    // Back 9  — IN  35
+]
+let TWIN_EAGLES_EAGLE_HCS: [Int] = [
+    9,3,13,17,15,1,5,11,7,
+    4,14,18,10,2,6,12,16,8
+]
+let TWIN_EAGLES_EAGLE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Eagle", yardage: 7607, rating: 77.5, slope: 150),
+    TeeInfo(teeName: "I",     yardage: 6971, rating: 74.6, slope: 144),
+    TeeInfo(teeName: "II",    yardage: 6420, rating: 71.8, slope: 137),
+    TeeInfo(teeName: "III",   yardage: 5810, rating: 68.6, slope: 127),
+    TeeInfo(teeName: "IV",    yardage: 4997, rating: 64.4, slope: 119),
+    TeeInfo(teeName: "V",     yardage: 4488, rating: 66.2, slope: 114),
+    TeeInfo(teeName: "VI",    yardage: 4067, rating: 63.9, slope: 110),
+]
+
+// MARK: - The Club at Mediterra (South Course) — Naples, FL
+// Par 72 | Designed by Tom Fazio | Private
+
+private let MEDITERRA_SOUTH_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000017")!
+
+let MEDITERRA_SOUTH_PARS: [Int] = [
+    5,4,3,4,4,3,5,4,4,   // Front 9 — OUT 36
+    4,4,4,3,4,5,4,3,5    // Back 9  — IN  36
+]
+let MEDITERRA_SOUTH_HCS: [Int] = [
+    9,13,15,7,5,17,3,1,11,
+    4,10,14,16,8,2,12,18,6
+]
+let MEDITERRA_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "I",   yardage: 7075, rating: 74.2, slope: 135),
+    TeeInfo(teeName: "II",  yardage: 6618, rating: 71.9, slope: 131),
+    TeeInfo(teeName: "III", yardage: 6134, rating: 69.5, slope: 129),
+    TeeInfo(teeName: "IV",  yardage: 5561, rating: 66.7, slope: 116),
+    TeeInfo(teeName: "V",   yardage: 4975, rating: 63.7, slope: 109),
+    TeeInfo(teeName: "VI",  yardage: 4130, rating: 63.9, slope: 113),
+]
+
 // MARK: - Innisbrook Resort — Palm Harbor, FL
 // Designed by Larry Packard | Resort
 
@@ -9833,6 +9878,145 @@ let STERLING_HILLS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue",  yardage: 5953, rating: 69.2, slope: 122),
     TeeInfo(teeName: "White", yardage: 5558, rating: 67.5, slope: 117),
     TeeInfo(teeName: "Red",   yardage: 4590)
+]
+
+// MARK: - Caves Valley Golf Club — Owings Mills, MD
+// Par 71 | Designed by Tom Fazio (est. 1991) | Private | Host: BMW Championship
+
+private let CAVES_VALLEY_GC_ID = UUID(uuidString: "CA3E5A11-0001-0001-0001-000000000001")!
+
+let CAVES_VALLEY_GC_PARS: [Int] = [
+    4,4,5,3,4,4,5,3,4,   // Front 9 — OUT 36
+    4,4,3,5,4,3,4,4,4    // Back 9  — IN  35
+]
+let CAVES_VALLEY_GC_HCS: [Int] = [
+    9,13,11,15,5,1,7,17,3,
+    14,2,18,6,12,16,10,4,8
+]
+let CAVES_VALLEY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "BMW/Champ", yardage: 7631, rating: 77.2, slope: 144),
+    TeeInfo(teeName: "Green",     yardage: 7226, rating: 75.3, slope: 142),
+    TeeInfo(teeName: "Blue",      yardage: 6710, rating: 73.0, slope: 137),
+    TeeInfo(teeName: "White",     yardage: 6228, rating: 71.0, slope: 133),
+    TeeInfo(teeName: "Gold",      yardage: 5775, rating: 68.1, slope: 125),
+    TeeInfo(teeName: "Red",       yardage: 5265, rating: 70.5, slope: 123),
+]
+
+// MARK: - Congressional Country Club (Blue Course) — Bethesda, MD
+// Par 72 | Devereux Emmet (1924) / Andrew Green (2019) | Private | Host: U.S. Open
+
+private let CONGRESSIONAL_BLUE_ID = UUID(uuidString: "C09B1003-0001-4001-8001-000000000001")!
+
+let CONGRESSIONAL_BLUE_PARS: [Int] = [
+    4,3,4,4,4,5,3,4,5,   // Front 9 — OUT 36
+    3,5,4,3,4,4,5,4,4    // Back 9  — IN  36
+]
+let CONGRESSIONAL_BLUE_HCS: [Int] = [
+    11,15,7,1,9,5,17,13,3,
+    16,10,12,18,4,2,6,8,14
+]
+let CONGRESSIONAL_BLUE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 7820, rating: 78.0, slope: 140),
+    TeeInfo(teeName: "Blue",   yardage: 7215, rating: 75.2, slope: 137),
+    TeeInfo(teeName: "Gold",   yardage: 6775, rating: 73.3, slope: 132),
+    TeeInfo(teeName: "White",  yardage: 6175, rating: 70.4, slope: 127),
+    TeeInfo(teeName: "Silver", yardage: 5280, rating: 65.9, slope: 121),
+]
+
+// MARK: - Congressional Country Club (Gold Course) — Bethesda, MD
+// Par 71 | Tom Fazio (2000) | Private
+
+private let CONGRESSIONAL_GOLD_ID = UUID(uuidString: "C09G0104-0001-4001-8001-000000000001")!
+
+let CONGRESSIONAL_GOLD_PARS: [Int] = [
+    4,4,3,4,3,5,5,4,4,   // Front 9 — OUT 36
+    5,3,4,3,5,4,4,4,3    // Back 9  — IN  35
+]
+let CONGRESSIONAL_GOLD_HCS: [Int] = [
+    3,9,15,7,17,1,11,5,13,
+    6,14,2,18,4,8,12,10,16
+]
+let CONGRESSIONAL_GOLD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6844, rating: 73.6, slope: 135),
+    TeeInfo(teeName: "Gold",  yardage: 6483, rating: 71.7, slope: 132),
+    TeeInfo(teeName: "White", yardage: 6050, rating: 69.8, slope: 129),
+    TeeInfo(teeName: "Red",   yardage: 5403, rating: 66.8, slope: 116),
+    TeeInfo(teeName: "Green", yardage: 5045, rating: 69.2, slope: 119),
+]
+
+// MARK: - Burning Tree Club — Bethesda, MD
+// Par 71 | Charles Alison & Harry Colt | Private
+
+private let BURNING_TREE_ID = UUID(uuidString: "B11TREE0-0001-4001-8001-000000000001")!
+
+let BURNING_TREE_PARS: [Int] = [
+    4,5,3,4,4,4,4,3,5,   // Front 9 — OUT 36
+    4,3,4,4,3,4,5,4,4    // Back 9  — IN  35
+]
+let BURNING_TREE_HCS: [Int] = [
+    5,11,17,1,13,3,7,15,9,
+    4,16,14,10,18,2,12,8,6
+]
+let BURNING_TREE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Medal", yardage: 7040, rating: 74.1, slope: 127),
+]
+
+// MARK: - Chevy Chase Club — Chevy Chase, MD
+// Par 71 | Donald Ross / Charles Alison / Arthur Hills | Private
+
+private let CHEVY_CHASE_CLUB_ID = UUID(uuidString: "CC4C1UB0-0001-4001-8001-000000000001")!
+
+let CHEVY_CHASE_CLUB_PARS: [Int] = [
+    4,4,4,3,4,5,4,5,3,   // Front 9 — OUT 36
+    4,5,3,4,4,3,4,4,4    // Back 9  — IN  35
+]
+let CHEVY_CHASE_CLUB_HCS: [Int] = [
+    11,5,7,15,13,3,9,1,17,
+    2,10,18,12,4,16,6,8,14
+]
+let CHEVY_CHASE_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Men's Championship", yardage: 7205, rating: 74.8, slope: 135),
+]
+
+// MARK: - Woodmont Country Club (North Course) — Rockville, MD
+// Par 72 | Alfred Tull (1950) / Arthur Hills (1999) | Private | Host: 2020 US Women's Amateur
+
+private let WOODMONT_CC_NORTH_ID = UUID(uuidString: "W00DM0NT-0001-4001-8001-000000000001")!
+
+let WOODMONT_CC_NORTH_PARS: [Int] = [
+    4,3,5,4,5,3,4,4,4,   // Front 9 — OUT 36
+    5,4,4,3,4,5,3,4,4    // Back 9  — IN  36
+]
+let WOODMONT_CC_NORTH_HCS: [Int] = [
+    7,15,1,13,3,17,9,11,5,
+    4,14,10,18,8,2,16,6,12
+]
+let WOODMONT_CC_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 7185, rating: 75.6, slope: 142),
+    TeeInfo(teeName: "Black/Blue", yardage: 6925, rating: 74.2, slope: 139),
+    TeeInfo(teeName: "Blue",       yardage: 6625, rating: 73.4, slope: 136),
+    TeeInfo(teeName: "Blue/Gold",  yardage: 6360, rating: 72.3, slope: 135),
+    TeeInfo(teeName: "Gold",       yardage: 6095, rating: 71.3, slope: 133),
+    TeeInfo(teeName: "Gold/Green", yardage: 5710, rating: 69.6, slope: 124),
+    TeeInfo(teeName: "Green",      yardage: 5495, rating: 68.8, slope: 123),
+    TeeInfo(teeName: "White",      yardage: 5095, rating: 65.9, slope: 113),
+]
+
+// MARK: - Rocky Gap Lodge & Golf Resort — Flintstone, MD
+// Par 72 | Jack Nicklaus | Resort
+
+private let ROCKY_GAP_GC_ID = UUID(uuidString: "R0CKY6AP-0001-4001-8001-000000000001")!
+
+let ROCKY_GAP_GC_PARS: [Int] = [
+    4,4,4,3,5,3,4,5,4,   // Front 9 — OUT 36
+    5,4,3,5,4,5,3,3,4    // Back 9  — IN  36
+]
+let ROCKY_GAP_GC_HCS: [Int] = [
+    13,11,1,17,9,15,7,5,3,
+    6,10,18,12,4,2,16,14,8
+]
+let ROCKY_GAP_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6876, rating: 73.0, slope: 136),
 ]
 
 // MARK: United States Naval Academy Golf Club
@@ -19115,6 +19299,26 @@ private enum BuiltIns {
           phone: "(239) 263-8421",
           address: "1600 Estuary Drive, Naples, FL 34105"),
 
+        c(TWIN_EAGLES_EAGLE_ID, "TwinEagles Club (Eagle Course)", TWIN_EAGLES_EAGLE_PARS, TWIN_EAGLES_EAGLE_HCS, TWIN_EAGLES_EAGLE_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Naples",
+          architect: "Steve Smyers",
+          type: "Private",
+          phone: "(239) 354-1721",
+          website: "https://www.thetwineaglesclub.com",
+          address: "11725 TwinEagles Blvd, Naples, FL 34120"),
+
+        c(MEDITERRA_SOUTH_ID, "The Club at Mediterra (South Course)", MEDITERRA_SOUTH_PARS, MEDITERRA_SOUTH_HCS, MEDITERRA_SOUTH_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Naples",
+          architect: "Tom Fazio",
+          type: "Private",
+          phone: "(239) 254-3000",
+          website: "https://www.mediterraliving.com",
+          address: "15755 Corso Mediterra Circle, Naples, FL 34110"),
+
         c(REUNION_LEGACY_PALMER_ID, "Reunion Resort (Legacy Course)", REUNION_LEGACY_PALMER_PARS, REUNION_LEGACY_PALMER_HCS,
           REUNION_LEGACY_PALMER_TEES,
           country: "USA",
@@ -21968,6 +22172,103 @@ private enum BuiltIns {
         // -------------------------
         // Maryland
         // -------------------------
+        c(
+            CAVES_VALLEY_GC_ID,
+            "Caves Valley Golf Club",
+            CAVES_VALLEY_GC_PARS,
+            CAVES_VALLEY_GC_HCS,
+            CAVES_VALLEY_GC_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(410) 356-1313",
+            address: "2910 Blendon Rd, Owings Mills, MD 21117"
+        ),
+
+        c(
+            CONGRESSIONAL_BLUE_ID,
+            "Congressional Country Club (Blue Course)",
+            CONGRESSIONAL_BLUE_PARS,
+            CONGRESSIONAL_BLUE_HCS,
+            CONGRESSIONAL_BLUE_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Devereux Emmet / Andrew Green",
+            type: "Private",
+            phone: "(301) 469-2000",
+            address: "8500 River Rd NW, Bethesda, MD 20817"
+        ),
+
+        c(
+            CONGRESSIONAL_GOLD_ID,
+            "Congressional Country Club (Gold Course)",
+            CONGRESSIONAL_GOLD_PARS,
+            CONGRESSIONAL_GOLD_HCS,
+            CONGRESSIONAL_GOLD_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(301) 469-2000",
+            address: "8500 River Rd NW, Bethesda, MD 20817"
+        ),
+
+        c(
+            BURNING_TREE_ID,
+            "Burning Tree Club",
+            BURNING_TREE_PARS,
+            BURNING_TREE_HCS,
+            BURNING_TREE_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Charles Alison & Harry Colt",
+            type: "Private",
+            address: "7475 Burning Tree Rd, Bethesda, MD 20817"
+        ),
+
+        c(
+            CHEVY_CHASE_CLUB_ID,
+            "Chevy Chase Club",
+            CHEVY_CHASE_CLUB_PARS,
+            CHEVY_CHASE_CLUB_HCS,
+            CHEVY_CHASE_CLUB_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Donald Ross / Charles Alison / Arthur Hills",
+            type: "Private",
+            phone: "(301) 652-4100",
+            address: "6100 Connecticut Avenue, Chevy Chase, MD 20815"
+        ),
+
+        c(
+            WOODMONT_CC_NORTH_ID,
+            "Woodmont Country Club (North Course)",
+            WOODMONT_CC_NORTH_PARS,
+            WOODMONT_CC_NORTH_HCS,
+            WOODMONT_CC_NORTH_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Alfred Tull / Arthur Hills",
+            type: "Private",
+            phone: "(301) 424-7200",
+            address: "1201 Rockville Pike, Rockville, MD 20852"
+        ),
+
+        c(
+            ROCKY_GAP_GC_ID,
+            "Rocky Gap Lodge & Golf Resort",
+            ROCKY_GAP_GC_PARS,
+            ROCKY_GAP_GC_HCS,
+            ROCKY_GAP_GC_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            phone: "(301) 784-8400",
+            address: "16701 Lakeview Rd NE, Flintstone, MD 21530"
+        ),
+
         c(
             USNA_GC_ID,
             "United States Naval Academy Golf Club",
