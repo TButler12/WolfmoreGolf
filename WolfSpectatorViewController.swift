@@ -1613,10 +1613,10 @@ private final class WolfHoleCell: UITableViewCell {
                         ? String(Int(absV))
                         : String(format: "%.2f", absV)
                     if v > 0 {
-                        col.text      = "+\(formatted)"
+                        col.text      = "\(formatted)"
                         col.textColor = .systemGreen
                     } else if v < 0 {
-                        col.text      = "−\(formatted)"
+                        col.text      = "\(formatted)"
                         col.textColor = .systemRed
                     } else {
                         col.text      = "0"
@@ -1641,9 +1641,9 @@ private final class WolfHoleCell: UITableViewCell {
                 let formatted = absV.truncatingRemainder(dividingBy: 1) == 0
                     ? String(Int(absV))
                     : String(format: "%.2f", absV)
-                if v > 0      { col.text = "+\(formatted)"; col.textColor = .systemGreen }
-                else if v < 0 { col.text = "−\(formatted)"; col.textColor = .systemRed }
-                else          { col.text = "0";              col.textColor = .secondaryLabel }
+                if v > 0      { col.text = "\(formatted)"; col.textColor = .systemGreen }
+                else if v < 0 { col.text = "\(formatted)"; col.textColor = .systemRed }
+                else          { col.text = "0";             col.textColor = .secondaryLabel }
             }
         } else {
             gameRow.isHidden = true
