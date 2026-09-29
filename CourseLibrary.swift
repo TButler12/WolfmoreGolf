@@ -2553,6 +2553,44 @@ let ROCK_CREEK_CATTLE_COMPANY_TEE_I_YARDS: [Int] = [
 let ROCK_CREEK_CATTLE_COMPANY_TEES: [TeeInfo] = [
     TeeInfo(teeName: "TEE I", yardage: 7486, rating: 75.9, slope: 153)
 ]
+// MARK: - Yellowstone Club — Big Sky, MT
+// Par 72 | Tom Weiskopf | Private
+
+private let YELLOWSTONE_CLUB_ID = UUID(uuidString: "C5E60001-0001-4001-8001-000000000001")!
+
+let YELLOWSTONE_CLUB_PARS: [Int] = [
+    4,4,3,4,5,3,5,4,4,   // Front 9 — OUT 36
+    4,3,5,4,3,5,3,4,5    // Back 9  — IN  36
+]
+let YELLOWSTONE_CLUB_HCS: [Int] = [
+    3,7,11,1,13,9,17,5,15,
+    6,18,12,2,8,14,10,16,4
+]
+let YELLOWSTONE_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Pioneer", yardage: 7116, rating: 72.5, slope: 135),
+]
+
+// MARK: - Old Works Golf Course — Anaconda, MT
+// Par 72 | Jack Nicklaus | Public
+
+private let OLD_WORKS_GC_ID = UUID(uuidString: "C5E60003-0001-4001-8001-000000000001")!
+
+let OLD_WORKS_GC_PARS: [Int] = [
+    4,4,5,3,4,5,3,4,4,   // Front 9 — OUT 36
+    4,5,3,4,5,3,5,3,4    // Back 9  — IN  36
+]
+let OLD_WORKS_GC_HCS: [Int] = [
+    11,17,3,7,1,5,13,9,15,
+    8,4,10,16,12,2,6,18,14
+]
+let OLD_WORKS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Slag",      yardage: 7705, rating: 76.1, slope: 136),
+    TeeInfo(teeName: "Gold",      yardage: 7211, rating: 74.8, slope: 128),
+    TeeInfo(teeName: "Copper",    yardage: 6776, rating: 71.2, slope: 121),
+    TeeInfo(teeName: "Limestone", yardage: 6144, rating: 68.3, slope: 116),
+    TeeInfo(teeName: "Brick",     yardage: 5348, rating: 65.1, slope: 109),
+]
+
 // MARK: Wade Hampton Club — Cashiers, NC (Tom Fazio)
 private let WADE_HAMPTON_CLUB_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A101")!
 let WADE_HAMPTON_CLUB_PARS_TODO: [Int] = [
@@ -14032,6 +14070,35 @@ private enum BuiltIns {
             website: "https://www.rockcreekcattlecompany.com/",
             address: "6848 S. Rock Creek Road, Deer Lodge, MT 59722"
         ),
+
+        c(
+            YELLOWSTONE_CLUB_ID,
+            "Yellowstone Club",
+            YELLOWSTONE_CLUB_PARS,
+            YELLOWSTONE_CLUB_HCS,
+            YELLOWSTONE_CLUB_TEES,
+            country: "USA",
+            state: "MT",
+            architect: "Tom Weiskopf",
+            type: "Private",
+            address: "Big Sky, MT 59716"
+        ),
+
+        c(
+            OLD_WORKS_GC_ID,
+            "Old Works Golf Course",
+            OLD_WORKS_GC_PARS,
+            OLD_WORKS_GC_HCS,
+            OLD_WORKS_GC_TEES,
+            country: "USA",
+            state: "MT",
+            architect: "Jack Nicklaus",
+            type: "Public",
+            phone: "(406) 563-5989",
+            website: "https://www.playoldworks.com",
+            address: "1205 Pizzini Way, Anaconda, MT 59711"
+        ),
+
         // -------------------------
         // Georgia
         // -------------------------
