@@ -12,7 +12,7 @@ final class ManagePlayersViewController: UIViewController,
                                          UITextFieldDelegate {
 
     // MARK: - Limits
-    private let maxActivePlayers = 5
+    private let maxActivePlayers = WOLF_MAX_PLAYERS
     private let trackingLimitPerCourse = 30
 
     // MARK: - Outlets
@@ -570,7 +570,7 @@ final class ManagePlayersViewController: UIViewController,
                 do {
                     let entries = try await SupabaseService.shared.fetchRoster(code: code)
                     let rosterNames = Set(entries.map { $0.canonicalName })
-                    let active = Array(selected.filter { rosterNames.contains($0.name) }.prefix(MAX_PLAYERS))
+                    let active = Array(selected.filter { rosterNames.contains($0.name) }.prefix(WOLF_MAX_PLAYERS))
 
                     // Final gate: confirm none of our selected players were claimed by a
                     // different group between picker dismissal and round start.
@@ -608,7 +608,7 @@ final class ManagePlayersViewController: UIViewController,
                     await MainActor.run { self.proceedWithStart(active: active) }
                 } catch {
                     // Roster fetch failed — proceed unfiltered rather than blocking the round
-                    await MainActor.run { self.proceedWithStart(active: Array(selected.prefix(MAX_PLAYERS))) }
+                    await MainActor.run { self.proceedWithStart(active: Array(selected.prefix(WOLF_MAX_PLAYERS))) }
                 }
             }
         } else {
@@ -620,7 +620,7 @@ final class ManagePlayersViewController: UIViewController,
                 let me = Friend(name: myName, defaultHC: ProfileStore.myHC)
                 selected.insert(me, at: 0)
             }
-            proceedWithStart(active: Array(selected.prefix(MAX_PLAYERS)))
+            proceedWithStart(active: Array(selected.prefix(WOLF_MAX_PLAYERS)))
         }
     }
 

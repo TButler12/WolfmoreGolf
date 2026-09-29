@@ -3705,7 +3705,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
 
         // 5b) Cascade: re-run payouts for any later committed standings holes
-        if let g = GameManager.shared.currentGame, g.resolvedGameType.isWolf {
+        if let g = GameManager.shared.currentGame, g.resolvedGameType.supportsSevenPlayers {
             let activeCount = g.playerActivated.prefix(WOLF_MAX_PLAYERS)
                 .enumerated()
                 .filter { g.playerActivated[$0.offset] &&

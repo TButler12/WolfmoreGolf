@@ -365,7 +365,7 @@ extension GameData {
 
     /// Maximum number of players that may be activated for this game type.
     var activePlayerLimit: Int {
-        resolvedGameType.isWolf ? WOLF_MAX_PLAYERS : MAX_PLAYERS
+        resolvedGameType.supportsSevenPlayers ? WOLF_MAX_PLAYERS : MAX_PLAYERS
     }
 }
 

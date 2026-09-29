@@ -20,6 +20,7 @@ enum GameType: String, Codable {
 
 extension GameType {
     var isWolf: Bool { self == .wolf || self == .wolfLowBall }
+    var supportsSevenPlayers: Bool { self == .sixPointScotch || self == .wolf || self == .wolfLowBall }
     /// True for Individual, Fourball, and FB Stroke Play (all fixed-team formats).
     var isMatchPlay: Bool { self == .matchPlay || self == .fourball || self == .bestBall }
     var isBestBall:  Bool { self == .bestBall }

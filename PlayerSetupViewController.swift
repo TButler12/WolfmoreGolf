@@ -24,8 +24,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet private weak var minusPointDollars: UIButton?
 
     // MARK: - Constants
-    private var capacity: Int { GameManager.shared.currentGame?.activePlayerLimit ?? MAX_PLAYERS }
-    private var maxActive: Int { capacity }
+    private let capacity = WOLF_MAX_PLAYERS
+    private var maxActive: Int { GameManager.shared.currentGame?.activePlayerLimit ?? MAX_PLAYERS }
     private weak var editStakeLinkButton: UIButton?
     private weak var stablefordToggleSwitch: UISwitch?
     private weak var stablefordSubRow: UIView?
@@ -38,6 +38,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private var editStakeBlinkTimer: Timer?
     private var editStakeBlinkIsGold = false
     private var teeSetButtons: [UIButton] = []
+    private var playerRowCards: [UIView] = []
     private weak var teeHdrLabel: UILabel?
 
     override func viewDidLoad() {
@@ -294,6 +295,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
                 row.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -8),
             ])
             main.addArrangedSubview(card)
+            playerRowCards.append(card)
         }
         teeSetButtons = tsbs
 
@@ -807,6 +809,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
         refreshTeeSetUI()
+        refreshExtraRowVisibility()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -1102,6 +1105,17 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         present(ac, animated: true)
     }
     // MARK: - Cap + buttons
+    private func refreshExtraRowVisibility() {
+        let limit = maxActive
+        for i in 0..<playerRowCards.count {
+            let hidden = i >= limit
+            playerRowCards[i].isHidden = hidden
+            if hidden, i < activeSwitches.count { activeSwitches[i].isOn = false }
+        }
+        enforceActivationCap()
+        updateGoButtonEnabled()
+    }
+
     private func enforceActivationCap() {
         let activeCount = activeSwitches.prefix(uiCount).filter { $0.isOn }.count
         let lockOthers = activeCount >= maxActive

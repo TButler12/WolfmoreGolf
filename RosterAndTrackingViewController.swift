@@ -45,7 +45,7 @@ final class RosterAndTrackingViewController: UIViewController,
 
     private var rows: [RowModel] = []
     private let trackLimit = 30
-    private let maxActivePlayers = 5
+    private let maxActivePlayers = WOLF_MAX_PLAYERS
 
     private var courseID: String {
         let stored = ProfileStore.homeCourseID
@@ -403,12 +403,12 @@ final class RosterAndTrackingViewController: UIViewController,
         GameManager.shared.update { g in
             g.normalize(holes: STANDARD_HOLES)
 
-            // Ensure sizes (adjust if your capacity differs)
-            if g.playerNames.count != MAX_PLAYERS { g.playerNames = Array(g.playerNames.prefix(MAX_PLAYERS)) + Array(repeating: "", count: max(0, 5 - g.playerNames.count)) }
-            if g.hcPlayers.count != MAX_PLAYERS { g.hcPlayers = Array(g.hcPlayers.prefix(MAX_PLAYERS)) + Array(repeating: 0, count: max(0, 5 - g.hcPlayers.count)) }
-            if g.playerActivated.count != MAX_PLAYERS { g.playerActivated = Array(g.playerActivated.prefix(MAX_PLAYERS)) + Array(repeating: false, count: max(0, 5 - g.playerActivated.count)) }
+            // Ensure sizes
+            if g.playerNames.count < WOLF_MAX_PLAYERS { g.playerNames += Array(repeating: "", count: WOLF_MAX_PLAYERS - g.playerNames.count) }
+            if g.hcPlayers.count < WOLF_MAX_PLAYERS { g.hcPlayers += Array(repeating: 0, count: WOLF_MAX_PLAYERS - g.hcPlayers.count) }
+            if g.playerActivated.count < WOLF_MAX_PLAYERS { g.playerActivated += Array(repeating: false, count: WOLF_MAX_PLAYERS - g.playerActivated.count) }
 
-            for seat in 0..<MAX_PLAYERS {
+            for seat in 0..<WOLF_MAX_PLAYERS {
                 if seat < activeRows.count {
                     g.playerNames[seat] = activeRows[seat].friend.name
                     g.hcPlayers[seat] = activeRows[seat].hc
