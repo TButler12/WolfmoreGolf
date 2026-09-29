@@ -143,6 +143,7 @@ final class WolfScorecardRenderer {
             }
             let gross2: [Int?]? = is36 ? (STANDARD_HOLES..<(2 * STANDARD_HOLES)).map { h -> Int? in
                 guard seat < game.scores.count, h < game.scores[seat].count else { return nil }
+                guard game.holeCommitted[safe: h] == true else { return nil }
                 return game.scores[seat][h]
             } : nil
             return PlayerData(seat: seat, name: name, hc: hc, gross: gross, gross2: gross2)

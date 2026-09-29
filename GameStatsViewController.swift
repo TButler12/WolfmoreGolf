@@ -306,7 +306,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
             .map { $0.name.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
 
-        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
+        let seats = 0..<min(g.activePlayerLimit, min(g.playerNames.count, g.playerActivated.count))
         for i in seats where g.playerActivated[i] {
             let seatName = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
             if trackedFriendNames.contains(where: { $0.caseInsensitiveCompare(seatName) == .orderedSame }) {
@@ -369,6 +369,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         if seat < g.scores.count, let first = g.scores.first, first.count == STANDARD_HOLES {
             let holes = 0..<min(STANDARD_HOLES, g.scores[seat].count)
             for h in holes {
+                guard g.holeCommitted[safe: h] == true else { continue }
                 if let v = g.scores[seat][h] { sum += v; haveAny = true }
             }
             return haveAny ? sum : nil
@@ -376,6 +377,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
 
         if g.scores.count == STANDARD_HOLES {
             for h in 0..<STANDARD_HOLES {
+                guard g.holeCommitted[safe: h] == true else { continue }
                 let row = g.scores[h]
                 if seat < row.count, let v = row[seat] { sum += v; haveAny = true }
             }
@@ -390,6 +392,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         if seat < g.scores.count, let first = g.scores.first, first.count == STANDARD_HOLES {
             let holes = 0..<min(9, g.scores[seat].count)
             for h in holes {
+                guard g.holeCommitted[safe: h] == true else { continue }
                 if let v = g.scores[seat][h] { sum += v; haveAny = true }
             }
             return haveAny ? sum : nil
@@ -398,6 +401,7 @@ final class GameStatsViewController: UIViewController, MFMessageComposeViewContr
         if g.scores.count == STANDARD_HOLES {
             let maxHole = min(9, g.scores.count)
             for h in 0..<maxHole {
+                guard g.holeCommitted[safe: h] == true else { continue }
                 let row = g.scores[h]
                 if seat < row.count, let v = row[seat] { sum += v; haveAny = true }
             }
