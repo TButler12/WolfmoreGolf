@@ -289,11 +289,11 @@ enum WolfActions {
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             presenter.present(alert, animated: true)
         } else {
-            let names = (0..<MAX_PLAYERS).compactMap { s -> String? in
+            let names = (0..<g.activePlayerLimit).compactMap { s -> String? in
                 guard g.playerActivated[safe: s] == true else { return nil }
                 return g.playerNames[safe: s] ?? ""
             }
-            let handicaps = (0..<MAX_PLAYERS).compactMap { s -> Int? in
+            let handicaps = (0..<g.activePlayerLimit).compactMap { s -> Int? in
                 guard g.playerActivated[safe: s] == true else { return nil }
                 return g.hcPlayers[safe: s] ?? 0
             }

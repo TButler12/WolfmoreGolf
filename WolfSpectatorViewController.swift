@@ -987,6 +987,12 @@ private final class WolfHoleCell: UITableViewCell {
     private var skinsCols: [UILabel] = []
     private let skinsRow   = UIStackView()
 
+    private let scoreEndSpacer = UIView()
+    private let moneyEndSpacer = UIView()
+    private let gameEndSpacer  = UIView()
+    private let skinsEndSpacer = UIView()
+    private var columnCount    = 0
+
     private let outerStack = UIStackView()
 
     private var holePressLevel: Int = 0 {
@@ -1048,9 +1054,8 @@ private final class WolfHoleCell: UITableViewCell {
             scoreRow.addArrangedSubview(l)
         }
 
-        let spacer1 = UIView()
-        spacer1.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        scoreRow.addArrangedSubview(spacer1)
+        scoreEndSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        scoreRow.addArrangedSubview(scoreEndSpacer)
 
         // Money sub-row (hidden until a hole has non-zero money_deltas)
         moneyRow.axis     = .horizontal
@@ -1075,9 +1080,8 @@ private final class WolfHoleCell: UITableViewCell {
             moneyRow.addArrangedSubview(l)
         }
 
-        let spacer2 = UIView()
-        spacer2.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        moneyRow.addArrangedSubview(spacer2)
+        moneyEndSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        moneyRow.addArrangedSubview(moneyEndSpacer)
 
         // Game dollars sub-row (running cumulative total through this hole)
         gameRow.axis     = .horizontal
@@ -1101,9 +1105,8 @@ private final class WolfHoleCell: UITableViewCell {
             gameRow.addArrangedSubview(l)
         }
 
-        let spacer3 = UIView()
-        spacer3.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        gameRow.addArrangedSubview(spacer3)
+        gameEndSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        gameRow.addArrangedSubview(gameEndSpacer)
 
         // Skins sub-row: "{N}S" for winner, "C" for tied carryover players
         skinsRow.axis     = .horizontal
@@ -1127,9 +1130,10 @@ private final class WolfHoleCell: UITableViewCell {
             skinsRow.addArrangedSubview(l)
         }
 
-        let spacer4 = UIView()
-        spacer4.setContentHuggingPriority(.defaultLow, for: .horizontal)
-        skinsRow.addArrangedSubview(spacer4)
+        skinsEndSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        skinsRow.addArrangedSubview(skinsEndSpacer)
+
+        columnCount = MAX_PLAYERS
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -1144,7 +1148,32 @@ private final class WolfHoleCell: UITableViewCell {
         l.widthAnchor.constraint(equalToConstant: width).isActive = true
     }
 
+    private func setupColumns(playerCount: Int) {
+        guard playerCount > 0, playerCount != columnCount else { return }
+        columnCount = playerCount
+        let colWidth: CGFloat = playerCount >= 7 ? 28 : playerCount == 6 ? 34 : 40
+        let scoreFS:  CGFloat = playerCount > MAX_PLAYERS ? 14 : 16
+        let subFS:    CGFloat = playerCount > MAX_PLAYERS ? 11 : 13
+        rebuildCols(&scoreCols, in: scoreRow, endSpacer: scoreEndSpacer, size: scoreFS, colWidth: colWidth)
+        rebuildCols(&moneyCols, in: moneyRow, endSpacer: moneyEndSpacer, size: subFS,   colWidth: colWidth)
+        rebuildCols(&gameCols,  in: gameRow,  endSpacer: gameEndSpacer,  size: subFS,   colWidth: colWidth)
+        rebuildCols(&skinsCols, in: skinsRow, endSpacer: skinsEndSpacer, size: subFS,   colWidth: colWidth)
+    }
+
+    private func rebuildCols(_ cols: inout [UILabel], in row: UIStackView, endSpacer: UIView, size: CGFloat, colWidth: CGFloat) {
+        for l in cols { row.removeArrangedSubview(l); l.removeFromSuperview() }
+        row.removeArrangedSubview(endSpacer); endSpacer.removeFromSuperview()
+        cols.removeAll()
+        for _ in 0..<columnCount {
+            let l = UILabel()
+            configLabel(l, size: size, weight: .semibold, width: colWidth)
+            cols.append(l); row.addArrangedSubview(l)
+        }
+        row.addArrangedSubview(endSpacer)
+    }
+
     func configureAsHeader(playerNames: [String], isMatchPlay: Bool = false, isBestBall: Bool = false) {
+        setupColumns(playerCount: playerNames.count)
         holePressLevel = 0
         holeLabel.text        = "Hole"
         holeLabel.textColor   = .secondaryLabel
@@ -1202,6 +1231,7 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsScoreTotals(results: [WolfHoleResult], playerCount: Int) {
+        setupColumns(playerCount: playerCount)
         holePressLevel = 0
         holeLabel.text        = "Score"
         holeLabel.textColor   = .secondaryLabel
@@ -1228,6 +1258,7 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsScoreSubtotal(label: String, holes: ClosedRange<Int>, results: [WolfHoleResult], playerCount: Int) {
+        setupColumns(playerCount: playerCount)
         holePressLevel = 0
         holeLabel.text      = label
         holeLabel.textColor = .secondaryLabel
@@ -1252,6 +1283,7 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsTotals(results: [WolfHoleResult], playerCount: Int) {
+        setupColumns(playerCount: playerCount)
         holePressLevel = 0
         holeLabel.text        = "Total"
         holeLabel.textColor   = .secondaryLabel
@@ -1284,6 +1316,7 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configureAsSkinsTotals(results: [WolfHoleResult], playerNames: [String]) {
+        setupColumns(playerCount: playerNames.count)
         holePressLevel = 0
         holeLabel.text      = "SK"
         holeLabel.textColor = .systemYellow
@@ -1338,6 +1371,7 @@ private final class WolfHoleCell: UITableViewCell {
                                      courseHCs: [Int] = [],
                                      teamASeats: [Int] = [],
                                      playerHandicaps: [Int] = []) {
+        setupColumns(playerCount: playerCount)
         holePressLevel = 0
         holeLabel.text      = isBestBall ? "BB" : "Match"
         holeLabel.textColor = .secondaryLabel
@@ -1423,6 +1457,7 @@ private final class WolfHoleCell: UITableViewCell {
                                       courseHCs: [Int] = [],
                                       teamASeats: [Int] = [],
                                       playerHandicaps: [Int] = []) {
+        setupColumns(playerCount: playerCount)
         holePressLevel = 0
         holeLabel.text      = "BB Net"
         holeLabel.textColor = .secondaryLabel
@@ -1469,6 +1504,7 @@ private final class WolfHoleCell: UITableViewCell {
 
     func configure(hole: Int, result: WolfHoleResult?, playerNames: [String], cumulativeTotals: [Double] = [],
                    matchStatus: String? = nil, teamASeats: [Int] = []) {
+        setupColumns(playerCount: playerNames.count)
         holePressLevel       = result?.wolfPlayer ?? 0
         holeLabel.text       = "\(hole)"
         holeLabel.textColor  = holePressLevel > 0 ? .systemOrange : .label
@@ -1531,12 +1567,23 @@ private final class WolfHoleCell: UITableViewCell {
         let wolfSlot    = result?.wolfSlot
         let partnerSlot = result?.partnerSlot
 
-        // Wolf team indices for orange coloring (explicit slots preferred)
+        // Wolf team indices for orange coloring.
+        // Derive from money-delta sign when deltas are available — correctly identifies all
+        // team members including a 3rd partner in 7-player games. Falls back to the explicit
+        // wolfSlot/partnerSlot pair for in-progress holes that have no payouts yet.
         let wolfTeamIndices: Set<Int>
         if let ws = wolfSlot {
-            var team: Set<Int> = [ws]
-            if let ps = partnerSlot { team.insert(ps) }
-            wolfTeamIndices = team
+            let deltas = result?.moneyDeltas ?? result?.payouts ?? []
+            let wolfDelta = ws < deltas.count ? deltas[ws] : 0.0
+            if !deltas.isEmpty, abs(wolfDelta) > 0.001 {
+                wolfTeamIndices = Set(deltas.indices.filter { i in
+                    wolfDelta > 0 ? deltas[i] > 0.001 : deltas[i] < -0.001
+                })
+            } else {
+                var team: Set<Int> = [ws]
+                if let ps = partnerSlot { team.insert(ps) }
+                wolfTeamIndices = team
+            }
         } else {
             wolfTeamIndices = []
         }
@@ -1602,7 +1649,7 @@ private final class WolfHoleCell: UITableViewCell {
             gameRow.isHidden = true
         }
 
-        // Skins sub-row: "{N}S" for winner, "C" for tied-carryover players, blank otherwise
+        // Skins sub-row: hidden for >5 player sessions (Skins is off for those rounds).
         let skinWinner = result?.skinWinner
         let skinCount  = result?.skinCount ?? 1
         let tiedSeats: Set<Int> = {
@@ -1610,7 +1657,7 @@ private final class WolfHoleCell: UITableViewCell {
             return Set(raw.split(separator: ",").compactMap { Int($0) })
         }()
         let hasSkinActivity = skinWinner != nil || !tiedSeats.isEmpty
-        if hasSkinActivity {
+        if hasSkinActivity, playerNames.count <= MAX_PLAYERS {
             skinsRow.isHidden = false
             for (i, col) in skinsCols.enumerated() {
                 let playerName = i < playerNames.count ? playerNames[i] : nil
