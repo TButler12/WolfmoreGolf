@@ -102,6 +102,7 @@ struct WolfSession: Codable {
     let playerHandicaps: [Int]?
     let nineHoleMatch: Bool?
     let nineHoleStartingHole: Int?
+    let groupName: String?
 
     enum CodingKeys: String, CodingKey {
         case id, code, status
@@ -112,6 +113,17 @@ struct WolfSession: Codable {
         case playerHandicaps      = "player_handicaps"
         case nineHoleMatch        = "nine_hole_match"
         case nineHoleStartingHole = "nine_hole_starting_hole"
+        case groupName            = "group_name"
+    }
+}
+
+struct WolfSessionCreateResult: Codable {
+    let sessionId: String
+    let creatorToken: String
+
+    enum CodingKeys: String, CodingKey {
+        case sessionId    = "session_id"
+        case creatorToken = "creator_token"
     }
 }
 

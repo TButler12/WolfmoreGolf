@@ -270,10 +270,12 @@ enum WolfActions {
         }
 
         if let sessionId = g.liveSessionId {
-            let code = g.liveSessionCode ?? ""
+            let code      = g.liveSessionCode ?? ""
+            let groupName = g.liveSessionGroupName
+            let msgParts  = [groupName, code.isEmpty ? nil : "Code: \(code)"].compactMap { $0 }
             let alert = UIAlertController(
                 title: "Live Session Active",
-                message: code.isEmpty ? nil : "Code: \(code)",
+                message: msgParts.isEmpty ? nil : msgParts.joined(separator: "\n"),
                 preferredStyle: .alert
             )
             if !code.isEmpty {
@@ -297,35 +299,66 @@ enum WolfActions {
                 guard g.playerActivated[safe: s] == true else { return nil }
                 return g.hcPlayers[safe: s] ?? 0
             }
-            let course = g.course.name.isEmpty ? "Custom Course" : g.course.name
-            Task {
-                do {
-                    let session = try await SupabaseService.shared.createWolfSession(
-                        playerNames: names,
-                        courseName: course,
-                        playerHandicaps: handicaps,
-                        nineHoleMatch: g.isNineHoleMatch,
-                        nineHoleStartingHole: g.nineHoleStartingHole
-                    )
-                    GameManager.shared.update { g in
-                        g.liveSessionId = session.id
-                        g.liveSessionCode = session.code
-                    }
-                    GameManager.shared.saveCurrent()
-                    await MainActor.run {
-                        NotificationCenter.default.post(name: .reloadUI, object: nil)
-                        showGoLiveCreatedAlert(code: session.code, from: presenter)
-                    }
-                } catch {
-                    await MainActor.run {
-                        let a = UIAlertController(title: "Go Live Failed",
-                                                  message: error.localizedDescription,
-                                                  preferredStyle: .alert)
-                        a.addAction(UIAlertAction(title: "OK", style: .default))
-                        presenter.present(a, animated: true)
-                    }
+            let course       = g.course.name.isEmpty ? "Custom Course" : g.course.name
+            let nineHole     = g.isNineHoleMatch
+            let nineHoleStart = g.nineHoleStartingHole
+
+            let namePrompt = UIAlertController(
+                title: "Name This Session",
+                message: "Optional · 20 characters max",
+                preferredStyle: .alert
+            )
+            namePrompt.addTextField { tf in
+                tf.placeholder        = "e.g. \(course)"
+                tf.returnKeyType      = .done
+                tf.clearButtonMode    = .whileEditing
+                NotificationCenter.default.addObserver(
+                    forName: UITextField.textDidChangeNotification,
+                    object: tf,
+                    queue: .main
+                ) { _ in
+                    if let t = tf.text, t.count > 20 { tf.text = String(t.prefix(20)) }
                 }
             }
+            namePrompt.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            namePrompt.addAction(UIAlertAction(title: "Go Live", style: .default) { [weak presenter] _ in
+                guard let presenter else { return }
+                var raw = namePrompt.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                if raw.count > 20 { raw = String(raw.prefix(20)) }
+                let groupName: String? = raw.isEmpty ? nil : raw
+                Task {
+                    do {
+                        let (sessionId, code, token) = try await SupabaseService.shared.createWolfSession(
+                            playerNames: names,
+                            courseName: course,
+                            groupName: groupName,
+                            playerHandicaps: handicaps,
+                            nineHoleMatch: nineHole,
+                            nineHoleStartingHole: nineHoleStart
+                        )
+                        GameManager.shared.update { g in
+                            g.liveSessionId       = sessionId
+                            g.liveSessionCode     = code
+                            g.liveCreatorToken    = token
+                            g.liveSessionGroupName = groupName
+                        }
+                        GameManager.shared.saveCurrent()
+                        await MainActor.run {
+                            NotificationCenter.default.post(name: .reloadUI, object: nil)
+                            showGoLiveCreatedAlert(code: code, from: presenter)
+                        }
+                    } catch {
+                        await MainActor.run {
+                            let a = UIAlertController(title: "Go Live Failed",
+                                                      message: error.localizedDescription,
+                                                      preferredStyle: .alert)
+                            a.addAction(UIAlertAction(title: "OK", style: .default))
+                            presenter.present(a, animated: true)
+                        }
+                    }
+                }
+            })
+            presenter.present(namePrompt, animated: true)
         }
     }
 
@@ -337,8 +370,10 @@ enum WolfActions {
                 print("ERROR archiveWolfSession: \(error)")
             }
             GameManager.shared.update { g in
-                g.liveSessionId = nil
-                g.liveSessionCode = nil
+                g.liveSessionId        = nil
+                g.liveSessionCode      = nil
+                g.liveCreatorToken     = nil
+                g.liveSessionGroupName = nil
             }
             GameManager.shared.saveCurrent()
             await MainActor.run {

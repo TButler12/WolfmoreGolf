@@ -32,6 +32,9 @@ final class WolfSpectatorViewController: UIViewController {
     private var tabTopToToolbar: NSLayoutConstraint?
     private let statusBanner     = UILabel()
 
+    private let sessionInfoLabel  = UILabel()
+    private var sessionInfoHeight: NSLayoutConstraint?
+
     private let formatBannerLabel = UILabel()
     private var formatBannerHeight: NSLayoutConstraint?
 
@@ -52,6 +55,7 @@ final class WolfSpectatorViewController: UIViewController {
         view.backgroundColor = .systemBackground
         setupTabBar()
         setupStatusBanner()
+        setupSessionInfo()
         setupFormatBanner()
         setupNamesHeader()
         setupTableView()
@@ -164,6 +168,22 @@ final class WolfSpectatorViewController: UIViewController {
         ])
     }
 
+    private func setupSessionInfo() {
+        sessionInfoLabel.translatesAutoresizingMaskIntoConstraints = false
+        sessionInfoLabel.textAlignment   = .center
+        sessionInfoLabel.numberOfLines   = 1
+        sessionInfoLabel.backgroundColor = .systemBackground
+        view.addSubview(sessionInfoLabel)
+        let h = sessionInfoLabel.heightAnchor.constraint(equalToConstant: 0)
+        sessionInfoHeight = h
+        NSLayoutConstraint.activate([
+            sessionInfoLabel.topAnchor.constraint(equalTo: statusBanner.bottomAnchor),
+            sessionInfoLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            sessionInfoLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            h,
+        ])
+    }
+
     private func setupFormatBanner() {
         formatBannerLabel.translatesAutoresizingMaskIntoConstraints = false
         formatBannerLabel.textAlignment   = .center
@@ -175,7 +195,7 @@ final class WolfSpectatorViewController: UIViewController {
         let h = formatBannerLabel.heightAnchor.constraint(equalToConstant: 0)
         formatBannerHeight = h
         NSLayoutConstraint.activate([
-            formatBannerLabel.topAnchor.constraint(equalTo: statusBanner.bottomAnchor),
+            formatBannerLabel.topAnchor.constraint(equalTo: sessionInfoLabel.bottomAnchor),
             formatBannerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             formatBannerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             h,
@@ -288,8 +308,25 @@ final class WolfSpectatorViewController: UIViewController {
         }
         tabButtons = []
 
+        var nameCounts: [String: Int] = [:]
+        for session in sessions {
+            if let name = session.groupName, !name.isEmpty {
+                nameCounts[name, default: 0] += 1
+            }
+        }
+
         for (i, session) in sessions.enumerated() {
-            let btn = makeTabButton(code: session.code, index: i)
+            let label: String
+            if let name = session.groupName, !name.isEmpty {
+                if (nameCounts[name] ?? 0) > 1 {
+                    label = "\(name) · \(session.code.prefix(3))"
+                } else {
+                    label = name
+                }
+            } else {
+                label = session.code
+            }
+            let btn = makeTabButton(label: label, index: i)
             tabButtons.append(btn)
             if i < 5 { tabRow1.addArrangedSubview(btn) }
             else      { tabRow2.addArrangedSubview(btn) }
@@ -310,9 +347,9 @@ final class WolfSpectatorViewController: UIViewController {
         updateTabHighlight()
     }
 
-    private func makeTabButton(code: String, index: Int) -> UIButton {
+    private func makeTabButton(label: String, index: Int) -> UIButton {
         var cfg = UIButton.Configuration.filled()
-        cfg.title = code
+        cfg.title = label
         cfg.cornerStyle = .capsule
         cfg.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
         cfg.baseBackgroundColor = .systemGray5
@@ -440,6 +477,7 @@ final class WolfSpectatorViewController: UIViewController {
     private func applyCurrentSession() {
         guard let session = currentSession else { return }
         applySessionStatus(session.status)
+        updateSessionInfoLabel(session: session)
         let results = Array(currentHoleResults.values)
         let isBB = results.contains { $0.decision == "bestball" }
         let isMP = isBB || results.contains { $0.decision == "matchplay" }
@@ -447,6 +485,30 @@ final class WolfSpectatorViewController: UIViewController {
         applyFormatBanner(session: session, results: results)
         namesHeaderView.isHidden = false
         tableView.reloadData()
+    }
+
+    private func updateSessionInfoLabel(session: WolfSession) {
+        guard let name = session.groupName, !name.isEmpty else {
+            sessionInfoHeight?.constant = 0
+            sessionInfoLabel.attributedText = nil
+            return
+        }
+        let str = NSMutableAttributedString(
+            string: name,
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 13, weight: .semibold),
+                .foregroundColor: UIColor.label
+            ]
+        )
+        str.append(NSAttributedString(
+            string: "  \(session.code)",
+            attributes: [
+                .font: UIFont.monospacedSystemFont(ofSize: 10, weight: .regular),
+                .foregroundColor: UIColor.secondaryLabel
+            ]
+        ))
+        sessionInfoLabel.attributedText = str
+        sessionInfoHeight?.constant = 28
     }
 
     @objc private func refreshTapped() {
@@ -509,8 +571,10 @@ final class WolfSpectatorViewController: UIViewController {
             guard let self else { return }
             if let idx = self.sessions.firstIndex(where: { $0.id == updated.id }) {
                 self.sessions[idx] = updated
+                self.rebuildTabBar()
                 if self.currentSessionIndex == idx {
                     self.applySessionStatus(updated.status)
+                    self.updateSessionInfoLabel(session: updated)
                 }
             }
         }

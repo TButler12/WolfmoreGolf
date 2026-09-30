@@ -440,26 +440,44 @@ final class SupabaseService {
 
     // MARK: - Wolf Live session
 
-    func createWolfSession(playerNames: [String], courseName: String, playerHandicaps: [Int] = [],
-                           nineHoleMatch: Bool = false, nineHoleStartingHole: Int = 1) async throws -> WolfSession {
-        let code = generateCode()
+    func createWolfSession(
+        playerNames: [String],
+        courseName: String,
+        groupName: String? = nil,
+        playerHandicaps: [Int] = [],
+        nineHoleMatch: Bool = false,
+        nineHoleStartingHole: Int = 1
+    ) async throws -> (id: String, code: String, creatorToken: String) {
+        let code     = generateCode()
         let hostName = ProfileStore.name ?? ""
-        let response: PostgrestResponse<WolfSession> = try await client
-            .from("wolf_sessions")
-            .insert([
-                "code":                    AnyJSON.string(code),
-                "host_name":               AnyJSON.string(hostName),
-                "player_names":            AnyJSON.array(playerNames.map { .string($0) }),
-                "course_name":             AnyJSON.string(courseName),
-                "status":                  AnyJSON.string("active"),
-                "player_handicaps":        AnyJSON.array(playerHandicaps.map { .integer($0) }),
-                "nine_hole_match":         AnyJSON.bool(nineHoleMatch),
-                "nine_hole_starting_hole": AnyJSON.integer(nineHoleStartingHole)
-            ] as [String: AnyJSON])
-            .select()
-            .single()
+
+        struct Params: Encodable {
+            let p_code: String
+            let p_host_name: String
+            let p_player_names: [String]
+            let p_course_name: String
+            let p_player_handicaps: [Int]
+            let p_nine_hole_match: Bool
+            let p_nine_hole_starting_hole: Int
+            let p_group_name: String?
+        }
+        let response: PostgrestResponse<[WolfSessionCreateResult]> = try await client
+            .rpc("create_wolf_session", params: Params(
+                p_code: code,
+                p_host_name: hostName,
+                p_player_names: playerNames,
+                p_course_name: courseName,
+                p_player_handicaps: playerHandicaps,
+                p_nine_hole_match: nineHoleMatch,
+                p_nine_hole_starting_hole: nineHoleStartingHole,
+                p_group_name: groupName
+            ))
             .execute()
-        return response.value
+        guard let result = response.value.first else {
+            throw NSError(domain: "WolfmoreGolf", code: -1,
+                          userInfo: [NSLocalizedDescriptionKey: "Session creation returned no result."])
+        }
+        return (id: result.sessionId, code: code, creatorToken: result.creatorToken)
     }
 
     func submitWolfHole(

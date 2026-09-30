@@ -68,6 +68,8 @@ struct GameData: Codable {
     // Wolf Live session ID and shareable code (nil = not broadcasting)
     var liveSessionId: String? = nil
     var liveSessionCode: String? = nil
+    var liveCreatorToken: String? = nil
+    var liveSessionGroupName: String? = nil
 
     // Tee Game (tournament group) code and group code (nil = not in a tee game)
     var tournamentCode: String? = nil
