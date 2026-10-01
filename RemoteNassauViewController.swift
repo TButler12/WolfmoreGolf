@@ -38,9 +38,11 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
             }
         }
 
+        #if DEBUG
         if let g = GameManager.shared.currentGame {
             debugLocalPlayerMatch(in: g)
         }
+        #endif
 
         setupUI()
         populateUI()
@@ -285,11 +287,13 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
         if total < 0 { return -1 }
         return 0
     }
+    #if DEBUG
     private func debugLocalPlayerMatch(in g: GameData) {
         print("ProfileStore.name =", ProfileStore.name ?? "nil")
         print("Round players =", g.playerNames)
         print("Resolved myPlayerIndex =", myPlayerIndex(in: g) as Any)
     }
+    #endif
 
     // MARK: - Send Results
 

@@ -19,7 +19,6 @@ final class PaywallViewController: UIViewController {
 
     private let scrollView  = UIScrollView()
     private let stack       = UIStackView()
-    private var yearlyBtn   = UIButton(type: .system)
     private var monthlyBtn  = UIButton(type: .system)
     private let spinner     = UIActivityIndicatorView(style: .medium)
 
@@ -99,19 +98,8 @@ final class PaywallViewController: UIViewController {
 
         let spacer = UIView()
 
-        // Yearly button (primary — best value)
-        yearlyBtn = makeButton(title: "Upgrade — $XX.99/year", primary: true)
-        yearlyBtn.addTarget(self, action: #selector(yearlyTapped), for: .touchUpInside)
-
-        // "or" separator
-        let orLabel = UILabel()
-        orLabel.text = "or"
-        orLabel.font = .systemFont(ofSize: 13)
-        orLabel.textColor = .tertiaryLabel
-        orLabel.textAlignment = .center
-
-        // Monthly button (secondary)
-        monthlyBtn = makeButton(title: "Upgrade — $4.99/month", primary: false)
+        // Monthly subscribe button
+        monthlyBtn = makeButton(title: "Upgrade — $4.99/month", primary: true)
         monthlyBtn.addTarget(self, action: #selector(monthlyTapped), for: .touchUpInside)
 
         // Restore
@@ -131,16 +119,14 @@ final class PaywallViewController: UIViewController {
         laterBtn.setTitleColor(green, for: .normal)
         laterBtn.addTarget(self, action: #selector(laterTapped), for: .touchUpInside)
 
-        // Add all views to the stack FIRST, then activate cross-view constraints
         [crownLabel, titleLabel, limitLabel, descLabel, divider, featuresLabel,
-         spacer, yearlyBtn, orLabel, monthlyBtn, restoreBtn, spinner, laterBtn]
+         spacer, monthlyBtn, restoreBtn, spinner, laterBtn]
             .forEach { stack.addArrangedSubview($0) }
 
         NSLayoutConstraint.activate([
             divider.heightAnchor.constraint(equalToConstant: 1),
             divider.widthAnchor.constraint(equalTo: stack.widthAnchor),
             spacer.heightAnchor.constraint(equalToConstant: 4),
-            yearlyBtn.widthAnchor.constraint(equalTo: stack.widthAnchor),
             monthlyBtn.widthAnchor.constraint(equalTo: stack.widthAnchor),
         ])
     }
@@ -167,18 +153,17 @@ final class PaywallViewController: UIViewController {
     }
 
     private func refreshProductTitles() {
-        for product in PremiumManager.shared.products {
-            if product.id == PremiumManager.monthlyProductID {
-                monthlyBtn.setTitle("\(product.displayPrice)/month", for: .normal)
-            } else if product.id == PremiumManager.yearlyProductID {
-                yearlyBtn.setTitle("\(product.displayPrice)/year  ·  Best Value", for: .normal)
-            }
+        let monthly = PremiumManager.shared.products.first(where: { $0.id == PremiumManager.monthlyProductID })
+        if let monthly {
+            monthlyBtn.setTitle("Upgrade — \(monthly.displayPrice)/month", for: .normal)
+            print("[Paywall] monthly product loaded — id=\(monthly.id) price=\(monthly.displayPrice)")
+        } else {
+            print("[Paywall] monthly product NOT loaded — products array: \(PremiumManager.shared.products.map(\.id))")
         }
     }
 
     // MARK: - Actions
 
-    @objc private func yearlyTapped()  { purchase(id: PremiumManager.yearlyProductID) }
     @objc private func monthlyTapped() { purchase(id: PremiumManager.monthlyProductID) }
 
     private func purchase(id: String) {
@@ -217,7 +202,6 @@ final class PaywallViewController: UIViewController {
                         let entitlementIDs = pm.lastSeenEntitlementIDs
                         let detail: String
                         if let diagnostic = pm.lastRestoreDiagnostic {
-                            // currentEntitlements was empty — use the richer diagnostic from Transaction.all scan
                             detail = diagnostic
                         } else if entitlementIDs.isEmpty {
                             detail = "No entitlements were returned by the App Store for this Apple ID."
@@ -241,7 +225,6 @@ final class PaywallViewController: UIViewController {
 
     private func setLoading(_ on: Bool) {
         on ? spinner.startAnimating() : spinner.stopAnimating()
-        yearlyBtn.isEnabled  = !on
         monthlyBtn.isEnabled = !on
     }
 

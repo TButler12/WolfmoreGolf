@@ -215,10 +215,14 @@ final class PremiumManager {
 
     func loadProducts() async {
         do {
-            products = try await Product.products(for: [Self.monthlyProductID, Self.yearlyProductID])
-                .sorted { $0.price < $1.price }
+            products = try await Product.products(for: [Self.monthlyProductID])
+            if let monthly = products.first(where: { $0.id == Self.monthlyProductID }) {
+                print("[PremiumManager] loadProducts — monthly loaded: id=\(monthly.id) price=\(monthly.displayPrice)")
+            } else {
+                print("[PremiumManager] loadProducts — monthly NOT returned by StoreKit (products=\(products.map(\.id)))")
+            }
         } catch {
-            // Products unavailable in this environment (e.g. simulator without StoreKit config)
+            print("[PremiumManager] loadProducts — error: \(error)")
         }
     }
 
