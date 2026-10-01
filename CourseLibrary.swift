@@ -1928,6 +1928,38 @@ let AZ_BILTMORE_ESTATES_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green",  yardage: 4386, rating: 61.6, slope: 102),
 ]
 
+// MARK: Wildfire GC — Faldo Championship (Phoenix, AZ)
+// Par 71 | 6,811 yds | Rating 72.2 | Slope 132
+private let WILDFIRE_FALDO_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000247")!
+
+let WILDFIRE_FALDO_PARS: [Int] = [
+    4,4,3,4,4,4,3,4,5,
+    4,5,4,4,3,5,4,3,4
+]
+let WILDFIRE_FALDO_HCS: [Int] = [
+    7,5,17,1,15,9,11,13,3,
+    2,14,6,8,16,4,12,18,10
+]
+let WILDFIRE_FALDO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6811, rating: 72.2, slope: 132)
+]
+
+// MARK: Wildfire GC — Palmer Signature (Phoenix, AZ)
+// Par 72 | 7,145 yds | Rating 72.7 | Slope 142
+private let WILDFIRE_PALMER_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000248")!
+
+let WILDFIRE_PALMER_PARS: [Int] = [
+    4,4,5,4,3,4,4,3,5,
+    4,5,4,3,5,3,4,4,4
+]
+let WILDFIRE_PALMER_HCS: [Int] = [
+    11,3,1,13,17,7,5,9,15,
+    10,6,8,18,4,14,16,2,12
+]
+let WILDFIRE_PALMER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7145, rating: 72.7, slope: 142)
+]
+
 // MARK: Silverleaf GC — Silver (Scottsdale, AZ)
 // Par 72 | 7,392 yds | Rating 75.1 | Slope 149
 private let SILVERLEAF_GC_SILVER_ID = UUID(uuidString: "A4444444-4444-4444-4444-444444444444")!
@@ -13949,6 +13981,30 @@ private enum BuiltIns {
             architect: "William P. Bell",
             type: "Private",
             address: "2400 E Missouri Ave, Phoenix, AZ 85016"
+        ),
+        c(
+            WILDFIRE_FALDO_ID,
+            "Wildfire GC (Faldo)",
+            WILDFIRE_FALDO_PARS,
+            WILDFIRE_FALDO_HCS,
+            WILDFIRE_FALDO_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Nick Faldo",
+            type: "Resort",
+            address: "5350 E Marriott Dr, Phoenix, AZ 85054"
+        ),
+        c(
+            WILDFIRE_PALMER_ID,
+            "Wildfire GC (Palmer)",
+            WILDFIRE_PALMER_PARS,
+            WILDFIRE_PALMER_HCS,
+            WILDFIRE_PALMER_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Arnold Palmer",
+            type: "Resort",
+            address: "5350 E Marriott Dr, Phoenix, AZ 85054"
         ),
         c(
             SILVERLEAF_GC_SILVER_ID,
