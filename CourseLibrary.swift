@@ -1803,6 +1803,22 @@ let DYE_PRESERVE_CHAMPIONSHIP_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Championship", yardage: 7312, rating: 75.9, slope: 146)
 ]
 
+// MARK: Whisper Rock — Lower Course — Lefty (Scottsdale, AZ)
+// Par 72 | 7,490 yds | Rating 75.6 | Slope 149
+private let WHISPER_ROCK_LOWER_LEFTY_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000244")!
+
+let WHISPER_ROCK_LOWER_LEFTY_PARS: [Int] = [
+    4,3,5,4,4,4,3,5,4,
+    4,5,3,4,4,4,4,3,5
+]
+let WHISPER_ROCK_LOWER_LEFTY_HCS: [Int] = [
+    6,16,4,18,2,12,14,8,10,
+    3,7,15,13,1,11,5,17,9
+]
+let WHISPER_ROCK_LOWER_LEFTY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Lefty", yardage: 7490, rating: 75.6, slope: 149)
+]
+
 // MARK: Whisper Rock — Upper Course — Rock (Scottsdale, AZ)
 // Par 72 | 7,550 yds | Rating 75.9 | Slope 146
 private let WHISPER_ROCK_UPPER_ROCK_ID = UUID(uuidString: "A3333333-3333-3333-3333-333333333333")!
@@ -1817,6 +1833,99 @@ let WHISPER_ROCK_UPPER_ROCK_HCS: [Int] = [
 ]
 let WHISPER_ROCK_UPPER_ROCK_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Rock", yardage: 7550, rating: 75.9, slope: 146)
+]
+
+// MARK: Wigwam Golf Club — Red Course (Litchfield Park, AZ)
+// Par 72 | 6,852 yds | Rating 72.0 | Slope 125
+private let WIGWAM_RED_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000245")!
+
+let WIGWAM_RED_PARS: [Int] = [
+    4,3,4,5,3,5,4,4,4,
+    4,4,3,5,4,4,4,3,5
+]
+let WIGWAM_RED_HCS: [Int] = [
+    7,15,9,13,11,1,5,17,3,
+    8,16,18,12,10,6,4,14,2
+]
+let WIGWAM_RED_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6852, rating: 72.0, slope: 125),
+    TeeInfo(teeName: "Club",         yardage: 6291, rating: 69.4, slope: 118),
+    TeeInfo(teeName: "Forward",      yardage: 5578, rating: 65.9, slope: 108),
+]
+
+// MARK: Wigwam Golf Club — Blue Course (Litchfield Park, AZ)
+// Par 70 | 6,373 yds | Rating 70.4 | Slope 129
+private let WIGWAM_BLUE_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000246")!
+
+let WIGWAM_BLUE_PARS: [Int] = [
+    5,3,5,3,5,4,4,4,3,
+    5,4,4,3,4,3,4,3,4
+]
+let WIGWAM_BLUE_HCS: [Int] = [
+    9,11,15,13,17,3,5,1,7,
+    8,16,6,2,18,10,14,12,4
+]
+let WIGWAM_BLUE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Jones Combo",   yardage: 6373, rating: 70.4, slope: 129),
+    TeeInfo(teeName: "Championship",  yardage: 5572, rating: 67.6, slope: 119),
+    TeeInfo(teeName: "Club",          yardage: 5199, rating: 66.9, slope: 115),
+]
+
+// MARK: Wigwam Golf Club — Gold Course (Litchfield Park, AZ)
+// Par 72 | 7,345 yds | Rating 75.0 | Slope 137
+private let WIGWAM_GOLD_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000241")!
+
+let WIGWAM_GOLD_PARS: [Int] = [
+    5,4,3,5,4,3,4,4,4,
+    5,3,4,4,5,4,3,4,4
+]
+let WIGWAM_GOLD_HCS: [Int] = [
+    11,7,15,3,13,17,9,1,5,
+    2,16,8,10,12,14,18,4,6
+]
+let WIGWAM_GOLD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Jones",         yardage: 7345, rating: 75.0, slope: 137),
+    TeeInfo(teeName: "Championship",  yardage: 6830, rating: 72.4, slope: 130),
+    TeeInfo(teeName: "Club",          yardage: 6348, rating: 70.3, slope: 125),
+    TeeInfo(teeName: "Forward",       yardage: 5885, rating: 67.9, slope: 120),
+]
+
+// MARK: Papago Golf Club (Phoenix, AZ)
+// Par 72 | 7,380 yds | Architect: William Francis Bell
+private let PAPAGO_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000242")!
+
+let PAPAGO_GC_PARS: [Int] = [
+    5,4,4,3,4,4,4,3,5,
+    5,3,4,4,4,5,4,3,4
+]
+let PAPAGO_GC_HCS: [Int] = [
+    15,17,3,13,11,1,7,9,5,
+    18,12,16,10,8,14,4,6,2
+]
+let PAPAGO_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7380),
+    TeeInfo(teeName: "Blue",  yardage: 6882),
+    TeeInfo(teeName: "White", yardage: 5797),
+    TeeInfo(teeName: "Gold",  yardage: 5338),
+]
+
+// MARK: Arizona Biltmore Golf Club — Estates Course (Phoenix, AZ)
+// Par 71 | 6,669 yds | Rating 72.0 | Slope 128 | Est. 1928
+private let AZ_BILTMORE_ESTATES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000243")!
+
+let AZ_BILTMORE_ESTATES_PARS: [Int] = [
+    4,5,4,4,3,4,3,4,4,
+    4,4,3,4,4,5,4,3,5
+]
+let AZ_BILTMORE_ESTATES_HCS: [Int] = [
+    7,13,5,17,9,1,11,15,3,
+    12,4,16,6,2,10,18,8,14
+]
+let AZ_BILTMORE_ESTATES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6669, rating: 72.0, slope: 128),
+    TeeInfo(teeName: "White",  yardage: 6034, rating: 68.8, slope: 121),
+    TeeInfo(teeName: "Copper", yardage: 5374, rating: 65.6, slope: 112),
+    TeeInfo(teeName: "Green",  yardage: 4386, rating: 61.6, slope: 102),
 ]
 
 // MARK: Silverleaf GC — Silver (Scottsdale, AZ)
@@ -13754,6 +13863,19 @@ private enum BuiltIns {
             address: "10320 E Dynamite Blvd, Scottsdale, AZ 85262"
         ),
         c(
+            WHISPER_ROCK_LOWER_LEFTY_ID,
+            "Whisper Rock Lower (Lefty)",
+            WHISPER_ROCK_LOWER_LEFTY_PARS,
+            WHISPER_ROCK_LOWER_LEFTY_HCS,
+            WHISPER_ROCK_LOWER_LEFTY_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Phil Mickelson & Gary Stephenson",
+            type: "Private",
+            phone: "(480) 575-8700",
+            address: "32000 N Old Bridge Rd, Scottsdale, AZ 85266"
+        ),
+        c(
             WHISPER_ROCK_UPPER_ROCK_ID,
             "Whisper Rock Upper (Rock)",
             WHISPER_ROCK_UPPER_ROCK_PARS,
@@ -13765,6 +13887,68 @@ private enum BuiltIns {
             type: "Private",
             phone: "(480) 575-8700",
             address: "32000 N Old Bridge Rd, Scottsdale, AZ 85266"
+        ),
+        c(
+            WIGWAM_RED_ID,
+            "Wigwam Golf Club (Red)",
+            WIGWAM_RED_PARS,
+            WIGWAM_RED_HCS,
+            WIGWAM_RED_TEES,
+            country: "USA",
+            state: "AZ",
+            type: "Resort",
+            phone: "(623) 935-9414",
+            address: "451 N Old Litchfield Rd, Litchfield Park, AZ 85340"
+        ),
+        c(
+            WIGWAM_BLUE_ID,
+            "Wigwam Golf Club (Blue)",
+            WIGWAM_BLUE_PARS,
+            WIGWAM_BLUE_HCS,
+            WIGWAM_BLUE_TEES,
+            country: "USA",
+            state: "AZ",
+            type: "Resort",
+            phone: "(623) 935-9414",
+            address: "451 N Old Litchfield Rd, Litchfield Park, AZ 85340"
+        ),
+        c(
+            WIGWAM_GOLD_ID,
+            "Wigwam Golf Club (Gold)",
+            WIGWAM_GOLD_PARS,
+            WIGWAM_GOLD_HCS,
+            WIGWAM_GOLD_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Robert Trent Jones Sr.",
+            type: "Resort",
+            phone: "(623) 935-9414",
+            address: "451 N Old Litchfield Rd, Litchfield Park, AZ 85340"
+        ),
+        c(
+            PAPAGO_GC_ID,
+            "Papago Golf Club",
+            PAPAGO_GC_PARS,
+            PAPAGO_GC_HCS,
+            PAPAGO_GC_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "William Francis Bell",
+            type: "Daily-Fee",
+            phone: "(602) 275-8428",
+            address: "5595 E Karsten Way, Phoenix, AZ 85008"
+        ),
+        c(
+            AZ_BILTMORE_ESTATES_ID,
+            "Arizona Biltmore (Estates)",
+            AZ_BILTMORE_ESTATES_PARS,
+            AZ_BILTMORE_ESTATES_HCS,
+            AZ_BILTMORE_ESTATES_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "William P. Bell",
+            type: "Private",
+            address: "2400 E Missouri Ave, Phoenix, AZ 85016"
         ),
         c(
             SILVERLEAF_GC_SILVER_ID,

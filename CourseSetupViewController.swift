@@ -21,6 +21,8 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     // MARK: - State
 
     private var activeCourseID: UUID?
+    // Holds a course loaded via loadCourseID that hasn't been confirmed yet.
+    private var pendingCourse: CourseProfile?
 
     // MARK: - Lifecycle
 
@@ -67,7 +69,21 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         }
 
         if let id = loadCourseID, let c = CourseLibrary.shared.get(id: id) {
-            setActiveCourse(c)
+            if id == CourseLibrary.shared.selectedCourseID {
+                // Already the active course — no confirmation needed.
+                setActiveCourse(c)
+            } else {
+                // Different course: show scorecard read-only, let user confirm via nav button.
+                activeCourseID = c.id
+                applyToUIOnly(pars: c.pars, hcs: c.hcs)
+                pendingCourse = c
+                navigationItem.rightBarButtonItem = UIBarButtonItem(
+                    title: "Play This Course",
+                    style: .done,
+                    target: self,
+                    action: #selector(playThisCourseTapped)
+                )
+            }
             return
         }
 
@@ -109,7 +125,21 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         })
     }
 
-    // MARK: - Save
+    // MARK: - Play / Save
+
+    @objc private func playThisCourseTapped() {
+        guard let c = pendingCourse else { return }
+        pendingCourse = nil
+        setActiveCourse(c)
+        updateCourseLabel()
+        // Restore the normal Save button now that the course is active.
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Save",
+            style: .done,
+            target: self,
+            action: #selector(saveCourseTapped)
+        )
+    }
 
     @objc private func saveCourseTapped() {
         view.endEditing(true)
@@ -343,6 +373,22 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
             g.course.holeHandicaps = h
             g.hole = min(max(g.hole, 0), 17)
         }
+    }
+
+    // Populates the par/HC grid for preview only — does NOT write to GameManager or
+    // selectedCourseID. Used when a different course is loaded via loadCourseID before
+    // the user confirms they want to play it.
+    private func applyToUIOnly(pars: [Int], hcs: [Int]) {
+        let p = Array(pars.prefix(STANDARD_HOLES))
+        let h = Array(hcs.prefix(STANDARD_HOLES))
+
+        let parSorted = parFields.sorted { $0.tag < $1.tag }
+        let hcSorted  = hcFields.sorted  { $0.tag < $1.tag }
+
+        for i in 0..<min(p.count, parSorted.count) { parSorted[i].text = "\(p[i])" }
+        for i in p.count..<min(STANDARD_HOLES, parSorted.count) { parSorted[i].text = "" }
+        for i in 0..<min(h.count, hcSorted.count) { hcSorted[i].text = "\(h[i])" }
+        for i in h.count..<min(STANDARD_HOLES, hcSorted.count) { hcSorted[i].text = "" }
     }
 
     private func readFields() -> (pars: [Int], hcs: [Int]) {
