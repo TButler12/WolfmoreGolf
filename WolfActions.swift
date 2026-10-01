@@ -1,5 +1,37 @@
 import UIKit
 
+// MARK: - Match Board history (persisted in UserDefaults)
+
+struct SavedMatchBoard: Codable {
+    let code: String
+    let name: String
+    let createdAt: TimeInterval
+}
+
+enum MatchBoardStore {
+    static let key = "createdMatchBoards"
+
+    static func all() -> [SavedMatchBoard] {
+        guard let data = UserDefaults.standard.data(forKey: key),
+              let boards = try? JSONDecoder().decode([SavedMatchBoard].self, from: data)
+        else { return [] }
+        return boards
+    }
+
+    static func save(code: String, name: String) {
+        var current = all()
+        current.removeAll { $0.code == code }
+        current.insert(SavedMatchBoard(code: code, name: name, createdAt: Date().timeIntervalSince1970), at: 0)
+        if let data = try? JSONEncoder().encode(Array(current.prefix(10))) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    static func todaysBoard() -> SavedMatchBoard? {
+        all().first { Calendar.current.isDateInToday(Date(timeIntervalSince1970: $0.createdAt)) }
+    }
+}
+
 enum WolfActions {
 
     // MARK: - Remote Nassau
@@ -253,6 +285,118 @@ enum WolfActions {
         presenter.present(alert, animated: true)
     }
 
+    // MARK: - Match play gate helpers
+
+    private static func presentMatchPlayWarning(gameTypeName: String, hasHolesScored: Bool,
+                                                from presenter: UIViewController,
+                                                switchAction: @escaping () -> Void) {
+        var msg = "This match board is for match play. Your round is set to \(gameTypeName).\n\nSwitch to match play to set up teams, then you'll be linked to the board."
+        if hasHolesScored {
+            msg += "\n\nNote: switching game type applies to remaining holes only."
+        }
+        let alert = UIAlertController(title: "Match Play Required", message: msg, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Switch to Match Play", style: .default) { _ in switchAction() })
+        presenter.present(alert, animated: true)
+    }
+
+    private static func openMatchPlaySettings(from presenter: UIViewController, completion: @escaping () -> Void) {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let vc = sb.instantiateViewController(withIdentifier: "GameSettingsViewController") as? GameSettingsViewController else { return }
+        vc.gameData = GameManager.shared.currentGame
+        vc.onPop = {
+            guard GameManager.shared.currentGame?.resolvedGameType.isMatchPlay == true else { return }
+            completion()
+        }
+        presenter.navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private static func executeGoLiveTask(names: [String], course: String, handicaps: [Int],
+                                          nineHole: Bool, nineHoleStart: Int,
+                                          groupName: String?, eventCode: String?,
+                                          from presenter: UIViewController) {
+        Task {
+            do {
+                let (sessionId, code, token) = try await SupabaseService.shared.createWolfSession(
+                    playerNames: names,
+                    courseName: course,
+                    groupName: groupName,
+                    playerHandicaps: handicaps,
+                    nineHoleMatch: nineHole,
+                    nineHoleStartingHole: nineHoleStart
+                )
+                GameManager.shared.update { g in
+                    g.liveSessionId        = sessionId
+                    g.liveSessionCode      = code
+                    g.liveCreatorToken     = token
+                    g.liveSessionGroupName = groupName
+                }
+                if let evCode = eventCode {
+                    do {
+                        try await SupabaseService.shared.linkSessionToEvent(
+                            sessionId: sessionId,
+                            creatorToken: token,
+                            eventCode: evCode
+                        )
+                        GameManager.shared.update { g in g.liveLinkedEventCode = evCode }
+                        if GameManager.shared.currentGame?.resolvedGameType.isMatchPlay == false {
+                            try? await SupabaseService.shared.publishMatchStatus(
+                                sessionId: sessionId, creatorToken: token,
+                                matchStatus: "Not playing match play", holesPlayed: 0)
+                        }
+                    } catch {
+                        print("WARN linkSessionToEvent at launch: \(error)")
+                    }
+                }
+                GameManager.shared.saveCurrent()
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .reloadUI, object: nil)
+                    showGoLiveCreatedAlert(code: code, from: presenter)
+                }
+            } catch {
+                await MainActor.run {
+                    let a = UIAlertController(title: "Go Live Failed",
+                                              message: error.localizedDescription,
+                                              preferredStyle: .alert)
+                    a.addAction(UIAlertAction(title: "OK", style: .default))
+                    presenter.present(a, animated: true)
+                }
+            }
+        }
+    }
+
+    private static func executeLinkTask(sessionId: String, token: String, evCode: String,
+                                        from presenter: UIViewController) {
+        Task {
+            do {
+                try await SupabaseService.shared.linkSessionToEvent(
+                    sessionId: sessionId, creatorToken: token, eventCode: evCode)
+                GameManager.shared.update { g in g.liveLinkedEventCode = evCode }
+                if GameManager.shared.currentGame?.resolvedGameType.isMatchPlay == false {
+                    try? await SupabaseService.shared.publishMatchStatus(
+                        sessionId: sessionId, creatorToken: token,
+                        matchStatus: "Not playing match play", holesPlayed: 0)
+                }
+                GameManager.shared.saveCurrent()
+                await MainActor.run {
+                    let a = UIAlertController(title: "Linked",
+                                              message: "Session linked to match board \(evCode).",
+                                              preferredStyle: .alert)
+                    a.addAction(UIAlertAction(title: "OK", style: .default))
+                    presenter.present(a, animated: true)
+                }
+            } catch {
+                await MainActor.run {
+                    let a = UIAlertController(title: "Link Failed",
+                                              message: error.localizedDescription,
+                                              preferredStyle: .alert)
+                    a.addAction(UIAlertAction(title: "OK", style: .default))
+                    presenter.present(a, animated: true)
+                }
+            }
+        }
+    }
+
     // MARK: - Go Live
 
     static func presentGoLive(from presenter: UIViewController) {
@@ -272,24 +416,52 @@ enum WolfActions {
         if let sessionId = g.liveSessionId {
             let code      = g.liveSessionCode ?? ""
             let groupName = g.liveSessionGroupName
-            let msgParts  = [groupName, code.isEmpty ? nil : "Code: \(code)"].compactMap { $0 }
-            let alert = UIAlertController(
-                title: "Live Session Active",
-                message: msgParts.isEmpty ? nil : msgParts.joined(separator: "\n"),
-                preferredStyle: .alert
+            let boardStatus = g.liveLinkedEventCode.map { "Match Board: \($0)" } ?? "Not on a match board"
+            let msgParts = [groupName, code.isEmpty ? nil : "Code: \(code)", boardStatus].compactMap { $0 }
+            let menu = UIAlertController(
+                title: "Live Wolf",
+                message: msgParts.joined(separator: "\n"),
+                preferredStyle: .actionSheet
             )
             if !code.isEmpty {
-                alert.addAction(UIAlertAction(title: "Share Code", style: .default) { [weak presenter] _ in
+                menu.addAction(UIAlertAction(title: "Share Code", style: .default) { [weak presenter] _ in
                     guard let presenter else { return }
-                    showGoLiveCreatedAlert(code: code, from: presenter)
+                    let link = "wolfmore://watch?code=\(code)"
+                    let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
+                    presenter.present(av, animated: true)
+                })
+                menu.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
+                    UIPasteboard.general.string = code
                 })
             }
-            alert.addAction(UIAlertAction(title: "Stop Live", style: .destructive) { [weak presenter] _ in
+            if g.liveLinkedEventCode == nil {
+                menu.addAction(UIAlertAction(title: "Link to Match Board…", style: .default) { [weak presenter] _ in
+                    guard let presenter else { return }
+                    linkToMatchBoardAction(sessionId: sessionId, creatorToken: g.liveCreatorToken, from: presenter)
+                })
+            } else {
+                let evCode = g.liveLinkedEventCode!
+                menu.addAction(UIAlertAction(title: "Unlink from Match Board (\(evCode))", style: .default) { [weak presenter] _ in
+                    guard let presenter else { return }
+                    unlinkFromMatchBoardAction(sessionId: sessionId, creatorToken: g.liveCreatorToken, from: presenter)
+                })
+            }
+            menu.addAction(UIAlertAction(title: "Create Match Board…", style: .default) { [weak presenter] _ in
+                guard let presenter else { return }
+                createMatchBoardAction(from: presenter)
+            })
+            menu.addAction(UIAlertAction(title: "Stop Live", style: .destructive) { [weak presenter] _ in
                 guard let presenter else { return }
                 stopLiveSession(id: sessionId, from: presenter)
             })
-            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            presenter.present(alert, animated: true)
+            menu.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            if let pop = menu.popoverPresentationController {
+                pop.sourceView = presenter.view
+                pop.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY,
+                                        width: 0, height: 0)
+                pop.permittedArrowDirections = []
+            }
+            presenter.present(menu, animated: true)
         } else {
             let names = (0..<g.activePlayerLimit).compactMap { s -> String? in
                 guard g.playerActivated[safe: s] == true else { return nil }
@@ -303,14 +475,15 @@ enum WolfActions {
             let nineHole     = g.isNineHoleMatch
             let nineHoleStart = g.nineHoleStartingHole
 
+            let prefillBoardCode = MatchBoardStore.todaysBoard()?.code ?? ""
             let namePrompt = UIAlertController(
-                title: "Name This Session",
-                message: "Optional · 20 characters max",
+                title: "Go Live",
+                message: "Group name (optional) · Match board code (leave blank if none)\n\nGot a code from the organizer? Enter it below to appear on their match board.",
                 preferredStyle: .alert
             )
             namePrompt.addTextField { tf in
-                tf.placeholder        = "e.g. \(course)"
-                tf.returnKeyType      = .done
+                tf.placeholder        = "Group name, e.g. \(course)"
+                tf.returnKeyType      = .next
                 tf.clearButtonMode    = .whileEditing
                 NotificationCenter.default.addObserver(
                     forName: UITextField.textDidChangeNotification,
@@ -320,43 +493,49 @@ enum WolfActions {
                     if let t = tf.text, t.count > 20 { tf.text = String(t.prefix(20)) }
                 }
             }
+            namePrompt.addTextField { tf in
+                tf.placeholder            = "Match board code, e.g. EABC123"
+                tf.text                   = prefillBoardCode
+                tf.autocapitalizationType = .allCharacters
+                tf.autocorrectionType     = .no
+                tf.returnKeyType          = .done
+                NotificationCenter.default.addObserver(
+                    forName: UITextField.textDidChangeNotification,
+                    object: tf,
+                    queue: .main
+                ) { _ in
+                    if let t = tf.text { tf.text = String(t.prefix(7)).uppercased() }
+                }
+            }
             namePrompt.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             namePrompt.addAction(UIAlertAction(title: "Go Live", style: .default) { [weak presenter] _ in
                 guard let presenter else { return }
-                var raw = namePrompt.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                var raw = namePrompt.textFields?[0].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
                 if raw.count > 20 { raw = String(raw.prefix(20)) }
                 let groupName: String? = raw.isEmpty ? nil : raw
-                Task {
-                    do {
-                        let (sessionId, code, token) = try await SupabaseService.shared.createWolfSession(
-                            playerNames: names,
-                            courseName: course,
-                            groupName: groupName,
-                            playerHandicaps: handicaps,
-                            nineHoleMatch: nineHole,
-                            nineHoleStartingHole: nineHoleStart
-                        )
-                        GameManager.shared.update { g in
-                            g.liveSessionId       = sessionId
-                            g.liveSessionCode     = code
-                            g.liveCreatorToken    = token
-                            g.liveSessionGroupName = groupName
-                        }
-                        GameManager.shared.saveCurrent()
-                        await MainActor.run {
-                            NotificationCenter.default.post(name: .reloadUI, object: nil)
-                            showGoLiveCreatedAlert(code: code, from: presenter)
-                        }
-                    } catch {
-                        await MainActor.run {
-                            let a = UIAlertController(title: "Go Live Failed",
-                                                      message: error.localizedDescription,
-                                                      preferredStyle: .alert)
-                            a.addAction(UIAlertAction(title: "OK", style: .default))
-                            presenter.present(a, animated: true)
+                let eventCodeRaw = (namePrompt.textFields?[1].text ?? "")
+                    .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                let eventCodeEntry: String? = eventCodeRaw.isEmpty ? nil : eventCodeRaw
+
+                // If a board code was entered and game isn't match play, warn first
+                if let evCode = eventCodeEntry,
+                   let g = GameManager.shared.currentGame,
+                   !g.resolvedGameType.isMatchPlay {
+                    let hasHoles = g.holeCommitted.contains(true)
+                    presentMatchPlayWarning(gameTypeName: g.resolvedGameType.displayName,
+                                           hasHolesScored: hasHoles, from: presenter) {
+                        openMatchPlaySettings(from: presenter) {
+                            executeGoLiveTask(names: names, course: course, handicaps: handicaps,
+                                              nineHole: nineHole, nineHoleStart: nineHoleStart,
+                                              groupName: groupName, eventCode: evCode, from: presenter)
                         }
                     }
+                    return
                 }
+
+                executeGoLiveTask(names: names, course: course, handicaps: handicaps,
+                                  nineHole: nineHole, nineHoleStart: nineHoleStart,
+                                  groupName: groupName, eventCode: eventCodeEntry, from: presenter)
             })
             presenter.present(namePrompt, animated: true)
         }
@@ -374,12 +553,163 @@ enum WolfActions {
                 g.liveSessionCode      = nil
                 g.liveCreatorToken     = nil
                 g.liveSessionGroupName = nil
+                g.liveLinkedEventCode  = nil
             }
             GameManager.shared.saveCurrent()
             await MainActor.run {
                 NotificationCenter.default.post(name: .reloadUI, object: nil)
             }
         }
+    }
+
+    static func createMatchBoardAction(from presenter: UIViewController) {
+        let prompt = UIAlertController(
+            title: "Create Live Match Board",
+            message: "Give the board a name. You'll get a code to share with scorers and viewers.",
+            preferredStyle: .alert
+        )
+        prompt.addTextField { tf in
+            tf.placeholder     = "e.g. Saturday Match Play"
+            tf.returnKeyType   = .done
+            tf.clearButtonMode = .whileEditing
+        }
+        prompt.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        prompt.addAction(UIAlertAction(title: "Create", style: .default) { [weak presenter] _ in
+            guard let presenter else { return }
+            let name = (prompt.textFields?.first?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { return }
+            let code = SupabaseService.shared.generateEventCodePublic()
+            Task {
+                do {
+                    let result = try await SupabaseService.shared.createLiveEvent(name: name, code: code)
+                    MatchBoardStore.save(code: result.eventCode, name: name)
+                    GameManager.shared.update { g in
+                        g.liveEventId             = result.eventId
+                        g.liveEventCode           = result.eventCode
+                        g.liveEventOrganizerToken = result.organizerToken
+                    }
+                    GameManager.shared.saveCurrent()
+                    await MainActor.run {
+                        showMatchBoardCreatedAlert(code: result.eventCode, name: name, from: presenter)
+                    }
+                } catch {
+                    await MainActor.run {
+                        let a = UIAlertController(title: "Create Match Board Failed",
+                                                  message: error.localizedDescription,
+                                                  preferredStyle: .alert)
+                        a.addAction(UIAlertAction(title: "OK", style: .default))
+                        presenter.present(a, animated: true)
+                    }
+                }
+            }
+        })
+        presenter.present(prompt, animated: true)
+    }
+
+    private static func linkToMatchBoardAction(sessionId: String, creatorToken: String?,
+                                               from presenter: UIViewController) {
+        guard let token = creatorToken else { return }
+        let prompt = UIAlertController(
+            title: "Link to Match Board",
+            message: "Enter the 7-character match board code",
+            preferredStyle: .alert
+        )
+        prompt.addTextField { tf in
+            tf.placeholder            = "e.g. EABC123"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType     = .no
+            tf.returnKeyType          = .done
+            NotificationCenter.default.addObserver(
+                forName: UITextField.textDidChangeNotification,
+                object: tf,
+                queue: .main
+            ) { _ in
+                if let t = tf.text { tf.text = String(t.prefix(7)).uppercased() }
+            }
+        }
+        prompt.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        prompt.addAction(UIAlertAction(title: "Link", style: .default) { [weak presenter] _ in
+            guard let presenter else { return }
+            let evCode = (prompt.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            guard !evCode.isEmpty else { return }
+
+            if let g = GameManager.shared.currentGame, !g.resolvedGameType.isMatchPlay {
+                let hasHoles = g.holeCommitted.contains(true)
+                presentMatchPlayWarning(gameTypeName: g.resolvedGameType.displayName,
+                                       hasHolesScored: hasHoles, from: presenter) {
+                    openMatchPlaySettings(from: presenter) {
+                        executeLinkTask(sessionId: sessionId, token: token, evCode: evCode, from: presenter)
+                    }
+                }
+                return
+            }
+
+            executeLinkTask(sessionId: sessionId, token: token, evCode: evCode, from: presenter)
+        })
+        presenter.present(prompt, animated: true)
+    }
+
+    private static func unlinkFromMatchBoardAction(sessionId: String, creatorToken: String?,
+                                                    from presenter: UIViewController) {
+        guard let token = creatorToken else { return }
+        let evCode = GameManager.shared.currentGame?.liveLinkedEventCode ?? ""
+        let confirm = UIAlertController(
+            title: "Unlink from Match Board",
+            message: evCode.isEmpty ? "Remove this session from the match board?" :
+                     "Remove this session from match board \(evCode)?",
+            preferredStyle: .alert
+        )
+        confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        confirm.addAction(UIAlertAction(title: "Unlink", style: .destructive) { [weak presenter] _ in
+            guard let presenter else { return }
+            Task {
+                do {
+                    try await SupabaseService.shared.unlinkSessionFromEvent(
+                        sessionId: sessionId,
+                        creatorToken: token
+                    )
+                    GameManager.shared.update { g in g.liveLinkedEventCode = nil }
+                    GameManager.shared.saveCurrent()
+                } catch {
+                    print("ERROR unlinkSessionFromEvent: \(error)")
+                }
+                await MainActor.run {
+                    NotificationCenter.default.post(name: .reloadUI, object: nil)
+                }
+            }
+        })
+        presenter.present(confirm, animated: true)
+    }
+
+    static func showMatchBoardCreatedAlert(code: String, name: String, from presenter: UIViewController) {
+        let link = "wolfmore://watch?code=\(code)"
+        let alert = UIAlertController(
+            title: "Match Board Created",
+            message: "Send this code to each group's scorer and your viewers.\n\n\(code)",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
+            UIPasteboard.general.string = code
+        })
+        alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak presenter] _ in
+            guard let presenter else { return }
+            let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
+            presenter.present(av, animated: true)
+        })
+        alert.addAction(UIAlertAction(title: "View Board", style: .default) { [weak presenter] _ in
+            guard let presenter else { return }
+            let vc = LiveEventViewController(eventCode: code)
+            if let nav = presenter.navigationController {
+                nav.pushViewController(vc, animated: true)
+            } else {
+                let nav = UINavigationController(rootViewController: vc)
+                nav.modalPresentationStyle = .pageSheet
+                presenter.present(nav, animated: true)
+            }
+        })
+        alert.addAction(UIAlertAction(title: "Done", style: .cancel))
+        presenter.present(alert, animated: true)
     }
 
     private static func showGoLiveCreatedAlert(code: String, from presenter: UIViewController) {

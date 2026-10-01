@@ -4304,6 +4304,30 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         print("ERROR submitWolfHole hole=\(backfillHole+1): \(error)")
                     }
                 }
+                // Publish match status for event summary after backfill
+                if let creatorToken = g.liveCreatorToken, g.liveLinkedEventCode != nil {
+                    if g.resolvedGameType.isMatchPlay, !g.isDualMatch {
+                        let status = liveMatchStatusString(g: g, throughHole: hole)
+                        let played = (0...hole).filter { g.holeCommitted[safe: $0] == true }.count
+                        do {
+                            try await SupabaseService.shared.publishMatchStatus(
+                                sessionId: sessionId,
+                                creatorToken: creatorToken,
+                                matchStatus: status,
+                                holesPlayed: played
+                            )
+                        } catch {
+                            print("ERROR publishMatchStatus: \(error)")
+                        }
+                    } else if !g.resolvedGameType.isMatchPlay {
+                        try? await SupabaseService.shared.publishMatchStatus(
+                            sessionId: sessionId,
+                            creatorToken: creatorToken,
+                            matchStatus: "Not playing match play",
+                            holesPlayed: 0
+                        )
+                    }
+                }
             }
         }
 
@@ -5389,13 +5413,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     }
 
     @objc private func liveWolfTapped() {
-        showLiveCodePrompt()
-    }
-
-    private func showLiveCodePrompt() {
         guard let g = GameManager.shared.currentGame else { return }
-
-        // Live Wolf supports up to MAX_PLAYERS for non-Wolf game types; Wolf-family games allow up to 7.
         let activeCount = (0..<g.activePlayerLimit).filter {
             (g.playerActivated[safe: $0] ?? false) &&
             !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
@@ -5410,11 +5428,16 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             present(ac, animated: true)
             return
         }
+        WolfActions.presentGoLive(from: self)
+    }
 
+    // Auto-popup shown once per session start — simpler share prompt, not the full menu.
+    private func showLiveCodePrompt() {
+        guard let g = GameManager.shared.currentGame else { return }
         if let code = g.liveSessionCode, !code.isEmpty {
             let ac = UIAlertController(
-                title: "Send Live Wolf Code?",
-                message: "Share code with spectators:\n\(code)",
+                title: "Live Wolf Active",
+                message: "Share this code with spectators:\n\(code)",
                 preferredStyle: .alert
             )
             ac.addAction(UIAlertAction(title: "Share", style: .default) { [weak self] _ in
@@ -5426,19 +5449,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             ac.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
                 UIPasteboard.general.string = code
             })
-            ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
-            present(ac, animated: true)
-        } else {
-            let ac = UIAlertController(
-                title: "Send Live Wolf Code?",
-                message: "Broadcast this round to spectators in real time.",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "Go Live", style: .default) { [weak self] _ in
-                guard let self else { return }
-                WolfActions.presentGoLive(from: self)
-            })
-            ac.addAction(UIAlertAction(title: "Not Now", style: .cancel))
+            ac.addAction(UIAlertAction(title: "Done", style: .cancel))
             present(ac, animated: true)
         }
     }
@@ -6295,6 +6306,62 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         if i < wolfButtons.count       { setY(wolfButtons[i]) }
         if i < proxButtons.count       { setY(proxButtons[i]) }
         if i < playerRowCardViews.count { setY(playerRowCardViews[i]) }
+    }
+
+    // Returns a human-readable match status string from Team A's perspective,
+    // used when publishing live match status for the event summary.
+    private func liveMatchStatusString(g: GameData, throughHole: Int) -> String {
+        let teamASeats = (g.matchPlayTeamA ?? []).filter { $0 < MAX_PLAYERS }
+        let rawTeamB   = (g.matchPlayTeamB ?? []).filter { $0 < MAX_PLAYERS }
+        let teamBSeats = rawTeamB.isEmpty
+            ? (0..<min(g.playerNames.count, MAX_PLAYERS)).filter { !teamASeats.contains($0) && !(g.playerNames[$0].trimmingCharacters(in: .whitespaces).isEmpty) }
+            : rawTeamB
+        let refSeat = teamASeats.first ?? 0
+
+        func shortNames(_ seats: [Int]) -> String {
+            let names = seats.compactMap { seat -> String? in
+                guard seat < g.playerNames.count else { return nil }
+                let n = g.playerNames[seat].trimmingCharacters(in: .whitespaces)
+                guard !n.isEmpty else { return nil }
+                return n.components(separatedBy: " ").first
+            }
+            return names.isEmpty ? "?" : names.joined(separator: "/")
+        }
+        let aNames = shortNames(teamASeats)
+        let bNames = shortNames(teamBSeats)
+
+        var wins = 0, losses = 0
+        for h in 0...throughHole {
+            guard g.holeCommitted[safe: h] == true else { continue }
+            let p = g.playerMoney[safe: refSeat]?[safe: h] ?? 0.0
+            if p > 0.001 { wins += 1 } else if p < -0.001 { losses += 1 }
+        }
+        let diff = wins - losses
+        let played = (0...throughHole).filter { g.holeCommitted[safe: $0] == true }.count
+        let remaining = g.totalHoles - played
+
+        // Clinched early — lead exceeds holes remaining
+        if diff > 0 && diff > remaining {
+            let score = remaining == 0 ? "\(diff)" : "\(diff)&\(remaining)"
+            return "\(aNames) won \(score) · Final"
+        }
+        if diff < 0 && abs(diff) > remaining {
+            let score = remaining == 0 ? "\(abs(diff))" : "\(abs(diff))&\(remaining)"
+            return "\(bNames) won \(score) · Final"
+        }
+        if remaining == 0 {
+            if diff == 0 { return "Halved · Final" }
+            let score = "\(abs(diff))"
+            return diff > 0 ? "\(aNames) won \(score) · Final" : "\(bNames) won \(score) · Final"
+        }
+        if diff == 0 { return "All Square · thru \(played)" }
+        if diff > 0 && diff == remaining { return "\(aNames) Dormie" }
+        if diff < 0 && abs(diff) == remaining { return "\(bNames) Dormie" }
+        if diff > 0 {
+            return "\(aNames) \(diff) UP vs \(bNames) · thru \(played)"
+        } else {
+            return "\(bNames) \(abs(diff)) UP vs \(aNames) · thru \(played)"
+        }
     }
 }
    

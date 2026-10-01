@@ -70,6 +70,10 @@ struct GameData: Codable {
     var liveSessionCode: String? = nil
     var liveCreatorToken: String? = nil
     var liveSessionGroupName: String? = nil
+    var liveLinkedEventCode: String? = nil
+    var liveEventId: String? = nil
+    var liveEventCode: String? = nil
+    var liveEventOrganizerToken: String? = nil
 
     // Tee Game (tournament group) code and group code (nil = not in a tee game)
     var tournamentCode: String? = nil

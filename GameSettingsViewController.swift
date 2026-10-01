@@ -40,6 +40,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private var contentStack: UIStackView!
 
     var gameData: GameData?
+    var onPop: (() -> Void)?
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -113,6 +114,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         navigationController?.navigationBar.standardAppearance = restored
         navigationController?.navigationBar.scrollEdgeAppearance = restored
         navigationController?.navigationBar.tintColor = nil
+        if isMovingFromParent { onPop?() }
     }
 
     // MARK: - Scroll Layout

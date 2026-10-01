@@ -127,6 +127,11 @@ final class GameManager {
         return g
     }
 
+    /// Remove the tournament slot entirely. Never touches currentGame_v1 or round history.
+    func clearTournamentSlot() {
+        UserDefaults.standard.removeObject(forKey: tournamentKey)
+    }
+
     /// Mutate and re-persist the tournament slot without touching activeSlot or currentGame.
     /// Safe to call from background tasks — never disrupts an in-progress local round.
     func patchTournamentSlot(_ mutate: (inout GameData) -> Void) {

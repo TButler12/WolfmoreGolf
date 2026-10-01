@@ -135,6 +135,7 @@
 		F6TT01012FC0000000000TSV /* TeamTeeSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6TT01002FC0000000000TSV /* TeamTeeSetupViewController.swift */; };
 		FF06AA07BB08CC09DD10EE11 /* CalcuttaManagerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE05FF06AA07BB08CC09DD10 /* CalcuttaManagerViewController.swift */; };
 		LC01B2C3D4E5F607182930AA /* LiveConnectedViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */; };
+		LE01B2C3D4E5F607182930AD /* LiveEventViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LE01B2C3D4E5F607182930AC /* LiveEventViewController.swift */; };
 		LP01B2C3D4E5F607182930AF /* LocationPromptViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */; };
 		PM01B2C3D4E5F607182930AB /* PremiumManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = PM01B2C3D4E5F607182930AC /* PremiumManager.swift */; };
 		PW01B2C3D4E5F607182930AD /* PaywallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */; };
@@ -276,6 +277,7 @@
 		F7B2D4E81C3A5F69A0E4B382 /* TournamentScorecardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentScorecardViewController.swift; sourceTree = "<group>"; };
 		FF93F31CFC2F49EC8E51DB61 /* RestorePastRoundViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestorePastRoundViewController.swift; sourceTree = "<group>"; };
 		LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveConnectedViewController.swift; sourceTree = "<group>"; };
+		LE01B2C3D4E5F607182930AC /* LiveEventViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LiveEventViewController.swift; sourceTree = "<group>"; };
 		LP01B2C3D4E5F607182930B0 /* LocationPromptViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationPromptViewController.swift; sourceTree = "<group>"; };
 		PM01B2C3D4E5F607182930AC /* PremiumManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PremiumManager.swift; sourceTree = "<group>"; };
 		PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewController.swift; sourceTree = "<group>"; };
@@ -325,6 +327,7 @@
 				79FE676BB72D42FAA7A487F7 /* PastGameDetailViewController.swift */,
 				A2B3C4D5E6F7081929304A5C /* TeeGamesViewController.swift */,
 				LC01B2C3D4E5F607182930AB /* LiveConnectedViewController.swift */,
+				LE01B2C3D4E5F607182930AC /* LiveEventViewController.swift */,
 				DV1C2D3E4F506071829304AB /* DeviceID.swift */,
 				RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */,
 				FF93F31CFC2F49EC8E51DB61 /* RestorePastRoundViewController.swift */,
@@ -604,6 +607,7 @@
 				B66C2E5033A842F5A84999BE /* PastGameDetailViewController.swift in Sources */,
 				A2B3C4D5E6F7081929304A5B /* TeeGamesViewController.swift in Sources */,
 				LC01B2C3D4E5F607182930AA /* LiveConnectedViewController.swift in Sources */,
+				LE01B2C3D4E5F607182930AD /* LiveEventViewController.swift in Sources */,
 				A3B4C5D6E7F8092030415A6C /* TeeGameSetupViewController.swift in Sources */,
 				SC01B2C3D4E5F607182930AA /* ScrambleTeamEntryViewController.swift in Sources */,
 				A4B5C6D7E8F90A2131526B7C /* UIViewController+ActionSheet.swift in Sources */,
@@ -732,7 +736,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 66;
+				CURRENT_PROJECT_VERSION = 67;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -747,7 +751,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.5;
+				MARKETING_VERSION = 3.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -773,7 +777,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 66;
+				CURRENT_PROJECT_VERSION = 67;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -788,7 +792,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.5;
+				MARKETING_VERSION = 3.0.7;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

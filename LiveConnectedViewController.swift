@@ -108,8 +108,8 @@ final class LiveConnectedViewController: UITableViewController {
                 guard let self else { return }
                 WolfActions.joinLiveMatch(from: self)
             },
-            Row(title: "Spectate Live Wolf",
-                subtitle: "Watch a friend's round in real time",
+            Row(title: "Watch Live Wolf or Match Board",
+                subtitle: "Watch a group or a match board in real time",
                 icon: "eye.fill",
                 tint: .secondaryLabel) { [weak self] in
                 self?.watchLiveTapped()
@@ -157,6 +157,13 @@ final class LiveConnectedViewController: UITableViewController {
                 }
                 WolfActions.presentGoLive(from: self)
             },
+            Row(title: "Create Match Board / Ryder Cup",
+                subtitle: "Follow several match play groups on one screen",
+                icon: "rectangle.3.group.fill",
+                tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)) { [weak self] in
+                guard let self else { return }
+                WolfActions.createMatchBoardAction(from: self)
+            },
         ]))
 
         let isOrganizer = GameManager.shared.currentGame?.tournamentIsOrganizer == true
@@ -196,6 +203,26 @@ final class LiveConnectedViewController: UITableViewController {
                 }
             }
             result.append(Section(header: "RECENT TOURNAMENTS", rows: rows))
+        }
+
+        let myBoards = MatchBoardStore.all()
+        if !myBoards.isEmpty {
+            let boardRows: [Row] = myBoards.prefix(5).map { board in
+                let dateStr = DateFormatter.localizedString(
+                    from: Date(timeIntervalSince1970: board.createdAt),
+                    dateStyle: .short, timeStyle: .none)
+                return Row(
+                    title: board.name,
+                    subtitle: "\(board.code) · \(dateStr)",
+                    icon: "rectangle.3.group.fill",
+                    tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)
+                ) { [weak self] in
+                    guard let self else { return }
+                    let vc = LiveEventViewController(eventCode: board.code)
+                    self.navigationController?.pushViewController(vc, animated: true)
+                }
+            }
+            result.append(Section(header: "MY MATCH BOARDS", rows: boardRows))
         }
 
         sections = result
@@ -633,12 +660,12 @@ final class LiveConnectedViewController: UITableViewController {
 
     private func showWatchLiveAlert() {
         let alert = UIAlertController(
-            title: "Spectate Live Wolf",
-            message: "Enter the 6-character code shared by the scorekeeper",
+            title: "Watch Live Wolf or Match Board",
+            message: "Enter a group code (6 chars) or a match board code (7 chars, starts with E)",
             preferredStyle: .alert
         )
         alert.addTextField { tf in
-            tf.placeholder = "e.g. ABC123"
+            tf.placeholder = "e.g. ABC123 or EABC123"
             tf.autocapitalizationType = .allCharacters
             tf.autocorrectionType = .no
             tf.returnKeyType = .go
@@ -647,7 +674,7 @@ final class LiveConnectedViewController: UITableViewController {
                 object: tf,
                 queue: .main
             ) { _ in
-                if let text = tf.text, text.count > 6 { tf.text = String(text.prefix(6)) }
+                if let text = tf.text, text.count > 7 { tf.text = String(text.prefix(7)) }
             }
         }
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -656,12 +683,17 @@ final class LiveConnectedViewController: UITableViewController {
                 .trimmingCharacters(in: .whitespacesAndNewlines)
                 .uppercased()
             guard !code.isEmpty else { return }
-            self?.fetchAndOpenSession(code: code)
+            self?.fetchAndOpen(code: code)
         })
         present(alert, animated: true)
     }
 
-    private func fetchAndOpenSession(code: String) {
+    private func fetchAndOpen(code: String) {
+        if code.count == 7 && code.hasPrefix("E") {
+            let vc = LiveEventViewController(eventCode: code)
+            navigationController?.pushViewController(vc, animated: true)
+            return
+        }
         Task {
             do {
                 let session = try await SupabaseService.shared.fetchWolfSessionByCode(code: code)

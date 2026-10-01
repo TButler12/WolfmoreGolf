@@ -33,6 +33,7 @@ final class ViewController: UIViewController,
     private weak var tournamentInfoSubtitleLabel: UILabel?
     private weak var tournamentGroupButton: UIButton?
     private weak var tournamentContinueButton: UIButton?
+    private weak var tournamentMenuButton: UIButton?
     private weak var editCourseButton: UIButton?
     private weak var tournamentButton: UIButton?
     private weak var liveConnectedButton: UIButton?
@@ -493,6 +494,14 @@ final class ViewController: UIViewController,
         badge.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(badge)
 
+        let menuBtn = UIButton(type: .system)
+        menuBtn.setImage(UIImage(systemName: "ellipsis"), for: .normal)
+        menuBtn.tintColor = UIColor.white.withAlphaComponent(0.7)
+        menuBtn.translatesAutoresizingMaskIntoConstraints = false
+        menuBtn.addTarget(self, action: #selector(tournamentMenuTapped), for: .touchUpInside)
+        card.addSubview(menuBtn)
+        tournamentMenuButton = menuBtn
+
         let nameLbl = UILabel()
         nameLbl.font = .systemFont(ofSize: 20, weight: .bold)
         nameLbl.textColor = .white
@@ -541,9 +550,14 @@ final class ViewController: UIViewController,
         card.addSubview(btnRow)
 
         NSLayoutConstraint.activate([
+            menuBtn.topAnchor.constraint(equalTo: card.topAnchor, constant: 10),
+            menuBtn.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -12),
+            menuBtn.widthAnchor.constraint(equalToConstant: 28),
+            menuBtn.heightAnchor.constraint(equalToConstant: 28),
+
             badge.topAnchor.constraint(equalTo: card.topAnchor, constant: pad),
             badge.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
-            badge.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -pad),
+            badge.trailingAnchor.constraint(equalTo: menuBtn.leadingAnchor, constant: -4),
 
             nameLbl.topAnchor.constraint(equalTo: badge.bottomAnchor, constant: 4),
             nameLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
@@ -568,6 +582,79 @@ final class ViewController: UIViewController,
         let sfEnabled = g.tournamentStablefordEnabled ?? false
         let vc = TournamentLeaderboardViewController(code: code, gameType: gameType, stablefordEnabled: sfEnabled)
         navigationController?.pushViewController(vc, animated: true)
+    }
+
+    @objc private func tournamentMenuTapped() {
+        guard let g = GameManager.shared.tournamentGameData,
+              let code = g.tournamentCode else { return }
+        let name = g.tournamentName ?? "Tournament"
+        let isOrganizer = g.tournamentIsOrganizer
+
+        let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(title: "Remove from Home", style: .destructive) { [weak self] _ in
+            self?.confirmRemoveTournament(name: name)
+        })
+        if isOrganizer {
+            sheet.addAction(UIAlertAction(title: "End Tournament", style: .destructive) { [weak self] _ in
+                self?.confirmEndTournament(name: name, code: code)
+            })
+        }
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let btn = tournamentMenuButton {
+            sheet.popoverPresentationController?.sourceView = btn
+            sheet.popoverPresentationController?.sourceRect = btn.bounds
+        }
+        present(sheet, animated: true)
+    }
+
+    private func confirmRemoveTournament(name: String) {
+        let alert = UIAlertController(
+            title: "Remove \"\(name)\"?",
+            message: "This removes the tournament from your phone. Results and the leaderboard stay available to others.",
+            preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Remove", style: .destructive) { [weak self] _ in
+            GameManager.shared.clearTournamentSlot()
+            self?.refreshHomeUI()
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
+    }
+
+    private func confirmEndTournament(name: String, code: String) {
+        let alert = UIAlertController(
+            title: "End \"\(name)\"?",
+            message: "This ends the tournament for all players. Scores and the leaderboard will remain visible but no new scores can be submitted.",
+            preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "End Tournament", style: .destructive) { [weak self] _ in
+            guard let self else { return }
+            let spinner = UIAlertController(title: nil, message: "Ending tournament…", preferredStyle: .alert)
+            self.present(spinner, animated: true)
+            Task { [weak self] in
+                guard let self else { return }
+                do {
+                    try await SupabaseService.shared.endTournament(code: code)
+                    GameManager.shared.clearTournamentSlot()
+                    await MainActor.run {
+                        spinner.dismiss(animated: false) {
+                            self.refreshHomeUI()
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        spinner.dismiss(animated: false) {
+                            let err = UIAlertController(
+                                title: "Error",
+                                message: "Couldn't end the tournament. Check your connection and try again.",
+                                preferredStyle: .alert)
+                            err.addAction(UIAlertAction(title: "OK", style: .default))
+                            self.present(err, animated: true)
+                        }
+                    }
+                }
+            }
+        })
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(alert, animated: true)
     }
 
     @objc private func tournamentContinueTapped() {
@@ -905,12 +992,16 @@ final class ViewController: UIViewController,
         tournamentContinueButton?.isHidden = !hasProgress
         card.isHidden = false
 
-        // Background fetch to catch stale day (e.g. day advanced while app was idle).
-        // Uses patchTournamentSlot so it never touches activeSlot or currentGame —
-        // safe to run concurrently with a local-round GameVC session.
+        // Background fetch: check for tournament end and stale day.
+        // Uses patchTournamentSlot so it never touches activeSlot or currentGame.
         Task { [weak self] in
-            guard let liveDay = try? await SupabaseService.shared.fetchTournament(code: code).currentDay,
-                  liveDay != day else { return }
+            guard let record = try? await SupabaseService.shared.fetchTournament(code: code) else { return }
+            if record.finishedAt != nil {
+                GameManager.shared.clearTournamentSlot()
+                await MainActor.run { self?.refreshHomeUI() }
+                return
+            }
+            guard let liveDay = record.currentDay, liveDay != day else { return }
             GameManager.shared.patchTournamentSlot { g in g.tournamentDay = liveDay }
             UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
             await MainActor.run {
@@ -1490,6 +1581,22 @@ final class ViewController: UIViewController,
 
     @objc private func inProgressCardTapped() {
         _ = GameManager.shared.loadLastOpened(notify: false)
+
+        // If the round has started, go directly to the scoring page.
+        // PlayerSetupVC sits invisibly beneath GameVC so Back returns to it.
+        if GameManager.shared.localGameData?.holeCommitted.contains(true) == true,
+           let navVC = navigationController {
+            let sb = UIStoryboard(name: "Main", bundle: nil)
+            let playerSetupVC = sb.instantiateViewController(withIdentifier: "PlayerSetupVC")
+            let gameVC        = sb.instantiateViewController(withIdentifier: "GameViewController")
+            var stack = navVC.viewControllers
+            stack.append(playerSetupVC)
+            stack.append(gameVC)
+            navVC.setViewControllers(stack, animated: true)
+            return
+        }
+
+        // Round exists but no holes committed yet — show player setup first.
         performSegue(withIdentifier: "showPlayerSetup", sender: self)
     }
 

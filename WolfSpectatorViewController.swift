@@ -34,6 +34,7 @@ final class WolfSpectatorViewController: UIViewController {
 
     private let sessionInfoLabel  = UILabel()
     private var sessionInfoHeight: NSLayoutConstraint?
+    private let eventChipButton   = UIButton(type: .system)
 
     private let formatBannerLabel = UILabel()
     private var formatBannerHeight: NSLayoutConstraint?
@@ -181,6 +182,17 @@ final class WolfSpectatorViewController: UIViewController {
             sessionInfoLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             sessionInfoLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             h,
+        ])
+
+        eventChipButton.translatesAutoresizingMaskIntoConstraints = false
+        eventChipButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .semibold)
+        eventChipButton.setTitleColor(.wolfMoreGreen, for: .normal)
+        eventChipButton.isHidden = true
+        eventChipButton.addTarget(self, action: #selector(eventChipTapped), for: .touchUpInside)
+        view.addSubview(eventChipButton)
+        NSLayoutConstraint.activate([
+            eventChipButton.centerYAnchor.constraint(equalTo: sessionInfoLabel.centerYAnchor),
+            eventChipButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -12),
         ])
     }
 
@@ -386,7 +398,16 @@ final class WolfSpectatorViewController: UIViewController {
     private func loadInitialSessions() {
         var codesToLoad: [String] = []
         let upper = sessionCode.uppercased()
-        if !upper.isEmpty { codesToLoad.append(upper) }
+        if !upper.isEmpty {
+            if isEventCode(upper) {
+                // Route event codes directly to LiveEventViewController
+                DispatchQueue.main.async { self.openLiveEvent(code: upper) }
+                loadingView.stopAnimating()
+                loadingView.isHidden = true
+                return
+            }
+            codesToLoad.append(upper)
+        }
 
         let saved = UserDefaults.standard.stringArray(forKey: savedCodesKey) ?? []
         for code in saved where !codesToLoad.contains(code) && codesToLoad.count < maxSessions {
@@ -488,27 +509,42 @@ final class WolfSpectatorViewController: UIViewController {
     }
 
     private func updateSessionInfoLabel(session: WolfSession) {
-        guard let name = session.groupName, !name.isEmpty else {
+        let hasEventCode = session.eventCode != nil && !(session.eventCode?.isEmpty ?? true)
+        if let name = session.groupName, !name.isEmpty {
+            let str = NSMutableAttributedString(
+                string: name,
+                attributes: [
+                    .font: UIFont.systemFont(ofSize: 13, weight: .semibold),
+                    .foregroundColor: UIColor.label
+                ]
+            )
+            str.append(NSAttributedString(
+                string: "  \(session.code)",
+                attributes: [
+                    .font: UIFont.monospacedSystemFont(ofSize: 10, weight: .regular),
+                    .foregroundColor: UIColor.secondaryLabel
+                ]
+            ))
+            sessionInfoLabel.attributedText = str
+            sessionInfoHeight?.constant = 28
+        } else if hasEventCode {
+            sessionInfoLabel.attributedText = nil
+            sessionInfoHeight?.constant = 28
+        } else {
             sessionInfoHeight?.constant = 0
             sessionInfoLabel.attributedText = nil
-            return
         }
-        let str = NSMutableAttributedString(
-            string: name,
-            attributes: [
-                .font: UIFont.systemFont(ofSize: 13, weight: .semibold),
-                .foregroundColor: UIColor.label
-            ]
-        )
-        str.append(NSAttributedString(
-            string: "  \(session.code)",
-            attributes: [
-                .font: UIFont.monospacedSystemFont(ofSize: 10, weight: .regular),
-                .foregroundColor: UIColor.secondaryLabel
-            ]
-        ))
-        sessionInfoLabel.attributedText = str
-        sessionInfoHeight?.constant = 28
+        if hasEventCode {
+            eventChipButton.setTitle("Match Board ›", for: .normal)
+            eventChipButton.isHidden = false
+        } else {
+            eventChipButton.isHidden = true
+        }
+    }
+
+    @objc private func eventChipTapped() {
+        guard let evCode = currentSession?.eventCode else { return }
+        openLiveEvent(code: evCode)
     }
 
     @objc private func refreshTapped() {
@@ -628,12 +664,12 @@ final class WolfSpectatorViewController: UIViewController {
     @objc private func addSessionTapped() {
         guard sessions.count < maxSessions else { return }
         let alert = UIAlertController(
-            title: "Watch Another Game",
-            message: "Enter the 6-character code",
+            title: "Watch a Game or Event",
+            message: "Enter a 6-char session code or 7-char event code",
             preferredStyle: .alert
         )
         alert.addTextField { tf in
-            tf.placeholder = "e.g. ABC123"
+            tf.placeholder = "e.g. ABC123 or EABC123"
             tf.autocapitalizationType = .allCharacters
             tf.autocorrectionType = .no
             tf.returnKeyType = .go
@@ -642,7 +678,7 @@ final class WolfSpectatorViewController: UIViewController {
                 object: tf,
                 queue: .main
             ) { _ in
-                if let text = tf.text, text.count > 6 { tf.text = String(text.prefix(6)) }
+                if let text = tf.text, text.count > 7 { tf.text = String(text.prefix(7)) }
             }
         }
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -656,7 +692,20 @@ final class WolfSpectatorViewController: UIViewController {
         present(alert, animated: true)
     }
 
+    private func isEventCode(_ code: String) -> Bool {
+        code.count == 7 && code.hasPrefix("E")
+    }
+
+    private func openLiveEvent(code: String) {
+        let vc = LiveEventViewController(eventCode: code)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
     private func addSession(code: String) {
+        if isEventCode(code) {
+            openLiveEvent(code: code)
+            return
+        }
         if let existing = sessions.firstIndex(where: { $0.code == code }) {
             currentSessionIndex = existing
             updateTabHighlight()
@@ -1020,7 +1069,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
             cell.configure(hole: displayHole, result: currentHoleResults[matchPos],
                            playerNames: session.playerNames,
                            cumulativeTotals: hasCumulative ? cumulative : [],
-                           matchStatus: matchStatus,
+                           matchStatus: hasCumulative ? matchStatus : nil,
                            teamASeats: isBestBall ? teamASeats : [])
         }
         return cell

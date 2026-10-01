@@ -103,6 +103,9 @@ struct WolfSession: Codable {
     let nineHoleMatch: Bool?
     let nineHoleStartingHole: Int?
     let groupName: String?
+    let matchStatus: String?
+    let holesPlayed: Int?
+    let eventCode: String?
 
     enum CodingKeys: String, CodingKey {
         case id, code, status
@@ -114,6 +117,34 @@ struct WolfSession: Codable {
         case nineHoleMatch        = "nine_hole_match"
         case nineHoleStartingHole = "nine_hole_starting_hole"
         case groupName            = "group_name"
+        case matchStatus          = "match_status"
+        case holesPlayed          = "holes_played"
+        case eventCode            = "event_code"
+    }
+}
+
+struct LiveEvent: Codable {
+    let id: String
+    let code: String
+    let name: String
+    let status: String
+    let createdAt: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id, code, name, status
+        case createdAt = "created_at"
+    }
+}
+
+struct LiveEventCreateResult: Codable {
+    let eventId: String
+    let eventCode: String
+    let organizerToken: String
+
+    enum CodingKeys: String, CodingKey {
+        case eventId        = "r_event_id"
+        case eventCode      = "r_event_code"
+        case organizerToken = "r_organizer_token"
     }
 }
 
@@ -254,6 +285,7 @@ struct TournamentRecord: Codable {
     let createdAt: String?
     let courseName: String?
     let currentDay: Int?
+    let finishedAt: String?          // set by end_tournament RPC; nil = still active
     let coOrganizerCode: String?
     let coOrganizerDevices: [String]?
     // Stableford-specific organizer rules
@@ -290,6 +322,7 @@ struct TournamentRecord: Codable {
         case createdAt          = "created_at"
         case courseName         = "course_name"
         case currentDay         = "current_day"
+        case finishedAt         = "finished_at"
         case coOrganizerCode    = "co_organizer_code"
         case coOrganizerDevices = "co_organizer_devices"
         case stablefordBaseline  = "stableford_baseline"

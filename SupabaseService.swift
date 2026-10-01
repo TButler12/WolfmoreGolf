@@ -8,6 +8,7 @@ final class SupabaseService {
     let client: SupabaseClient
     private var holeScoreChannels: [String: RealtimeChannelV2] = [:]
     private var wolfSessionChannels: [String: RealtimeChannelV2] = [:]
+    private var wolfEventChannels: [String: RealtimeChannelV2] = [:]
 
     private init() {
         client = SupabaseClient(
@@ -686,6 +687,114 @@ final class SupabaseService {
         }
     }
 
+    // MARK: - Live Events
+
+    func createLiveEvent(name: String, code: String) async throws -> LiveEventCreateResult {
+        struct Params: Encodable {
+            let p_name: String
+            let p_code: String
+        }
+        let response: PostgrestResponse<[LiveEventCreateResult]> = try await client
+            .rpc("create_live_event", params: Params(p_name: name, p_code: code))
+            .execute()
+        guard let result = response.value.first else {
+            throw NSError(domain: "WolfmoreGolf", code: -1,
+                          userInfo: [NSLocalizedDescriptionKey: "Event creation returned no result."])
+        }
+        return result
+    }
+
+    func linkSessionToEvent(sessionId: String, creatorToken: String, eventCode: String) async throws {
+        struct Params: Encodable {
+            let p_session_id: String
+            let p_creator_token: String
+            let p_event_code: String
+        }
+        try await client.rpc("link_session_to_event", params: Params(
+            p_session_id: sessionId,
+            p_creator_token: creatorToken,
+            p_event_code: eventCode.uppercased()
+        )).execute()
+    }
+
+    func unlinkSessionFromEvent(sessionId: String, creatorToken: String) async throws {
+        struct Params: Encodable {
+            let p_session_id: String
+            let p_creator_token: String
+        }
+        try await client.rpc("unlink_session_from_event", params: Params(
+            p_session_id: sessionId,
+            p_creator_token: creatorToken
+        )).execute()
+    }
+
+    func publishMatchStatus(sessionId: String, creatorToken: String,
+                            matchStatus: String, holesPlayed: Int) async throws {
+        struct Params: Encodable {
+            let p_session_id: String
+            let p_creator_token: String
+            let p_match_status: String
+            let p_holes_played: Int
+        }
+        try await client.rpc("publish_match_status", params: Params(
+            p_session_id: sessionId,
+            p_creator_token: creatorToken,
+            p_match_status: matchStatus,
+            p_holes_played: holesPlayed
+        )).execute()
+    }
+
+    func fetchLiveEvent(code: String) async throws -> LiveEvent {
+        let response: PostgrestResponse<LiveEvent> = try await client
+            .from("live_events")
+            .select()
+            .eq("code", value: code.uppercased())
+            .single()
+            .execute()
+        return response.value
+    }
+
+    func fetchEventSessions(eventCode: String) async throws -> [WolfSession] {
+        let response: PostgrestResponse<[WolfSession]> = try await client
+            .from("wolf_sessions")
+            .select()
+            .eq("event_code", value: eventCode.uppercased())
+            .order("created_at")
+            .execute()
+        return response.value
+    }
+
+    func subscribeToEventSessions(eventCode: String, onUpdate: @escaping (WolfSession) -> Void) {
+        let key = "event-sessions-\(eventCode.uppercased())"
+        let channel = client.channel("wolf-event-\(eventCode.uppercased())-\(UUID().uuidString)")
+        wolfEventChannels[key] = channel
+
+        channel.onPostgresChange(
+            UpdateAction.self,
+            schema: "public",
+            table: "wolf_sessions",
+            filter: "event_code=eq.\(eventCode.uppercased())"
+        ) { action in
+            if let record = try? action.decodeRecord(as: WolfSession.self, decoder: JSONDecoder()) {
+                DispatchQueue.main.async { onUpdate(record) }
+            }
+        }
+
+        Task { await channel.subscribe() }
+    }
+
+    func unsubscribeFromEventSessions(eventCode: String) async {
+        let key = "event-sessions-\(eventCode.uppercased())"
+        if let ch = wolfEventChannels.removeValue(forKey: key) {
+            await ch.unsubscribe()
+        }
+    }
+
+    func generateEventCodePublic() -> String {
+        let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+        return "E" + String((0..<6).map { _ in chars.randomElement()! })
+    }
+
     // MARK: - Tee Games (tournaments table)
 
     func createTournament(
@@ -805,6 +914,13 @@ final class SupabaseService {
             .from("tournament_roster")
             .update(["group_code": AnyJSON.null])
             .eq("tournament_code", value: code)
+            .execute()
+    }
+
+    func endTournament(code: String) async throws {
+        struct Params: Encodable { let p_code: String; let p_device_id: String }
+        try await client
+            .rpc("end_tournament", params: Params(p_code: code, p_device_id: DeviceID.id))
             .execute()
     }
 
