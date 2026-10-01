@@ -23,6 +23,7 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     private var activeCourseID: UUID?
     // Holds a course loaded via loadCourseID that hasn't been confirmed yet.
     private var pendingCourse: CourseProfile?
+    private let playButton = UIButton(type: .system)
 
     // MARK: - Lifecycle
 
@@ -31,6 +32,7 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
 
         hideKeyboardWhenTappedAround()
         wirePopupOnInstructionLabel()
+        setupPlayButton()
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             title: "Save",
@@ -50,6 +52,24 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         updateCourseLabel()
         if prefillTemplate { title = "Boilerplate" }
         startInstructionGlow()
+    }
+
+    private func setupPlayButton() {
+        var cfg = UIButton.Configuration.filled()
+        cfg.title = "Play This Course"
+        cfg.cornerStyle = .large
+        cfg.contentInsets = NSDirectionalEdgeInsets(top: 14, leading: 24, bottom: 14, trailing: 24)
+        playButton.configuration = cfg
+        playButton.addTarget(self, action: #selector(playThisCourseTapped), for: .touchUpInside)
+        playButton.isHidden = true
+        playButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(playButton)
+        NSLayoutConstraint.activate([
+            playButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            playButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            playButton.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 40),
+            playButton.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -40),
+        ])
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -73,16 +93,11 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
                 // Already the active course — no confirmation needed.
                 setActiveCourse(c)
             } else {
-                // Different course: show scorecard read-only, let user confirm via nav button.
+                // Different course: show scorecard read-only, let user confirm via play button.
                 activeCourseID = c.id
                 applyToUIOnly(pars: c.pars, hcs: c.hcs)
                 pendingCourse = c
-                navigationItem.rightBarButtonItem = UIBarButtonItem(
-                    title: "Play This Course",
-                    style: .done,
-                    target: self,
-                    action: #selector(playThisCourseTapped)
-                )
+                playButton.isHidden = false
             }
             return
         }
@@ -130,15 +145,9 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     @objc private func playThisCourseTapped() {
         guard let c = pendingCourse else { return }
         pendingCourse = nil
+        playButton.isHidden = true
         setActiveCourse(c)
         updateCourseLabel()
-        // Restore the normal Save button now that the course is active.
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Save",
-            style: .done,
-            target: self,
-            action: #selector(saveCourseTapped)
-        )
     }
 
     @objc private func saveCourseTapped() {
