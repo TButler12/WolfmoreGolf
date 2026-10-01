@@ -40,6 +40,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private var teeSetButtons: [UIButton] = []
     private var playerRowCards: [UIView] = []
     private weak var teeHdrLabel: UILabel?
+    private weak var scrollView: UIScrollView?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -181,8 +182,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         // ── Scroll + content stack ─────────────────────────────────────
         let scroll = UIScrollView()
         scroll.alwaysBounceVertical = true
+        scroll.keyboardDismissMode = .interactive
         scroll.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(scroll)
+        scrollView = scroll
         NSLayoutConstraint.activate([
             scroll.topAnchor.constraint(equalTo: headerView.bottomAnchor),
             scroll.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -816,11 +819,38 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         navigationController?.setNavigationBarHidden(true, animated: animated)
         refreshTeeSetUI()
         refreshExtraRowVisibility()
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)),
+                                               name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)),
+                                               name: UIResponder.keyboardWillHideNotification, object: nil)
     }
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         navigationController?.setNavigationBarHidden(false, animated: animated)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+    }
+
+    @objc private func keyboardWillShow(_ note: Notification) {
+        guard let sv = scrollView,
+              let info = note.userInfo,
+              let kbFrame = (info[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
+        let kbHeight = kbFrame.height
+        let inset = UIEdgeInsets(top: 0, left: 0, bottom: kbHeight, right: 0)
+        sv.contentInset = inset
+        sv.scrollIndicatorInsets = inset
+        // Scroll the active field into view
+        if let active = nameFields.first(where: { $0.isFirstResponder })
+            ?? handicapFields.first(where: { $0.isFirstResponder }) {
+            let rect = active.convert(active.bounds, to: sv)
+            sv.scrollRectToVisible(rect.insetBy(dx: 0, dy: -16), animated: true)
+        }
+    }
+
+    @objc private func keyboardWillHide(_ note: Notification) {
+        scrollView?.contentInset = .zero
+        scrollView?.scrollIndicatorInsets = .zero
     }
 
     override func viewDidAppear(_ animated: Bool) {
