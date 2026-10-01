@@ -1928,6 +1928,45 @@ let AZ_BILTMORE_ESTATES_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green",  yardage: 4386, rating: 61.6, slope: 102),
 ]
 
+// MARK: Tucson National — Catalina Course (Tucson, AZ)
+// Par 73 | 7,262 yds | Rating 74.8 | Slope 138
+// Designed by Robert Bruce Harris & Bruce Devlin
+private let TUCSON_NATIONAL_CATALINA_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000249")!
+
+let TUCSON_NATIONAL_CATALINA_PARS: [Int] = [
+    4,5,4,3,4,4,3,5,4,
+    5,5,3,4,4,5,4,3,4
+]
+let TUCSON_NATIONAL_CATALINA_HCS: [Int] = [
+    9,17,11,15,13,3,5,7,1,
+    6,2,10,16,14,8,12,18,4
+]
+let TUCSON_NATIONAL_CATALINA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 7262, rating: 74.8, slope: 138),
+    TeeInfo(teeName: "White",  yardage: 6610, rating: 71.9, slope: 134),
+    TeeInfo(teeName: "Red",    yardage: 5717, rating: 67.0, slope: 128),
+    TeeInfo(teeName: "Yellow", yardage: 5414, rating: 65.5, slope: 125),
+]
+
+// MARK: Tucson National — Sonoran Course (Tucson, AZ)
+// Par 70 | 6,552 yds | Rating 70.0 | Slope 127
+private let TUCSON_NATIONAL_SONORAN_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000250")!
+
+let TUCSON_NATIONAL_SONORAN_PARS: [Int] = [
+    4,4,3,4,4,3,5,4,4,
+    3,5,4,3,4,5,4,3,4
+]
+let TUCSON_NATIONAL_SONORAN_HCS: [Int] = [
+    15,13,11,17,5,7,3,9,1,
+    16,2,8,14,4,6,12,18,10
+]
+let TUCSON_NATIONAL_SONORAN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6552, rating: 70.0, slope: 127),
+    TeeInfo(teeName: "White",  yardage: 6065, rating: 67.0, slope: 122),
+    TeeInfo(teeName: "Red",    yardage: 5240, rating: 64.0, slope: 109),
+    TeeInfo(teeName: "Yellow", yardage: 4579, rating: 64.5, slope: 106),
+]
+
 // MARK: Wildfire GC — Faldo Championship (Phoenix, AZ)
 // Par 71 | 6,811 yds | Rating 72.2 | Slope 132
 private let WILDFIRE_FALDO_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000247")!
@@ -13981,6 +14020,29 @@ private enum BuiltIns {
             architect: "William P. Bell",
             type: "Private",
             address: "2400 E Missouri Ave, Phoenix, AZ 85016"
+        ),
+        c(
+            TUCSON_NATIONAL_CATALINA_ID,
+            "Tucson National (Catalina)",
+            TUCSON_NATIONAL_CATALINA_PARS,
+            TUCSON_NATIONAL_CATALINA_HCS,
+            TUCSON_NATIONAL_CATALINA_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Robert Bruce Harris & Bruce Devlin",
+            type: "Resort",
+            address: "2727 W Club Dr, Tucson, AZ 85742"
+        ),
+        c(
+            TUCSON_NATIONAL_SONORAN_ID,
+            "Tucson National (Sonoran)",
+            TUCSON_NATIONAL_SONORAN_PARS,
+            TUCSON_NATIONAL_SONORAN_HCS,
+            TUCSON_NATIONAL_SONORAN_TEES,
+            country: "USA",
+            state: "AZ",
+            type: "Resort",
+            address: "2727 W Club Dr, Tucson, AZ 85742"
         ),
         c(
             WILDFIRE_FALDO_ID,
