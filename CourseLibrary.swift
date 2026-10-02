@@ -1928,6 +1928,117 @@ let AZ_BILTMORE_ESTATES_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green",  yardage: 4386, rating: 61.6, slope: 102),
 ]
 
+// MARK: Seven Canyons (Sedona, AZ)
+// Par 71 | 6,858 yds (Weiskopf) | Tom Weiskopf design
+private let SEVEN_CANYONS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000256")!
+
+let SEVEN_CANYONS_PARS: [Int] = [
+    4,3,4,4,5,4,5,4,3,
+    4,4,4,5,3,4,4,3,4
+]
+let SEVEN_CANYONS_HCS: [Int] = [
+    6,18,14,16,2,12,8,4,10,
+    5,11,1,7,17,9,13,15,3
+]
+let SEVEN_CANYONS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Weiskopf", yardage: 6858),
+    TeeInfo(teeName: "Member",   yardage: 6418),
+    TeeInfo(teeName: "Regular",  yardage: 5884),
+    TeeInfo(teeName: "Forward",  yardage: 5143),
+]
+
+// MARK: Sunridge Canyon GC (Fountain Hills, AZ)
+// Par 71 | 7,002 yds | Rating 72.2 | Slope 138
+// Keith Foster Design
+private let SUNRIDGE_CANYON_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000255")!
+
+let SUNRIDGE_CANYON_PARS: [Int] = [
+    4,4,5,4,4,3,4,3,5,
+    4,4,3,5,3,4,5,3,4
+]
+let SUNRIDGE_CANYON_HCS: [Int] = [
+    17,5,15,11,1,7,9,13,3,
+    14,10,18,6,16,2,8,12,4
+]
+let SUNRIDGE_CANYON_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7002, rating: 72.2, slope: 138),
+    TeeInfo(teeName: "Gold",  yardage: 6426, rating: 70.0, slope: 132),
+    TeeInfo(teeName: "White", yardage: 6010, rating: 67.7, slope: 124),
+    TeeInfo(teeName: "Green", yardage: 4708, rating: 64.6, slope: 113),
+]
+
+// MARK: Gold Canyon Golf Resort — Dinosaur Mountain (Gold Canyon, AZ)
+// Par 70 (Men) | 6,711 yds | Rating 71.9 | Slope 145
+private let GOLD_CANYON_DINO_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000253")!
+
+let GOLD_CANYON_DINO_PARS: [Int] = [
+    4,3,5,4,3,4,4,3,5,
+    3,5,4,4,3,4,5,3,4
+]
+let GOLD_CANYON_DINO_HCS: [Int] = [
+    5,15,3,1,9,11,7,13,17,
+    16,18,12,2,6,4,14,8,10
+]
+let GOLD_CANYON_DINO_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 6711, rating: 71.9, slope: 145),
+    TeeInfo(teeName: "Black",  yardage: 6386, rating: 70.1, slope: 137),
+    TeeInfo(teeName: "White",  yardage: 5412, rating: 65.6, slope: 117),
+    TeeInfo(teeName: "Silver", yardage: 5136, rating: 64.6, slope: 117),
+]
+
+// MARK: Gold Canyon Golf Resort — Sidewinder (Gold Canyon, AZ)
+// Par 71 (Men) | 6,561 yds | Rating 72.0 | Slope 134
+private let GOLD_CANYON_SIDEWINDER_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000254")!
+
+let GOLD_CANYON_SIDEWINDER_PARS: [Int] = [
+    5,3,4,3,4,5,3,4,4,
+    3,5,4,4,3,4,4,4,5
+]
+let GOLD_CANYON_SIDEWINDER_HCS: [Int] = [
+    18,10,6,16,12,8,14,4,2,
+    13,9,11,17,7,1,3,15,5
+]
+let GOLD_CANYON_SIDEWINDER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 6561, rating: 72.0, slope: 134),
+    TeeInfo(teeName: "Black",  yardage: 6187, rating: 69.9, slope: 129),
+    TeeInfo(teeName: "White",  yardage: 5302, rating: 65.2, slope: 116),
+    TeeInfo(teeName: "Silver", yardage: 4898, rating: 64.2, slope: 112),
+]
+
+// MARK: Superstition Mountain GCC — Prospector Course (Gold Canyon, AZ)
+// Par 72 | 7,225 yds | Rating 73.4 | Slope 136
+// Jack Nicklaus design
+private let SUPERSTITION_PROSPECTOR_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000251")!
+
+let SUPERSTITION_PROSPECTOR_PARS: [Int] = [
+    4,5,4,3,4,4,5,3,4,
+    4,4,3,5,4,4,4,3,5
+]
+let SUPERSTITION_PROSPECTOR_HCS: [Int] = [
+    11,1,5,15,7,13,3,17,9,
+    12,4,18,10,8,14,2,16,6
+]
+let SUPERSTITION_PROSPECTOR_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Nicklaus", yardage: 7225, rating: 73.4, slope: 136)
+]
+
+// MARK: Superstition Mountain GCC — Lost Gold Course (Gold Canyon, AZ)
+// Par 72 | 7,351 yds | Rating 73.8 | Slope 137
+// Jack Nicklaus design
+private let SUPERSTITION_LOST_GOLD_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000252")!
+
+let SUPERSTITION_LOST_GOLD_PARS: [Int] = [
+    4,5,4,3,5,4,4,3,4,
+    5,3,4,4,5,3,5,3,4
+]
+let SUPERSTITION_LOST_GOLD_HCS: [Int] = [
+    3,9,7,15,11,13,1,17,5,
+    8,16,2,14,10,12,6,18,4
+]
+let SUPERSTITION_LOST_GOLD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Nicklaus", yardage: 7351, rating: 73.8, slope: 137)
+]
+
 // MARK: Tucson National — Catalina Course (Tucson, AZ)
 // Par 73 | 7,262 yds | Rating 74.8 | Slope 138
 // Designed by Robert Bruce Harris & Bruce Devlin
@@ -14020,6 +14131,82 @@ private enum BuiltIns {
             architect: "William P. Bell",
             type: "Private",
             address: "2400 E Missouri Ave, Phoenix, AZ 85016"
+        ),
+        c(
+            SEVEN_CANYONS_ID,
+            "Seven Canyons",
+            SEVEN_CANYONS_PARS,
+            SEVEN_CANYONS_HCS,
+            SEVEN_CANYONS_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Tom Weiskopf",
+            type: "Private",
+            phone: "(928) 203-2000",
+            address: "625 Golf Club Way, Sedona, AZ 86336"
+        ),
+        c(
+            SUNRIDGE_CANYON_ID,
+            "Sunridge Canyon GC",
+            SUNRIDGE_CANYON_PARS,
+            SUNRIDGE_CANYON_HCS,
+            SUNRIDGE_CANYON_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Keith Foster",
+            type: "Daily-Fee",
+            phone: "(480) 837-5100",
+            address: "13100 N Sunridge Dr, Fountain Hills, AZ 85268"
+        ),
+        c(
+            GOLD_CANYON_DINO_ID,
+            "Gold Canyon GR (Dinosaur Mountain)",
+            GOLD_CANYON_DINO_PARS,
+            GOLD_CANYON_DINO_HCS,
+            GOLD_CANYON_DINO_TEES,
+            country: "USA",
+            state: "AZ",
+            type: "Resort",
+            phone: "(480) 982-9090",
+            address: "6100 S Kings Ranch Rd, Gold Canyon, AZ 85118"
+        ),
+        c(
+            GOLD_CANYON_SIDEWINDER_ID,
+            "Gold Canyon GR (Sidewinder)",
+            GOLD_CANYON_SIDEWINDER_PARS,
+            GOLD_CANYON_SIDEWINDER_HCS,
+            GOLD_CANYON_SIDEWINDER_TEES,
+            country: "USA",
+            state: "AZ",
+            type: "Resort",
+            phone: "(480) 982-9090",
+            address: "6100 S Kings Ranch Rd, Gold Canyon, AZ 85118"
+        ),
+        c(
+            SUPERSTITION_PROSPECTOR_ID,
+            "Superstition Mountain GCC (Prospector)",
+            SUPERSTITION_PROSPECTOR_PARS,
+            SUPERSTITION_PROSPECTOR_HCS,
+            SUPERSTITION_PROSPECTOR_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(480) 983-3200",
+            address: "8000 E Club Village Dr, Gold Canyon, AZ 85118"
+        ),
+        c(
+            SUPERSTITION_LOST_GOLD_ID,
+            "Superstition Mountain GCC (Lost Gold)",
+            SUPERSTITION_LOST_GOLD_PARS,
+            SUPERSTITION_LOST_GOLD_HCS,
+            SUPERSTITION_LOST_GOLD_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(480) 983-3200",
+            address: "8000 E Club Village Dr, Gold Canyon, AZ 85118"
         ),
         c(
             TUCSON_NATIONAL_CATALINA_ID,
