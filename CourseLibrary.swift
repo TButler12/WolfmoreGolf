@@ -1966,6 +1966,44 @@ let VENTANA_MOUNTAIN_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Silver", yardage: 5733, rating: 64.7, slope: 127),
 ]
 
+// MARK: The Gallery Golf Club — North Course (Marana, AZ)
+// Par 72 | John Fought | Private
+private let GALLERY_NORTH_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000259")!
+
+let GALLERY_NORTH_PARS: [Int] = [
+    4,4,3,4,4,5,3,4,5,
+    4,5,3,4,4,3,5,4,4
+]
+let GALLERY_NORTH_HCS: [Int] = [
+    9,5,15,11,7,3,13,17,1,
+    8,6,12,4,10,16,2,14,18
+]
+let GALLERY_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Dorado", yardage: 7304, rating: 75.3, slope: 149),
+    TeeInfo(teeName: "Azul",   yardage: 6820, rating: 72.9, slope: 143),
+    TeeInfo(teeName: "Verde",  yardage: 6303, rating: 70.3, slope: 135),
+    TeeInfo(teeName: "Rojo",   yardage: 5459, rating: 71.6, slope: 128),
+]
+
+// MARK: The Gallery Golf Club — South Course (Marana, AZ)
+// Par 72 | John Fought | Private
+private let GALLERY_SOUTH_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000260")!
+
+let GALLERY_SOUTH_PARS: [Int] = [
+    5,4,3,4,5,4,4,3,4,
+    5,4,4,4,3,4,3,5,4
+]
+let GALLERY_SOUTH_HCS: [Int] = [
+    3,7,11,5,1,13,17,15,9,
+    4,10,18,6,14,12,16,2,8
+]
+let GALLERY_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Dorado", yardage: 7224, rating: 74.5, slope: 145),
+    TeeInfo(teeName: "Azul",   yardage: 6748, rating: 72.2, slope: 140),
+    TeeInfo(teeName: "Verde",  yardage: 6195, rating: 69.5, slope: 132),
+    TeeInfo(teeName: "Rojo",   yardage: 5361, rating: 70.8, slope: 125),
+]
+
 // MARK: Seven Canyons (Sedona, AZ)
 // Par 71 | 6,858 yds (Weiskopf) | Tom Weiskopf design
 private let SEVEN_CANYONS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000256")!
@@ -14195,6 +14233,32 @@ private enum BuiltIns {
             type: "Resort",
             phone: "(520) 577-4061",
             address: "6200 N Clubhouse Ln, Tucson, AZ 85750"
+        ),
+        c(
+            GALLERY_NORTH_ID,
+            "The Gallery GC (North)",
+            GALLERY_NORTH_PARS,
+            GALLERY_NORTH_HCS,
+            GALLERY_NORTH_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "John Fought",
+            type: "Private",
+            phone: "(520) 744-2555",
+            address: "14000 N Dove Mountain Blvd, Marana, AZ 85658"
+        ),
+        c(
+            GALLERY_SOUTH_ID,
+            "The Gallery GC (South)",
+            GALLERY_SOUTH_PARS,
+            GALLERY_SOUTH_HCS,
+            GALLERY_SOUTH_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "John Fought",
+            type: "Private",
+            phone: "(520) 744-2555",
+            address: "14000 N Dove Mountain Blvd, Marana, AZ 85658"
         ),
         c(
             SEVEN_CANYONS_ID,
