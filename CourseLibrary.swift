@@ -1928,6 +1928,44 @@ let AZ_BILTMORE_ESTATES_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green",  yardage: 4386, rating: 61.6, slope: 102),
 ]
 
+// MARK: Ventana Canyon — Canyon Course (Tucson, AZ)
+// Par 72 | 6,836 yds | Rating 72.1 | Slope 137
+// Tom Fazio design
+private let VENTANA_CANYON_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000257")!
+
+let VENTANA_CANYON_PARS: [Int] = [
+    4,5,4,4,3,4,5,3,4,
+    4,4,5,3,4,4,3,4,5
+]
+let VENTANA_CANYON_HCS: [Int] = [
+    8,12,2,18,16,6,10,14,4,
+    11,3,9,15,17,1,13,5,7
+]
+let VENTANA_CANYON_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6836, rating: 72.1, slope: 137),
+    TeeInfo(teeName: "Gold",   yardage: 6299, rating: 70.2, slope: 132),
+    TeeInfo(teeName: "Silver", yardage: 5822, rating: 68.0, slope: 125),
+]
+
+// MARK: Ventana Canyon — Mountain Course (Tucson, AZ)
+// Par 72 | 6,898 yds | Rating 72.9 | Slope 141
+// Tom Fazio design
+private let VENTANA_MOUNTAIN_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000258")!
+
+let VENTANA_MOUNTAIN_PARS: [Int] = [
+    4,4,3,5,4,3,4,5,4,
+    4,4,5,4,3,4,3,4,5
+]
+let VENTANA_MOUNTAIN_HCS: [Int] = [
+    9,3,17,11,15,5,1,13,7,
+    10,8,12,16,2,18,4,6,14
+]
+let VENTANA_MOUNTAIN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 6898, rating: 72.9, slope: 141),
+    TeeInfo(teeName: "Gold",   yardage: 6338, rating: 70.2, slope: 136),
+    TeeInfo(teeName: "Silver", yardage: 5733, rating: 64.7, slope: 127),
+]
+
 // MARK: Seven Canyons (Sedona, AZ)
 // Par 71 | 6,858 yds (Weiskopf) | Tom Weiskopf design
 private let SEVEN_CANYONS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000256")!
@@ -14131,6 +14169,32 @@ private enum BuiltIns {
             architect: "William P. Bell",
             type: "Private",
             address: "2400 E Missouri Ave, Phoenix, AZ 85016"
+        ),
+        c(
+            VENTANA_CANYON_ID,
+            "Ventana Canyon (Canyon)",
+            VENTANA_CANYON_PARS,
+            VENTANA_CANYON_HCS,
+            VENTANA_CANYON_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Tom Fazio",
+            type: "Resort",
+            phone: "(520) 577-4061",
+            address: "6200 N Clubhouse Ln, Tucson, AZ 85750"
+        ),
+        c(
+            VENTANA_MOUNTAIN_ID,
+            "Ventana Canyon (Mountain)",
+            VENTANA_MOUNTAIN_PARS,
+            VENTANA_MOUNTAIN_HCS,
+            VENTANA_MOUNTAIN_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Tom Fazio",
+            type: "Resort",
+            phone: "(520) 577-4061",
+            address: "6200 N Clubhouse Ln, Tucson, AZ 85750"
         ),
         c(
             SEVEN_CANYONS_ID,
