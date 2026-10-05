@@ -225,21 +225,26 @@ private extension RulesViewController {
         • To add a custom course: tap the course picker, then tap 'Add Course' — enter the course name, then set par and handicap for each hole. Custom courses are saved and available for all future rounds.
         """)
 
-        header("TEE SELECTION")
+        header("MIXED TEES")
         body("""
-        Players in the same group can play from different tees — WolfMore scores each player against their own tee's pars and handicap ratings.
+        It's common for players in the same group to play from different tee boxes — men and women playing together, seniors or juniors on shorter yardages, or simply players of different skill levels who want a fair match. Each tee box has its own par values and stroke index ratings. WolfMore tracks every player against their own tee's pars and handicap ratings, so scoring and stroke allocation are always correct regardless of where each person tees it up.
 
-        • On the pre-round player setup screen, tap "Default" next to any player's name to choose their tee
-        • Available tees are pulled from the selected course (e.g. Blue, White, Red)
-        • "Default" means the course's standard tee is used for that player
-        • Each player's tee choice is saved and remembered for future rounds on that course
+        Setting up alternate tees:
+        • Open Course Setup (✏️ pencil on the Home screen)
+        • Tap "Tee Sets" in the top-left and choose "+ Add Tee Set"
+        • Enter the name (e.g. "Red"), then the par and stroke index for each hole
+        • Tee sets are saved to that course only — they never appear on other courses
 
-        How it affects scoring:
-        • Handicap strokes are allocated based on each player's tee stroke index, not a shared index
-        • In Stableford tournaments, points are calculated against that player's tee pars
-        • Wolf, Nassau, and Skins all honor per-player tee pars and handicaps automatically
+        Assigning a tee to a player:
+        • On the Player Setup screen, tap the tee button next to any player's name
+        • Choose their tee set — or leave it on "Default" to use the course's standard tee
+        • Each player's tee choice is remembered for future rounds on that course
 
-        Tee selection is optional — if everyone plays the same tee, leave all players set to Default.
+        How mixed tees affect scoring:
+        • Each player's default score on a hole is their own tee's par
+        • Handicap strokes are allocated from each player's tee stroke index, not a shared index
+        • Wolf, Nassau, Skins, and Stableford all honor per-player tee pars and handicaps automatically
+        • Tee selection is optional — if everyone plays the same tee, leave all players on Default
         """)
 
         header("SCORING")
