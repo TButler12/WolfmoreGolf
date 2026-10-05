@@ -446,6 +446,9 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
                     }
                 }
             }
+            if let g = GameManager.shared.currentGame {
+                CourseLibrary.shared.updateTeeSets(g.course.teeSets, forCourseID: g.course.id)
+            }
         })
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         if let pop = ac.popoverPresentationController {
@@ -471,6 +474,9 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
                 } else {
                     g.course.teeSets.append(ts)
                 }
+            }
+            if let g = GameManager.shared.currentGame {
+                CourseLibrary.shared.updateTeeSets(g.course.teeSets, forCourseID: g.course.id)
             }
         }
         navigationController?.pushViewController(editor, animated: true)

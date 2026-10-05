@@ -23644,6 +23644,14 @@ final class CourseLibrary {
         seedBuiltIns()
     }
 
+    func updateTeeSets(_ teeSets: [TeeSet], forCourseID id: UUID) {
+        guard let i = courses.firstIndex(where: { $0.id == id }) else { return }
+        var c = courses[i]
+        c.teeSets = teeSets.isEmpty ? nil : teeSets
+        courses[i] = c
+        save()
+    }
+
     func upsert(_ c: CourseProfile) {
         if let i = courses.firstIndex(where: { $0.id == c.id }) {
             courses[i] = mergedCourse(base: courses[i], incoming: c)
