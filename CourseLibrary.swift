@@ -3214,6 +3214,22 @@ let OLD_WORKS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Brick",     yardage: 5348, rating: 65.1, slope: 109),
 ]
 
+// MARK: Riverside Country Club — Bozeman, MT
+// Par 71 | Private
+private let RIVERSIDE_CC_BOZEMAN_ID = UUID(uuidString: "41C5EE5E-0001-4B00-8C00-000000000001")!
+
+let RIVERSIDE_CC_BOZEMAN_PARS: [Int] = [
+    4,4,5,4,4,3,5,3,4,
+    5,4,3,4,4,4,3,4,4
+]
+let RIVERSIDE_CC_BOZEMAN_HCS: [Int] = [
+    5,11,13,7,1,9,15,17,3,
+    14,8,12,10,6,2,18,16,4
+]
+let RIVERSIDE_CC_BOZEMAN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6790, rating: 72.8, slope: 136),
+]
+
 // MARK: Big Sky Resort Golf Club — Big Sky, MT (Arnold Palmer)
 // Par 72 | Semi-Private
 private let BIG_SKY_RESORT_GC_ID = UUID(uuidString: "B165C190-0001-4B00-8C00-000000000001")!
@@ -15281,6 +15297,21 @@ private enum BuiltIns {
             phone: "(406) 862-5960",
             website: "https://www.golfwhitefish.com",
             address: "1200 US Highway 93, Whitefish, MT 59937"
+        ),
+
+        c(
+            RIVERSIDE_CC_BOZEMAN_ID,
+            "Riverside Country Club",
+            RIVERSIDE_CC_BOZEMAN_PARS,
+            RIVERSIDE_CC_BOZEMAN_HCS,
+            RIVERSIDE_CC_BOZEMAN_TEES,
+            country: "USA",
+            state: "MT",
+            type: "Private",
+            phone: "(406) 587-5105",
+            website: "https://www.riverside-country-club.com",
+            address: "2500 Springhill Rd, Bozeman, MT 59718",
+            isWolfApproved: true
         ),
 
         c(
