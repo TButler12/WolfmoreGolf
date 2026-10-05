@@ -2004,6 +2004,22 @@ let GALLERY_SOUTH_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Rojo",   yardage: 5361, rating: 70.8, slope: 125),
 ]
 
+// MARK: Golf Club at Dove Mountain — Tortolita/Saguaro Course (Marana, AZ)
+// Par 72 | Jack Nicklaus Signature | Resort
+private let DOVE_MOUNTAIN_TORT_SAG_ID = UUID(uuidString: "D04E0001-AA00-4B00-8C00-000000000001")!
+
+let DOVE_MOUNTAIN_TORT_SAG_PARS: [Int] = [
+    4,5,3,5,4,4,3,4,4,
+    4,5,3,4,4,3,4,5,4
+]
+let DOVE_MOUNTAIN_TORT_SAG_HCS: [Int] = [
+    5,3,15,1,9,11,17,7,13,
+    8,4,18,14,6,16,10,2,12
+]
+let DOVE_MOUNTAIN_TORT_SAG_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 7448, rating: 74.2, slope: 147),
+]
+
 // MARK: Seven Canyons (Sedona, AZ)
 // Par 71 | 6,858 yds (Weiskopf) | Tom Weiskopf design
 private let SEVEN_CANYONS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000256")!
@@ -14259,6 +14275,22 @@ private enum BuiltIns {
             type: "Private",
             phone: "(520) 744-2555",
             address: "14000 N Dove Mountain Blvd, Marana, AZ 85658"
+        ),
+        c(
+            DOVE_MOUNTAIN_TORT_SAG_ID,
+            "Golf Club at Dove Mountain (Tort/Sag)",
+            DOVE_MOUNTAIN_TORT_SAG_PARS,
+            DOVE_MOUNTAIN_TORT_SAG_HCS,
+            DOVE_MOUNTAIN_TORT_SAG_TEES,
+            country: "USA",
+            state: "AZ",
+            region: "Marana / Tucson",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            phone: "(520) 572-4000",
+            website: "https://www.golfclubatdovemountain.com",
+            address: "15000 N Secret Springs Drive, Marana, AZ 85658",
+            isWolfApproved: true
         ),
         c(
             SEVEN_CANYONS_ID,
