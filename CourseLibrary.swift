@@ -3214,6 +3214,22 @@ let OLD_WORKS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Brick",     yardage: 5348, rating: 65.1, slope: 109),
 ]
 
+// MARK: The Highlands Golf Club — Missoula, MT
+// Par 69 | Daily-Fee
+private let HIGHLANDS_GC_MISSOULA_ID = UUID(uuidString: "416461C5-0001-4B00-8C00-000000000001")!
+
+let HIGHLANDS_GC_MISSOULA_PARS: [Int] = [
+    4,4,3,4,4,3,4,4,4,
+    4,4,3,4,4,3,4,4,5
+]
+let HIGHLANDS_GC_MISSOULA_HCS: [Int] = [
+    10,4,18,8,2,16,12,14,6,
+    9,3,17,7,1,15,11,13,5
+]
+let HIGHLANDS_GC_MISSOULA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue/Black", yardage: 6065, rating: 68.3, slope: 118),
+]
+
 // MARK: Riverside Country Club — Bozeman, MT
 // Par 71 | Private
 private let RIVERSIDE_CC_BOZEMAN_ID = UUID(uuidString: "41C5EE5E-0001-4B00-8C00-000000000001")!
@@ -15297,6 +15313,19 @@ private enum BuiltIns {
             phone: "(406) 862-5960",
             website: "https://www.golfwhitefish.com",
             address: "1200 US Highway 93, Whitefish, MT 59937"
+        ),
+
+        c(
+            HIGHLANDS_GC_MISSOULA_ID,
+            "The Highlands Golf Club",
+            HIGHLANDS_GC_MISSOULA_PARS,
+            HIGHLANDS_GC_MISSOULA_HCS,
+            HIGHLANDS_GC_MISSOULA_TEES,
+            country: "USA",
+            state: "MT",
+            type: "Public",
+            address: "102 Ben Hogan Drive, Missoula, MT 59803",
+            isWolfApproved: true
         ),
 
         c(
