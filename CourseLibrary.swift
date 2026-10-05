@@ -11249,6 +11249,50 @@ let BETHPAGE_RED_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 6921, rating: 73.7, slope: 128)
 ]
 
+// MARK: Century Country Club — Purchase, NY (Colt & Alison)
+// Par 71 | Private
+private let CENTURY_CC_PURCHASE_ID = UUID(uuidString: "CE47CC01-0001-4B00-8C00-000000000001")!
+
+let CENTURY_CC_PURCHASE_PARS: [Int] = [
+    4,4,4,3,4,4,3,5,4,
+    4,5,4,3,4,5,4,3,4
+]
+let CENTURY_CC_PURCHASE_HCS: [Int] = [
+    3,13,9,15,1,5,17,11,7,
+    10,6,12,18,4,14,2,16,8
+]
+let CENTURY_CC_PURCHASE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7026, rating: 74.8, slope: 140),
+]
+
+// MARK: Quaker Ridge Golf Club — Scarsdale, NY (A.W. Tillinghast)
+// Par 70 | Private
+private let QUAKER_RIDGE_GC_ID = UUID(uuidString: "40A7E41D-0001-4B00-8C00-000000000001")!
+
+let QUAKER_RIDGE_GC_PARS: [Int] = [
+    5,4,4,4,3,4,4,4,3,
+    3,4,4,3,5,4,4,4,4
+]
+let QUAKER_RIDGE_GC_HCS: [Int] = [
+    7,9,5,11,17,1,3,13,15,
+    18,10,2,14,6,12,4,16,8
+]
+let QUAKER_RIDGE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7023, rating: 74.9, slope: 143),
+    TeeInfo(teeName: "Blue",  yardage: 6456),
+    TeeInfo(teeName: "White", yardage: 6163),
+    TeeInfo(teeName: "Green", yardage: 5611),
+    TeeInfo(teeName: "Gold",  yardage: 5009),
+]
+let QUAKER_RIDGE_GC_WOMENS_PARS: [Int] = [
+    5,4,5,4,3,5,4,4,3,  // holes 3 & 6 par 5 for women
+    3,4,5,3,5,4,5,4,4   // holes 12 & 17 par 5 for women
+]
+let QUAKER_RIDGE_GC_WOMENS_HCS: [Int] = [
+    3,7,11,9,17,5,1,13,15,
+    18,8,6,16,2,4,10,14,12
+]
+
 // MARK: Maidstone Club (West) — East Hampton, NY (Willie Park, Jr.)
 // Par 72 | Private | Est. 1891
 private let MAIDSTONE_CLUB_WEST_ID = UUID(uuidString: "4A1D57EE-0001-4B00-8C00-000000000001")!
@@ -22010,6 +22054,36 @@ private enum BuiltIns {
         phone: "(516) 249-0700",
         website: "https://www.bethpagegolfcourse.com",
         address: "99 Quaker Meeting House Rd, Farmingdale, NY"
+        ),
+        c(
+        CENTURY_CC_PURCHASE_ID,
+        "Century Country Club",
+        CENTURY_CC_PURCHASE_PARS,
+        CENTURY_CC_PURCHASE_HCS,
+        CENTURY_CC_PURCHASE_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Westchester",
+        architect: "Colt & Alison",
+        type: "Private",
+        address: "100 Simpson Road, Purchase, NY 10577",
+        isWolfApproved: true
+        ),
+        c(
+        QUAKER_RIDGE_GC_ID,
+        "Quaker Ridge Golf Club",
+        QUAKER_RIDGE_GC_PARS,
+        QUAKER_RIDGE_GC_HCS,
+        QUAKER_RIDGE_GC_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Westchester",
+        architect: "A.W. Tillinghast",
+        type: "Private",
+        website: "https://www.quakerridgegc.org",
+        address: "146 Griffen Ave, Scarsdale, NY 10583",
+        isWolfApproved: true,
+        teeSets: [TeeSet(name: "Women's", pars: QUAKER_RIDGE_GC_WOMENS_PARS, hcs: QUAKER_RIDGE_GC_WOMENS_HCS)]
         ),
         c(
         MAIDSTONE_CLUB_WEST_ID,
