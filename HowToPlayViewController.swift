@@ -24,8 +24,8 @@ final class HowToPlayViewController: UIViewController {
             systemImage: "mappin.and.ellipse",
             symbolColor: UIColor(red: 0.20, green: 0.44, blue: 0.20, alpha: 1),
             title: "Pick Your Course",
-            body: "The course name on your Home screen shows what you're playing — tap it to switch courses, or the ⓘ button for tee and architect details. Every round you play gets tracked against this course.\n\nDon't see your course? Tap the ✏️ pencil on Home to edit course details, or choose \"Add New Course\" from the course picker to enter pars and hole handicaps manually.\n\nPlaying mixed tees? On the Player Setup screen, tap the tee icon next to any player to assign them a different tee set — useful for women's tees or when players are playing from different yardages.",
-            badges: ["Change Course", "Add Course", "Mixed Tees", "Women's Tees"]
+            body: "The course name on your Home screen shows what you're playing — tap it to switch courses, or the ⓘ button for tee and architect details. Every round you play gets tracked against this course.\n\nDon't see your course? Tap the ✏️ pencil on Home to edit course details, or choose \"Add New Course\" from the course picker to enter pars and hole handicaps manually.\n\nPlaying mixed tees? On the Player Setup screen, tap the tee icon next to any player to assign them a different tee set — useful for women's tees or when players are playing from different yardages.\n\nTo add a tee set to a course, open Course Setup (✏️ pencil on Home), tap \"Tee Sets\" in the top-left, then \"+ Add Tee Set\". Enter the alternate pars and stroke indexes — each tee set is saved to that course and never bleeds into other courses.",
+            badges: ["Change Course", "Add Course", "Mixed Tees", "Add Tee Set"]
         ),
         HowToPlayPage(
             systemImage: "person.3.fill",
