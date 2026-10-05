@@ -412,8 +412,28 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
 
     // MARK: - Tee Sets
 
+    // Returns tee sets for the course currently displayed (which may be pending/unconfirmed).
+    private var displayedCourseTeesSets: [TeeSet] {
+        if let id = activeCourseID, let profile = CourseLibrary.shared.get(id: id) {
+            return profile.teeSets ?? []
+        }
+        return GameManager.shared.currentGame?.course.teeSets ?? []
+    }
+
+    // Persists tee sets for the displayed course. If the course is pending (not yet activated
+    // in the game), only the library is updated; the in-game course is left unchanged.
+    private func saveDisplayedCourseTeesSets(_ teeSets: [TeeSet]) {
+        if let id = activeCourseID {
+            CourseLibrary.shared.updateTeeSets(teeSets, forCourseID: id)
+            pendingCourse?.teeSets = teeSets.isEmpty ? nil : teeSets
+        }
+        // Only mirror into the live game when this course is already the active one.
+        guard pendingCourse == nil else { return }
+        GameManager.shared.update { g in g.course.teeSets = teeSets }
+    }
+
     @objc private func teeSetsTapped() {
-        let teeSets = GameManager.shared.currentGame?.course.teeSets ?? []
+        let teeSets = displayedCourseTeesSets
         let ac = UIAlertController(title: "Tee Sets", message: teeSets.isEmpty ? "No alternate tee sets saved for this course." : nil, preferredStyle: .actionSheet)
         for ts in teeSets {
             let hcSummary = ts.hcs.prefix(6).map { String($0) }.joined(separator: ",") + (ts.hcs.count > 6 ? "…" : "")
@@ -436,18 +456,20 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         ac.addAction(UIAlertAction(title: "Edit", style: .default) { [weak self] _ in
             self?.pushTeeSetEditor(editing: ts)
         })
-        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
-            GameManager.shared.update { g in
-                g.course.teeSets.removeAll { $0.id == ts.id }
-                for i in g.playerTeeSetIndex.indices {
-                    if g.playerTeeSetIndex[i] != 0 {
-                        let idx = g.playerTeeSetIndex[i] - 1
-                        if idx >= g.course.teeSets.count { g.playerTeeSetIndex[i] = 0 }
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            guard let self else { return }
+            var teeSets = self.displayedCourseTeesSets
+            teeSets.removeAll { $0.id == ts.id }
+            self.saveDisplayedCourseTeesSets(teeSets)
+            // Reset any in-game player assignments that pointed past the new end of the list.
+            if self.pendingCourse == nil {
+                GameManager.shared.update { g in
+                    for i in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[i] != 0 {
+                        if g.playerTeeSetIndex[i] - 1 >= g.course.teeSets.count {
+                            g.playerTeeSetIndex[i] = 0
+                        }
                     }
                 }
-            }
-            if let g = GameManager.shared.currentGame {
-                CourseLibrary.shared.updateTeeSets(g.course.teeSets, forCourseID: g.course.id)
             }
         })
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -462,34 +484,47 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     }
 
     private func pushTeeSetEditor(editing existingTS: TeeSet?) {
-        guard let g = GameManager.shared.currentGame else { return }
+        // Default pars/HCs come from the displayed course, which may be pending.
+        let defaultPars: [Int]
+        let defaultHCs: [Int]
+        if let pending = pendingCourse {
+            defaultPars = Array(pending.pars.prefix(STANDARD_HOLES))
+            defaultHCs  = Array(pending.hcs.prefix(STANDARD_HOLES))
+        } else if let g = GameManager.shared.currentGame {
+            defaultPars = Array(g.courseParToPass.prefix(STANDARD_HOLES))
+            defaultHCs  = Array(g.courseHCToPass.prefix(STANDARD_HOLES))
+        } else {
+            return
+        }
+
         let editor = TeeSetEditorViewController()
         editor.existingTeeSet = existingTS
-        editor.defaultPars = Array(g.courseParToPass.prefix(STANDARD_HOLES))
-        editor.defaultHCs  = Array(g.courseHCToPass.prefix(STANDARD_HOLES))
-        editor.onSave = { ts in
-            GameManager.shared.update { g in
-                if let idx = g.course.teeSets.firstIndex(where: { $0.id == ts.id }) {
-                    let oldPars = g.course.teeSets[idx].pars
-                    g.course.teeSets[idx] = ts
-                    // Clear scores for players on this tee set where par changed.
-                    // Committed or not — the old score was entered against the old par
-                    // and is no longer meaningful once the par changes.
+        editor.defaultPars = defaultPars
+        editor.defaultHCs  = defaultHCs
+        editor.onSave = { [weak self] ts in
+            guard let self else { return }
+            var teeSets = self.displayedCourseTeesSets
+            if let idx = teeSets.firstIndex(where: { $0.id == ts.id }) {
+                let oldPars = teeSets[idx].pars
+                teeSets[idx] = ts
+                self.saveDisplayedCourseTeesSets(teeSets)
+                // Clear scores for active-game players whose par changed on this tee set.
+                if self.pendingCourse == nil {
                     let teeSlot = idx + 1
-                    for seat in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[seat] == teeSlot {
-                        for h in ts.pars.indices {
-                            guard h < oldPars.count, ts.pars[h] != oldPars[h] else { continue }
-                            guard h < g.scores[safe: seat]?.count ?? 0 else { continue }
-                            g.scores[seat][h] = nil
-                            if h < g.holeCommitted.count { g.holeCommitted[h] = false }
+                    GameManager.shared.update { g in
+                        for seat in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[seat] == teeSlot {
+                            for h in ts.pars.indices {
+                                guard h < oldPars.count, ts.pars[h] != oldPars[h] else { continue }
+                                guard h < g.scores[safe: seat]?.count ?? 0 else { continue }
+                                g.scores[seat][h] = nil
+                                if h < g.holeCommitted.count { g.holeCommitted[h] = false }
+                            }
                         }
                     }
-                } else {
-                    g.course.teeSets.append(ts)
                 }
-            }
-            if let g = GameManager.shared.currentGame {
-                CourseLibrary.shared.updateTeeSets(g.course.teeSets, forCourseID: g.course.id)
+            } else {
+                teeSets.append(ts)
+                self.saveDisplayedCourseTeesSets(teeSets)
             }
         }
         navigationController?.pushViewController(editor, animated: true)
