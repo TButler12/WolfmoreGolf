@@ -11249,6 +11249,38 @@ let BETHPAGE_RED_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 6921, rating: 73.7, slope: 128)
 ]
 
+// MARK: Bethpage State Park - Blue — Farmingdale, NY (A.W. Tillinghast)
+// Par 72 | Municipal
+private let BETHPAGE_BLUE_ID = UUID(uuidString: "A4E7A4A1-3A8F-4F4F-9B2F-6E9C1A0B4003")!
+
+let BETHPAGE_BLUE_PARS: [Int] = [
+    4,4,3,5,4,4,3,5,4,
+    4,3,5,4,4,4,5,3,4
+]
+let BETHPAGE_BLUE_HCS: [Int] = [
+    7,3,13,15,17,1,11,5,9,
+    12,16,10,18,8,2,4,14,6
+]
+let BETHPAGE_BLUE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6676, rating: 71.8, slope: 129),
+]
+
+// MARK: Bethpage State Park - Green — Farmingdale, NY (A.W. Tillinghast)
+// Par 71 | Municipal
+private let BETHPAGE_GREEN_ID = UUID(uuidString: "A4E7A4A1-3A8F-4F4F-9B2F-6E9C1A0B4004")!
+
+let BETHPAGE_GREEN_PARS: [Int] = [
+    4,4,3,4,4,3,5,4,5,
+    4,3,4,5,4,3,4,4,4
+]
+let BETHPAGE_GREEN_HCS: [Int] = [
+    15,3,17,11,7,5,9,13,1,
+    12,16,18,2,14,8,10,4,6
+]
+let BETHPAGE_GREEN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6378, rating: 70.5, slope: 128),
+]
+
 // MARK: Harbor Links Golf Course — Port Washington, NY
 
 private let HARBOR_LINKS_ID = UUID(uuidString: "8F0A1B2C-3D4E-4F5A-6B7C-8D9E0F1A2B3C")!
@@ -21962,6 +21994,37 @@ private enum BuiltIns {
         phone: "(516) 249-0700",
         website: "https://www.bethpagegolfcourse.com",
         address: "99 Quaker Meeting House Rd, Farmingdale, NY"
+        ),
+        c(
+        BETHPAGE_BLUE_ID,
+        "Bethpage State Park - Blue",
+        BETHPAGE_BLUE_PARS,
+        BETHPAGE_BLUE_HCS,
+        BETHPAGE_BLUE_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Long Island",
+        architect: "A.W. Tillinghast",
+        type: "Public",
+        phone: "(516) 249-0700",
+        website: "https://www.bethpagegolfcourse.com",
+        address: "99 Quaker Meeting House Rd, Farmingdale, NY 11702",
+        isWolfApproved: true
+        ),
+        c(
+        BETHPAGE_GREEN_ID,
+        "Bethpage State Park - Green",
+        BETHPAGE_GREEN_PARS,
+        BETHPAGE_GREEN_HCS,
+        BETHPAGE_GREEN_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Long Island",
+        architect: "A.W. Tillinghast",
+        type: "Public",
+        phone: "(516) 249-0700",
+        website: "https://www.bethpagegolfcourse.com",
+        address: "99 Quaker Meeting House Rd, Farmingdale, NY 11702"
         ),
         c(
         HARBOR_LINKS_ID,
