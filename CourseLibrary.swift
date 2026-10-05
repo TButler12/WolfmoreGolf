@@ -3214,6 +3214,22 @@ let OLD_WORKS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Brick",     yardage: 5348, rating: 65.1, slope: 109),
 ]
 
+// MARK: Black Bull — Bozeman, MT (Tom Weiskopf)
+// Par 72 | Private
+private let BLACK_BULL_BOZEMAN_ID = UUID(uuidString: "B1AC8B00-0001-4B00-8C00-000000000001")!
+
+let BLACK_BULL_BOZEMAN_PARS: [Int] = [
+    4,3,5,4,4,4,5,3,4,
+    5,3,4,4,4,5,3,4,4
+]
+let BLACK_BULL_BOZEMAN_HCS: [Int] = [
+    6,8,18,4,16,2,14,12,10,
+    3,13,7,9,11,17,5,15,1
+]
+let BLACK_BULL_BOZEMAN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Back 40", yardage: 7183, rating: 74.4, slope: 143),
+]
+
 // MARK: Eagle Bend Golf Club (Eagle to Osprey) — Big Fork, MT
 // Par 72 | Private
 private let EAGLE_BEND_EAGLE_TO_OSPREY_ID = UUID(uuidString: "EA61E8EE-0001-4B00-8C00-000000000001")!
@@ -15249,6 +15265,21 @@ private enum BuiltIns {
             phone: "(406) 862-5960",
             website: "https://www.golfwhitefish.com",
             address: "1200 US Highway 93, Whitefish, MT 59937"
+        ),
+
+        c(
+            BLACK_BULL_BOZEMAN_ID,
+            "Black Bull",
+            BLACK_BULL_BOZEMAN_PARS,
+            BLACK_BULL_BOZEMAN_HCS,
+            BLACK_BULL_BOZEMAN_TEES,
+            country: "USA",
+            state: "MT",
+            architect: "Tom Weiskopf",
+            type: "Private",
+            phone: "(406) 556-5011",
+            address: "148 Highnoon Way, Bozeman, MT 59718",
+            isWolfApproved: true
         ),
 
         c(
