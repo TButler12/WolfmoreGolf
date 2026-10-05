@@ -3235,6 +3235,22 @@ let SAND_VALLEY_LIDO_PARS_TODO: [Int] = [4,4,3,5,4,5,5,3,4,4,4,4,4,3,4,3,5,4]
 let SAND_VALLEY_LIDO_HCS_TODO:  [Int] = [11,7,15,1,13,3,5,9,17,6,8,2,16,18,10,12,4,14]
 
 // MARK: Colorado Golf Club — Parker, CO (Bill Coore/Ben Crenshaw)
+// MARK: Colorado Springs Country Club (Colorado Springs, CO)
+// Par 71 | Dick Phelps | Private
+private let COLORADO_SPRINGS_CC_ID = UUID(uuidString: "C05CC001-1900-4B00-8C00-000000000001")!
+
+let COLORADO_SPRINGS_CC_PARS: [Int] = [
+    5,4,4,3,4,4,4,3,4,
+    4,5,3,4,4,5,4,3,4
+]
+let COLORADO_SPRINGS_CC_HCS: [Int] = [
+    15,13,5,11,1,3,9,17,7,
+    4,8,12,2,14,18,16,6,10
+]
+let COLORADO_SPRINGS_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6905, rating: 72.6, slope: 128),
+]
+
 private let COLORADO_GOLF_CLUB_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A104")!
 // MARK: Colorado Golf Club — Championship
 // 7,571 yds | Par 72
@@ -15039,6 +15055,22 @@ private enum BuiltIns {
             phone: "(405) 743-1658",
             website: "https://www.karstencreek.com/",
             address: "1800 S. Memorial Drive, Stillwater, OK 74074",
+            isWolfApproved: true
+        ),
+        c(
+            COLORADO_SPRINGS_CC_ID,
+            "Colorado Springs Country Club",
+            COLORADO_SPRINGS_CC_PARS,
+            COLORADO_SPRINGS_CC_HCS,
+            COLORADO_SPRINGS_CC_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Colorado Springs",
+            architect: "Dick Phelps",
+            type: "Private",
+            phone: "(719) 538-4080",
+            website: "https://www.ccofcolorado.com",
+            address: "125 E. Clubhouse Drive, Colorado Springs, CO 80906",
             isWolfApproved: true
         ),
         c(
