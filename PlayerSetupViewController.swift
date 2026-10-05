@@ -1119,7 +1119,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let ac = UIAlertController(title: "Tee Set for \(g.playerNames[safe: seat] ?? "Player \(seat+1)")", message: nil, preferredStyle: .actionSheet)
 
         ac.addAction(UIAlertAction(title: "Default (Course)", style: .default) { [weak self] _ in
-            GameManager.shared.update { g in g.playerTeeSetIndex[seat] = 0 }
+            GameManager.shared.update { g in
+                g.playerTeeSetIndex[seat] = 0
+                Self.clearUncommittedScores(for: seat, in: &g)
+            }
             self?.refreshTeeSetUI()
             self?.recalcStrokesFromModel()
         })
@@ -1127,7 +1130,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         for (idx, ts) in g.course.teeSets.enumerated() {
             let teeIndex = idx + 1
             ac.addAction(UIAlertAction(title: ts.name, style: .default) { [weak self] _ in
-                GameManager.shared.update { g in g.playerTeeSetIndex[seat] = teeIndex }
+                GameManager.shared.update { g in
+                    g.playerTeeSetIndex[seat] = teeIndex
+                    Self.clearUncommittedScores(for: seat, in: &g)
+                }
                 self?.refreshTeeSetUI()
                 self?.recalcStrokesFromModel()
             })
@@ -1140,6 +1146,15 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
         present(ac, animated: true)
     }
+    private static func clearUncommittedScores(for seat: Int, in g: inout GameData) {
+        guard seat < g.scores.count else { return }
+        for h in g.scores[seat].indices {
+            if g.holeCommitted[safe: h] != true {
+                g.scores[seat][h] = nil
+            }
+        }
+    }
+
     // MARK: - Cap + buttons
     private func refreshExtraRowVisibility() {
         let limit = maxActive
@@ -1253,13 +1268,16 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             var name: String
             var hc: Int
             var active: Bool
+            var teeSetIndex: Int
         }
 
+        let currentTeeIndices = GameManager.shared.currentGame?.playerTeeSetIndex ?? []
         let rows: [Row] = (0..<uiCount).map { i in
             Row(
                 name: (nameFields[i].text ?? "").trimmingCharacters(in: .whitespacesAndNewlines),
                 hc: Int(handicapFields[i].text ?? "") ?? 0,
-                active: activeSwitches[i].isOn
+                active: activeSwitches[i].isOn,
+                teeSetIndex: currentTeeIndices[safe: i] ?? 0
             )
         }
 
@@ -1274,6 +1292,13 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             nameFields[i].text = reordered[i].name
             handicapFields[i].text = String(reordered[i].hc)
         }
+
+        GameManager.shared.update { g in
+            for i in 0..<self.uiCount where i < g.playerTeeSetIndex.count {
+                g.playerTeeSetIndex[i] = reordered[i].teeSetIndex
+            }
+        }
+        refreshTeeSetUI()
 
         for i in 0..<uiCount {
             let on = (i < newActiveCount)

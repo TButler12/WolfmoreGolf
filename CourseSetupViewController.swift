@@ -470,7 +470,20 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         editor.onSave = { ts in
             GameManager.shared.update { g in
                 if let idx = g.course.teeSets.firstIndex(where: { $0.id == ts.id }) {
+                    let oldPars = g.course.teeSets[idx].pars
                     g.course.teeSets[idx] = ts
+                    // Clear scores for players on this tee set where par changed.
+                    // Committed or not — the old score was entered against the old par
+                    // and is no longer meaningful once the par changes.
+                    let teeSlot = idx + 1
+                    for seat in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[seat] == teeSlot {
+                        for h in ts.pars.indices {
+                            guard h < oldPars.count, ts.pars[h] != oldPars[h] else { continue }
+                            guard h < g.scores[safe: seat]?.count ?? 0 else { continue }
+                            g.scores[seat][h] = nil
+                            if h < g.holeCommitted.count { g.holeCommitted[h] = false }
+                        }
+                    }
                 } else {
                     g.course.teeSets.append(ts)
                 }

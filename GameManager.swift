@@ -185,6 +185,7 @@ final class GameManager {
         let keepHCs         = old.hcPlayers
         let keepActives     = old.playerActivated
         let keepRosterList  = old.rosterNames
+        let keepTeeSetIndex = old.playerTeeSetIndexOpt
         var fresh = baselineNewGame(named: old.gameName)
         fresh.course             = keepCourse
         fresh.courseParToPass    = keepCoursePar
@@ -193,6 +194,7 @@ final class GameManager {
         fresh.hcPlayers          = keepHCs
         fresh.playerActivated    = keepActives
         fresh.rosterNames        = keepRosterList
+        fresh.playerTeeSetIndexOpt = keepTeeSetIndex
 
         // Carry base stake forward so the new round starts at the same stake the user configured.
         fresh.baseGameStake = old.baseGameStake
@@ -510,7 +512,7 @@ extension GameManager {
         guard holeCount > 0, !pars.isEmpty else { return }
 
         // Seats visible on the Game screen
-        let seatsRange = 0 ..< min(MAX_PLAYERS,
+        let seatsRange = 0 ..< min(WOLF_MAX_PLAYERS,
                                    min(game.playerNames.count,
                                        game.playerActivated.count))
 
@@ -535,7 +537,7 @@ extension GameManager {
 
             for hole in 0..<holeCount {
                 if game.scores[seat][hole] == nil {
-                    game.scores[seat][hole] = pars[hole % STANDARD_HOLES]
+                    game.scores[seat][hole] = game.parForHole(hole % STANDARD_HOLES, player: seat)
                 }
             }
         }

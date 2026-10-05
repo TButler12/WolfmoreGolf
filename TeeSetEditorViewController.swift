@@ -13,8 +13,9 @@ final class TeeSetEditorViewController: UIViewController {
 
     private let scrollView = UIScrollView()
     private let nameField  = UITextField()
-    private var parFields: [UITextField] = []
-    private var hcFields:  [UITextField] = []
+    private var parFields:        [UITextField] = []
+    private var hcFields:         [UITextField] = []
+    private var defaultParLabels: [UILabel]     = []
 
     // MARK: - Lifecycle
 
@@ -70,6 +71,14 @@ final class TeeSetEditorViewController: UIViewController {
         nameField.delegate = self
         content.addArrangedSubview(nameField)
 
+        // Legend explaining the colour coding
+        let legend = UILabel()
+        legend.text = "Orange = same as course  ·  Green = changed"
+        legend.font = .systemFont(ofSize: 12)
+        legend.textColor = .secondaryLabel
+        legend.textAlignment = .center
+        content.addArrangedSubview(legend)
+
         // Grid: 3 sections of 6 holes each
         for section in 0..<3 {
             content.addArrangedSubview(makeSection(startHole: section * 6))
@@ -79,12 +88,13 @@ final class TeeSetEditorViewController: UIViewController {
     private func makeSection(startHole: Int) -> UIView {
         let container = UIStackView()
         container.axis = .vertical
-        container.spacing = 5
+        container.spacing = 4
 
         let holeRow = UIStackView()
         let parRow  = UIStackView()
+        let defRow  = UIStackView()   // course-default comparison row
         let hcRow   = UIStackView()
-        for row in [holeRow, parRow, hcRow] {
+        for row in [holeRow, parRow, defRow, hcRow] {
             row.axis = .horizontal
             row.spacing = 4
             row.alignment = .center
@@ -93,6 +103,7 @@ final class TeeSetEditorViewController: UIViewController {
         // Left-side labels
         holeRow.addArrangedSubview(sideLabel(""))
         parRow.addArrangedSubview(sideLabel("Par"))
+        defRow.addArrangedSubview(sideLabel("Crs"))
         hcRow.addArrangedSubview(sideLabel("HC"))
 
         for i in 0..<6 {
@@ -101,25 +112,30 @@ final class TeeSetEditorViewController: UIViewController {
 
             let numView = holeNumberTile("\(holeNumber)")
             let parTF   = parField()
+            let defL    = courseDefaultLabel()
             let hcTF    = hcField()
 
             parFields.append(parTF)
+            defaultParLabels.append(defL)
             hcFields.append(hcTF)
 
             holeRow.addArrangedSubview(numView)
             parRow.addArrangedSubview(parTF)
+            defRow.addArrangedSubview(defL)
             hcRow.addArrangedSubview(hcTF)
 
             // Visual gap between groups of 3
             if i == 2 {
                 holeRow.setCustomSpacing(10, after: numView)
                 parRow.setCustomSpacing(10, after: parTF)
+                defRow.setCustomSpacing(10, after: defL)
                 hcRow.setCustomSpacing(10, after: hcTF)
             }
         }
 
         container.addArrangedSubview(holeRow)
         container.addArrangedSubview(parRow)
+        container.addArrangedSubview(defRow)
         container.addArrangedSubview(hcRow)
         return container
     }
@@ -174,6 +190,21 @@ final class TeeSetEditorViewController: UIViewController {
         return tf
     }
 
+    private func courseDefaultLabel() -> UILabel {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 13, weight: .medium)
+        l.textColor = .tertiaryLabel
+        l.textAlignment = .center
+        l.layer.cornerRadius = 4
+        l.layer.masksToBounds = true
+        l.backgroundColor = UIColor.systemGray6
+        NSLayoutConstraint.activate([
+            l.widthAnchor.constraint(equalToConstant: 42),
+            l.heightAnchor.constraint(equalToConstant: 24),
+        ])
+        return l
+    }
+
     private func hcField() -> UITextField {
         let tf = UITextField()
         tf.backgroundColor = .secondarySystemBackground
@@ -197,8 +228,31 @@ final class TeeSetEditorViewController: UIViewController {
         let pars = existingTeeSet?.pars ?? defaultPars
         let hcs  = existingTeeSet?.hcs  ?? defaultHCs
         nameField.text = existingTeeSet?.name ?? ""
-        for (i, tf) in parFields.enumerated() { tf.text = i < pars.count ? "\(pars[i])" : "" }
-        for (i, tf) in hcFields.enumerated()  { tf.text = i < hcs.count  ? "\(hcs[i])"  : "" }
+
+        for (i, tf) in parFields.enumerated() {
+            tf.text = i < pars.count ? "\(pars[i])" : ""
+            applyParColor(to: tf, value: i < pars.count ? pars[i] : nil, index: i)
+        }
+        for (i, l) in defaultParLabels.enumerated() {
+            l.text = i < defaultPars.count ? "\(defaultPars[i])" : ""
+        }
+        for (i, tf) in hcFields.enumerated() {
+            tf.text = i < hcs.count ? "\(hcs[i])" : ""
+        }
+    }
+
+    private func applyParColor(to tf: UITextField, value: Int?, index: Int) {
+        let v = value ?? (index < defaultPars.count ? defaultPars[index] : 4)
+        let isCustom = index < defaultPars.count && v != defaultPars[index]
+        tf.backgroundColor = isCustom
+            ? UIColor(red: 0.20, green: 0.78, blue: 0.35, alpha: 1.0)
+            : UIColor(red: 0.97, green: 0.72, blue: 0.18, alpha: 1.0)
+    }
+
+    private func recolorParFields() {
+        for (i, tf) in parFields.enumerated() {
+            applyParColor(to: tf, value: Int(tf.text ?? ""), index: i)
+        }
     }
 
     @objc private func endEditing() { view.endEditing(true) }
@@ -241,6 +295,10 @@ extension TeeSetEditorViewController: UITextFieldDelegate {
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
+    }
+
+    func textFieldDidEndEditing(_ textField: UITextField) {
+        if parFields.contains(textField) { recolorParFields() }
     }
 
     func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange,
