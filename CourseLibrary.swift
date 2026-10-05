@@ -11249,6 +11249,75 @@ let BETHPAGE_RED_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 6921, rating: 73.7, slope: 128)
 ]
 
+// MARK: Westchester Country Club (South Course) — Rye, NY (Walter J. Travis, 1922)
+// Par 71 | Private
+private let WCC_SOUTH_ID       = UUID(uuidString: "4CCCA001-0001-4B00-8C00-000000000001")!
+private let WCC_SOUTH_WOMENS_ID = UUID(uuidString: "4CCCA002-0001-4B00-8C00-000000000001")!
+
+let WCC_SOUTH_PARS: [Int] = [
+    4,4,5,3,5,4,4,3,4,   // out 36
+    5,3,4,4,3,4,3,5,4    // in  35
+]
+let WCC_SOUTH_HCS: [Int] = [
+    7,5,13,15,9,3,1,17,11,
+    8,18,12,14,10,2,16,4,6
+]
+let WCC_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",       yardage: 6623, rating: 72.5, slope: 132),
+    TeeInfo(teeName: "Blue/White", yardage: 6431, rating: 71.6, slope: 130),
+    TeeInfo(teeName: "White",      yardage: 6149, rating: 70.3, slope: 130),
+    TeeInfo(teeName: "Silver",     yardage: 5718, rating: 68.4, slope: 126),
+    TeeInfo(teeName: "Red",        yardage: 5400, rating: 67.0, slope: 123),
+    TeeInfo(teeName: "Yellow",     yardage: 4934, rating: 65.1, slope: 118),
+]
+// Women's par 72: hole 15 bumped from par 4 → 5 vs men
+let WCC_SOUTH_WOMENS_PARS: [Int] = [
+    4,4,5,3,5,4,4,3,4,
+    5,3,4,4,3,5,3,5,4
+]
+let WCC_SOUTH_WOMENS_HCS: [Int] = [
+    5,11,7,13,1,15,3,17,9,
+    6,18,10,12,14,2,16,4,8
+]
+let WCC_SOUTH_WOMENS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White",  yardage: 6149, rating: 76.2, slope: 136),
+    TeeInfo(teeName: "Silver", yardage: 5718, rating: 73.8, slope: 135),
+    TeeInfo(teeName: "Red",    yardage: 5400, rating: 71.9, slope: 131),
+    TeeInfo(teeName: "Yellow", yardage: 4934, rating: 69.6, slope: 125),
+]
+
+// MARK: Westchester Country Club (West Course) — Rye, NY
+// Par 72 | Private
+private let WCC_WEST_ID        = UUID(uuidString: "4CCCB001-0001-4B00-8C00-000000000001")!
+private let WCC_WEST_WOMENS_ID  = UUID(uuidString: "4CCCB002-0001-4B00-8C00-000000000001")!
+
+let WCC_WEST_PARS: [Int] = [
+    4,4,5,4,3,4,3,4,5,   // out 36
+    3,4,4,4,5,3,4,4,5    // in  36
+]
+let WCC_WEST_HCS: [Int] = [
+    11,3,7,5,17,1,15,13,9,
+    16,14,6,2,10,18,12,4,8
+]
+let WCC_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black/Blue",  yardage: 6718),
+    TeeInfo(teeName: "Blue",        yardage: 6505),
+    TeeInfo(teeName: "Blue/White",  yardage: 6295),
+    TeeInfo(teeName: "White",       yardage: 6143),
+]
+// Women's par 75: holes 2,6 (4→5 front); hole 17 (4→5 back)
+let WCC_WEST_WOMENS_PARS: [Int] = [
+    4,5,5,4,3,5,3,4,5,
+    3,4,4,4,5,3,4,5,5
+]
+let WCC_WEST_WOMENS_HCS: [Int] = [
+    13,1,9,7,17,3,15,11,5,
+    16,12,2,6,4,18,14,10,8
+]
+let WCC_WEST_WOMENS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "White/Green", yardage: 5544),
+]
+
 // MARK: Century Country Club — Purchase, NY (Colt & Alison)
 // Par 71 | Private
 private let CENTURY_CC_PURCHASE_ID = UUID(uuidString: "CE47CC01-0001-4B00-8C00-000000000001")!
@@ -22054,6 +22123,70 @@ private enum BuiltIns {
         phone: "(516) 249-0700",
         website: "https://www.bethpagegolfcourse.com",
         address: "99 Quaker Meeting House Rd, Farmingdale, NY"
+        ),
+        c(
+        WCC_SOUTH_ID,
+        "Westchester CC (South Course)",
+        WCC_SOUTH_PARS,
+        WCC_SOUTH_HCS,
+        WCC_SOUTH_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Westchester",
+        architect: "Walter J. Travis",
+        type: "Private",
+        phone: "(914) 967-6000",
+        website: "https://www.westchestercc.org",
+        address: "99 Biltmore Avenue, Rye, NY 10580",
+        isWolfApproved: true,
+        teeSets: [TeeSet(name: "Women's", pars: WCC_SOUTH_WOMENS_PARS, hcs: WCC_SOUTH_WOMENS_HCS)]
+        ),
+        c(
+        WCC_SOUTH_WOMENS_ID,
+        "Westchester CC (South, Women's)",
+        WCC_SOUTH_WOMENS_PARS,
+        WCC_SOUTH_WOMENS_HCS,
+        WCC_SOUTH_WOMENS_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Westchester",
+        architect: "Walter J. Travis",
+        type: "Private",
+        phone: "(914) 967-6000",
+        website: "https://www.westchestercc.org",
+        address: "99 Biltmore Avenue, Rye, NY 10580",
+        isWolfApproved: true
+        ),
+        c(
+        WCC_WEST_ID,
+        "Westchester CC (West Course)",
+        WCC_WEST_PARS,
+        WCC_WEST_HCS,
+        WCC_WEST_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Westchester",
+        type: "Private",
+        phone: "(914) 967-6000",
+        website: "https://www.westchestercc.org",
+        address: "99 Biltmore Avenue, Rye, NY 10580",
+        isWolfApproved: true,
+        teeSets: [TeeSet(name: "Women's", pars: WCC_WEST_WOMENS_PARS, hcs: WCC_WEST_WOMENS_HCS)]
+        ),
+        c(
+        WCC_WEST_WOMENS_ID,
+        "Westchester CC (West, Women's)",
+        WCC_WEST_WOMENS_PARS,
+        WCC_WEST_WOMENS_HCS,
+        WCC_WEST_WOMENS_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Westchester",
+        type: "Private",
+        phone: "(914) 967-6000",
+        website: "https://www.westchestercc.org",
+        address: "99 Biltmore Avenue, Rye, NY 10580",
+        isWolfApproved: true
         ),
         c(
         CENTURY_CC_PURCHASE_ID,
