@@ -3214,6 +3214,22 @@ let OLD_WORKS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Brick",     yardage: 5348, rating: 65.1, slope: 109),
 ]
 
+// MARK: Big Sky Resort Golf Club — Big Sky, MT (Arnold Palmer)
+// Par 72 | Semi-Private
+private let BIG_SKY_RESORT_GC_ID = UUID(uuidString: "B165C190-0001-4B00-8C00-000000000001")!
+
+let BIG_SKY_RESORT_GC_PARS: [Int] = [
+    4,5,3,4,4,5,4,3,4,
+    4,5,4,3,4,5,4,3,4
+]
+let BIG_SKY_RESORT_GC_HCS: [Int] = [
+    11,3,13,1,15,9,7,17,5,
+    4,10,18,16,8,2,12,14,6
+]
+let BIG_SKY_RESORT_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6800, rating: 72.4, slope: 140),
+]
+
 // MARK: Black Bull — Bozeman, MT (Tom Weiskopf)
 // Par 72 | Private
 private let BLACK_BULL_BOZEMAN_ID = UUID(uuidString: "B1AC8B00-0001-4B00-8C00-000000000001")!
@@ -15265,6 +15281,20 @@ private enum BuiltIns {
             phone: "(406) 862-5960",
             website: "https://www.golfwhitefish.com",
             address: "1200 US Highway 93, Whitefish, MT 59937"
+        ),
+
+        c(
+            BIG_SKY_RESORT_GC_ID,
+            "Big Sky Resort Golf Club",
+            BIG_SKY_RESORT_GC_PARS,
+            BIG_SKY_RESORT_GC_HCS,
+            BIG_SKY_RESORT_GC_TEES,
+            country: "USA",
+            state: "MT",
+            architect: "Arnold Palmer",
+            type: "Semi-Private",
+            address: "Big Sky, MT 59716",
+            isWolfApproved: true
         ),
 
         c(
