@@ -4484,7 +4484,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         vc.existingGIR = game.girHit[safe: playerIndex]?[safe: hole] ?? nil
         vc.existingPutts = game.puttsPerHole[safe: playerIndex]?[safe: hole] ?? nil
         vc.existingScore = game.scores[safe: playerIndex]?[safe: hole] ?? nil
-        vc.par = game.courseParToPass[safe: hole] ?? 4
+        vc.par = game.parForHole(hole, player: playerIndex)
 
         vc.onSave = { fairwayHit, girHit, putts, score in
             GameManager.shared.update { g in

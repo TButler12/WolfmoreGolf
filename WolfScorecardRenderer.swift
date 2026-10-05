@@ -565,7 +565,7 @@ final class WolfScorecardRenderer {
                 default:
                     if let localH = hIdx(ci) {
                         if let score = gross[localH] {
-                            let diff  = score - pars[localH]
+                            let diff  = score - game.parForHole(localH, player: seat)
                             let color = scoreColor(diff: diff)
                             drawCell("\(score)",
                                      x: colXs[ci], y: ry, w: w, h: playerH,
