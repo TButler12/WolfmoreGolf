@@ -433,19 +433,18 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
 
     private func manageTeeSet(_ ts: TeeSet) {
         let ac = UIAlertController(title: ts.name, message: nil, preferredStyle: .actionSheet)
-        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+        ac.addAction(UIAlertAction(title: "Edit", style: .default) { [weak self] _ in
+            self?.pushTeeSetEditor(editing: ts)
+        })
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { _ in
             GameManager.shared.update { g in
                 g.course.teeSets.removeAll { $0.id == ts.id }
-                // Clear any player assignments to the deleted tee set
                 for i in g.playerTeeSetIndex.indices {
                     if g.playerTeeSetIndex[i] != 0 {
                         let idx = g.playerTeeSetIndex[i] - 1
                         if idx >= g.course.teeSets.count { g.playerTeeSetIndex[i] = 0 }
                     }
                 }
-            }
-            if let pop = ac.popoverPresentationController {
-                pop.barButtonItem = self?.navigationItem.leftBarButtonItem
             }
         })
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -456,44 +455,25 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     }
 
     private func addTeeSetFlow() {
+        pushTeeSetEditor(editing: nil)
+    }
+
+    private func pushTeeSetEditor(editing existingTS: TeeSet?) {
         guard let g = GameManager.shared.currentGame else { return }
-        let alert = UIAlertController(
-            title: "Add Tee Set",
-            message: "Leave HC/Par blank to copy from main course.",
-            preferredStyle: .alert
-        )
-        alert.addTextField { tf in
-            tf.placeholder = "Name (e.g., Red Tees)"
-            tf.autocapitalizationType = .words
-        }
-        alert.addTextField { tf in
-            tf.placeholder = "Stroke Indices — 18 values, comma-separated"
-            tf.keyboardType = .numbersAndPunctuation
-        }
-        alert.addTextField { tf in
-            tf.placeholder = "Pars — 18 values, comma-separated (optional)"
-            tf.keyboardType = .numbersAndPunctuation
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Add", style: .default) { [weak self] _ in
-            guard self != nil else { return }
-            let name = alert.textFields?[0].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            guard !name.isEmpty else { return }
-
-            func parseList(_ text: String?, fallback: [Int]) -> [Int] {
-                guard let t = text, !t.isEmpty else { return fallback }
-                let vals = t.components(separatedBy: ",").compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
-                guard !vals.isEmpty else { return fallback }
-                let padded = vals + Array(fallback.dropFirst(vals.count))
-                return Array(padded.prefix(STANDARD_HOLES))
+        let editor = TeeSetEditorViewController()
+        editor.existingTeeSet = existingTS
+        editor.defaultPars = Array(g.courseParToPass.prefix(STANDARD_HOLES))
+        editor.defaultHCs  = Array(g.courseHCToPass.prefix(STANDARD_HOLES))
+        editor.onSave = { ts in
+            GameManager.shared.update { g in
+                if let idx = g.course.teeSets.firstIndex(where: { $0.id == ts.id }) {
+                    g.course.teeSets[idx] = ts
+                } else {
+                    g.course.teeSets.append(ts)
+                }
             }
-
-            let hcs  = parseList(alert.textFields?[1].text, fallback: g.courseHCToPass)
-            let pars = parseList(alert.textFields?[2].text, fallback: g.courseParToPass)
-            let newTS = TeeSet(name: name, pars: pars, hcs: hcs)
-            GameManager.shared.update { g in g.course.teeSets.append(newTS) }
-        })
-        present(alert, animated: true)
+        }
+        navigationController?.pushViewController(editor, animated: true)
     }
 
     // MARK: - Home button

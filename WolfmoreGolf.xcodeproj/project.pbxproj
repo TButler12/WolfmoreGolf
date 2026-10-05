@@ -141,6 +141,7 @@
 		PW01B2C3D4E5F607182930AD /* PaywallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */; };
 		RS1A2B3C4D5E6F70819203AA /* ResetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */; };
 		SC01B2C3D4E5F607182930AA /* ScrambleTeamEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC01B2C3D4E5F607182930AB /* ScrambleTeamEntryViewController.swift */; };
+		TS01B2C3D4E5F607182930AA /* TeeSetEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = TS01B2C3D4E5F607182930AB /* TeeSetEditorViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -283,6 +284,7 @@
 		PW01B2C3D4E5F607182930AE /* PaywallViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PaywallViewController.swift; sourceTree = "<group>"; };
 		RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetSnapshotStore.swift; sourceTree = "<group>"; };
 		SC01B2C3D4E5F607182930AB /* ScrambleTeamEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrambleTeamEntryViewController.swift; sourceTree = "<group>"; };
+		TS01B2C3D4E5F607182930AB /* TeeSetEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeSetEditorViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -374,6 +376,7 @@
 				F657CEB32F01BBCA001CBFCD /* CourseLibrary.swift */,
 				F66006C32F60C56F00148767 /* CoursePickerViewController.swift */,
 				F66006C42F60C56F00148767 /* CourseSetupViewController.swift */,
+				TS01B2C3D4E5F607182930AB /* TeeSetEditorViewController.swift */,
 				F63960472F60D62500EC0C30 /* AppNotifications.swift */,
 				F6590F042EFA225B0085D088 /* GameType.swift */,
 				F63D07132ED922D400F165CA /* ManagePlayerCell.swift */,
@@ -610,6 +613,7 @@
 				LE01B2C3D4E5F607182930AD /* LiveEventViewController.swift in Sources */,
 				A3B4C5D6E7F8092030415A6C /* TeeGameSetupViewController.swift in Sources */,
 				SC01B2C3D4E5F607182930AA /* ScrambleTeamEntryViewController.swift in Sources */,
+				TS01B2C3D4E5F607182930AA /* TeeSetEditorViewController.swift in Sources */,
 				A4B5C6D7E8F90A2131526B7C /* UIViewController+ActionSheet.swift in Sources */,
 				A6B7C8D9EA0B1C2D3E4F5067 /* TournamentLeaderboardViewController.swift in Sources */,
 				A7B8C9D0EB1C2D3E4F506179 /* GroupDetailViewController.swift in Sources */,
@@ -736,7 +740,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 67;
+				CURRENT_PROJECT_VERSION = 68;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -751,7 +755,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.7;
+				MARKETING_VERSION = 3.0.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -777,7 +781,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 67;
+				CURRENT_PROJECT_VERSION = 68;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -792,7 +796,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.0.7;
+				MARKETING_VERSION = 3.0.8;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
