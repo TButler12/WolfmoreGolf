@@ -3214,6 +3214,23 @@ let OLD_WORKS_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Brick",     yardage: 5348, rating: 65.1, slope: 109),
 ]
 
+// MARK: Eagle Bend Golf Club (Eagle to Osprey) — Big Fork, MT
+// Par 72 | Private
+private let EAGLE_BEND_EAGLE_TO_OSPREY_ID = UUID(uuidString: "EA61E8EE-0001-4B00-8C00-000000000001")!
+
+let EAGLE_BEND_EAGLE_TO_OSPREY_PARS: [Int] = [
+    4,5,4,3,4,3,4,5,4,
+    4,3,5,4,4,3,4,5,4
+]
+let EAGLE_BEND_EAGLE_TO_OSPREY_HCS: [Int] = [
+    7,9,1,5,15,13,11,17,3,
+    14,6,16,10,2,12,4,18,8
+]
+let EAGLE_BEND_EAGLE_TO_OSPREY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6822, rating: 72.9, slope: 134),
+    TeeInfo(teeName: "White", yardage: 6297, rating: 73.6, slope: 127),
+]
+
 // MARK: Wade Hampton Club — Cashiers, NC (Tom Fazio)
 private let WADE_HAMPTON_CLUB_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A101")!
 let WADE_HAMPTON_CLUB_PARS_TODO: [Int] = [
@@ -15232,6 +15249,19 @@ private enum BuiltIns {
             phone: "(406) 862-5960",
             website: "https://www.golfwhitefish.com",
             address: "1200 US Highway 93, Whitefish, MT 59937"
+        ),
+
+        c(
+            EAGLE_BEND_EAGLE_TO_OSPREY_ID,
+            "Eagle Bend Golf Club (Eagle to Osprey)",
+            EAGLE_BEND_EAGLE_TO_OSPREY_PARS,
+            EAGLE_BEND_EAGLE_TO_OSPREY_HCS,
+            EAGLE_BEND_EAGLE_TO_OSPREY_TEES,
+            country: "USA",
+            state: "MT",
+            type: "Private",
+            address: "279 Eagle Bend Drive, Big Fork, MT 59911",
+            isWolfApproved: true
         ),
 
         // -------------------------
