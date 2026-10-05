@@ -11249,6 +11249,22 @@ let BETHPAGE_RED_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Blue", yardage: 6921, rating: 73.7, slope: 128)
 ]
 
+// MARK: Maidstone Club (West) — East Hampton, NY (Willie Park, Jr.)
+// Par 72 | Private | Est. 1891
+private let MAIDSTONE_CLUB_WEST_ID = UUID(uuidString: "4A1D57EE-0001-4B00-8C00-000000000001")!
+
+let MAIDSTONE_CLUB_WEST_PARS: [Int] = [
+    4,5,4,3,4,4,4,3,4,
+    4,4,3,5,3,5,5,4,4
+]
+let MAIDSTONE_CLUB_WEST_HCS: [Int] = [
+    9,1,5,13,17,11,7,15,3,
+    2,4,16,10,18,8,6,12,14
+]
+let MAIDSTONE_CLUB_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6742, rating: 74.0, slope: 140),
+]
+
 // MARK: Bethpage State Park - Blue — Farmingdale, NY (A.W. Tillinghast)
 // Par 72 | Municipal
 private let BETHPAGE_BLUE_ID = UUID(uuidString: "A4E7A4A1-3A8F-4F4F-9B2F-6E9C1A0B4003")!
@@ -21994,6 +22010,21 @@ private enum BuiltIns {
         phone: "(516) 249-0700",
         website: "https://www.bethpagegolfcourse.com",
         address: "99 Quaker Meeting House Rd, Farmingdale, NY"
+        ),
+        c(
+        MAIDSTONE_CLUB_WEST_ID,
+        "Maidstone Club - West",
+        MAIDSTONE_CLUB_WEST_PARS,
+        MAIDSTONE_CLUB_WEST_HCS,
+        MAIDSTONE_CLUB_WEST_TEES,
+        country: "USA",
+        state: "NY",
+        region: "Long Island / Hamptons",
+        architect: "Willie Park, Jr.",
+        type: "Private",
+        phone: "(631) 324-0510",
+        address: "50 Old Beach Lane, East Hampton, NY 11937",
+        isWolfApproved: true
         ),
         c(
         BETHPAGE_BLUE_ID,
