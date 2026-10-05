@@ -12168,6 +12168,38 @@ let CHESTER_VALLEY_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Gold",  yardage: 5588, rating: 67.4, slope: 124),
 ]
 
+// MARK: The Springhaven Club — Wallingford, PA (Ida Dixon)
+// Par 70 | Private | Est. 1896
+private let SPRINGHAVEN_CLUB_ID = UUID(uuidString: "5941A8EE-0001-4B00-8C00-000000000001")!
+
+let SPRINGHAVEN_CLUB_PARS: [Int] = [
+    4,5,3,4,4,3,4,5,3,
+    4,4,5,3,4,4,3,4,4
+]
+let SPRINGHAVEN_CLUB_HCS: [Int] = [
+    5,7,17,3,11,13,1,9,15,
+    8,2,12,16,14,6,18,4,10
+]
+let SPRINGHAVEN_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "1896", yardage: 6622, rating: 71.7, slope: 129),
+]
+
+// MARK: Nemacolin Woodlands Resort (Shepherd's Rock) — Farmington, PA (Pete Dye)
+// Par 72 | Resort
+private let NEMACOLIN_SHEPHERDS_ROCK_ID = UUID(uuidString: "4E5AC014-0001-4B00-8C00-000000000001")!
+
+let NEMACOLIN_SHEPHERDS_ROCK_PARS: [Int] = [
+    5,4,4,5,3,4,4,3,5,
+    4,4,3,5,3,4,4,4,4
+]
+let NEMACOLIN_SHEPHERDS_ROCK_HCS: [Int] = [
+    7,17,5,1,11,15,13,9,3,
+    8,2,16,6,18,12,14,10,4
+]
+let NEMACOLIN_SHEPHERDS_ROCK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7290, rating: 75.4, slope: 146),
+]
+
 // MARK: Saucon Valley CC (Old Course) — Bethlehem, PA
 private let SAUCON_VALLEY_OLD_ID = UUID(uuidString: "5AEC0001-0000-4000-8000-000000000001")!
 let SAUCON_VALLEY_OLD_PARS: [Int] = [5,4,4,3,4,5,4,4,3, 4,3,4,4,3,5,4,4,4]
@@ -22477,6 +22509,35 @@ private enum BuiltIns {
             phone: "(610) 647-4007",
             website: "https://www.chestervalleygc.org",
             address: "430 Swedesford Road, Malvern, PA 19355",
+            isWolfApproved: true
+        ),
+        c(
+            SPRINGHAVEN_CLUB_ID,
+            "The Springhaven Club",
+            SPRINGHAVEN_CLUB_PARS,
+            SPRINGHAVEN_CLUB_HCS,
+            SPRINGHAVEN_CLUB_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Philadelphia / Main Line",
+            architect: "Ida Dixon",
+            type: "Private",
+            phone: "(610) 876-8187",
+            address: "600 South Providence Road, Wallingford, PA 19086",
+            isWolfApproved: true
+        ),
+        c(
+            NEMACOLIN_SHEPHERDS_ROCK_ID,
+            "Nemacolin Woodlands Resort (Shepherd's Rock)",
+            NEMACOLIN_SHEPHERDS_ROCK_PARS,
+            NEMACOLIN_SHEPHERDS_ROCK_HCS,
+            NEMACOLIN_SHEPHERDS_ROCK_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Western PA",
+            architect: "Pete Dye",
+            type: "Resort",
+            address: "1001 Lafayette Drive, Farmington, PA 15437",
             isWolfApproved: true
         ),
         c(SUNNEHANNA_CC_ID, "Sunnehanna Country Club", SUNNEHANNA_CC_PARS, SUNNEHANNA_CC_HCS,
