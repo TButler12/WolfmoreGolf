@@ -12149,6 +12149,25 @@ let MERION_WEST_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Back", yardage: 6019, rating: 69.9, slope: 129)
 ]
 
+// MARK: Chester Valley Golf Club — Malvern, PA (George Fazio/Jim Nagle)
+// Par 70 | Private | Est. 1923
+private let CHESTER_VALLEY_GC_ID = UUID(uuidString: "C4E57A11-0001-4B00-8C00-000000000001")!
+
+let CHESTER_VALLEY_GC_PARS: [Int] = [
+    4,5,4,4,3,4,3,4,4,
+    3,4,4,4,5,3,4,4,4
+]
+let CHESTER_VALLEY_GC_HCS: [Int] = [
+    3,9,15,7,13,1,17,5,11,
+    18,8,4,2,10,16,14,12,6
+]
+let CHESTER_VALLEY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6686, rating: 72.7, slope: 137),
+    TeeInfo(teeName: "White", yardage: 6225, rating: 70.3, slope: 132),
+    TeeInfo(teeName: "Green", yardage: 6002, rating: 69.1, slope: 125),
+    TeeInfo(teeName: "Gold",  yardage: 5588, rating: 67.4, slope: 124),
+]
+
 // MARK: Saucon Valley CC (Old Course) — Bethlehem, PA
 private let SAUCON_VALLEY_OLD_ID = UUID(uuidString: "5AEC0001-0000-4000-8000-000000000001")!
 let SAUCON_VALLEY_OLD_PARS: [Int] = [5,4,4,3,4,5,4,4,3, 4,3,4,4,3,5,4,4,4]
@@ -22443,6 +22462,22 @@ private enum BuiltIns {
             architect: "Hugh Wilson",
             type: "Private",
             address: "450 Ardmore Ave., Ardmore, PA 19003"
+        ),
+        c(
+            CHESTER_VALLEY_GC_ID,
+            "Chester Valley Golf Club",
+            CHESTER_VALLEY_GC_PARS,
+            CHESTER_VALLEY_GC_HCS,
+            CHESTER_VALLEY_GC_TEES,
+            country: "USA",
+            state: "PA",
+            region: "Philadelphia / Main Line",
+            architect: "George Fazio & Jim Nagle",
+            type: "Private",
+            phone: "(610) 647-4007",
+            website: "https://www.chestervalleygc.org",
+            address: "430 Swedesford Road, Malvern, PA 19355",
+            isWolfApproved: true
         ),
         c(SUNNEHANNA_CC_ID, "Sunnehanna Country Club", SUNNEHANNA_CC_PARS, SUNNEHANNA_CC_HCS,
           SUNNEHANNA_CC_TEES,
