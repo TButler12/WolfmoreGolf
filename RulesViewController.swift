@@ -227,7 +227,7 @@ private extension RulesViewController {
 
         header("MIXED TEES")
         body("""
-        It's common for players in the same group to play from different tee boxes — men and women playing together, seniors or juniors on shorter yardages, or simply players of different skill levels who want a fair match. Each tee box has its own par values and stroke index ratings. WolfMore tracks every player against their own tee's pars and handicap ratings, so scoring and stroke allocation are always correct regardless of where each person tees it up.
+        It's common for players in the same group to play from different tee boxes — men and women playing together, seniors, juniors, or adaptive golfers on shorter yardages, or simply players of different skill levels who want a fair match. Each tee box has its own par values and stroke index ratings. WolfMore tracks every player against their own tee's pars and handicap ratings, so scoring and stroke allocation are always correct regardless of where each person tees it up.
 
         Setting up alternate tees:
         • Open Course Setup (✏️ pencil on the Home screen)
