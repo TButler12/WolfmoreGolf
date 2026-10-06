@@ -11201,7 +11201,7 @@ let BOWES_CREEK_HCS: [Int] = [
 let BOWES_CREEK_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 6794, rating: 73.6, slope: 143)
 ]
-private let THUNDERHAWK_ID = UUID(uuidString: "A7A10005-0000-0000-0000-000000000005")!
+private let THUNDERHAWK_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000237")!
 
 let THUNDERHAWK_PARS: [Int] = [
     4,5,3,4,4,3,5,4,4,
@@ -13585,13 +13585,6 @@ let CAROLINA_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",   yardage: 4740, rating: 64.2, slope: 113),
 ]
 
-// MARK: - ThunderHawk Golf Club (Beach Park, IL)
-private let THUNDERHAWK_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000237")!
-let THUNDERHAWK_GC_PARS: [Int] = [4,5,3,4,4,3,5,4,4, 4,5,4,3,4,3,5,3,5]
-let THUNDERHAWK_GC_HCS:  [Int] = [17,5,9,3,7,11,15,13,1, 14,16,4,8,12,18,2,10,6]
-let THUNDERHAWK_GC_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Black", yardage: 7031, rating: 74.6, slope: 143),
-]
 
 // MARK: - Randall Oaks Golf Club (West Dundee, IL)
 private let RANDALL_OAKS_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000236")!
@@ -18906,7 +18899,7 @@ private enum BuiltIns {
         ),
         c(
             BOULDER_CREEK_GC_ID,
-            "Boulder Creek Golf Club",
+            "Boulder Creek Golf Club (NV)",
             BOULDER_CREEK_GC_PARS,
             BOULDER_CREEK_GC_HCS,
             BOULDER_CREEK_GC_TEES,
@@ -20580,12 +20573,6 @@ private enum BuiltIns {
           phone: "(847) 931-5950",
           address: "875 Sports Way, Elgin, IL 60123"),
 
-        c(THUNDERHAWK_GC_ID, "ThunderHawk Golf Club", THUNDERHAWK_GC_PARS, THUNDERHAWK_GC_HCS, THUNDERHAWK_GC_TEES,
-          country: "USA",
-          state: "IL",
-          architect: "Robert Trent Jones Jr",
-          type: "Public",
-          address: "Beach Park, IL"),
 
         c(RANDALL_OAKS_GC_ID, "Randall Oaks Golf Club", RANDALL_OAKS_GC_PARS, RANDALL_OAKS_GC_HCS, RANDALL_OAKS_GC_TEES,
           country: "USA",
