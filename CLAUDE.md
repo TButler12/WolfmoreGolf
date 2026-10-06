@@ -18,6 +18,7 @@ Every 18-hole layout must have exactly 18 pars and 18 handicaps. Handicaps must 
 - Women's handicaps often differ from men's. Women's tee sets use the women's row, converted the same way.
 - When changing an existing course, keep its UUID so saved rounds and tee sets stay linked.
 - Enter clean arrays with no subtotals or hole counts.
+- Never invent placeholder values for yardage, rating, or slope. If real values aren't available, ask me.
 
 ## Where to Work
 

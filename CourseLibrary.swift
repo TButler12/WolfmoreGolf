@@ -6776,20 +6776,62 @@ let RAINDANCE_NATIONAL_TEES: [TeeInfo] = [
 ]
 
 // MARK: - Breckenridge Golf Club — Breckenridge, CO
-private let BRECKENRIDGE_GC_ID = UUID(uuidString: "FD2BE095-AB3C-4F8D-D1E0-CD3FA2B4CF60")!
+private let BRECKENRIDGE_GC_BEAVER_BEAR_ID = UUID(uuidString: "FD2BE095-AB3C-4F8D-D1E0-CD3FA2B4CF60")!
+private let BRECKENRIDGE_GC_BEAR_ELK_ID   = UUID(uuidString: "669FE7A2-6749-449E-A9DB-0FD04117E153")!
+private let BRECKENRIDGE_GC_ELK_BEAVER_ID = UUID(uuidString: "01F3DDF3-EEB5-42F2-AF69-65DF67CF694E")!
 
-let BRECKENRIDGE_GC_PARS: [Int] = [
+let BRECKENRIDGE_GC_BEAVER_BEAR_PARS: [Int] = [
     4,5,3,4,4,4,4,5,3,
-    4,5,4,3,4,4,5,4,4
+    4,5,4,3,4,5,3,4,4
 ]
 
-let BRECKENRIDGE_GC_HCS: [Int] = [
+let BRECKENRIDGE_GC_BEAVER_BEAR_HCS: [Int] = [
     7,11,17,9,5,15,3,1,13,
+    12,18,8,16,14,6,10,4,2
+]
+
+let BRECKENRIDGE_GC_BEAVER_BEAR_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Nicklaus",   yardage: 7266, rating: 73.9, slope: 151),
+    TeeInfo(teeName: "Tournament", yardage: 6605, rating: 71.7, slope: 139),
+    TeeInfo(teeName: "Club",       yardage: 6124, rating: 69.9, slope: 129),
+    TeeInfo(teeName: "Middle",     yardage: 5688, rating: 67.9, slope: 119),
+    TeeInfo(teeName: "Forward",    yardage: 4945, rating: 63.7, slope: 113)
+]
+
+let BRECKENRIDGE_GC_BEAR_ELK_PARS: [Int] = [
+    4,5,4,3,4,5,3,4,4,
+    4,5,3,4,3,4,4,5,4
+]
+
+let BRECKENRIDGE_GC_BEAR_ELK_HCS: [Int] = [
+    11,17,7,15,13,5,9,3,1,
     18,6,16,10,14,12,2,4,8
 ]
 
-let BRECKENRIDGE_GC_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Beaver/Bear", yardage: 7339, rating: 73.9, slope: 151)
+let BRECKENRIDGE_GC_BEAR_ELK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Nicklaus",   yardage: 7258, rating: 73.3, slope: 146),
+    TeeInfo(teeName: "Tournament", yardage: 6697, rating: 71.5, slope: 140),
+    TeeInfo(teeName: "Club",       yardage: 6325, rating: 69.7, slope: 135),
+    TeeInfo(teeName: "Middle",     yardage: 5760, rating: 68.1, slope: 121),
+    TeeInfo(teeName: "Forward",    yardage: 4952, rating: 64.5, slope: 112)
+]
+
+let BRECKENRIDGE_GC_ELK_BEAVER_PARS: [Int] = [
+    4,5,3,4,3,4,4,5,4,
+    4,5,3,4,4,4,4,5,3
+]
+
+let BRECKENRIDGE_GC_ELK_BEAVER_HCS: [Int] = [
+    17,5,15,9,13,11,1,3,7,
+    8,12,18,10,6,16,4,2,14
+]
+
+let BRECKENRIDGE_GC_ELK_BEAVER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Nicklaus",   yardage: 7120, rating: 73.2, slope: 150),
+    TeeInfo(teeName: "Tournament", yardage: 6532, rating: 71.6, slope: 142),
+    TeeInfo(teeName: "Club",       yardage: 6091, rating: 69.8, slope: 133),
+    TeeInfo(teeName: "Middle",     yardage: 5602, rating: 67.8, slope: 117),
+    TeeInfo(teeName: "Forward",    yardage: 4793, rating: 64.0, slope: 112)
 ]
 
 // MARK: - Keystone Ranch Golf Course — Keystone, CO
@@ -18441,11 +18483,43 @@ private enum BuiltIns {
             isWolfApproved: true
         ),
         c(
-            BRECKENRIDGE_GC_ID,
-            "Breckenridge Golf Club",
-            BRECKENRIDGE_GC_PARS,
-            BRECKENRIDGE_GC_HCS,
-            BRECKENRIDGE_GC_TEES,
+            BRECKENRIDGE_GC_BEAVER_BEAR_ID,
+            "Breckenridge Golf Club (Beaver / Bear)",
+            BRECKENRIDGE_GC_BEAVER_BEAR_PARS,
+            BRECKENRIDGE_GC_BEAVER_BEAR_HCS,
+            BRECKENRIDGE_GC_BEAVER_BEAR_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Jack Nicklaus",
+            type: "Public",
+            phone: "(970) 453-9104",
+            website: "https://www.breckenridgegolfclub.com",
+            address: "200 Clubhouse Drive, Breckenridge, CO 80424",
+            isWolfApproved: true
+        ),
+        c(
+            BRECKENRIDGE_GC_BEAR_ELK_ID,
+            "Breckenridge Golf Club (Bear / Elk)",
+            BRECKENRIDGE_GC_BEAR_ELK_PARS,
+            BRECKENRIDGE_GC_BEAR_ELK_HCS,
+            BRECKENRIDGE_GC_BEAR_ELK_TEES,
+            country: "USA",
+            state: "CO",
+            region: "Denver",
+            architect: "Jack Nicklaus",
+            type: "Public",
+            phone: "(970) 453-9104",
+            website: "https://www.breckenridgegolfclub.com",
+            address: "200 Clubhouse Drive, Breckenridge, CO 80424",
+            isWolfApproved: true
+        ),
+        c(
+            BRECKENRIDGE_GC_ELK_BEAVER_ID,
+            "Breckenridge Golf Club (Elk / Beaver)",
+            BRECKENRIDGE_GC_ELK_BEAVER_PARS,
+            BRECKENRIDGE_GC_ELK_BEAVER_HCS,
+            BRECKENRIDGE_GC_ELK_BEAVER_TEES,
             country: "USA",
             state: "CO",
             region: "Denver",
