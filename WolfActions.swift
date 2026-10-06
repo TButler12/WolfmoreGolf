@@ -517,10 +517,11 @@ enum WolfActions {
                     .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
                 let eventCodeEntry: String? = eventCodeRaw.isEmpty ? nil : eventCodeRaw
 
-                // If a board code was entered and game isn't match play, warn first
+                // If a board code was entered and game isn't match play (or 6-Point, which can broadcast freely), warn first
                 if let evCode = eventCodeEntry,
                    let g = GameManager.shared.currentGame,
-                   !g.resolvedGameType.isMatchPlay {
+                   !g.resolvedGameType.isMatchPlay,
+                   g.resolvedGameType != .sixPointScotch {
                     let hasHoles = g.holeCommitted.contains(true)
                     presentMatchPlayWarning(gameTypeName: g.resolvedGameType.displayName,
                                            hasHolesScored: hasHoles, from: presenter) {
@@ -634,7 +635,9 @@ enum WolfActions {
                 .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
             guard !evCode.isEmpty else { return }
 
-            if let g = GameManager.shared.currentGame, !g.resolvedGameType.isMatchPlay {
+            if let g = GameManager.shared.currentGame,
+               !g.resolvedGameType.isMatchPlay,
+               g.resolvedGameType != .sixPointScotch {
                 let hasHoles = g.holeCommitted.contains(true)
                 presentMatchPlayWarning(gameTypeName: g.resolvedGameType.displayName,
                                        hasHolesScored: hasHoles, from: presenter) {

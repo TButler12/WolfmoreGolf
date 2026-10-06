@@ -6544,8 +6544,8 @@ let ARROWHEAD_SOUTH_WEST_PARS: [Int] = [
 ]
 
 let ARROWHEAD_SOUTH_WEST_HCS: [Int] = [
-    9,3,6,8,1,5,7,2,4,
-    2,6,5,7,9,1,8,3,4
+    17,5,11,15,1,9,13,3,7,
+    4,12,10,14,18,2,16,6,8
 ]
 
 let ARROWHEAD_SOUTH_WEST_TEES: [TeeInfo] = [
@@ -6564,8 +6564,8 @@ let ARROWHEAD_WEST_EAST_PARS: [Int] = [
 ]
 
 let ARROWHEAD_WEST_EAST_HCS: [Int] = [
-    2,6,5,7,9,1,8,3,4,
-    1,7,9,3,6,2,8,5,4
+    3,11,9,13,17,1,15,5,7,
+    2,14,18,6,12,4,16,10,8
 ]
 
 let ARROWHEAD_WEST_EAST_TEES: [TeeInfo] = [
@@ -6784,8 +6784,8 @@ let BRECKENRIDGE_GC_PARS: [Int] = [
 ]
 
 let BRECKENRIDGE_GC_HCS: [Int] = [
-    4,6,9,5,3,8,2,1,7,
-    9,3,8,5,7,6,1,2,4
+    7,11,17,9,5,15,3,1,13,
+    18,6,16,10,14,12,2,4,8
 ]
 
 let BRECKENRIDGE_GC_TEES: [TeeInfo] = [
@@ -10362,7 +10362,23 @@ let PAAKO_RIDGE_10_27_PARS: [Int] = [
 
 let PAAKO_RIDGE_10_27_HCS: [Int] = [
     10,2,14,16,8,4,18,12,6,
-    5,7,2,8,1,9,3,6,4
+    9,13,3,15,1,17,5,11,7
+]
+let PAAKO_RIDGE_1_9_19_27_PARS: [Int] = [
+    4,4,5,3,5,4,4,3,4,
+    5,4,4,3,5,3,5,3,4
+]
+let PAAKO_RIDGE_1_9_19_27_HCS: [Int] = [
+    13,11,5,17,7,15,1,9,3,
+    10,14,4,16,2,18,6,12,8
+]
+let PAAKO_RIDGE_WOMENS_PARS: [Int] = [
+    4,4,5,3,5,4,4,3,4,
+    4,4,5,4,3,5,3,4,4
+]
+let PAAKO_RIDGE_WOMENS_HCS: [Int] = [
+    13,11,7,17,5,15,1,9,3,
+    10,12,14,16,8,2,18,6,4
 ]
 private let PAAKO_RIDGE_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black", yardage: 7562, rating: 75.7, slope: 150),
@@ -10843,6 +10859,36 @@ let USNA_GC_HCS: [Int] = [
 
 let USNA_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "College", yardage: 7025, rating: 74.0, slope: 130)
+]
+
+// MARK: The Club at PB Dye — Ijamsville, MD
+private let PB_DYE_GC_ID = UUID(uuidString: "4BD9E001-0001-4B00-8C00-000000000001")!
+
+let PB_DYE_GC_PARS: [Int] = [
+    4,3,5,4,3,4,4,5,4,
+    4,3,5,4,4,4,5,3,4
+]
+
+let PB_DYE_GC_HCS: [Int] = [
+    15,9,7,11,17,1,3,13,5,
+    16,18,8,12,6,2,10,14,4
+]
+
+let PB_DYE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7145, rating: 74.6, slope: 143),
+    TeeInfo(teeName: "Blue",  yardage: 6758, rating: 72.5, slope: 138),
+    TeeInfo(teeName: "White", yardage: 6356, rating: 70.7, slope: 134),
+    TeeInfo(teeName: "Green", yardage: 5887, rating: 68.5, slope: 129),
+]
+
+let PB_DYE_GC_GOLD_PARS: [Int] = [
+    4,3,5,5,3,4,4,5,4,
+    4,3,5,4,4,4,5,3,4
+]
+
+let PB_DYE_GC_GOLD_HCS: [Int] = [
+    17,15,1,3,13,11,5,9,7,
+    14,16,2,12,6,4,8,18,10
 ]
 
 // MARK: Greenville Country Club
@@ -21655,13 +21701,30 @@ private enum BuiltIns {
             website: "https://paakogolf.com/",
             address: "1 Club House Dr, Sandia Park, NM 87047",
             isWolfApproved: true,
-            promo: nil
+            promo: nil,
+            teeSets: [TeeSet(name: "Women's", pars: PAAKO_RIDGE_WOMENS_PARS, hcs: PAAKO_RIDGE_WOMENS_HCS)]
         ),
         c(
             PAAKO_RIDGE_10_27_ID,
             "Paako Ridge Golf Club (10–27)",
             PAAKO_RIDGE_10_27_PARS,
             PAAKO_RIDGE_10_27_HCS,
+            PAAKO_RIDGE_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Ken Dye",
+            type: "Public",
+            phone: "(505) 281-6000",
+            website: "https://paakogolf.com/",
+            address: "1 Club House Dr, Sandia Park, NM 87047",
+            isWolfApproved: true,
+            promo: nil
+        ),
+        c(
+            PAAKO_RIDGE_1_9_19_27_ID,
+            "Paako Ridge Golf Club (1–9/19–27)",
+            PAAKO_RIDGE_1_9_19_27_PARS,
+            PAAKO_RIDGE_1_9_19_27_HCS,
             PAAKO_RIDGE_TEES,
             country: "USA",
             state: "NM",
@@ -24073,6 +24136,23 @@ private enum BuiltIns {
             address: "Annapolis, MD 21402"
         ),
 
+        c(
+            PB_DYE_GC_ID,
+            "The Club at PB Dye",
+            PB_DYE_GC_PARS,
+            PB_DYE_GC_HCS,
+            PB_DYE_GC_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "P.B. Dye",
+            type: "Private",
+            phone: "(301) 607-4653",
+            website: "https://www.pbdyegolf.com",
+            address: "9526 Doctor Perry Road, Ijamsville, MD 21754",
+            isWolfApproved: true,
+            teeSets: [TeeSet(name: "Gold", pars: PB_DYE_GC_GOLD_PARS, hcs: PB_DYE_GC_GOLD_HCS)]
+        ),
+
         // -------------------------
         // North Carolina
         // -------------------------
@@ -24304,6 +24384,16 @@ final class CourseLibrary {
         }
 
         if changed { save() }
+
+        #if DEBUG
+        let expected = Set(1...18)
+        for p in builtIns {
+            let hcs = Array(p.hcs.prefix(18))
+            if hcs.count == 18, Set(hcs) != expected {
+                print("⚠️ HC audit FAIL — \(p.name): \(hcs)")
+            }
+        }
+        #endif
     }
 
     @discardableResult

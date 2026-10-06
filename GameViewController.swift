@@ -16,7 +16,17 @@ extension UIImage {
         return img.resizableImage(withCapInsets: .zero, resizingMode: .stretch)
     }
 }
-final class GameViewController: UIViewController, MFMessageComposeViewControllerDelegate {
+/// UIScrollView that blocks UIKit's scrollRectToVisible when scrolling is disabled.
+/// Without this, focusing a text field calls scrollRectToVisible even with isScrollEnabled = false,
+/// setting a non-zero contentOffset that hides the first player row behind the header.
+private final class PinnedScrollView: UIScrollView {
+    override func scrollRectToVisible(_ rect: CGRect, animated: Bool) {
+        guard isScrollEnabled else { return }
+        super.scrollRectToVisible(rect, animated: animated)
+    }
+}
+
+final class GameViewController: UIViewController, MFMessageComposeViewControllerDelegate, UIScrollViewDelegate {
     
      var isUmbrella: Bool = false   // true = mute double for ENTIRE game
     @IBAction private func closeTapped(_ sender: Any) {
@@ -71,6 +81,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var bottomSeparator: UIView?
     private weak var bottomRow1: UIStackView?  // Alone | Re-Roll | Roll
     private weak var bottomRow2: UIStackView?  // Press | Hammer
+
     private var dollarStepper: UIStepper?
     private weak var liveSummaryWolfLabel: UILabel?
     private weak var liveSummarySkinsLabel: UILabel?
@@ -226,6 +237,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     // Tournament new-day polling
     private var newDayPollTimer: Timer?
+    private var isAdjustingScrollState = false
     private var newDayAlertShown = false
     private var liveTabScoreButton: UIButton?
     private var liveTabLiveButton: UIButton?
@@ -265,14 +277,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         ibSubviews = view.subviews
 
         // Embed all storyboard views in a scroll view so 7-player content can scroll
-        // above the tab bar on smaller screens. Disabled (acts as plain container) for ≤5 players.
-        let gameScroll = UIScrollView()
+        // above the tab bar on smaller screens. Disabled (acts as plain container) until
+        // content overflows or the offset drifts; PinnedScrollView blocks scrollRectToVisible
+        // while disabled so text-field focus can't shift the view unexpectedly.
+        let gameScroll = PinnedScrollView()
         gameScroll.translatesAutoresizingMaskIntoConstraints = false
         gameScroll.showsVerticalScrollIndicator = true
         gameScroll.showsHorizontalScrollIndicator = false
         gameScroll.isScrollEnabled = false
         gameScroll.alwaysBounceVertical = false
         gameScroll.contentInsetAdjustmentBehavior = .never
+        gameScroll.delegate = self
         view.addSubview(gameScroll)
         NSLayoutConstraint.activate([
             gameScroll.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -390,6 +405,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         NotificationCenter.default.addObserver(self, selector: #selector(handleReloadUI), name: .reloadUI, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleRemoteMatchDidStart), name: .remoteMatchDidStart, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleAppBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
     }
 
     @objc private func handleAppBackground() {
@@ -430,11 +446,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        navigationController?.isModalInPresentation = true
         // Sync local currentHole from the model every time the screen appears
         // so returning to an active game always shows the correct hole.
         if let g = GameManager.shared.currentGame {
             currentHole = g.hole
         }
+        gameContentScrollView?.setContentOffset(.zero, animated: false)
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
@@ -450,6 +468,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        if isMovingFromParent { navigationController?.isModalInPresentation = false }
         navigationController?.setNavigationBarHidden(false, animated: animated)
         newDayPollTimer?.invalidate()
         newDayPollTimer = nil
@@ -457,6 +476,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        gameContentScrollView?.setContentOffset(.zero, animated: false)
         showFirstGameTipIfNeeded()
         showMuteTipBannerIfNeeded()
         startNewDayPollingIfNeeded()
@@ -467,9 +487,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         installSortButtonIfNeeded()
         repositionSortButton()
         installGameHeaderIfNeeded()
-        installLiveNassauButtonIfNeeded()
         installLiveTabBarIfNeeded()
-        layoutBottomControls()
+        layoutBottomControls()              // must run before installLiveNassauButtonIfNeeded
+        installLiveNassauButtonIfNeeded()
         applyStoryboardShiftIfNeeded()
         refreshPlayerRowCards()
         let wasBuildDone = extraScoringRowsBuilt
@@ -484,7 +504,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         if let header = gameHeaderView { view.bringSubviewToFront(header) }
         if let container = liveContentContainer { view.bringSubviewToFront(container) }
         if let bar = liveTabBar { view.bringSubviewToFront(bar) }
-        if let btn = liveNassauButton { view.bringSubviewToFront(btn) }
+        // Only float to front when the button lives directly on view (legacy path); when embedded
+        // in Row 7 its superview is the stack view and bringSubviewToFront would detach it.
+        if let btn = liveNassauButton, btn.superview === view { view.bringSubviewToFront(btn) }
     }
 
     // MARK: - Dark green game header
@@ -917,18 +939,29 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
               let header = gameHeaderView,
               header.frame.maxY > 50 else { return }
 
-        let gap = CGFloat(200) - header.frame.maxY
-        guard gap > 4 else { storyboardContentShifted = true; return }
+        // Confirm player rows are laid out before shifting.
+        let sortedFields = scoreFields.sorted(by: { $0.tag < $1.tag })
+        guard let firstField = sortedFields.first, firstField.frame != .zero else { return }
 
-        let shift = gap - 8  // leave 8pt breathing room below header
-        guard shift > 0 else { storyboardContentShifted = true; return }
+        // Anchor to the topmost VISIBLE storyboard view (the column-header label row), not just
+        // the first score field. Exclude hidden views (holePlaying, parOfHole) which sit near
+        // Y=0 in the storyboard and would otherwise pull everything too far down.
+        let topmostY = ibSubviews
+            .filter { !$0.isHidden && $0.frame != .zero && $0.frame.minY >= 0 }
+            .map { $0.frame.minY }
+            .min() ?? firstField.frame.minY
+
+        let targetTopmostY = header.frame.maxY + 4
+        let shift = topmostY - targetTopmostY  // positive → content too low (shift up); negative → shift down
+
+        storyboardContentShifted = true
+        guard abs(shift) > 2 else { return }
 
         for sv in ibSubviews {
             var f = sv.frame
             f.origin.y -= shift
             sv.frame = f
         }
-        storyboardContentShifted = true
 
         playerRowCardViews.forEach { $0.removeFromSuperview() }
         playerRowCardViews.removeAll()
@@ -1015,7 +1048,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func updateLiveNassauButtonPosition() {
-        guard liveNassauButton != nil else { return }
+        guard let btn = liveNassauButton, btn.superview === view else { return }
         let tabBarHeight: CGFloat
         if let bar = liveTabBar, !bar.isHidden {
             tabBarHeight = liveTabBarHeightConstraint?.constant ?? 44
@@ -1795,6 +1828,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
     @objc private func dismissKeyboard() { view.endEditing(true) }
 
+    @objc private func handleKeyboardWillHide(_ notification: Notification) {
+        // Snap back to top after every keyboard dismissal. PinnedScrollView blocks the initial
+        // auto-scroll for non-scrollable layouts; for 7-player scrollable mode, snapping back
+        // ensures player 1 stays visible after each score entry.
+        gameContentScrollView?.setContentOffset(.zero, animated: false)
+    }
+
    
     
     private func makeDoneToolbar() -> UIToolbar {
@@ -2393,7 +2433,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         // In Match Play / pure Stableford, hide Nassau betting
         nassauButton?.isHidden = isMatchPlay || isPureStableford
-        if isMatchPlay || isPureStableford { liveNassauButton?.isHidden = true }
+        if isMatchPlay || isPureStableford {
+            liveNassauButton?.isHidden = true
+        }
 
         // Umbrella is 6-point only
         if !t.isScotch, g.isUmbrella {
@@ -2947,6 +2989,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let total = GameManager.shared.currentGame?.totalHoles ?? STANDARD_HOLES
         currentHole = (currentHole - 1 + total) % total
         GameManager.shared.update { $0.hole = currentHole }
+        gameContentScrollView?.setContentOffset(.zero, animated: false)
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
@@ -2958,6 +3001,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let total = GameManager.shared.currentGame?.totalHoles ?? STANDARD_HOLES
         currentHole = (currentHole + 1) % total
         GameManager.shared.update { $0.hole = currentHole }
+        gameContentScrollView?.setContentOffset(.zero, animated: false)
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
         refreshTotalMoneyLabels()
@@ -3184,11 +3228,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         let titleLabel = UILabel()
         titleLabel.text          = title
-        titleLabel.font          = UIFont.systemFont(ofSize: 11, weight: .semibold)
+        titleLabel.font          = UIFont.systemFont(ofSize: 9, weight: .semibold)
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        let symConfig = UIImage.SymbolConfiguration(pointSize: 17, weight: .bold)
+        let symConfig = UIImage.SymbolConfiguration(pointSize: 13, weight: .bold)
 
         let minus = UIButton(type: .system)
         minus.setImage(UIImage(systemName: "minus", withConfiguration: symConfig), for: .normal)
@@ -3211,7 +3255,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             titleLabel.topAnchor.constraint(equalTo: container.topAnchor),
             titleLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor),
             titleLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor),
-            titleLabel.heightAnchor.constraint(equalToConstant: 18),
+            titleLabel.heightAnchor.constraint(equalToConstant: 14),
 
             minus.topAnchor.constraint(equalTo: titleLabel.bottomAnchor),
             minus.leadingAnchor.constraint(equalTo: container.leadingAnchor),
@@ -5751,7 +5795,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
 
             let row2 = UIStackView(arrangedSubviews: [pc, hc])
             row2.axis = .horizontal; row2.spacing = 6; row2.distribution = .fillEqually
-            row2.heightAnchor.constraint(equalToConstant: 44).isActive = true
+            row2.heightAnchor.constraint(equalToConstant: 40).isActive = true
             vStack.addArrangedSubview(row2)
             bottomRow2 = row2
 
@@ -5838,7 +5882,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             row6.heightAnchor.constraint(equalToConstant: 32).isActive = true
             vStack.addArrangedSubview(row6)
 
-            // ── Row 7: Live Wolf | Tournament ────────────────────────────────
+            // ── Row 7: Live Wolf | Join Tournament ────────────────────────────────
             var lwCfg = UIButton.Configuration.plain()
             lwCfg.baseForegroundColor = .label
             lwCfg.background.backgroundColor = UIColor.systemGray4
@@ -5876,11 +5920,11 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         }
 
         // Update frame every layout pass (handles rotation / safe-area changes)
-        // Normal:     44 + 8 + 44 + 8 + 40 + 8 + 44 + 8 + 40 + 8 + 32 + 8 + 32 = 324
-        // Match Play: rows 1+2 hidden → subtract 44 + 8 + 44 + 8 = 104
+        // Normal:     44 + 8 + 40 + 8 + 40 + 8 + 44 + 8 + 40 + 8 + 32 + 8 + 32 = 320
+        // Match Play: rows 1+2 hidden → subtract 44 + 8 + 40 + 8 = 100 → 320 - 100 = 220
         // Team Tee rows are additive: seg (34+8) + peek (16+8) or container (players × 28 + footer 20 + 8)
         let isMatchPlay = GameManager.shared.currentGame?.resolvedGameType.isMatchPlay == true
-        var stackHeight: CGFloat = isMatchPlay ? 220 : 324
+        var stackHeight: CGFloat = isMatchPlay ? 220 : 320
 
         if let g = GameManager.shared.currentGame,
            g.teamTeeSettings?.isEnabled == true,
@@ -6197,6 +6241,18 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         styleWolfButtons()
     }
 
+    func scrollViewDidScroll(_ scrollView: UIScrollView) {
+        guard !isAdjustingScrollState else { return }
+        isAdjustingScrollState = true
+        defer { isAdjustingScrollState = false }
+        guard scrollView.contentOffset.y > 0 else { return }
+        scrollView.isScrollEnabled = true
+        let minH = scrollView.bounds.height + scrollView.contentOffset.y
+        if scrollView.contentSize.height < minH {
+            scrollView.contentSize = CGSize(width: scrollView.bounds.width, height: minH)
+        }
+    }
+
     private func relayoutScoringPage() {
         guard let g = GameManager.shared.currentGame,
               g.resolvedGameType.supportsSevenPlayers,
@@ -6210,11 +6266,17 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         guard activeCount >= 6 else {
             // Move extra rows offscreen (applyInactiveSlotVisibility will also hide them)
             for slot in 5..<scoreFields.count { moveRowOffscreen(slot: slot) }
-            // Restore non-scrolling layout for ≤5 players
-            if let sv = gameContentScrollView, sv.isScrollEnabled {
-                sv.isScrollEnabled = false
-                sv.setContentOffset(.zero, animated: false)
-                sv.contentInset = .zero
+            // Safety net: if offset drifted while scroll was on, re-enable so the user can drag back.
+            if let sv = gameContentScrollView {
+                let notAtTop = sv.contentOffset.y > 0
+                if sv.isScrollEnabled != notAtTop {
+                    sv.isScrollEnabled = notAtTop
+                    if !notAtTop { sv.setContentOffset(.zero, animated: false); sv.contentInset = .zero }
+                }
+                if notAtTop {
+                    sv.contentSize = CGSize(width: sv.bounds.width,
+                                            height: sv.bounds.height + sv.contentOffset.y)
+                }
             }
             return
         }
@@ -6263,18 +6325,21 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         bottomStack.frame.origin.y = lastRowBottom
         bottomSeparator?.frame.origin.y = lastRowBottom - 6
 
-        // Enable scrolling when 7-player content overflows above the tab bar
+        // Enable scrolling when content overflows, or as a safety net when offset has drifted.
         if let sv = gameContentScrollView {
             let tabBarH: CGFloat = (liveTabBar?.isHidden == false)
                 ? (liveTabBarHeightConstraint?.constant ?? 44) : 0
             let safeBottom    = view.safeAreaLayoutGuide.layoutFrame.maxY
             let usableBottom  = safeBottom - tabBarH
             let contentBottom = lastRowBottom + stackH + 8
-            let needsScroll   = contentBottom > usableBottom
             let bottomInset   = sv.bounds.height - usableBottom
-            sv.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
-            sv.contentSize = CGSize(width: sv.bounds.width,
-                                    height: needsScroll ? contentBottom : sv.bounds.height)
+            // Safety net: also enable if offset has drifted so the user can drag back to top.
+            let needsScroll   = contentBottom > usableBottom || sv.contentOffset.y > 0
+            // When the safety net fires, inflate contentSize so the view is scrollable back to origin.
+            let minH          = sv.bounds.height + max(0, sv.contentOffset.y)
+            sv.contentInset   = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
+            sv.contentSize    = CGSize(width: sv.bounds.width,
+                                       height: needsScroll ? max(contentBottom, minH) : contentBottom)
             if sv.isScrollEnabled != needsScroll {
                 sv.isScrollEnabled = needsScroll
                 if !needsScroll { sv.setContentOffset(.zero, animated: false) }
