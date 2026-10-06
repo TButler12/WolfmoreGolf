@@ -2451,8 +2451,8 @@ let SHANGRI_LA_CH_PARS: [Int] = [
 ]
 
 let SHANGRI_LA_CH_HCS: [Int] = [
-    9,17,13,5,11,15,3,1,7,
-    11,15,5,7,17,3,9,13,1
+    10,14,18,4,6,16,12,2,8,
+    5,17,7,11,15,1,9,13,3
 ]
 
 let SHANGRI_LA_CH_TEES: [TeeInfo] = [
@@ -3598,7 +3598,7 @@ let SHOOTING_STAR_CHAMPIONSHIP_HCS: [Int] = [
 // MARK: Cornerstone — Montrose, CO (Greg Norman)
 private let CORNERSTONE_ID = UUID(uuidString: "A0F2F5C3-9AC5-4D86-9A1F-0B6D77F6A108")!
 let CORNERSTONE_PARS_TODO: [Int] = [4,5,3,4,3,5,3,4,5,4,3,4,5,4,4,5,3,4]
-let CORNERSTONE_HCS_TODO:  [Int] = [15,7,11,5,3,1,17,3,9,12,10,2,4,14,18,6,16,8]
+let CORNERSTONE_HCS_TODO:  [Int] = [15,7,11,5,13,1,17,3,9,12,10,2,4,14,18,6,16,8]
 
 // MARK: Manele Golf Course — Nicklaus — Lanai City, HI
 // Par 72 | 7,039 yds | Rating 74.0 | Slope 134 | Type: Resort | Architect: Jack Nicklaus
@@ -4251,7 +4251,7 @@ let HARRISON_LAKE_CC_PARS: [Int] = [
 ]
 
 let HARRISON_LAKE_CC_HCS: [Int] = [
-    9,3,1,5,7,15,13,13,17,
+    9,3,1,5,7,15,13,11,17,
     2,6,4,16,10,18,14,12,8
 ]
 
