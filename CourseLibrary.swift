@@ -5870,15 +5870,15 @@ let RTJ_CAPITOL_HILL_JUDGE_HCS: [Int] = [
 ]
 
 let RTJ_CAPITOL_HILL_JUDGE_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Black", yardage: 7807, rating: 78.5, slope: 147),
-    TeeInfo(teeName: "Purple", yardage: 7151, rating: 75.1, slope: 142),
-    TeeInfo(teeName: "Orange", yardage: 6577, rating: 71.7, slope: 131),
-    TeeInfo(teeName: "White", yardage: 6120, rating: 69.6, slope: 130),
-    TeeInfo(teeName: "Gold", yardage: 5215, rating: 65.9, slope: 116),
-    TeeInfo(teeName: "Teal", yardage: 4854, rating: 64.7, slope: 115),
-    TeeInfo(teeName: "Ladies White", yardage: 6120, rating: 75.6, slope: 139),
-    TeeInfo(teeName: "Ladies Gold", yardage: 5215, rating: 69.9, slope: 126),
-    TeeInfo(teeName: "Ladies Teal", yardage: 4854, rating: 68.4, slope: 123)
+    TeeInfo(teeName: "Black",        yardage: 7806, rating: 78.5, slope: 147),
+    TeeInfo(teeName: "Purple",       yardage: 7141, rating: 75.1, slope: 142),
+    TeeInfo(teeName: "Orange",       yardage: 6579, rating: 71.7, slope: 131),
+    TeeInfo(teeName: "White",        yardage: 6130, rating: 69.6, slope: 130),
+    TeeInfo(teeName: "Gold",         yardage: 5262, rating: 65.9, slope: 116),
+    TeeInfo(teeName: "Teal",         yardage: 4411, rating: 64.7, slope: 115),
+    TeeInfo(teeName: "Ladies White", yardage: 6130, rating: 75.6, slope: 139),
+    TeeInfo(teeName: "Ladies Gold",  yardage: 5262, rating: 69.9, slope: 126),
+    TeeInfo(teeName: "Ladies Teal",  yardage: 4411, rating: 68.4, slope: 123)
 ]
 private let RTJ_CAPITOL_HILL_LEGISLATOR_ID = UUID(uuidString: "22222222-BBBB-4444-CCCC-000000000002")!
 
@@ -6209,6 +6209,18 @@ let RTJ_OXMOOR_RIDGE_HCS: [Int] = [
 8,4,2,12,16,6,14,18,10,
 9,7,3,17,13,11,15,5,1
 ]
+
+let RTJ_OXMOOR_RIDGE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Purple",        yardage: 7055, rating: 74.3, slope: 141),
+    TeeInfo(teeName: "Orange",        yardage: 6527, rating: 72.1, slope: 136),
+    TeeInfo(teeName: "White",         yardage: 6148, rating: 70.3, slope: 133),
+    TeeInfo(teeName: "Gold",          yardage: 5546, rating: 67.3, slope: 128),
+    TeeInfo(teeName: "Teal",          yardage: 4974, rating: 64.9, slope: 120),
+    TeeInfo(teeName: "Ladies Orange", yardage: 6527, rating: 78.6, slope: 141),
+    TeeInfo(teeName: "Ladies White",  yardage: 6148, rating: 76.4, slope: 137),
+    TeeInfo(teeName: "Ladies Gold",   yardage: 5546, rating: 72.8, slope: 128),
+    TeeInfo(teeName: "Ladies Teal",   yardage: 4974, rating: 69.4, slope: 122)
+]
 // Valley
 private let RTJ_OXMOOR_VALLEY_ID = UUID(uuidString: "D4000002-0000-4444-BBBB-000000000002")!
 
@@ -6221,6 +6233,18 @@ let RTJ_OXMOOR_VALLEY_HCS: [Int] = [
 5,15,9,17,7,13,3,11,1,
 6,14,4,18,2,10,16,12,8
 ]
+
+let RTJ_OXMOOR_VALLEY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Purple",        yardage: 7327, rating: 75.6, slope: 147),
+    TeeInfo(teeName: "Orange",        yardage: 6624, rating: 72.1, slope: 141),
+    TeeInfo(teeName: "White",         yardage: 6043, rating: 69.3, slope: 130),
+    TeeInfo(teeName: "Gold",          yardage: 5297, rating: 65.9, slope: 124),
+    TeeInfo(teeName: "Teal",          yardage: 4625, rating: 62.9, slope: 112),
+    TeeInfo(teeName: "Ladies Orange", yardage: 6624, rating: 78.9, slope: 147),
+    TeeInfo(teeName: "Ladies White",  yardage: 6043, rating: 75.4, slope: 143),
+    TeeInfo(teeName: "Ladies Gold",   yardage: 5297, rating: 71.3, slope: 133),
+    TeeInfo(teeName: "Ladies Teal",   yardage: 4625, rating: 67.1, slope: 115)
+]
 private let RTJ_ROSS_BRIDGE_ID = UUID(uuidString: "E5000001-0000-4444-AAAA-000000000001")!
 
 let RTJ_ROSS_BRIDGE_PARS: [Int] = [
@@ -6232,19 +6256,91 @@ let RTJ_ROSS_BRIDGE_HCS: [Int] = [
 3,13,1,15,7,11,5,17,9,
 2,16,18,6,14,12,8,10,4
 ]
-private let RTJ_SILVER_LAKES_BACK_HEART_ID = UUID(uuidString: "F6000001-0000-4444-AAAA-000000000001")!
 
-let RTJ_SILVER_LAKES_BACK_HEART_PARS: [Int] = [
+let RTJ_ROSS_BRIDGE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 8168, rating: 78.4, slope: 147),
+    TeeInfo(teeName: "Purple", yardage: 7407, rating: 75.0, slope: 140),
+    TeeInfo(teeName: "Orange", yardage: 6846, rating: 72.0, slope: 134),
+    TeeInfo(teeName: "White+", yardage: 6546, rating: 70.7, slope: 130),
+    TeeInfo(teeName: "White",  yardage: 6227, rating: 69.6, slope: 129),
+    TeeInfo(teeName: "Gold",   yardage: 5460, rating: 67.1, slope: 124),
+    TeeInfo(teeName: "Teal",   yardage: 4817, rating: 63.4, slope: 118)
+]
+// Silver Lakes — Heartbreaker / Backbreaker (UUID reused from BACK_HEART)
+private let RTJ_SILVER_LAKES_HB_ID = UUID(uuidString: "F6000001-0000-4444-AAAA-000000000001")!
+
+let RTJ_SILVER_LAKES_HB_PARS: [Int] = [
+5,4,4,4,3,4,5,3,4,
+4,3,4,4,3,4,5,4,5
+]
+
+let RTJ_SILVER_LAKES_HB_HCS: [Int] = [
+15,7,5,11,13,9,3,17,1,
+8,16,4,6,14,12,10,2,18
+]
+
+let RTJ_SILVER_LAKES_HB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",        yardage: 7663, rating: 76.7, slope: 142),
+    TeeInfo(teeName: "Purple",       yardage: 7014, rating: 74.4, slope: 137),
+    TeeInfo(teeName: "Orange",       yardage: 6533, rating: 71.8, slope: 128),
+    TeeInfo(teeName: "White",        yardage: 6034, rating: 69.3, slope: 126),
+    TeeInfo(teeName: "Gold",         yardage: 5550, rating: 67.2, slope: 122),
+    TeeInfo(teeName: "Teal",         yardage: 4761, rating: 64.5, slope: 111),
+    TeeInfo(teeName: "Ladies White", yardage: 6034, rating: 75.5, slope: 145),
+    TeeInfo(teeName: "Ladies Gold",  yardage: 5550, rating: 72.9, slope: 140),
+    TeeInfo(teeName: "Ladies Teal",  yardage: 4761, rating: 69.4, slope: 123)
+]
+
+// Silver Lakes — Backbreaker / Mindbreaker
+private let RTJ_SILVER_LAKES_BM_ID = UUID(uuidString: "1B434604-9CB4-43A3-9BF2-038775B53BA0")!
+
+let RTJ_SILVER_LAKES_BM_PARS: [Int] = [
 4,3,4,4,3,4,5,4,5,
+5,3,4,3,5,4,4,4,4
+]
+
+let RTJ_SILVER_LAKES_BM_HCS: [Int] = [
+7,15,3,5,13,11,9,1,17,
+10,14,4,12,18,2,16,6,8
+]
+
+let RTJ_SILVER_LAKES_BM_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",        yardage: 7491, rating: 76.2, slope: 147),
+    TeeInfo(teeName: "Purple",       yardage: 6976, rating: 74.5, slope: 143),
+    TeeInfo(teeName: "Orange",       yardage: 6397, rating: 71.8, slope: 137),
+    TeeInfo(teeName: "White",        yardage: 5977, rating: 69.4, slope: 131),
+    TeeInfo(teeName: "Gold",         yardage: 5421, rating: 67.0, slope: 126),
+    TeeInfo(teeName: "Teal",         yardage: 4686, rating: 64.1, slope: 109),
+    TeeInfo(teeName: "Ladies White", yardage: 5977, rating: 76.3, slope: 149),
+    TeeInfo(teeName: "Ladies Gold",  yardage: 5421, rating: 73.1, slope: 142),
+    TeeInfo(teeName: "Ladies Teal",  yardage: 4686, rating: 68.8, slope: 122)
+]
+
+// Silver Lakes — Mindbreaker / Heartbreaker
+private let RTJ_SILVER_LAKES_MH_ID = UUID(uuidString: "6E121F4D-73B3-4CF4-9649-8ED958B2D05C")!
+
+let RTJ_SILVER_LAKES_MH_PARS: [Int] = [
+5,3,4,3,5,4,4,4,4,
 5,4,4,4,3,4,5,3,4
 ]
 
-let RTJ_SILVER_LAKES_BACK_HEART_HCS: [Int] = [
-    // Backbreaker odd
-    7,15,3,5,13,11,9,1,17,
-    // Heartbreaker even
-    16,8,6,12,14,10,4,18,2
+let RTJ_SILVER_LAKES_MH_HCS: [Int] = [
+9,13,3,11,17,1,15,5,7,
+16,8,6,12,14,10,4,18,2
 ]
+
+let RTJ_SILVER_LAKES_MH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",        yardage: 7456, rating: 75.9, slope: 146),
+    TeeInfo(teeName: "Purple",       yardage: 6902, rating: 73.5, slope: 140),
+    TeeInfo(teeName: "Orange",       yardage: 6534, rating: 71.8, slope: 137),
+    TeeInfo(teeName: "White",        yardage: 6077, rating: 69.6, slope: 131),
+    TeeInfo(teeName: "Gold",         yardage: 5491, rating: 67.1, slope: 125),
+    TeeInfo(teeName: "Teal",         yardage: 4791, rating: 64.6, slope: 107),
+    TeeInfo(teeName: "Ladies White", yardage: 6077, rating: 75.8, slope: 146),
+    TeeInfo(teeName: "Ladies Gold",  yardage: 5491, rating: 72.8, slope: 140),
+    TeeInfo(teeName: "Ladies Teal",  yardage: 4791, rating: 68.4, slope: 119)
+]
+
 private let RTJ_SHOALS_FIGHTING_JOE_ID = UUID(uuidString: "A7000001-0000-4444-AAAA-000000000001")!
 
 let RTJ_SHOALS_FIGHTING_JOE_PARS: [Int] = [
@@ -6256,6 +6352,16 @@ let RTJ_SHOALS_FIGHTING_JOE_HCS: [Int] = [
 3,9,7,13,15,5,1,11,17,
 6,14,2,16,10,12,8,4,18
 ]
+
+let RTJ_SHOALS_FIGHTING_JOE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",       yardage: 8092, rating: 78.6, slope: 146),
+    TeeInfo(teeName: "Purple",      yardage: 7256, rating: 74.5, slope: 139),
+    TeeInfo(teeName: "Orange",      yardage: 6768, rating: 72.1, slope: 134),
+    TeeInfo(teeName: "White",       yardage: 6294, rating: 70.0, slope: 124),
+    TeeInfo(teeName: "Gold",        yardage: 5595, rating: 67.6, slope: 120),
+    TeeInfo(teeName: "Teal",        yardage: 4911, rating: 64.2, slope: 113),
+    TeeInfo(teeName: "Ladies Teal", yardage: 4911, rating: 69.1, slope: 117)
+]
 private let RTJ_SHOALS_SCHOOLMASTER_ID = UUID(uuidString: "A7000002-0000-4444-BBBB-000000000002")!
 
 let RTJ_SHOALS_SCHOOLMASTER_PARS: [Int] = [
@@ -6266,7 +6372,15 @@ let RTJ_SHOALS_SCHOOLMASTER_PARS: [Int] = [
 let RTJ_SHOALS_SCHOOLMASTER_HCS: [Int] = [
 13,17,7,3,9,15,11,5,1,
 16,4,2,6,12,8,18,10,14
+]
 
+let RTJ_SHOALS_SCHOOLMASTER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",       yardage: 7971, rating: 77.6, slope: 148),
+    TeeInfo(teeName: "Purple",      yardage: 7386, rating: 74.6, slope: 141),
+    TeeInfo(teeName: "Orange",      yardage: 6850, rating: 72.2, slope: 136),
+    TeeInfo(teeName: "White",       yardage: 6332, rating: 69.2, slope: 130),
+    TeeInfo(teeName: "Gold",        yardage: 5848, rating: 67.7, slope: 128),
+    TeeInfo(teeName: "Ladies Teal", yardage: 5224, rating: 70.2, slope: 126)
 ]
 // MARK: Steelwood Country Club (Gold)
 private let STEELWOOD_CC_GOLD_ID = UUID(uuidString: "C8D7F4A1-2E33-4A8A-9D11-7B5C2F6A9012")!
@@ -17886,7 +18000,164 @@ private enum BuiltIns {
           website: "https://www.rtjgolf.com/highlandoaks/",
           address: "904 Royal Pkwy, Dothan, AL 36305"
         ),
-        
+
+        c(RTJ_CAPITOL_HILL_JUDGE_ID,
+          "Capitol Hill (Judge)",
+          RTJ_CAPITOL_HILL_JUDGE_PARS,
+          RTJ_CAPITOL_HILL_JUDGE_HCS,
+          RTJ_CAPITOL_HILL_JUDGE_TEES,
+          country: "USA",
+          state: "AL",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(334) 285-1114",
+          website: "https://www.rtjgolf.com/capitolhill/",
+          address: "2600 Constitution Avenue, Prattville, AL 36066"
+        ),
+
+        c(RTJ_CAPITOL_HILL_LEGISLATOR_ID,
+          "Capitol Hill (Legislator)",
+          RTJ_CAPITOL_HILL_LEGISLATOR_PARS,
+          RTJ_CAPITOL_HILL_LEGISLATOR_HCS,
+          RTJ_CAPITOL_HILL_LEGISLATOR_TEES,
+          country: "USA",
+          state: "AL",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(334) 285-1114",
+          website: "https://www.rtjgolf.com/capitolhill/",
+          address: "2600 Constitution Avenue, Prattville, AL 36066"
+        ),
+
+        c(RTJ_CAPITOL_HILL_SENATOR_ID,
+          "Capitol Hill (Senator)",
+          RTJ_CAPITOL_HILL_SENATOR_PARS,
+          RTJ_CAPITOL_HILL_SENATOR_HCS,
+          RTJ_CAPITOL_HILL_SENATOR_TEES,
+          country: "USA",
+          state: "AL",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(334) 285-1114",
+          website: "https://www.rtjgolf.com/capitolhill/",
+          address: "2600 Constitution Avenue, Prattville, AL 36066"
+        ),
+
+        c(RTJ_OXMOOR_RIDGE_ID,
+          "Oxmoor Valley (Ridge)",
+          RTJ_OXMOOR_RIDGE_PARS,
+          RTJ_OXMOOR_RIDGE_HCS,
+          RTJ_OXMOOR_RIDGE_TEES,
+          country: "USA",
+          state: "AL",
+          region: "Birmingham",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(205) 942-1177",
+          website: "https://www.rtjgolf.com/oxmoorvalley/",
+          address: "100 SunBelt Pkwy, Birmingham, AL 35211"
+        ),
+
+        c(RTJ_OXMOOR_VALLEY_ID,
+          "Oxmoor Valley (Valley)",
+          RTJ_OXMOOR_VALLEY_PARS,
+          RTJ_OXMOOR_VALLEY_HCS,
+          RTJ_OXMOOR_VALLEY_TEES,
+          country: "USA",
+          state: "AL",
+          region: "Birmingham",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(205) 942-1177",
+          website: "https://www.rtjgolf.com/oxmoorvalley/",
+          address: "100 SunBelt Pkwy, Birmingham, AL 35211"
+        ),
+
+        c(RTJ_ROSS_BRIDGE_ID,
+          "Ross Bridge",
+          RTJ_ROSS_BRIDGE_PARS,
+          RTJ_ROSS_BRIDGE_HCS,
+          RTJ_ROSS_BRIDGE_TEES,
+          country: "USA",
+          state: "AL",
+          region: "Birmingham",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(205) 949-3085",
+          website: "https://www.rtjgolf.com/rossbridge/",
+          address: "4000 Grand Avenue, Hoover, AL 35226"
+        ),
+
+        c(RTJ_SILVER_LAKES_HB_ID,
+          "Silver Lakes (Heartbreaker / Backbreaker)",
+          RTJ_SILVER_LAKES_HB_PARS,
+          RTJ_SILVER_LAKES_HB_HCS,
+          RTJ_SILVER_LAKES_HB_TEES,
+          country: "USA",
+          state: "AL",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(256) 892-3268",
+          website: "https://www.rtjgolf.com/silverlakes/",
+          address: "1 SunBelt Pkwy, Glencoe, AL 35905"
+        ),
+
+        c(RTJ_SILVER_LAKES_BM_ID,
+          "Silver Lakes (Backbreaker / Mindbreaker)",
+          RTJ_SILVER_LAKES_BM_PARS,
+          RTJ_SILVER_LAKES_BM_HCS,
+          RTJ_SILVER_LAKES_BM_TEES,
+          country: "USA",
+          state: "AL",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(256) 892-3268",
+          website: "https://www.rtjgolf.com/silverlakes/",
+          address: "1 SunBelt Pkwy, Glencoe, AL 35905"
+        ),
+
+        c(RTJ_SILVER_LAKES_MH_ID,
+          "Silver Lakes (Mindbreaker / Heartbreaker)",
+          RTJ_SILVER_LAKES_MH_PARS,
+          RTJ_SILVER_LAKES_MH_HCS,
+          RTJ_SILVER_LAKES_MH_TEES,
+          country: "USA",
+          state: "AL",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(256) 892-3268",
+          website: "https://www.rtjgolf.com/silverlakes/",
+          address: "1 SunBelt Pkwy, Glencoe, AL 35905"
+        ),
+
+        c(RTJ_SHOALS_FIGHTING_JOE_ID,
+          "The Shoals (Fighting Joe)",
+          RTJ_SHOALS_FIGHTING_JOE_PARS,
+          RTJ_SHOALS_FIGHTING_JOE_HCS,
+          RTJ_SHOALS_FIGHTING_JOE_TEES,
+          country: "USA",
+          state: "AL",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(256) 446-5111",
+          website: "https://www.rtjgolf.com/theshoals/",
+          address: "One Robert Trent Jones Trail, Muscle Shoals, AL 35661"
+        ),
+
+        c(RTJ_SHOALS_SCHOOLMASTER_ID,
+          "The Shoals (Schoolmaster)",
+          RTJ_SHOALS_SCHOOLMASTER_PARS,
+          RTJ_SHOALS_SCHOOLMASTER_HCS,
+          RTJ_SHOALS_SCHOOLMASTER_TEES,
+          country: "USA",
+          state: "AL",
+          architect: "Robert Trent Jones, Sr.",
+          type: "RTJ Trail",
+          phone: "(256) 446-5111",
+          website: "https://www.rtjgolf.com/theshoals/",
+          address: "One Robert Trent Jones Trail, Muscle Shoals, AL 35661"
+        ),
+
         c(RTJ_LAKEWOOD_AZALEA_ID,
           "Lakewood Club (Azalea)",
           RTJ_LAKEWOOD_AZALEA_PARS,
