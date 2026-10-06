@@ -22,3 +22,7 @@ Every 18-hole layout must have exactly 18 pars and 18 handicaps. Handicaps must 
 ## Where to Work
 
 Work only in /Users/tombutler/Developer/WolfmoreGolf on the main branch. Never create or edit files in a worktree, a .claude/worktrees folder, or a /tmp copy.
+
+## Building
+
+Always build with the WolfmoreGolf scheme: `xcodebuild -scheme WolfmoreGolf`.

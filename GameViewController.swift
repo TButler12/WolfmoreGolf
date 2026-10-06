@@ -24,6 +24,15 @@ private final class PinnedScrollView: UIScrollView {
         guard isScrollEnabled else { return }
         super.scrollRectToVisible(rect, animated: animated)
     }
+#if DEBUG
+    override var contentOffset: CGPoint {
+        didSet {
+            guard contentOffset != .zero, !isDragging, !isDecelerating else { return }
+            print("⚠️ Player list offset shifted to \(contentOffset)")
+            Thread.callStackSymbols.forEach { print("  \($0)") }
+        }
+    }
+#endif
 }
 
 final class GameViewController: UIViewController, MFMessageComposeViewControllerDelegate, UIScrollViewDelegate {
@@ -208,6 +217,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // Storyboard subview upward shift to close gap below dynamic header
     private var ibSubviews: [UIView] = []
     private var storyboardContentShifted = false
+    private var lastShiftedHeaderMaxY: CGFloat = 0
 
     // Scroll container for scoring page — enabled only when 7-player content overflows tab bar
     private var gameContentScrollView: UIScrollView?
@@ -935,9 +945,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func applyStoryboardShiftIfNeeded() {
-        guard !storyboardContentShifted,
-              let header = gameHeaderView,
+        guard let header = gameHeaderView,
               header.frame.maxY > 50 else { return }
+
+        let headerMaxY = header.frame.maxY
+        // Re-run if this is the first shift OR if the header grew/shrank since last time
+        // (e.g. the $ Money / Pts toggle appearing makes the header ~40pt taller).
+        guard !storyboardContentShifted || lastShiftedHeaderMaxY != headerMaxY else { return }
 
         // Confirm player rows are laid out before shifting.
         let sortedFields = scoreFields.sorted(by: { $0.tag < $1.tag })
@@ -951,10 +965,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             .map { $0.frame.minY }
             .min() ?? firstField.frame.minY
 
-        let targetTopmostY = header.frame.maxY + 4
+        let targetTopmostY = headerMaxY + 4
         let shift = topmostY - targetTopmostY  // positive → content too low (shift up); negative → shift down
 
         storyboardContentShifted = true
+        lastShiftedHeaderMaxY = headerMaxY
         guard abs(shift) > 2 else { return }
 
         for sv in ibSubviews {
@@ -2462,6 +2477,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         updateStablefordToggleVisibility()
         applyInactiveSlotVisibility()
+        view.setNeedsLayout()
     }
 
     private func updateStablefordToggleVisibility() {
@@ -5919,28 +5935,14 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             applyGameTypeUI()
         }
 
-        // Update frame every layout pass (handles rotation / safe-area changes)
-        // Normal:     44 + 8 + 40 + 8 + 40 + 8 + 44 + 8 + 40 + 8 + 32 + 8 + 32 = 320
-        // Match Play: rows 1+2 hidden → subtract 44 + 8 + 40 + 8 = 100 → 320 - 100 = 220
-        // Team Tee rows are additive: seg (34+8) + peek (16+8) or container (players × 28 + footer 20 + 8)
-        let isMatchPlay = GameManager.shared.currentGame?.resolvedGameType.isMatchPlay == true
-        var stackHeight: CGFloat = isMatchPlay ? 220 : 320
-
-        if let g = GameManager.shared.currentGame,
-           g.teamTeeSettings?.isEnabled == true,
-           teamTeeSeg?.isHidden == false {
-            stackHeight += 34 + 8  // segmented control row
-            if teamTeeTabIndex == 0 {
-                stackHeight += 16 + 8  // peek label
-            } else {
-                let activeCount = (0..<MAX_PLAYERS).filter { seat in
-                    (seat < g.playerActivated.count && g.playerActivated[seat]) &&
-                    (seat < g.playerNames.count &&
-                     !g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                }.count
-                stackHeight += CGFloat(activeCount) * 28 + 20 + 8  // player rows + footer + spacing
-            }
-        }
+        // Measure the stack from its actual visible rows so this never drifts out of sync.
+        // systemLayoutSizeFitting collapses hidden arranged subviews automatically, so any
+        // row that shows or hides (match play, team tee, live summary strip) is counted correctly.
+        let stackHeight = bottomStackView?.systemLayoutSizeFitting(
+            CGSize(width: totalW, height: UIView.layoutFittingCompressedSize.height),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel
+        ).height ?? 268
 
         bottomStackView?.frame = CGRect(x: leading, y: row1Y, width: totalW, height: stackHeight)
         sup.bringSubviewToFront(bottomStackView!)
@@ -6242,15 +6244,12 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     }
 
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        guard !isAdjustingScrollState else { return }
+        guard !isAdjustingScrollState,
+              !scrollView.isScrollEnabled,
+              scrollView.contentOffset != .zero else { return }
         isAdjustingScrollState = true
-        defer { isAdjustingScrollState = false }
-        guard scrollView.contentOffset.y > 0 else { return }
-        scrollView.isScrollEnabled = true
-        let minH = scrollView.bounds.height + scrollView.contentOffset.y
-        if scrollView.contentSize.height < minH {
-            scrollView.contentSize = CGSize(width: scrollView.bounds.width, height: minH)
-        }
+        scrollView.setContentOffset(.zero, animated: false)
+        isAdjustingScrollState = false
     }
 
     private func relayoutScoringPage() {
@@ -6264,18 +6263,22 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         }.count
 
         guard activeCount >= 6 else {
-            // Move extra rows offscreen (applyInactiveSlotVisibility will also hide them)
             for slot in 5..<scoreFields.count { moveRowOffscreen(slot: slot) }
-            // Safety net: if offset drifted while scroll was on, re-enable so the user can drag back.
-            if let sv = gameContentScrollView {
-                let notAtTop = sv.contentOffset.y > 0
-                if sv.isScrollEnabled != notAtTop {
-                    sv.isScrollEnabled = notAtTop
-                    if !notAtTop { sv.setContentOffset(.zero, animated: false); sv.contentInset = .zero }
-                }
-                if notAtTop {
-                    sv.contentSize = CGSize(width: sv.bounds.width,
-                                            height: sv.bounds.height + sv.contentOffset.y)
+            // Same overflow check as the 6+ path so landscape scrolls with any player count.
+            if let sv = gameContentScrollView, let bottomStack = bottomStackView,
+               bottomStack.frame != .zero {
+                let tabBarH: CGFloat = (liveTabBar?.isHidden == false)
+                    ? (liveTabBarHeightConstraint?.constant ?? 44) : 0
+                let usableBottom  = view.safeAreaLayoutGuide.layoutFrame.maxY - tabBarH
+                let contentBottom = bottomStack.frame.maxY + 8
+                let needsScroll   = contentBottom > usableBottom
+                let bottomInset   = sv.bounds.height - usableBottom
+                sv.contentInset  = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
+                sv.contentSize   = CGSize(width: sv.bounds.width,
+                                          height: needsScroll ? contentBottom : sv.bounds.height)
+                if sv.isScrollEnabled != needsScroll {
+                    sv.isScrollEnabled = needsScroll
+                    if !needsScroll { sv.setContentOffset(.zero, animated: false) }
                 }
             }
             return
@@ -6292,7 +6295,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
 
         // How much space can the bottom stack give up?
         let safeBottom = view.safeAreaLayoutGuide.layoutFrame.maxY
-        let stackH = bottomStack.frame.height > 0 ? bottomStack.frame.height : 324
+        let stackH = bottomStack.frame.height > 0 ? bottomStack.frame.height : 268
         let stackBaseY = pressedPushed2.frame.minY  // reset each pass by layoutBottomControls
         let availablePush = max(0, safeBottom - (stackBaseY + stackH))
 
@@ -6325,21 +6328,17 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         bottomStack.frame.origin.y = lastRowBottom
         bottomSeparator?.frame.origin.y = lastRowBottom - 6
 
-        // Enable scrolling when content overflows, or as a safety net when offset has drifted.
+        // Enable scrolling when 7-player content overflows above the tab bar.
         if let sv = gameContentScrollView {
             let tabBarH: CGFloat = (liveTabBar?.isHidden == false)
                 ? (liveTabBarHeightConstraint?.constant ?? 44) : 0
-            let safeBottom    = view.safeAreaLayoutGuide.layoutFrame.maxY
-            let usableBottom  = safeBottom - tabBarH
+            let usableBottom  = view.safeAreaLayoutGuide.layoutFrame.maxY - tabBarH
             let contentBottom = lastRowBottom + stackH + 8
+            let needsScroll   = contentBottom > usableBottom
             let bottomInset   = sv.bounds.height - usableBottom
-            // Safety net: also enable if offset has drifted so the user can drag back to top.
-            let needsScroll   = contentBottom > usableBottom || sv.contentOffset.y > 0
-            // When the safety net fires, inflate contentSize so the view is scrollable back to origin.
-            let minH          = sv.bounds.height + max(0, sv.contentOffset.y)
             sv.contentInset   = UIEdgeInsets(top: 0, left: 0, bottom: bottomInset, right: 0)
             sv.contentSize    = CGSize(width: sv.bounds.width,
-                                       height: needsScroll ? max(contentBottom, minH) : contentBottom)
+                                       height: needsScroll ? contentBottom : sv.bounds.height)
             if sv.isScrollEnabled != needsScroll {
                 sv.isScrollEnabled = needsScroll
                 if !needsScroll { sv.setContentOffset(.zero, animated: false) }
