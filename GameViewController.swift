@@ -1071,10 +1071,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             tabBarHeight = 0
         }
         liveNassauBottomConstraint?.constant = -(16 + tabBarHeight)
-        // Defer animation to avoid re-entrant viewDidLayoutSubviews when called from a layout pass.
-        // Calling layoutIfNeeded() synchronously here triggers viewDidLayoutSubviews before
-        // applyStoryboardShiftIfNeeded runs, causing the Sort button and Wolf-button row to be
-        // positioned with pre-shift coordinates.
+        // MUST stay async — do not make this call synchronous.
+        // In Nassau mode, viewWillAppear calls installLiveNassauButtonIfNeeded(), which
+        // calls here, which would call view.layoutIfNeeded() before the real layout cycle
+        // starts. That premature drain causes applyStoryboardShiftIfNeeded to run inside
+        // layoutIfNeeded's passes, so repositionSortButton and layoutBottomControls never
+        // see the post-shift coordinates. Deferring to the next run-loop turn lets the
+        // normal viewDidLayoutSubviews sequence finish first; the animation fires cleanly
+        // after the shift has already been applied.
         DispatchQueue.main.async { [weak self] in
             guard let self else { return }
             UIView.animate(withDuration: 0.2) { self.view.layoutIfNeeded() }
