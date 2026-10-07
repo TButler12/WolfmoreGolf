@@ -1014,9 +1014,9 @@ enum NassauEngine {
         )
     }
 
-    /// Signed net amount from team-1's perspective.
+    /// Signed net amount from team-1's perspective including only SETTLED bets.
     /// Positive = team-1 wins money, negative = team-2 wins money, zero = even.
-    /// Only completed bets and presses are counted.
+    /// Only fully-completed segments and presses are counted.
     static func netNassauDelta(for match: NassauMatch, gameData: GameData) -> Double {
         var delta: Double = 0
 
@@ -1045,6 +1045,42 @@ enum NassauEngine {
         let team1 = displayNames(for: match.team1PlayerIndexes, playerNames: playerNames)
         let team2 = displayNames(for: match.team2PlayerIndexes, playerNames: playerNames)
         return moneyText(delta: netNassauDelta(for: match, gameData: gameData),
+                         team1: team1, team2: team2)
+    }
+
+    /// Signed projected amount from team-1's perspective.
+    /// Like netNassauDelta but counts any segment or press that has started,
+    /// valued at its CURRENT leader — as if the round ended right now.
+    static func projectedNassauDelta(for match: NassauMatch, gameData: GameData) -> Double {
+        var delta: Double = 0
+
+        if committedHoleCount(gameData: gameData, in: 0...8) > 0,
+           let final = match.frontStatusByHole.last {
+            delta += final > 0 ? match.stake : (final < 0 ? -match.stake : 0)
+        }
+        if committedHoleCount(gameData: gameData, in: 9...17) > 0,
+           let final = match.backStatusByHole.last {
+            delta += final > 0 ? match.stake : (final < 0 ? -match.stake : 0)
+        }
+        if committedHoleCount(gameData: gameData, in: 0...17) > 0,
+           let final = match.overallStatusByHole.last {
+            delta += final > 0 ? match.stake : (final < 0 ? -match.stake : 0)
+        }
+        for press in match.presses {
+            guard let final = press.runningStatus.last else { continue }
+            delta += final > 0 ? press.stake : (final < 0 ? -press.stake : 0)
+        }
+        return delta
+    }
+
+    static func projectedNassauMoneyText(
+        for match: NassauMatch,
+        playerNames: [String],
+        gameData: GameData
+    ) -> String {
+        let team1 = displayNames(for: match.team1PlayerIndexes, playerNames: playerNames)
+        let team2 = displayNames(for: match.team2PlayerIndexes, playerNames: playerNames)
+        return moneyText(delta: projectedNassauDelta(for: match, gameData: gameData),
                          team1: team1, team2: team2)
     }
 

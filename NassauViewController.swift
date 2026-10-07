@@ -348,35 +348,55 @@ final class NassauViewController: UIViewController {
         inner.addArrangedSubview(sep)
         sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
 
-        // NET row
+        // NET (settled) row
         let netRow = UIStackView()
         netRow.axis = .horizontal
         netRow.spacing = 8
 
         let netLabel = UILabel()
-        netLabel.text = "NET"
+        netLabel.text = "NET (settled)"
         netLabel.font = .systemFont(ofSize: 12, weight: .semibold)
         netLabel.textColor = .secondaryLabel
 
-        let spacer = UIView()
-        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let netSpacer = UIView()
+        netSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
         let netValue = UILabel()
         netValue.text = NassauEngine.netNassauMoneyText(for: match, playerNames: game.playerNames, gameData: game)
-        let delta = NassauEngine.netNassauDelta(for: match, gameData: game)
-        if delta > 0 {
-            netValue.textColor = .systemGreen
-        } else if delta < 0 {
-            netValue.textColor = .systemRed
-        } else {
-            netValue.textColor = .secondaryLabel
-        }
+        let settledDelta = NassauEngine.netNassauDelta(for: match, gameData: game)
+        netValue.textColor = settledDelta > 0 ? .systemGreen : (settledDelta < 0 ? .systemRed : .secondaryLabel)
         netValue.font = .systemFont(ofSize: 14, weight: .semibold)
 
         netRow.addArrangedSubview(netLabel)
-        netRow.addArrangedSubview(spacer)
+        netRow.addArrangedSubview(netSpacer)
         netRow.addArrangedSubview(netValue)
         inner.addArrangedSubview(netRow)
+
+        // PROJECTED row — only shown mid-round
+        if !NassauEngine.isOverallComplete(gameData: game) {
+            let projRow = UIStackView()
+            projRow.axis = .horizontal
+            projRow.spacing = 8
+
+            let projLabel = UILabel()
+            projLabel.text = "PROJECTED"
+            projLabel.font = .systemFont(ofSize: 12, weight: .semibold)
+            projLabel.textColor = .secondaryLabel
+
+            let projSpacer = UIView()
+            projSpacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+            let projValue = UILabel()
+            projValue.text = NassauEngine.projectedNassauMoneyText(for: match, playerNames: game.playerNames, gameData: game)
+            let projDelta = NassauEngine.projectedNassauDelta(for: match, gameData: game)
+            projValue.textColor = projDelta > 0 ? .systemGreen : (projDelta < 0 ? .systemRed : .secondaryLabel)
+            projValue.font = .systemFont(ofSize: 14, weight: .semibold)
+
+            projRow.addArrangedSubview(projLabel)
+            projRow.addArrangedSubview(projSpacer)
+            projRow.addArrangedSubview(projValue)
+            inner.addArrangedSubview(projRow)
+        }
 
         return wrapInCard(inner)
     }
