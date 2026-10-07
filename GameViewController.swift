@@ -218,6 +218,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var ibSubviews: [UIView] = []
     private var storyboardContentShifted = false
     private var lastShiftedHeaderMaxY: CGFloat = 0
+    // Original storyboard frames captured once before any shift. Shift is always
+    // computed relative to these so the function is idempotent: re-running with
+    // the same header height produces the same frame positions regardless of
+    // how many times it has already been called.
+    private var originalIBFrames: [ObjectIdentifier: CGRect] = [:]
 
     // Scroll container for scoring page — enabled only when 7-player content overflows tab bar
     private var gameContentScrollView: UIScrollView?
@@ -498,9 +503,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         repositionSortButton()
         installGameHeaderIfNeeded()
         installLiveTabBarIfNeeded()
+        applyStoryboardShiftIfNeeded()      // must run before layoutBottomControls so pressedPushed2 is at its correct Y
         layoutBottomControls()              // must run before installLiveNassauButtonIfNeeded
         installLiveNassauButtonIfNeeded()
-        applyStoryboardShiftIfNeeded()
         refreshPlayerRowCards()
         let wasBuildDone = extraScoringRowsBuilt
         buildExtraScoringRowsIfNeeded()
@@ -949,31 +954,41 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
               header.frame.maxY > 50 else { return }
 
         let headerMaxY = header.frame.maxY
-        // Re-run if this is the first shift OR if the header grew/shrank since last time
-        // (e.g. the $ Money / Pts toggle appearing makes the header ~40pt taller).
-        guard !storyboardContentShifted || lastShiftedHeaderMaxY != headerMaxY else { return }
 
-        // Confirm player rows are laid out before shifting.
-        let sortedFields = scoreFields.sorted(by: { $0.tag < $1.tag })
-        guard let firstField = sortedFields.first, firstField.frame != .zero else { return }
+        // Capture original (pre-shift) frames once, on the first valid layout pass.
+        // We require score fields to be non-zero so we know Auto Layout has finished.
+        if originalIBFrames.isEmpty {
+            let sortedFields = scoreFields.sorted(by: { $0.tag < $1.tag })
+            guard let firstField = sortedFields.first, firstField.frame != .zero else { return }
+            for sv in ibSubviews where sv.frame != .zero {
+                originalIBFrames[ObjectIdentifier(sv)] = sv.frame
+            }
+        }
+        guard !originalIBFrames.isEmpty else { return }
 
-        // Anchor to the topmost VISIBLE storyboard view (the column-header label row), not just
-        // the first score field. Exclude hidden views (holePlaying, parOfHole) which sit near
-        // Y=0 in the storyboard and would otherwise pull everything too far down.
-        let topmostY = ibSubviews
-            .filter { !$0.isHidden && $0.frame != .zero && $0.frame.minY >= 0 }
-            .map { $0.frame.minY }
-            .min() ?? firstField.frame.minY
+        // Skip if the header hasn't moved since our last apply — no work to do.
+        guard lastShiftedHeaderMaxY != headerMaxY else { return }
+
+        // Compute shift entirely from the original frames (idempotent: same inputs → same output
+        // regardless of how many times this has already run or what the current frames are).
+        // This prevents compound shifts when the nav-bar transition temporarily widens the safe
+        // area and changes headerMaxY mid-animation.
+        let originalTopmostY = ibSubviews
+            .filter { !$0.isHidden }
+            .compactMap { originalIBFrames[ObjectIdentifier($0)]?.minY }
+            .filter { $0 >= 0 }
+            .min() ?? 0
+        guard originalTopmostY > 0 else { return }
 
         let targetTopmostY = headerMaxY + 4
-        let shift = topmostY - targetTopmostY  // positive → content too low (shift up); negative → shift down
+        let shift = originalTopmostY - targetTopmostY
 
         storyboardContentShifted = true
         lastShiftedHeaderMaxY = headerMaxY
-        guard abs(shift) > 2 else { return }
 
         for sv in ibSubviews {
-            var f = sv.frame
+            guard let original = originalIBFrames[ObjectIdentifier(sv)] else { continue }
+            var f = original
             f.origin.y -= shift
             sv.frame = f
         }
