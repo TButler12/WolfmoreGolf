@@ -1014,6 +1014,29 @@ enum NassauEngine {
         )
     }
 
+    /// Signed net amount from team-1's perspective.
+    /// Positive = team-1 wins money, negative = team-2 wins money, zero = even.
+    /// Only completed bets and presses are counted.
+    static func netNassauDelta(for match: NassauMatch, gameData: GameData) -> Double {
+        var delta: Double = 0
+
+        if isFrontComplete(gameData: gameData), let final = match.frontStatusByHole.last {
+            delta += final > 0 ? match.stake : (final < 0 ? -match.stake : 0)
+        }
+        if isBackComplete(gameData: gameData), let final = match.backStatusByHole.last {
+            delta += final > 0 ? match.stake : (final < 0 ? -match.stake : 0)
+        }
+        if isOverallComplete(gameData: gameData), let final = match.overallStatusByHole.last {
+            delta += final > 0 ? match.stake : (final < 0 ? -match.stake : 0)
+        }
+        for press in match.presses {
+            guard isPressComplete(press, gameData: gameData),
+                  let final = press.runningStatus.last else { continue }
+            delta += final > 0 ? press.stake : (final < 0 ? -press.stake : 0)
+        }
+        return delta
+    }
+
     static func netNassauMoneyText(
         for match: NassauMatch,
         playerNames: [String],
@@ -1021,45 +1044,8 @@ enum NassauEngine {
     ) -> String {
         let team1 = displayNames(for: match.team1PlayerIndexes, playerNames: playerNames)
         let team2 = displayNames(for: match.team2PlayerIndexes, playerNames: playerNames)
-
-        var delta: Double = 0
-
-        if isFrontComplete(gameData: gameData), let final = match.frontStatusByHole.last {
-            if final > 0 {
-                delta += match.stake
-            } else if final < 0 {
-                delta -= match.stake
-            }
-        }
-
-        if isBackComplete(gameData: gameData), let final = match.backStatusByHole.last {
-            if final > 0 {
-                delta += match.stake
-            } else if final < 0 {
-                delta -= match.stake
-            }
-        }
-
-        if isOverallComplete(gameData: gameData), let final = match.overallStatusByHole.last {
-            if final > 0 {
-                delta += match.stake
-            } else if final < 0 {
-                delta -= match.stake
-            }
-        }
-
-        for press in match.presses {
-            guard isPressComplete(press, gameData: gameData) else { continue }
-            guard let final = press.runningStatus.last else { continue }
-
-            if final > 0 {
-                delta += press.stake
-            } else if final < 0 {
-                delta -= press.stake
-            }
-        }
-
-        return moneyText(delta: delta, team1: team1, team2: team2)
+        return moneyText(delta: netNassauDelta(for: match, gameData: gameData),
+                         team1: team1, team2: team2)
     }
 
     static func runningStatusText(_ status: [Int]) -> String {

@@ -362,20 +362,13 @@ final class NassauViewController: UIViewController {
         spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
         let netValue = UILabel()
-        let last = match.overallStatusByHole.last
-        if let last = last {
-            let raw = NassauEngine.runningStatusText(match.overallStatusByHole)
-            let displayText = (raw == "All Square") ? "Even" : raw
-            netValue.text = displayText
-            if last > 0 {
-                netValue.textColor = .systemGreen
-            } else if last < 0 {
-                netValue.textColor = .systemRed
-            } else {
-                netValue.textColor = .secondaryLabel
-            }
+        netValue.text = NassauEngine.netNassauMoneyText(for: match, playerNames: game.playerNames, gameData: game)
+        let delta = NassauEngine.netNassauDelta(for: match, gameData: game)
+        if delta > 0 {
+            netValue.textColor = .systemGreen
+        } else if delta < 0 {
+            netValue.textColor = .systemRed
         } else {
-            netValue.text = "Even"
             netValue.textColor = .secondaryLabel
         }
         netValue.font = .systemFont(ofSize: 14, weight: .semibold)
