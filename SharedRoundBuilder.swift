@@ -41,6 +41,7 @@ enum SharedRoundBuilder {
         return SharedRound(
             playerName: playerIndex < g.playerNames.count ? g.playerNames[playerIndex] : "Player",
             courseName: resolvedCourseName(from: g),
+            courseId: g.course.id.uuidString,
             pars: Array(g.course.pars.prefix(STANDARD_HOLES)),
             hcs: Array(g.course.holeHandicaps.prefix(STANDARD_HOLES)),
             scores: scores,
@@ -57,6 +58,7 @@ enum SharedRoundBuilder {
         SharedRound(
             playerName: playerIndex < g.playerNames.count ? g.playerNames[playerIndex] : "Player",
             courseName: resolvedCourseName(from: g),
+            courseId: g.course.id.uuidString,
             pars: Array(g.course.pars.prefix(STANDARD_HOLES)),
             hcs: Array(g.course.holeHandicaps.prefix(STANDARD_HOLES)),
             scores: [],

@@ -194,44 +194,18 @@ final class LiveNassauViewController: UIViewController {
     }
 
     private var isSameCourse: Bool {
-        // Primary: explicit course names stored on the MatchRecord
-        let a = (match?.courseA ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let b = (match?.courseB ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if !a.isEmpty && !b.isEmpty {
-            return a == b
+        let aName = (match?.courseA ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let bName = (match?.courseB ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !aName.isEmpty && !bName.isEmpty else { return false }
+
+        // Prefer UUID comparison via CourseLibrary to avoid false matches from name variants
+        let norm = { (s: String) in s.lowercased() }
+        if let profA = CourseLibrary.shared.courses.first(where: { norm($0.name) == norm(aName) }),
+           let profB = CourseLibrary.shared.courses.first(where: { norm($0.name) == norm(bName) }) {
+            return profA.id == profB.id
         }
 
-        // Build per-player (hole → holeHc) maps from received scores
-        var hcByPlayer: [String: [Int: Int]] = [:]
-        for s in receivedScores {
-            guard let pn = s.playerName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
-                  !pn.isEmpty, let hc = s.holeHc else { continue }
-            if hcByPlayer[pn] == nil { hcByPlayer[pn] = [:] }
-            hcByPlayer[pn]![s.hole] = hc
-        }
-        guard hcByPlayer.count >= 2 else { return false }
-        let players = Array(hcByPlayer.values)
-
-        // Fallback 1: any shared holes with matching HC values → same course
-        let common = Set(players[0].keys).intersection(Set(players[1].keys))
-        if !common.isEmpty && common.allSatisfy({ players[0][$0] == players[1][$0] }) {
-            return true
-        }
-
-        // Fallback 2: each player's (hole → hc) pairs match the same known course in CourseLibrary.
-        // Works even when players haven't played any common hole numbers yet.
-        let coursesPerPlayer: [Set<String>] = hcByPlayer.values.map { hcMap in
-            let matching = CourseLibrary.shared.courses.filter { course in
-                hcMap.allSatisfy { hole, hc in
-                    guard hole >= 0, hole < course.hcs.count else { return false }
-                    return course.hcs[hole] == hc
-                }
-            }
-            return Set(matching.map { $0.name })
-        }
-        guard let first = coursesPerPlayer.first else { return false }
-        let sharedCourses = coursesPerPlayer.dropFirst().reduce(first) { $0.intersection($1) }
-        return !sharedCourses.isEmpty
+        return norm(aName) == norm(bName)
     }
 
     private var amHost: Bool {
@@ -536,20 +510,46 @@ final class LiveNassauViewController: UIViewController {
                 return makePairedHole(rank: h, o: o, p: p)
             }
         } else {
-            // Different courses — match by HC rank (hardest vs hardest)
-            let ownerSorted = ownerScores
-                .filter { front ? $0.hole < 9 : $0.hole >= 9 }
-                .sorted { hcRank($0) < hcRank($1) }
-            let oppSorted = oppScores
-                .filter { front ? $0.hole < 9 : $0.hole >= 9 }
-                .sorted { hcRank($0) < hcRank($1) }
+            let range = front ? (0..<9) : (9..<STANDARD_HOLES)
 
-            let count = max(ownerSorted.count, oppSorted.count)
-            return (0..<count).compactMap { i -> PairedHole? in
-                let o = i < ownerSorted.count ? ownerSorted[i] : nil
-                let p = i < oppSorted.count   ? oppSorted[i]   : nil
-                guard o != nil || p != nil else { return nil }
-                return makePairedHole(rank: i, o: o, p: p)
+            // Fixed-slot path: always 9 slots ranked by HC from CourseProfile
+            if let ownerProf = ownerProfile, let oppProf = oppProfile {
+                let ownerOrder = RemoteNassauPairing.hcSortedIndices(hcs: ownerProf.hcs, range: range)
+                let oppOrder   = RemoteNassauPairing.hcSortedIndices(hcs: oppProf.hcs,   range: range)
+                return (0..<9).map { rank in
+                    let ownerIdx = ownerOrder[rank]
+                    let oppIdx   = oppOrder[rank]
+                    let o = ownerScores.first { $0.hole == ownerIdx }
+                    let p = oppScores.first   { $0.hole == oppIdx   }
+                    return makePairedHole(rank: rank, o: o, p: p)
+                }
+            }
+
+            // Fallback: reconstruct HC order from per-hole HC values in received scores.
+            // Unplayed holes get HC=999 so they sort to the end but still occupy fixed slots.
+            var ownerHcArray = Array(repeating: 999, count: STANDARD_HOLES)
+            var oppHcArray   = Array(repeating: 999, count: STANDARD_HOLES)
+            for s in ownerScores { if let hc = s.holeHc { ownerHcArray[s.hole] = hc } }
+            for s in oppScores   { if let hc = s.holeHc { oppHcArray[s.hole]   = hc } }
+
+            let hasHcData = ownerHcArray.contains { $0 != 999 } || oppHcArray.contains { $0 != 999 }
+            if hasHcData {
+                let ownerOrder = RemoteNassauPairing.hcSortedIndices(hcs: ownerHcArray, range: range)
+                let oppOrder   = RemoteNassauPairing.hcSortedIndices(hcs: oppHcArray,   range: range)
+                return (0..<9).map { rank in
+                    let ownerIdx = ownerOrder[rank]
+                    let oppIdx   = oppOrder[rank]
+                    let o = ownerScores.first { $0.hole == ownerIdx }
+                    let p = oppScores.first   { $0.hole == oppIdx   }
+                    return makePairedHole(rank: rank, o: o, p: p)
+                }
+            }
+
+            // True fallback: no HC data at all — 9 fixed slots in physical hole order
+            return range.map { h in
+                let o = ownerScores.first { $0.hole == h }
+                let p = oppScores.first   { $0.hole == h }
+                return makePairedHole(rank: h - range.lowerBound, o: o, p: p)
             }
         }
     }

@@ -13,7 +13,6 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     var myRound: SharedRound!
     var opponentRound: SharedRound!
     var result: RemoteNassauResult!
-    var compareMode: RemoteCompareMode = .holeByHole
     var sameCourse: Bool = false
 
     private let matchupLabel = UILabel()
@@ -27,16 +26,7 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
-
-        if sameCourse {
-            title = "Hole by Hole (Same Course)"
-        } else {
-            switch compareMode {
-            case .holeByHole:    title = "Hole by Hole"
-            case .frontBackByHC: title = "Front / Back 9 by HC"
-            case .all18ByHC:     title = "18 Holes by HC"
-            }
-        }
+        title = sameCourse ? "Nassau Results (Same Course)" : "Nassau Results"
 
         #if DEBUG
         if let g = GameManager.shared.currentGame {
@@ -109,49 +99,21 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     private func populateUI() {
         matchupLabel.text = "\(myRound.playerName) vs \(opponentRound.playerName)"
 
-        let holes = displayedHoles
-        let front = Array(holes.prefix(9))
-        let back = Array(holes.suffix(9))
+        frontLabel.text   = "Front: \(nassauText(for: result.frontScore))"
+        backLabel.text    = "Back: \(nassauText(for: result.backScore))"
+        overallLabel.text = "Overall: \(nassauText(for: result.overallScore))"
+        totalLabel.text   = "Total Outcome: \(nassauText(for: result.totalOutcome)) (\(moneyText(for: result.dollarOutcome)))"
 
-        let frontScore = scoreSlice(front)
-        let backScore = scoreSlice(back)
-        let overallScore = scoreSlice(holes)
-
-        let totalOutcome = frontScore + backScore + overallScore
-        let dollarOutcome = totalOutcome * result.stakePerBet
-
-        frontLabel.text = "Front: \(nassauText(for: frontScore))"
-        backLabel.text = "Back: \(nassauText(for: backScore))"
-        overallLabel.text = "Overall: \(nassauText(for: overallScore))"
-        totalLabel.text = "Total Outcome: \(nassauText(for: totalOutcome)) (\(moneyText(for: dollarOutcome)))"
-
-        styledResultLabel(frontLabel, value: frontScore)
-        styledResultLabel(backLabel, value: backScore)
-        styledResultLabel(overallLabel, value: overallScore)
-        styledResultLabel(totalLabel, value: totalOutcome)
+        styledResultLabel(frontLabel,   value: result.frontScore)
+        styledResultLabel(backLabel,    value: result.backScore)
+        styledResultLabel(overallLabel, value: result.overallScore)
+        styledResultLabel(totalLabel,   value: result.totalOutcome)
 
         tableView.reloadData()
     }
+
     private var displayedHoles: [RemoteHoleResult] {
-        guard myRound != nil, opponentRound != nil else {
-            return result.holeResults
-        }
-
-        // Same course: always use natural hole-number order — no HC alignment needed
-        if sameCourse || compareMode == .holeByHole {
-            return result.holeResults.sorted { $0.holeNumberA < $1.holeNumberA }
-        }
-
-        switch compareMode {
-        case .holeByHole:
-            return result.holeResults.sorted { $0.holeNumberA < $1.holeNumberA }
-        case .frontBackByHC:
-            let front = RemoteNassauScorer.sortedFront9ByHCA(playerA: myRound, playerB: opponentRound)
-            let back  = RemoteNassauScorer.sortedBack9ByHCA(playerA: myRound, playerB: opponentRound)
-            return front + back
-        case .all18ByHC:
-            return RemoteNassauScorer.sortedAll18ByHCA(playerA: myRound, playerB: opponentRound)
-        }
+        result.holeResults
     }
 
     private func moneyText(for value: Int) -> String {
@@ -168,14 +130,10 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
 
     private func winnerText(for winner: RemoteHoleWinner) -> String {
         switch winner {
-        case .playerA:
-            return myRound.playerName
-        case .playerB:
-            return opponentRound.playerName
-        case .tie:
-            return "Tie"
-        case .noResult:
-            return "-"
+        case .playerA:  return myRound.playerName
+        case .playerB:  return opponentRound.playerName
+        case .tie:      return "Tie"
+        case .noResult: return "-"
         }
     }
 
@@ -189,9 +147,7 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
         }
     }
 
-    func numberOfSections(in tableView: UITableView) -> Int {
-        1
-    }
+    func numberOfSections(in tableView: UITableView) -> Int { 1 }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         displayedHoles.count
@@ -207,51 +163,32 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
 
         var content = cell.defaultContentConfiguration()
 
+        let opponentRevealed = hole.grossA != nil
         let grossAText = hole.grossA.map(String.init) ?? "-"
-        let grossBText = hole.grossB.map(String.init) ?? "-"
-        let netAText = hole.netA.map(String.init) ?? "-"
-        let netBText = hole.netB.map(String.init) ?? "-"
-
-        let prefix: String
-        switch compareMode {
-        case .frontBackByHC:
-            prefix = indexPath.row < 9 ? "F9 • " : "B9 • "
-        case .holeByHole, .all18ByHC:
-            prefix = ""
+        let netAText   = hole.netA.map(String.init)   ?? "-"
+        let grossBText: String
+        let netBText: String
+        let winnerDisplay: String
+        if opponentRevealed {
+            grossBText   = hole.grossB.map(String.init) ?? "-"
+            netBText     = hole.netB.map(String.init)   ?? "-"
+            winnerDisplay = winnerText(for: hole.winner)
+        } else {
+            grossBText   = hole.grossB != nil ? "✓" : "-"
+            netBText     = "-"
+            winnerDisplay = "-"
         }
 
-        let displayHC: Int
-        switch compareMode {
-        case .frontBackByHC:
-            displayHC = hole.holeHandicapA
-        case .all18ByHC:
-            displayHC = hole.holeHandicapA
-        case .holeByHole:
-            displayHC = hole.holeHandicapA
-        }
-
-        switch compareMode {
-        case .holeByHole:
+        if hole.holeNumberA == hole.holeNumberB {
             content.text = "Hole \(hole.holeNumberA): Gross \(grossAText) - \(grossBText)"
-
-        case .frontBackByHC:
-            content.text = "\(prefix)HC \(displayHC): Hole \(hole.holeNumberA) vs Hole \(hole.holeNumberB): Gross \(grossAText) - \(grossBText)"
-
-        case .all18ByHC:
-            let isFront = indexPath.row < 9
-            let prefix = isFront ? "F9" : "B9"
-
-            // HC 1–9 for front, 10–18 for back
-            let displayHC = isFront
-                ? (indexPath.row + 1)
-                : (indexPath.row + 1)
-
-            content.text = "\(prefix) • HC \(displayHC): Hole \(hole.holeNumberA) vs Hole \(hole.holeNumberB): Gross \(grossAText) - \(grossBText)"
+        } else {
+            let rank = (indexPath.row % 9) + 1
+            content.text = "HC\(rank): Hole \(hole.holeNumberA) vs Hole \(hole.holeNumberB): Gross \(grossAText) - \(grossBText)"
         }
 
         content.secondaryText = """
         Net: \(netAText) - \(netBText)   Strokes: \(hole.strokesA) - \(hole.strokesB)
-        Winner: \(winnerText(for: hole.winner))
+        Winner: \(winnerDisplay)
         """
 
         content.textProperties.font = .systemFont(ofSize: 18, weight: .semibold)
@@ -266,27 +203,12 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     private func myPlayerIndex(in g: GameData) -> Int? {
         let myName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         guard !myName.isEmpty else { return nil }
-
         return g.playerNames.firstIndex {
             $0.trimmingCharacters(in: .whitespacesAndNewlines)
                 .localizedCaseInsensitiveCompare(myName) == .orderedSame
         }
     }
-    private func scoreSlice(_ holes: [RemoteHoleResult]) -> Int {
-        var total = 0
 
-        for hole in holes {
-            switch hole.winner {
-            case .playerA: total += 1
-            case .playerB: total -= 1
-            case .tie, .noResult: break
-            }
-        }
-
-        if total > 0 { return 1 }
-        if total < 0 { return -1 }
-        return 0
-    }
     #if DEBUG
     private func debugLocalPlayerMatch(in g: GameData) {
         print("ProfileStore.name =", ProfileStore.name ?? "nil")
@@ -318,16 +240,6 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
     }
 
     private func buildResultsSummary() -> String {
-        let holes = displayedHoles
-        let front = Array(holes.prefix(9))
-        let back  = Array(holes.suffix(9))
-
-        let frontScore   = scoreSlice(front)
-        let backScore    = scoreSlice(back)
-        let overallScore = scoreSlice(holes)
-        let totalOutcome = frontScore + backScore + overallScore
-        let dollars      = totalOutcome * result.stakePerBet
-
         let me   = myRound.playerName
         let them = opponentRound.playerName
 
@@ -338,30 +250,22 @@ final class RemoteNassauViewController: UIViewController, UITableViewDataSource,
         }
 
         let moneyLine: String
-        if dollars > 0 {
-            moneyLine = "\(them) owes \(me): $\(dollars)"
-        } else if dollars < 0 {
-            moneyLine = "\(me) owes \(them): $\(abs(dollars))"
+        if result.dollarOutcome > 0 {
+            moneyLine = "\(them) owes \(me): $\(result.dollarOutcome)"
+        } else if result.dollarOutcome < 0 {
+            moneyLine = "\(me) owes \(them): $\(abs(result.dollarOutcome))"
         } else {
             moneyLine = "All square — no money owed"
-        }
-
-        let modeLabel: String
-        switch compareMode {
-        case .holeByHole:    modeLabel = "Hole by Hole"
-        case .frontBackByHC: modeLabel = "Front/Back 9 by HC"
-        case .all18ByHC:     modeLabel = "18 Holes by HC"
         }
 
         return """
         WolfMore Nassau Results
         \(me) vs \(them)
-        Mode: \(modeLabel)
         \(me) @ \(myRound.courseName)
         \(them) @ \(opponentRound.courseName)
-        \(segmentLine("Front", frontScore))
-        \(segmentLine("Back", backScore))
-        \(segmentLine("Overall", overallScore))
+        \(segmentLine("Front", result.frontScore))
+        \(segmentLine("Back", result.backScore))
+        \(segmentLine("Overall", result.overallScore))
         \(moneyLine)
         """
     }

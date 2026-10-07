@@ -142,6 +142,9 @@
 		RS1A2B3C4D5E6F70819203AA /* ResetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */; };
 		SC01B2C3D4E5F607182930AA /* ScrambleTeamEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC01B2C3D4E5F607182930AB /* ScrambleTeamEntryViewController.swift */; };
 		TS01B2C3D4E5F607182930AA /* TeeSetEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = TS01B2C3D4E5F607182930AB /* TeeSetEditorViewController.swift */; };
+		AB000001000000000000000B /* RemoteNassauPairingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001000000000000000A /* RemoteNassauPairingTests.swift */; };
+		AB000001000000000000001B /* LocalNassauTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000001000000000000001A /* LocalNassauTests.swift */; };
+		AB00000200000000000000BB /* RemoteNassauPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000200000000000000AA /* RemoteNassauPairing.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -285,6 +288,10 @@
 		RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetSnapshotStore.swift; sourceTree = "<group>"; };
 		SC01B2C3D4E5F607182930AB /* ScrambleTeamEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrambleTeamEntryViewController.swift; sourceTree = "<group>"; };
 		TS01B2C3D4E5F607182930AB /* TeeSetEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeSetEditorViewController.swift; sourceTree = "<group>"; };
+		AB000001000000000000000A /* RemoteNassauPairingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauPairingTests.swift; sourceTree = "<group>"; };
+		AB000001000000000000001A /* LocalNassauTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalNassauTests.swift; sourceTree = "<group>"; };
+		AB00000100000000000000FE /* WolfmoreGolfTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WolfmoreGolfTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AB00000200000000000000AA /* RemoteNassauPairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauPairing.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -294,6 +301,13 @@
 			files = (
 				F6DF412B2FC8A06F00F8322F /* Supabase in Frameworks */,
 				F6D66AC62F327AC500367C08 /* StoreKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB000001000000000000000D /* Frameworks (Tests) */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -319,6 +333,7 @@
 				F6E008142F8D26FC00763694 /* RemoteMatchStore.swift */,
 				F6E008122F8D269F00763694 /* RemoteMatch.swift */,
 				F6E0080A2F8965B600763694 /* RemoteNassauViewController.swift */,
+				AB00000200000000000000AA /* RemoteNassauPairing.swift */,
 				F6A010002FA0000000000AE1 /* WolfActions.swift */,
 				F6E008082F89408500763694 /* RemoteNassauScorer.swift */,
 				F6E008062F89403800763694 /* SharedRoundBuilder.swift */,
@@ -444,6 +459,7 @@
 				F64DE8142EB2850000F8D625 /* AppDelegate.swift */,
 				F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */,
 				F6D66AC42F327AC400367C08 /* Frameworks */,
+				AB00000100000000000000FF /* WolfmoreGolfTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -454,6 +470,7 @@
 				A1EB54C3590E492CB9905AE3 /* PrivacyInfo.xcprivacy */,
 				F64DE9512EB6AAE300F8D625 /* Assets.xcassets */,
 				F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */,
+				AB00000100000000000000FE /* WolfmoreGolfTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -480,6 +497,15 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		AB00000100000000000000FF /* WolfmoreGolfTests */ = {
+			isa = PBXGroup;
+			children = (
+				AB000001000000000000000A /* RemoteNassauPairingTests.swift */,
+				AB000001000000000000001A /* LocalNassauTests.swift */,
+			);
+			path = WolfmoreGolfTests;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -503,6 +529,23 @@
 			productReference = F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AB000001000000000000000E /* WolfmoreGolfTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AB00000100000000000000FB /* Build configuration list for PBXNativeTarget "WolfmoreGolfTests" */;
+			buildPhases = (
+				AB000001000000000000000C /* Sources */,
+				AB000001000000000000000D /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AB00000100000000000000FC /* PBXTargetDependency */,
+			);
+			name = WolfmoreGolfTests;
+			productName = WolfmoreGolfTests;
+			productReference = AB00000100000000000000FE /* WolfmoreGolfTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -516,6 +559,10 @@
 					F64DE7872EB0396000F8D625 = {
 						CreatedOnToolsVersion = 26.0.1;
 						LastSwiftMigration = 2600;
+					};
+					AB000001000000000000000E = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F64DE7872EB0396000F8D625;
 					};
 				};
 			};
@@ -555,6 +602,7 @@
 			projectRoot = "";
 			targets = (
 				F64DE7872EB0396000F8D625 /* WolfmoreGolf */,
+				AB000001000000000000000E /* WolfmoreGolfTests */,
 			);
 		};
 /* End PBXProject section */
@@ -707,10 +755,38 @@
 				F6E0081E2F8DBF2A00763694 /* ImportRemoteRoundViewController.swift in Sources */,
 				F6590F052EFA225B0085D088 /* GameType.swift in Sources */,
 				D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */,
+				AB00000200000000000000BB /* RemoteNassauPairing.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AB000001000000000000000C /* Sources (Tests) */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AB000001000000000000000B /* RemoteNassauPairingTests.swift in Sources */,
+				AB000001000000000000001B /* LocalNassauTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXContainerItemProxy section */
+		AB00000100000000000000FD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F64DE7802EB0396000F8D625 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F64DE7872EB0396000F8D625;
+			remoteInfo = WolfmoreGolf;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXTargetDependency section */
+		AB00000100000000000000FC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F64DE7872EB0396000F8D625 /* WolfmoreGolf */;
+			targetProxy = AB00000100000000000000FD /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
 		F66006BB2F60C56F00148767 /* AppDelegate.swift */ = {
@@ -936,6 +1012,55 @@
 			};
 			name = Release;
 		};
+		AB000001000000000000000F /* Debug (Tests) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BJ5DUSSCLX;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolfTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WolfmoreGolf.app/WolfmoreGolf";
+			};
+			name = Debug;
+		};
+		AB00000100000000000000FA /* Release (Tests) */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BJ5DUSSCLX;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolfTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/WolfmoreGolf.app/WolfmoreGolf";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -953,6 +1078,15 @@
 			buildConfigurations = (
 				F64DE79C2EB0396100F8D625 /* Debug */,
 				F64DE79D2EB0396100F8D625 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AB00000100000000000000FB /* Build configuration list for PBXNativeTarget "WolfmoreGolfTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AB000001000000000000000F /* Debug */,
+				AB00000100000000000000FA /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -42,8 +42,6 @@ struct RemoteNassauResult: Codable {
 enum RemoteNassauScorer {
 
     // +1 = owner/host wins, -1 = opponent wins, 0 = tie or missing scores.
-    // Compares net scores relative to each player's own par when both pars are available;
-    // falls back to raw net when a par is missing.
     static func holeWinner(netHost: Int?, netOpp: Int?, parHost: Int?, parOpp: Int?) -> Int {
         guard let hn = netHost, let on = netOpp else { return 0 }
         if let ph = parHost, let po = parOpp {
@@ -58,263 +56,52 @@ enum RemoteNassauScorer {
         return 0
     }
 
-    static func score(playerA: SharedRound, playerB: SharedRound, stakePerBet: Int) -> RemoteNassauResult {
-        var results: [RemoteHoleResult] = []
-
-        let lowerCH = min(playerA.courseHandicap, playerB.courseHandicap)
-        let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)
-        let bStrokesToApply = max(0, playerB.courseHandicap - lowerCH)
-
-        for i in 0..<STANDARD_HOLES {
-            let grossA: Int? = i < playerA.scores.count ? playerA.scores[i] : nil
-            let grossB: Int? = i < playerB.scores.count ? playerB.scores[i] : nil
-
-            let holeHCA = playerA.hcs[safe: i] ?? STANDARD_HOLES
-            let holeHCB = playerB.hcs[safe: i] ?? STANDARD_HOLES
-
-            let aPops = strokesReceived(strokesToApply: aStrokesToApply, holeHandicap: holeHCA)
-            let bPops = strokesReceived(strokesToApply: bStrokesToApply, holeHandicap: holeHCB)
-
-            let netA = grossA.map { $0 - aPops }
-            let netB = grossB.map { $0 - bPops }
-
-            let parA = playerA.pars[safe: i]
-            let parB = playerB.pars[safe: i]
-
-            let winner: RemoteHoleWinner
-            if let netA, let netB {
-                if let parA, let parB {
-                    let relA = netA - parA
-                    let relB = netB - parB
-                    if relA < relB { winner = .playerA }
-                    else if relB < relA { winner = .playerB }
-                    else { winner = .tie }
-                } else {
-                    if netA < netB { winner = .playerA }
-                    else if netB < netA { winner = .playerB }
-                    else { winner = .tie }
-                }
-            } else {
-                winner = .noResult
-            }
-
-            results.append(
-                RemoteHoleResult(
-                    holeNumberA: i + 1,
-                    holeNumberB: i + 1,
-                    holeHandicapA: holeHCA,
-                    holeHandicapB: holeHCB,
-                    grossA: grossA,
-                    grossB: grossB,
-                    netA: netA,
-                    netB: netB,
-                    parA: parA,
-                    parB: parB,
-                    strokesA: aPops,
-                    strokesB: bPops,
-                    winner: winner
-                )
+    static func score(playerA: SharedRound, playerB: SharedRound, stakePerBet: Int, sameCourse: Bool) -> RemoteNassauResult {
+        let slots = RemoteNassauPairing.buildSlots(a: playerA, b: playerB, sameCourse: sameCourse)
+        let results: [RemoteHoleResult] = slots.map { slot in
+            RemoteHoleResult(
+                holeNumberA:   slot.indexA + 1,
+                holeNumberB:   slot.indexB + 1,
+                holeHandicapA: playerA.hcs[safe: slot.indexA] ?? STANDARD_HOLES,
+                holeHandicapB: playerB.hcs[safe: slot.indexB] ?? STANDARD_HOLES,
+                grossA:        slot.grossA,
+                grossB:        slot.grossB,
+                netA:          slot.netA,
+                netB:          slot.netB,
+                parA:          slot.parA,
+                parB:          slot.parB,
+                strokesA:      slot.strokesA,
+                strokesB:      slot.strokesB,
+                winner:        slot.winner
             )
         }
-
-        let frontScore = scoreSlice(Array(results.prefix(9)))
-        let backScore = scoreSlice(Array(results.suffix(9)))
+        let frontScore   = scoreSlice(Array(results.prefix(9)))
+        let backScore    = scoreSlice(Array(results.suffix(9)))
         let overallScore = scoreSlice(results)
         let totalOutcome = frontScore + backScore + overallScore
         let dollarOutcome = totalOutcome * stakePerBet
-
         return RemoteNassauResult(
-            holeResults: results,
-            frontScore: frontScore,
-            backScore: backScore,
+            holeResults:  results,
+            frontScore:   frontScore,
+            backScore:    backScore,
             overallScore: overallScore,
             totalOutcome: totalOutcome,
-            stakePerBet: stakePerBet,
+            stakePerBet:  stakePerBet,
             dollarOutcome: dollarOutcome
         )
     }
 
-    static func sortedAll18ByHCA(playerA: SharedRound, playerB: SharedRound) -> [RemoteHoleResult] {
-        let lowerCH = min(playerA.courseHandicap, playerB.courseHandicap)
-        let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)
-        let bStrokesToApply = max(0, playerB.courseHandicap - lowerCH)
-
-        let aOrder = (0..<STANDARD_HOLES).sorted {
-            let hc0 = playerA.hcs[safe: $0] ?? STANDARD_HOLES
-            let hc1 = playerA.hcs[safe: $1] ?? STANDARD_HOLES
-            if hc0 == hc1 { return $0 < $1 }
-            return hc0 < hc1
-        }
-
-        let bOrder = (0..<STANDARD_HOLES).sorted {
-            let hc0 = playerB.hcs[safe: $0] ?? STANDARD_HOLES
-            let hc1 = playerB.hcs[safe: $1] ?? STANDARD_HOLES
-            if hc0 == hc1 { return $0 < $1 }
-            return hc0 < hc1
-        }
-
-        return zip(aOrder, bOrder).map { aIndex, bIndex in
-            makeHoleResult(
-                playerA: playerA,
-                playerB: playerB,
-                aIndex: aIndex,
-                bIndex: bIndex,
-                aStrokesToApply: aStrokesToApply,
-                bStrokesToApply: bStrokesToApply
-            )
-        }
-    }
-    static func sortedFront9ByHCA(playerA: SharedRound, playerB: SharedRound) -> [RemoteHoleResult] {
-        let lowerCH = min(playerA.courseHandicap, playerB.courseHandicap)
-        let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)
-        let bStrokesToApply = max(0, playerB.courseHandicap - lowerCH)
-
-        let aFront = (0..<9).sorted {
-            let hc0 = playerA.hcs[safe: $0] ?? 9
-            let hc1 = playerA.hcs[safe: $1] ?? 9
-            if hc0 == hc1 { return $0 < $1 }
-            return hc0 < hc1
-        }
-
-        let bFront = (0..<9).sorted {
-            let hc0 = playerB.hcs[safe: $0] ?? 9
-            let hc1 = playerB.hcs[safe: $1] ?? 9
-            if hc0 == hc1 { return $0 < $1 }
-            return hc0 < hc1
-        }
-
-        return zip(aFront, bFront).map { aIndex, bIndex in
-            makeHoleResult(
-                playerA: playerA,
-                playerB: playerB,
-                aIndex: aIndex,
-                bIndex: bIndex,
-                aStrokesToApply: aStrokesToApply,
-                bStrokesToApply: bStrokesToApply
-            )
-        }
-    }
-
-    static func sortedBack9ByHCA(playerA: SharedRound, playerB: SharedRound) -> [RemoteHoleResult] {
-        let lowerCH = min(playerA.courseHandicap, playerB.courseHandicap)
-        let aStrokesToApply = max(0, playerA.courseHandicap - lowerCH)
-        let bStrokesToApply = max(0, playerB.courseHandicap - lowerCH)
-
-        let aBack = (9..<STANDARD_HOLES).sorted {
-            let hc0 = playerA.hcs[safe: $0] ?? 9
-            let hc1 = playerA.hcs[safe: $1] ?? 9
-            if hc0 == hc1 { return $0 < $1 }
-            return hc0 < hc1
-        }
-
-        let bBack = (9..<STANDARD_HOLES).sorted {
-            let hc0 = playerB.hcs[safe: $0] ?? 9
-            let hc1 = playerB.hcs[safe: $1] ?? 9
-            if hc0 == hc1 { return $0 < $1 }
-            return hc0 < hc1
-        }
-
-        return zip(aBack, bBack).map { aIndex, bIndex in
-            makeHoleResult(
-                playerA: playerA,
-                playerB: playerB,
-                aIndex: aIndex,
-                bIndex: bIndex,
-                aStrokesToApply: aStrokesToApply,
-                bStrokesToApply: bStrokesToApply
-            )
-        }
-    }
-
-    private static func makeHoleResult(
-        playerA: SharedRound,
-        playerB: SharedRound,
-        aIndex: Int,
-        bIndex: Int,
-        aStrokesToApply: Int,
-        bStrokesToApply: Int
-    ) -> RemoteHoleResult {
-        let grossA = aIndex < playerA.scores.count ? playerA.scores[aIndex] : nil
-        let grossB = bIndex < playerB.scores.count ? playerB.scores[bIndex] : nil
-
-        let holeHCA = playerA.hcs[safe: aIndex] ?? STANDARD_HOLES
-        let holeHCB = playerB.hcs[safe: bIndex] ?? STANDARD_HOLES
-
-        let aPops = strokesReceived(strokesToApply: aStrokesToApply, holeHandicap: holeHCA)
-        let bPops = strokesReceived(strokesToApply: bStrokesToApply, holeHandicap: holeHCB)
-
-        let netA = grossA.map { $0 - aPops }
-        let netB = grossB.map { $0 - bPops }
-
-        let parA = playerA.pars[safe: aIndex]
-        let parB = playerB.pars[safe: bIndex]
-
-        let winner: RemoteHoleWinner
-        if let netA, let netB {
-            if let parA, let parB {
-                let relA = netA - parA
-                let relB = netB - parB
-                if relA < relB { winner = .playerA }
-                else if relB < relA { winner = .playerB }
-                else { winner = .tie }
-            } else {
-                if netA < netB { winner = .playerA }
-                else if netB < netA { winner = .playerB }
-                else { winner = .tie }
-            }
-        } else {
-            winner = .noResult
-        }
-
-        return RemoteHoleResult(
-            holeNumberA: aIndex + 1,
-            holeNumberB: bIndex + 1,
-            holeHandicapA: holeHCA,
-            holeHandicapB: holeHCB,
-            grossA: grossA,
-            grossB: grossB,
-            netA: netA,
-            netB: netB,
-            parA: parA,
-            parB: parB,
-            strokesA: aPops,
-            strokesB: bPops,
-            winner: winner
-        )
-    }
-
-    private static func strokesReceived(strokesToApply: Int, holeHandicap: Int) -> Int {
-        guard strokesToApply > 0 else { return 0 }
-
-        let fullRounds = strokesToApply / STANDARD_HOLES
-        let remainder = strokesToApply % STANDARD_HOLES
-
-        return fullRounds + (holeHandicap <= remainder ? 1 : 0)
-    }
-
-    private static func scoreSlice(_ holes: [RemoteHoleResult]) -> Int {
+    static func scoreSlice(_ holes: [RemoteHoleResult]) -> Int {
         var total = 0
-
         for hole in holes {
             switch hole.winner {
-            case .playerA:
-                total += 1
-            case .playerB:
-                total -= 1
-            case .tie, .noResult:
-                break
+            case .playerA:              total += 1
+            case .playerB:              total -= 1
+            case .tie, .noResult:       break
             }
         }
-
         if total > 0 { return 1 }
         if total < 0 { return -1 }
         return 0
-    }
-}
-
-private extension Array {
-    subscript(safe index: Int) -> Element? {
-        guard indices.contains(index) else { return nil }
-        return self[index]
     }
 }

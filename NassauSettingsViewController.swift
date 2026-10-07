@@ -292,23 +292,12 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
                     return
                 }
 
-                let ac = UIAlertController(title: "Compare Mode", message: nil, preferredStyle: .actionSheet)
-                ac.addAction(UIAlertAction(title: "Hole by Hole", style: .default) { [weak self] _ in
-                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .holeByHole)
-                })
-                ac.addAction(UIAlertAction(title: "Front / Back 9 by HC", style: .default) { [weak self] _ in
-                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .frontBackByHC)
-                })
-                ac.addAction(UIAlertAction(title: "18 Holes by HC", style: .default) { [weak self] _ in
-                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake, mode: .all18ByHC)
-                })
-                ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                self.present(ac, animated: true)
+                self.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake)
             }
         }
     }
 
-    private func acceptChallenge(myRound: SharedRound, opponentRound: SharedRound, stake: Int, mode: RemoteCompareMode) {
+    private func acceptChallenge(myRound: SharedRound, opponentRound: SharedRound, stake: Int) {
         let match = RemoteMatch(
             myRound: myRound,
             opponentName: opponentRound.playerName,
@@ -316,7 +305,6 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             inviteCode: nil,
             isAccepted: true,
             opponentRound: opponentRound,
-            compareMode: mode,
             roundApplied: false
         )
         print("DEBUG RemoteNassau sameCourse: \(match.sameCourse) local: \(myRound.courseName) remote: \(opponentRound.courseName)")
@@ -427,16 +415,9 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
     }
 
     private func buildAcceptanceMessage(match: RemoteMatch) -> String {
-        let modeLabel: String
-        switch match.compareMode {
-        case .holeByHole:    modeLabel = "Hole by Hole"
-        case .frontBackByHC: modeLabel = "Front/Back 9 by HC"
-        case .all18ByHC:     modeLabel = "18 Holes by HC"
-        }
-        return """
+        """
         WolfMore Nassau — Challenge Accepted! 🏌️
         \(match.myRound.playerName) @ \(match.myRound.courseName)
-        Mode: \(modeLabel)
         Stake: $\(match.stakePerBet) per bet
         Results coming after my round!
         """
