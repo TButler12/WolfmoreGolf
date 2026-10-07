@@ -3363,42 +3363,47 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         guard let g = GameManager.shared.currentGame else { return }
         guard let myIndex = myPlayerIndex(in: g) else { return }
 
-        let round = SharedRoundBuilder.make(from: g, playerIndex: myIndex)
+        promptForRemoteStake { [weak self] stake in
+            guard let self else { return }
 
-        guard let encoded = RemoteRoundCodec.encode(round) else {
-            showRemoteImportError(message: "Could not create remote invite.")
-            return
-        }
+            let round = SharedRoundBuilder.make(from: g, playerIndex: myIndex, stake: stake)
 
-        print("📤 SENDING round.playerName =", round.playerName)
-        print("📤 SENDING encoded =")
-        print(encoded)
+            guard let encoded = RemoteRoundCodec.encode(round) else {
+                self.showRemoteImportError(message: "Could not create remote invite.")
+                return
+            }
 
-        let messageBody = """
-        WolfMore Remote Nassau Invite
+            print("📤 SENDING round.playerName =", round.playerName)
+            print("📤 SENDING encoded =")
+            print(encoded)
 
-        Player: \(round.playerName)
-        Course: \(round.courseName)
+            let messageBody = """
+            WolfMore Remote Nassau Invite
 
-        Paste this code into WolfMore:
-        \(encoded)
-        """
+            Player: \(round.playerName)
+            Course: \(round.courseName)
+            Stake: $\(stake) per bet
 
-        if MFMessageComposeViewController.canSendText() {
-            let composer = MFMessageComposeViewController()
-            composer.messageComposeDelegate = self
-            composer.body = messageBody
-            present(composer, animated: true)
-        } else {
-            UIPasteboard.general.string = encoded
+            Paste this code into WolfMore:
+            \(encoded)
+            """
 
-            let ac = UIAlertController(
-                title: "Messages Unavailable",
-                message: "This device cannot send texts. The invite code was copied to the clipboard instead.",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "OK", style: .default))
-            present(ac, animated: true)
+            if MFMessageComposeViewController.canSendText() {
+                let composer = MFMessageComposeViewController()
+                composer.messageComposeDelegate = self
+                composer.body = messageBody
+                self.present(composer, animated: true)
+            } else {
+                UIPasteboard.general.string = encoded
+
+                let ac = UIAlertController(
+                    title: "Messages Unavailable",
+                    message: "This device cannot send texts. The invite code was copied to the clipboard instead.",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(ac, animated: true)
+            }
         }
     }
     private var onMessageComposeDismissed: (() -> Void)?
@@ -3469,22 +3474,33 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             return
         }
 
-        promptForRemoteStake { [weak self] stake in
+        self.promptForRemoteRound { [weak self] opponentRound in
             guard let self else { return }
 
-            self.promptForRemoteRound { [weak self] opponentRound in
-                guard let self else { return }
+            let myRound = SharedRoundBuilder.makeIdentity(from: g, playerIndex: myIndex)
 
-                let myRound = SharedRoundBuilder.makeIdentity(from: g, playerIndex: myIndex)
+            if self.isSamePlayer(myRound.playerName, opponentRound.playerName) {
+                self.showRemoteImportError(
+                    message: "You pasted your own remote round code. Paste your opponent’s code instead."
+                )
+                return
+            }
 
-                if self.isSamePlayer(myRound.playerName, opponentRound.playerName) {
-                    self.showRemoteImportError(
-                        message: "You pasted your own remote round code. Paste your opponent’s code instead."
-                    )
-                    return
+            if let stake = opponentRound.stake {
+                let ac = UIAlertController(
+                    title: "Challenge Accepted",
+                    message: "Stake: $\(stake) per bet, set by \(opponentRound.playerName)",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                ac.addAction(UIAlertAction(title: "Accept", style: .default) { [weak self] _ in
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake)
+                })
+                self.present(ac, animated: true)
+            } else {
+                self.promptForRemoteStake { [weak self] stake in
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake)
                 }
-
-                self.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake)
             }
         }
     }

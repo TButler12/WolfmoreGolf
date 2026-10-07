@@ -280,21 +280,50 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             return
         }
 
-        promptForRemoteStake { [weak self] stake in
+        self.promptForRemoteRound { [weak self] opponentRound in
             guard let self else { return }
-            self.promptForRemoteRound { [weak self] opponentRound in
-                guard let self else { return }
 
-                let myRound = SharedRoundBuilder.makeIdentity(from: g, playerIndex: myIndex)
+            let myRound = SharedRoundBuilder.makeIdentity(from: g, playerIndex: myIndex)
 
-                guard !self.isSamePlayer(myRound.playerName, opponentRound.playerName) else {
-                    self.showRemoteError("You pasted your own remote round code. Paste your opponent's code instead.")
-                    return
+            guard !self.isSamePlayer(myRound.playerName, opponentRound.playerName) else {
+                self.showRemoteError("You pasted your own remote round code. Paste your opponent's code instead.")
+                return
+            }
+
+            if let stake = opponentRound.stake {
+                let ac = UIAlertController(
+                    title: "Challenge Accepted",
+                    message: "Stake: $\(stake) per bet, set by \(opponentRound.playerName)",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                ac.addAction(UIAlertAction(title: "Accept", style: .default) { [weak self] _ in
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake)
+                })
+                self.present(ac, animated: true)
+            } else {
+                self.promptForRemoteStake { [weak self] stake in
+                    self?.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake)
                 }
-
-                self.acceptChallenge(myRound: myRound, opponentRound: opponentRound, stake: stake)
             }
         }
+    }
+
+    private func promptForRemoteStake(completion: @escaping (Int) -> Void) {
+        let ac = UIAlertController(
+            title: "Nassau Stake",
+            message: "Enter the stake per bet (Front / Back / Overall)",
+            preferredStyle: .alert
+        )
+        ac.addTextField { tf in
+            tf.placeholder = "10"; tf.text = "10"; tf.keyboardType = .numberPad
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
+            let raw = ac.textFields?.first?.text ?? "10"
+            completion(max(1, Int(raw.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 10))
+        })
+        present(ac, animated: true)
     }
 
     private func acceptChallenge(myRound: SharedRound, opponentRound: SharedRound, stake: Int) {
@@ -334,23 +363,6 @@ final class NassauSettingsViewController: UIViewController, UITextFieldDelegate,
             preferredStyle: .alert
         )
         ac.addAction(UIAlertAction(title: "Let's Play!", style: .default))
-        present(ac, animated: true)
-    }
-
-    private func promptForRemoteStake(completion: @escaping (Int) -> Void) {
-        let ac = UIAlertController(
-            title: "Nassau Stake",
-            message: "Enter the stake per bet (Front / Back / Overall)",
-            preferredStyle: .alert
-        )
-        ac.addTextField { tf in
-            tf.placeholder = "10"; tf.text = "10"; tf.keyboardType = .numberPad
-        }
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Continue", style: .default) { _ in
-            let raw = ac.textFields?.first?.text ?? "10"
-            completion(max(1, Int(raw.trimmingCharacters(in: .whitespacesAndNewlines)) ?? 10))
-        })
         present(ac, animated: true)
     }
 

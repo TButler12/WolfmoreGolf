@@ -201,10 +201,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
                         }
                         SupabaseService.shared.subscribeToResults(matchId: match.id) { _ in }
                         await MainActor.run {
-                            // Post immediately (GameVC observer already registered) then pop —
-                            // matches WolfActions.joinLiveMatch which also posts before any navigation.
-                            NotificationCenter.default.post(name: .remoteMatchDidStart, object: nil)
-                            nav?.popToRootViewController(animated: true)
+                            var msg = "Connected to Nassau match \(match.code.uppercased())."
+                            if let s = match.stake {
+                                let by = match.hostName.map { ", set by \($0)" } ?? ""
+                                msg += "\nStake: $\(Int(s)) per bet\(by)."
+                            }
+                            let ok = UIAlertController(title: "Joined Match", message: msg, preferredStyle: .alert)
+                            ok.addAction(UIAlertAction(title: "OK", style: .default) { _ in
+                                NotificationCenter.default.post(name: .remoteMatchDidStart, object: nil)
+                                nav?.popToRootViewController(animated: true)
+                            })
+                            root.present(ok, animated: true)
                         }
                     } catch {
                         await MainActor.run {

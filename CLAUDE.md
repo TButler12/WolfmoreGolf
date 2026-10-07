@@ -27,3 +27,26 @@ Work only in /Users/tombutler/Developer/WolfmoreGolf on the main branch. Never c
 ## Building
 
 Always build with the WolfmoreGolf scheme: `xcodebuild -scheme WolfmoreGolf`.
+
+## Remote Nassau — Known Limitations / Next Steps
+
+### Step 3 (planned, not started)
+- Fixed rules: front/back/overall 1 unit each; results shown in units ("+2", "Up 2"), not dollars
+- No presses in remote matches; press UI and logic hidden/disabled for remote only
+- Store full 18-hole pars and HC arrays in the Supabase match record at create/join time — **SQL review required before any schema changes**
+- Fallback: if full HC data for either course is missing, don't show pairings or results for a nine until both players finish it; show own scores with a note ("Results appear when both players finish the front 9")
+- Joiner accept screen: shows both courses, handicap strokes, and fixed rules; Accept and Decline only, nothing editable
+
+### Known limitations (current)
+- **Stake not synced**: each device enters its own stake; if they differ the dollar amounts on each screen will disagree
+- **Mid-round pairing shift**: if the opponent's course isn't in the local library and the received `HoleScoreRecord` rows have no `holeHc` data, slots fall back to physical hole order; pairings may appear different to each player until Step 3's stored HC arrays are in place
+- **Course-loading TODO**: audit the Nassau start path and the case where `selectedCourseID` is nil — verify the correct course's pars/HCs are always loaded before a remote match is created or joined
+
+## Backlog
+
+### Press options (local Nassau only — remote stays no-presses)
+- Auto-press trigger: 1, 2, or 3 down (currently hardcoded to 2)
+- Rolling presses: option for a new press to fire when an existing press also goes X down
+- Presses per nine: 1, 2, 3, or unlimited (default 1)
+- Optional 18-hole overall press
+- All of the above are local-only settings; remote Nassau has no presses by design

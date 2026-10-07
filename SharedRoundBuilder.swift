@@ -13,7 +13,7 @@ enum SharedRoundBuilder {
         return (stored.isEmpty || stored == "WolfMore") ? "Custom Course" : stored
     }
 
-    static func make(from g: GameData, playerIndex: Int) -> SharedRound {
+    static func make(from g: GameData, playerIndex: Int, stake: Int? = nil) -> SharedRound {
         let scores: [Int?] = (0..<STANDARD_HOLES).map { hole in
             guard playerIndex < g.scores.count,
                   hole < g.scores[playerIndex].count else { return nil }
@@ -48,7 +48,8 @@ enum SharedRoundBuilder {
             fairways: fairways,
             girs: girs,
             putts: putts,
-            courseHandicap: playerIndex < g.hcPlayers.count ? g.hcPlayers[playerIndex] : 0
+            courseHandicap: playerIndex < g.hcPlayers.count ? g.hcPlayers[playerIndex] : 0,
+            stake: stake
         )
     }
 

@@ -10,6 +10,7 @@ struct SharedRound: Codable {
     let girs: [Bool?]
     let putts: [Int?]
     let courseHandicap: Int
+    let stake: Int?             // set by originator; nil on records created before this field was added
 
     init(
         playerName: String,
@@ -21,7 +22,8 @@ struct SharedRound: Codable {
         fairways: [Bool?],
         girs: [Bool?],
         putts: [Int?],
-        courseHandicap: Int
+        courseHandicap: Int,
+        stake: Int? = nil
     ) {
         self.playerName     = playerName
         self.courseName     = courseName
@@ -33,11 +35,13 @@ struct SharedRound: Codable {
         self.girs           = girs
         self.putts          = putts
         self.courseHandicap = courseHandicap
+        self.stake          = stake
     }
 
     private enum CodingKeys: String, CodingKey {
         case playerName, courseName, courseId
         case pars, hcs, scores, fairways, girs, putts, courseHandicap
+        case stake
     }
 
     init(from decoder: Decoder) throws {
@@ -52,5 +56,6 @@ struct SharedRound: Codable {
         girs            = try c.decode([Bool?].self, forKey: .girs)
         putts           = try c.decode([Int?].self,  forKey: .putts)
         courseHandicap  = try c.decode(Int.self,     forKey: .courseHandicap)
+        stake           = try c.decodeIfPresent(Int.self, forKey: .stake)
     }
 }

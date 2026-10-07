@@ -225,11 +225,13 @@ enum WolfActions {
                     NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
                     SupabaseService.shared.subscribeToResults(matchId: match.id) { _ in }
                     await MainActor.run {
-                        let alert = UIAlertController(
-                            title: "Joined Match",
-                            message: "Connected to live match \(match.code). Scores will sync as they come in.",
-                            preferredStyle: .alert
-                        )
+                        var msg = "Connected to live match \(match.code)."
+                        if let s = match.stake {
+                            let by = match.hostName.map { ", set by \($0)" } ?? ""
+                            msg += "\nStake: $\(Int(s)) per bet\(by)."
+                        }
+                        msg += "\nScores will sync as they come in."
+                        let alert = UIAlertController(title: "Joined Match", message: msg, preferredStyle: .alert)
                         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
                         presenter.present(alert, animated: true)
                     }
