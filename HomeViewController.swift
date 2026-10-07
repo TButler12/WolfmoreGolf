@@ -1444,17 +1444,7 @@ final class ViewController: UIViewController,
 
             let curName = currentGame.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
             if curName == newCourse.name {
-                // Still write pars/hcs atomically — name match alone doesn't mean
-                // hole data is current (could be a post-termination split state).
                 CourseLibrary.shared.selectedCourseID = id
-                _ = GameManager.shared.loadLastOpened(notify: false)
-                GameManager.shared.update { g in
-                    g.course.pars          = Array(newCourse.pars.prefix(STANDARD_HOLES))
-                    g.course.holeHandicaps = Array(newCourse.hcs.prefix(STANDARD_HOLES))
-                    g.course.name          = newCourse.name
-                    g.course.id            = newCourse.id
-                }
-                GameManager.shared.saveCurrent()
                 self.refreshHomeUI()
                 self.dismiss(animated: true)
                 return

@@ -119,20 +119,12 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
 
     private func setActiveCourse(_ c: CourseProfile) {
         activeCourseID = c.id
-        applyToUIOnly(pars: c.pars, hcs: c.hcs)
-        let p = Array(c.pars.prefix(STANDARD_HOLES))
-        let h = Array(c.hcs.prefix(STANDARD_HOLES))
-        // TODO: verify Nassau start path (startLiveMatch/joinLiveMatch) also reads from
-        // the library record at game time, not from this saved slot. Also audit what
-        // happens when selectedCourseID is nil at round start.
+        applyToUIAndModel(pars: c.pars, hcs: c.hcs)
         GameManager.shared.update { g in
-            g.course.pars          = p
-            g.course.holeHandicaps = h
-            g.hole                 = min(max(g.hole, 0), 17)
-            g.course.name          = c.name
-            g.course.id            = c.id
-            g.course.teeSets       = c.teeSets ?? []
-            g.playerTeeSetIndex    = Array(repeating: 0, count: WOLF_MAX_PLAYERS)
+            g.course.name    = c.name
+            g.course.id      = c.id
+            g.course.teeSets = c.teeSets ?? []
+            g.playerTeeSetIndex = Array(repeating: 0, count: WOLF_MAX_PLAYERS)
         }
         CourseLibrary.shared.selectedCourseID = c.id
     }
