@@ -87,7 +87,7 @@ final class HowToPlayViewController: UIViewController {
             systemImage: "dot.radiowaves.left.and.right",
             symbolColor: UIColor(red: 0.12, green: 0.47, blue: 0.62, alpha: 1),
             title: "Remote Nassau Match",
-            body: "Playing a Nassau against someone who isn't with you today? From Live & Tournaments, tap Join Remote Nassau Match and import their invite to track the same bet remotely — both of your scores sync automatically as you each play your own round.",
+            body: "Remote Nassau is a 1v1 Nassau bet between two players at different courses. Each player tracks their own round independently — front 9, back 9, and total — while scores sync automatically in real time. From Live & Tournaments, tap Join Remote Nassau Match and import your opponent's invite code. When the round is done, tap View Matches to see who won each bet.",
             badges: ["Remote Nassau", "Join Match", "Sync Scores"]
         ),
         HowToPlayPage(

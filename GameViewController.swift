@@ -1066,7 +1066,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let amber = UIColor(red: 0.831, green: 0.725, blue: 0.416, alpha: 1.0)
         let headerGreen = UIColor(red: 0.118, green: 0.227, blue: 0.165, alpha: 1.0)
         var cfg = UIButton.Configuration.filled()
-        cfg.title = "Live Nassau"
+        cfg.title = "Remote Nassau"
         cfg.image = UIImage(systemName: "dot.radiowaves.left.and.right")
         cfg.imagePlacement = .leading
         cfg.imagePadding = 6
