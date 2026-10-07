@@ -223,6 +223,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // the same header height produces the same frame positions regardless of
     // how many times it has already been called.
     private var originalIBFrames: [ObjectIdentifier: CGRect] = [:]
+    // Last shift value applied by applyStoryboardShiftIfNeeded.
+    // repositionSortButton reads this to compute the sort button Y from the original frame.
+    private var currentIBShift: CGFloat = 0
 
     // Scroll container for scoring page — enabled only when 7-player content overflows tab bar
     private var gameContentScrollView: UIScrollView?
@@ -500,10 +503,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         installSortButtonIfNeeded()
-        repositionSortButton()
         installGameHeaderIfNeeded()
         installLiveTabBarIfNeeded()
-        applyStoryboardShiftIfNeeded()      // must run before layoutBottomControls so pressedPushed2 is at its correct Y
+        applyStoryboardShiftIfNeeded()      // sets currentIBShift; must run before repositionSortButton and layoutBottomControls
+        repositionSortButton()              // uses currentIBShift + original frame — idempotent
         layoutBottomControls()              // must run before installLiveNassauButtonIfNeeded
         installLiveNassauButtonIfNeeded()
         refreshPlayerRowCards()
@@ -939,11 +942,19 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
     private func repositionSortButton() {
         guard let btn = sortButton,
-              let first = playerNameLabels.sorted(by: { $0.tag < $1.tag }).first,
-              first.frame.minY > 0 else { return }
-        // Column headers in the storyboard sit ~20pt above the first player row's center.
-        // Align the sort pill's center to match the column header row's center.
-        let headerCenterY = first.frame.minY - 20
+              let first = playerNameLabels.sorted(by: { $0.tag < $1.tag }).first else { return }
+        // Compute from original storyboard frame + currentIBShift (set by applyStoryboardShiftIfNeeded
+        // this same pass). This is idempotent: the result depends only on the original frame and the
+        // current shift, not on whatever frame value is currently set.
+        let firstMinY: CGFloat
+        if let original = originalIBFrames[ObjectIdentifier(first)] {
+            firstMinY = original.minY - currentIBShift
+        } else {
+            guard first.frame.minY > 0 else { return }
+            firstMinY = first.frame.minY
+        }
+        // Column headers sit ~20pt above the first player row's center.
+        let headerCenterY = firstMinY - 20
         let h: CGFloat = 26
         let w: CGFloat = 72
         btn.frame = CGRect(x: first.frame.minX, y: headerCenterY - h / 2, width: w, height: h)
@@ -985,6 +996,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
 
         storyboardContentShifted = true
         lastShiftedHeaderMaxY = headerMaxY
+        currentIBShift = shift
 
         for sv in ibSubviews {
             guard let original = originalIBFrames[ObjectIdentifier(sv)] else { continue }
