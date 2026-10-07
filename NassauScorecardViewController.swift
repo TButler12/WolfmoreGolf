@@ -280,6 +280,8 @@ final class PairedHoleCell: UITableViewCell {
         nameRow.isHidden   = true
         courseRow.isHidden = true
 
+        let opponentRevealed = hole.hostScore != nil
+
         hcLbl.text             = "\(hole.hcRank)"
         hcLbl.textColor        = .tertiaryLabel
         ownerHoleLbl.text      = hole.hostScore != nil ? "H\(hole.hostPhysicalHole)" : "—"
@@ -287,8 +289,21 @@ final class PairedHoleCell: UITableViewCell {
         oppHoleLbl.text        = hole.opponentScore != nil ? "H\(hole.opponentPhysicalHole)" : "—"
         oppHoleLbl.textColor   = .secondaryLabel
 
-        ownerScrLbl.text = scoreText(gross: hole.hostScore,     net: hole.hostNetScore,     strokes: hole.hostStrokes)
-        oppScrLbl.text   = scoreText(gross: hole.opponentScore, net: hole.opponentNetScore, strokes: hole.opponentStrokes)
+        ownerScrLbl.text = scoreText(gross: hole.hostScore, net: hole.hostNetScore, strokes: hole.hostStrokes)
+
+        if opponentRevealed {
+            oppScrLbl.text = scoreText(gross: hole.opponentScore, net: hole.opponentNetScore, strokes: hole.opponentStrokes)
+        } else {
+            oppScrLbl.text = hole.opponentScore != nil ? "✓" : "—"
+        }
+
+        guard opponentRevealed else {
+            resultLbl.text        = "—"
+            resultLbl.textColor   = .tertiaryLabel
+            ownerScrLbl.textColor = .tertiaryLabel
+            oppScrLbl.textColor   = hole.opponentScore != nil ? .label : .tertiaryLabel
+            return
+        }
 
         switch hole.netResult {
         case 1:
@@ -311,8 +326,8 @@ final class PairedHoleCell: UITableViewCell {
             } else {
                 resultLbl.text        = "—"
                 resultLbl.textColor   = .tertiaryLabel
-                ownerScrLbl.textColor = hole.hostScore     != nil ? .label : .tertiaryLabel
-                oppScrLbl.textColor   = hole.opponentScore != nil ? .label : .tertiaryLabel
+                ownerScrLbl.textColor = .label
+                oppScrLbl.textColor   = .tertiaryLabel
             }
         }
     }
