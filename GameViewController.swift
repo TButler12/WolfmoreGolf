@@ -1071,7 +1071,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             tabBarHeight = 0
         }
         liveNassauBottomConstraint?.constant = -(16 + tabBarHeight)
-        UIView.animate(withDuration: 0.2) { self.view.layoutIfNeeded() }
+        // Defer animation to avoid re-entrant viewDidLayoutSubviews when called from a layout pass.
+        // Calling layoutIfNeeded() synchronously here triggers viewDidLayoutSubviews before
+        // applyStoryboardShiftIfNeeded runs, causing the Sort button and Wolf-button row to be
+        // positioned with pre-shift coordinates.
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            UIView.animate(withDuration: 0.2) { self.view.layoutIfNeeded() }
+        }
     }
 
     @objc private func liveNassauTapped() {
