@@ -28,21 +28,30 @@ Work only in /Users/tombutler/Developer/WolfmoreGolf on the main branch. Never c
 
 Always build with the WolfmoreGolf scheme: `xcodebuild -scheme WolfmoreGolf`.
 
+## Remote Nassau — Architecture
+
+### Live path (active)
+Real Remote Nassau scoring lives entirely in **`LiveNassauViewController`**, reached via `RemoteMatchesViewController` → row tap → `LiveNassauViewController`. This reads `MatchRecord` from Supabase and includes presses. The "View Final Result" popup is produced here.
+
+### Dead code (do not use as reference)
+`RemoteNassauScorer.score`, `RemoteMatch.result`, `openRemoteMatch()`, and `RemoteNassauViewController` are unreachable from any user-facing screen. `openRemoteMatch()` has no call site. Do not target these when fixing or extending Remote Nassau scoring.
+
 ## Remote Nassau — Known Limitations / Next Steps
 
-### Step 3 (planned, not started)
-- Fixed rules: front/back/overall 1 unit each; results shown in units ("+2", "Up 2"), not dollars
-- No presses in remote matches; press UI and logic hidden/disabled for remote only
+### Step 3 (planned, not started) — targets the live path
 - Store full 18-hole pars and HC arrays in the Supabase match record at create/join time — **SQL review required before any schema changes**
 - Fallback: if full HC data for either course is missing, don't show pairings or results for a nine until both players finish it; show own scores with a note ("Results appear when both players finish the front 9")
-- Joiner accept screen: shows both courses, handicap strokes, and fixed rules; Accept and Decline only, nothing editable
+- Joiner accept screen: shows both courses, handicap strokes, and rules; Accept and Decline only, nothing editable
 
 ### Known limitations (current)
-- **Stake not synced**: each device enters its own stake; if they differ the dollar amounts on each screen will disagree
 - **Mid-round pairing shift**: if the opponent's course isn't in the local library and the received `HoleScoreRecord` rows have no `holeHc` data, slots fall back to physical hole order; pairings may appear different to each player until Step 3's stored HC arrays are in place
 - **Course-loading TODO**: audit the Nassau start path and the case where `selectedCourseID` is nil — verify the correct course's pars/HCs are always loaded before a remote match is created or joined
 
 ## Backlog
+
+### Remote Nassau scoring — refactor (do not start until Step 3 is done)
+1. Extract `LiveNassauViewController`'s scoring (pairing, strokes, presses, money) into a testable function and add unit tests, including: $3 stake, front/back/18 plus 2 presses = +$15.
+2. Remove the dead remote code (`RemoteNassauScorer`, `RemoteMatch`, `RemoteMatchStore`, `openRemoteMatch`, `RemoteNassauViewController`) or wire the live path to the shared scorer — one source of truth.
 
 ### Press options (local Nassau only — remote stays no-presses)
 - Auto-press trigger: 1, 2, or 3 down (currently hardcoded to 2)
