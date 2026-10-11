@@ -56,6 +56,13 @@ final class HowToPlayViewController: UIViewController {
             badges: ["Scores", "Roll / Press / Alone", "Prox", "ⓘ Menu"]
         ),
         HowToPlayPage(
+            systemImage: "info.circle.fill",
+            symbolColor: UIColor(red: 0.18, green: 0.38, blue: 0.58, alpha: 1),
+            title: "Mid-Round Adjustments",
+            body: "Tap the ⓘ button in the top-right corner of the scoring screen any time during your round to open a menu of quick adjustments — no need to back out to the Home screen.\n\n• How to Play — opens this walkthrough.\n• Scoring Tips — reminders on entering scores, handicap strokes, and committing holes.\n• Change Course — switch to a different course if the group moved or the wrong one was set at the start. Pars and hole handicaps update immediately; scores already entered are kept.\n• Change Handicap — adjust any player's handicap mid-round. Stroke allocation updates from the current hole forward.\n• Change Base $ Bet — raise or lower the base dollar stake for the rest of the round.\n• Pass Game to Another Phone — hand off the live round to another device so a different player can keep score.",
+            badges: ["ⓘ Button", "Change Course", "Change Handicap", "Change $ Bet", "Pass Game"]
+        ),
+        HowToPlayPage(
             systemImage: "chart.bar.fill",
             symbolColor: UIColor(red: 0.25, green: 0.45, blue: 0.70, alpha: 1),
             title: "Stats & Hole Tracking",
