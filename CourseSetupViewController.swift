@@ -144,10 +144,28 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
 
     @objc private func playThisCourseTapped() {
         guard let c = pendingCourse else { return }
-        pendingCourse = nil
-        playButton.isHidden = true
-        setActiveCourse(c)
-        updateCourseLabel()
+        let roundInProgress = GameManager.shared.currentGame?.holeCommitted.contains(true) == true
+        if roundInProgress {
+            let alert = UIAlertController(
+                title: "Change Course?",
+                message: "A round is in progress. Changing the course updates pars and handicaps but does not undo scores already entered.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            alert.addAction(UIAlertAction(title: "Change Course", style: .destructive) { [weak self] _ in
+                guard let self else { return }
+                self.pendingCourse = nil
+                self.playButton.isHidden = true
+                self.setActiveCourse(c)
+                self.updateCourseLabel()
+            })
+            present(alert, animated: true)
+        } else {
+            pendingCourse = nil
+            playButton.isHidden = true
+            setActiveCourse(c)
+            updateCourseLabel()
+        }
     }
 
     @objc private func saveCourseTapped() {
@@ -535,9 +553,14 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
     @IBAction func homeButtonTapped(_ sender: UIButton) {
         view.endEditing(true)
 
-        // Ensure model is updated from fields before leaving
-        let (pars, hcs) = readFields()
-        applyToUIAndModel(pars: pars, hcs: hcs)
+        // Only flush the UI fields back to the model when editing the active course.
+        // When pendingCourse != nil the display shows a different library course for
+        // preview; writing readFields() to GameManager here is what corrupts the
+        // active game's pars/HCs while leaving its course name unchanged.
+        if pendingCourse == nil {
+            let (pars, hcs) = readFields()
+            applyToUIAndModel(pars: pars, hcs: hcs)
+        }
 
         navigationController?.popToRootViewController(animated: true)
     }
