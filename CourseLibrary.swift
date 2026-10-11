@@ -1803,6 +1803,72 @@ let DYE_PRESERVE_CHAMPIONSHIP_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Championship", yardage: 7312, rating: 75.9, slope: 146)
 ]
 
+// MARK: - The Loxahatchee Club — Jupiter, FL
+// Par 72 | Jack Nicklaus | Private
+private let LOXAHATCHEE_CLUB_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000020")!
+
+let LOXAHATCHEE_CLUB_PARS: [Int] = [
+    4,3,4,5,3,4,4,5,4,   // Front 9 — OUT 36
+    4,4,3,5,4,4,5,3,4    // Back 9  — IN  36
+]
+let LOXAHATCHEE_CLUB_HCS: [Int] = [  // Men's HCP
+    13,15,9,1,17,3,11,5,7,
+    14,8,18,4,6,10,2,16,12
+]
+let LOXAHATCHEE_CLUB_WOMENS_HCS: [Int] = [  // Women's HCP
+    7,17,9,3,15,1,13,5,11,
+    10,14,18,4,6,12,2,16,8
+]
+let LOXAHATCHEE_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7240, rating: 75.9, slope: 153),
+    TeeInfo(teeName: "Gold",  yardage: 6703),
+    TeeInfo(teeName: "Blue",  yardage: 6307),
+    TeeInfo(teeName: "White", yardage: 5902),
+    TeeInfo(teeName: "Red",   yardage: 5405),
+    TeeInfo(teeName: "Green", yardage: 4583),
+]
+
+// MARK: - Jupiter Hills Club (Hills Course) — Tequesta, FL
+// Par 72 | George Fazio & Tom Fazio | Private
+private let JUPITER_HILLS_HILLS_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000021")!
+
+let JUPITER_HILLS_HILLS_PARS: [Int] = [
+    5,4,3,5,4,4,4,4,3,   // Front 9 — OUT 36
+    4,3,4,5,3,4,4,5,4    // Back 9  — IN  36
+]
+let JUPITER_HILLS_HILLS_HCS: [Int] = [  // Men's HCP
+    7,1,17,15,13,5,9,3,11,
+    8,12,6,10,14,2,16,18,4
+]
+let JUPITER_HILLS_HILLS_WOMENS_HCS: [Int] = [  // Women's HCP (Red)
+    5,11,15,9,13,3,1,7,17,
+    8,18,10,2,16,12,14,4,6
+]
+let JUPITER_HILLS_HILLS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7369, rating: 76.9, slope: 148),
+    TeeInfo(teeName: "Gold",  yardage: 7016),
+    TeeInfo(teeName: "Blue",  yardage: 6627),
+    TeeInfo(teeName: "White", yardage: 6204),
+    TeeInfo(teeName: "Green", yardage: 5560),
+    TeeInfo(teeName: "Red",   yardage: 5232),
+]
+
+// MARK: - Jupiter Hills Club (Village Course) — Tequesta, FL
+// Par 72 | Private
+private let JUPITER_HILLS_VILLAGE_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000022")!
+
+let JUPITER_HILLS_VILLAGE_PARS: [Int] = [
+    4,3,5,5,4,4,4,4,3,   // Front 9 — OUT 36
+    4,4,5,3,4,4,5,3,4    // Back 9  — IN  36
+]
+let JUPITER_HILLS_VILLAGE_HCS: [Int] = [
+    5,15,9,11,3,17,7,1,13,
+    2,10,12,18,8,6,14,16,4
+]
+let JUPITER_HILLS_VILLAGE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6759, rating: 73.9, slope: 147),
+]
+
 // MARK: Whisper Rock — Lower Course — Lefty (Scottsdale, AZ)
 // Par 72 | 7,490 yds | Rating 75.6 | Slope 149
 private let WHISPER_ROCK_LOWER_LEFTY_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000244")!
@@ -9653,6 +9719,51 @@ let MEDITERRA_SOUTH_TEES: [TeeInfo] = [
     TeeInfo(teeName: "VI",  yardage: 4130, rating: 63.9, slope: 113),
 ]
 
+// MARK: - Talis Park Golf Course — Naples, FL
+// Par 72 | Designed by Greg Norman & Pete Dye | Private
+// Scorecard source: talisparkgolfclub.com
+
+private let TALIS_PARK_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000018")!
+
+let TALIS_PARK_PARS: [Int] = [
+    4,4,3,4,5,3,4,5,4,   // Front 9 — OUT 36
+    4,5,4,3,4,5,4,3,4    // Back 9  — IN  36
+]
+// Men's HCP
+let TALIS_PARK_HCS: [Int] = [
+    15,9,5,13,11,17,1,3,7,
+    4,6,14,18,2,16,8,12,10
+]
+// Women's HCP (L)
+let TALIS_PARK_WOMENS_HCS: [Int] = [
+    13,11,9,15,7,17,5,1,3,
+    6,4,14,18,2,8,12,16,10
+]
+let TALIS_PARK_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Champ",  yardage: 7001),
+    TeeInfo(teeName: "Back",   yardage: 6532),
+    TeeInfo(teeName: "Member", yardage: 6140),
+    TeeInfo(teeName: "Middle", yardage: 5688),
+    TeeInfo(teeName: "Forward",yardage: 4979),
+]
+
+// MARK: - McArthur Golf Club — Hobe Sound, FL
+// Par 71 | Designed by Tom Fazio & Nick Price | Private
+
+private let MCARTHUR_GC_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000019")!
+
+let MCARTHUR_GC_PARS: [Int] = [
+    4,4,4,4,3,4,5,3,5,   // Front 9 — OUT 36
+    3,4,4,4,3,5,3,5,4    // Back 9  — IN  35
+]
+let MCARTHUR_GC_HCS: [Int] = [
+    7,9,1,17,11,5,15,3,13,
+    16,6,10,2,18,14,12,8,4
+]
+let MCARTHUR_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6863, rating: 73.7, slope: 134),
+]
+
 // MARK: - Innisbrook Resort — Palm Harbor, FL
 // Designed by Larry Packard | Resort
 
@@ -13747,6 +13858,186 @@ let HIGHLANDS_ELGIN_TEES: [TeeInfo] = [
     TeeInfo(teeName: "White",      yardage: 4901),
 ]
 
+// MARK: - Interlachen Country Club — Edina, MN
+private let INTERLACHEN_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000143")!
+let INTERLACHEN_CC_PARS: [Int]   = [5,4,3,5,3,4,4,4,5, 4,4,5,3,4,4,4,3,4]   // Men Par 72 (holes 1,9 play par 5)
+let INTERLACHEN_CC_W_PARS: [Int] = [5,4,3,5,3,4,4,4,5, 4,5,5,3,5,5,4,3,4]   // Women Par 75
+let INTERLACHEN_CC_HCS:  [Int] = [3,13,9,5,17,7,15,1,11, 12,4,2,14,6,10,18,16,8]
+let INTERLACHEN_CC_W_HCS: [Int] = [3,9,17,1,15,7,11,13,5, 4,8,2,14,16,18,10,12,6]
+let INTERLACHEN_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",        yardage: 6981, rating: 74.3, slope: 141),
+    TeeInfo(teeName: "Tan",          yardage: 6515, rating: 72.2, slope: 136),
+    TeeInfo(teeName: "Tan/Blue",     yardage: 6238, rating: 70.9, slope: 134),
+    TeeInfo(teeName: "Blue",         yardage: 6075, rating: 70.2, slope: 132),
+    TeeInfo(teeName: "Yellow",       yardage: 5865, rating: 69.2, slope: 130),
+    TeeInfo(teeName: "Yellow/Green", yardage: 5382, rating: 66.9, slope: 126),
+    TeeInfo(teeName: "Green",        yardage: 5187, rating: 65.9, slope: 125)
+]
+
+// MARK: - Hobbit's Glen Golf Club — Columbia, MD
+private let HOBBITS_GLEN_GC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000151")!
+let HOBBITS_GLEN_GC_PARS: [Int] = [4,5,4,4,3,4,5,3,4, 4,3,4,4,4,5,3,4,5]
+let HOBBITS_GLEN_GC_HCS:  [Int] = [8,6,2,10,18,14,12,16,4, 5,17,9,1,3,13,15,7,11]
+let HOBBITS_GLEN_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6992, rating: 73.8, slope: 136)
+]
+
+// MARK: - Indian Creek Country Club — Indian Creek Village, FL
+private let INDIAN_CREEK_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000150")!
+let INDIAN_CREEK_CC_PARS: [Int] = [4,4,5,4,3,4,4,3,5, 4,5,3,4,4,3,4,4,5]
+let INDIAN_CREEK_CC_HCS:  [Int] = [15,3,5,9,17,1,11,7,13, 6,16,4,12,2,14,10,8,18]
+let INDIAN_CREEK_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Orange", yardage: 7075, rating: 73.7, slope: 132)
+]
+
+// MARK: - Marsh Landing Country Club — Ponte Vedra Beach, FL
+private let MARSH_LANDING_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000149")!
+let MARSH_LANDING_CC_PARS: [Int] = [4,3,4,4,5,4,4,3,5, 4,4,3,4,4,5,3,5,4]
+let MARSH_LANDING_CC_HCS:  [Int] = [13,15,1,5,17,7,3,9,11, 14,8,12,4,6,16,18,10,2]
+let MARSH_LANDING_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6851, rating: 74.3, slope: 143),
+    TeeInfo(teeName: "Member",       yardage: 6468, rating: 72.4, slope: 135),
+    TeeInfo(teeName: "Merganser",    yardage: 6176, rating: 71.2, slope: 129),
+    TeeInfo(teeName: "Regular",      yardage: 5878, rating: 69.6, slope: 126),
+    TeeInfo(teeName: "Marsh",        yardage: 5560, rating: 68.0, slope: 122)
+]
+
+// MARK: - Sara Bay Country Club — Sarasota, FL
+private let SARA_BAY_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000148")!
+let SARA_BAY_CC_PARS: [Int]   = [4,4,4,3,4,4,5,3,5, 4,4,4,3,4,4,3,5,5]
+let SARA_BAY_CC_HCS:  [Int]   = [5,7,9,17,3,13,1,15,11, 4,6,8,14,10,2,16,18,12]
+let SARA_BAY_CC_W_HCS: [Int]  = [9,11,13,17,5,7,1,15,3, 12,14,4,16,10,2,18,8,6]
+let SARA_BAY_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "2025 Black", yardage: 7101, rating: 75.3, slope: 137),
+    TeeInfo(teeName: "Blue",       yardage: 7062),
+    TeeInfo(teeName: "White",      yardage: 6433),
+    TeeInfo(teeName: "Silver",     yardage: 5880),
+    TeeInfo(teeName: "Gold",       yardage: 5598),
+    TeeInfo(teeName: "Red",        yardage: 5278),
+    TeeInfo(teeName: "Orange",     yardage: 4899)
+]
+
+// MARK: - TPC Tampa Bay — Lutz, FL
+private let TPC_TAMPA_BAY_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000147")!
+let TPC_TAMPA_BAY_PARS: [Int]   = [4,3,4,4,4,3,5,4,4, 4,3,5,4,5,4,4,3,4]
+let TPC_TAMPA_BAY_HCS:  [Int]   = [11,13,7,3,15,17,9,5,1, 10,18,14,16,6,2,8,12,4]
+let TPC_TAMPA_BAY_L_HCS: [Int]  = [11,15,7,9,13,17,5,3,1, 10,18,12,14,4,6,2,16,8]
+let TPC_TAMPA_BAY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "TPC",    yardage: 6898, rating: 72.9, slope: 135),
+    TeeInfo(teeName: "Blue",   yardage: 6610, rating: 72.6, slope: 136),
+    TeeInfo(teeName: "Green",  yardage: 6332, rating: 70.8, slope: 133),
+    TeeInfo(teeName: "White",  yardage: 6008, rating: 68.8, slope: 129),
+    TeeInfo(teeName: "Silver", yardage: 5519, rating: 66.8, slope: 123),
+    TeeInfo(teeName: "Red",    yardage: 4990, rating: 68.8, slope: 118)
+]
+
+// MARK: - Black Diamond Ranch — Lecanto, FL
+private let BLACK_DIAMOND_RANCH_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000144")!
+let BLACK_DIAMOND_RANCH_PARS: [Int] = [4,4,5,4,3,4,4,3,5, 5,3,4,4,4,4,5,3,4]
+let BLACK_DIAMOND_RANCH_HCS:  [Int] = [7,1,11,3,17,15,9,13,5, 18,16,2,14,12,8,6,10,4]
+let BLACK_DIAMOND_RANCH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6932, rating: 73.4, slope: 130)
+]
+
+// MARK: - Black Diamond Ranch - The Quarry Course — Lecanto, FL
+private let BLACK_DIAMOND_QUARRY_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000145")!
+let BLACK_DIAMOND_QUARRY_PARS: [Int] = [4,4,4,3,5,4,4,3,5, 4,4,4,3,5,4,4,3,5]
+let BLACK_DIAMOND_QUARRY_HCS:  [Int] = [11,9,1,17,5,7,15,13,3, 4,16,6,18,8,14,2,10,12]
+let BLACK_DIAMOND_QUARRY_W_HCS: [Int] = [11,9,3,17,5,7,13,15,1, 14,16,4,18,6,12,2,10,8]
+let BLACK_DIAMOND_QUARRY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",     yardage: 7056),
+    TeeInfo(teeName: "Dark Gray", yardage: 6537),
+    TeeInfo(teeName: "Green",     yardage: 6043)
+]
+
+// MARK: - Black Diamond Ranch - The Highlands — Lecanto, FL
+private let BLACK_DIAMOND_HIGHLANDS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000146")!
+let BLACK_DIAMOND_HIGHLANDS_PARS: [Int] = [4,3,5,5,4,4,4,4,3, 4,3,5,5,4,4,4,4,3]
+let BLACK_DIAMOND_HIGHLANDS_HCS:  [Int] = [5,15,11,17,1,7,3,9,13, 6,16,12,18,2,8,4,10,14]
+let BLACK_DIAMOND_HIGHLANDS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6906, rating: 74.4, slope: 140)
+]
+
+// MARK: - Bobby Jones Golf Club — Sarasota, FL
+private let BOBBY_JONES_SARASOTA_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000142")!
+let BOBBY_JONES_SARASOTA_PARS: [Int] = [4,4,3,5,5,4,4,3,4, 4,5,4,3,4,4,3,4,4]
+let BOBBY_JONES_SARASOTA_HCS:  [Int] = [7,3,11,17,15,1,13,9,5, 12,6,14,16,8,2,10,18,4]
+let BOBBY_JONES_SARASOTA_L_HCS: [Int] = [7,3,11,13,17,1,15,9,5, 18,12,6,16,8,2,10,14,4]
+let BOBBY_JONES_SARASOTA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Ross",   yardage: 6240, rating: 70.2, slope: 128),
+    TeeInfo(teeName: "Red",    yardage: 6714, rating: 72.3, slope: 133),
+    TeeInfo(teeName: "Black",  yardage: 6389, rating: 69.7, slope: 131),
+    TeeInfo(teeName: "Blue",   yardage: 6061, rating: 69.4, slope: 126),
+    TeeInfo(teeName: "Tan",    yardage: 5668, rating: 67.3, slope: 124),
+    TeeInfo(teeName: "White",  yardage: 5061, rating: 64.4, slope: 111),
+    TeeInfo(teeName: "Yellow", yardage: 4583, rating: 62.2, slope: 107)
+]
+
+// MARK: - Evermore Grand Cypress Resort - Cypress Course — Orlando, FL
+private let GRAND_CYPRESS_CYPRESS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000141")!
+let GRAND_CYPRESS_CYPRESS_PARS: [Int] = [4,5,3,4,4,4,4,3,5, 4,3,4,5,4,5,4,3,4]
+let GRAND_CYPRESS_CYPRESS_HCS:  [Int] = [7,11,15,5,17,3,1,9,13, 10,12,4,14,18,8,2,16,6]
+let GRAND_CYPRESS_CYPRESS_L_HCS: [Int] = [11,7,13,9,17,3,1,15,5, 14,12,8,10,18,6,4,16,2]
+let GRAND_CYPRESS_CYPRESS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7148, rating: 74.0, slope: 127),
+    TeeInfo(teeName: "Gold",  yardage: 6740, rating: 72.2, slope: 125),
+    TeeInfo(teeName: "Blue",  yardage: 6282, rating: 70.1, slope: 119),
+    TeeInfo(teeName: "White", yardage: 5740, rating: 67.4, slope: 113),
+    TeeInfo(teeName: "Red",   yardage: 5134, rating: 64.6, slope: 107),
+    TeeInfo(teeName: "Green", yardage: 4516, rating: 62.5, slope: 102)
+]
+
+// MARK: - The Golden Bear Club at Keenes Pointe — Windermere, FL
+private let GOLDEN_BEAR_KEENES_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000140")!
+let GOLDEN_BEAR_KEENES_PARS: [Int] = [4,4,5,4,3,4,3,5,4, 4,5,3,4,4,4,3,5,4]
+let GOLDEN_BEAR_KEENES_HCS:  [Int] = [6,18,4,16,14,10,8,12,2, 15,5,7,9,11,3,13,17,1]
+let GOLDEN_BEAR_KEENES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Bear", yardage: 7192, rating: 75.6, slope: 144)
+]
+
+// MARK: - St. Andrews Country Club — Boca Raton, FL
+private let ST_ANDREWS_BOCA_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000135")!
+let ST_ANDREWS_BOCA_PARS: [Int] = [4,3,5,4,4,3,5,4,4, 5,4,3,4,4,5,3,4,4]
+let ST_ANDREWS_BOCA_HCS:  [Int] = [15,13,1,17,3,11,5,9,7, 10,14,18,4,12,2,16,8,6]
+let ST_ANDREWS_BOCA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6865, rating: 73.7, slope: 144)
+]
+
+// MARK: - Lake Nona Golf & Country Club — Orlando, FL
+private let LAKE_NONA_GCC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000136")!
+let LAKE_NONA_GCC_PARS: [Int] = [4,5,4,3,4,3,4,4,5, 4,5,4,3,4,5,4,3,4]
+let LAKE_NONA_GCC_HCS:  [Int] = [9,5,1,17,15,13,3,7,11, 4,12,10,16,18,8,2,14,6]
+let LAKE_NONA_GCC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7191, rating: 74.6, slope: 138)
+]
+
+// MARK: - Amelia Island Plantation - Ocean Links Course — Amelia Island, FL
+private let AMELIA_OCEAN_LINKS_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000137")!
+let AMELIA_OCEAN_LINKS_PARS: [Int] = [4,4,4,4,3,3,5,3,5, 4,5,4,3,4,3,4,5,3]
+let AMELIA_OCEAN_LINKS_HCS:  [Int] = [15,7,3,9,11,17,5,13,1, 12,2,16,10,8,14,6,4,18]
+let AMELIA_OCEAN_LINKS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6108, rating: 69.3, slope: 128)
+]
+
+// MARK: - Omni Amelia Island - Oak Marsh — Amelia Island, FL
+private let OMNI_OAK_MARSH_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000138")!
+let OMNI_OAK_MARSH_PARS: [Int] = [4,5,4,3,4,4,3,4,5, 4,5,3,4,4,4,3,4,5]
+let OMNI_OAK_MARSH_HCS:  [Int] = [2,8,18,16,14,4,12,6,10, 17,3,7,13,5,9,15,1,11]
+let OMNI_OAK_MARSH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6471, rating: 70.9, slope: 129)
+]
+
+// MARK: - San Jose Country Club — San Jose, CA
+private let SAN_JOSE_CC_ID = UUID(uuidString: "B7A10000-0000-0000-0000-000000000139")!
+let SAN_JOSE_CC_PARS: [Int] = [4,4,3,4,3,4,3,4,4, 3,5,4,4,3,4,5,5,4]
+let SAN_JOSE_CC_HCS:  [Int] = [14,10,8,2,18,6,16,4,12, 9,17,1,5,15,13,3,11,7]
+let SAN_JOSE_CC_RED_HCS: [Int] = [10,8,12,6,16,2,18,14,4, 15,11,13,7,17,9,5,1,3]
+let SAN_JOSE_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",  yardage: 6225),
+    TeeInfo(teeName: "White", yardage: 5933),
+    TeeInfo(teeName: "Red",   yardage: 5492)
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -14457,7 +14748,15 @@ private enum BuiltIns {
           phone: "((772) 545-9600",
           website: "https://www.medalistgolfclub.org",
           address: "9908 SE Cottage Lane, Hobe Sound, FL 33455"),
-        
+
+        c(MCARTHUR_GC_ID, "McArthur Golf Club", MCARTHUR_GC_PARS, MCARTHUR_GC_HCS, MCARTHUR_GC_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Hobe Sound",
+          architect: "Tom Fazio & Nick Price",
+          type: "Private",
+          address: "6550 SE Osprey St, Hobe Sound, FL 33455"),
+
         c(DYE_PRESERVE_CHAMPIONSHIP_ID, "Dye Preserve (Championship)", DYE_PRESERVE_CHAMPIONSHIP_PARS, DYE_PRESERVE_CHAMPIONSHIP_HCS, DYE_PRESERVE_CHAMPIONSHIP_TEES,
           country: "USA",
           state: "FL",
@@ -14466,7 +14765,34 @@ private enum BuiltIns {
           phone: "(561) 575-7011",
           website: "https://www.dyepreserve.com",
           address: "1800 SE Bridge Road, Jupiter, FL 33469"),
-        
+
+        c(LOXAHATCHEE_CLUB_ID, "The Loxahatchee Club", LOXAHATCHEE_CLUB_PARS, LOXAHATCHEE_CLUB_HCS, LOXAHATCHEE_CLUB_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Jupiter",
+          architect: "Jack Nicklaus",
+          type: "Private",
+          teeSets: [
+            TeeSet(name: "Red",   pars: LOXAHATCHEE_CLUB_PARS, hcs: LOXAHATCHEE_CLUB_WOMENS_HCS),
+            TeeSet(name: "Green", pars: LOXAHATCHEE_CLUB_PARS, hcs: LOXAHATCHEE_CLUB_WOMENS_HCS),
+          ]),
+
+        c(JUPITER_HILLS_HILLS_ID, "Jupiter Hills Club (Hills Course)", JUPITER_HILLS_HILLS_PARS, JUPITER_HILLS_HILLS_HCS, JUPITER_HILLS_HILLS_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Jupiter",
+          architect: "George Fazio & Tom Fazio",
+          type: "Private",
+          teeSets: [
+            TeeSet(name: "Red", pars: JUPITER_HILLS_HILLS_PARS, hcs: JUPITER_HILLS_HILLS_WOMENS_HCS),
+          ]),
+
+        c(JUPITER_HILLS_VILLAGE_ID, "Jupiter Hills Club (Village Course)", JUPITER_HILLS_VILLAGE_PARS, JUPITER_HILLS_VILLAGE_HCS, JUPITER_HILLS_VILLAGE_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Jupiter",
+          type: "Private"),
+
         c(SEMINOLE_GOLD_ID, "Seminole (Gold)", SEMINOLE_GOLD_PARS, SEMINOLE_GOLD_HCS, SEMINOLE_GOLD_TEES,
           country: "USA",
           state: "FL",
@@ -17338,6 +17664,19 @@ private enum BuiltIns {
             phone: "800-922-4680",
             website: "https://www.golfthewilderness.com",
             address: "1450 Bois Forte Road, Tower, MN 55790"
+        ),
+        c(
+            INTERLACHEN_CC_ID,
+            "Interlachen Country Club",
+            INTERLACHEN_CC_PARS,
+            INTERLACHEN_CC_HCS,
+            INTERLACHEN_CC_TEES,
+            country: "USA",
+            state: "MN",
+            architect: "Donald Ross",
+            type: "Private",
+            address: "6200 Interlachen Blvd, Edina, MN 55436",
+            teeSets: [TeeSet(name: "Women's Par 75", pars: INTERLACHEN_CC_W_PARS, hcs: INTERLACHEN_CC_W_HCS)]
         ),
         c(
             HAZELTINE_NATIONAL_ID,
@@ -21262,6 +21601,19 @@ private enum BuiltIns {
           website: "https://www.mediterraliving.com",
           address: "15755 Corso Mediterra Circle, Naples, FL 34110"),
 
+        c(TALIS_PARK_ID, "Talis Park Golf Course", TALIS_PARK_PARS, TALIS_PARK_HCS, TALIS_PARK_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Naples",
+          architect: "Greg Norman & Pete Dye",
+          type: "Private",
+          phone: "(239) 514-1051",
+          address: "16665 Toscana Circle, Naples, FL 34110",
+          teeSets: [
+            TeeSet(name: "Middle",  pars: TALIS_PARK_PARS, hcs: TALIS_PARK_WOMENS_HCS),
+            TeeSet(name: "Forward", pars: TALIS_PARK_PARS, hcs: TALIS_PARK_WOMENS_HCS),
+          ]),
+
         c(REUNION_LEGACY_PALMER_ID, "Reunion Resort (Legacy Course)", REUNION_LEGACY_PALMER_PARS, REUNION_LEGACY_PALMER_HCS,
           REUNION_LEGACY_PALMER_TEES,
           country: "USA",
@@ -24485,6 +24837,20 @@ private enum BuiltIns {
             teeSets: [TeeSet(name: "Gold", pars: PB_DYE_GC_GOLD_PARS, hcs: PB_DYE_GC_GOLD_HCS)]
         ),
 
+        c(
+            HOBBITS_GLEN_GC_ID,
+            "Hobbit's Glen Golf Club",
+            HOBBITS_GLEN_GC_PARS,
+            HOBBITS_GLEN_GC_HCS,
+            HOBBITS_GLEN_GC_TEES,
+            country: "USA",
+            state: "MD",
+            architect: "Edmund Ault",
+            type: "Semi-Private",
+            phone: "(410) 730-5980",
+            address: "11130 Willow Bottom Drive, Columbia, MD"
+        ),
+
         // -------------------------
         // North Carolina
         // -------------------------
@@ -24550,6 +24916,183 @@ private enum BuiltIns {
             website: "https://stjohnsgolf.com",
             address: "205 St Johns Golf Dr., St. Augustine, FL 32092"
         ),
+        c(
+            ST_ANDREWS_BOCA_ID,
+            "St. Andrews Country Club",
+            ST_ANDREWS_BOCA_PARS,
+            ST_ANDREWS_BOCA_HCS,
+            ST_ANDREWS_BOCA_TEES,
+            country: "USA",
+            state: "FL",
+            type: "Private",
+            phone: "(561) 451-4900",
+            address: "17557 Claridge Oval West, Boca Raton, FL 33496"
+        ),
+        c(
+            LAKE_NONA_GCC_ID,
+            "Lake Nona Golf & Country Club",
+            LAKE_NONA_GCC_PARS,
+            LAKE_NONA_GCC_HCS,
+            LAKE_NONA_GCC_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Tom Fazio",
+            type: "Private"
+        ),
+        c(
+            AMELIA_OCEAN_LINKS_ID,
+            "Amelia Island Plantation - Ocean Links",
+            AMELIA_OCEAN_LINKS_PARS,
+            AMELIA_OCEAN_LINKS_HCS,
+            AMELIA_OCEAN_LINKS_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Bobby Weed",
+            type: "Resort"
+        ),
+        c(
+            OMNI_OAK_MARSH_ID,
+            "Omni Amelia Island - Oak Marsh",
+            OMNI_OAK_MARSH_PARS,
+            OMNI_OAK_MARSH_HCS,
+            OMNI_OAK_MARSH_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Pete Dye",
+            type: "Resort",
+            resortBrand: "Omni Hotels & Resorts"
+        ),
+        c(
+            INDIAN_CREEK_CC_ID,
+            "Indian Creek Country Club",
+            INDIAN_CREEK_CC_PARS,
+            INDIAN_CREEK_CC_HCS,
+            INDIAN_CREEK_CC_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "William S. Flynn",
+            type: "Private",
+            address: "Indian Creek Village, FL"
+        ),
+        c(
+            MARSH_LANDING_CC_ID,
+            "Marsh Landing Country Club",
+            MARSH_LANDING_CC_PARS,
+            MARSH_LANDING_CC_HCS,
+            MARSH_LANDING_CC_TEES,
+            country: "USA",
+            state: "FL",
+            type: "Private",
+            phone: "(904) 285-6514",
+            website: "https://marshlandingcc.com",
+            address: "25655 Marsh Landing Parkway, Ponte Vedra Beach, FL 32082"
+        ),
+        c(
+            SARA_BAY_CC_ID,
+            "Sara Bay Country Club",
+            SARA_BAY_CC_PARS,
+            SARA_BAY_CC_HCS,
+            SARA_BAY_CC_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Donald Ross",
+            type: "Private",
+            phone: "(941) 355-7658",
+            address: "7011 Willow Street, Sarasota, FL 34243",
+            teeSets: [TeeSet(name: "Ladies", pars: SARA_BAY_CC_PARS, hcs: SARA_BAY_CC_W_HCS)]
+        ),
+        c(
+            TPC_TAMPA_BAY_ID,
+            "TPC Tampa Bay",
+            TPC_TAMPA_BAY_PARS,
+            TPC_TAMPA_BAY_HCS,
+            TPC_TAMPA_BAY_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Bobby Weed",
+            type: "Daily-Fee",
+            phone: "(866) 752-9872",
+            website: "https://www.tpctampabay.com",
+            address: "5300 West Lutz Lake Fern Road, Lutz, FL 33558",
+            teeSets: [TeeSet(name: "Ladies", pars: TPC_TAMPA_BAY_PARS, hcs: TPC_TAMPA_BAY_L_HCS)]
+        ),
+        c(
+            BLACK_DIAMOND_RANCH_ID,
+            "Black Diamond Ranch",
+            BLACK_DIAMOND_RANCH_PARS,
+            BLACK_DIAMOND_RANCH_HCS,
+            BLACK_DIAMOND_RANCH_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(352) 746-3440",
+            address: "3125 W. Black Diamond Circle, Lecanto, FL 34461"
+        ),
+        c(
+            BLACK_DIAMOND_QUARRY_ID,
+            "Black Diamond Ranch - The Quarry Course",
+            BLACK_DIAMOND_QUARRY_PARS,
+            BLACK_DIAMOND_QUARRY_HCS,
+            BLACK_DIAMOND_QUARRY_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Tom Fazio",
+            type: "Private",
+            address: "3125 W. Black Diamond Circle, Lecanto, FL 34461",
+            teeSets: [TeeSet(name: "Ladies", pars: BLACK_DIAMOND_QUARRY_PARS, hcs: BLACK_DIAMOND_QUARRY_W_HCS)]
+        ),
+        c(
+            BLACK_DIAMOND_HIGHLANDS_ID,
+            "Black Diamond Ranch - The Highlands",
+            BLACK_DIAMOND_HIGHLANDS_PARS,
+            BLACK_DIAMOND_HIGHLANDS_HCS,
+            BLACK_DIAMOND_HIGHLANDS_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Tom Fazio",
+            type: "Private",
+            address: "3125 W. Black Diamond Circle, Lecanto, FL 34461"
+        ),
+        c(
+            BOBBY_JONES_SARASOTA_ID,
+            "Bobby Jones Golf Club",
+            BOBBY_JONES_SARASOTA_PARS,
+            BOBBY_JONES_SARASOTA_HCS,
+            BOBBY_JONES_SARASOTA_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Donald Ross",
+            type: "Public",
+            website: "https://bobbyjonesgolfclub.com",
+            address: "Sarasota, FL",
+            teeSets: [TeeSet(name: "Ladies", pars: BOBBY_JONES_SARASOTA_PARS, hcs: BOBBY_JONES_SARASOTA_L_HCS)]
+        ),
+        c(
+            GRAND_CYPRESS_CYPRESS_ID,
+            "Evermore Grand Cypress Resort - Cypress Course",
+            GRAND_CYPRESS_CYPRESS_PARS,
+            GRAND_CYPRESS_CYPRESS_HCS,
+            GRAND_CYPRESS_CYPRESS_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Jack Nicklaus",
+            type: "Resort",
+            resortBrand: "Evermore",
+            teeSets: [TeeSet(name: "Ladies", pars: GRAND_CYPRESS_CYPRESS_PARS, hcs: GRAND_CYPRESS_CYPRESS_L_HCS)]
+        ),
+        c(
+            GOLDEN_BEAR_KEENES_ID,
+            "The Golden Bear Club at Keenes Pointe",
+            GOLDEN_BEAR_KEENES_PARS,
+            GOLDEN_BEAR_KEENES_HCS,
+            GOLDEN_BEAR_KEENES_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            address: "Windermere, FL"
+        ),
 
         // -------------------------
         // California
@@ -24580,6 +25123,18 @@ private enum BuiltIns {
             type: "Public",
             website: "https://sterlinghillsgolf.com",
             address: "901 Sterling Hills Drive, Camarillo, CA 93010"
+        ),
+        c(
+            SAN_JOSE_CC_ID,
+            "San Jose Country Club",
+            SAN_JOSE_CC_PARS,
+            SAN_JOSE_CC_HCS,
+            SAN_JOSE_CC_TEES,
+            country: "USA",
+            state: "CA",
+            type: "Private",
+            address: "15571 Alum Rock Ave, San Jose, CA",
+            teeSets: [TeeSet(name: "Red (Women)", pars: SAN_JOSE_CC_PARS, hcs: SAN_JOSE_CC_RED_HCS)]
         ),
         ]
 

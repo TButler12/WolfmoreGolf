@@ -2269,7 +2269,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let fg: UIColor    = .white
         let minusFG        = count == 0 ? UIColor.white.withAlphaComponent(0.4) : UIColor.white
 
-        container.backgroundColor    = .systemOrange
+        container.backgroundColor    = count == 0 ? .systemOrange : .black
         hammerTitleLabel?.textColor  = fg
         levelLabel.textColor         = fg
         minusBtn.tintColor           = minusFG
@@ -5847,7 +5847,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
 
             let row2 = UIStackView(arrangedSubviews: [pc, hc])
             row2.axis = .horizontal; row2.spacing = 6; row2.distribution = .fillEqually
-            row2.heightAnchor.constraint(equalToConstant: 40).isActive = true
+            row2.heightAnchor.constraint(equalToConstant: 48).isActive = true
             vStack.addArrangedSubview(row2)
             bottomRow2 = row2
 
