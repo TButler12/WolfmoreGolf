@@ -90,13 +90,30 @@ final class SupabaseService {
                               userInfo: [NSLocalizedDescriptionKey: "This match is already in progress. Ask your opponent to start a new match."])
             }
 
-            // Append joiner to opponent_names; record joiner's course for same-course detection
+            // Append joiner to opponent_names; record joiner's course for same-course detection.
             let newOpponents = currentOpponents + [myName]
             var updateFields: [String: AnyJSON] = [
                 "opponent_name":  AnyJSON.string(myName),
                 "opponent_names": AnyJSON.array(newOpponents.map { .string($0) })
             ]
             if !courseB.isEmpty { updateFields["course_b"] = AnyJSON.string(courseB) }
+
+            // For v2 matches always include the pairing column in this same update.
+            // The server trigger uses NEW.pairing IS NOT NULL as the v2-awareness signal:
+            //   - New clients always write a non-null value (real pairs or [] for same-course).
+            //   - Old clients (≤3.0.7) never include pairing → NEW.pairing stays NULL → blocked.
+            if match.games?.contains("pairing_v2") == true {
+                let effectiveCourseB = courseB.isEmpty ? (match.courseB ?? "") : courseB
+                let computed: [[Int]]?
+                if let aName = match.courseA, !aName.isEmpty, !effectiveCourseB.isEmpty {
+                    computed = RemoteNassauPairing.computeStoredPairing(courseAName: aName, courseBName: effectiveCourseB)
+                } else {
+                    computed = nil
+                }
+                // [] is the same-course / unresolvable sentinel; IS NOT NULL, so trigger allows it.
+                updateFields["pairing"] = .array((computed ?? []).map { .array($0.map { .integer($0) }) })
+            }
+
             try await client
                 .from("matches")
                 .update(updateFields)
@@ -113,13 +130,12 @@ final class SupabaseService {
             g.nassauState = state
         }
 
-        // For v2 matches: store the canonical pairing so both devices use the same slot order.
-        // Joiner provides courseB; use the match's recorded courseB as fallback (rejoin case).
-        if match.games?.contains("pairing_v2") == true, match.pairing == nil {
+        // Rejoin path: store pairing if it was never written (e.g. first join was an old client).
+        // Rejoins don't change opponent_names so the server trigger never fires for this update.
+        if isRejoin, match.games?.contains("pairing_v2") == true, match.pairing == nil {
             let effectiveCourseB = courseB.isEmpty ? (match.courseB ?? "") : courseB
-            if let courseAName = match.courseA, !courseAName.isEmpty, !effectiveCourseB.isEmpty,
-               let stored = RemoteNassauPairing.computeStoredPairing(
-                   courseAName: courseAName, courseBName: effectiveCourseB) {
+            if let aName = match.courseA, !aName.isEmpty, !effectiveCourseB.isEmpty,
+               let stored = RemoteNassauPairing.computeStoredPairing(courseAName: aName, courseBName: effectiveCourseB) {
                 try? await storeMatchPairing(id: match.id, pairing: stored)
             }
         }
