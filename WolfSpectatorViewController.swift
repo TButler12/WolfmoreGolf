@@ -1028,20 +1028,24 @@ extension WolfSpectatorViewController: UITableViewDataSource {
 
                             // M2 only exists in dual match (1v1+1v1). A 2v2 single match has
                             // partnerSlot set (Team A has 2 players), so skip M2 for those.
-                            if r.partnerSlot == nil && abs(m1ADelta) > 0.001 {
-                                let m1TeamBSeat = (0..<min(playerCount, deltas.count)).first {
-                                    $0 != ws && abs(deltas[$0] + m1ADelta) < 0.001
-                                }
-                                let m1AllSeats = Set([ws, m1TeamBSeat].compactMap { $0 })
-                                let m2Seats = (0..<min(playerCount, deltas.count)).filter {
-                                    !m1AllSeats.contains($0) && abs(deltas[$0]) > 0.001
-                                }
-                                if !m2Seats.isEmpty {
-                                    if m2AnchorSeat == nil { m2AnchorSeat = m2Seats.min() }
-                                    if let anchor = m2AnchorSeat, anchor < deltas.count {
-                                        let d = deltas[anchor]
-                                        if d > 0.001 { m2AWins += 1 } else if d < -0.001 { m2BWins += 1 }
+                            if r.partnerSlot == nil {
+                                if abs(m1ADelta) > 0.001 {
+                                    // M1 had a winner — identify M2 seats from money deltas.
+                                    let m1TeamBSeat = (0..<min(playerCount, deltas.count)).first {
+                                        $0 != ws && abs(deltas[$0] + m1ADelta) < 0.001
                                     }
+                                    let m1AllSeats = Set([ws, m1TeamBSeat].compactMap { $0 })
+                                    let m2Seats = (0..<min(playerCount, deltas.count)).filter {
+                                        !m1AllSeats.contains($0) && abs(deltas[$0]) > 0.001
+                                    }
+                                    if m2AnchorSeat == nil, !m2Seats.isEmpty {
+                                        m2AnchorSeat = m2Seats.min()
+                                    }
+                                }
+                                // Score M2 whenever the anchor is known — even on holes where M1 halved.
+                                if let anchor = m2AnchorSeat, anchor < deltas.count {
+                                    let d = deltas[anchor]
+                                    if d > 0.001 { m2AWins += 1 } else if d < -0.001 { m2BWins += 1 }
                                 }
                             }
                         } else if let tw = r.teamWon {
