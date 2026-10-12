@@ -307,6 +307,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             segment.layer.borderColor = UIColor.systemGray4.cgColor
             segment.layer.borderWidth = 1
 
+            var matchPlayAllowed = true
             if let g {
                 switch g.resolvedGameType {
                 case .sixPointScotch: segment.selectedSegmentIndex = 0
@@ -318,15 +319,23 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 case .hammer:         segment.selectedSegmentIndex = 0
                 case .tournament:     break
                 }
-                // Disable Match Play for odd player counts (teams need equal sides)
                 let activePlayers = g.playerNames.enumerated()
                     .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                     .count
-                if activePlayers % 2 != 0 { segment.setEnabled(false, forSegmentAt: 3) }
+                matchPlayAllowed = activePlayers == 2 || activePlayers == 4
+                if !matchPlayAllowed { segment.setEnabled(false, forSegmentAt: 3) }
             }
 
             subviews.append(segment)
             wolfScoringSegment = segment
+
+            let mpNote = UILabel()
+            mpNote.text = "Match Play needs 2 or 4 players."
+            mpNote.font = UIFont.systemFont(ofSize: 12)
+            mpNote.textColor = .secondaryLabel
+            mpNote.numberOfLines = 0
+            mpNote.isHidden = matchPlayAllowed
+            subviews.append(mpNote)
         }
 
         let wolfSection = UIStackView(arrangedSubviews: subviews)
@@ -348,14 +357,14 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             newType = (GameManager.shared.currentGame?.resolvedGameType == .bestBall) ? .bestBall : .matchPlay
         }
 
-        // Block switching to a 5-player format when >5 players are active.
+        // Block switching to Match Play when player count isn't 2 or 4.
         if !newType.supportsSevenPlayers {
             let current = GameManager.shared.currentGame
             let activeCount = (0..<WOLF_MAX_PLAYERS).filter { i in
                 (current?.playerActivated[safe: i] ?? false) &&
                 !(current?.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
             }.count
-            if activeCount > MAX_PLAYERS {
+            if activeCount != 2 && activeCount != 4 {
                 let revert: Int
                 switch current?.resolvedGameType {
                 case .wolf:        revert = 1
@@ -365,7 +374,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 sender.selectedSegmentIndex = revert
                 let ac = UIAlertController(
                     title: "Format Not Available",
-                    message: "Match Play supports up to 5 players. You have \(activeCount) active players. Switch to 6-Point, Wolf 2pt, or LowBall, or reduce to 5 or fewer players.",
+                    message: "Match Play needs 2 or 4 players. You have \(activeCount) active players.",
                     preferredStyle: .alert
                 )
                 ac.addAction(UIAlertAction(title: "OK", style: .default))
@@ -513,6 +522,11 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         guard let g = GameManager.shared.currentGame else { return }
 
         // ── Sub-mode: Individual / Fourball / FB Stroke Play ──
+        let activePlayers = g.playerNames.enumerated()
+            .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .count
+        let fourAllowed = activePlayers == 4
+
         let subModeSeg = UISegmentedControl(items: ["Individual", "Fourball", "FB Stroke Play"])
         subModeSeg.selectedSegmentIndex = g.resolvedGameType == .fourball ? 1
                                         : g.resolvedGameType == .bestBall  ? 2 : 0
@@ -526,9 +540,22 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             .foregroundColor: UIColor.white,
             .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
         ], for: .selected)
+        if !fourAllowed {
+            subModeSeg.setEnabled(false, forSegmentAt: 1)
+            subModeSeg.setEnabled(false, forSegmentAt: 2)
+        }
         subModeSeg.addTarget(self, action: #selector(matchPlaySubModeChanged(_:)), for: .valueChanged)
         matchPlaySubModeSegment = subModeSeg
         inner.addArrangedSubview(subModeSeg)
+
+        if !fourAllowed {
+            let fbNote = UILabel()
+            fbNote.text = "Fourball and FB Stroke Play require exactly 4 players."
+            fbNote.font = UIFont.systemFont(ofSize: 12)
+            fbNote.textColor = .secondaryLabel
+            fbNote.numberOfLines = 0
+            inner.addArrangedSubview(fbNote)
+        }
 
         let sep0 = UIView()
         sep0.backgroundColor = .separator
@@ -802,6 +829,24 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         case 1:  newType = .fourball
         case 2:  newType = .bestBall
         default: newType = .matchPlay
+        }
+        if newType == .fourball || newType == .bestBall {
+            let current = GameManager.shared.currentGame
+            let activeCount = (0..<WOLF_MAX_PLAYERS).filter { i in
+                (current?.playerActivated[safe: i] ?? false) &&
+                !(current?.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            }.count
+            if activeCount != 4 {
+                sender.selectedSegmentIndex = 0
+                let ac = UIAlertController(
+                    title: "Format Not Available",
+                    message: "Fourball and FB Stroke Play require exactly 4 players. You have \(activeCount) active players.",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                present(ac, animated: true)
+                return
+            }
         }
         GameManager.shared.update { g in
             g.gameType = newType
