@@ -474,23 +474,28 @@ final class LiveNassauViewController: UIViewController {
         let ownerProfile = CourseLibrary.shared.courses.first { normCourse($0.name) == normCourse(ownerCourseName) }
         let oppProfile   = CourseLibrary.shared.courses.first { normCourse($0.name) == normCourse(oppCourseName)   }
 
-        func makePairedHole(rank: Int, o: HoleScoreRecord?, p: HoleScoreRecord?) -> PairedHole {
+        func makePairedHole(rank: Int, o: HoleScoreRecord?, p: HoleScoreRecord?,
+                            knownHostIdx: Int? = nil, knownOppIdx: Int? = nil) -> PairedHole {
             let rawSI = o?.holeHc ?? p?.holeHc ?? (rank + 1)
             let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
             let hostStrokes = NassauEngine.pops(for: hostDelta, strokeIndex: si)
             let oppStrokes  = NassauEngine.pops(for: oppDelta,  strokeIndex: si)
             let hostNet: Int? = o.map { $0.grossScore - hostStrokes }
             let oppNet:  Int? = p.map { $0.grossScore - oppStrokes  }
+            let hostIdx = o?.hole ?? knownHostIdx ?? rank
+            let oppIdx  = p?.hole ?? knownOppIdx  ?? rank
             let hostPar = o.flatMap { ownerProfile?.pars[safe: $0.hole] }
-            let oppPar  = p.flatMap { oppProfile?.pars[safe: $0.hole]   }
+                       ?? knownHostIdx.flatMap { ownerProfile?.pars[safe: $0] }
+            let oppPar  = p.flatMap { oppProfile?.pars[safe: $0.hole] }
+                       ?? knownOppIdx.flatMap { oppProfile?.pars[safe: $0] }
             return PairedHole(
                 hcRank: rank + 1,
-                hostPhysicalHole: (o?.hole ?? rank) + 1,
+                hostPhysicalHole: hostIdx + 1,
                 hostScore: o?.grossScore,
                 hostNetScore: hostNet,
                 hostStrokes: hostStrokes,
                 hostPar: hostPar,
-                opponentPhysicalHole: (p?.hole ?? rank) + 1,
+                opponentPhysicalHole: oppIdx + 1,
                 opponentScore: p?.grossScore,
                 opponentNetScore: oppNet,
                 opponentStrokes: oppStrokes,
@@ -514,6 +519,21 @@ final class LiveNassauViewController: UIViewController {
 
             // Fixed-slot path: always 9 slots ranked by HC from CourseProfile
             if let ownerProf = ownerProfile, let oppProf = oppProfile {
+                // v2: par-first pairing ordered by HC-sum (new matches only)
+                if match?.games?.contains("pairing_v2") == true {
+                    let pairs = RemoteNassauPairing.parFirstPairedIndices(
+                        parsA: ownerProf.pars, hcsA: ownerProf.hcs,
+                        parsB: oppProf.pars,   hcsB: oppProf.hcs,
+                        range: range
+                    )
+                    return pairs.enumerated().map { (rank, pair) in
+                        let o = ownerScores.first { $0.hole == pair.indexA }
+                        let p = oppScores.first   { $0.hole == pair.indexB }
+                        return makePairedHole(rank: rank, o: o, p: p,
+                                              knownHostIdx: pair.indexA, knownOppIdx: pair.indexB)
+                    }
+                }
+                // v1: sort each course independently by HC
                 let ownerOrder = RemoteNassauPairing.hcSortedIndices(hcs: ownerProf.hcs, range: range)
                 let oppOrder   = RemoteNassauPairing.hcSortedIndices(hcs: oppProf.hcs,   range: range)
                 return (0..<9).map { rank in

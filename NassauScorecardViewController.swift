@@ -141,7 +141,7 @@ extension NassauScorecardViewController: UITableViewDelegate {
 // Column widths shared by header row and data rows (guarantees alignment)
 private enum HoleCellCol {
     static let hc:   CGFloat = 24
-    static let hole: CGFloat = 38
+    static let hole: CGFloat = 50  // wide enough for "H10 P4"
     static let scr:  CGFloat = 32
     static let gap:  CGFloat = 6
 }
@@ -284,9 +284,13 @@ final class PairedHoleCell: UITableViewCell {
 
         hcLbl.text             = "\(hole.hcRank)"
         hcLbl.textColor        = .tertiaryLabel
-        ownerHoleLbl.text      = hole.hostScore != nil ? "H\(hole.hostPhysicalHole)" : "—"
+        ownerHoleLbl.text      = holeParLabel(hole: hole.hostPhysicalHole,
+                                               par: hole.hostPar,
+                                               hasScore: hole.hostScore != nil)
         ownerHoleLbl.textColor = .secondaryLabel
-        oppHoleLbl.text        = hole.opponentScore != nil ? "H\(hole.opponentPhysicalHole)" : "—"
+        oppHoleLbl.text        = holeParLabel(hole: hole.opponentPhysicalHole,
+                                               par: hole.opponentPar,
+                                               hasScore: hole.opponentScore != nil)
         oppHoleLbl.textColor   = .secondaryLabel
 
         ownerScrLbl.text = scoreText(gross: hole.hostScore, net: hole.hostNetScore, strokes: hole.hostStrokes)
@@ -330,6 +334,11 @@ final class PairedHoleCell: UITableViewCell {
                 oppScrLbl.textColor   = .tertiaryLabel
             }
         }
+    }
+
+    private func holeParLabel(hole: Int, par: Int?, hasScore: Bool) -> String {
+        if let p = par { return "H\(hole) P\(p)" }
+        return hasScore ? "H\(hole)" : "—"
     }
 
     private func scoreText(gross: Int?, net: Int?, strokes: Int) -> String {

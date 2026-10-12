@@ -129,7 +129,7 @@ enum WolfActions {
                         courseA: courseName,
                         courseB: "",
                         stake: stake,
-                        games: ["nassau"]
+                        games: ["nassau", "pairing_v2"]
                     )
                     GameManager.shared.update { g in
                         if g.remoteNassauSideMap == nil {

@@ -38,6 +38,68 @@ enum RemoteNassauPairing {
              + buildNineSlots(a: a, b: b, range: 9..<18, aStrokes: aStrokes, bStrokes: bStrokes, sameCourse: sameCourse)
     }
 
+    /// Par-first pairing for different-course matches (v2).
+    /// Groups holes by par, pairs hardest-to-hardest within each par group,
+    /// pairs leftovers by closest par (never 3↔5 if avoidable), then sorts
+    /// the 9 resulting pairs by HC-sum ascending (tiebreak: lower min-HC first).
+    /// Returns exactly 9 (indexA, indexB) pairs for the given nine.
+    static func parFirstPairedIndices(
+        parsA: [Int], hcsA: [Int],
+        parsB: [Int], hcsB: [Int],
+        range: Range<Int>
+    ) -> [(indexA: Int, indexB: Int)] {
+        struct H { let index: Int; let par: Int; let hc: Int }
+
+        var byParA = [Int: [H]]()
+        var byParB = [Int: [H]]()
+        for i in range {
+            let h = H(index: i, par: parsA[safe: i] ?? 4, hc: hcsA[safe: i] ?? 99)
+            byParA[h.par, default: []].append(h)
+        }
+        for i in range {
+            let h = H(index: i, par: parsB[safe: i] ?? 4, hc: hcsB[safe: i] ?? 99)
+            byParB[h.par, default: []].append(h)
+        }
+        for k in byParA.keys { byParA[k]!.sort { $0.hc < $1.hc } }
+        for k in byParB.keys { byParB[k]!.sort { $0.hc < $1.hc } }
+
+        var pairs  = [(indexA: Int, indexB: Int)]()
+        var leftA  = [H]()
+        var leftB  = [H]()
+
+        for par in [3, 4, 5] {
+            let ga = byParA[par] ?? []
+            let gb = byParB[par] ?? []
+            let n  = min(ga.count, gb.count)
+            for i in 0..<n { pairs.append((ga[i].index, gb[i].index)) }
+            leftA += Array(ga.dropFirst(n))
+            leftB += Array(gb.dropFirst(n))
+        }
+
+        // Pair leftovers: minimize |parA - parB|, then HC-sum (avoids 3↔5 if a 3↔4 or 4↔5 exists)
+        while !leftA.isEmpty && !leftB.isEmpty {
+            var bi = 0, bj = 0, bPD = Int.max, bSum = Int.max
+            for i in leftA.indices {
+                for j in leftB.indices {
+                    let pd  = abs(leftA[i].par - leftB[j].par)
+                    let sum = leftA[i].hc + leftB[j].hc
+                    if pd < bPD || (pd == bPD && sum < bSum) { bi = i; bj = j; bPD = pd; bSum = sum }
+                }
+            }
+            pairs.append((leftA.remove(at: bi).index, leftB.remove(at: bj).index))
+        }
+
+        // Sort hardest pair first: ascending HC-sum, tiebreak ascending min-HC
+        pairs.sort { a, b in
+            let sA = (hcsA[safe: a.indexA] ?? 99) + (hcsB[safe: a.indexB] ?? 99)
+            let sB = (hcsA[safe: b.indexA] ?? 99) + (hcsB[safe: b.indexB] ?? 99)
+            if sA != sB { return sA < sB }
+            return min(hcsA[safe: a.indexA] ?? 99, hcsB[safe: a.indexB] ?? 99)
+                 < min(hcsA[safe: b.indexA] ?? 99, hcsB[safe: b.indexB] ?? 99)
+        }
+        return pairs
+    }
+
     /// Indices within `range` sorted by ascending HC value (hardest first).
     /// Used by the live view to look up which physical hole occupies each fixed slot.
     static func hcSortedIndices(hcs: [Int], range: Range<Int>) -> [Int] {
