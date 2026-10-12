@@ -735,4 +735,71 @@ enum WolfActions {
         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
         presenter.present(alert, animated: true)
     }
+
+    static func presentWatchLive(from presenter: UIViewController) {
+        let alert = UIAlertController(
+            title: "Watch Live Wolf or Match Board",
+            message: "Enter a group code (6 chars) or a match board code (7 chars, starts with E)",
+            preferredStyle: .alert
+        )
+        alert.addTextField { tf in
+            tf.placeholder = "e.g. ABC123 or EABC123"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType = .no
+            tf.returnKeyType = .go
+            NotificationCenter.default.addObserver(
+                forName: UITextField.textDidChangeNotification,
+                object: tf,
+                queue: .main
+            ) { _ in
+                if let text = tf.text, text.count > 7 { tf.text = String(text.prefix(7)) }
+            }
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Watch", style: .default) { [weak alert, weak presenter] _ in
+            guard let presenter else { return }
+            let code = (alert?.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .uppercased()
+            guard !code.isEmpty else { return }
+            if code.count == 7 && code.hasPrefix("E") {
+                let vc = LiveEventViewController(eventCode: code)
+                if let nav = presenter.navigationController {
+                    nav.pushViewController(vc, animated: true)
+                } else {
+                    let nav = UINavigationController(rootViewController: vc)
+                    nav.modalPresentationStyle = .pageSheet
+                    presenter.present(nav, animated: true)
+                }
+                return
+            }
+            Task {
+                do {
+                    let session = try await SupabaseService.shared.fetchWolfSessionByCode(code: code)
+                    await MainActor.run {
+                        let vc = WolfSpectatorViewController()
+                        vc.sessionCode = session.code
+                        if let nav = presenter.navigationController {
+                            nav.pushViewController(vc, animated: true)
+                        } else {
+                            let nav = UINavigationController(rootViewController: vc)
+                            nav.modalPresentationStyle = .pageSheet
+                            presenter.present(nav, animated: true)
+                        }
+                    }
+                } catch {
+                    await MainActor.run {
+                        let err = UIAlertController(
+                            title: "Code Not Found",
+                            message: "Check the code and try again.",
+                            preferredStyle: .alert
+                        )
+                        err.addAction(UIAlertAction(title: "OK", style: .default))
+                        presenter.present(err, animated: true)
+                    }
+                }
+            }
+        })
+        presenter.present(alert, animated: true)
+    }
 }

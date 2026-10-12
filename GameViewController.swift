@@ -5565,7 +5565,40 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         }
     }
 
-    @objc private func tournamentAttachTapped() {
+    @objc private func joinTapped() {
+        let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(
+            title: "Tournament\nLink this round to a tournament leaderboard",
+            style: .default) { [weak self] _ in self?.showTournamentJoinPrompt() })
+        sheet.addAction(UIAlertAction(
+            title: "Leaderboard (as scorer)\nGo Live and appear on an organizer's board",
+            style: .default) { [weak self] _ in
+            guard let self else { return }
+            WolfActions.presentGoLive(from: self)
+        })
+        sheet.addAction(UIAlertAction(
+            title: "Watch a group\nView another group's live scores",
+            style: .default) { [weak self] _ in
+            guard let self else { return }
+            WolfActions.presentWatchLive(from: self)
+        })
+        sheet.addAction(UIAlertAction(
+            title: "Remote Nassau\nPlay or view a remote Nassau match",
+            style: .default) { [weak self] _ in
+            guard let self else { return }
+            let vc = RemoteMatchesViewController()
+            self.navigationController?.pushViewController(vc, animated: true)
+        })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = sheet.popoverPresentationController {
+            pop.sourceView = view
+            pop.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 0, height: 0)
+            pop.permittedArrowDirections = []
+        }
+        present(sheet, animated: true)
+    }
+
+    private func showTournamentJoinPrompt() {
         let ac = UIAlertController(
             title: "Join Tournament",
             message: "Enter the tournament code to link this round.",
@@ -6042,9 +6075,9 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             tnCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
             }
-            tnCfg.title = "Join Tournament"
+            tnCfg.title = "Join"
             let tournamentBtn = UIButton(configuration: tnCfg)
-            tournamentBtn.addTarget(self, action: #selector(tournamentAttachTapped), for: .touchUpInside)
+            tournamentBtn.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
 
             let row7 = UIStackView(arrangedSubviews: [liveWolfBtn, tournamentBtn])
             row7.axis = .horizontal; row7.spacing = 6; row7.distribution = .fillEqually

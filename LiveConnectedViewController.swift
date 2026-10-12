@@ -659,61 +659,7 @@ final class LiveConnectedViewController: UITableViewController {
     }
 
     private func showWatchLiveAlert() {
-        let alert = UIAlertController(
-            title: "Watch Live Wolf or Match Board",
-            message: "Enter a group code (6 chars) or a match board code (7 chars, starts with E)",
-            preferredStyle: .alert
-        )
-        alert.addTextField { tf in
-            tf.placeholder = "e.g. ABC123 or EABC123"
-            tf.autocapitalizationType = .allCharacters
-            tf.autocorrectionType = .no
-            tf.returnKeyType = .go
-            NotificationCenter.default.addObserver(
-                forName: UITextField.textDidChangeNotification,
-                object: tf,
-                queue: .main
-            ) { _ in
-                if let text = tf.text, text.count > 7 { tf.text = String(text.prefix(7)) }
-            }
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Watch", style: .default) { [weak self, weak alert] _ in
-            let code = (alert?.textFields?.first?.text ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .uppercased()
-            guard !code.isEmpty else { return }
-            self?.fetchAndOpen(code: code)
-        })
-        present(alert, animated: true)
-    }
-
-    private func fetchAndOpen(code: String) {
-        if code.count == 7 && code.hasPrefix("E") {
-            let vc = LiveEventViewController(eventCode: code)
-            navigationController?.pushViewController(vc, animated: true)
-            return
-        }
-        Task {
-            do {
-                let session = try await SupabaseService.shared.fetchWolfSessionByCode(code: code)
-                await MainActor.run {
-                    let vc = WolfSpectatorViewController()
-                    vc.sessionCode = session.code
-                    self.navigationController?.pushViewController(vc, animated: true)
-                }
-            } catch {
-                await MainActor.run {
-                    let alert = UIAlertController(
-                        title: "Code Not Found",
-                        message: "Check the code and try again.",
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: "OK", style: .default))
-                    self.present(alert, animated: true)
-                }
-            }
-        }
+        WolfActions.presentWatchLive(from: self)
     }
 
     // MARK: - Co-Organizer
