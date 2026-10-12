@@ -5657,58 +5657,21 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     }
 
     private func applyTournamentAttach(record: TournamentRecord, preserveScores: Bool = false) {
-        // Snapshot the current game before applyTournamentJoin switches the active slot.
-        // If an existing tournament slot is loaded, its GameData replaces currentGame, so
-        // anything from the local slot (live sessions, remote nassau, scores) must be
-        // captured here and restored after.
-        let pre = GameManager.shared.currentGame
-
-        // Score/money snapshot (only needed when preserving a mid-round join)
-        let savedScores    = preserveScores ? pre?.scores        : nil
-        let savedCommitted = preserveScores ? pre?.holeCommitted : nil
-        let savedHole      = preserveScores ? pre?.hole          : nil
-        let savedMoney     = preserveScores ? pre?.playerMoney   : nil
-
-        // Live/remote session snapshot — always, so running broadcasts survive the slot switch
-        let savedRemoteMatchId           = pre?.remoteMatchId
-        let savedRemoteMatchIds          = pre?.remoteMatchIds ?? []
-        let savedRemoteNassauSide        = pre?.remoteNassauSide
-        let savedRemoteNassauSideMap     = pre?.remoteNassauSideMap
-        let savedLiveSessionId           = pre?.liveSessionId
-        let savedLiveSessionCode         = pre?.liveSessionCode
-        let savedLiveCreatorToken        = pre?.liveCreatorToken
-        let savedLiveSessionGroupName    = pre?.liveSessionGroupName
-        let savedLiveLinkedEventCode     = pre?.liveLinkedEventCode
-        let savedLiveEventId             = pre?.liveEventId
-        let savedLiveEventCode           = pre?.liveEventCode
-        let savedLiveEventOrganizerToken = pre?.liveEventOrganizerToken
+        let savedScores    = preserveScores ? GameManager.shared.currentGame?.scores        : nil
+        let savedCommitted = preserveScores ? GameManager.shared.currentGame?.holeCommitted : nil
+        let savedHole      = preserveScores ? GameManager.shared.currentGame?.hole          : nil
 
         GameManager.applyTournamentJoin(record: record)
 
-        GameManager.shared.update { g in
-            // Restore scores, committed flags, hole position, and money when preserving
-            if preserveScores, let scores = savedScores {
+        if preserveScores, let scores = savedScores {
+            GameManager.shared.update { g in
                 g.scores        = scores
                 if let c = savedCommitted { g.holeCommitted = c }
                 if let h = savedHole      { g.hole          = h }
-                if let m = savedMoney     { g.playerMoney   = m }
             }
-            // Always restore live/remote session state so broadcasts keep updating
-            g.remoteMatchId              = savedRemoteMatchId
-            g.remoteMatchIds             = savedRemoteMatchIds
-            g.remoteNassauSide           = savedRemoteNassauSide
-            g.remoteNassauSideMap        = savedRemoteNassauSideMap
-            g.liveSessionId              = savedLiveSessionId
-            g.liveSessionCode            = savedLiveSessionCode
-            g.liveCreatorToken           = savedLiveCreatorToken
-            g.liveSessionGroupName       = savedLiveSessionGroupName
-            g.liveLinkedEventCode        = savedLiveLinkedEventCode
-            g.liveEventId                = savedLiveEventId
-            g.liveEventCode              = savedLiveEventCode
-            g.liveEventOrganizerToken    = savedLiveEventOrganizerToken
+            if let h = savedHole { self.currentHole = h }
+            GameManager.shared.saveCurrent()
         }
-        if preserveScores, let h = savedHole { self.currentHole = h }
-        GameManager.shared.saveCurrent()
 
         if GameManager.shared.currentGame?.resolvedGameType != .tournament {
             GameManager.shared.seedScoresWithParsForActivePlayers()
