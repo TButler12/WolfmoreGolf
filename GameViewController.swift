@@ -4851,7 +4851,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 if g.isDualMatch {
                     let a2 = (g.matchPlayTeamA2 ?? []).filter { activeSeats.contains($0) }
                     let b2 = (g.matchPlayTeamB2 ?? []).filter { activeSeats.contains($0) }
-                    liveSummaryPlayerLabel?.text = "Best Ball"
+                    liveSummaryPlayerLabel?.text = g.resolvedGameType.displayName
                     liveSummaryWolfLabel?.text   = "M1: \(toParStr(teamBestBallToPar(a1))) / \(toParStr(teamBestBallToPar(b1)))"
                     liveSummarySkinsLabel?.text  = "M2: \(toParStr(teamBestBallToPar(a2))) / \(toParStr(teamBestBallToPar(b2)))"
                     liveSummaryNassauLabel?.text = thruText
@@ -4862,7 +4862,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     let bName = b1.compactMap { g.playerNames[safe: $0]?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }.first ?? "B"
                     let diff = aTP - bTP
                     let leadText = diff < 0 ? "\(aName) leads \(abs(diff))" : diff > 0 ? "\(bName) leads \(diff)" : "Even"
-                    liveSummaryPlayerLabel?.text = "Best Ball"
+                    liveSummaryPlayerLabel?.text = g.resolvedGameType.displayName
                     liveSummaryWolfLabel?.text   = "\(aName): \(toParStr(aTP))"
                     liveSummarySkinsLabel?.text  = "\(bName): \(toParStr(bTP))"
                     liveSummaryNassauLabel?.text = "\(leadText) · \(thruText)"
@@ -4892,14 +4892,14 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 let a2 = (g.matchPlayTeamA2 ?? []).filter { $0 < MAX_PLAYERS }
                 let b2 = (g.matchPlayTeamB2 ?? []).filter { $0 < MAX_PLAYERS }
                 let playerName = g.playerNames[safe: mySeat]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                liveSummaryPlayerLabel?.text = playerName.isEmpty ? "Match Play" : playerName
+                liveSummaryPlayerLabel?.text = playerName.isEmpty ? g.resolvedGameType.displayName : playerName
                 liveSummaryWolfLabel?.text   = "M1: \(matchStatus(teamA: a1, teamB: b1))"
                 liveSummarySkinsLabel?.text  = "M2: \(matchStatus(teamA: a2, teamB: b2))"
                 liveSummaryNassauLabel?.text = played > 0 ? "Thru \(played)" : "—"
             } else {
                 let playerName = g.playerNames[safe: mySeat]?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                liveSummaryPlayerLabel?.text = playerName.isEmpty ? "Match Play" : playerName
-                liveSummaryWolfLabel?.text   = "Match Play"
+                liveSummaryPlayerLabel?.text = playerName.isEmpty ? g.resolvedGameType.displayName : playerName
+                liveSummaryWolfLabel?.text   = g.resolvedGameType.displayName
                 liveSummarySkinsLabel?.text  = matchStatus(teamA: a1, teamB: b1)
                 liveSummaryNassauLabel?.text = played > 0 ? "Thru \(played)" : "—"
             }
@@ -5572,7 +5572,70 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         }
     }
 
+    private func gameTypeFor(record: TournamentRecord) -> GameType? {
+        switch record.gameType {
+        case "stableford": return .tournament
+        case "wolf":
+            switch record.wolfVariant {
+            case "2pt":       return .wolf
+            case "lowball":   return .wolfLowBall
+            case "matchplay": return .matchPlay
+            default:          return .sixPointScotch
+            }
+        default: return nil
+        }
+    }
+
     private func confirmAndAttach(record: TournamentRecord) {
+        let g = GameManager.shared.currentGame
+        let hasCommitted = g?.holeCommitted.contains(true) == true
+
+        if hasCommitted {
+            let currentType    = g?.resolvedGameType
+            let tournamentType = gameTypeFor(record: record)
+            let formatConflict = tournamentType != nil && tournamentType != currentType
+
+            let tournamentCourse = record.courseName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let currentCourse    = g?.course.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            let courseConflict   = !tournamentCourse.isEmpty && !currentCourse.isEmpty
+                && currentCourse.caseInsensitiveCompare(tournamentCourse) != .orderedSame
+
+            if formatConflict || courseConflict {
+                var parts: [String] = []
+                if formatConflict {
+                    let tName = tournamentType?.displayName ?? record.gameType.capitalized
+                    let cName = currentType?.displayName ?? "your current format"
+                    parts.append("format (\(tName) vs. \(cName))")
+                }
+                if courseConflict {
+                    parts.append("course (\(tournamentCourse) vs. \(currentCourse))")
+                }
+                let ac = UIAlertController(
+                    title: "Can't Join Mid-Round",
+                    message: "\"\(record.name)\" uses a different \(parts.joined(separator: " and ")). Your scores can't carry over. Finish your current round first.",
+                    preferredStyle: .alert
+                )
+                ac.addAction(UIAlertAction(title: "OK", style: .default))
+                present(ac, animated: true)
+                return
+            }
+
+            // Same format and course — scores will be preserved
+            let typeName = tournamentType?.displayName ?? record.gameType.capitalized
+            let ac = UIAlertController(
+                title: "Join \"\(record.name)\"?",
+                message: "\(typeName) tournament. Your current players and scores will be kept.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
+                self?.applyTournamentAttach(record: record, preserveScores: true)
+            })
+            present(ac, animated: true)
+            return
+        }
+
+        // No committed holes — fresh start
         let typeName: String
         switch record.gameType {
         case "wolf":       typeName = "Wolf"
@@ -5583,7 +5646,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         }
         let ac = UIAlertController(
             title: "Join \"\(record.name)\"?",
-            message: "\(typeName) tournament. Your current players and scores will be kept.",
+            message: "\(typeName) tournament. Your players will be carried over.",
             preferredStyle: .alert
         )
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -5593,12 +5656,23 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         present(ac, animated: true)
     }
 
-    private func applyTournamentAttach(record: TournamentRecord) {
+    private func applyTournamentAttach(record: TournamentRecord, preserveScores: Bool = false) {
+        let savedScores    = preserveScores ? GameManager.shared.currentGame?.scores        : nil
+        let savedCommitted = preserveScores ? GameManager.shared.currentGame?.holeCommitted : nil
+        let savedHole      = preserveScores ? GameManager.shared.currentGame?.hole          : nil
+
         GameManager.applyTournamentJoin(record: record)
-        // Re-seed with the now-correct tournament course. viewDidLoad already seeded with the
-        // pre-join course, so any score that was par on the old course but should be a different
-        // par on the tournament course needs to be re-evaluated. Only fills nil slots, so scores
-        // already entered by the player are preserved. Stableford skipped: nil = unplayed there.
+
+        if preserveScores, let scores = savedScores {
+            GameManager.shared.update { g in
+                g.scores        = scores
+                if let c = savedCommitted { g.holeCommitted = c }
+                if let h = savedHole      { g.hole          = h }
+            }
+            if let h = savedHole { self.currentHole = h }
+            GameManager.shared.saveCurrent()
+        }
+
         if GameManager.shared.currentGame?.resolvedGameType != .tournament {
             GameManager.shared.seedScoresWithParsForActivePlayers()
         }

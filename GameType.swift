@@ -33,7 +33,7 @@ extension GameType {
         case .wolfLowBall:    return "Wolf LowBall"
         case .matchPlay:      return "Singles"
         case .fourball:       return "Fourball"
-        case .bestBall:       return "FB Stroke Play"
+        case .bestBall:       return "Team Stroke Play"
         case .sixPointScotch: return "6-Point Scotch"
         case .hammer:         return "Hammer"
         case .tournament:     return "Tournament"
