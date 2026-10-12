@@ -487,10 +487,17 @@ final class WolfSpectatorViewController: UIViewController {
             let n = names[seat].trimmingCharacters(in: .whitespaces)
             return n.components(separatedBy: " ").first ?? n
         }
-        let aNames = teamASeats.map(short).joined(separator: " & ")
-        let bNames = teamBSeats.map(short).joined(separator: " & ")
         let formatName = isBB ? "Best Ball" : "Match Play"
-        let pairing = (!aNames.isEmpty && !bNames.isEmpty) ? "\(aNames) vs \(bNames)" : ""
+        let parsedSeats = results.first(where: { $0.mpSeats != nil })?
+            .mpSeats?.split(separator: ",").compactMap({ Int($0) }) ?? []
+        let pairing: String
+        if parsedSeats.count >= 4 {
+            pairing = "\(short(parsedSeats[0])) vs \(short(parsedSeats[1])) · \(short(parsedSeats[2])) vs \(short(parsedSeats[3]))"
+        } else {
+            let aNames = teamASeats.map(short).joined(separator: " & ")
+            let bNames = teamBSeats.map(short).joined(separator: " & ")
+            pairing = (!aNames.isEmpty && !bNames.isEmpty) ? "\(aNames) vs \(bNames)" : ""
+        }
         formatBannerLabel.text = pairing.isEmpty ? formatName : "\(formatName)  ·  \(pairing)"
         formatBannerHeight?.constant = 36
     }
@@ -1014,44 +1021,10 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                     else if diff > 0 { matchStatus = "B \(diff)" }
                     else             { matchStatus = "E" }
                 } else {
-                    // Match Play: accumulate hole wins/losses from money deltas.
-                    var m1AWins = 0, m1BWins = 0
-                    var m2AWins = 0, m2BWins = 0
-                    var m2AnchorSeat: Int? = nil
-
-                    for h in 1...matchPos {
-                        guard let r = currentHoleResults[h] else { continue }
-                        let deltas = r.moneyDeltas ?? r.payouts ?? []
-                        if let ws = r.wolfSlot, ws < deltas.count {
-                            let m1ADelta = deltas[ws]
-                            if m1ADelta > 0.001 { m1AWins += 1 } else if m1ADelta < -0.001 { m1BWins += 1 }
-
-                            // M2 only exists in dual match (1v1+1v1). A 2v2 single match has
-                            // partnerSlot set (Team A has 2 players), so skip M2 for those.
-                            if r.partnerSlot == nil {
-                                if abs(m1ADelta) > 0.001 {
-                                    // M1 had a winner — identify M2 seats from money deltas.
-                                    let m1TeamBSeat = (0..<min(playerCount, deltas.count)).first {
-                                        $0 != ws && abs(deltas[$0] + m1ADelta) < 0.001
-                                    }
-                                    let m1AllSeats = Set([ws, m1TeamBSeat].compactMap { $0 })
-                                    let m2Seats = (0..<min(playerCount, deltas.count)).filter {
-                                        !m1AllSeats.contains($0) && abs(deltas[$0]) > 0.001
-                                    }
-                                    if m2AnchorSeat == nil, !m2Seats.isEmpty {
-                                        m2AnchorSeat = m2Seats.min()
-                                    }
-                                }
-                                // Score M2 whenever the anchor is known — even on holes where M1 halved.
-                                if let anchor = m2AnchorSeat, anchor < deltas.count {
-                                    let d = deltas[anchor]
-                                    if d > 0.001 { m2AWins += 1 } else if d < -0.001 { m2BWins += 1 }
-                                }
-                            }
-                        } else if let tw = r.teamWon {
-                            if tw { m1AWins += 1 } else { m1BWins += 1 }
-                        }
-                    }
+                    // Match Play hole-win accumulation.
+                    // New rows carry mp_seats ("m1a,m1b[,m2a,m2b]") so we can compute from
+                    // net scores — works at $0 stake and from hole 1 even when M1 halves.
+                    // Old rows without mp_seats fall back to money-delta inference.
 
                     func statusString(aWins: Int, bWins: Int, aLabel: String, bLabel: String) -> String {
                         let diff = aWins - bWins
@@ -1060,12 +1033,110 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                         return "\(bLabel) \(abs(diff))↑"
                     }
 
-                    let m1Status = statusString(aWins: m1AWins, bWins: m1BWins, aLabel: "A", bLabel: "B")
-                    if m2AnchorSeat != nil {
-                        let m2Status = statusString(aWins: m2AWins, bWins: m2BWins, aLabel: "C", bLabel: "D")
-                        matchStatus = "\(m1Status)\n\(m2Status)"
+                    let parsedSeats = Array(currentHoleResults.values)
+                        .first(where: { $0.mpSeats != nil })?
+                        .mpSeats?.split(separator: ",").compactMap({ Int($0) }) ?? []
+
+                    if parsedSeats.count >= 2 {
+                        // Net-score path: explicit seat assignments
+                        let m1ASeat = parsedSeats[0]
+                        let m1BSeat = parsedSeats[1]
+                        let m2ASeat: Int? = parsedSeats.count >= 4 ? parsedSeats[2] : nil
+                        let m2BSeat: Int? = parsedSeats.count >= 4 ? parsedSeats[3] : nil
+                        let hcs = session.playerHandicaps ?? []
+                        let m1Baseline = [m1ASeat, m1BSeat]
+                            .compactMap { $0 < hcs.count ? hcs[$0] : nil }.min() ?? 0
+                        let m2Baseline: Int = {
+                            guard let s2a = m2ASeat, let s2b = m2BSeat else { return 0 }
+                            return [s2a, s2b].compactMap { $0 < hcs.count ? hcs[$0] : nil }.min() ?? 0
+                        }()
+
+                        func mpPops(seat: Int, baseline: Int, si: Int) -> Int {
+                            guard seat < hcs.count else { return 0 }
+                            let delta = max(0, hcs[seat] - baseline)
+                            if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
+                            return 1 + (si <= delta - STANDARD_HOLES ? 1 : 0)
+                        }
+
+                        var m1AWins = 0, m1BWins = 0, m2AWins = 0, m2BWins = 0
+                        for h in 1...matchPos {
+                            guard let r = currentHoleResults[h], let scores = r.scores else { continue }
+                            let courseH = isNineHoleSession
+                                ? physicalHole(matchPosition: h) - 1
+                                : (h - 1) % STANDARD_HOLES
+                            let si = courseH < courseHCs.count ? max(1, courseHCs[courseH]) : STANDARD_HOLES
+                            if m1ASeat < scores.count, scores[m1ASeat] > 0,
+                               m1BSeat < scores.count, scores[m1BSeat] > 0 {
+                                let aNet = scores[m1ASeat] - mpPops(seat: m1ASeat, baseline: m1Baseline, si: si)
+                                let bNet = scores[m1BSeat] - mpPops(seat: m1BSeat, baseline: m1Baseline, si: si)
+                                if aNet < bNet { m1AWins += 1 } else if aNet > bNet { m1BWins += 1 }
+                            }
+                            if let s2a = m2ASeat, let s2b = m2BSeat,
+                               s2a < scores.count, scores[s2a] > 0,
+                               s2b < scores.count, scores[s2b] > 0 {
+                                let aNet = scores[s2a] - mpPops(seat: s2a, baseline: m2Baseline, si: si)
+                                let bNet = scores[s2b] - mpPops(seat: s2b, baseline: m2Baseline, si: si)
+                                if aNet < bNet { m2AWins += 1 } else if aNet > bNet { m2BWins += 1 }
+                            }
+                        }
+
+                        func firstName(_ seat: Int) -> String {
+                            guard seat < session.playerNames.count else { return "P\(seat+1)" }
+                            let n = session.playerNames[seat].trimmingCharacters(in: .whitespaces)
+                            return n.components(separatedBy: " ").first ?? n
+                        }
+                        let m1Status = statusString(aWins: m1AWins, bWins: m1BWins,
+                                                    aLabel: firstName(m1ASeat), bLabel: firstName(m1BSeat))
+                        if let s2a = m2ASeat, let s2b = m2BSeat {
+                            let m2Status = statusString(aWins: m2AWins, bWins: m2BWins,
+                                                        aLabel: firstName(s2a), bLabel: firstName(s2b))
+                            matchStatus = "\(m1Status)\n\(m2Status)"
+                        } else {
+                            matchStatus = m1Status
+                        }
                     } else {
-                        matchStatus = m1Status
+                        // Delta-inference fallback for rows written before mp_seats was added.
+                        var m1AWins = 0, m1BWins = 0
+                        var m2AWins = 0, m2BWins = 0
+                        var m2AnchorSeat: Int? = nil
+
+                        for h in 1...matchPos {
+                            guard let r = currentHoleResults[h] else { continue }
+                            let deltas = r.moneyDeltas ?? r.payouts ?? []
+                            if let ws = r.wolfSlot, ws < deltas.count {
+                                let m1ADelta = deltas[ws]
+                                if m1ADelta > 0.001 { m1AWins += 1 } else if m1ADelta < -0.001 { m1BWins += 1 }
+
+                                if r.partnerSlot == nil {
+                                    if abs(m1ADelta) > 0.001 {
+                                        let m1TeamBSeat = (0..<min(playerCount, deltas.count)).first {
+                                            $0 != ws && abs(deltas[$0] + m1ADelta) < 0.001
+                                        }
+                                        let m1AllSeats = Set([ws, m1TeamBSeat].compactMap { $0 })
+                                        let m2Seats = (0..<min(playerCount, deltas.count)).filter {
+                                            !m1AllSeats.contains($0) && abs(deltas[$0]) > 0.001
+                                        }
+                                        if m2AnchorSeat == nil, !m2Seats.isEmpty {
+                                            m2AnchorSeat = m2Seats.min()
+                                        }
+                                    }
+                                    if let anchor = m2AnchorSeat, anchor < deltas.count {
+                                        let d = deltas[anchor]
+                                        if d > 0.001 { m2AWins += 1 } else if d < -0.001 { m2BWins += 1 }
+                                    }
+                                }
+                            } else if let tw = r.teamWon {
+                                if tw { m1AWins += 1 } else { m1BWins += 1 }
+                            }
+                        }
+
+                        let m1Status = statusString(aWins: m1AWins, bWins: m1BWins, aLabel: "A", bLabel: "B")
+                        if m2AnchorSeat != nil {
+                            let m2Status = statusString(aWins: m2AWins, bWins: m2BWins, aLabel: "C", bLabel: "D")
+                            matchStatus = "\(m1Status)\n\(m2Status)"
+                        } else {
+                            matchStatus = m1Status
+                        }
                     }
                 }
             }

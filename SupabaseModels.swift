@@ -189,6 +189,8 @@ struct WolfHoleResult: Codable {
     let skinCount: Int?
     let skinTiedSeats: String?
     let wolfVariant: String?
+    // Explicit match-play seat assignments: "m1a,m1b[,m2a,m2b]" — nil on pre-v2 rows
+    let mpSeats: String?
     enum CodingKeys: String, CodingKey {
         case id, hole, scores, decision, payouts, alone
         case sessionId        = "session_id"
@@ -210,6 +212,7 @@ struct WolfHoleResult: Codable {
         case skinCount        = "skin_count"
         case skinTiedSeats    = "skin_tied_seats"
         case wolfVariant      = "wolf_variant"
+        case mpSeats          = "mp_seats"
     }
 
     // Try Bool first; fall back to string comparison for inconsistently stored rows.
@@ -246,6 +249,7 @@ struct WolfHoleResult: Codable {
         skinCount    = try c.decodeIfPresent(Int.self,      forKey: .skinCount)
         skinTiedSeats = try c.decodeIfPresent(String.self,  forKey: .skinTiedSeats)
         wolfVariant   = try c.decodeIfPresent(String.self,  forKey: .wolfVariant)
+        mpSeats       = try c.decodeIfPresent(String.self,  forKey: .mpSeats)
         teamWon    = Self.flexBool(c, .teamWon)
         wentAlone  = Self.flexBool(c, .wentAlone)
         wolfPlayer = try? c.decodeIfPresent(Int.self, forKey: .wolfPlayer)

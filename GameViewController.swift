@@ -4309,14 +4309,28 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     // For regular Wolf: derive from wolfButtonStatus mask.
                     let wolfSlot: Int?
                     let partnerSlot: Int?
+                    // "m1a,m1b[,m2a,m2b]" — lets spectator compute match results from net scores
+                    // instead of money deltas, so $0 stake and M1-halved holes work correctly.
+                    let mpSeats: String?
                     if g.resolvedGameType.isMatchPlay {
                         wolfSlot    = g.matchPlayTeamA?.first
                         partnerSlot = (g.matchPlayTeamA?.count ?? 0) > 1 ? g.matchPlayTeamA?[1] : nil
+                        if let a1 = g.matchPlayTeamA?.first, let b1 = g.matchPlayTeamB?.first {
+                            if g.isDualMatch,
+                               let a2 = g.matchPlayTeamA2?.first, let b2 = g.matchPlayTeamB2?.first {
+                                mpSeats = "\(a1),\(b1),\(a2),\(b2)"
+                            } else {
+                                mpSeats = "\(a1),\(b1)"
+                            }
+                        } else {
+                            mpSeats = nil
+                        }
                     } else {
                         let wolfMask      = g.wolfMaskByHole[safe: backfillHole] ?? []
                         let wolfTeamSlots = wolfMask.enumerated().compactMap { $0.element ? $0.offset : nil }
                         wolfSlot    = wolfTeamSlots[safe: 0]
                         partnerSlot = wolfTeamSlots[safe: 1]
+                        mpSeats     = nil
                     }
                     let wentAlone     = g.aloneApplied[safe: backfillHole] ?? false
                     let rerollOn      = g.rerollApplied[safe: backfillHole] ?? false
@@ -4392,7 +4406,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                             skinValue: holeSkinValue,
                             nassauStatus: holeNassauStatus,
                             skinCount: holeSkinCount,
-                            skinTiedSeats: holeSkinTiedSeats
+                            skinTiedSeats: holeSkinTiedSeats,
+                            mpSeats: mpSeats
                         )
                     } catch let pgError as PostgrestError {
                         print("ERROR submitWolfHole hole=\(backfillHole+1) Postgrest \(pgError.code ?? "") \(pgError.message)")

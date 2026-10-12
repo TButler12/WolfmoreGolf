@@ -497,7 +497,8 @@ final class SupabaseService {
         skinValue: Double? = nil,
         nassauStatus: String? = nil,
         skinCount: Int? = nil,
-        skinTiedSeats: String? = nil
+        skinTiedSeats: String? = nil,
+        mpSeats: String? = nil
     ) async throws {
         let g = GameManager.shared.currentGame
         struct Payload: Encodable {
@@ -519,6 +520,38 @@ final class SupabaseService {
             var nassau_status: String?
             var skin_count: Int?
             var skin_tied_seats: String?
+            var mp_seats: String?
+
+            // mp_seats must use encodeIfPresent so nil omits the key entirely.
+            // Sending "mp_seats": null to PostgREST fails until the column is added to the DB.
+            private enum CodingKeys: String, CodingKey {
+                case session_id, hole, scores, went_alone, team_won, money_deltas
+                case wolf_slot, partner_slot, decision, hammer_multiplier, wolf_player
+                case tournament_code, group_code, skin_winner, skin_value
+                case nassau_status, skin_count, skin_tied_seats, mp_seats
+            }
+            func encode(to encoder: Encoder) throws {
+                var c = encoder.container(keyedBy: CodingKeys.self)
+                try c.encode(session_id,        forKey: .session_id)
+                try c.encode(hole,              forKey: .hole)
+                try c.encode(scores,            forKey: .scores)
+                try c.encode(went_alone,        forKey: .went_alone)
+                try c.encode(team_won,          forKey: .team_won)
+                try c.encode(money_deltas,      forKey: .money_deltas)
+                try c.encode(wolf_slot,         forKey: .wolf_slot)
+                try c.encode(partner_slot,      forKey: .partner_slot)
+                try c.encode(decision,          forKey: .decision)
+                try c.encode(hammer_multiplier, forKey: .hammer_multiplier)
+                try c.encode(wolf_player,       forKey: .wolf_player)
+                try c.encode(tournament_code,   forKey: .tournament_code)
+                try c.encode(group_code,        forKey: .group_code)
+                try c.encode(skin_winner,       forKey: .skin_winner)
+                try c.encode(skin_value,        forKey: .skin_value)
+                try c.encode(nassau_status,     forKey: .nassau_status)
+                try c.encode(skin_count,        forKey: .skin_count)
+                try c.encode(skin_tied_seats,   forKey: .skin_tied_seats)
+                try c.encodeIfPresent(mp_seats, forKey: .mp_seats)
+            }
         }
         let payload = Payload(
             session_id: sessionId,
@@ -538,7 +571,8 @@ final class SupabaseService {
             skin_value: skinValue,
             nassau_status: nassauStatus,
             skin_count: skinCount,
-            skin_tied_seats: skinTiedSeats
+            skin_tied_seats: skinTiedSeats,
+            mp_seats: mpSeats
         )
         #if DEBUG
         print("🏆 submitWolfHole tournament_code=\(g?.tournamentCode ?? "nil") group_code=\(g?.groupCode ?? "nil")")
