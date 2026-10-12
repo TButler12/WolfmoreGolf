@@ -110,6 +110,30 @@ enum RemoteNassauPairing {
         }
     }
 
+    // MARK: - Stored pairing helpers
+
+    /// Computes the canonical 18-pair pairing for two different courses and returns it as
+    /// [[courseA_idx, courseB_idx] × 18] (front 9 first).  Returns nil when either course
+    /// is not in the library or both courses are the same (physical-order match: no storage needed).
+    static func computeStoredPairing(courseAName: String, courseBName: String) -> [[Int]]? {
+        let norm = { (s: String) in s.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+        guard let profA = CourseLibrary.shared.courses.first(where: { norm($0.name) == norm(courseAName) }),
+              let profB = CourseLibrary.shared.courses.first(where: { norm($0.name) == norm(courseBName) })
+        else { return nil }
+        guard profA.id != profB.id else { return nil }
+        let front = parFirstPairedIndices(parsA: profA.pars, hcsA: profA.hcs,
+                                          parsB: profB.pars, hcsB: profB.hcs, range: 0..<9)
+        let back  = parFirstPairedIndices(parsA: profA.pars, hcsA: profA.hcs,
+                                          parsB: profB.pars, hcsB: profB.hcs, range: 9..<18)
+        return (front + back).map { [$0.indexA, $0.indexB] }
+    }
+
+    /// Returns true when `pairing` looks like a complete, well-formed stored pairing.
+    static func isValidStoredPairing(_ pairing: [[Int]]?) -> Bool {
+        guard let p = pairing, p.count == 18 else { return false }
+        return p.allSatisfy { $0.count == 2 }
+    }
+
     // MARK: - Private
 
     private static func buildNineSlots(

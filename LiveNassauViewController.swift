@@ -517,9 +517,26 @@ final class LiveNassauViewController: UIViewController {
         } else {
             let range = front ? (0..<9) : (9..<STANDARD_HOLES)
 
+            // Prefer stored pairing from DB (written by joiner at join time).
+            // Stored as [courseA_idx, courseB_idx]; swap indices when viewing as joiner.
+            if match?.games?.contains("pairing_v2") == true,
+               RemoteNassauPairing.isValidStoredPairing(match?.pairing) {
+                let allPairs  = match!.pairing!
+                let slotRange = front ? (0..<9) : (9..<18)
+                return slotRange.map { rank in
+                    let pair     = allPairs[rank]
+                    let ownerIdx = amHost ? pair[0] : pair[1]
+                    let oppIdx   = amHost ? pair[1] : pair[0]
+                    let o = ownerScores.first { $0.hole == ownerIdx }
+                    let p = oppScores.first   { $0.hole == oppIdx   }
+                    return makePairedHole(rank: rank, o: o, p: p,
+                                         knownHostIdx: ownerIdx, knownOppIdx: oppIdx)
+                }
+            }
+
             // Fixed-slot path: always 9 slots ranked by HC from CourseProfile
             if let ownerProf = ownerProfile, let oppProf = oppProfile {
-                // v2: par-first pairing ordered by HC-sum (new matches only)
+                // v2: par-first pairing ordered by HC-sum (fallback when stored pairing unavailable)
                 if match?.games?.contains("pairing_v2") == true {
                     let pairs = RemoteNassauPairing.parFirstPairedIndices(
                         parsA: ownerProf.pars, hcsA: ownerProf.hcs,

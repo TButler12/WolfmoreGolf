@@ -16,9 +16,10 @@ struct MatchRecord: Codable {
     let opponentName: String?       // legacy single-opponent field (kept for backward compat)
     let opponentNames: [String]?    // hub-and-spoke: all joiners in order
     let createdAt: String?
+    let pairing: [[Int]]?           // stored hole-pair indices [[courseA_idx, courseB_idx] × 18]
 
     enum CodingKeys: String, CodingKey {
-        case id, code, stake, games, status, trigger
+        case id, code, stake, games, status, trigger, pairing
         case courseA        = "course_a"
         case courseB        = "course_b"
         case pressMode      = "press_mode"
@@ -27,6 +28,25 @@ struct MatchRecord: Codable {
         case opponentName   = "opponent_name"
         case opponentNames  = "opponent_names"
         case createdAt      = "created_at"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c          = try decoder.container(keyedBy: CodingKeys.self)
+        id             = try  c.decode(String.self,    forKey: .id)
+        code           = try  c.decode(String.self,    forKey: .code)
+        status         = try  c.decode(String.self,    forKey: .status)
+        courseA        = try? c.decode(String.self,    forKey: .courseA)
+        courseB        = try? c.decode(String.self,    forKey: .courseB)
+        stake          = try? c.decode(Double.self,    forKey: .stake)
+        games          = try? c.decode([String].self,  forKey: .games)
+        pressMode      = try? c.decode(String.self,    forKey: .pressMode)
+        trigger        = try? c.decode(Int.self,       forKey: .trigger)
+        playerIncluded = try? c.decode([Bool].self,    forKey: .playerIncluded)
+        hostName       = try? c.decode(String.self,    forKey: .hostName)
+        opponentName   = try? c.decode(String.self,    forKey: .opponentName)
+        opponentNames  = try? c.decode([String].self,  forKey: .opponentNames)
+        createdAt      = try? c.decode(String.self,    forKey: .createdAt)
+        pairing        = try? c.decode([[Int]].self,   forKey: .pairing)
     }
 }
 

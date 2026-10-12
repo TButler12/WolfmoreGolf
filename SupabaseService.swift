@@ -71,6 +71,14 @@ final class SupabaseService {
                           userInfo: [NSLocalizedDescriptionKey: "Could not find match."])
         }
 
+        // Block if this match uses a pairing format this app version doesn't understand.
+        let knownPairingTags = Set(["pairing_v2"])
+        let unknownTags = (match.games ?? []).filter { $0.hasPrefix("pairing_") && !knownPairingTags.contains($0) }
+        if !unknownTags.isEmpty {
+            throw NSError(domain: "WolfmoreGolf", code: 426,
+                          userInfo: [NSLocalizedDescriptionKey: "Update WolfMore to join this match."])
+        }
+
         let currentOpponents = match.opponentNames ?? []
         let myName = ProfileStore.name ?? ""
         let isRejoin = !myName.isEmpty &&
@@ -105,7 +113,28 @@ final class SupabaseService {
             g.nassauState = state
         }
 
+        // For v2 matches: store the canonical pairing so both devices use the same slot order.
+        // Joiner provides courseB; use the match's recorded courseB as fallback (rejoin case).
+        if match.games?.contains("pairing_v2") == true, match.pairing == nil {
+            let effectiveCourseB = courseB.isEmpty ? (match.courseB ?? "") : courseB
+            if let courseAName = match.courseA, !courseAName.isEmpty, !effectiveCourseB.isEmpty,
+               let stored = RemoteNassauPairing.computeStoredPairing(
+                   courseAName: courseAName, courseBName: effectiveCourseB) {
+                try? await storeMatchPairing(id: match.id, pairing: stored)
+            }
+        }
+
         return match
+    }
+
+    // MARK: - Store pairing in match record
+    func storeMatchPairing(id: String, pairing: [[Int]]) async throws {
+        struct Payload: Encodable { let pairing: [[Int]] }
+        try await client
+            .from("matches")
+            .update(Payload(pairing: pairing))
+            .eq("id", value: id)
+            .execute()
     }
 
     // MARK: - Fetch single match by UUID
