@@ -383,7 +383,7 @@ extension RoundStore {
         guard !who.isEmpty else { return nil }
 
         // ---------- Find ACTIVE seat that matches name ----------
-        let seatsRange = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
+        let seatsRange = 0..<min(WOLF_MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
         guard let seat = seatsRange.first(where: { i in
             g.playerActivated[i] &&
             g.playerNames[i]
@@ -628,7 +628,7 @@ extension RoundStore {
         let sharedGameID = gameID ?? UUID()
         let now = Date()
 
-        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
+        let seats = 0..<min(WOLF_MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
 
         for seat in seats where g.playerActivated[seat] {
             let name = g.playerNames[seat]
@@ -652,7 +652,7 @@ extension RoundStore {
         guard let g = GameManager.shared.currentGame else { save(); return }
 
         let now = Date()
-        let seats = 0..<min(MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
+        let seats = 0..<min(WOLF_MAX_PLAYERS, min(g.playerNames.count, g.playerActivated.count))
 
         for seat in seats where g.playerActivated[seat] {
             let name = g.playerNames[seat].trimmingCharacters(in: .whitespacesAndNewlines)
