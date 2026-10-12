@@ -29,6 +29,8 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private weak var nineHoleHalfNoteLabel: UILabel?
     private weak var dualMatchSwitch: UISwitch?
     private weak var matchPlaySubModeSegment: UISegmentedControl?
+    private weak var standaloneTeamTeeSection: UIStackView?
+    private weak var standaloneSkinsSection: UIStackView?
     private weak var goLiveButton: UIButton?
     private weak var teamTeeSwitch: UISwitch?
     private weak var teamTeeConfigureButton: UIButton?
@@ -274,7 +276,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         let g = GameManager.shared.currentGame
         let inTournament = g?.tournamentCode != nil
 
-        var subviews: [UIView] = [sectionHeader("Wolf Scoring Options")]
+        var subviews: [UIView] = [sectionHeader("Game Type")]
 
         if inTournament {
             let info = UILabel()
@@ -353,8 +355,8 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         case 1: newType = .wolf
         case 2: newType = .wolfLowBall
         default:
-            // Keep .bestBall if already in that sub-mode; default to .matchPlay for new switches.
-            newType = (GameManager.shared.currentGame?.resolvedGameType == .bestBall) ? .bestBall : .matchPlay
+            let cur = GameManager.shared.currentGame?.resolvedGameType
+            newType = (cur == .bestBall || cur == .fourball) ? cur! : .matchPlay
         }
 
         // Block switching to Match Play when player count isn't 2 or 4.
@@ -393,14 +395,21 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 g.gameHoleDollarsArray = Array(repeating: 1.0, count: g.totalHoles)
                 g.holeBaseAmount       = Array(repeating: 1.0, count: g.totalHoles)
             }
-            // Initialize default team split when switching to Match Play / Best Ball
+            // Initialize default team split when switching to Match Play
             if newType.isMatchPlay, g.matchPlayTeamA == nil {
                 let active = g.playerNames.enumerated()
                     .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
                     .map { $0.offset }
-                let half = active.count / 2
-                g.matchPlayTeamA = Array(active.prefix(half))
-                g.matchPlayTeamB = Array(active.dropFirst(half))
+                if active.count == 4 && newType == .matchPlay {
+                    g.matchPlayTeamA  = [active[0]]
+                    g.matchPlayTeamB  = [active[1]]
+                    g.matchPlayTeamA2 = [active[2]]
+                    g.matchPlayTeamB2 = [active[3]]
+                } else {
+                    let half = max(1, active.count / 2)
+                    g.matchPlayTeamA = Array(active.prefix(half))
+                    g.matchPlayTeamB = Array(active.dropFirst(half))
+                }
             }
         }
         if newType.isMatchPlay { baseStakeField.text = "1" }
@@ -498,14 +507,12 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Match Play Teams
 
     private func installMatchPlayTeamsSection() {
-        let header = sectionHeader("Match Play Format")
-
         let inner = UIStackView()
         inner.axis    = .vertical
         inner.spacing = 10
         matchPlayTeamsInner = inner
 
-        let container = UIStackView(arrangedSubviews: [header, inner])
+        let container = UIStackView(arrangedSubviews: [inner])
         container.axis    = .vertical
         container.spacing = 8
         container.isHidden = true
@@ -518,84 +525,141 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private func refreshMatchPlayTeamsContent() {
         guard let inner = matchPlayTeamsInner else { return }
         inner.arrangedSubviews.forEach { $0.removeFromSuperview() }
-
         guard let g = GameManager.shared.currentGame else { return }
 
-        // ── Sub-mode: Individual / Fourball / FB Stroke Play ──
-        let activePlayers = g.playerNames.enumerated()
+        let active = g.playerNames.enumerated()
             .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .count
-        let fourAllowed = activePlayers == 4
+            .map { ($0.offset, $0.element) }
+        let activeCount = active.count
+        let matchPlayAllowed = activeCount == 2 || activeCount == 4
+        let fourAllowed      = activeCount == 4
 
-        let subModeSeg = UISegmentedControl(items: ["Individual", "Fourball", "FB Stroke Play"])
-        subModeSeg.selectedSegmentIndex = g.resolvedGameType == .fourball ? 1
-                                        : g.resolvedGameType == .bestBall  ? 2 : 0
-        subModeSeg.backgroundColor          = .systemGray6
-        subModeSeg.selectedSegmentTintColor = .wolfMoreGreen
-        subModeSeg.setTitleTextAttributes([
-            .foregroundColor: UIColor.secondaryLabel,
-            .font: UIFont.systemFont(ofSize: 13, weight: .regular)
-        ], for: .normal)
-        subModeSeg.setTitleTextAttributes([
-            .foregroundColor: UIColor.white,
-            .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
-        ], for: .selected)
-        if !fourAllowed {
-            subModeSeg.setEnabled(false, forSegmentAt: 1)
-            subModeSeg.setEnabled(false, forSegmentAt: 2)
-        }
-        subModeSeg.addTarget(self, action: #selector(matchPlaySubModeChanged(_:)), for: .valueChanged)
-        matchPlaySubModeSegment = subModeSeg
-        inner.addArrangedSubview(subModeSeg)
+        // ── FORMAT ─────────────────────────────────────────────────────────────
+        inner.addArrangedSubview(sectionHeader("FORMAT"))
 
-        if !fourAllowed {
-            let fbNote = UILabel()
-            fbNote.text = "Fourball and FB Stroke Play require exactly 4 players."
-            fbNote.font = UIFont.systemFont(ofSize: 12)
-            fbNote.textColor = .secondaryLabel
-            fbNote.numberOfLines = 0
-            inner.addArrangedSubview(fbNote)
+        let singlesDesc = fourAllowed ? "Head-to-head. 4 players = 2 matches." : "Head-to-head. One match."
+        let formats: [(String, String, GameType, Bool)] = [
+            ("Singles",          singlesDesc,                                        .matchPlay, matchPlayAllowed),
+            ("Fourball",         "2 vs 2. Best net ball wins the hole.",              .fourball,  fourAllowed),
+            ("Team Stroke Play", "2 vs 2. Best ball totals, settled at the end.",     .bestBall,  fourAllowed),
+        ]
+        for (title, desc, gtype, enabled) in formats {
+            let isSelected: Bool
+            switch g.resolvedGameType {
+            case .matchPlay: isSelected = (gtype == .matchPlay)
+            case .fourball:  isSelected = (gtype == .fourball)
+            case .bestBall:  isSelected = (gtype == .bestBall)
+            default:         isSelected = false
+            }
+            inner.addArrangedSubview(mpFormatCard(title: title, desc: desc, gameType: gtype, selected: isSelected, enabled: enabled))
         }
 
-        let sep0 = UIView()
-        sep0.backgroundColor = .separator
-        sep0.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
-        inner.addArrangedSubview(sep0)
+        guard matchPlayAllowed else {
+            let note = UILabel()
+            note.text = "Match Play needs 2 or 4 players."
+            note.font = .systemFont(ofSize: 12)
+            note.textColor = .secondaryLabel
+            note.numberOfLines = 0
+            inner.addArrangedSubview(note)
+            return
+        }
 
-        // ── 9-Hole Match toggle (hidden when 36-hole is active) ──────────────
+        // ── MATCHUPS ────────────────────────────────────────────────────────────
+        let matchupsLbl = sectionHeader("MATCHUPS")
+        let swapHint    = UILabel()
+        swapHint.text      = "Tap a name to swap"
+        swapHint.font      = .systemFont(ofSize: 12)
+        swapHint.textColor = .secondaryLabel
+        swapHint.setContentHuggingPriority(.required, for: .horizontal)
+        let matchupsRow = UIStackView(arrangedSubviews: [matchupsLbl, swapHint])
+        matchupsRow.axis      = .horizontal
+        matchupsRow.alignment = .lastBaseline
+        inner.addArrangedSubview(matchupsRow)
+
+        let teamA  = g.matchPlayTeamA  ?? []
+        let teamB  = g.matchPlayTeamB  ?? []
+        let teamA2 = g.matchPlayTeamA2 ?? []
+        let teamB2 = g.matchPlayTeamB2 ?? []
+
+        let strokesNote = UILabel()
+        strokesNote.font       = .systemFont(ofSize: 12)
+        strokesNote.textColor  = .secondaryLabel
+        strokesNote.numberOfLines = 0
+
+        switch g.resolvedGameType {
+        case .matchPlay:
+            let a1 = teamA.first  ?? (active[safe: 0]?.0 ?? 0)
+            let b1 = teamB.first  ?? (active[safe: 1]?.0 ?? 1)
+            inner.addArrangedSubview(mpSinglesCard(label: "MATCH 1", aSeat: a1, bSeat: b1, active: active, g: g))
+            if g.isDualMatch {
+                let a2 = teamA2.first ?? (active[safe: 2]?.0 ?? 2)
+                let b2 = teamB2.first ?? (active[safe: 3]?.0 ?? 3)
+                inner.addArrangedSubview(mpSinglesCard(label: "MATCH 2", aSeat: a2, bSeat: b2, active: active, g: g))
+                strokesNote.text = "Strokes use only the two players in each match. Each match is paid separately."
+            } else {
+                strokesNote.text = "Strokes use only the two players in this match."
+            }
+            inner.addArrangedSubview(strokesNote)
+
+        case .fourball, .bestBall:
+            let a0 = teamA[safe: 0] ?? (active[safe: 0]?.0 ?? 0)
+            let a1 = teamA[safe: 1] ?? (active[safe: 2]?.0 ?? 2)
+            let b0 = teamB[safe: 0] ?? (active[safe: 1]?.0 ?? 1)
+            let b1 = teamB[safe: 1] ?? (active[safe: 3]?.0 ?? 3)
+            let allFour = [a0, a1, b0, b1]
+            inner.addArrangedSubview(mpTeamCard(label: "TEAM A", seats: [a0, a1], allSeats: allFour, active: active, g: g))
+            let vsLbl = UILabel()
+            vsLbl.text          = "vs"
+            vsLbl.textAlignment = .center
+            vsLbl.font          = .systemFont(ofSize: 13)
+            vsLbl.textColor     = .secondaryLabel
+            inner.addArrangedSubview(vsLbl)
+            inner.addArrangedSubview(mpTeamCard(label: "TEAM B", seats: [b0, b1], allSeats: allFour, active: active, g: g))
+            let minHC   = allFour.compactMap { g.hcPlayers[safe: $0] }.min() ?? 0
+            let minName = active.first(where: { g.hcPlayers[safe: $0.0] == minHC })?.1 ?? ""
+            let shortMin = minName.components(separatedBy: " ").first ?? minName
+            strokesNote.text = "Strokes are measured from the lowest handicap of the four players (\(shortMin), \(minHC)). One match, one pot."
+            inner.addArrangedSubview(strokesNote)
+
+        default: break
+        }
+
+        // ── OPTIONS ─────────────────────────────────────────────────────────────
+        inner.addArrangedSubview(sectionHeader("OPTIONS"))
+        let optCard = UIView()
+        optCard.backgroundColor  = .secondarySystemBackground
+        optCard.layer.cornerRadius = 10
+        let optStack = UIStackView()
+        optStack.axis    = .vertical
+        optStack.spacing = 0
+        optStack.translatesAutoresizingMaskIntoConstraints = false
+        optCard.addSubview(optStack)
+        NSLayoutConstraint.activate([
+            optStack.topAnchor.constraint(equalTo: optCard.topAnchor, constant: 4),
+            optStack.bottomAnchor.constraint(equalTo: optCard.bottomAnchor, constant: -4),
+            optStack.leadingAnchor.constraint(equalTo: optCard.leadingAnchor),
+            optStack.trailingAnchor.constraint(equalTo: optCard.trailingAnchor),
+        ])
+
         if !g.matchPlay36Holes {
-            let nineLbl = UILabel()
-            nineLbl.text = "9-Hole Match"
-            nineLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-            nineLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
-
             let nineSw = UISwitch()
+            nineSw.isOn       = g.isNineHoleMatch
             nineSw.onTintColor = .wolfMoreGreen
-            nineSw.isOn = g.isNineHoleMatch
             nineSw.addTarget(self, action: #selector(nineHoleMatchToggled(_:)), for: .valueChanged)
             nineHoleSwitch = nineSw
-
-            let nineRow = UIStackView(arrangedSubviews: [nineLbl, nineSw])
-            nineRow.axis = .horizontal; nineRow.alignment = .center; nineRow.spacing = 8
-            inner.addArrangedSubview(nineRow)
-
-            let nineNote = UILabel()
-            nineNote.text = "Confined to front 9 or back 9 based on starting hole."
-            nineNote.font = UIFont.systemFont(ofSize: 12)
-            nineNote.textColor = .secondaryLabel
-            nineNote.numberOfLines = 0
-            inner.addArrangedSubview(nineNote)
-
+            optStack.addArrangedSubview(mpOptionRow(title: "9-Hole Match",
+                                                    desc: "Front or back 9, based on the starting hole",
+                                                    sw: nineSw))
             if g.isNineHoleMatch {
                 let shLbl = UILabel()
-                shLbl.text = "Starting Hole"
-                shLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+                shLbl.text  = "Starting Hole"
+                shLbl.font  = .systemFont(ofSize: 14)
+                shLbl.textColor = .secondaryLabel
                 shLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
 
                 let valLbl = UILabel()
-                valLbl.text = "\(g.nineHoleStartingHole)"
-                valLbl.font = UIFont.systemFont(ofSize: 15)
-                valLbl.textColor = .label
+                valLbl.text          = "\(g.nineHoleStartingHole)"
+                valLbl.font          = .systemFont(ofSize: 14, weight: .semibold)
                 valLbl.textAlignment = .right
                 valLbl.widthAnchor.constraint(equalToConstant: 28).isActive = true
                 nineHoleStartingHoleLabel = valLbl
@@ -603,152 +667,113 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 let stepper = UIStepper()
                 stepper.minimumValue = 1
                 stepper.maximumValue = Double(STANDARD_HOLES)
-                stepper.stepValue = 1
-                stepper.value = Double(g.nineHoleStartingHole)
+                stepper.stepValue    = 1
+                stepper.value        = Double(g.nineHoleStartingHole)
                 stepper.addTarget(self, action: #selector(nineHoleStartingHoleChanged(_:)), for: .valueChanged)
 
                 let shRow = UIStackView(arrangedSubviews: [shLbl, valLbl, stepper])
                 shRow.axis = .horizontal; shRow.alignment = .center; shRow.spacing = 8
-                inner.addArrangedSubview(shRow)
+                shRow.layoutMargins = UIEdgeInsets(top: 4, left: 16, bottom: 4, right: 16)
+                shRow.isLayoutMarginsRelativeArrangement = true
+                optStack.addArrangedSubview(shRow)
 
-                let isFront = g.nineHoleStartingHole <= 9
-                let seq = g.nineHoleSequence.map { $0 + 1 }.map { "\($0)" }.joined(separator: ", ")
+                let isFront  = g.nineHoleStartingHole <= 9
+                let seq      = g.nineHoleSequence.map { "\($0 + 1)" }.joined(separator: ", ")
                 let halfNote = UILabel()
-                halfNote.text = "\(isFront ? "Front" : "Back") 9 · Hole order: \(seq)"
-                halfNote.font = UIFont.systemFont(ofSize: 12)
+                halfNote.text      = "\(isFront ? "Front" : "Back") 9 · Hole order: \(seq)"
+                halfNote.font      = .systemFont(ofSize: 12)
                 halfNote.textColor = .secondaryLabel
                 halfNote.numberOfLines = 0
-                nineHoleHalfNoteLabel = halfNote
-                inner.addArrangedSubview(halfNote)
+                halfNote.layoutMargins = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+                nineHoleHalfNoteLabel  = halfNote
+                let halfWrap = UIStackView(arrangedSubviews: [halfNote])
+                halfWrap.layoutMargins = UIEdgeInsets(top: 0, left: 16, bottom: 8, right: 16)
+                halfWrap.isLayoutMarginsRelativeArrangement = true
+                optStack.addArrangedSubview(halfWrap)
             }
-
-            let sepNine = UIView()
-            sepNine.backgroundColor = .separator
-            sepNine.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
-            inner.addArrangedSubview(sepNine)
+            optStack.addArrangedSubview(mpSeparator())
         }
 
-        // ── 36-Hole toggle (hidden when 9-hole match is active) ──────────────
         if !g.isNineHoleMatch {
-            let switchLbl = UILabel()
-            switchLbl.text = "36-Hole Round"
-            switchLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-            switchLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+            let thirtySixSw = UISwitch()
+            thirtySixSw.isOn       = g.matchPlay36Holes
+            thirtySixSw.onTintColor = .wolfMoreGreen
+            thirtySixSw.addTarget(self, action: #selector(matchPlay36Toggled(_:)), for: .valueChanged)
+            matchPlay36Switch = thirtySixSw
+            optStack.addArrangedSubview(mpOptionRow(title: "36-Hole Round",
+                                                    desc: "Holes 19–36 replay the same course",
+                                                    sw: thirtySixSw))
+        }
+        inner.addArrangedSubview(optCard)
 
-            let sw = UISwitch()
-            sw.onTintColor = .wolfMoreGreen
-            sw.isOn = g.matchPlay36Holes
-            sw.addTarget(self, action: #selector(matchPlay36Toggled(_:)), for: .valueChanged)
-            matchPlay36Switch = sw
+        // ── SIDE GAMES ──────────────────────────────────────────────────────────
+        inner.addArrangedSubview(sectionHeader("SIDE GAMES"))
+        let sideCard = UIView()
+        sideCard.backgroundColor   = .secondarySystemBackground
+        sideCard.layer.cornerRadius = 10
+        let sideStack = UIStackView()
+        sideStack.axis    = .vertical
+        sideStack.spacing = 0
+        sideStack.translatesAutoresizingMaskIntoConstraints = false
+        sideCard.addSubview(sideStack)
+        NSLayoutConstraint.activate([
+            sideStack.topAnchor.constraint(equalTo: sideCard.topAnchor, constant: 4),
+            sideStack.bottomAnchor.constraint(equalTo: sideCard.bottomAnchor, constant: -4),
+            sideStack.leadingAnchor.constraint(equalTo: sideCard.leadingAnchor),
+            sideStack.trailingAnchor.constraint(equalTo: sideCard.trailingAnchor),
+        ])
 
-            let switchRow = UIStackView(arrangedSubviews: [switchLbl, sw])
-            switchRow.axis = .horizontal; switchRow.alignment = .center; switchRow.spacing = 8
-            inner.addArrangedSubview(switchRow)
-
-            let switchNote = UILabel()
-            switchNote.text = "Holes 19–36 replay the same course as holes 1–18."
-            switchNote.font = UIFont.systemFont(ofSize: 12)
-            switchNote.textColor = .secondaryLabel
-            switchNote.numberOfLines = 0
-            inner.addArrangedSubview(switchNote)
-
-            let sep = UIView()
-            sep.backgroundColor = .separator
-            sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
-            inner.addArrangedSubview(sep)
+        let isTeamTeeEnabled = g.teamTeeSettings?.isEnabled ?? false
+        let teamTeeSw = UISwitch()
+        teamTeeSw.isOn       = isTeamTeeEnabled
+        teamTeeSw.onTintColor = .wolfMoreGreen
+        teamTeeSw.addTarget(self, action: #selector(teamTeeSwitchChanged(_:)), for: .valueChanged)
+        teamTeeSwitch = teamTeeSw
+        sideStack.addArrangedSubview(mpOptionRow(title: "Team Tee Game",
+                                                 desc: "Lowest net scores per hole across the group",
+                                                 sw: teamTeeSw))
+        if isTeamTeeEnabled {
+            let cfg = UIButton(type: .system)
+            cfg.setTitle("Configure Count Rules →", for: .normal)
+            cfg.titleLabel?.font = .systemFont(ofSize: 13)
+            cfg.contentHorizontalAlignment = .left
+            cfg.addTarget(self, action: #selector(teamTeeConfigureTapped), for: .touchUpInside)
+            teamTeeConfigureButton = cfg
+            let cfgWrap = UIStackView(arrangedSubviews: [cfg])
+            cfgWrap.layoutMargins = UIEdgeInsets(top: 0, left: 16, bottom: 6, right: 16)
+            cfgWrap.isLayoutMarginsRelativeArrangement = true
+            sideStack.addArrangedSubview(cfgWrap)
         }
 
-        // ── Dual Match toggle ────────────────────────────────────────────────
-        let dualLbl = UILabel()
-        dualLbl.text = "1 vs 1"
-        dualLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-        dualLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        let hasSkins = g.skinsState?.settings.isEnabled == true
+        if hasSkins {
+            sideStack.addArrangedSubview(mpSeparator())
+            let skinsLbl = UILabel()
+            skinsLbl.text = "Skins ties"
+            skinsLbl.font = .systemFont(ofSize: 16, weight: .semibold)
+            let skinsTitleWrap = UIStackView(arrangedSubviews: [skinsLbl])
+            skinsTitleWrap.layoutMargins = UIEdgeInsets(top: 10, left: 16, bottom: 4, right: 16)
+            skinsTitleWrap.isLayoutMarginsRelativeArrangement = true
+            sideStack.addArrangedSubview(skinsTitleWrap)
 
-        let isIndividual = g.resolvedGameType == .matchPlay
-
-        let dualSw = UISwitch()
-        dualSw.onTintColor = .wolfMoreGreen
-        dualSw.isOn = g.isDualMatch
-        dualSw.isEnabled = isIndividual
-        dualSw.alpha = isIndividual ? 1.0 : 0.4
-        dualSw.addTarget(self, action: #selector(dualMatchToggled(_:)), for: .valueChanged)
-        dualMatchSwitch = dualSw
-
-        dualLbl.alpha = isIndividual ? 1.0 : 0.4
-
-        let dualRow = UIStackView(arrangedSubviews: [dualLbl, dualSw])
-        dualRow.axis = .horizontal; dualRow.alignment = .center; dualRow.spacing = 8
-        inner.addArrangedSubview(dualRow)
-
-        let dualNote = UILabel()
-        dualNote.text = isIndividual
-            ? "Two simultaneous 1v1 matches (e.g. McTommy vs Bob AND Todd vs G)."
-            : "Only available in Individual mode."
-        dualNote.font = UIFont.systemFont(ofSize: 12)
-        dualNote.textColor = .secondaryLabel
-        dualNote.numberOfLines = 0
-        inner.addArrangedSubview(dualNote)
-
-        let sep2 = UIView()
-        sep2.backgroundColor = .separator
-        sep2.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
-        inner.addArrangedSubview(sep2)
-
-        // ── Team assignment ──────────────────────────────────────────────────
-        let active = g.playerNames.enumerated()
-            .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .map { ($0.offset, $0.element) }
-
-        let isDual   = g.isDualMatch
-        let teamASet = Set(g.matchPlayTeamA  ?? [])
-        let teamA2   = Set(g.matchPlayTeamA2 ?? [])
-        let teamB2   = Set(g.matchPlayTeamB2 ?? [])
-
-        let segItems: [String] = isDual ? ["1:A", "1:B", "2:A", "2:B"] : ["Team A", "Team B"]
-        let segWidth: CGFloat  = isDual ? 220 : 160
-
-        for (seat, name) in active {
-            let nameLbl = UILabel()
-            nameLbl.text = name
-            nameLbl.font = UIFont.systemFont(ofSize: 15, weight: .medium)
-            nameLbl.setContentHuggingPriority(.defaultLow, for: .horizontal)
-
-            let seg = UISegmentedControl(items: segItems)
-            if isDual {
-                if teamASet.contains(seat)  { seg.selectedSegmentIndex = 0 }
-                else if teamA2.contains(seat) { seg.selectedSegmentIndex = 2 }
-                else if teamB2.contains(seat) { seg.selectedSegmentIndex = 3 }
-                else                         { seg.selectedSegmentIndex = 1 }  // default M1-B
-            } else {
-                seg.selectedSegmentIndex = teamASet.contains(seat) ? 0 : 1
-            }
-            seg.tag = seat
-            seg.backgroundColor          = .systemGray6
-            seg.selectedSegmentTintColor = .wolfMoreGreen
-            seg.setTitleTextAttributes([
-                .foregroundColor: UIColor.secondaryLabel,
-                .font: UIFont.systemFont(ofSize: 12, weight: .regular)
-            ], for: .normal)
-            seg.setTitleTextAttributes([
-                .foregroundColor: UIColor.white,
-                .font: UIFont.systemFont(ofSize: 12, weight: .semibold)
-            ], for: .selected)
-            seg.addTarget(self, action: #selector(matchPlayTeamChanged(_:)), for: .valueChanged)
-            seg.setContentHuggingPriority(.required, for: .horizontal)
-            seg.widthAnchor.constraint(equalToConstant: segWidth).isActive = true
-
-            let row = UIStackView(arrangedSubviews: [nameLbl, seg])
-            row.axis      = .horizontal
-            row.spacing   = 8
-            row.alignment = .center
-            inner.addArrangedSubview(row)
+            let seg = UISegmentedControl(items: ["No Carry", "Carry Ties"])
+            seg.selectedSegmentIndex = (g.skinsState?.settings.carryoversEnabled == true) ? 1 : 0
+            seg.addTarget(self, action: #selector(skinsCarryoverChanged(_:)), for: .valueChanged)
+            skinsCarryoverSegment = seg
+            let segWrap = UIStackView(arrangedSubviews: [seg])
+            segWrap.layoutMargins = UIEdgeInsets(top: 4, left: 16, bottom: 10, right: 16)
+            segWrap.isLayoutMarginsRelativeArrangement = true
+            sideStack.addArrangedSubview(segWrap)
         }
+        inner.addArrangedSubview(sideCard)
     }
 
     private func refreshMatchPlayUI() {
         let isMatchPlay = wolfScoringSegment?.selectedSegmentIndex == 3
         pressStyleSection?.isHidden  = isMatchPlay
         hammerStyleSection?.isHidden = isMatchPlay
+        standaloneTeamTeeSection?.isHidden = isMatchPlay
+        standaloneSkinsSection?.isHidden   = isMatchPlay
         if isMatchPlay {
             refreshMatchPlayTeamsContent()
             matchPlayTeamsSection?.isHidden = false
@@ -823,107 +848,305 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         refreshMatchPlayTeamsContent()
     }
 
-    @objc private func matchPlaySubModeChanged(_ sender: UISegmentedControl) {
-        let newType: GameType
-        switch sender.selectedSegmentIndex {
-        case 1:  newType = .fourball
-        case 2:  newType = .bestBall
-        default: newType = .matchPlay
-        }
-        if newType == .fourball || newType == .bestBall {
-            let current = GameManager.shared.currentGame
-            let activeCount = (0..<WOLF_MAX_PLAYERS).filter { i in
-                (current?.playerActivated[safe: i] ?? false) &&
-                !(current?.playerNames[safe: i] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-            }.count
-            if activeCount != 4 {
-                sender.selectedSegmentIndex = 0
-                let ac = UIAlertController(
-                    title: "Format Not Available",
-                    message: "Fourball and FB Stroke Play require exactly 4 players. You have \(activeCount) active players.",
-                    preferredStyle: .alert
-                )
-                ac.addAction(UIAlertAction(title: "OK", style: .default))
-                present(ac, animated: true)
-                return
-            }
-        }
+    // MARK: - Match Play card actions
+
+    @objc private func formatCardTapped(_ sender: UIButton) {
+        guard let g = GameManager.shared.currentGame else { return }
+        let active = g.playerNames.enumerated()
+            .filter { g.playerActivated[$0.offset] && !$0.element.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .map { $0.offset }
+
         GameManager.shared.update { g in
-            g.gameType = newType
-            if newType == .matchPlay, !g.isDualMatch {
-                // Default 1 vs 1 to ON when switching to Individual.
-                let teamA = (g.matchPlayTeamA ?? []).sorted()
-                let teamB = (g.matchPlayTeamB ?? []).sorted()
-                let active = g.playerNames.indices.filter {
-                    g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                }.sorted()
-                let notInMatch1 = active.filter { !Set(teamA + teamB).contains($0) }
-                if !notInMatch1.isEmpty {
-                    let half = max(1, notInMatch1.count / 2)
-                    g.matchPlayTeamA2 = Array(notInMatch1.prefix(half))
-                    g.matchPlayTeamB2 = Array(notInMatch1.suffix(from: half))
-                } else {
-                    g.matchPlayTeamA  = teamA.count > 0 ? [teamA[0]] : []
-                    g.matchPlayTeamB  = teamB.count > 0 ? [teamB[0]] : []
-                    g.matchPlayTeamA2 = teamA.count > 1 ? Array(teamA.dropFirst()) : []
-                    g.matchPlayTeamB2 = teamB.count > 1 ? Array(teamB.dropFirst()) : []
+            switch sender.tag {
+            case 0: // Singles
+                g.gameType = .matchPlay
+                if active.count == 4 {
+                    g.matchPlayTeamA  = [active[0]]
+                    g.matchPlayTeamB  = [active[1]]
+                    g.matchPlayTeamA2 = [active[2]]
+                    g.matchPlayTeamB2 = [active[3]]
+                } else if active.count == 2 {
+                    g.matchPlayTeamA  = [active[0]]
+                    g.matchPlayTeamB  = [active[1]]
+                    g.matchPlayTeamA2 = nil
+                    g.matchPlayTeamB2 = nil
                 }
-            } else if newType != .matchPlay, g.isDualMatch {
-                // 1 vs 1 only available in Individual — clear it for Fourball / FB Stroke Play.
-                var a1 = g.matchPlayTeamA ?? []
-                var b1 = g.matchPlayTeamB ?? []
-                for s in (g.matchPlayTeamA2 ?? []) where !a1.contains(s) { a1.append(s) }
-                for s in (g.matchPlayTeamB2 ?? []) where !b1.contains(s) { b1.append(s) }
-                g.matchPlayTeamA  = a1.sorted()
-                g.matchPlayTeamB  = b1.sorted()
-                g.matchPlayTeamA2 = nil
-                g.matchPlayTeamB2 = nil
+            case 1: // Fourball
+                g.gameType = .fourball
+                if active.count >= 4 {
+                    g.matchPlayTeamA  = [active[0], active[2]]
+                    g.matchPlayTeamB  = [active[1], active[3]]
+                    g.matchPlayTeamA2 = nil
+                    g.matchPlayTeamB2 = nil
+                }
+            default: // Team Stroke Play
+                g.gameType = .bestBall
+                if active.count >= 4 {
+                    g.matchPlayTeamA  = [active[0], active[2]]
+                    g.matchPlayTeamB  = [active[1], active[3]]
+                    g.matchPlayTeamA2 = nil
+                    g.matchPlayTeamB2 = nil
+                }
             }
-        }
-        if let sw = dualMatchSwitch {
-            sw.setOn(newType == .matchPlay, animated: true)
         }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         refreshMatchPlayTeamsContent()
     }
 
-    @objc private func dualMatchToggled(_ sender: UISwitch) {
+    private func swapMatchPlaySeats(_ seatA: Int, _ seatB: Int) {
         GameManager.shared.update { g in
-            if sender.isOn {
-                // Default: pair players in natural seat order.
-                // Seat 0 vs Seat 1 = Match 1, Seat 2 vs Seat 3 = Match 2.
-                let active = g.playerNames.indices.filter {
-                    g.playerActivated[$0] && !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                }.sorted()
-                if active.count >= 4 {
-                    g.matchPlayTeamA  = [active[0]]
-                    g.matchPlayTeamB  = [active[1]]
-                    g.matchPlayTeamA2 = [active[2]]
-                    g.matchPlayTeamB2 = [active[3]]
-                } else if active.count == 3 {
-                    g.matchPlayTeamA  = [active[0]]
-                    g.matchPlayTeamB  = [active[1]]
-                    g.matchPlayTeamA2 = [active[2]]
-                    g.matchPlayTeamB2 = []
-                } else if active.count >= 2 {
-                    g.matchPlayTeamA  = [active[0]]
-                    g.matchPlayTeamB  = [active[1]]
-                    g.matchPlayTeamA2 = []
-                    g.matchPlayTeamB2 = []
+            func swp(_ arr: inout [Int]) {
+                for i in arr.indices {
+                    if arr[i] == seatA      { arr[i] = seatB }
+                    else if arr[i] == seatB { arr[i] = seatA }
                 }
-            } else {
-                // Merge Match 2 players back into Match 1 before clearing
-                var a1 = g.matchPlayTeamA ?? []
-                var b1 = g.matchPlayTeamB ?? []
-                for s in (g.matchPlayTeamA2 ?? []) where !a1.contains(s) { a1.append(s) }
-                for s in (g.matchPlayTeamB2 ?? []) where !b1.contains(s) { b1.append(s) }
-                g.matchPlayTeamA  = a1.sorted()
-                g.matchPlayTeamB  = b1.sorted()
-                g.matchPlayTeamA2 = nil
-                g.matchPlayTeamB2 = nil
             }
+            var a1 = g.matchPlayTeamA  ?? []
+            var b1 = g.matchPlayTeamB  ?? []
+            var a2 = g.matchPlayTeamA2 ?? []
+            var b2 = g.matchPlayTeamB2 ?? []
+            swp(&a1); swp(&b1); swp(&a2); swp(&b2)
+            g.matchPlayTeamA  = a1
+            g.matchPlayTeamB  = b1
+            g.matchPlayTeamA2 = a2.isEmpty ? nil : a2
+            g.matchPlayTeamB2 = b2.isEmpty ? nil : b2
         }
         refreshMatchPlayTeamsContent()
+    }
+
+    // MARK: - Match Play card builders
+
+    private func mpFormatCard(title: String, desc: String, gameType: GameType, selected: Bool, enabled: Bool) -> UIView {
+        let card = UIView()
+        card.backgroundColor   = selected ? UIColor.wolfMoreGreen.withAlphaComponent(0.06) : .secondarySystemBackground
+        card.layer.cornerRadius = 10
+        card.layer.borderWidth  = selected ? 2 : 1
+        card.layer.borderColor  = selected ? UIColor.wolfMoreGreen.cgColor : UIColor.systemGray4.cgColor
+        card.alpha              = enabled ? 1.0 : 0.4
+
+        let radio = UIImageView(image: UIImage(systemName: selected ? "largecircle.fill.circle" : "circle"))
+        radio.tintColor     = selected ? .wolfMoreGreen : .systemGray3
+        radio.contentMode   = .scaleAspectFit
+        radio.translatesAutoresizingMaskIntoConstraints = false
+        radio.widthAnchor.constraint(equalToConstant: 22).isActive  = true
+        radio.heightAnchor.constraint(equalToConstant: 22).isActive = true
+
+        let titleLbl = UILabel()
+        titleLbl.text = title
+        titleLbl.font = .systemFont(ofSize: 16, weight: .semibold)
+
+        let descLbl = UILabel()
+        descLbl.text          = desc
+        descLbl.font          = .systemFont(ofSize: 13)
+        descLbl.textColor     = .secondaryLabel
+        descLbl.numberOfLines = 0
+
+        let textStack = UIStackView(arrangedSubviews: [titleLbl, descLbl])
+        textStack.axis    = .vertical
+        textStack.spacing = 2
+
+        let hStack = UIStackView(arrangedSubviews: [radio, textStack])
+        hStack.axis      = .horizontal
+        hStack.spacing   = 12
+        hStack.alignment = .center
+        hStack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(hStack)
+        NSLayoutConstraint.activate([
+            hStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
+            hStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -12),
+            hStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            hStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+        ])
+
+        if enabled {
+            let typeTag: Int
+            switch gameType {
+            case .matchPlay: typeTag = 0
+            case .fourball:  typeTag = 1
+            default:         typeTag = 2
+            }
+            let btn = UIButton()
+            btn.tag = typeTag
+            btn.addTarget(self, action: #selector(formatCardTapped(_:)), for: .touchUpInside)
+            btn.translatesAutoresizingMaskIntoConstraints = false
+            card.addSubview(btn)
+            NSLayoutConstraint.activate([
+                btn.topAnchor.constraint(equalTo: card.topAnchor),
+                btn.bottomAnchor.constraint(equalTo: card.bottomAnchor),
+                btn.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+                btn.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+            ])
+        }
+        return card
+    }
+
+    private func mpSinglesCard(label: String, aSeat: Int, bSeat: Int, active: [(Int, String)], g: GameData) -> UIView {
+        let card = UIView()
+        card.backgroundColor   = .secondarySystemBackground
+        card.layer.cornerRadius = 10
+
+        let matchLbl = UILabel()
+        matchLbl.text      = label
+        matchLbl.font      = .systemFont(ofSize: 11, weight: .semibold)
+        matchLbl.textColor = .secondaryLabel
+
+        let aBtn = mpPlayerButton(seat: aSeat, allActive: active)
+        let vsLbl = UILabel()
+        vsLbl.text          = "vs"
+        vsLbl.font          = .systemFont(ofSize: 13)
+        vsLbl.textColor     = .secondaryLabel
+        vsLbl.textAlignment = .center
+        vsLbl.setContentHuggingPriority(.required, for: .horizontal)
+        let bBtn = mpPlayerButton(seat: bSeat, allActive: active)
+
+        let playersRow = UIStackView(arrangedSubviews: [aBtn, vsLbl, bBtn])
+        playersRow.axis         = .horizontal
+        playersRow.spacing      = 8
+        playersRow.alignment    = .center
+        playersRow.distribution = .fillProportionally
+
+        let strokesLbl = UILabel()
+        strokesLbl.text          = mpSinglesStrokesText(aSeat: aSeat, bSeat: bSeat, g: g)
+        strokesLbl.font          = .systemFont(ofSize: 13)
+        strokesLbl.textColor     = .secondaryLabel
+        strokesLbl.numberOfLines = 0
+
+        let content = UIStackView(arrangedSubviews: [matchLbl, playersRow, strokesLbl])
+        content.axis    = .vertical
+        content.spacing = 8
+        content.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
+            content.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -12),
+            content.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            content.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+        ])
+        return card
+    }
+
+    private func mpTeamCard(label: String, seats: [Int], allSeats: [Int], active: [(Int, String)], g: GameData) -> UIView {
+        let card = UIView()
+        card.backgroundColor   = .secondarySystemBackground
+        card.layer.cornerRadius = 10
+
+        let teamLbl = UILabel()
+        teamLbl.text      = label
+        teamLbl.font      = .systemFont(ofSize: 11, weight: .semibold)
+        teamLbl.textColor = .wolfMoreGreen
+
+        let btnsRow = UIStackView()
+        btnsRow.axis         = .horizontal
+        btnsRow.spacing      = 8
+        btnsRow.distribution = .fillEqually
+        for seat in seats {
+            btnsRow.addArrangedSubview(mpPlayerButton(seat: seat, allActive: active))
+        }
+
+        let strokesLbl = UILabel()
+        strokesLbl.text          = mpTeamStrokesText(seats: seats, allSeats: allSeats, active: active, g: g)
+        strokesLbl.font          = .systemFont(ofSize: 13)
+        strokesLbl.textColor     = .secondaryLabel
+        strokesLbl.numberOfLines = 0
+
+        let content = UIStackView(arrangedSubviews: [teamLbl, btnsRow, strokesLbl])
+        content.axis    = .vertical
+        content.spacing = 8
+        content.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(content)
+        NSLayoutConstraint.activate([
+            content.topAnchor.constraint(equalTo: card.topAnchor, constant: 12),
+            content.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -12),
+            content.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 14),
+            content.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -14),
+        ])
+        return card
+    }
+
+    private func mpPlayerButton(seat: Int, allActive: [(Int, String)]) -> UIButton {
+        let name = allActive.first(where: { $0.0 == seat })?.1 ?? "?"
+        var config = UIButton.Configuration.plain()
+        config.title           = name
+        config.image           = UIImage(systemName: "chevron.down")
+        config.imagePlacement  = .trailing
+        config.imagePadding    = 6
+        config.baseForegroundColor = .label
+        config.contentInsets   = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 10)
+        config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 15, weight: .semibold); return a
+        }
+        let btn = UIButton(configuration: config)
+        btn.layer.borderWidth  = 1
+        btn.layer.borderColor  = UIColor.systemGray4.cgColor
+        btn.layer.cornerRadius = 8
+
+        let others  = allActive.filter { $0.0 != seat }
+        let actions = others.map { (otherSeat, otherName) in
+            UIAction(title: otherName) { [weak self] _ in self?.swapMatchPlaySeats(seat, otherSeat) }
+        }
+        if !actions.isEmpty {
+            btn.menu = UIMenu(children: actions)
+            btn.showsMenuAsPrimaryAction = true
+        }
+        return btn
+    }
+
+    private func mpSinglesStrokesText(aSeat: Int, bSeat: Int, g: GameData) -> String {
+        let hcA    = g.hcPlayers[safe: aSeat] ?? 0
+        let hcB    = g.hcPlayers[safe: bSeat] ?? 0
+        let strokes = abs(hcA - hcB)
+        let nameA   = (g.playerNames[safe: aSeat] ?? "P\(aSeat+1)").trimmingCharacters(in: .whitespacesAndNewlines)
+        let nameB   = (g.playerNames[safe: bSeat] ?? "P\(bSeat+1)").trimmingCharacters(in: .whitespacesAndNewlines)
+        let shortA  = nameA.components(separatedBy: " ").first ?? nameA
+        let shortB  = nameB.components(separatedBy: " ").first ?? nameB
+        if strokes == 0 { return "Dead even \u{00B7} \(shortA) \(hcA), \(shortB) \(hcB)" }
+        let receiver = hcA > hcB ? shortA : shortB
+        return "\(receiver) gets \(strokes) stroke\(strokes == 1 ? "" : "s") \u{00B7} \(shortA) \(hcA), \(shortB) \(hcB)"
+    }
+
+    private func mpTeamStrokesText(seats: [Int], allSeats: [Int], active: [(Int, String)], g: GameData) -> String {
+        let base  = allSeats.compactMap { g.hcPlayers[safe: $0] }.min() ?? 0
+        let parts = seats.map { seat -> String in
+            let hc     = g.hcPlayers[safe: seat] ?? 0
+            let stks   = hc - base
+            let name   = active.first(where: { $0.0 == seat })?.1 ?? "P\(seat+1)"
+            let short  = name.components(separatedBy: " ").first ?? name
+            return "\(short) \(stks)"
+        }
+        return parts.joined(separator: " \u{00B7} ") + " strokes"
+    }
+
+    private func mpOptionRow(title: String, desc: String, sw: UISwitch) -> UIView {
+        let titleLbl = UILabel()
+        titleLbl.text = title
+        titleLbl.font = .systemFont(ofSize: 16, weight: .semibold)
+
+        let descLbl = UILabel()
+        descLbl.text          = desc
+        descLbl.font          = .systemFont(ofSize: 13)
+        descLbl.textColor     = .secondaryLabel
+        descLbl.numberOfLines = 0
+
+        let textStack = UIStackView(arrangedSubviews: [titleLbl, descLbl])
+        textStack.axis    = .vertical
+        textStack.spacing = 2
+        textStack.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        sw.setContentHuggingPriority(.required, for: .horizontal)
+
+        let row = UIStackView(arrangedSubviews: [textStack, sw])
+        row.axis      = .horizontal
+        row.spacing   = 12
+        row.alignment = .center
+        row.layoutMargins = UIEdgeInsets(top: 10, left: 16, bottom: 10, right: 16)
+        row.isLayoutMarginsRelativeArrangement = true
+        return row
+    }
+
+    private func mpSeparator() -> UIView {
+        let sep = UIView()
+        sep.backgroundColor = .separator
+        sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        return sep
     }
 
     @objc private func matchPlay36Toggled(_ sender: UISwitch) {
@@ -1027,6 +1250,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         section.axis = .vertical
         section.spacing = 8
 
+        standaloneTeamTeeSection = section
         let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
         contentStack.insertArrangedSubview(section, at: insertIndex)
     }
@@ -1067,6 +1291,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         section.axis = .vertical
         section.spacing = 8
 
+        standaloneSkinsSection = section
         let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
         contentStack.insertArrangedSubview(section, at: insertIndex)
     }
