@@ -31,7 +31,7 @@ extension GameType {
         switch self {
         case .wolf:           return "Wolf 2-Point"
         case .wolfLowBall:    return "Wolf LowBall"
-        case .matchPlay:      return "Individual"
+        case .matchPlay:      return "Singles"
         case .fourball:       return "Fourball"
         case .bestBall:       return "FB Stroke Play"
         case .sixPointScotch: return "6-Point Scotch"

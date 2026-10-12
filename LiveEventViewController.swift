@@ -28,7 +28,7 @@ final class LiveEventViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         title = eventCode
-        navigationItem.prompt = "Match Board"
+        navigationItem.prompt = "Leaderboard"
 
         setupTableView()
         setupLoading()
@@ -200,7 +200,7 @@ final class LiveEventViewController: UIViewController {
             } catch {
                 await MainActor.run {
                     self.finishLoading()
-                    let a = UIAlertController(title: "Match Board Not Found",
+                    let a = UIAlertController(title: "Leaderboard Not Found",
                                               message: "Check the code and try again.",
                                               preferredStyle: .alert)
                     a.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in

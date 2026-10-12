@@ -550,7 +550,14 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         pillsStack.translatesAutoresizingMaskIntoConstraints = false
         headerGamePillsStack = pillsStack
 
-        [closeBtn, titleLbl, coursePillContainer, pillsStack].forEach { hv.addSubview($0) }
+        let joinCodeBtn = UIButton(type: .system)
+        joinCodeBtn.setTitle("Join with Code", for: .normal)
+        joinCodeBtn.setTitleColor(UIColor.white.withAlphaComponent(0.85), for: .normal)
+        joinCodeBtn.titleLabel?.font = UIFont.systemFont(ofSize: 13, weight: .medium)
+        joinCodeBtn.translatesAutoresizingMaskIntoConstraints = false
+        joinCodeBtn.addTarget(self, action: #selector(joinWithCodeTapped), for: .touchUpInside)
+
+        [closeBtn, titleLbl, coursePillContainer, pillsStack, joinCodeBtn].forEach { hv.addSubview($0) }
 
         NSLayoutConstraint.activate([
             titleLbl.topAnchor.constraint(equalTo: hv.topAnchor, constant: 14),
@@ -564,7 +571,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
             pillsStack.topAnchor.constraint(equalTo: coursePillContainer.bottomAnchor, constant: 8),
             pillsStack.centerXAnchor.constraint(equalTo: hv.centerXAnchor),
-            pillsStack.bottomAnchor.constraint(equalTo: hv.bottomAnchor, constant: -14),
+
+            joinCodeBtn.topAnchor.constraint(equalTo: pillsStack.bottomAnchor, constant: 6),
+            joinCodeBtn.centerXAnchor.constraint(equalTo: hv.centerXAnchor),
+            joinCodeBtn.bottomAnchor.constraint(equalTo: hv.bottomAnchor, constant: -10),
         ])
 
         return hv
@@ -1529,6 +1539,14 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Helpers
     @objc private func closeTapped() { closeToHome() }
     @objc private func dismissKB() { view.endEditing(true) }
+
+    @objc private func joinWithCodeTapped() {
+        WolfActions.presentJoinWithCode(from: self) { [weak self] record, _ in
+            GameManager.applyTournamentJoin(record: record)
+            NotificationCenter.default.post(name: .reloadUI, object: nil)
+            self?.dismiss(animated: true)
+        }
+    }
 
     private func showAlert(title: String, message: String) {
         let a = UIAlertController(title: title, message: message, preferredStyle: .alert)
