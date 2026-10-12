@@ -476,14 +476,19 @@ final class LiveNassauViewController: UIViewController {
 
         func makePairedHole(rank: Int, o: HoleScoreRecord?, p: HoleScoreRecord?,
                             knownHostIdx: Int? = nil, knownOppIdx: Int? = nil) -> PairedHole {
-            let rawSI = o?.holeHc ?? p?.holeHc ?? (rank + 1)
-            let si    = max(1, min(STANDARD_HOLES, rawSI == 0 ? STANDARD_HOLES : rawSI))
-            let hostStrokes = NassauEngine.pops(for: hostDelta, strokeIndex: si)
-            let oppStrokes  = NassauEngine.pops(for: oppDelta,  strokeIndex: si)
-            let hostNet: Int? = o.map { $0.grossScore - hostStrokes }
-            let oppNet:  Int? = p.map { $0.grossScore - oppStrokes  }
+            // Indices must be resolved before HC lookups so each player uses their own course's HC.
             let hostIdx = o?.hole ?? knownHostIdx ?? rank
             let oppIdx  = p?.hole ?? knownOppIdx  ?? rank
+            // Per-player stroke indices: score record's holeHc first (works without profile),
+            // then CourseProfile (authoritative for unscored holes), then slot rank fallback.
+            let rawHostSI = o?.holeHc ?? ownerProfile?.hcs[safe: hostIdx] ?? (rank + 1)
+            let rawOppSI  = p?.holeHc ?? oppProfile?.hcs[safe: oppIdx]   ?? (rank + 1)
+            let hostSI = max(1, min(STANDARD_HOLES, rawHostSI == 0 ? STANDARD_HOLES : rawHostSI))
+            let oppSI  = max(1, min(STANDARD_HOLES, rawOppSI  == 0 ? STANDARD_HOLES : rawOppSI))
+            let hostStrokes = NassauEngine.pops(for: hostDelta, strokeIndex: hostSI)
+            let oppStrokes  = NassauEngine.pops(for: oppDelta,  strokeIndex: oppSI)
+            let hostNet: Int? = o.map { $0.grossScore - hostStrokes }
+            let oppNet:  Int? = p.map { $0.grossScore - oppStrokes  }
             let hostPar = o.flatMap { ownerProfile?.pars[safe: $0.hole] }
                        ?? knownHostIdx.flatMap { ownerProfile?.pars[safe: $0] }
             let oppPar  = p.flatMap { oppProfile?.pars[safe: $0.hole] }
