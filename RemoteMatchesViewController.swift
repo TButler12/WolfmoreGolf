@@ -7,8 +7,16 @@ import UIKit
 final class RemoteMatchesViewController: UIViewController {
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
-    private var matches: [MatchRecord] = []
+    private var todayMatches: [MatchRecord] = []
+    private var pastMatches:  [MatchRecord] = []
     private var isLoading = false
+
+    private var allSections: [(header: String, rows: [MatchRecord], isPast: Bool)] {
+        var out: [(String, [MatchRecord], Bool)] = []
+        if !todayMatches.isEmpty { out.append(("Active Matches", todayMatches, false)) }
+        if !pastMatches.isEmpty  { out.append(("Past Matches",   pastMatches,  true))  }
+        return out
+    }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -47,11 +55,17 @@ final class RemoteMatchesViewController: UIViewController {
             do {
                 let fetched = try await SupabaseService.shared.fetchActiveMatches()
                 await MainActor.run {
-                    // Newest first so the most recent match is always at the top
-                    self.matches = fetched.sorted {
+                    let sorted = fetched.sorted {
                         let d0 = Self.parseSupabaseDate($0.createdAt ?? "") ?? .distantPast
                         let d1 = Self.parseSupabaseDate($1.createdAt ?? "") ?? .distantPast
                         return d0 > d1
+                    }
+                    let startOfToday = Calendar.current.startOfDay(for: Date())
+                    self.todayMatches = sorted.filter {
+                        (Self.parseSupabaseDate($0.createdAt ?? "") ?? .distantPast) >= startOfToday
+                    }
+                    self.pastMatches = sorted.filter {
+                        (Self.parseSupabaseDate($0.createdAt ?? "") ?? .distantPast) < startOfToday
                     }
                     self.isLoading = false
                     self.tableView.reloadData()
@@ -65,15 +79,22 @@ final class RemoteMatchesViewController: UIViewController {
         }
     }
 
+    private func match(at indexPath: IndexPath) -> MatchRecord {
+        allSections[indexPath.section].rows[indexPath.row]
+    }
+
     private func archiveMatch(at indexPath: IndexPath) {
-        let match = matches[indexPath.row]
-        print("DEBUG deleting match id=\(match.id) code=\(match.code)")
+        let m = match(at: indexPath)
         Task {
             do {
-                try await SupabaseService.shared.archiveMatch(id: match.id)
+                try await SupabaseService.shared.archiveMatch(id: m.id)
                 await MainActor.run {
-                    guard indexPath.row < self.matches.count else { return }
-                    self.matches.remove(at: indexPath.row)
+                    let isPast = self.allSections[indexPath.section].isPast
+                    if isPast {
+                        self.pastMatches.removeAll { $0.id == m.id }
+                    } else {
+                        self.todayMatches.removeAll { $0.id == m.id }
+                    }
                     self.tableView.deleteRows(at: [indexPath], with: .automatic)
                 }
             } catch {
@@ -124,19 +145,27 @@ final class RemoteMatchesViewController: UIViewController {
 
 extension RemoteMatchesViewController: UITableViewDataSource {
 
-    func numberOfSections(in tableView: UITableView) -> Int { 1 }
+    func numberOfSections(in tableView: UITableView) -> Int {
+        if isLoading || allSections.isEmpty { return 1 }
+        return allSections.count
+    }
 
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        matches.count
+        if isLoading || allSections.isEmpty { return 0 }
+        return allSections[section].rows.count
     }
 
     func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
-        isLoading ? "Loading…" : (matches.isEmpty ? "No Active Matches" : "Active Matches")
+        if isLoading { return "Loading…" }
+        if allSections.isEmpty { return "No Matches" }
+        return allSections[section].header
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: MatchCell.reuseID, for: indexPath) as! MatchCell
-        cell.configure(with: matches[indexPath.row], current: isActiveMatch(matches[indexPath.row]))
+        let m = match(at: indexPath)
+        let isPast = allSections[indexPath.section].isPast
+        cell.configure(with: m, current: isActiveMatch(m), ended: isPast)
         return cell
     }
 }
@@ -147,9 +176,8 @@ extension RemoteMatchesViewController: UITableViewDelegate {
 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        let match = matches[indexPath.row]
         let vc = LiveNassauViewController()
-        vc.match = match
+        vc.match = match(at: indexPath)
         navigationController?.pushViewController(vc, animated: true)
     }
 
@@ -213,9 +241,9 @@ private final class MatchCell: UITableViewCell {
 
     required init?(coder: NSCoder) { fatalError() }
 
-    func configure(with match: MatchRecord, current: Bool) {
-        codeLabel.text = "Code: \(match.code)"
-        codeLabel.textColor = current ? .label : .tertiaryLabel
+    func configure(with match: MatchRecord, current: Bool, ended: Bool) {
+        codeLabel.text  = "Code: \(match.code)"
+        codeLabel.textColor = current ? .label : (ended ? .secondaryLabel : .label)
 
         let host = match.hostName?.trimmingCharacters(in: .whitespacesAndNewlines)
                      .nilIfEmpty ?? match.courseA ?? "Unknown"
@@ -223,12 +251,14 @@ private final class MatchCell: UITableViewCell {
         if let opp = match.opponentName?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty {
             details.append("vs \(opp)")
         }
-        if let raw = match.createdAt,
-           let date = RemoteMatchesViewController.parseSupabaseDate(raw) {
+        if ended {
+            details.append("Ended")
+        } else if let raw = match.createdAt,
+                  let date = RemoteMatchesViewController.parseSupabaseDate(raw) {
             details.append(Self.relativeTime(from: date))
         }
         detailLabel.text = details.joined(separator: " · ")
-        detailLabel.textColor = current ? .secondaryLabel : .tertiaryLabel
+        detailLabel.textColor = current ? .secondaryLabel : (ended ? .tertiaryLabel : .secondaryLabel)
 
         borderBar.backgroundColor = current ? .systemGreen : .systemGray3
     }

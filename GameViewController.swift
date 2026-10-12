@@ -5583,11 +5583,10 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             WolfActions.presentWatchLive(from: self)
         })
         sheet.addAction(UIAlertAction(
-            title: "Remote Nassau\nPlay or view a remote Nassau match",
+            title: "Remote Nassau\nImport an invite to join a live Nassau match",
             style: .default) { [weak self] _ in
             guard let self else { return }
-            let vc = RemoteMatchesViewController()
-            self.navigationController?.pushViewController(vc, animated: true)
+            WolfActions.joinLiveMatch(from: self)
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         if let pop = sheet.popoverPresentationController {
