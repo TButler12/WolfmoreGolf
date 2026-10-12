@@ -611,21 +611,6 @@ final class SupabaseService {
         return response.value
     }
 
-    func fetchMatchByCode(code: String) async throws -> MatchRecord {
-        let response: PostgrestResponse<[MatchRecord]> = try await client
-            .from("matches")
-            .select()
-            .eq("code", value: code.uppercased())
-            .order("created_at", ascending: false)
-            .limit(1)
-            .execute()
-        guard let match = response.value.first else {
-            throw NSError(domain: "WolfmoreGolf", code: 404,
-                          userInfo: [NSLocalizedDescriptionKey: "No match found."])
-        }
-        return match
-    }
-
     func fetchWolfHoleResults(sessionId: String) async throws -> [WolfHoleResult] {
         let response: PostgrestResponse<[WolfHoleResult]> = try await client
             .from("wolf_hole_results")

@@ -542,7 +542,7 @@ final class WolfSpectatorViewController: UIViewController {
             sessionInfoLabel.attributedText = nil
         }
         if hasEventCode {
-            eventChipButton.setTitle("Leaderboard ›", for: .normal)
+            eventChipButton.setTitle("Match Board ›", for: .normal)
             eventChipButton.isHidden = false
         } else {
             eventChipButton.isHidden = true

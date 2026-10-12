@@ -382,7 +382,7 @@ enum WolfActions {
                 GameManager.shared.saveCurrent()
                 await MainActor.run {
                     let a = UIAlertController(title: "Linked",
-                                              message: "Session linked to leaderboard \(evCode).",
+                                              message: "Session linked to match board \(evCode).",
                                               preferredStyle: .alert)
                     a.addAction(UIAlertAction(title: "OK", style: .default))
                     presenter.present(a, animated: true)
@@ -418,7 +418,7 @@ enum WolfActions {
         if let sessionId = g.liveSessionId {
             let code      = g.liveSessionCode ?? ""
             let groupName = g.liveSessionGroupName
-            let boardStatus = g.liveLinkedEventCode.map { "Leaderboard: \($0)" } ?? "Not on a leaderboard"
+            let boardStatus = g.liveLinkedEventCode.map { "Match Board: \($0)" } ?? "Not on a match board"
             let msgParts = [groupName, code.isEmpty ? nil : "Code: \(code)", boardStatus].compactMap { $0 }
             let menu = UIAlertController(
                 title: "Live Wolf",
@@ -437,18 +437,18 @@ enum WolfActions {
                 })
             }
             if g.liveLinkedEventCode == nil {
-                menu.addAction(UIAlertAction(title: "Link to Leaderboard…", style: .default) { [weak presenter] _ in
+                menu.addAction(UIAlertAction(title: "Link to Match Board…", style: .default) { [weak presenter] _ in
                     guard let presenter else { return }
                     linkToMatchBoardAction(sessionId: sessionId, creatorToken: g.liveCreatorToken, from: presenter)
                 })
             } else {
                 let evCode = g.liveLinkedEventCode!
-                menu.addAction(UIAlertAction(title: "Unlink from Leaderboard (\(evCode))", style: .default) { [weak presenter] _ in
+                menu.addAction(UIAlertAction(title: "Unlink from Match Board (\(evCode))", style: .default) { [weak presenter] _ in
                     guard let presenter else { return }
                     unlinkFromMatchBoardAction(sessionId: sessionId, creatorToken: g.liveCreatorToken, from: presenter)
                 })
             }
-            menu.addAction(UIAlertAction(title: "Create Leaderboard…", style: .default) { [weak presenter] _ in
+            menu.addAction(UIAlertAction(title: "Create Match Board…", style: .default) { [weak presenter] _ in
                 guard let presenter else { return }
                 createMatchBoardAction(from: presenter)
             })
@@ -480,7 +480,7 @@ enum WolfActions {
             let prefillBoardCode = MatchBoardStore.todaysBoard()?.code ?? ""
             let namePrompt = UIAlertController(
                 title: "Go Live",
-                message: "Group name (optional) · Leaderboard code (leave blank if none)\n\nGot a code from the organizer? Enter it below to appear on their leaderboard.",
+                message: "Group name (optional) · Match board code (leave blank if none)\n\nGot a code from the organizer? Enter it below to appear on their match board.",
                 preferredStyle: .alert
             )
             namePrompt.addTextField { tf in
@@ -496,7 +496,7 @@ enum WolfActions {
                 }
             }
             namePrompt.addTextField { tf in
-                tf.placeholder            = "Leaderboard code, e.g. EABC123"
+                tf.placeholder            = "Match board code, e.g. EABC123"
                 tf.text                   = prefillBoardCode
                 tf.autocapitalizationType = .allCharacters
                 tf.autocorrectionType     = .no
@@ -567,8 +567,8 @@ enum WolfActions {
 
     static func createMatchBoardAction(from presenter: UIViewController) {
         let prompt = UIAlertController(
-            title: "Create Live Leaderboard",
-            message: "Give the leaderboard a name. You'll get a code to share with scorers and viewers.",
+            title: "Create Live Match Board",
+            message: "Give the board a name. You'll get a code to share with scorers and viewers.",
             preferredStyle: .alert
         )
         prompt.addTextField { tf in
@@ -597,7 +597,7 @@ enum WolfActions {
                     }
                 } catch {
                     await MainActor.run {
-                        let a = UIAlertController(title: "Create Leaderboard Failed",
+                        let a = UIAlertController(title: "Create Match Board Failed",
                                                   message: error.localizedDescription,
                                                   preferredStyle: .alert)
                         a.addAction(UIAlertAction(title: "OK", style: .default))
@@ -613,8 +613,8 @@ enum WolfActions {
                                                from presenter: UIViewController) {
         guard let token = creatorToken else { return }
         let prompt = UIAlertController(
-            title: "Link to Leaderboard",
-            message: "Enter the 7-character leaderboard code",
+            title: "Link to Match Board",
+            message: "Enter the 7-character match board code",
             preferredStyle: .alert
         )
         prompt.addTextField { tf in
@@ -690,7 +690,7 @@ enum WolfActions {
     static func showMatchBoardCreatedAlert(code: String, name: String, from presenter: UIViewController) {
         let link = "wolfmore://watch?code=\(code)"
         let alert = UIAlertController(
-            title: "Leaderboard Created",
+            title: "Match Board Created",
             message: "Send this code to each group's scorer and your viewers.\n\n\(code)",
             preferredStyle: .alert
         )
@@ -718,239 +718,21 @@ enum WolfActions {
     }
 
     private static func showGoLiveCreatedAlert(code: String, from presenter: UIViewController) {
+        let link = "wolfmore://watch?code=\(code)"
         let alert = UIAlertController(
             title: "Live Session Created",
-            message: "Share this code with spectators: \(code)",
+            message: "Share this link with spectators:\n\(link)",
             preferredStyle: .alert
         )
         alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
             UIPasteboard.general.string = code
         })
+        alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak presenter] _ in
+            guard let presenter else { return }
+            let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
+            presenter.present(av, animated: true)
+        })
         alert.addAction(UIAlertAction(title: "OK", style: .cancel))
         presenter.present(alert, animated: true)
-    }
-
-    // MARK: - Join with Code
-
-    static func presentJoinWithCode(
-        from presenter: UIViewController,
-        handleTournament: ((TournamentRecord, UIViewController) -> Void)? = nil
-    ) {
-        let alert = UIAlertController(
-            title: "Join with Code",
-            message: "Enter a tournament, leaderboard, or Live Wolf code",
-            preferredStyle: .alert
-        )
-        alert.addTextField { tf in
-            tf.placeholder            = "e.g. ABC123 or EABC123"
-            tf.autocapitalizationType = .allCharacters
-            tf.autocorrectionType     = .no
-            tf.returnKeyType          = .go
-            NotificationCenter.default.addObserver(
-                forName: UITextField.textDidChangeNotification,
-                object: tf,
-                queue: .main
-            ) { _ in
-                if let t = tf.text { tf.text = String(t.prefix(7)).uppercased() }
-            }
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Join", style: .default) { [weak presenter] _ in
-            guard let presenter else { return }
-            let raw = (alert.textFields?.first?.text ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-                .uppercased()
-            guard !raw.isEmpty else { return }
-            resolveJoinCode(raw, from: presenter, handleTournament: handleTournament)
-        })
-        presenter.present(alert, animated: true)
-    }
-
-    private static func resolveJoinCode(
-        _ code: String,
-        from presenter: UIViewController,
-        handleTournament: ((TournamentRecord, UIViewController) -> Void)?
-    ) {
-        if code.count == 7 && code.hasPrefix("E") {
-            joinLeaderboard(code: code, from: presenter)
-            return
-        }
-
-        let spinner = UIAlertController(title: nil, message: "Looking up code…", preferredStyle: .alert)
-        presenter.present(spinner, animated: true)
-
-        Task {
-            async let tourneyFetch = SupabaseService.shared.fetchTournament(code: code)
-            async let wolfFetch    = SupabaseService.shared.fetchWolfSessionByCode(code: code)
-            let tourney: TournamentRecord?  = try? await tourneyFetch
-            let wolfSession: WolfSession?   = try? await wolfFetch
-
-            await MainActor.run {
-                spinner.dismiss(animated: false) {
-                    switch (tourney, wolfSession) {
-                    case (let t?, let w?):
-                        let ac = UIAlertController(
-                            title: "Which did you mean?",
-                            message: "Tournament \"\(t.name)\" or Live Wolf group \"\(w.groupName ?? w.code)\"?",
-                            preferredStyle: .alert
-                        )
-                        ac.addAction(UIAlertAction(title: "Tournament", style: .default) { _ in
-                            dispatchTournament(t, from: presenter, handleTournament: handleTournament)
-                        })
-                        ac.addAction(UIAlertAction(title: "Live Wolf", style: .default) { _ in
-                            openSessionSpectator(wolfSession: w, from: presenter)
-                        })
-                        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                        presenter.present(ac, animated: true)
-                    case (let t?, nil):
-                        dispatchTournament(t, from: presenter, handleTournament: handleTournament)
-                    case (nil, let w?):
-                        openSessionSpectator(wolfSession: w, from: presenter)
-                    case (nil, nil):
-                        checkNassauCode(code, from: presenter)
-                    }
-                }
-            }
-        }
-    }
-
-    private static func joinLeaderboard(code: String, from presenter: UIViewController) {
-        let g = GameManager.shared.currentGame
-
-        guard let game = g else {
-            let vc = LiveEventViewController(eventCode: code)
-            if let nav = presenter.navigationController {
-                nav.pushViewController(vc, animated: true)
-            } else {
-                let nav = UINavigationController(rootViewController: vc)
-                nav.modalPresentationStyle = .pageSheet
-                presenter.present(nav, animated: true)
-            }
-            return
-        }
-
-        if game.liveLinkedEventCode?.uppercased() == code {
-            let vc = LiveEventViewController(eventCode: code)
-            presenter.navigationController?.pushViewController(vc, animated: true)
-            return
-        }
-
-        if let sessionId = game.liveSessionId, let token = game.liveCreatorToken {
-            executeLinkTask(sessionId: sessionId, token: token, evCode: code, from: presenter)
-            return
-        }
-
-        guard PremiumManager.shared.canUse(.liveWolf) else {
-            presenter.present(PaywallViewController(feature: .liveWolf), animated: true)
-            return
-        }
-        PremiumManager.shared.recordUse(.liveWolf)
-        PremiumManager.shared.nudgeIfNeeded(for: .liveWolf, from: presenter)
-
-        let fullName  = ProfileStore.name ?? ""
-        let firstName = fullName.components(separatedBy: " ").first ?? fullName
-        let groupName = firstName.isEmpty ? "My Group" : "\(firstName)'s group"
-
-        let names = (0..<game.activePlayerLimit).compactMap { s -> String? in
-            guard game.playerActivated[safe: s] == true else { return nil }
-            return game.playerNames[safe: s] ?? ""
-        }
-        let handicaps = (0..<game.activePlayerLimit).compactMap { s -> Int? in
-            guard game.playerActivated[safe: s] == true else { return nil }
-            return game.hcPlayers[safe: s] ?? 0
-        }
-        let course        = game.course.name.isEmpty ? "Custom Course" : game.course.name
-        let nineHole      = game.isNineHoleMatch
-        let nineHoleStart = game.nineHoleStartingHole
-
-        executeGoLiveTask(names: names, course: course, handicaps: handicaps,
-                          nineHole: nineHole, nineHoleStart: nineHoleStart,
-                          groupName: groupName, eventCode: code, from: presenter)
-    }
-
-    private static func openSessionSpectator(wolfSession: WolfSession, from presenter: UIViewController) {
-        let vc = WolfSpectatorViewController()
-        vc.sessionCode = wolfSession.code
-        if let nav = presenter.navigationController {
-            nav.pushViewController(vc, animated: true)
-        } else {
-            let nav = UINavigationController(rootViewController: vc)
-            nav.modalPresentationStyle = .pageSheet
-            presenter.present(nav, animated: true)
-        }
-    }
-
-    private static func dispatchTournament(
-        _ record: TournamentRecord,
-        from presenter: UIViewController,
-        handleTournament: ((TournamentRecord, UIViewController) -> Void)?
-    ) {
-        if let handler = handleTournament {
-            handler(record, presenter)
-        } else {
-            linkTournamentToRound(record: record, from: presenter)
-        }
-    }
-
-    private static func linkTournamentToRound(record: TournamentRecord, from presenter: UIViewController) {
-        let typeName: String
-        switch record.gameType {
-        case "wolf":       typeName = "Wolf"
-        case "stableford": typeName = "Stableford"
-        case "skins":      typeName = "Skins"
-        case "scramble":   typeName = "Scramble"
-        default:           typeName = record.gameType.capitalized
-        }
-        let ac = UIAlertController(
-            title: "Join \"\(record.name)\"?",
-            message: "\(typeName) tournament.",
-            preferredStyle: .alert
-        )
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Watch", style: .default) { [weak presenter] _ in
-            guard let presenter else { return }
-            let vc = TournamentLeaderboardViewController(code: record.code)
-            if let nav = presenter.navigationController {
-                nav.pushViewController(vc, animated: true)
-            } else {
-                let nav = UINavigationController(rootViewController: vc)
-                nav.modalPresentationStyle = .pageSheet
-                presenter.present(nav, animated: true)
-            }
-        })
-        ac.addAction(UIAlertAction(title: "Join as Scorer", style: .default) { _ in
-            GameManager.applyTournamentJoin(record: record)
-            NotificationCenter.default.post(name: .reloadUI, object: nil)
-        })
-        presenter.present(ac, animated: true)
-    }
-
-    private static func checkNassauCode(_ code: String, from presenter: UIViewController) {
-        Task {
-            let isNassau = (try? await SupabaseService.shared.fetchMatchByCode(code: code)) != nil
-            await MainActor.run {
-                if isNassau {
-                    let ac = UIAlertController(
-                        title: "Remote Nassau Code",
-                        message: "That's a Remote Nassau code. Use Remote Nassau to join a live match.",
-                        preferredStyle: .alert
-                    )
-                    ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-                    ac.addAction(UIAlertAction(title: "Open Remote Nassau", style: .default) { [weak presenter] _ in
-                        guard let presenter else { return }
-                        joinLiveMatch(from: presenter)
-                    })
-                    presenter.present(ac, animated: true)
-                } else {
-                    let ac = UIAlertController(
-                        title: "Code Not Found",
-                        message: "No tournament, leaderboard, or Live Wolf group found for that code. Check the code and try again.",
-                        preferredStyle: .alert
-                    )
-                    ac.addAction(UIAlertAction(title: "OK", style: .default))
-                    presenter.present(ac, animated: true)
-                }
-            }
-        }
     }
 }

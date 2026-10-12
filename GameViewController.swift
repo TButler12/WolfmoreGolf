@@ -5566,9 +5566,61 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     }
 
     @objc private func tournamentAttachTapped() {
-        WolfActions.presentJoinWithCode(from: self) { [weak self] record, _ in
-            guard let self else { return }
-            self.confirmAndAttach(record: record)
+        let ac = UIAlertController(
+            title: "Join Tournament",
+            message: "Enter the tournament code to link this round.",
+            preferredStyle: .alert
+        )
+        ac.addTextField { tf in
+            tf.placeholder = "Tournament code"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType = .no
+            tf.returnKeyType = .done
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
+            guard let self,
+                  let raw = ac.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+                  !raw.isEmpty else { return }
+            self.attachToTournament(code: raw.uppercased())
+        })
+        present(ac, animated: true)
+    }
+
+    private func attachToTournament(code: String) {
+        if let existing = GameManager.shared.currentGame?.tournamentCode,
+           !existing.isEmpty, existing != code {
+            let warn = UIAlertController(
+                title: "Replace Tournament?",
+                message: "This round is already linked to \(existing). Replace it with \(code)?",
+                preferredStyle: .alert
+            )
+            warn.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            warn.addAction(UIAlertAction(title: "Replace", style: .destructive) { [weak self] _ in
+                self?.performTournamentAttach(code: code)
+            })
+            present(warn, animated: true)
+            return
+        }
+        performTournamentAttach(code: code)
+    }
+
+    private func performTournamentAttach(code: String) {
+        Task {
+            do {
+                let record = try await SupabaseService.shared.fetchTournament(code: code)
+                await MainActor.run { self.confirmAndAttach(record: record) }
+            } catch {
+                await MainActor.run {
+                    let ac = UIAlertController(
+                        title: "Tournament Not Found",
+                        message: "No tournament with code \"\(code)\" was found. Check the code and try again.",
+                        preferredStyle: .alert
+                    )
+                    ac.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(ac, animated: true)
+                }
+            }
         }
     }
 
@@ -5990,7 +6042,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             tnCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
             }
-            tnCfg.title = "Join with Code"
+            tnCfg.title = "Join Tournament"
             let tournamentBtn = UIButton(configuration: tnCfg)
             tournamentBtn.addTarget(self, action: #selector(tournamentAttachTapped), for: .touchUpInside)
 

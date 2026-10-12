@@ -95,11 +95,11 @@ final class LiveConnectedViewController: UITableViewController {
         var result: [Section] = []
 
         result.append(Section(header: "JOIN", rows: [
-            Row(title: "Join with Code",
-                subtitle: "Enter a tournament, leaderboard, or Live Wolf code",
+            Row(title: "Join Tournament",
+                subtitle: "Enter a code to join an existing tournament",
                 icon: "trophy.fill",
                 tint: wolfGreen) { [weak self] in
-                self?.joinWithCodeTapped()
+                self?.joinTournamentTapped()
             },
             Row(title: "Join Remote Nassau Match",
                 subtitle: "Import an invite to join a live Nassau match",
@@ -108,8 +108,8 @@ final class LiveConnectedViewController: UITableViewController {
                 guard let self else { return }
                 WolfActions.joinLiveMatch(from: self)
             },
-            Row(title: "Watch Live Wolf or Leaderboard",
-                subtitle: "Watch a group or a leaderboard in real time",
+            Row(title: "Watch Live Wolf or Match Board",
+                subtitle: "Watch a group or a match board in real time",
                 icon: "eye.fill",
                 tint: .secondaryLabel) { [weak self] in
                 self?.watchLiveTapped()
@@ -157,7 +157,7 @@ final class LiveConnectedViewController: UITableViewController {
                 }
                 WolfActions.presentGoLive(from: self)
             },
-            Row(title: "Create Leaderboard / Ryder Cup",
+            Row(title: "Create Match Board / Ryder Cup",
                 subtitle: "Follow several match play groups on one screen",
                 icon: "rectangle.3.group.fill",
                 tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)) { [weak self] in
@@ -222,7 +222,7 @@ final class LiveConnectedViewController: UITableViewController {
                     self.navigationController?.pushViewController(vc, animated: true)
                 }
             }
-            result.append(Section(header: "MY LEADERBOARDS", rows: boardRows))
+            result.append(Section(header: "MY MATCH BOARDS", rows: boardRows))
         }
 
         sections = result
@@ -266,12 +266,52 @@ final class LiveConnectedViewController: UITableViewController {
         dismiss(animated: true)
     }
 
-    // MARK: - Join with Code
+    // MARK: - Join Tournament
 
-    private func joinWithCodeTapped() {
-        WolfActions.presentJoinWithCode(from: self) { [weak self] record, _ in
-            guard let self else { return }
-            self.showJoinConfirmation(record: record)
+    private func joinTournamentTapped() {
+        let ac = UIAlertController(
+            title: "Join Tournament",
+            message: "Enter the 6-letter code from the tournament organizer.",
+            preferredStyle: .alert
+        )
+        ac.addTextField { tf in
+            tf.placeholder = "XXXXXX"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType = .no
+            tf.returnKeyType = .join
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self, weak ac] _ in
+            let raw = (ac?.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .uppercased()
+            guard raw.count == 6 else {
+                self?.showError("Please enter a 6-letter code.")
+                return
+            }
+            self?.joinTournament(code: raw)
+        })
+        present(ac, animated: true)
+    }
+
+    private func joinTournament(code: String) {
+        let spinner = UIAlertController(title: nil, message: "Looking up tournament…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                let record = try await SupabaseService.shared.fetchTournament(code: code)
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showJoinConfirmation(record: record)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Tournament not found. Check the code and try again.\n\n\(error.localizedDescription)")
+                    }
+                }
+            }
         }
     }
 
@@ -620,8 +660,8 @@ final class LiveConnectedViewController: UITableViewController {
 
     private func showWatchLiveAlert() {
         let alert = UIAlertController(
-            title: "Watch Live Wolf or Leaderboard",
-            message: "Enter a group code (6 chars) or a leaderboard code (7 chars, starts with E)",
+            title: "Watch Live Wolf or Match Board",
+            message: "Enter a group code (6 chars) or a match board code (7 chars, starts with E)",
             preferredStyle: .alert
         )
         alert.addTextField { tf in
