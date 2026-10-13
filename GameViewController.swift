@@ -3888,41 +3888,39 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 if !ids.isEmpty { return ids }
                 return g.remoteMatchId.map { [$0] } ?? []
             }()
-            let ownerSlot = myPlayerIndex(in: g) ?? 0
-            let gross5c   = ownerSlot < g.scores.count ? g.scores[ownerSlot][hole] : nil
-            print("DEBUG 5c remoteMatchId=\(g.remoteMatchId ?? "nil") remoteMatchIds=\(g.remoteMatchIds) matchIds=\(matchIds) ownerSlot=\(ownerSlot) gross=\(String(describing: gross5c))")
             if !matchIds.isEmpty {
-                if let gross = gross5c {
-                    let hc        = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
-                    let playerHc  = g.hcPlayers[safe: ownerSlot] ?? 0
-                    let ownerName = g.playerNames[safe: ownerSlot] ?? (ProfileStore.name ?? "")
-                    Task {
-                        for matchId in matchIds {
-                            let side: String?
-                            if let map = g.remoteNassauSideMap {
-                                side = map[matchId]
-                            } else {
-                                side = g.remoteNassauSide  // old save: same side for all matches
-                            }
-                            guard let side else {
-                                print("ERROR remote nassau write skipped — side unknown for matchId \(matchId)")
-                                continue
-                            }
-                            print("DEBUG remote nassau writing: matchId=\(matchId) side=\(side) hole=\(hole + 1) score=\(gross) hc=\(hc) playerHc=\(playerHc) name=\(ownerName)")
-                            do {
-                                try await SupabaseService.shared.submitRemoteNassauHole(
-                                    matchId:    matchId,
-                                    side:       side,
-                                    hole:       hole + 1,
-                                    grossScore: gross,
-                                    handicap:   hc,
-                                    playerHc:   playerHc,
-                                    playerName: ownerName
-                                )
-                                print("DEBUG remote nassau write SUCCESS: matchId=\(matchId) side=\(side) hole=\(hole + 1)")
-                            } catch {
-                                print("ERROR remote nassau write FAILED: matchId=\(matchId) side=\(side) hole=\(hole + 1) error=\(error)")
-                            }
+                let hc = g.course.holeHandicaps[safe: hole] ?? (hole + 1)
+                Task {
+                    for matchId in matchIds {
+                        let ownerSlot = WolfActions.remoteNassauOwnerSlot(
+                            matchId: matchId, game: g, myPlayerIndex: self.myPlayerIndex(in: g))
+                        guard ownerSlot < g.scores.count, let gross = g.scores[ownerSlot][hole] else { continue }
+                        let playerHc  = g.hcPlayers[safe: ownerSlot] ?? 0
+                        let ownerName = g.playerNames[safe: ownerSlot] ?? (ProfileStore.name ?? "")
+                        let side: String?
+                        if let map = g.remoteNassauSideMap {
+                            side = map[matchId]
+                        } else {
+                            side = g.remoteNassauSide  // old save: same side for all matches
+                        }
+                        guard let side else {
+                            print("ERROR remote nassau write skipped — side unknown for matchId \(matchId)")
+                            continue
+                        }
+                        print("DEBUG remote nassau writing: matchId=\(matchId) side=\(side) hole=\(hole + 1) score=\(gross) hc=\(hc) playerHc=\(playerHc) name=\(ownerName)")
+                        do {
+                            try await SupabaseService.shared.submitRemoteNassauHole(
+                                matchId:    matchId,
+                                side:       side,
+                                hole:       hole + 1,
+                                grossScore: gross,
+                                handicap:   hc,
+                                playerHc:   playerHc,
+                                playerName: ownerName
+                            )
+                            print("DEBUG remote nassau write SUCCESS: matchId=\(matchId) side=\(side) hole=\(hole + 1)")
+                        } catch {
+                            print("ERROR remote nassau write FAILED: matchId=\(matchId) side=\(side) hole=\(hole + 1) error=\(error)")
                         }
                     }
                 }

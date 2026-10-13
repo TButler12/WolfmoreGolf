@@ -97,95 +97,126 @@ enum WolfActions {
 
         let trigger = nassau?.settings.autoPressTriggerDown ?? 2
 
-        let included: [String] = (0..<MAX_PLAYERS).compactMap { idx in
+        let activePlayers: [(slot: Int, name: String)] = (0..<MAX_PLAYERS).compactMap { idx in
             guard idx < g.playerActivated.count, g.playerActivated[idx],
                   idx < g.playerNames.count else { return nil }
             let name = g.playerNames[idx].trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else { return nil }
-            let isIncluded = nassau.map { idx < $0.playerIncluded.count && $0.playerIncluded[idx] } ?? true
-            return isIncluded ? name : nil
+            return (slot: idx, name: name)
         }
 
-        let playersText = included.isEmpty ? "None" : included.joined(separator: ", ")
+        let myName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
 
-        let message = """
-            Stake: \(stakeText)
-            Press Mode: \(pressModeText)
-            Trigger: \(trigger) down
-            Players: \(playersText)
-            """
-
-        let confirm = UIAlertController(
-            title: "Start Live Match",
-            message: message,
-            preferredStyle: .alert
-        )
-        confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        confirm.addAction(UIAlertAction(title: "Confirm", style: .default) { [weak presenter] _ in
-            guard let presenter else { return }
-            Task {
-                do {
-                    let match = try await SupabaseService.shared.createMatch(
-                        courseA: courseName,
-                        courseB: "",
-                        stake: stake,
-                        games: ["nassau", "pairing_v2"]
-                    )
-                    GameManager.shared.update { g in
-                        if g.remoteNassauSideMap == nil {
-                            var seeded: [String: String] = [:]
-                            if let existingSide = g.remoteNassauSide {
-                                for id in g.remoteMatchIds { seeded[id] = existingSide }
-                                if let single = g.remoteMatchId, !g.remoteMatchIds.contains(single) {
-                                    seeded[single] = existingSide
-                                }
-                            }
-                            g.remoteNassauSideMap = seeded
-                        }
-                        g.remoteMatchId    = match.id
-                        g.remoteNassauSide = "A"
-                        if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
-                        var sideMap = g.remoteNassauSideMap ?? [:]
-                        sideMap[match.id] = "A"
-                        g.remoteNassauSideMap = sideMap
-                    }
-                    NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
-                    await MainActor.run {
-                        let link = "wolfmore://nassau?code=\(match.code)"
-                        let alert = UIAlertController(
-                            title: "Live Match Created",
-                            message: "Share this link with your opponent:\n\(link)",
-                            preferredStyle: .alert
+        func showConfirm(selectedSlot: Int, selectedName: String) {
+            let message = """
+                Stake: \(stakeText)
+                Press Mode: \(pressModeText)
+                Trigger: \(trigger) down
+                Player: \(selectedName)
+                Opponent: invite someone at another course
+                """
+            let confirm = UIAlertController(
+                title: "Start Remote Nassau",
+                message: message,
+                preferredStyle: .alert
+            )
+            confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            confirm.addAction(UIAlertAction(title: "Create & Share Invite", style: .default) { [weak presenter] _ in
+                guard let presenter else { return }
+                Task {
+                    do {
+                        let match = try await SupabaseService.shared.createMatch(
+                            courseA: courseName,
+                            courseB: "",
+                            stake: stake,
+                            games: ["nassau", "pairing_v2"]
                         )
-                        alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
-                            UIPasteboard.general.string = match.code
-                        })
-                        alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak presenter] _ in
-                            guard let presenter else { return }
-                            let avc = UIActivityViewController(activityItems: [link], applicationActivities: nil)
-                            if let pop = avc.popoverPresentationController {
-                                pop.sourceView = presenter.view
-                                pop.sourceRect = CGRect(x: presenter.view.bounds.midX,
-                                                        y: presenter.view.bounds.midY,
-                                                        width: 0, height: 0)
-                                pop.permittedArrowDirections = []
+                        GameManager.shared.update { g in
+                            if g.remoteNassauSideMap == nil {
+                                var seeded: [String: String] = [:]
+                                if let existingSide = g.remoteNassauSide {
+                                    for id in g.remoteMatchIds { seeded[id] = existingSide }
+                                    if let single = g.remoteMatchId, !g.remoteMatchIds.contains(single) {
+                                        seeded[single] = existingSide
+                                    }
+                                }
+                                g.remoteNassauSideMap = seeded
                             }
-                            presenter.present(avc, animated: true)
-                        })
-                        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                        presenter.present(alert, animated: true)
+                            g.remoteMatchId    = match.id
+                            g.remoteNassauSide = "A"
+                            if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
+                            var sideMap = g.remoteNassauSideMap ?? [:]
+                            sideMap[match.id] = "A"
+                            g.remoteNassauSideMap = sideMap
+                            var slotMap = g.remoteNassauLocalSlotMap ?? [:]
+                            slotMap[match.id] = selectedSlot
+                            g.remoteNassauLocalSlotMap = slotMap
+                        }
+                        NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
+                        await MainActor.run {
+                            let link = "wolfmore://nassau?code=\(match.code)"
+                            let alert = UIAlertController(
+                                title: "Live Match Created",
+                                message: "Share this link with your opponent:\n\(link)",
+                                preferredStyle: .alert
+                            )
+                            alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
+                                UIPasteboard.general.string = match.code
+                            })
+                            alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak presenter] _ in
+                                guard let presenter else { return }
+                                let avc = UIActivityViewController(activityItems: [link], applicationActivities: nil)
+                                if let pop = avc.popoverPresentationController {
+                                    pop.sourceView = presenter.view
+                                    pop.sourceRect = CGRect(x: presenter.view.bounds.midX,
+                                                            y: presenter.view.bounds.midY,
+                                                            width: 0, height: 0)
+                                    pop.permittedArrowDirections = []
+                                }
+                                presenter.present(avc, animated: true)
+                            })
+                            alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                            presenter.present(alert, animated: true)
+                        }
+                    } catch {
+                        await MainActor.run { showLiveMatchError(error, from: presenter) }
                     }
-                } catch {
-                    await MainActor.run { showLiveMatchError(error, from: presenter) }
                 }
-            }
-        })
-        presenter.present(confirm, animated: true)
+            })
+            presenter.present(confirm, animated: true)
+        }
+
+        guard activePlayers.count > 1 else {
+            let p = activePlayers.first ?? (slot: 0, name: myName)
+            showConfirm(selectedSlot: p.slot, selectedName: p.name)
+            return
+        }
+
+        let picker = UIAlertController(
+            title: "Start Remote Nassau",
+            message: "Who is playing this match?",
+            preferredStyle: .actionSheet
+        )
+        for player in activePlayers {
+            let isYou = !myName.isEmpty && player.name.localizedCaseInsensitiveCompare(myName) == .orderedSame
+            let title = isYou ? "\(player.name) (You)" : player.name
+            picker.addAction(UIAlertAction(title: title, style: .default) { _ in
+                showConfirm(selectedSlot: player.slot, selectedName: player.name)
+            })
+        }
+        picker.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = picker.popoverPresentationController {
+            pop.sourceView = presenter.view
+            pop.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY,
+                                    width: 0, height: 0)
+            pop.permittedArrowDirections = []
+        }
+        presenter.present(picker, animated: true)
     }
 
     static func joinLiveMatch(from presenter: UIViewController) {
         let prompt = UIAlertController(
-            title: "Join Live Match",
+            title: "Join Remote Nassau",
             message: "Enter the 6-character match code",
             preferredStyle: .alert
         )
@@ -199,48 +230,103 @@ enum WolfActions {
                   let code = prompt.textFields?.first?.text?
                       .trimmingCharacters(in: .whitespacesAndNewlines),
                   !code.isEmpty else { return }
-            Task {
-                do {
-                    let joinerCourse = GameManager.shared.currentGame?.course.name
-                        .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                    let match = try await SupabaseService.shared.joinMatch(code: code, courseB: joinerCourse)
-                    GameManager.shared.update { g in
-                        if g.remoteNassauSideMap == nil {
-                            var seeded: [String: String] = [:]
-                            if let existingSide = g.remoteNassauSide {
-                                for id in g.remoteMatchIds { seeded[id] = existingSide }
-                                if let single = g.remoteMatchId, !g.remoteMatchIds.contains(single) {
-                                    seeded[single] = existingSide
-                                }
-                            }
-                            g.remoteNassauSideMap = seeded
-                        }
-                        g.remoteMatchId    = match.id
-                        g.remoteNassauSide = "B"
-                        if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
-                        var sideMap = g.remoteNassauSideMap ?? [:]
-                        sideMap[match.id] = "B"
-                        g.remoteNassauSideMap = sideMap
-                    }
-                    NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
-                    SupabaseService.shared.subscribeToResults(matchId: match.id) { _ in }
-                    await MainActor.run {
-                        var msg = "Connected to live match \(match.code)."
-                        if let s = match.stake {
-                            let by = match.hostName.map { ", set by \($0)" } ?? ""
-                            msg += "\nStake: $\(Int(s)) per bet\(by)."
-                        }
-                        msg += "\nScores will sync as they come in."
-                        let alert = UIAlertController(title: "Joined Match", message: msg, preferredStyle: .alert)
-                        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-                        presenter.present(alert, animated: true)
-                    }
-                } catch {
-                    await MainActor.run { showLiveMatchError(error, code: code, from: presenter) }
-                }
-            }
+            showJoinPlayerPicker(code: code, from: presenter)
         })
         presenter.present(prompt, animated: true)
+    }
+
+    private static func showJoinPlayerPicker(code: String, from presenter: UIViewController) {
+        guard let g = GameManager.shared.currentGame else { return }
+
+        let activePlayers: [(slot: Int, name: String)] = (0..<MAX_PLAYERS).compactMap { idx in
+            guard idx < g.playerActivated.count, g.playerActivated[idx],
+                  idx < g.playerNames.count else { return nil }
+            let name = g.playerNames[idx].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { return nil }
+            return (slot: idx, name: name)
+        }
+
+        let myName = (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+
+        guard activePlayers.count > 1 else {
+            executeJoin(code: code, localSlot: activePlayers.first?.slot ?? 0, from: presenter)
+            return
+        }
+
+        let picker = UIAlertController(
+            title: "Join Remote Nassau",
+            message: "Who is playing this match?",
+            preferredStyle: .actionSheet
+        )
+        for player in activePlayers {
+            let isYou = !myName.isEmpty && player.name.localizedCaseInsensitiveCompare(myName) == .orderedSame
+            let title = isYou ? "\(player.name) (You)" : player.name
+            picker.addAction(UIAlertAction(title: title, style: .default) { [weak presenter] _ in
+                guard let presenter else { return }
+                executeJoin(code: code, localSlot: player.slot, from: presenter)
+            })
+        }
+        picker.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = picker.popoverPresentationController {
+            pop.sourceView = presenter.view
+            pop.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY,
+                                    width: 0, height: 0)
+            pop.permittedArrowDirections = []
+        }
+        presenter.present(picker, animated: true)
+    }
+
+    private static func executeJoin(code: String, localSlot: Int, from presenter: UIViewController) {
+        Task {
+            do {
+                let joinerCourse = GameManager.shared.currentGame?.course.name
+                    .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let match = try await SupabaseService.shared.joinMatch(code: code, courseB: joinerCourse)
+                GameManager.shared.update { g in
+                    if g.remoteNassauSideMap == nil {
+                        var seeded: [String: String] = [:]
+                        if let existingSide = g.remoteNassauSide {
+                            for id in g.remoteMatchIds { seeded[id] = existingSide }
+                            if let single = g.remoteMatchId, !g.remoteMatchIds.contains(single) {
+                                seeded[single] = existingSide
+                            }
+                        }
+                        g.remoteNassauSideMap = seeded
+                    }
+                    g.remoteMatchId    = match.id
+                    g.remoteNassauSide = "B"
+                    if !g.remoteMatchIds.contains(match.id) { g.remoteMatchIds.append(match.id) }
+                    var sideMap = g.remoteNassauSideMap ?? [:]
+                    sideMap[match.id] = "B"
+                    g.remoteNassauSideMap = sideMap
+                    var slotMap = g.remoteNassauLocalSlotMap ?? [:]
+                    slotMap[match.id] = localSlot
+                    g.remoteNassauLocalSlotMap = slotMap
+                }
+                NotificationCenter.default.post(name: NSNotification.Name("RemoteMatchDidStart"), object: nil)
+                SupabaseService.shared.subscribeToResults(matchId: match.id) { _ in }
+                await MainActor.run {
+                    var msg = "Connected to live match \(match.code)."
+                    if let s = match.stake {
+                        let by = match.hostName.map { ", set by \($0)" } ?? ""
+                        msg += "\nStake: $\(Int(s)) per bet\(by)."
+                    }
+                    msg += "\nScores will sync as they come in."
+                    let alert = UIAlertController(title: "Joined Match", message: msg, preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+                    presenter.present(alert, animated: true)
+                }
+            } catch {
+                await MainActor.run { showLiveMatchError(error, code: code, from: presenter) }
+            }
+        }
+    }
+
+    /// Returns the seat index whose scores feed the given remote match.
+    /// Uses the stored per-match selection when available; falls back to myPlayerIndex then 0.
+    static func remoteNassauOwnerSlot(matchId: String, game: GameData, myPlayerIndex: Int?) -> Int {
+        if let map = game.remoteNassauLocalSlotMap, let slot = map[matchId] { return slot }
+        return myPlayerIndex ?? 0
     }
 
     private static func shareMatchCode(from presenter: UIViewController) {

@@ -65,6 +65,8 @@ struct GameData: Codable {
     var remoteNassauSide: String? = nil
     // Per-match side map (matchId → "A"/"B"). nil on old saves; migrate from remoteNassauSide at read time.
     var remoteNassauSideMap: [String: String]? = nil
+    // Per-match local player slot (matchId → seat index). nil on old saves; falls back to myPlayerIndex.
+    var remoteNassauLocalSlotMap: [String: Int]? = nil
     // Wolf Live session ID and shareable code (nil = not broadcasting)
     var liveSessionId: String? = nil
     var liveSessionCode: String? = nil
