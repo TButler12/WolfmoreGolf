@@ -27,13 +27,13 @@ final class SupabaseService {
         courseA: String,
         courseB: String,
         stake: Double,
+        pressMode: NassauPressMode,
+        trigger: Int,
         games: [String],
         playerName: String
     ) async throws -> MatchRecord {
         let code = generateCode()
         let nassau = GameManager.shared.currentGame?.nassauState
-        let pressMode      = nassau?.settings.pressMode.rawValue ?? NassauPressMode.auto.rawValue
-        let trigger        = nassau?.settings.autoPressTriggerDown ?? 2
         let playerIncluded = nassau?.playerIncluded ?? Array(repeating: true, count: MAX_PLAYERS)
 
         let response: PostgrestResponse<MatchRecord> = try await client
@@ -45,7 +45,7 @@ final class SupabaseService {
                 "stake":            AnyJSON.double(stake),
                 "games":            AnyJSON.array(games.map { .string($0) }),
                 "status":           AnyJSON.string("active"),
-                "press_mode":       AnyJSON.string(pressMode),
+                "press_mode":       AnyJSON.string(pressMode.rawValue),
                 "trigger":          AnyJSON.integer(trigger),
                 "player_included":  AnyJSON.array(playerIncluded.map { .bool($0) }),
                 "host_name":        AnyJSON.string(playerName)
@@ -54,6 +54,30 @@ final class SupabaseService {
             .single()
             .execute()
         return response.value
+    }
+
+    // MARK: - Fetch match (read-only preview, no side effects)
+    func fetchMatch(code: String) async throws -> MatchRecord {
+        let response: PostgrestResponse<[MatchRecord]> = try await client
+            .from("matches")
+            .select()
+            .eq("code", value: code.uppercased())
+            .neq("status", value: "finished")
+            .neq("status", value: "cancelled")
+            .order("created_at", ascending: false)
+            .limit(1)
+            .execute()
+        guard let match = response.value.first else {
+            throw NSError(domain: "WolfmoreGolf", code: 404,
+                          userInfo: [NSLocalizedDescriptionKey: "Could not find match."])
+        }
+        let knownPairingTags = Set(["pairing_v2"])
+        let unknownTags = (match.games ?? []).filter { $0.hasPrefix("pairing_") && !knownPairingTags.contains($0) }
+        if !unknownTags.isEmpty {
+            throw NSError(domain: "WolfmoreGolf", code: 426,
+                          userInfo: [NSLocalizedDescriptionKey: "Update WolfMore to join this match."])
+        }
+        return match
     }
 
     // MARK: - Join match (applies host's Nassau settings to local state)

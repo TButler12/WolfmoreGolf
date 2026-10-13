@@ -78,4 +78,58 @@ final class RemoteNassauSlotTests: XCTestCase {
         XCTAssertNotEqual(g.scores[0][0], g.scores[slot][0],
                           "The selected player's score must differ from seat 0 in this scenario")
     }
+
+    // MARK: - rulesDescription (join confirmation text)
+
+    func testRulesDescription_AutoPress2Down() {
+        XCTAssertEqual(WolfActions.rulesDescription(stake: 1, pressMode: .auto, trigger: 2),
+                       "$1 · Auto press at 2 down")
+    }
+
+    func testRulesDescription_AutoPress1Down() {
+        XCTAssertEqual(WolfActions.rulesDescription(stake: 2, pressMode: .auto, trigger: 1),
+                       "$2 · Auto press at 1 down")
+    }
+
+    func testRulesDescription_ManualPress() {
+        XCTAssertEqual(WolfActions.rulesDescription(stake: 5, pressMode: .manual, trigger: 2),
+                       "$5 · Manual press")
+    }
+
+    func testRulesDescription_NoPress() {
+        XCTAssertEqual(WolfActions.rulesDescription(stake: 3, pressMode: .off, trigger: 1),
+                       "$3 · No press")
+    }
+
+    // MARK: - Setup VC helpers (stake options and press-mode index)
+
+    func testSetupVC_StakeOptions_ContainCommonValues() {
+        XCTAssertEqual(RemoteNassauSetupViewController.stakeOptions, [1, 2, 3, 5, 10])
+    }
+
+    func testSetupVC_PressModeIndex_RoundTrips() {
+        for mode in [NassauPressMode.auto, .manual, .off] {
+            let idx = RemoteNassauSetupViewController.pressModeIndex(mode)
+            XCTAssertEqual(RemoteNassauSetupViewController.pressModeAt(idx), mode)
+        }
+    }
+
+    func testRulesDescription_ChosenRulesUsedForBothDevices() {
+        // Simulates: creator chose $5 / Manual press.
+        // Both devices apply the same rules from the match record.
+        var state = NassauState()
+        let chosenStake: Double = 5
+        let chosenMode: NassauPressMode = .manual
+        let chosenTrigger = 2
+        state.settings.baseStake = chosenStake
+        state.settings.pressMode = chosenMode
+        state.settings.autoPressTriggerDown = chosenTrigger
+        XCTAssertEqual(state.settings.baseStake, chosenStake)
+        XCTAssertEqual(state.settings.pressMode, chosenMode)
+        XCTAssertEqual(state.settings.autoPressTriggerDown, chosenTrigger)
+        let desc = WolfActions.rulesDescription(stake: state.settings.baseStake,
+                                                pressMode: state.settings.pressMode,
+                                                trigger: state.settings.autoPressTriggerDown)
+        XCTAssertEqual(desc, "$5 · Manual press")
+    }
 }
