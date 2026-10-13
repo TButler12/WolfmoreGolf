@@ -1697,10 +1697,12 @@ private final class WolfHoleCell: UITableViewCell {
         if let ms = matchStatus {
             let isDual = ms.contains("\n")
             decisionLabel.numberOfLines = isDual ? 0 : 2
+            decisionLabel.lineBreakMode = .byWordWrapping
             decisionLabel.font      = .systemFont(ofSize: isDual ? 9 : 10, weight: .bold)
             decisionLabel.text      = ms
             decisionLabel.textColor = ms == "AS" ? .secondaryLabel : .systemGreen
         } else {
+            decisionLabel.lineBreakMode = .byTruncatingTail
         switch result?.decision {
         case "alone":
             decisionLabel.text      = "A"
