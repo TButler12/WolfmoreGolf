@@ -871,9 +871,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
     }
 
     private var summaryRowCount: Int {
-        let isBB = currentHoleResults.values.contains {
-            $0.decision == "bestball" || ($0.decision == "matchplay" && $0.partnerSlot != nil)
-        }
+        let isBB = SpectatorScoring.detect(results: Array(currentHoleResults.values)).isTeamMatch
         if isNineHoleSession       { return isBB ? 4 : 3 }
         return totalHolesForCurrentSession == 36 ? (isBB ? 8 : 7) : (isBB ? 5 : 4)
     }
@@ -888,9 +886,9 @@ extension WolfSpectatorViewController: UITableViewDataSource {
         let cell = tableView.dequeueReusableCell(withIdentifier: WolfHoleCell.reuseID, for: indexPath) as! WolfHoleCell
         guard let session = currentSession else { return cell }
         let allResults = Array(currentHoleResults.values)
-        let isBestBall  = allResults.contains { $0.decision == "bestball" }
-        let isFourball  = !isBestBall && allResults.contains { $0.decision == "matchplay" && $0.partnerSlot != nil }
-        let isTeamMatch = isBestBall || isFourball
+        let fmt         = SpectatorScoring.detect(results: allResults)
+        let isBestBall  = fmt.isBestBall
+        let isTeamMatch = fmt.isTeamMatch
         let isMatchPlay = isTeamMatch || allResults.contains { $0.decision == "matchplay" }
         let totalHoles = totalHolesForCurrentSession
         let is36 = totalHoles == 36
@@ -993,32 +991,20 @@ extension WolfSpectatorViewController: UITableViewDataSource {
             if isMatchPlay {
                 if isTeamMatch {
                     // Best Ball / Fourball: accumulate team best-NET-vs-par through this match position.
+                    let isNine = isNineHoleSession
+                    let (aSum, bSum) = SpectatorScoring.teamBestNetSums(
+                        results: Array(currentHoleResults.values),
+                        teamASeats: teamASeats,
+                        playerCount: session.playerNames.count,
+                        upThrough: matchPos,
+                        coursePars: coursePars,
+                        courseHCs: courseHCs,
+                        playerHandicaps: session.playerHandicaps ?? [],
+                        courseHoleIndex: isNine
+                            ? { h in self.physicalHole(matchPosition: h) - 1 }
+                            : { h in (h - 1) % STANDARD_HOLES }
+                    )
                     let teamBSeats = session.playerNames.indices.filter { !teamASeats.contains($0) }
-                    let hcs = session.playerHandicaps ?? []
-                    let baseHC = hcs.isEmpty ? 0 : (hcs.min() ?? 0)
-                    func bbPops(seat: Int, si: Int) -> Int {
-                        guard !hcs.isEmpty, seat < hcs.count else { return 0 }
-                        let delta = max(0, hcs[seat] - baseHC)
-                        if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
-                        return 1 + (si <= delta - STANDARD_HOLES ? 1 : 0)
-                    }
-                    var aSum = 0, bSum = 0
-                    for h in 1...matchPos {
-                        guard let r = currentHoleResults[h], let scores = r.scores else { continue }
-                        let courseH = isNineHoleSession ? physicalHole(matchPosition: h) - 1 : (h - 1) % STANDARD_HOLES
-                        let par = courseH < coursePars.count ? coursePars[courseH] : 4
-                        let si  = courseH < courseHCs.count ? max(1, courseHCs[courseH]) : STANDARD_HOLES
-                        let aBest = teamASeats.compactMap { seat -> Int? in
-                            guard seat < scores.count, scores[seat] > 0 else { return nil }
-                            return scores[seat] - bbPops(seat: seat, si: si)
-                        }.min()
-                        let bBest = teamBSeats.compactMap { seat -> Int? in
-                            guard seat < scores.count, scores[seat] > 0 else { return nil }
-                            return scores[seat] - bbPops(seat: seat, si: si)
-                        }.min()
-                        if let a = aBest { aSum += a - par }
-                        if let b = bBest { bSum += b - par }
-                    }
                     func shortName(_ seat: Int) -> String {
                         guard seat < session.playerNames.count else { return "P\(seat+1)" }
                         let n = session.playerNames[seat].trimmingCharacters(in: .whitespaces)
