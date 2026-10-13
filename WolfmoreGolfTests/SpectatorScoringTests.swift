@@ -77,6 +77,32 @@ final class SpectatorScoringTests: XCTestCase {
         XCTAssertTrue(fmt.isTeamMatch)
     }
 
+    func testDetect_Fourball_WhenOnlyLaterHoleHasPartnerSlot() {
+        // Hole 1 was written without partnerSlot (e.g. data not yet propagated at 9:41),
+        // hole 2 has partnerSlot set (data available by 9:42). Must detect as Fourball
+        // on the next refresh so the spectator shows the correct current format.
+        let results = [
+            makeResult(hole: 1, decision: "matchplay", wolfSlot: 0),               // no partnerSlot
+            makeResult(hole: 2, decision: "matchplay", wolfSlot: 0, partnerSlot: 1),
+        ]
+        let fmt = SpectatorScoring.detect(results: results)
+        XCTAssertTrue(fmt.isFourball, "Any hole with partnerSlot should flip detection to Fourball")
+        XCTAssertFalse(fmt.isBestBall)
+        XCTAssertTrue(fmt.isTeamMatch)
+    }
+
+    func testDetect_ReadsCurrentData_SinglesThenFourball() {
+        // Simulates a session that started appearing as Singles (no partnerSlot anywhere)
+        // and later appeared as Fourball once partnerSlot propagated.
+        let singlesSnapshot = [makeResult(hole: 1, decision: "matchplay", wolfSlot: 0)]
+        XCTAssertFalse(SpectatorScoring.detect(results: singlesSnapshot).isFourball,
+                       "Without partnerSlot, should detect Singles")
+
+        let fourballSnapshot = [makeResult(hole: 1, decision: "matchplay", wolfSlot: 0, partnerSlot: 1)]
+        XCTAssertTrue(SpectatorScoring.detect(results: fourballSnapshot).isFourball,
+                      "With partnerSlot present, next refresh should detect Fourball")
+    }
+
     // MARK: - Team best-net sums
 
     // Scenario setup: 4 players, all par-4, standard HC 1-18.

@@ -1013,8 +1013,8 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                     }
                     func teamLabel(_ seats: [Int]) -> String { seats.map(shortName).joined(separator: "/") }
                     let diff = aSum - bSum  // negative = A leads, positive = B leads
-                    if diff < 0      { matchStatus = "\(abs(diff))↑" }
-                    else if diff > 0 { matchStatus = "\(diff)↑" }
+                    if diff < 0      { matchStatus = "\(teamLabel(teamASeats)) \(abs(diff))↑" }
+                    else if diff > 0 { matchStatus = "\(teamLabel(Array(teamBSeats))) \(diff)↑" }
                     else             { matchStatus = "AS" }
                     teamMatchDiff = diff
                 } else {
@@ -1143,7 +1143,8 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                            cumulativeTotals: hasCumulative ? cumulative : [],
                            matchStatus: hasCumulative ? matchStatus : nil,
                            teamASeats: isTeamMatch ? teamASeats : [],
-                           teamMatchDiff: hasCumulative ? teamMatchDiff : nil)
+                           teamMatchDiff: hasCumulative ? teamMatchDiff : nil,
+                           isMatchPlayRow: isMatchPlay)
         }
         return cell
     }
@@ -1736,7 +1737,8 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configure(hole: Int, result: WolfHoleResult?, playerNames: [String], cumulativeTotals: [Double] = [],
-                   matchStatus: String? = nil, teamASeats: [Int] = [], teamMatchDiff: Int? = nil) {
+                   matchStatus: String? = nil, teamASeats: [Int] = [], teamMatchDiff: Int? = nil,
+                   isMatchPlayRow: Bool = false) {
         setupColumns(playerCount: playerNames.count)
         holePressLevel       = result?.wolfPlayer ?? 0
         holeLabel.text       = "\(hole)"
@@ -1749,7 +1751,8 @@ private final class WolfHoleCell: UITableViewCell {
             // Team format chip
             decisionLabel.numberOfLines  = 1
             decisionLabel.lineBreakMode  = .byClipping
-            decisionLabel.adjustsFontSizeToFitWidth = false
+            decisionLabel.adjustsFontSizeToFitWidth = true
+            decisionLabel.minimumScaleFactor        = 0.6
             decisionLabel.font           = .systemFont(ofSize: 13, weight: .bold)
             decisionLabel.textAlignment  = .center
             decisionLabel.text           = ms
@@ -1957,7 +1960,7 @@ private final class WolfHoleCell: UITableViewCell {
         }
 
         // Match-play wide layout: 2–4 players fill the full row width.
-        let wideLayout = matchStatus != nil && playerNames.count <= 4
+        let wideLayout = isMatchPlayRow && playerNames.count <= 4
         if wideLayout != isMatchPlayLayout || playerNames.count != matchPlayColumnCount {
             isMatchPlayLayout    = wideLayout
             matchPlayColumnCount = playerNames.count
