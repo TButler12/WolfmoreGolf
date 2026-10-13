@@ -1161,6 +1161,11 @@ private final class WolfHoleCell: UITableViewCell {
     private var scoreCols: [UILabel] = []
     private let scoreRow   = UIStackView()
 
+    private var decisionWidthConstraint: NSLayoutConstraint?
+    private var scoreColWidthConstraints: [NSLayoutConstraint] = []
+    private var isMatchPlayLayout = false
+    private var matchPlayColumnCount = 0
+
     private let moneyLabel = UILabel()
     private var moneyCols: [UILabel] = []
     private let moneyRow   = UIStackView()
@@ -1191,17 +1196,44 @@ private final class WolfHoleCell: UITableViewCell {
         holeLabel.layer.sublayers?.filter { $0.name == "pb" }.forEach { $0.removeFromSuperlayer() }
         holeLabel.layer.borderWidth = 0
         holeLabel.clipsToBounds = false
-        guard holePressLevel > 0 else { return }
-        let b = holeLabel.bounds
-        for i in 0..<min(holePressLevel, 3) {
-            let inset = CGFloat(i) * 3.0
-            let bl = CALayer()
-            bl.name = "pb"
-            bl.frame = b.insetBy(dx: inset, dy: inset)
-            bl.borderWidth = 1.5
-            bl.borderColor = UIColor.systemOrange.cgColor
-            bl.cornerRadius = max(2, 4 - inset * 0.5)
-            holeLabel.layer.addSublayer(bl)
+        if holePressLevel > 0 {
+            let b = holeLabel.bounds
+            for i in 0..<min(holePressLevel, 3) {
+                let inset = CGFloat(i) * 3.0
+                let bl = CALayer()
+                bl.name = "pb"
+                bl.frame = b.insetBy(dx: inset, dy: inset)
+                bl.borderWidth = 1.5
+                bl.borderColor = UIColor.systemOrange.cgColor
+                bl.cornerRadius = max(2, 4 - inset * 0.5)
+                holeLabel.layer.addSublayer(bl)
+            }
+        }
+        guard contentView.bounds.width > 0 else { return }
+        if isMatchPlayLayout, matchPlayColumnCount > 0 {
+            let inset  = contentView.layoutMargins.left + contentView.layoutMargins.right
+            let avail  = contentView.bounds.width - inset
+            // Items: holeLabel(32) + (N+1) spacings(6) + decisionLabel + N×scoreCol
+            let fixedW = CGFloat(32) + CGFloat(6) * CGFloat(matchPlayColumnCount + 1)
+            let remain = avail - fixedW
+            let decW   = (remain * 0.33).rounded()
+            let colW   = ((remain - decW) / CGFloat(matchPlayColumnCount)).rounded()
+            let newDec = max(80, min(decW, 220))
+            let newCol = max(36, colW)
+            if decisionWidthConstraint?.constant != newDec {
+                decisionWidthConstraint?.constant = newDec
+            }
+            for c in scoreColWidthConstraints where c.constant != newCol {
+                c.constant = newCol
+            }
+        } else {
+            let wolfColW: CGFloat = columnCount >= 7 ? 28 : columnCount == 6 ? 34 : 40
+            if decisionWidthConstraint?.constant != 46 {
+                decisionWidthConstraint?.constant = 46
+            }
+            for c in scoreColWidthConstraints where c.constant != wolfColW {
+                c.constant = wolfColW
+            }
         }
     }
 
@@ -1228,7 +1260,7 @@ private final class WolfHoleCell: UITableViewCell {
         configLabel(holeLabel, size: 15, weight: .regular, width: 32)
         scoreRow.addArrangedSubview(holeLabel)
 
-        configLabel(decisionLabel, size: 11, weight: .semibold, width: 46)
+        decisionWidthConstraint = configLabel(decisionLabel, size: 11, weight: .semibold, width: 46)
         decisionLabel.numberOfLines = 2
         decisionLabel.lineBreakMode = .byTruncatingTail
         scoreRow.addArrangedSubview(decisionLabel)
@@ -1254,9 +1286,9 @@ private final class WolfHoleCell: UITableViewCell {
         moneyLabel.textColor = .secondaryLabel
         moneyRow.addArrangedSubview(moneyLabel)
 
-        // Spacer to align money cols under score cols (skip decision column)
+        // Spacer to align money cols under score cols (tracks decisionLabel width automatically)
         let moneyDecisionSpacer = UIView()
-        moneyDecisionSpacer.widthAnchor.constraint(equalToConstant: 46).isActive = true
+        moneyDecisionSpacer.widthAnchor.constraint(equalTo: decisionLabel.widthAnchor).isActive = true
         moneyRow.addArrangedSubview(moneyDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
@@ -1281,7 +1313,7 @@ private final class WolfHoleCell: UITableViewCell {
         gameRow.addArrangedSubview(gameLabel)
 
         let gameDecisionSpacer = UIView()
-        gameDecisionSpacer.widthAnchor.constraint(equalToConstant: 46).isActive = true
+        gameDecisionSpacer.widthAnchor.constraint(equalTo: decisionLabel.widthAnchor).isActive = true
         gameRow.addArrangedSubview(gameDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
@@ -1306,7 +1338,7 @@ private final class WolfHoleCell: UITableViewCell {
         skinsRow.addArrangedSubview(skinsLabel)
 
         let skinsDecisionSpacer = UIView()
-        skinsDecisionSpacer.widthAnchor.constraint(equalToConstant: 46).isActive = true
+        skinsDecisionSpacer.widthAnchor.constraint(equalTo: decisionLabel.widthAnchor).isActive = true
         skinsRow.addArrangedSubview(skinsDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
@@ -1324,38 +1356,48 @@ private final class WolfHoleCell: UITableViewCell {
 
     required init?(coder: NSCoder) { fatalError() }
 
-    private func configLabel(_ l: UILabel, size: CGFloat, weight: UIFont.Weight, width: CGFloat) {
+    @discardableResult
+    private func configLabel(_ l: UILabel, size: CGFloat, weight: UIFont.Weight, width: CGFloat) -> NSLayoutConstraint {
         l.font      = .systemFont(ofSize: size, weight: weight)
         l.textAlignment = .center
         l.adjustsFontSizeToFitWidth = true
         l.minimumScaleFactor = 0.7
         l.lineBreakMode = .byClipping
         l.numberOfLines = 1
-        l.widthAnchor.constraint(equalToConstant: width).isActive = true
+        let c = l.widthAnchor.constraint(equalToConstant: width)
+        c.isActive = true
+        return c
     }
 
     private func setupColumns(playerCount: Int) {
+        // Reset match-play wide layout; caller re-enables if appropriate.
+        isMatchPlayLayout = false
+        matchPlayColumnCount = 0
+        scoreEndSpacer.isHidden = false
         guard playerCount > 0, playerCount != columnCount else { return }
         columnCount = playerCount
         let colWidth: CGFloat = playerCount >= 7 ? 28 : playerCount == 6 ? 34 : 40
         let scoreFS:  CGFloat = playerCount > MAX_PLAYERS ? 14 : 16
         let subFS:    CGFloat = playerCount > MAX_PLAYERS ? 11 : 13
-        rebuildCols(&scoreCols, in: scoreRow, endSpacer: scoreEndSpacer, size: scoreFS, colWidth: colWidth)
+        scoreColWidthConstraints = rebuildCols(&scoreCols, in: scoreRow, endSpacer: scoreEndSpacer, size: scoreFS, colWidth: colWidth)
         rebuildCols(&moneyCols, in: moneyRow, endSpacer: moneyEndSpacer, size: subFS,   colWidth: colWidth)
         rebuildCols(&gameCols,  in: gameRow,  endSpacer: gameEndSpacer,  size: subFS,   colWidth: colWidth)
         rebuildCols(&skinsCols, in: skinsRow, endSpacer: skinsEndSpacer, size: subFS,   colWidth: colWidth)
     }
 
-    private func rebuildCols(_ cols: inout [UILabel], in row: UIStackView, endSpacer: UIView, size: CGFloat, colWidth: CGFloat) {
+    @discardableResult
+    private func rebuildCols(_ cols: inout [UILabel], in row: UIStackView, endSpacer: UIView, size: CGFloat, colWidth: CGFloat) -> [NSLayoutConstraint] {
         for l in cols { row.removeArrangedSubview(l); l.removeFromSuperview() }
         row.removeArrangedSubview(endSpacer); endSpacer.removeFromSuperview()
         cols.removeAll()
+        var constraints: [NSLayoutConstraint] = []
         for _ in 0..<columnCount {
             let l = UILabel()
-            configLabel(l, size: size, weight: .semibold, width: colWidth)
+            constraints.append(configLabel(l, size: size, weight: .semibold, width: colWidth))
             cols.append(l); row.addArrangedSubview(l)
         }
         row.addArrangedSubview(endSpacer)
+        return constraints
     }
 
     func configureAsHeader(playerNames: [String], isMatchPlay: Bool = false, isBestBall: Bool = false) {
@@ -1366,6 +1408,11 @@ private final class WolfHoleCell: UITableViewCell {
         decisionLabel.text    = isBestBall ? "BB" : isMatchPlay ? "MP" : ""
         decisionLabel.textColor = .secondaryLabel
         decisionLabel.font    = .systemFont(ofSize: 10, weight: .semibold)
+        if isMatchPlay && playerNames.count <= 4 {
+            isMatchPlayLayout    = true
+            matchPlayColumnCount = playerNames.count
+            scoreEndSpacer.isHidden = true
+        }
 
         let labels = Self.deduplicatedDisplayNames(playerNames)
         for (i, col) in scoreCols.enumerated() {
@@ -1784,6 +1831,14 @@ private final class WolfHoleCell: UITableViewCell {
             moneyRow.isHidden = true
             gameRow.isHidden  = true
             skinsRow.isHidden = true
+            // Match-play wide layout: 2–4 players fill the full row width.
+            let wideLayout = playerNames.count <= 4
+            if wideLayout != isMatchPlayLayout || playerNames.count != matchPlayColumnCount {
+                isMatchPlayLayout    = wideLayout
+                matchPlayColumnCount = playerNames.count
+                scoreEndSpacer.isHidden = wideLayout
+                setNeedsLayout()
+            }
             return
         }
 
@@ -1899,6 +1954,15 @@ private final class WolfHoleCell: UITableViewCell {
             }
         } else {
             skinsRow.isHidden = true
+        }
+
+        // Match-play wide layout: 2–4 players fill the full row width.
+        let wideLayout = matchStatus != nil && playerNames.count <= 4
+        if wideLayout != isMatchPlayLayout || playerNames.count != matchPlayColumnCount {
+            isMatchPlayLayout    = wideLayout
+            matchPlayColumnCount = playerNames.count
+            scoreEndSpacer.isHidden = wideLayout
+            setNeedsLayout()
         }
     }
 }
