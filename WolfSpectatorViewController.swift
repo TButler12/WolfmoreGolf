@@ -871,7 +871,9 @@ extension WolfSpectatorViewController: UITableViewDataSource {
     }
 
     private var summaryRowCount: Int {
-        let isBB = currentHoleResults.values.contains { $0.decision == "bestball" }
+        let isBB = currentHoleResults.values.contains {
+            $0.decision == "bestball" || ($0.decision == "matchplay" && $0.partnerSlot != nil)
+        }
         if isNineHoleSession       { return isBB ? 4 : 3 }
         return totalHolesForCurrentSession == 36 ? (isBB ? 8 : 7) : (isBB ? 5 : 4)
     }
@@ -887,7 +889,9 @@ extension WolfSpectatorViewController: UITableViewDataSource {
         guard let session = currentSession else { return cell }
         let allResults = Array(currentHoleResults.values)
         let isBestBall  = allResults.contains { $0.decision == "bestball" }
-        let isMatchPlay = isBestBall || allResults.contains { $0.decision == "matchplay" }
+        let isFourball  = !isBestBall && allResults.contains { $0.decision == "matchplay" && $0.partnerSlot != nil }
+        let isTeamMatch = isBestBall || isFourball
+        let isMatchPlay = isTeamMatch || allResults.contains { $0.decision == "matchplay" }
         let totalHoles = totalHolesForCurrentSession
         let is36 = totalHoles == 36
         let pc = session.playerNames.count
@@ -910,11 +914,11 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 case 0: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
                 case 1:
                     if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc,
-                                                                      isBestBall: isBestBall, coursePars: coursePars, courseHCs: courseHCs,
+                                                                      isBestBall: isTeamMatch, coursePars: coursePars, courseHCs: courseHCs,
                                                                       teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
                     else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
                 case 2:
-                    if isBestBall { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
+                    if isTeamMatch { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
                                                                        coursePars: coursePars, courseHCs: courseHCs,
                                                                        teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
                     else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
@@ -930,11 +934,11 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 case 4: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
                 case 5:
                     if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc,
-                                                                      isBestBall: isBestBall, coursePars: coursePars, courseHCs: courseHCs,
+                                                                      isBestBall: isTeamMatch, coursePars: coursePars, courseHCs: courseHCs,
                                                                       teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
                     else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
                 case 6:
-                    if isBestBall { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
+                    if isTeamMatch { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
                                                                        coursePars: coursePars, courseHCs: courseHCs,
                                                                        teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
                     else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
@@ -947,11 +951,11 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                 case 1: cell.configureAsScoreTotals(results: allResults, playerCount: pc)
                 case 2:
                     if isMatchPlay { cell.configureAsMatchPlayTotals(results: allResults, playerCount: pc,
-                                                                      isBestBall: isBestBall, coursePars: coursePars, courseHCs: courseHCs,
+                                                                      isBestBall: isTeamMatch, coursePars: coursePars, courseHCs: courseHCs,
                                                                       teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
                     else           { cell.configureAsTotals(results: allResults, playerCount: pc) }
                 case 3:
-                    if isBestBall { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
+                    if isTeamMatch { cell.configureAsBestBallNetTotals(results: allResults, playerCount: pc,
                                                                        coursePars: coursePars, courseHCs: courseHCs,
                                                                        teamASeats: teamASeats, playerHandicaps: session.playerHandicaps ?? []) }
                     else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
@@ -987,8 +991,8 @@ extension WolfSpectatorViewController: UITableViewDataSource {
             // Running match score for match play (from Team A / wolfSlot perspective)
             var matchStatus: String? = nil
             if isMatchPlay {
-                if isBestBall {
-                    // Best Ball: accumulate team best-NET-vs-par through this match position.
+                if isTeamMatch {
+                    // Best Ball / Fourball: accumulate team best-NET-vs-par through this match position.
                     let teamBSeats = session.playerNames.indices.filter { !teamASeats.contains($0) }
                     let hcs = session.playerHandicaps ?? []
                     let baseHC = hcs.isEmpty ? 0 : (hcs.min() ?? 0)
@@ -1015,11 +1019,16 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                         if let a = aBest { aSum += a - par }
                         if let b = bBest { bSum += b - par }
                     }
-                    func toParStr(_ v: Int) -> String { v == 0 ? "E" : v > 0 ? "+\(v)" : "\(v)" }
+                    func shortName(_ seat: Int) -> String {
+                        guard seat < session.playerNames.count else { return "P\(seat+1)" }
+                        let n = session.playerNames[seat].trimmingCharacters(in: .whitespaces)
+                        return n.components(separatedBy: " ").first ?? n
+                    }
+                    func teamLabel(_ seats: [Int]) -> String { seats.map(shortName).joined(separator: "/") }
                     let diff = aSum - bSum  // negative = A leads, positive = B leads
-                    if diff < 0      { matchStatus = "A \(abs(diff))" }
-                    else if diff > 0 { matchStatus = "B \(diff)" }
-                    else             { matchStatus = "E" }
+                    if diff < 0      { matchStatus = "\(teamLabel(teamASeats)) \(abs(diff))↑" }
+                    else if diff > 0 { matchStatus = "\(teamLabel(Array(teamBSeats))) \(diff)↑" }
+                    else             { matchStatus = "AS" }
                 } else {
                     // Match Play hole-win accumulation.
                     // New rows carry mp_seats ("m1a,m1b[,m2a,m2b]") so we can compute from
@@ -1145,7 +1154,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                            playerNames: session.playerNames,
                            cumulativeTotals: hasCumulative ? cumulative : [],
                            matchStatus: hasCumulative ? matchStatus : nil,
-                           teamASeats: isBestBall ? teamASeats : [])
+                           teamASeats: isTeamMatch ? teamASeats : [])
         }
         return cell
     }
