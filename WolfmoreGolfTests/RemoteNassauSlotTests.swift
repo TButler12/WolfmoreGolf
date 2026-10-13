@@ -92,8 +92,9 @@ final class RemoteNassauSlotTests: XCTestCase {
     }
 
     func testRulesDescription_ManualPress() {
+        // Manual is normalized to auto; trigger is used.
         XCTAssertEqual(WolfActions.rulesDescription(stake: 5, pressMode: .manual, trigger: 2),
-                       "$5 · Manual press")
+                       "$5 · Auto press at 2 down")
     }
 
     func testRulesDescription_NoPress() {
@@ -101,35 +102,58 @@ final class RemoteNassauSlotTests: XCTestCase {
                        "$3 · No press")
     }
 
-    // MARK: - Setup VC helpers (stake options and press-mode index)
+    // MARK: - Setup VC helpers (preset stakes and press-mode index)
 
-    func testSetupVC_StakeOptions_ContainCommonValues() {
-        XCTAssertEqual(RemoteNassauSetupViewController.stakeOptions, [1, 2, 3, 5, 10])
+    func testSetupVC_PresetStakes_ContainCommonValues() {
+        XCTAssertEqual(RemoteNassauSetupViewController.presetStakes, [1, 2, 5, 10, 20])
     }
 
     func testSetupVC_PressModeIndex_RoundTrips() {
-        for mode in [NassauPressMode.auto, .manual, .off] {
+        // Only auto and off are valid for remote Nassau.
+        for mode in [NassauPressMode.auto, .off] {
             let idx = RemoteNassauSetupViewController.pressModeIndex(mode)
             XCTAssertEqual(RemoteNassauSetupViewController.pressModeAt(idx), mode)
         }
     }
 
+    func testSetupVC_PressModeIndex_ManualMapsToAutoSegment() {
+        XCTAssertEqual(RemoteNassauSetupViewController.pressModeIndex(.manual),
+                       RemoteNassauSetupViewController.pressModeIndex(.auto))
+    }
+
+    // MARK: - normalizeRemotePressMode
+
+    func testNormalizePressMode_ManualBecomesAuto() {
+        XCTAssertEqual(WolfActions.normalizeRemotePressMode(.manual), .auto)
+        XCTAssertEqual(WolfActions.normalizeRemotePressMode(.auto),   .auto)
+        XCTAssertEqual(WolfActions.normalizeRemotePressMode(.off),    .off)
+    }
+
+    func testRulesDescription_ManualTreatedAsAuto() {
+        XCTAssertEqual(WolfActions.rulesDescription(stake: 1, pressMode: .manual, trigger: 2),
+                       "$1 · Auto press at 2 down",
+                       "Manual press mode must display as Auto in remote Nassau")
+    }
+
+    // MARK: - Custom stake
+
+    func testCustomStake_RulesDescription() {
+        XCTAssertEqual(WolfActions.rulesDescription(stake: 15, pressMode: .auto, trigger: 2),
+                       "$15 · Auto press at 2 down")
+        XCTAssertEqual(WolfActions.rulesDescription(stake: 20, pressMode: .off, trigger: 1),
+                       "$20 · No press")
+    }
+
     func testRulesDescription_ChosenRulesUsedForBothDevices() {
-        // Simulates: creator chose $5 / Manual press.
+        // Simulates: creator chose $5 / Auto press.
         // Both devices apply the same rules from the match record.
         var state = NassauState()
-        let chosenStake: Double = 5
-        let chosenMode: NassauPressMode = .manual
-        let chosenTrigger = 2
-        state.settings.baseStake = chosenStake
-        state.settings.pressMode = chosenMode
-        state.settings.autoPressTriggerDown = chosenTrigger
-        XCTAssertEqual(state.settings.baseStake, chosenStake)
-        XCTAssertEqual(state.settings.pressMode, chosenMode)
-        XCTAssertEqual(state.settings.autoPressTriggerDown, chosenTrigger)
+        state.settings.baseStake            = 5
+        state.settings.pressMode            = .auto
+        state.settings.autoPressTriggerDown = 2
         let desc = WolfActions.rulesDescription(stake: state.settings.baseStake,
                                                 pressMode: state.settings.pressMode,
                                                 trigger: state.settings.autoPressTriggerDown)
-        XCTAssertEqual(desc, "$5 · Manual press")
+        XCTAssertEqual(desc, "$5 · Auto press at 2 down")
     }
 }

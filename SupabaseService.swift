@@ -149,7 +149,10 @@ final class SupabaseService {
         GameManager.shared.update { g in
             var state = g.nassauState ?? NassauState()
             if let stake   = match.stake                                         { state.settings.baseStake = stake }
-            if let pm      = match.pressMode, let mode = NassauPressMode(rawValue: pm) { state.settings.pressMode = mode }
+            if let pm      = match.pressMode, let mode = NassauPressMode(rawValue: pm) {
+                // Manual is not supported in remote Nassau; treat as auto.
+                state.settings.pressMode = mode == .manual ? .auto : mode
+            }
             if let trigger = match.trigger                                        { state.settings.autoPressTriggerDown = trigger }
             if let included = match.playerIncluded                               { state.playerIncluded = included }
             g.nassauState = state

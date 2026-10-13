@@ -312,13 +312,18 @@ enum WolfActions {
         return myPlayerIndex ?? 0
     }
 
+    /// Manual press is not supported in remote Nassau; map it to auto.
+    static func normalizeRemotePressMode(_ mode: NassauPressMode) -> NassauPressMode {
+        mode == .manual ? .auto : mode
+    }
+
     /// Compact rules summary shown to the joiner, e.g. "$1 · Auto press at 2 down".
     static func rulesDescription(stake: Double, pressMode: NassauPressMode, trigger: Int) -> String {
         let s = stake == floor(stake) ? "$\(Int(stake))" : String(format: "$%.2f", stake)
-        switch pressMode {
+        switch normalizeRemotePressMode(pressMode) {
         case .auto:   return "\(s) · Auto press at \(trigger) down"
-        case .manual: return "\(s) · Manual press"
         case .off:    return "\(s) · No press"
+        case .manual: return "\(s) · Auto press at \(trigger) down"  // unreachable
         }
     }
 

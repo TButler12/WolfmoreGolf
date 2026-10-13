@@ -23,22 +23,31 @@ final class RemoteNassauSetupViewController: UIViewController {
     private var selectedPressMode: NassauPressMode
     private var selectedTrigger: Int
 
-    static let stakeOptions: [Double] = [1, 2, 3, 5, 10]
+    // Preset stake options. "Other…" is the implicit 6th segment.
+    static let presetStakes: [Double] = [1, 2, 5, 10, 20]
 
     // MARK: - Controls
 
     private lazy var stakeSegment: UISegmentedControl = {
-        let titles = Self.stakeOptions.map { v -> String in
+        let presetTitles = Self.presetStakes.map { v -> String in
             v == floor(v) ? "$\(Int(v))" : String(format: "$%.2f", v)
         }
-        let s = UISegmentedControl(items: titles)
-        s.selectedSegmentIndex = max(0, Self.stakeOptions.firstIndex(of: selectedStake) ?? 0)
+        let s = UISegmentedControl(items: presetTitles + ["Other…"])
+        if let idx = Self.presetStakes.firstIndex(of: selectedStake) {
+            s.selectedSegmentIndex = idx
+        } else {
+            // Non-preset initial value (e.g. loaded from an existing match).
+            let title = selectedStake == floor(selectedStake)
+                ? "$\(Int(selectedStake))" : String(format: "$%.2f", selectedStake)
+            s.setTitle(title, forSegmentAt: Self.presetStakes.count)
+            s.selectedSegmentIndex = Self.presetStakes.count
+        }
         s.addTarget(self, action: #selector(stakeChanged), for: .valueChanged)
         return s
     }()
 
     private lazy var pressSegment: UISegmentedControl = {
-        let s = UISegmentedControl(items: ["Auto", "Manual", "Off"])
+        let s = UISegmentedControl(items: ["Auto", "Off"])
         s.selectedSegmentIndex = Self.pressModeIndex(selectedPressMode)
         s.addTarget(self, action: #selector(pressChanged), for: .valueChanged)
         return s
@@ -64,7 +73,8 @@ final class RemoteNassauSetupViewController: UIViewController {
         self.selectedSlot      = defaultPlayer?.slot ?? 0
         self.selectedName      = defaultPlayer?.name ?? myName
         self.selectedStake     = config.initialStake
-        self.selectedPressMode = config.initialPressMode
+        // Manual is not supported in remote Nassau; treat as auto.
+        self.selectedPressMode = config.initialPressMode == .manual ? .auto : config.initialPressMode
         self.selectedTrigger   = config.initialTrigger
         super.init(nibName: nil, bundle: nil)
     }
@@ -127,8 +137,41 @@ final class RemoteNassauSetupViewController: UIViewController {
     }
 
     @objc private func stakeChanged(_ s: UISegmentedControl) {
-        guard s.selectedSegmentIndex >= 0, s.selectedSegmentIndex < Self.stakeOptions.count else { return }
-        selectedStake = Self.stakeOptions[s.selectedSegmentIndex]
+        if s.selectedSegmentIndex < Self.presetStakes.count {
+            selectedStake = Self.presetStakes[s.selectedSegmentIndex]
+            // Reset the Other segment title in case it was showing a custom value.
+            s.setTitle("Other…", forSegmentAt: Self.presetStakes.count)
+        } else {
+            showCustomStakeEntry()
+        }
+    }
+
+    private func showCustomStakeEntry() {
+        let alert = UIAlertController(title: "Custom Stake",
+                                      message: "Whole dollars (1–1000)", preferredStyle: .alert)
+        alert.addTextField { tf in
+            tf.keyboardType = .numberPad
+            tf.placeholder  = "15"
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { [weak self] _ in
+            guard let self else { return }
+            // Revert segment to whatever stake was previously set.
+            let idx = Self.presetStakes.firstIndex(of: selectedStake) ?? Self.presetStakes.count
+            stakeSegment.selectedSegmentIndex = idx
+        })
+        alert.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in
+            guard let self else { return }
+            let raw = alert.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            if let v = Int(raw), v >= 1, v <= 1000 {
+                selectedStake = Double(v)
+                stakeSegment.setTitle("$\(v)", forSegmentAt: Self.presetStakes.count)
+                stakeSegment.selectedSegmentIndex = Self.presetStakes.count
+            } else {
+                let idx = Self.presetStakes.firstIndex(of: selectedStake) ?? Self.presetStakes.count
+                stakeSegment.selectedSegmentIndex = idx
+            }
+        })
+        present(alert, animated: true)
     }
 
     @objc private func pressChanged(_ s: UISegmentedControl) {
@@ -146,7 +189,7 @@ final class RemoteNassauSetupViewController: UIViewController {
         selectedTrigger = s.selectedSegmentIndex == 0 ? 1 : 2
     }
 
-    // MARK: - Player picker (shown when row is tapped and multiple players exist)
+    // MARK: - Player picker
 
     private func playerTapped() {
         guard config.activePlayers.count > 1 else { return }
@@ -170,13 +213,11 @@ final class RemoteNassauSetupViewController: UIViewController {
 
     // MARK: - Helpers
 
-    static func pressModeIndex(_ mode: NassauPressMode) -> Int {
-        switch mode { case .auto: return 0; case .manual: return 1; case .off: return 2 }
-    }
+    /// Maps a press mode to its segment index (Auto/Manual both → 0; Off → 1).
+    static func pressModeIndex(_ mode: NassauPressMode) -> Int { mode == .off ? 1 : 0 }
 
-    static func pressModeAt(_ index: Int) -> NassauPressMode {
-        switch index { case 0: return .auto; case 1: return .manual; default: return .off }
-    }
+    /// Maps a segment index back to a press mode (only Auto and Off are valid for remote Nassau).
+    static func pressModeAt(_ index: Int) -> NassauPressMode { index == 1 ? .off : .auto }
 }
 
 // MARK: - UITableViewDataSource / Delegate
@@ -209,11 +250,11 @@ extension RemoteNassauSetupViewController: UITableViewDataSource, UITableViewDel
             }
         case (1, 0):
             cell.textLabel?.text = "Stake"
-            stakeSegment.frame   = CGRect(x: 0, y: 0, width: 220, height: 31)
+            stakeSegment.frame   = CGRect(x: 0, y: 0, width: 265, height: 31)
             cell.accessoryView   = stakeSegment
         case (1, 1):
             cell.textLabel?.text = "Press"
-            pressSegment.frame   = CGRect(x: 0, y: 0, width: 220, height: 31)
+            pressSegment.frame   = CGRect(x: 0, y: 0, width: 140, height: 31)
             cell.accessoryView   = pressSegment
         case (1, 2):
             cell.textLabel?.text = "Trigger"
