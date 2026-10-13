@@ -27,7 +27,8 @@ final class SupabaseService {
         courseA: String,
         courseB: String,
         stake: Double,
-        games: [String]
+        games: [String],
+        playerName: String
     ) async throws -> MatchRecord {
         let code = generateCode()
         let nassau = GameManager.shared.currentGame?.nassauState
@@ -47,7 +48,7 @@ final class SupabaseService {
                 "press_mode":       AnyJSON.string(pressMode),
                 "trigger":          AnyJSON.integer(trigger),
                 "player_included":  AnyJSON.array(playerIncluded.map { .bool($0) }),
-                "host_name":        AnyJSON.string(ProfileStore.name ?? "")
+                "host_name":        AnyJSON.string(playerName)
             ] as [String: AnyJSON])
             .select()
             .single()
@@ -56,7 +57,7 @@ final class SupabaseService {
     }
 
     // MARK: - Join match (applies host's Nassau settings to local state)
-    func joinMatch(code: String, courseB: String = "") async throws -> MatchRecord {
+    func joinMatch(code: String, courseB: String = "", playerName: String = "") async throws -> MatchRecord {
         let response: PostgrestResponse<[MatchRecord]> = try await client
             .from("matches")
             .select()
@@ -80,7 +81,7 @@ final class SupabaseService {
         }
 
         let currentOpponents = match.opponentNames ?? []
-        let myName = ProfileStore.name ?? ""
+        let myName = playerName.isEmpty ? (ProfileStore.name ?? "") : playerName
         let isRejoin = !myName.isEmpty &&
             currentOpponents.contains(where: { $0.lowercased() == myName.lowercased() })
 

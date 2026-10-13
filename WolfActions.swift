@@ -129,7 +129,8 @@ enum WolfActions {
                             courseA: courseName,
                             courseB: "",
                             stake: stake,
-                            games: ["nassau", "pairing_v2"]
+                            games: ["nassau", "pairing_v2"],
+                            playerName: selectedName
                         )
                         GameManager.shared.update { g in
                             if g.remoteNassauSideMap == nil {
@@ -279,9 +280,12 @@ enum WolfActions {
     private static func executeJoin(code: String, localSlot: Int, from presenter: UIViewController) {
         Task {
             do {
-                let joinerCourse = GameManager.shared.currentGame?.course.name
+                let g = GameManager.shared.currentGame
+                let joinerCourse = g?.course.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+                let joinerName   = g?.playerNames[safe: localSlot]?
                     .trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                let match = try await SupabaseService.shared.joinMatch(code: code, courseB: joinerCourse)
+                let match = try await SupabaseService.shared.joinMatch(
+                    code: code, courseB: joinerCourse, playerName: joinerName)
                 GameManager.shared.update { g in
                     if g.remoteNassauSideMap == nil {
                         var seeded: [String: String] = [:]

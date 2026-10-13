@@ -190,7 +190,14 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - Identity helpers
 
     private var myName: String {
-        (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if let g = GameManager.shared.currentGame,
+           let matchId = match?.id,
+           let slot = g.remoteNassauLocalSlotMap?[matchId],
+           slot < g.playerNames.count {
+            let n = g.playerNames[slot].trimmingCharacters(in: .whitespacesAndNewlines)
+            if !n.isEmpty { return n }
+        }
+        return (ProfileStore.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     private var isSameCourse: Bool {

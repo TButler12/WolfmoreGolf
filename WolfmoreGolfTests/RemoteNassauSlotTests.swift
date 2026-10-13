@@ -37,6 +37,31 @@ final class RemoteNassauSlotTests: XCTestCase {
         XCTAssertEqual(WolfActions.remoteNassauOwnerSlot(matchId: "matchB", game: g, myPlayerIndex: 1), 3)
     }
 
+    // MARK: - Selected player name and HC are used, not the profile owner's
+
+    func testSelectedPlayerName_IsUsedNotProfileOwner() {
+        var g = GameData()
+        g.playerNames = ["Test 5", "Tryer", "Alice", "Bob"]
+        g.remoteNassauLocalSlotMap = ["m1": 1]  // Tryer at slot 1
+
+        let slot = WolfActions.remoteNassauOwnerSlot(matchId: "m1", game: g, myPlayerIndex: 0)
+        XCTAssertEqual(slot, 1)
+        XCTAssertEqual(g.playerNames[slot], "Tryer",
+                       "Selected player is Tryer (slot 1), not the profile owner at slot 0")
+    }
+
+    func testSelectedPlayerHC_IsUsedNotProfileOwnerHC() {
+        var g = GameData()
+        g.playerNames = ["Test 5", "Tryer", "Alice", "Bob"]
+        g.hcPlayers   = [10, 18, 5, 12]
+        g.remoteNassauLocalSlotMap = ["m1": 1]  // Tryer at slot 1, HC 18
+
+        let slot = WolfActions.remoteNassauOwnerSlot(matchId: "m1", game: g, myPlayerIndex: 0)
+        XCTAssertEqual(g.hcPlayers[safe: slot], 18,
+                       "Match must use Tryer's HC (18), not Test 5's (10)")
+        XCTAssertNotEqual(g.hcPlayers[safe: 0], g.hcPlayers[safe: slot])
+    }
+
     // MARK: - Only the selected player's scores feed the match
 
     func testOnlySelectedPlayerScores_NotOtherSeats() {
