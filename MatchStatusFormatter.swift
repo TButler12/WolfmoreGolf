@@ -36,6 +36,18 @@ enum MatchStatusFormatter {
             : "\(b) \(abs(diff)) UP vs \(a) · thru \(played)"
     }
 
+    /// Merges a live matchStatus string with a holes label ("thru N" or "Final"),
+    /// suppressing duplication when the status already embeds the same information.
+    /// Used by the Match Board to compose the cell's secondary text.
+    static func boardSecondary(status: String, holes: String) -> String {
+        guard !holes.isEmpty else { return status }
+        if holes == "Final" {
+            return status.contains("Final") ? status : "\(status)  ·  Final"
+        }
+        // "thru N" — skip if already present in status
+        return status.contains(holes) ? status : "\(status)  ·  \(holes)"
+    }
+
     /// Status string for a dual match (two simultaneous singles or Fourball pairs),
     /// e.g. "McTommy 2 UP vs Pat · Ray 2 UP vs Doug · thru 2".
     static func dualMatchStatus(m1: MatchScoreLine, m2: MatchScoreLine) -> String {

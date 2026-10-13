@@ -118,4 +118,68 @@ final class MatchStatusFormatterTests: XCTestCase {
             MatchStatusFormatter.dualMatchStatus(m1: m1, m2: m2),
             "McTommy 2 UP vs Pat · Ray 2 UP vs Doug · thru 2")
     }
+
+    // MARK: - boardSecondary
+
+    func testBoardSecondary_NoHoles_ReturnsStatus() {
+        XCTAssertEqual(
+            MatchStatusFormatter.boardSecondary(status: "All Square · thru 2", holes: ""),
+            "All Square · thru 2")
+    }
+
+    func testBoardSecondary_InProgress_NoDuplicate() {
+        // status already ends with "· thru 2", holes = "thru 2" → no appending
+        XCTAssertEqual(
+            MatchStatusFormatter.boardSecondary(
+                status: "McTommy 2 UP vs Pat · thru 2", holes: "thru 2"),
+            "McTommy 2 UP vs Pat · thru 2")
+    }
+
+    func testBoardSecondary_InProgress_DifferentHole() {
+        // status has "thru 2" but session now reports "thru 3" — still skip (contains "thru 3"? no)
+        // In practice status and holesPlayed stay in sync; this edge just verifies the check
+        XCTAssertEqual(
+            MatchStatusFormatter.boardSecondary(
+                status: "McTommy 2 UP vs Pat · thru 2", holes: "thru 3"),
+            "McTommy 2 UP vs Pat · thru 2  ·  thru 3")
+    }
+
+    func testBoardSecondary_Final_Appended() {
+        // In-progress status + archived session → show Final
+        XCTAssertEqual(
+            MatchStatusFormatter.boardSecondary(
+                status: "McTommy 2 UP vs Pat · thru 16", holes: "Final"),
+            "McTommy 2 UP vs Pat · thru 16  ·  Final")
+    }
+
+    func testBoardSecondary_Final_NotDuplicated() {
+        // Status already embeds Final (match clinched and published as Final)
+        XCTAssertEqual(
+            MatchStatusFormatter.boardSecondary(
+                status: "McTommy won 4&3 · Final", holes: "Final"),
+            "McTommy won 4&3 · Final")
+    }
+
+    func testBoardSecondary_Dormie_NoHolesAppended() {
+        // Dormie status has no "thru" and holes = "thru 16" — holes IS new info, so append
+        XCTAssertEqual(
+            MatchStatusFormatter.boardSecondary(
+                status: "McTommy Dormie", holes: "thru 16"),
+            "McTommy Dormie  ·  thru 16")
+    }
+
+    func testBoardSecondary_DualMatch_Final() {
+        // Dual status with "thru 2" + archived → show Final
+        XCTAssertEqual(
+            MatchStatusFormatter.boardSecondary(
+                status: "McTommy 2 UP vs Pat · Ray 2 UP vs Doug · thru 2", holes: "Final"),
+            "McTommy 2 UP vs Pat · Ray 2 UP vs Doug · thru 2  ·  Final")
+    }
+
+    func testBoardSecondary_DualMatch_NoThruDuplicate() {
+        XCTAssertEqual(
+            MatchStatusFormatter.boardSecondary(
+                status: "McTommy 2 UP vs Pat · Ray 2 UP vs Doug · thru 2", holes: "thru 2"),
+            "McTommy 2 UP vs Pat · Ray 2 UP vs Doug · thru 2")
+    }
 }

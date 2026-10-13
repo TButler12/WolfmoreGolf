@@ -283,8 +283,7 @@ extension LiveEventViewController: UITableViewDataSource, UITableViewDelegate {
         let hasStatus = session.matchStatus != nil
         let status = session.matchStatus ?? "Not playing match play"
         let holes  = holesLabel(for: session)
-        let statusAlreadyAnnotated = status.contains("thru") || status.contains("Final") || status.contains("Dormie")
-        let secondary = (!hasStatus || holes.isEmpty || statusAlreadyAnnotated) ? status : "\(status)  ·  \(holes)"
+        let secondary = hasStatus ? MatchStatusFormatter.boardSecondary(status: status, holes: holes) : status
 
         var config = cell.defaultContentConfiguration()
         config.text          = groupLabel(for: session)

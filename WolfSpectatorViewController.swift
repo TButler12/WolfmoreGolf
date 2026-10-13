@@ -988,6 +988,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
 
             // Running match score for match play (from Team A / wolfSlot perspective)
             var matchStatus: String? = nil
+            var teamMatchDiff: Int? = nil
             if isMatchPlay {
                 if isTeamMatch {
                     // Best Ball / Fourball: accumulate team best-NET-vs-par through this match position.
@@ -1012,9 +1013,10 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                     }
                     func teamLabel(_ seats: [Int]) -> String { seats.map(shortName).joined(separator: "/") }
                     let diff = aSum - bSum  // negative = A leads, positive = B leads
-                    if diff < 0      { matchStatus = "\(teamLabel(teamASeats)) \(abs(diff))↑" }
-                    else if diff > 0 { matchStatus = "\(teamLabel(Array(teamBSeats))) \(diff)↑" }
+                    if diff < 0      { matchStatus = "\(abs(diff))↑" }
+                    else if diff > 0 { matchStatus = "\(diff)↑" }
                     else             { matchStatus = "AS" }
+                    teamMatchDiff = diff
                 } else {
                     // Match Play hole-win accumulation.
                     // New rows carry mp_seats ("m1a,m1b[,m2a,m2b]") so we can compute from
@@ -1140,7 +1142,8 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                            playerNames: session.playerNames,
                            cumulativeTotals: hasCumulative ? cumulative : [],
                            matchStatus: hasCumulative ? matchStatus : nil,
-                           teamASeats: isTeamMatch ? teamASeats : [])
+                           teamASeats: isTeamMatch ? teamASeats : [],
+                           teamMatchDiff: hasCumulative ? teamMatchDiff : nil)
         }
         return cell
     }
@@ -1686,23 +1689,55 @@ private final class WolfHoleCell: UITableViewCell {
     }
 
     func configure(hole: Int, result: WolfHoleResult?, playerNames: [String], cumulativeTotals: [Double] = [],
-                   matchStatus: String? = nil, teamASeats: [Int] = []) {
+                   matchStatus: String? = nil, teamASeats: [Int] = [], teamMatchDiff: Int? = nil) {
         setupColumns(playerCount: playerNames.count)
         holePressLevel       = result?.wolfPlayer ?? 0
         holeLabel.text       = "\(hole)"
         holeLabel.textColor  = holePressLevel > 0 ? .systemOrange : .label
 
-        // Match play: show running score in decision column (e.g. "A 2↑", "AS", "B 1↑")
-        // Dual-match status contains \n; use unlimited lines + smaller font so both fit.
-        if let ms = matchStatus {
+        // Match play: show running score in decision column.
+        // Team formats: small colored chip ("1↑"/"AS") — no names, background matches leading team.
+        // Singles: names on two lines with word-wrap and auto-shrink so score is never hidden.
+        if let ms = matchStatus, let td = teamMatchDiff {
+            // Team format chip
+            decisionLabel.numberOfLines  = 1
+            decisionLabel.lineBreakMode  = .byClipping
+            decisionLabel.adjustsFontSizeToFitWidth = false
+            decisionLabel.font           = .systemFont(ofSize: 13, weight: .bold)
+            decisionLabel.textAlignment  = .center
+            decisionLabel.text           = ms
+            decisionLabel.layer.cornerRadius  = 4
+            decisionLabel.layer.masksToBounds = true
+            if td == 0 {
+                decisionLabel.backgroundColor = .clear
+                decisionLabel.textColor       = .secondaryLabel
+            } else if td < 0 {
+                decisionLabel.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.30)
+                decisionLabel.textColor       = .label
+            } else {
+                decisionLabel.backgroundColor = UIColor.systemBlue.withAlphaComponent(0.25)
+                decisionLabel.textColor       = .label
+            }
+        } else if let ms = matchStatus {
+            // Singles — names + score, word-wrap, auto-shrink so score never clips
             let isDual = ms.contains("\n")
-            decisionLabel.numberOfLines = isDual ? 0 : 2
-            decisionLabel.lineBreakMode = .byWordWrapping
-            decisionLabel.font      = .systemFont(ofSize: isDual ? 9 : 10, weight: .bold)
-            decisionLabel.text      = ms
-            decisionLabel.textColor = ms == "AS" ? .secondaryLabel : .systemGreen
+            decisionLabel.numberOfLines  = isDual ? 0 : 2
+            decisionLabel.lineBreakMode  = .byWordWrapping
+            decisionLabel.adjustsFontSizeToFitWidth = !isDual
+            decisionLabel.minimumScaleFactor        = 0.65
+            decisionLabel.font           = .systemFont(ofSize: isDual ? 9 : 10, weight: .bold)
+            decisionLabel.textAlignment  = .center
+            decisionLabel.text           = ms
+            decisionLabel.textColor      = ms == "AS" ? .secondaryLabel : .systemGreen
+            decisionLabel.backgroundColor         = .clear
+            decisionLabel.layer.cornerRadius      = 0
+            decisionLabel.layer.masksToBounds     = false
         } else {
-            decisionLabel.lineBreakMode = .byTruncatingTail
+            decisionLabel.lineBreakMode  = .byTruncatingTail
+            decisionLabel.adjustsFontSizeToFitWidth = false
+            decisionLabel.backgroundColor         = .clear
+            decisionLabel.layer.cornerRadius      = 0
+            decisionLabel.layer.masksToBounds     = false
         switch result?.decision {
         case "alone":
             decisionLabel.text      = "A"
