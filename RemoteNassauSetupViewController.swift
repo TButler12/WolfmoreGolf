@@ -53,11 +53,21 @@ final class RemoteNassauSetupViewController: UIViewController {
         return s
     }()
 
-    private lazy var triggerSegment: UISegmentedControl = {
-        let s = UISegmentedControl(items: ["1 down", "2 down"])
-        s.selectedSegmentIndex = selectedTrigger == 1 ? 0 : 1
+    private lazy var triggerStepper: UIStepper = {
+        let s = UIStepper()
+        s.minimumValue = 1
+        s.maximumValue = 5
+        s.stepValue    = 1
+        s.value        = Double(selectedTrigger)
         s.addTarget(self, action: #selector(triggerChanged), for: .valueChanged)
         return s
+    }()
+
+    private lazy var triggerLabel: UILabel = {
+        let l = UILabel()
+        l.font = .systemFont(ofSize: 17)
+        l.text = "\(selectedTrigger) down"
+        return l
     }()
 
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
@@ -141,6 +151,7 @@ final class RemoteNassauSetupViewController: UIViewController {
             selectedStake = Self.presetStakes[s.selectedSegmentIndex]
             // Reset the Other segment title in case it was showing a custom value.
             s.setTitle("Other…", forSegmentAt: Self.presetStakes.count)
+            refreshRulesFooter()
         } else {
             showCustomStakeEntry()
         }
@@ -166,6 +177,7 @@ final class RemoteNassauSetupViewController: UIViewController {
                 selectedStake = Double(v)
                 stakeSegment.setTitle("$\(v)", forSegmentAt: Self.presetStakes.count)
                 stakeSegment.selectedSegmentIndex = Self.presetStakes.count
+                refreshRulesFooter()
             } else {
                 let idx = Self.presetStakes.firstIndex(of: selectedStake) ?? Self.presetStakes.count
                 stakeSegment.selectedSegmentIndex = idx
@@ -183,10 +195,13 @@ final class RemoteNassauSetupViewController: UIViewController {
         if showTrigger && !hasTrigger  { tableView.insertRows(at: [ip], with: .automatic) }
         if !showTrigger && hasTrigger  { tableView.deleteRows(at: [ip], with: .automatic)  }
         tableView.endUpdates()
+        refreshRulesFooter()
     }
 
-    @objc private func triggerChanged(_ s: UISegmentedControl) {
-        selectedTrigger = s.selectedSegmentIndex == 0 ? 1 : 2
+    @objc private func triggerChanged(_ s: UIStepper) {
+        selectedTrigger   = Int(s.value)
+        triggerLabel.text = "\(selectedTrigger) down"
+        refreshRulesFooter()
     }
 
     // MARK: - Player picker
@@ -209,6 +224,15 @@ final class RemoteNassauSetupViewController: UIViewController {
             pop.permittedArrowDirections = []
         }
         present(sheet, animated: true)
+    }
+
+    // MARK: - Footer refresh
+
+    private func refreshRulesFooter() {
+        guard let footer = tableView.footerView(forSection: 1) else { return }
+        footer.textLabel?.text = WolfActions.rulesDescription(
+            stake: selectedStake, pressMode: selectedPressMode, trigger: selectedTrigger, isV2: true)
+        footer.textLabel?.sizeToFit()
     }
 
     // MARK: - Helpers
@@ -238,6 +262,12 @@ extension RemoteNassauSetupViewController: UITableViewDataSource, UITableViewDel
         section == 0 ? "Player" : "Rules"
     }
 
+    func tableView(_ tableView: UITableView, titleForFooterInSection section: Int) -> String? {
+        guard section == 1 else { return nil }
+        return WolfActions.rulesDescription(
+            stake: selectedStake, pressMode: selectedPressMode, trigger: selectedTrigger, isV2: true)
+    }
+
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
         cell.selectionStyle = .none
@@ -258,8 +288,12 @@ extension RemoteNassauSetupViewController: UITableViewDataSource, UITableViewDel
             cell.accessoryView   = pressSegment
         case (1, 2):
             cell.textLabel?.text = "Trigger"
-            triggerSegment.frame = CGRect(x: 0, y: 0, width: 175, height: 31)
-            cell.accessoryView   = triggerSegment
+            triggerLabel.text    = "\(selectedTrigger) down"
+            let container        = UIStackView(arrangedSubviews: [triggerLabel, triggerStepper])
+            container.spacing    = 8
+            container.alignment  = .center
+            container.frame      = CGRect(x: 0, y: 0, width: 165, height: 44)
+            cell.accessoryView   = container
         default: break
         }
         return cell

@@ -245,63 +245,33 @@ final class LiveNassauViewController: UIViewController {
 
     // MARK: - Standings calculation
 
-    // Running status from already-computed PairedHole results.
-    // Skips uncommitted holes; +1 per owner win, -1 per opponent win.
     private func runningStatus(from pairs: [PairedHole]) -> [Int] {
-        var current = 0
-        var result: [Int] = []
-        for ph in pairs {
-            guard ph.hostScore != nil, ph.opponentScore != nil else { continue }
-            current += ph.netResult
-            result.append(current)
-        }
-        return result
+        NassauPressDetector.runningStatus(from: pairs)
     }
 
-    private struct PressInfo {
-        let startPos: Int    // 1-based overall position (front: 1–9, back: 10–18)
-        let endPos: Int
-        let stake: Double
-        var runningStatus: [Int] = []
-    }
+    private typealias PressInfo = NassauPressDetector.Press
 
-    // Matches NassauEngine.buildPressesForSegment: next-hole start, max 3 per segment, no press-on-press.
     private func detectPresses(
         pairs: [PairedHole],
-        holeOffset: Int,        // 0 for front, 9 for back
-        segmentEndPos: Int,     // 9 for front, 18 for back
+        holeOffset: Int,
+        segmentEndPos: Int,
         trigger: Int,
         stake: Double
     ) -> [PressInfo] {
-        let maxPresses = 3
-        var presses: [PressInfo] = []
-        var current = 0
-        var prevAbs = 0
+        NassauPressDetector.detectLegacy(pairs: pairs, holeOffset: holeOffset,
+                                         segmentEndPos: segmentEndPos, trigger: trigger, stake: stake)
+    }
 
-        for (idx, ph) in pairs.enumerated() {
-            guard ph.hostScore != nil, ph.opponentScore != nil else { continue }
-            current += ph.netResult
-            let pos1Based  = holeOffset + idx + 1
-            let currentAbs = abs(current)
-
-            if prevAbs < trigger && currentAbs >= trigger && presses.count < maxPresses {
-                let startPos = pos1Based + 1   // next-hole rule
-                if startPos <= segmentEndPos {
-                    presses.append(PressInfo(startPos: startPos, endPos: segmentEndPos, stake: stake))
-                }
-            }
-            prevAbs = currentAbs
-        }
-
-        return presses.map { p in
-            var info = p
-            let startIdx = max(0, p.startPos - 1 - holeOffset)
-            let endIdx   = min(pairs.count - 1, p.endPos - 1 - holeOffset)
-            if startIdx <= endIdx {
-                info.runningStatus = runningStatus(from: Array(pairs[startIdx...endIdx]))
-            }
-            return info
-        }
+    // press_v2: each active segment watches its own score; unlimited, no press on last hole.
+    private func detectPressesV2(
+        pairs: [PairedHole],
+        holeOffset: Int,
+        segmentEndPos: Int,
+        trigger: Int,
+        stake: Double
+    ) -> [PressInfo] {
+        NassauPressDetector.detectV2(pairs: pairs, holeOffset: holeOffset,
+                                     segmentEndPos: segmentEndPos, trigger: trigger, stake: stake)
     }
 
     // Result text for a segment or press, matching NassauEngine.summarizeSegment.
@@ -318,12 +288,27 @@ final class LiveNassauViewController: UIViewController {
         }
     }
 
-    // Signed money delta from owner's perspective; 0 when incomplete or tied.
+    // Short result for popup press lines — omits player name to prevent wrapping.
+    private func pressResultText(status: [Int], complete: Bool) -> String {
+        let final = status.last ?? 0
+        if complete {
+            if final > 0 { return "won \(final) up" }
+            if final < 0 { return "\(abs(final)) down" }
+            return "Halved"
+        } else {
+            if final > 0 { return "\(final) up" }
+            if final < 0 { return "\(abs(final)) down" }
+            return "All Square"
+        }
+    }
+
+    // Hole-range label: "#13–18" normally, "#18" for a 1-hole press.
+    private func holeRangeLabel(posLabel: String, startPos: Int, endPos: Int) -> String {
+        startPos == endPos ? "\(posLabel)\(startPos)" : "\(posLabel)\(startPos)–\(endPos)"
+    }
+
     private func segmentMoney(status: [Int], complete: Bool, stake: Double) -> Double {
-        guard complete, let final = status.last else { return 0 }
-        if final > 0 { return  stake }
-        if final < 0 { return -stake }
-        return 0
+        NassauPressDetector.segmentMoney(status: status, complete: complete, stake: stake)
     }
 
     private func buildPairingSection(ownerName: String, opponentName: String) -> PairingSection? {
@@ -355,14 +340,21 @@ final class LiveNassauViewController: UIViewController {
         ]
 
         if pressMode == .auto {
-            let posLabel     = isSameCourse ? "H" : "#"
-            let frontPresses = detectPresses(pairs: frontPairs, holeOffset: 0, segmentEndPos: 9,
-                                              trigger: trigger, stake: stake)
-            let backPresses  = detectPresses(pairs: backPairs,  holeOffset: 9, segmentEndPos: 18,
-                                              trigger: trigger, stake: stake)
+            let posLabel = isSameCourse ? "H" : "#"
+            let isV2     = match?.games?.contains("press_v2") == true
+            let frontPresses = isV2
+                ? detectPressesV2(pairs: frontPairs, holeOffset: 0, segmentEndPos: 9,
+                                  trigger: trigger, stake: stake)
+                : detectPresses  (pairs: frontPairs, holeOffset: 0, segmentEndPos: 9,
+                                  trigger: trigger, stake: stake)
+            let backPresses  = isV2
+                ? detectPressesV2(pairs: backPairs, holeOffset: 9, segmentEndPos: 18,
+                                  trigger: trigger, stake: stake)
+                : detectPresses  (pairs: backPairs, holeOffset: 9, segmentEndPos: 18,
+                                  trigger: trigger, stake: stake)
             for (i, p) in (frontPresses + backPresses).enumerated() {
                 let pressComplete = p.endPos <= 9 ? isFrontComplete : isBackComplete
-                let label = "Press \(i + 1) · \(posLabel)\(p.startPos)–\(p.endPos)"
+                let label = "Press \(i + 1) · \(holeRangeLabel(posLabel: posLabel, startPos: p.startPos, endPos: p.endPos))"
                 rows.append(makeRow(label, status: p.runningStatus, t1: t1, t2: t2,
                                     complete: pressComplete, stake: p.stake))
             }
@@ -643,21 +635,28 @@ final class LiveNassauViewController: UIViewController {
             var lines = ["\(t1) vs \(t2)"]
             lines.append("  Front 9: \(segmentResultText(status: frontStatus,   complete: isFrontComplete,   t1: t1, t2: t2))")
             lines.append("  Back 9:  \(segmentResultText(status: backStatus,    complete: isBackComplete,    t1: t1, t2: t2))")
-            lines.append("  18 Hole: \(segmentResultText(status: overallStatus, complete: isOverallComplete, t1: t1, t2: t2))")
+            lines.append("  18 Holes: \(segmentResultText(status: overallStatus, complete: isOverallComplete, t1: t1, t2: t2))")
 
             var totalMoney = segmentMoney(status: frontStatus,   complete: isFrontComplete,   stake: stake)
                            + segmentMoney(status: backStatus,    complete: isBackComplete,    stake: stake)
                            + segmentMoney(status: overallStatus, complete: isOverallComplete, stake: stake)
 
             if pressMode == .auto {
-                let frontPresses = detectPresses(pairs: frontPairs, holeOffset: 0, segmentEndPos: 9,
-                                                  trigger: trigger, stake: stake)
-                let backPresses  = detectPresses(pairs: backPairs,  holeOffset: 9, segmentEndPos: 18,
-                                                  trigger: trigger, stake: stake)
+                let isV2 = match?.games?.contains("press_v2") == true
+                let frontPresses = isV2
+                    ? detectPressesV2(pairs: frontPairs, holeOffset: 0, segmentEndPos: 9,
+                                      trigger: trigger, stake: stake)
+                    : detectPresses  (pairs: frontPairs, holeOffset: 0, segmentEndPos: 9,
+                                      trigger: trigger, stake: stake)
+                let backPresses  = isV2
+                    ? detectPressesV2(pairs: backPairs, holeOffset: 9, segmentEndPos: 18,
+                                      trigger: trigger, stake: stake)
+                    : detectPresses  (pairs: backPairs, holeOffset: 9, segmentEndPos: 18,
+                                      trigger: trigger, stake: stake)
                 for (i, p) in (frontPresses + backPresses).enumerated() {
                     let pressComplete = p.endPos <= 9 ? isFrontComplete : isBackComplete
-                    let label = "Press \(i + 1) · \(posLabel)\(p.startPos)–\(p.endPos)"
-                    lines.append("  \(label): \(segmentResultText(status: p.runningStatus, complete: pressComplete, t1: t1, t2: t2))")
+                    let label = "Press \(i + 1) · \(holeRangeLabel(posLabel: posLabel, startPos: p.startPos, endPos: p.endPos))"
+                    lines.append("  \(label): \(pressResultText(status: p.runningStatus, complete: pressComplete))")
                     totalMoney += segmentMoney(status: p.runningStatus, complete: pressComplete, stake: p.stake)
                 }
             }

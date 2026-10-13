@@ -113,13 +113,15 @@ enum WolfActions {
                                       courseName: String, from presenter: UIViewController) {
         Task {
             do {
+                var gameTags: [String] = ["nassau", "pairing_v2"]
+                if pressMode == .auto { gameTags.append("press_v2") }
                 let match = try await SupabaseService.shared.createMatch(
                     courseA: courseName,
                     courseB: "",
                     stake: stake,
                     pressMode: pressMode,
                     trigger: trigger,
-                    games: ["nassau", "pairing_v2"],
+                    games: gameTags,
                     playerName: name
                 )
                 GameManager.shared.update { g in
@@ -296,7 +298,8 @@ enum WolfActions {
             let stake     = preview.stake ?? 1.0
             let pressMode = preview.pressMode.flatMap(NassauPressMode.init(rawValue:)) ?? .auto
             let trigger   = preview.trigger ?? 2
-            let rules     = rulesDescription(stake: stake, pressMode: pressMode, trigger: trigger)
+            let isV2      = preview.games?.contains("press_v2") == true
+            let rules     = rulesDescription(stake: stake, pressMode: pressMode, trigger: trigger, isV2: isV2)
             let msg = "Host: \(host)\n\(rules)\n\nRules are locked — set by the host."
             let alert = UIAlertController(title: "Join Remote Nassau?", message: msg, preferredStyle: .alert)
             alert.addAction(UIAlertAction(title: "Cancel", style: .cancel) { _ in cont.resume(returning: false) })
@@ -317,13 +320,22 @@ enum WolfActions {
         mode == .manual ? .auto : mode
     }
 
-    /// Compact rules summary shown to the joiner, e.g. "$1 · Auto press at 2 down".
-    static func rulesDescription(stake: Double, pressMode: NassauPressMode, trigger: Int) -> String {
+    /// Compact rules summary shown to the joiner.
+    /// isV2=true → "Unlimited auto presses at N down · $X per bet" (press_v2 matches).
+    static func rulesDescription(stake: Double, pressMode: NassauPressMode, trigger: Int,
+                                  isV2: Bool = false) -> String {
         let s = stake == floor(stake) ? "$\(Int(stake))" : String(format: "$%.2f", stake)
         switch normalizeRemotePressMode(pressMode) {
-        case .auto:   return "\(s) · Auto press at \(trigger) down"
-        case .off:    return "\(s) · No press"
-        case .manual: return "\(s) · Auto press at \(trigger) down"  // unreachable
+        case .auto:
+            return isV2
+                ? "Unlimited auto presses at \(trigger) down · \(s) per bet"
+                : "\(s) · Auto press at \(trigger) down"
+        case .off:
+            return "\(s) · No press"
+        case .manual:
+            return isV2
+                ? "Unlimited auto presses at \(trigger) down · \(s) per bet"
+                : "\(s) · Auto press at \(trigger) down"
         }
     }
 

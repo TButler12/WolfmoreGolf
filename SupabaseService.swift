@@ -72,8 +72,14 @@ final class SupabaseService {
                           userInfo: [NSLocalizedDescriptionKey: "Could not find match."])
         }
         let knownPairingTags = Set(["pairing_v2"])
-        let unknownTags = (match.games ?? []).filter { $0.hasPrefix("pairing_") && !knownPairingTags.contains($0) }
-        if !unknownTags.isEmpty {
+        let unknownPairingTags = (match.games ?? []).filter { $0.hasPrefix("pairing_") && !knownPairingTags.contains($0) }
+        if !unknownPairingTags.isEmpty {
+            throw NSError(domain: "WolfmoreGolf", code: 426,
+                          userInfo: [NSLocalizedDescriptionKey: "Update WolfMore to join this match."])
+        }
+        let knownPressTags = Set(["press_v2"])
+        let unknownPressTags = (match.games ?? []).filter { $0.hasPrefix("press_") && !knownPressTags.contains($0) }
+        if !unknownPressTags.isEmpty {
             throw NSError(domain: "WolfmoreGolf", code: 426,
                           userInfo: [NSLocalizedDescriptionKey: "Update WolfMore to join this match."])
         }
@@ -96,10 +102,16 @@ final class SupabaseService {
                           userInfo: [NSLocalizedDescriptionKey: "Could not find match."])
         }
 
-        // Block if this match uses a pairing format this app version doesn't understand.
+        // Block if this match uses a pairing or press format this app version doesn't understand.
         let knownPairingTags = Set(["pairing_v2"])
-        let unknownTags = (match.games ?? []).filter { $0.hasPrefix("pairing_") && !knownPairingTags.contains($0) }
-        if !unknownTags.isEmpty {
+        let unknownPairingTags = (match.games ?? []).filter { $0.hasPrefix("pairing_") && !knownPairingTags.contains($0) }
+        if !unknownPairingTags.isEmpty {
+            throw NSError(domain: "WolfmoreGolf", code: 426,
+                          userInfo: [NSLocalizedDescriptionKey: "Update WolfMore to join this match."])
+        }
+        let knownPressTags = Set(["press_v2"])
+        let unknownPressTags = (match.games ?? []).filter { $0.hasPrefix("press_") && !knownPressTags.contains($0) }
+        if !unknownPressTags.isEmpty {
             throw NSError(domain: "WolfmoreGolf", code: 426,
                           userInfo: [NSLocalizedDescriptionKey: "Update WolfMore to join this match."])
         }
@@ -122,6 +134,10 @@ final class SupabaseService {
                 "opponent_names": AnyJSON.array(newOpponents.map { .string($0) })
             ]
             if !courseB.isEmpty { updateFields["course_b"] = AnyJSON.string(courseB) }
+            // Signal press_v2 capability so the DB trigger allows the join.
+            if match.games?.contains("press_v2") == true {
+                updateFields["joiner_capability"] = AnyJSON.string("press_v2")
+            }
 
             // For v2 matches always include the pairing column in this same update.
             // The server trigger uses NEW.pairing IS NOT NULL as the v2-awareness signal:
