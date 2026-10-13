@@ -33,6 +33,8 @@
 		AB00000800000000000000FF /* RemoteNassauSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000800000000000000AA /* RemoteNassauSetupViewController.swift */; };
 		AB00000900000000000000FF /* NassauPressDetector.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000900000000000000AA /* NassauPressDetector.swift */; };
 		AB00000A00000000000000FF /* RemoteNassauPressV2Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000A00000000000000AA /* RemoteNassauPressV2Tests.swift */; };
+		AB00000B00000000000000FF /* NassauScorecardTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000B00000000000000AA /* NassauScorecardTests.swift */; };
+		AB00000C00000000000000FF /* ScorecardSnapshotTest.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000C00000000000000AA /* ScorecardSnapshotTest.swift */; };
 		AB01CD02EF03AB04CD05EF06 /* TournamentRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F007 /* TournamentRosterViewController.swift */; };
 		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
 		AL01B2C3D4E5F607182930AA /* ArchitectLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */; };
@@ -196,6 +198,8 @@
 		AB00000800000000000000AA /* RemoteNassauSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauSetupViewController.swift; sourceTree = "<group>"; };
 		AB00000900000000000000AA /* NassauPressDetector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauPressDetector.swift; sourceTree = "<group>"; };
 		AB00000A00000000000000AA /* RemoteNassauPressV2Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauPressV2Tests.swift; sourceTree = "<group>"; };
+		AB00000B00000000000000AA /* NassauScorecardTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NassauScorecardTests.swift; sourceTree = "<group>"; };
+		AB00000C00000000000000AA /* ScorecardSnapshotTest.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScorecardSnapshotTest.swift; sourceTree = "<group>"; };
 		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
 		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
 		AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
@@ -349,6 +353,8 @@
 				AB00000600000000000000AA /* MatchStatusFormatterTests.swift */,
 				AB00000700000000000000AA /* RemoteNassauSlotTests.swift */,
 				AB00000A00000000000000AA /* RemoteNassauPressV2Tests.swift */,
+				AB00000B00000000000000AA /* NassauScorecardTests.swift */,
+				AB00000C00000000000000AA /* ScorecardSnapshotTest.swift */,
 			);
 			path = WolfmoreGolfTests;
 			sourceTree = "<group>";
@@ -676,6 +682,8 @@
 				AB00000600000000000000FF /* MatchStatusFormatterTests.swift in Sources */,
 				AB00000700000000000000FF /* RemoteNassauSlotTests.swift in Sources */,
 				AB00000A00000000000000FF /* RemoteNassauPressV2Tests.swift in Sources */,
+				AB00000B00000000000000FF /* NassauScorecardTests.swift in Sources */,
+				AB00000C00000000000000FF /* ScorecardSnapshotTest.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

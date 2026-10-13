@@ -77,12 +77,19 @@ final class LiveNassauViewController: UIViewController {
     // MARK: - UI Setup
 
     private func setupUI() {
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
+        let refreshBtn = UIBarButtonItem(
             image: UIImage(systemName: "arrow.clockwise"),
             style: .plain,
             target: self,
             action: #selector(refreshTapped)
         )
+        let scorecardBtn = UIBarButtonItem(
+            title: "Scorecard",
+            style: .plain,
+            target: self,
+            action: #selector(scorecardTapped)
+        )
+        navigationItem.rightBarButtonItems = [refreshBtn, scorecardBtn]
 
         statusLabel.text          = "Connecting…"
         statusLabel.textColor     = .systemYellow
@@ -597,6 +604,38 @@ final class LiveNassauViewController: UIViewController {
 
     // MARK: - Final result
 
+    @objc private func scorecardTapped() {
+        guard let section = pairings.first else { return }
+        let front = buildPairedHoles(ownerName: section.ownerName, opponentName: section.opponentName, front: true)
+        let back  = buildPairedHoles(ownerName: section.ownerName, opponentName: section.opponentName, front: false)
+        let config = scorecardConfig(ownerName: section.ownerName, opponentName: section.opponentName,
+                                     pairs: front + back, title: "Scorecard")
+        navigationController?.pushViewController(NassauScorecardViewController(config: config), animated: true)
+    }
+
+    // Builds a ScorecardConfig from match settings + pre-built pairs.
+    private func scorecardConfig(ownerName: String, opponentName: String,
+                                 pairs: [PairedHole], title: String) -> ScorecardConfig {
+        let stake     = match?.stake ?? 1.0
+        let trigger   = match?.trigger ?? 2
+        let pressMode = match.flatMap { NassauPressMode(rawValue: $0.pressMode ?? "") } ?? .auto
+        let isV2      = match?.games?.contains("press_v2") == true
+        let ownerCourse    = amHost ? (match?.courseA ?? "") : (match?.courseB ?? "")
+        let opponentCourse = amHost ? (match?.courseB ?? "") : (match?.courseA ?? "")
+        return ScorecardConfig(
+            ownerName: ownerName.isEmpty    ? "You" : ownerName,
+            opponentName: opponentName.isEmpty ? "Opp" : opponentName,
+            ownerCourse:    ownerCourse,
+            opponentCourse: opponentCourse,
+            pairs: pairs,
+            stake: stake, trigger: trigger,
+            pressMode: pressMode, isV2: isV2,
+            isSameCourse: isSameCourse,
+            posLabel: isSameCourse ? "H" : "#",
+            title: title
+        )
+    }
+
     @objc private func finalResultTapped() {
         let hostRaw = match?.hostName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let pairingArgs: [(owner: String, opponent: String)]
@@ -753,29 +792,11 @@ extension LiveNassauViewController: UITableViewDelegate {
               indexPath.row == 0 || indexPath.row == 1 else { return }
         let section = pairings[indexPath.section]
         let front   = indexPath.row == 0
-        let pairs   = buildPairedHoles(ownerName: section.ownerName, opponentName: section.opponentName, front: front)
-        let ownerCourse = amHost
-            ? (match?.courseA ?? "")
-            : (match?.courseB ?? "")
-        let opponentCourse = amHost
-            ? (match?.courseB ?? "")
-            : (match?.courseA ?? "")
-
-        let vc      = NassauScorecardViewController()
-        vc.segmentTitle   = front ? "Front 9" : "Back 9"
-        vc.ownerName      = section.ownerName.isEmpty    ? "Player 1" : section.ownerName
-        vc.opponentName   = section.opponentName.isEmpty ? "Player 2" : section.opponentName
-        vc.ownerCourse    = ownerCourse
-        vc.opponentCourse = opponentCourse
-        vc.pairedHoles    = pairs
-        vc.refreshProvider = { [weak self] in
-            guard let self else { return pairs }
-            await self.refreshScores()
-            return self.buildPairedHoles(ownerName: section.ownerName,
-                                         opponentName: section.opponentName,
-                                         front: front)
-        }
-        navigationController?.pushViewController(vc, animated: true)
+        let pairs  = buildPairedHoles(ownerName: section.ownerName, opponentName: section.opponentName, front: front)
+        let title  = front ? "Front 9" : "Back 9"
+        let config = scorecardConfig(ownerName: section.ownerName, opponentName: section.opponentName,
+                                     pairs: pairs, title: title)
+        navigationController?.pushViewController(NassauScorecardViewController(config: config), animated: true)
     }
 }
 
