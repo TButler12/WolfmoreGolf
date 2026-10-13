@@ -4417,9 +4417,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 }
                 // Publish match status for event summary after backfill
                 if let creatorToken = g.liveCreatorToken, g.liveLinkedEventCode != nil {
-                    if g.resolvedGameType.isMatchPlay, !g.isDualMatch {
-                        let status = liveMatchStatusString(g: g, throughHole: hole)
-                        let played = (0...hole).filter { g.holeCommitted[safe: $0] == true }.count
+                    let played = (0...hole).filter { g.holeCommitted[safe: $0] == true }.count
+                    if g.resolvedGameType.isMatchPlay {
+                        let status = g.isDualMatch
+                            ? liveDualMatchStatusString(g: g, throughHole: hole)
+                            : liveMatchStatusString(g: g, throughHole: hole)
                         do {
                             try await SupabaseService.shared.publishMatchStatus(
                                 sessionId: sessionId,
@@ -4430,7 +4432,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                         } catch {
                             print("ERROR publishMatchStatus: \(error)")
                         }
-                    } else if !g.resolvedGameType.isMatchPlay {
+                    } else {
                         try? await SupabaseService.shared.publishMatchStatus(
                             sessionId: sessionId,
                             creatorToken: creatorToken,
@@ -6583,6 +6585,43 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         } else {
             return "\(bNames) \(abs(diff)) UP vs \(aNames) · thru \(played)"
         }
+    }
+
+    private func liveDualMatchStatusString(g: GameData, throughHole: Int) -> String {
+        let a1 = (g.matchPlayTeamA  ?? []).filter { $0 < MAX_PLAYERS }
+        let b1 = (g.matchPlayTeamB  ?? []).filter { $0 < MAX_PLAYERS }
+        let a2 = (g.matchPlayTeamA2 ?? []).filter { $0 < MAX_PLAYERS }
+        let b2 = (g.matchPlayTeamB2 ?? []).filter { $0 < MAX_PLAYERS }
+
+        func shortNames(_ seats: [Int]) -> String {
+            let names = seats.compactMap { seat -> String? in
+                guard seat < g.playerNames.count else { return nil }
+                let n = g.playerNames[seat].trimmingCharacters(in: .whitespaces)
+                guard !n.isEmpty else { return nil }
+                return n.components(separatedBy: " ").first
+            }
+            return names.isEmpty ? "?" : names.joined(separator: "/")
+        }
+
+        func holeDiff(refSeat: Int) -> Int {
+            var wins = 0, losses = 0
+            for h in 0...throughHole {
+                guard g.holeCommitted[safe: h] == true else { continue }
+                let p = g.playerMoney[safe: refSeat]?[safe: h] ?? 0.0
+                if p > 0.001 { wins += 1 } else if p < -0.001 { losses += 1 }
+            }
+            return wins - losses
+        }
+
+        let played    = (0...throughHole).filter { g.holeCommitted[safe: $0] == true }.count
+        let remaining = g.totalHoles - played
+        let m1 = MatchStatusFormatter.MatchScoreLine(
+            diff: holeDiff(refSeat: a1.first ?? 0), played: played, remaining: remaining,
+            aLabel: shortNames(a1), bLabel: shortNames(b1))
+        let m2 = MatchStatusFormatter.MatchScoreLine(
+            diff: holeDiff(refSeat: a2.first ?? 0), played: played, remaining: remaining,
+            aLabel: shortNames(a2), bLabel: shortNames(b2))
+        return MatchStatusFormatter.dualMatchStatus(m1: m1, m2: m2)
     }
 }
    

@@ -1693,9 +1693,12 @@ private final class WolfHoleCell: UITableViewCell {
         holeLabel.textColor  = holePressLevel > 0 ? .systemOrange : .label
 
         // Match play: show running score in decision column (e.g. "A 2↑", "AS", "B 1↑")
+        // Dual-match status contains \n; use unlimited lines + smaller font so both fit.
         if let ms = matchStatus {
+            let isDual = ms.contains("\n")
+            decisionLabel.numberOfLines = isDual ? 0 : 2
+            decisionLabel.font      = .systemFont(ofSize: isDual ? 9 : 10, weight: .bold)
             decisionLabel.text      = ms
-            decisionLabel.font      = .systemFont(ofSize: 10, weight: .bold)
             decisionLabel.textColor = ms == "AS" ? .secondaryLabel : .systemGreen
         } else {
         switch result?.decision {

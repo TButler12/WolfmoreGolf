@@ -27,6 +27,8 @@
 		AB00000200000000000000BB /* RemoteNassauPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000200000000000000AA /* RemoteNassauPairing.swift */; };
 		AB00000300000000000000CC /* SpectatorScoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000300000000000000AA /* SpectatorScoring.swift */; };
 		AB00000400000000000000DD /* SpectatorScoringTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000400000000000000AA /* SpectatorScoringTests.swift */; };
+		AB00000500000000000000EE /* MatchStatusFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000500000000000000AA /* MatchStatusFormatter.swift */; };
+		AB00000600000000000000FF /* MatchStatusFormatterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00000600000000000000AA /* MatchStatusFormatterTests.swift */; };
 		AB01CD02EF03AB04CD05EF06 /* TournamentRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F007 /* TournamentRosterViewController.swift */; };
 		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
 		AL01B2C3D4E5F607182930AA /* ArchitectLibrary.swift in Sources */ = {isa = PBXBuildFile; fileRef = AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */; };
@@ -184,6 +186,8 @@
 		AB00000200000000000000AA /* RemoteNassauPairing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteNassauPairing.swift; sourceTree = "<group>"; };
 		AB00000300000000000000AA /* SpectatorScoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorScoring.swift; sourceTree = "<group>"; };
 		AB00000400000000000000AA /* SpectatorScoringTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpectatorScoringTests.swift; sourceTree = "<group>"; };
+		AB00000500000000000000AA /* MatchStatusFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchStatusFormatter.swift; sourceTree = "<group>"; };
+		AB00000600000000000000AA /* MatchStatusFormatterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MatchStatusFormatterTests.swift; sourceTree = "<group>"; };
 		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
 		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
 		AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
@@ -334,6 +338,7 @@
 				AB000001000000000000000A /* RemoteNassauPairingTests.swift */,
 				AB000001000000000000001A /* LocalNassauTests.swift */,
 				AB00000400000000000000AA /* SpectatorScoringTests.swift */,
+				AB00000600000000000000AA /* MatchStatusFormatterTests.swift */,
 			);
 			path = WolfmoreGolfTests;
 			sourceTree = "<group>";
@@ -359,6 +364,7 @@
 				F6E0080A2F8965B600763694 /* RemoteNassauViewController.swift */,
 				AB00000200000000000000AA /* RemoteNassauPairing.swift */,
 				AB00000300000000000000AA /* SpectatorScoring.swift */,
+				AB00000500000000000000AA /* MatchStatusFormatter.swift */,
 				F6A010002FA0000000000AE1 /* WolfActions.swift */,
 				F6E008082F89408500763694 /* RemoteNassauScorer.swift */,
 				F6E008062F89403800763694 /* SharedRoundBuilder.swift */,
@@ -644,6 +650,7 @@
 				AB000001000000000000000B /* RemoteNassauPairingTests.swift in Sources */,
 				AB000001000000000000001B /* LocalNassauTests.swift in Sources */,
 				AB00000400000000000000DD /* SpectatorScoringTests.swift in Sources */,
+				AB00000600000000000000FF /* MatchStatusFormatterTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -783,6 +790,7 @@
 				D88F621DFA504D329EBE02E3 /* Constants.swift in Sources */,
 				AB00000200000000000000BB /* RemoteNassauPairing.swift in Sources */,
 				AB00000300000000000000CC /* SpectatorScoring.swift in Sources */,
+				AB00000500000000000000EE /* MatchStatusFormatter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
