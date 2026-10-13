@@ -1161,7 +1161,9 @@ private final class WolfHoleCell: UITableViewCell {
     private var scoreCols: [UILabel] = []
     private let scoreRow   = UIStackView()
 
-    private var decisionWidthConstraint: NSLayoutConstraint?
+    // Width constraints for the decision column and its alignment spacers in sub-rows;
+    // all updated together so the sub-rows stay aligned when the column widens.
+    private var decisionColumnConstraints: [NSLayoutConstraint] = []
     private var scoreColWidthConstraints: [NSLayoutConstraint] = []
     private var isMatchPlayLayout = false
     private var matchPlayColumnCount = 0
@@ -1220,20 +1222,12 @@ private final class WolfHoleCell: UITableViewCell {
             let colW   = ((remain - decW) / CGFloat(matchPlayColumnCount)).rounded()
             let newDec = max(80, min(decW, 220))
             let newCol = max(36, colW)
-            if decisionWidthConstraint?.constant != newDec {
-                decisionWidthConstraint?.constant = newDec
-            }
-            for c in scoreColWidthConstraints where c.constant != newCol {
-                c.constant = newCol
-            }
+            for c in decisionColumnConstraints where c.constant != newDec { c.constant = newDec }
+            for c in scoreColWidthConstraints   where c.constant != newCol { c.constant = newCol }
         } else {
             let wolfColW: CGFloat = columnCount >= 7 ? 28 : columnCount == 6 ? 34 : 40
-            if decisionWidthConstraint?.constant != 46 {
-                decisionWidthConstraint?.constant = 46
-            }
-            for c in scoreColWidthConstraints where c.constant != wolfColW {
-                c.constant = wolfColW
-            }
+            for c in decisionColumnConstraints where c.constant != 46      { c.constant = 46 }
+            for c in scoreColWidthConstraints   where c.constant != wolfColW { c.constant = wolfColW }
         }
     }
 
@@ -1260,7 +1254,7 @@ private final class WolfHoleCell: UITableViewCell {
         configLabel(holeLabel, size: 15, weight: .regular, width: 32)
         scoreRow.addArrangedSubview(holeLabel)
 
-        decisionWidthConstraint = configLabel(decisionLabel, size: 11, weight: .semibold, width: 46)
+        decisionColumnConstraints.append(configLabel(decisionLabel, size: 11, weight: .semibold, width: 46))
         decisionLabel.numberOfLines = 2
         decisionLabel.lineBreakMode = .byTruncatingTail
         scoreRow.addArrangedSubview(decisionLabel)
@@ -1286,9 +1280,11 @@ private final class WolfHoleCell: UITableViewCell {
         moneyLabel.textColor = .secondaryLabel
         moneyRow.addArrangedSubview(moneyLabel)
 
-        // Spacer to align money cols under score cols (tracks decisionLabel width automatically)
+        // Spacer to align money cols under score cols (width kept in sync via decisionColumnConstraints)
         let moneyDecisionSpacer = UIView()
-        moneyDecisionSpacer.widthAnchor.constraint(equalTo: decisionLabel.widthAnchor).isActive = true
+        let moneySpacerC = moneyDecisionSpacer.widthAnchor.constraint(equalToConstant: 46)
+        moneySpacerC.isActive = true
+        decisionColumnConstraints.append(moneySpacerC)
         moneyRow.addArrangedSubview(moneyDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
@@ -1313,7 +1309,9 @@ private final class WolfHoleCell: UITableViewCell {
         gameRow.addArrangedSubview(gameLabel)
 
         let gameDecisionSpacer = UIView()
-        gameDecisionSpacer.widthAnchor.constraint(equalTo: decisionLabel.widthAnchor).isActive = true
+        let gameSpacerC = gameDecisionSpacer.widthAnchor.constraint(equalToConstant: 46)
+        gameSpacerC.isActive = true
+        decisionColumnConstraints.append(gameSpacerC)
         gameRow.addArrangedSubview(gameDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
@@ -1338,7 +1336,9 @@ private final class WolfHoleCell: UITableViewCell {
         skinsRow.addArrangedSubview(skinsLabel)
 
         let skinsDecisionSpacer = UIView()
-        skinsDecisionSpacer.widthAnchor.constraint(equalTo: decisionLabel.widthAnchor).isActive = true
+        let skinsSpacerC = skinsDecisionSpacer.widthAnchor.constraint(equalToConstant: 46)
+        skinsSpacerC.isActive = true
+        decisionColumnConstraints.append(skinsSpacerC)
         skinsRow.addArrangedSubview(skinsDecisionSpacer)
 
         for _ in 0..<MAX_PLAYERS {
