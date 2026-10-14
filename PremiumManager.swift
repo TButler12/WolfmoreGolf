@@ -215,11 +215,12 @@ final class PremiumManager {
 
     func loadProducts() async {
         do {
-            products = try await Product.products(for: [Self.monthlyProductID])
-            if let monthly = products.first(where: { $0.id == Self.monthlyProductID }) {
-                print("[PremiumManager] loadProducts — monthly loaded: id=\(monthly.id) price=\(monthly.displayPrice)")
-            } else {
-                print("[PremiumManager] loadProducts — monthly NOT returned by StoreKit (products=\(products.map(\.id)))")
+            products = try await Product.products(for: [Self.monthlyProductID, Self.yearlyProductID])
+            for p in products {
+                print("[PremiumManager] loadProducts — loaded: id=\(p.id) price=\(p.displayPrice)")
+            }
+            if products.isEmpty {
+                print("[PremiumManager] loadProducts — no products returned by StoreKit")
             }
         } catch {
             print("[PremiumManager] loadProducts — error: \(error)")

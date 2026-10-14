@@ -1,5 +1,6 @@
 import UIKit
 import StoreKit
+import SafariServices
 
 final class PaywallViewController: UIViewController {
 
@@ -17,10 +18,16 @@ final class PaywallViewController: UIViewController {
 
     required init?(coder: NSCoder) { fatalError() }
 
-    private let scrollView  = UIScrollView()
-    private let stack       = UIStackView()
-    private var monthlyBtn  = UIButton(type: .system)
-    private let spinner     = UIActivityIndicatorView(style: .medium)
+    private let scrollView        = UIScrollView()
+    private let stack             = UIStackView()
+    private var monthlyBtn        = UIButton(type: .system)
+    private var yearlyBtn         = UIButton(type: .system)
+    private let spinner           = UIActivityIndicatorView(style: .medium)
+
+    // Disclosure labels — updated by refreshProductTitles()
+    private let monthlyInfoLabel  = makeDisclosureLabel()
+    private let yearlyInfoLabel   = makeDisclosureLabel()
+    private let autoRenewsLabel   = makeDisclosureLabel()
 
     private let green = UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1)
 
@@ -43,9 +50,9 @@ final class PaywallViewController: UIViewController {
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
         ])
 
-        stack.axis = .vertical
+        stack.axis      = .vertical
         stack.alignment = .center
-        stack.spacing = 14
+        stack.spacing   = 14
         stack.translatesAutoresizingMaskIntoConstraints = false
         scrollView.addSubview(stack)
         NSLayoutConstraint.activate([
@@ -58,29 +65,29 @@ final class PaywallViewController: UIViewController {
 
         // Crown
         let crownLabel = UILabel()
-        crownLabel.text = "👑"
-        crownLabel.font = .systemFont(ofSize: 60)
+        crownLabel.text          = "👑"
+        crownLabel.font          = .systemFont(ofSize: 60)
         crownLabel.textAlignment = .center
 
         // Title
         let titleLabel = UILabel()
-        titleLabel.text = "WolfMore Premium"
-        titleLabel.font = .systemFont(ofSize: 26, weight: .bold)
+        titleLabel.text          = "WolfMore Premium"
+        titleLabel.font          = .systemFont(ofSize: 26, weight: .bold)
         titleLabel.textAlignment = .center
 
         // Limit message
         let limitLabel = UILabel()
-        limitLabel.text = feature.limitMessage
-        limitLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        limitLabel.textColor = .secondaryLabel
+        limitLabel.text          = feature.limitMessage
+        limitLabel.font          = .systemFont(ofSize: 16, weight: .medium)
+        limitLabel.textColor     = .secondaryLabel
         limitLabel.textAlignment = .center
         limitLabel.numberOfLines = 0
 
         // Description
         let descLabel = UILabel()
-        descLabel.text = "Upgrade to WolfMore Premium for unlimited access to AI Summary, Remote Nassau, and Live Wolf."
-        descLabel.font = .systemFont(ofSize: 15)
-        descLabel.textColor = .secondaryLabel
+        descLabel.text          = "Upgrade to WolfMore Premium for unlimited access to AI Summary, Remote Nassau, and Live Wolf."
+        descLabel.font          = .systemFont(ofSize: 15)
+        descLabel.textColor     = .secondaryLabel
         descLabel.textAlignment = .center
         descLabel.numberOfLines = 0
 
@@ -91,36 +98,72 @@ final class PaywallViewController: UIViewController {
 
         // Features
         let featuresLabel = UILabel()
-        featuresLabel.text = "✓  Unlimited AI Summaries\n✓  Unlimited Remote Nassau\n✓  Unlimited Live Wolf\n✓  All future premium features"
-        featuresLabel.font = .systemFont(ofSize: 15)
+        featuresLabel.text          = "✓  Unlimited AI Summaries\n✓  Unlimited Remote Nassau\n✓  Unlimited Live Wolf\n✓  All future premium features"
+        featuresLabel.font          = .systemFont(ofSize: 15)
         featuresLabel.textAlignment = .center
         featuresLabel.numberOfLines = 0
 
         let spacer = UIView()
 
-        // Monthly subscribe button
+        // Subscribe buttons
         monthlyBtn = makeButton(title: "Upgrade — $4.99/month", primary: true)
         monthlyBtn.addTarget(self, action: #selector(monthlyTapped), for: .touchUpInside)
 
-        // Restore
+        yearlyBtn = makeButton(title: "Upgrade Yearly", primary: false)
+        yearlyBtn.addTarget(self, action: #selector(yearlyTapped), for: .touchUpInside)
+        yearlyBtn.isHidden = true   // shown only when product loads
+
+        // ── Disclosure section ─────────────────────────────────────────────
+
+        // Per-product info labels
+        monthlyInfoLabel.text    = ""
+        yearlyInfoLabel.text     = ""
+        yearlyInfoLabel.isHidden = true
+
+        // Auto-renews notice (always visible)
+        autoRenewsLabel.text = "Auto-renews until canceled. Cancel anytime in\nSettings → Apple ID → Subscriptions."
+
+        // Terms / Privacy links
+        let termsBtn = makeLinkButton(title: "Terms of Use")
+        termsBtn.addTarget(self, action: #selector(termsTapped), for: .touchUpInside)
+
+        let privacyBtn = makeLinkButton(title: "Privacy Policy")
+        privacyBtn.addTarget(self, action: #selector(privacyTapped), for: .touchUpInside)
+
+        let pipe = UILabel()
+        pipe.text      = "|"
+        pipe.font      = .systemFont(ofSize: 13)
+        pipe.textColor = .separator
+
+        let linksRow = UIStackView(arrangedSubviews: [termsBtn, pipe, privacyBtn])
+        linksRow.axis      = .horizontal
+        linksRow.spacing   = 4
+        linksRow.alignment = .center
+
+        // ── Restore / dismiss ──────────────────────────────────────────────
+
         let restoreBtn = UIButton(type: .system)
         restoreBtn.setTitle("Restore Purchases", for: .normal)
         restoreBtn.titleLabel?.font = .systemFont(ofSize: 14)
         restoreBtn.setTitleColor(.secondaryLabel, for: .normal)
         restoreBtn.addTarget(self, action: #selector(restoreTapped), for: .touchUpInside)
 
-        // Spinner
         spinner.hidesWhenStopped = true
 
-        // Maybe Later
         let laterBtn = UIButton(type: .system)
         laterBtn.setTitle("Maybe Later", for: .normal)
         laterBtn.titleLabel?.font = .systemFont(ofSize: 16)
         laterBtn.setTitleColor(green, for: .normal)
         laterBtn.addTarget(self, action: #selector(laterTapped), for: .touchUpInside)
 
+        // ── Assemble stack ─────────────────────────────────────────────────
+
         [crownLabel, titleLabel, limitLabel, descLabel, divider, featuresLabel,
-         spacer, monthlyBtn, restoreBtn, spinner, laterBtn]
+         spacer,
+         monthlyBtn, yearlyBtn,
+         monthlyInfoLabel, yearlyInfoLabel,
+         autoRenewsLabel, linksRow,
+         restoreBtn, spinner, laterBtn]
             .forEach { stack.addArrangedSubview($0) }
 
         NSLayoutConstraint.activate([
@@ -128,23 +171,27 @@ final class PaywallViewController: UIViewController {
             divider.widthAnchor.constraint(equalTo: stack.widthAnchor),
             spacer.heightAnchor.constraint(equalToConstant: 4),
             monthlyBtn.widthAnchor.constraint(equalTo: stack.widthAnchor),
+            yearlyBtn.widthAnchor.constraint(equalTo: stack.widthAnchor),
+            monthlyInfoLabel.widthAnchor.constraint(equalTo: stack.widthAnchor),
+            yearlyInfoLabel.widthAnchor.constraint(equalTo: stack.widthAnchor),
+            autoRenewsLabel.widthAnchor.constraint(equalTo: stack.widthAnchor),
         ])
     }
 
     private func makeButton(title: String, primary: Bool) -> UIButton {
         let btn = UIButton(type: .system)
         btn.setTitle(title, for: .normal)
-        btn.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        btn.titleLabel?.font          = .systemFont(ofSize: 16, weight: .semibold)
         btn.titleLabel?.numberOfLines = 0
         btn.titleLabel?.textAlignment = .center
-        btn.layer.cornerRadius = 12
+        btn.layer.cornerRadius        = 12
         btn.heightAnchor.constraint(equalToConstant: 54).isActive = true
         btn.translatesAutoresizingMaskIntoConstraints = false
         if primary {
             btn.backgroundColor = green
             btn.setTitleColor(.white, for: .normal)
         } else {
-            btn.backgroundColor = .secondarySystemBackground
+            btn.backgroundColor  = .secondarySystemBackground
             btn.setTitleColor(green, for: .normal)
             btn.layer.borderWidth = 1.5
             btn.layer.borderColor = green.cgColor
@@ -152,19 +199,59 @@ final class PaywallViewController: UIViewController {
         return btn
     }
 
+    private func makeLinkButton(title: String) -> UIButton {
+        let btn = UIButton(type: .system)
+        btn.setTitle(title, for: .normal)
+        btn.titleLabel?.font = .systemFont(ofSize: 13)
+        btn.setTitleColor(.link, for: .normal)
+        return btn
+    }
+
+    private static func makeDisclosureLabel() -> UILabel {
+        let l = UILabel()
+        l.font          = .systemFont(ofSize: 12)
+        l.textColor     = .secondaryLabel
+        l.textAlignment = .center
+        l.numberOfLines = 0
+        return l
+    }
+
+    // MARK: - Product refresh
+
     private func refreshProductTitles() {
-        let monthly = PremiumManager.shared.products.first(where: { $0.id == PremiumManager.monthlyProductID })
-        if let monthly {
-            monthlyBtn.setTitle("Upgrade — \(monthly.displayPrice)/month", for: .normal)
-            print("[Paywall] monthly product loaded — id=\(monthly.id) price=\(monthly.displayPrice)")
+        let products = PremiumManager.shared.products
+        let monthly  = products.first(where: { $0.id == PremiumManager.monthlyProductID })
+        let yearly   = products.first(where: { $0.id == PremiumManager.yearlyProductID  })
+
+        // Monthly button + info
+        if let m = monthly {
+            monthlyBtn.setTitle("Upgrade Monthly — \(m.displayPrice)/month", for: .normal)
+            monthlyInfoLabel.text = "\(m.displayName) · Monthly · \(m.displayPrice)/month"
+            print("[Paywall] monthly loaded — \(m.id) \(m.displayPrice)")
         } else {
-            print("[Paywall] monthly product NOT loaded — products array: \(PremiumManager.shared.products.map(\.id))")
+            print("[Paywall] monthly NOT loaded — products: \(products.map(\.id))")
+        }
+
+        // Yearly button + info (shown only when product available)
+        if let y = yearly {
+            let perMonth  = y.price / 12
+            let perMonthF = perMonth.formatted(y.priceFormatStyle)
+            yearlyBtn.setTitle("Upgrade Yearly — \(y.displayPrice)/year", for: .normal)
+            yearlyInfoLabel.text = "\(y.displayName) · Yearly · \(y.displayPrice)/year (\(perMonthF)/month)"
+            yearlyBtn.isHidden        = false
+            yearlyInfoLabel.isHidden  = false
+            print("[Paywall] yearly loaded — \(y.id) \(y.displayPrice)")
+        } else {
+            yearlyBtn.isHidden       = true
+            yearlyInfoLabel.isHidden = true
+            print("[Paywall] yearly not available")
         }
     }
 
     // MARK: - Actions
 
     @objc private func monthlyTapped() { purchase(id: PremiumManager.monthlyProductID) }
+    @objc private func yearlyTapped()  { purchase(id: PremiumManager.yearlyProductID)  }
 
     private func purchase(id: String) {
         guard let product = PremiumManager.shared.products.first(where: { $0.id == id }) else {
@@ -223,9 +310,24 @@ final class PaywallViewController: UIViewController {
 
     @objc private func laterTapped() { dismiss(animated: true) }
 
+    @objc private func termsTapped() {
+        openURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+    }
+
+    @objc private func privacyTapped() {
+        openURL("https://www.wolfmore.com/privacy-policy")
+    }
+
+    private func openURL(_ string: String) {
+        guard let url = URL(string: string) else { return }
+        let vc = SFSafariViewController(url: url)
+        present(vc, animated: true)
+    }
+
     private func setLoading(_ on: Bool) {
         on ? spinner.startAnimating() : spinner.stopAnimating()
         monthlyBtn.isEnabled = !on
+        yearlyBtn.isEnabled  = !on
     }
 
     private func alert(_ title: String, _ message: String) {

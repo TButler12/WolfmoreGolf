@@ -6,6 +6,7 @@
 //
 import UIKit
 import MessageUI
+import SafariServices
 
 final class ViewController: UIViewController,
                             MFMailComposeViewControllerDelegate,
@@ -1776,6 +1777,12 @@ final class ViewController: UIViewController,
             }
         })
         ac.addAction(UIAlertAction(title: "Send Feedback",     style: .default) { [weak self] _ in self?.sendFeedbackEmail() })
+        ac.addAction(UIAlertAction(title: "Terms of Use",      style: .default) { [weak self] _ in
+            self?.openInAppURL("https://www.apple.com/legal/internet-services/itunes/dev/stdeula/")
+        })
+        ac.addAction(UIAlertAction(title: "Privacy Policy",    style: .default) { [weak self] _ in
+            self?.openInAppURL("https://www.wolfmore.com/privacy-policy")
+        })
         if ResetSnapshotStore.shared.hasSnapshots {
             ac.addAction(UIAlertAction(title: "Swap to Previous Round", style: .default) { [weak self] _ in self?.openRestorePastRound() })
         }
@@ -2076,6 +2083,11 @@ final class ViewController: UIViewController,
     }
 
     // MARK: - Helpers
+
+    private func openInAppURL(_ string: String) {
+        guard let url = URL(string: string) else { return }
+        present(SFSafariViewController(url: url), animated: true)
+    }
 
     private func presentManagePlayers() {
         // Local-game path — clear any stale live-tournament state so ManagePlayersVC
