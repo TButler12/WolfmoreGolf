@@ -165,3 +165,4 @@ final class LiveConnectedBoardsSectionTest: XCTestCase {
         UserDefaults.standard.removeObject(forKey: MatchBoardStore.key)
     }
 }
+

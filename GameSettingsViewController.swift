@@ -35,6 +35,8 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private weak var teamTeeSwitch: UISwitch?
     private weak var teamTeeConfigureButton: UIButton?
     private weak var skinsCarryoverSegment: UISegmentedControl?
+    private weak var loneWolfSegment: UISegmentedControl?
+    private weak var loneWolfSection: UIStackView?
     private weak var sfModeSegment: UISegmentedControl?
     private weak var sfModifiedSettingsStack: UIStackView?
     private var sfSettingsStepperValues: [Int: Int] = [0: 8, 1: 4, 2: 2, 3: 0, 4: -1, 5: -3]
@@ -95,6 +97,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         installWolfScoringSegment()
         installPressStyleSegment()
         installHammerStyleSegment()
+        installLoneWolfTeamScoreSegment()
         installMatchPlayTeamsSection()
         refreshMatchPlayUI()
         installTeamTeeSection()
@@ -186,11 +189,20 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             main.addArrangedSubview(vSection("Base Stake ($)", body: stakeField))
         }
 
+        // Umbrella section header with ⓘ
+        main.addArrangedSubview(labeledHeaderRow(
+            title: "Umbrella",
+            infoTitle: "Umbrella",
+            infoMessage: "Umbrella On: win 6 or more points on a hole and the points double."
+        ))
+
         // Umbrella button
         let umbrella = UIButton(type: .system)
         umbrella.translatesAutoresizingMaskIntoConstraints = false
         umbrella.heightAnchor.constraint(equalToConstant: 48).isActive = true
         umbrella.addTarget(self, action: #selector(umbrellaTapped(_:)), for: .touchUpInside)
+        let umbrellaLPR = UILongPressGestureRecognizer(target: self, action: #selector(umbrellaLongPressed(_:)))
+        umbrella.addGestureRecognizer(umbrellaLPR)
         umbrellaButton = umbrella
         main.addArrangedSubview(umbrella)
 
@@ -418,7 +430,111 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         refreshMatchPlayUI()
     }
 
+    // MARK: - Lone Wolf Team Score segment
+
+    private static let loneWolfInfoTitle   = "Lone Wolf Team Score"
+    private static let loneWolfInfoMessage = "When a player goes alone, their team total is compared to the other team's total. Ghost Partner: your score plus an imaginary partner halfway between your score and bogey (3 on a par 3 → 3 + 3.5 = 6.5). Double Score: your score counts twice (3 → 6)."
+
+    private func installLoneWolfTeamScoreSegment() {
+        let segment = UISegmentedControl(items: ["Ghost Partner", "Double Score"])
+        segment.addTarget(self, action: #selector(loneWolfTeamScoreChanged(_:)), for: .valueChanged)
+        segment.backgroundColor          = .systemGray6
+        segment.selectedSegmentTintColor = UIColor(displayP3Red: 0.751, green: 0.819, blue: 0.370, alpha: 1)
+        segment.setTitleTextAttributes([
+            .foregroundColor: UIColor.secondaryLabel,
+            .font: UIFont.systemFont(ofSize: 14, weight: .regular)
+        ], for: .normal)
+        segment.setTitleTextAttributes([
+            .foregroundColor: UIColor.white,
+            .font: UIFont.systemFont(ofSize: 14, weight: .semibold)
+        ], for: .selected)
+        segment.layer.borderColor = UIColor.systemGray4.cgColor
+        segment.layer.borderWidth = 1
+
+        let current = GameManager.shared.currentGame?.loneWolfTeamScore ?? .ghostPartner
+        segment.selectedSegmentIndex = (current == .doubleScore) ? 1 : 0
+
+        let lpr = UILongPressGestureRecognizer(target: self, action: #selector(loneWolfSegmentLongPressed(_:)))
+        segment.addGestureRecognizer(lpr)
+
+        let note = UILabel()
+        note.font          = UIFont.preferredFont(forTextStyle: .caption1)
+        note.textColor     = .secondaryLabel
+        note.numberOfLines = 0
+        note.text          = "Ghost: 3 on a par 3 → 6.5 · Double: 3 → 6"
+
+        let header = labeledHeaderRow(
+            title: Self.loneWolfInfoTitle,
+            infoTitle: Self.loneWolfInfoTitle,
+            infoMessage: Self.loneWolfInfoMessage
+        )
+
+        let section = UIStackView(arrangedSubviews: [header, segment, note])
+        section.axis    = .vertical
+        section.spacing = 6
+
+        let insertIndex = max(0, contentStack.arrangedSubviews.count - 1)
+        contentStack.insertArrangedSubview(section, at: insertIndex)
+        loneWolfSegment = segment
+        loneWolfSection = section
+    }
+
+    @objc private func loneWolfTeamScoreChanged(_ sender: UISegmentedControl) {
+        let value: LoneWolfTeamScore = (sender.selectedSegmentIndex == 1) ? .doubleScore : .ghostPartner
+        GameManager.shared.update { g in g.loneWolfTeamScore = value }
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+    }
+
+    @objc private func loneWolfSegmentLongPressed(_ gr: UILongPressGestureRecognizer) {
+        guard gr.state == .began else { return }
+        showInfoAlert(title: Self.loneWolfInfoTitle, message: Self.loneWolfInfoMessage)
+    }
+
+    @objc private func umbrellaLongPressed(_ gr: UILongPressGestureRecognizer) {
+        guard gr.state == .began else { return }
+        showInfoAlert(
+            title: "Umbrella",
+            message: "Umbrella On: win 6 or more points on a hole and the points double."
+        )
+    }
+
+    // MARK: - Info helpers
+
+    private func labeledHeaderRow(title: String, infoTitle: String, infoMessage: String) -> UIView {
+        let label = sectionHeader(title)
+
+        let btn = UIButton(type: .system)
+        btn.setImage(UIImage(systemName: "info.circle"), for: .normal)
+        btn.tintColor = .secondaryLabel
+        btn.addAction(UIAction { [weak self] _ in
+            self?.showInfoAlert(title: infoTitle, message: infoMessage)
+        }, for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            btn.widthAnchor.constraint(equalToConstant: 24),
+            btn.heightAnchor.constraint(equalToConstant: 24),
+        ])
+
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+
+        let row = UIStackView(arrangedSubviews: [label, spacer, btn])
+        row.axis      = .horizontal
+        row.alignment = .center
+        row.spacing   = 4
+        return row
+    }
+
+    private func showInfoAlert(title: String, message: String) {
+        let ac = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
+    }
+
     // MARK: - Press Style segment
+
+    private static let pressInfoTitle   = "Press Style"
+    private static let pressInfoMessage = "A press raises the bet for the rest of the nine. Press Style sets how it grows when pressed again. Doubling: ×2, ×4, ×8. Additive: ×2, ×3, ×4."
 
     private func installPressStyleSegment() {
         let segment = UISegmentedControl(items: ["Doubling", "Additive"])
@@ -439,13 +555,21 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         let style = GameManager.shared.currentGame?.pressStyle ?? .doubling
         segment.selectedSegmentIndex = (style == .additive) ? 1 : 0
 
+        let lpr = UILongPressGestureRecognizer(target: self, action: #selector(pressSegmentLongPressed(_:)))
+        segment.addGestureRecognizer(lpr)
+
         let note = UILabel()
         note.font          = UIFont.preferredFont(forTextStyle: .caption1)
         note.textColor     = .secondaryLabel
         note.numberOfLines = 0
         note.text          = "Doubling: ×2, ×4, ×8… each tap  •  Additive: +$base each tap (×2, ×3, ×4…)"
 
-        let section = UIStackView(arrangedSubviews: [sectionHeader("Press Style"), segment, note])
+        let header = labeledHeaderRow(
+            title: Self.pressInfoTitle,
+            infoTitle: Self.pressInfoTitle,
+            infoMessage: Self.pressInfoMessage
+        )
+        let section = UIStackView(arrangedSubviews: [header, segment, note])
         section.axis    = .vertical
         section.spacing = 6
 
@@ -455,6 +579,11 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         pressStyleSection = section
     }
 
+    @objc private func pressSegmentLongPressed(_ gr: UILongPressGestureRecognizer) {
+        guard gr.state == .began else { return }
+        showInfoAlert(title: Self.pressInfoTitle, message: Self.pressInfoMessage)
+    }
+
     @objc private func pressStyleChanged(_ sender: UISegmentedControl) {
         let style: HammerStyle = (sender.selectedSegmentIndex == 1) ? .additive : .doubling
         GameManager.shared.update { g in g.pressStyle = style }
@@ -462,6 +591,9 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     }
 
     // MARK: - Hammer Style segment
+
+    private static let hammerInfoTitle   = "Hammer Style"
+    private static let hammerInfoMessage = "Throw a hammer to raise the hole bet. The other team accepts or concedes the hole at the current stake. Hammer Style sets how the bet grows with each accepted hammer. Doubling: ×2, ×4, ×8. Additive: ×2, ×3, ×4."
 
     private func installHammerStyleSegment() {
         let segment = UISegmentedControl(items: ["Doubling", "Additive"])
@@ -482,13 +614,21 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         let style = GameManager.shared.currentGame?.hammerStyle ?? .additive
         segment.selectedSegmentIndex = (style == .additive) ? 1 : 0
 
+        let lpr = UILongPressGestureRecognizer(target: self, action: #selector(hammerSegmentLongPressed(_:)))
+        segment.addGestureRecognizer(lpr)
+
         let note = UILabel()
         note.font          = UIFont.preferredFont(forTextStyle: .caption1)
         note.textColor     = .secondaryLabel
         note.numberOfLines = 0
         note.text          = "Doubling: ×2, ×4, ×8… each tap  •  Additive: +$base each tap (×2, ×3, ×4…)"
 
-        let section = UIStackView(arrangedSubviews: [sectionHeader("Hammer Style"), segment, note])
+        let header = labeledHeaderRow(
+            title: Self.hammerInfoTitle,
+            infoTitle: Self.hammerInfoTitle,
+            infoMessage: Self.hammerInfoMessage
+        )
+        let section = UIStackView(arrangedSubviews: [header, segment, note])
         section.axis    = .vertical
         section.spacing = 6
 
@@ -496,6 +636,11 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         contentStack.insertArrangedSubview(section, at: insertIndex)
         hammerStyleSegment = segment
         hammerStyleSection = section
+    }
+
+    @objc private func hammerSegmentLongPressed(_ gr: UILongPressGestureRecognizer) {
+        guard gr.state == .began else { return }
+        showInfoAlert(title: Self.hammerInfoTitle, message: Self.hammerInfoMessage)
     }
 
     @objc private func hammerStyleChanged(_ sender: UISegmentedControl) {

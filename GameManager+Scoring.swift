@@ -217,7 +217,10 @@ extension GameManager {
                     return 999
                 case 1:
                     let lone = arr[0]
-                    return lone + (lone + Float(par + 1)) / 2.0
+                    switch g.loneWolfTeamScore ?? .ghostPartner {
+                    case .ghostPartner: return lone + (lone + Float(par + 1)) / 2.0
+                    case .doubleScore:  return lone * 2.0
+                    }
                 default:
                     return arr[0] + arr[1]
                 }

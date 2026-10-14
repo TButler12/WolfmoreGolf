@@ -31,7 +31,7 @@ final class HowToPlayViewController: UIViewController {
             systemImage: "person.3.fill",
             symbolColor: UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1),
             title: "Start a Round",
-            body: "Quick Start lets you type player names right on the next screen; Play from Loaded Contacts pulls in players you've saved before. Either way, enter each player's handicap and tee — WolfMore uses the gap between players' handicaps to hand out strokes on the hardest holes first.\n\nTap Edit Stake & Format to open Game Settings, where you can set the base dollar stake, switch between Wolf scoring formats, toggle Umbrella, and choose Press and Hammer styles (Doubling ×2/×4/×8 or Additive +$base each tap). Changes save instantly.",
+            body: "Quick Start lets you type player names right on the next screen; Play from Loaded Contacts pulls in players you've saved before. Either way, enter each player's handicap and tee — WolfMore uses the gap between players' handicaps to hand out strokes on the hardest holes first.\n\nTap Edit Stake & Format to open Game Settings, where you can set the base dollar stake, switch between Wolf scoring formats, toggle Umbrella, choose Press and Hammer styles (Doubling ×2/×4/×8 or Additive +$base each tap), and set Lone Wolf Team Score. Changes save instantly.\n\nLone Wolf Team Score sets how a player's team total is calculated when they go alone. Ghost Partner (default): score plus an imaginary partner halfway between that score and bogey — a 3 on a par 3 gives a team total of 6.5. Double Score: the lone score simply counts twice — a 3 gives 6.",
             badges: ["Quick Start", "Loaded Contacts", "Edit Stake & Format", "Game Settings"]
         ),
         HowToPlayPage(

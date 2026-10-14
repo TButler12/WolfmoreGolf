@@ -43,6 +43,11 @@ enum HammerStyle: String, Codable {
     case additive  // TGL style: stake grows linearly (+base each tap)
 }
 
+enum LoneWolfTeamScore: String, Codable {
+    case ghostPartner
+    case doubleScore
+}
+
 struct GameData: Codable {
     var holeStatsPromptMuted: Bool = false
     var scorePerHole: [[Int?]] = []
@@ -110,6 +115,7 @@ struct GameData: Codable {
     var hammerCountPerHole: [Int]?
     var hammerStyle: HammerStyle = .additive
     var pressStyle: HammerStyle = .doubling
+    var loneWolfTeamScore: LoneWolfTeamScore? = nil
     var wolfStake: Double? = nil
     var wolfPlayerPerHole: [Int?]?
     var wolfWentAlonePerHole: [Bool]?
