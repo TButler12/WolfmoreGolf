@@ -867,6 +867,17 @@ final class SupabaseService {
         )).execute()
     }
 
+    func deleteLiveEvent(code: String, organizerToken: String) async throws {
+        struct Params: Encodable {
+            let p_code: String
+            let p_organizer_token: String
+        }
+        try await client.rpc("delete_live_event", params: Params(
+            p_code: code.uppercased(),
+            p_organizer_token: organizerToken
+        )).execute()
+    }
+
     func fetchLiveEvent(code: String) async throws -> LiveEvent {
         let response: PostgrestResponse<LiveEvent> = try await client
             .from("live_events")

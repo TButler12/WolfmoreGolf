@@ -11,6 +11,7 @@ final class LiveConnectedViewController: UITableViewController {
         let icon: String        // SF Symbol name
         let tint: UIColor       // icon tint color
         let action: () -> Void
+        var removeAction: (() -> Void)? = nil  // non-nil enables swipe-to-Remove
     }
 
     private struct Section {
@@ -19,6 +20,7 @@ final class LiveConnectedViewController: UITableViewController {
     }
 
     private var sections: [Section] = []
+    private var showAllBoards = false
 
     // MARK: - Lifecycle
 
@@ -29,6 +31,8 @@ final class LiveConnectedViewController: UITableViewController {
             barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
         )
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
+        tableView.addGestureRecognizer(longPress)
     }
 
     // Tracks which tournament codes have a new day available (populated async)
@@ -205,9 +209,15 @@ final class LiveConnectedViewController: UITableViewController {
             result.append(Section(header: "RECENT TOURNAMENTS", rows: rows))
         }
 
-        let myBoards = MatchBoardStore.all()
-        if !myBoards.isEmpty {
-            let boardRows: [Row] = myBoards.prefix(5).map { board in
+        let allBoards = MatchBoardStore.all()
+        if !allBoards.isEmpty {
+            let cutoff    = Date().addingTimeInterval(-30 * 86_400).timeIntervalSince1970
+            let recent    = allBoards.filter { $0.createdAt >= cutoff }
+            let older     = allBoards.filter { $0.createdAt <  cutoff }
+            let visible   = showAllBoards ? allBoards : recent
+
+            let boardIcon = UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)
+            var boardRows: [Row] = visible.map { board in
                 let dateStr = DateFormatter.localizedString(
                     from: Date(timeIntervalSince1970: board.createdAt),
                     dateStyle: .short, timeStyle: .none)
@@ -215,14 +225,38 @@ final class LiveConnectedViewController: UITableViewController {
                     title: board.name,
                     subtitle: "\(board.code) · \(dateStr)",
                     icon: "rectangle.3.group.fill",
-                    tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)
-                ) { [weak self] in
-                    guard let self else { return }
-                    let vc = LiveEventViewController(eventCode: board.code)
-                    self.navigationController?.pushViewController(vc, animated: true)
-                }
+                    tint: boardIcon,
+                    action: { [weak self] in
+                        guard let self else { return }
+                        let vc = LiveEventViewController(eventCode: board.code,
+                                                        organizerToken: board.organizerToken)
+                        self.navigationController?.pushViewController(vc, animated: true)
+                    },
+                    removeAction: { [weak self] in
+                        MatchBoardStore.remove(code: board.code)
+                        self?.buildSections()
+                        self?.tableView.reloadData()
+                    }
+                )
             }
-            result.append(Section(header: "MY MATCH BOARDS", rows: boardRows))
+
+            if !showAllBoards && !older.isEmpty {
+                boardRows.append(Row(
+                    title: "Show older (\(older.count) more)",
+                    subtitle: "",
+                    icon: "clock.arrow.circlepath",
+                    tint: .secondaryLabel,
+                    action: { [weak self] in
+                        self?.showAllBoards = true
+                        self?.buildSections()
+                        self?.tableView.reloadData()
+                    }
+                ))
+            }
+
+            if !boardRows.isEmpty {
+                result.append(Section(header: "MY MATCH BOARDS", rows: boardRows))
+            }
         }
 
         sections = result
@@ -258,6 +292,34 @@ final class LiveConnectedViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         sections[indexPath.section].rows[indexPath.row].action()
+    }
+
+    override func tableView(
+        _ tableView: UITableView,
+        trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
+    ) -> UISwipeActionsConfiguration? {
+        guard let removeAction = sections[indexPath.section].rows[indexPath.row].removeAction
+        else { return nil }
+        let action = UIContextualAction(style: .destructive, title: "Remove") { _, _, done in
+            removeAction()
+            done(true)
+        }
+        return UISwipeActionsConfiguration(actions: [action])
+    }
+
+    @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
+        guard gesture.state == .began else { return }
+        let point = gesture.location(in: tableView)
+        guard let indexPath = tableView.indexPathForRow(at: point),
+              let removeAction = sections[indexPath.section].rows[indexPath.row].removeAction
+        else { return }
+        let rowTitle = sections[indexPath.section].rows[indexPath.row].title
+        let ac = UIAlertController(title: rowTitle, message: nil, preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "Remove from This Device", style: .destructive) { _ in
+            removeAction()
+        })
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(ac)
     }
 
     // MARK: - Actions

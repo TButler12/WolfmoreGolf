@@ -3,6 +3,7 @@ import UIKit
 final class LiveEventViewController: UIViewController {
 
     private let eventCode: String
+    private let organizerToken: String?
     private var event: LiveEvent?
     private var sessions: [WolfSession] = []
 
@@ -15,8 +16,9 @@ final class LiveEventViewController: UIViewController {
 
     // MARK: - Init
 
-    init(eventCode: String) {
-        self.eventCode = eventCode.uppercased()
+    init(eventCode: String, organizerToken: String? = nil) {
+        self.eventCode      = eventCode.uppercased()
+        self.organizerToken = organizerToken
         super.init(nibName: nil, bundle: nil)
     }
 
@@ -38,6 +40,17 @@ final class LiveEventViewController: UIViewController {
 
         SupabaseService.shared.subscribeToEventSessions(eventCode: eventCode) { [weak self] updated in
             self?.handleSessionUpdate(updated)
+        }
+
+        if organizerToken != nil {
+            let trashButton = UIBarButtonItem(
+                image: UIImage(systemName: "trash"),
+                style: .plain,
+                target: self,
+                action: #selector(deleteBoardTapped)
+            )
+            trashButton.tintColor = .systemRed
+            navigationItem.rightBarButtonItem = trashButton
         }
     }
 
@@ -245,6 +258,49 @@ final class LiveEventViewController: UIViewController {
     private func startPollTimer() {
         pollTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
             self?.fetchSessions()
+        }
+    }
+
+    // MARK: - Delete Board
+
+    @objc private func deleteBoardTapped() {
+        let name = event?.name ?? eventCode
+        let ac = UIAlertController(
+            title: "Delete Board?",
+            message: "Delete \"\(name)\" for everyone? Scores will be lost.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            self?.performDeleteBoard()
+        })
+        present(ac, animated: true)
+    }
+
+    private func performDeleteBoard() {
+        guard let token = organizerToken else { return }
+        let spinner = UIAlertController(title: nil, message: "Deleting board…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                try await SupabaseService.shared.deleteLiveEvent(code: eventCode, organizerToken: token)
+                MatchBoardStore.remove(code: eventCode)
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.navigationController?.popViewController(animated: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let err = UIAlertController(title: "Delete Failed",
+                                                    message: error.localizedDescription,
+                                                    preferredStyle: .alert)
+                        err.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(err, animated: true)
+                    }
+                }
+            }
         }
     }
 

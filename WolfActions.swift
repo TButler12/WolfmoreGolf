@@ -6,6 +6,7 @@ struct SavedMatchBoard: Codable {
     let code: String
     let name: String
     let createdAt: TimeInterval
+    var organizerToken: String?   // nil for boards joined/watched by others
 }
 
 enum MatchBoardStore {
@@ -18,17 +19,49 @@ enum MatchBoardStore {
         return boards
     }
 
-    static func save(code: String, name: String) {
+    static func recent(withinDays days: Int = 30) -> [SavedMatchBoard] {
+        let cutoff = Date().addingTimeInterval(-Double(days) * 86_400).timeIntervalSince1970
+        return all().filter { $0.createdAt >= cutoff }
+    }
+
+    static func save(code: String, name: String, organizerToken: String? = nil) {
         var current = all()
         current.removeAll { $0.code == code }
-        current.insert(SavedMatchBoard(code: code, name: name, createdAt: Date().timeIntervalSince1970), at: 0)
-        if let data = try? JSONEncoder().encode(Array(current.prefix(10))) {
+        current.insert(SavedMatchBoard(code: code, name: name,
+                                       createdAt: Date().timeIntervalSince1970,
+                                       organizerToken: organizerToken), at: 0)
+        if let data = try? JSONEncoder().encode(Array(current.prefix(50))) {
+            UserDefaults.standard.set(data, forKey: key)
+        }
+    }
+
+    static func remove(code: String) {
+        var current = all()
+        current.removeAll { $0.code == code }
+        if let data = try? JSONEncoder().encode(current) {
             UserDefaults.standard.set(data, forKey: key)
         }
     }
 
     static func todaysBoard() -> SavedMatchBoard? {
         all().first { Calendar.current.isDateInToday(Date(timeIntervalSince1970: $0.createdAt)) }
+    }
+}
+
+// MARK: - Hidden Remote Nassau Matches (local-only list, never touches server)
+
+enum HiddenMatchStore {
+    private static let key = "hiddenRemoteMatchIds"
+
+    static func hiddenIds() -> Set<String> {
+        Set(UserDefaults.standard.stringArray(forKey: key) ?? [])
+    }
+
+    static func hide(id: String) {
+        var ids = Array(hiddenIds())
+        guard !ids.contains(id) else { return }
+        ids.append(id)
+        UserDefaults.standard.set(ids, forKey: key)
     }
 }
 
@@ -681,7 +714,8 @@ enum WolfActions {
             Task {
                 do {
                     let result = try await SupabaseService.shared.createLiveEvent(name: name, code: code)
-                    MatchBoardStore.save(code: result.eventCode, name: name)
+                    MatchBoardStore.save(code: result.eventCode, name: name,
+                                         organizerToken: result.organizerToken)
                     GameManager.shared.update { g in
                         g.liveEventId             = result.eventId
                         g.liveEventCode           = result.eventCode

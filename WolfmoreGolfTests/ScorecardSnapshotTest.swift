@@ -76,3 +76,92 @@ final class ScorecardSnapshotTest: XCTestCase {
         NSLog("Share image saved to: \(shareUrl.path)")
     }
 }
+
+// MARK: - LiveConnectedViewController match boards snapshot
+
+final class LiveConnectedSnapshotTest: XCTestCase {
+
+    func testRenderMyMatchBoardsSection() throws {
+        // Seed two recent boards and one older board
+        UserDefaults.standard.removeObject(forKey: MatchBoardStore.key)
+        let now = Date().timeIntervalSince1970
+        let boards: [[String: Any]] = [
+            ["code": "ESATMTC",  "name": "Saturday Match Play", "createdAt": now - 86400,      "organizerToken": "fake-tok"],
+            ["code": "ERYDRCUP", "name": "Ryder Cup",            "createdAt": now - 5*86400],
+            ["code": "EOLDONE",  "name": "Old Board Oct",         "createdAt": now - 35*86400],
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: boards) {
+            UserDefaults.standard.set(data, forKey: MatchBoardStore.key)
+        }
+
+        let vc  = LiveConnectedViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        let size = CGSize(width: 390, height: 844)
+        let win = UIWindow(frame: CGRect(origin: .zero, size: size))
+        win.rootViewController = nav
+        win.makeKeyAndVisible()
+
+        vc.loadViewIfNeeded()
+        nav.view.frame = CGRect(origin: .zero, size: size)
+        nav.view.layoutIfNeeded()
+        vc.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.1))
+
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let img = renderer.image { ctx in nav.view.layer.render(in: ctx.cgContext) }
+        let url = URL(fileURLWithPath: "/tmp/live_connected_boards.png")
+        try img.pngData()!.write(to: url)
+        NSLog("Live Connected screenshot saved to: \(url.path)")
+
+        UserDefaults.standard.removeObject(forKey: MatchBoardStore.key)
+    }
+}
+
+final class LiveConnectedBoardsSectionTest: XCTestCase {
+
+    func testRenderMyMatchBoardsSectionFull() throws {
+        UserDefaults.standard.removeObject(forKey: MatchBoardStore.key)
+        let now = Date().timeIntervalSince1970
+        let boards: [[String: Any]] = [
+            ["code": "ESATMTC",  "name": "Saturday Match Play", "createdAt": now - 86400,    "organizerToken": "fake-tok"],
+            ["code": "ERYDRCUP", "name": "Ryder Cup",           "createdAt": now - 5*86400],
+            ["code": "EOLDONE",  "name": "Old Board Oct",        "createdAt": now - 35*86400],
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: boards) {
+            UserDefaults.standard.set(data, forKey: MatchBoardStore.key)
+        }
+
+        let vc  = LiveConnectedViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        let size = CGSize(width: 390, height: 1600)
+        let win = UIWindow(frame: CGRect(origin: .zero, size: size))
+        win.rootViewController = nav
+        win.makeKeyAndVisible()
+
+        vc.loadViewIfNeeded()
+        nav.view.frame = CGRect(origin: .zero, size: size)
+        nav.view.layoutIfNeeded()
+        vc.view.layoutIfNeeded()
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.1))
+
+        // Scroll to bottom to show MY MATCH BOARDS section
+        if let tv = vc.tableView as? UITableView {
+            let sections = tv.numberOfSections
+            if sections > 0 {
+                let rows = tv.numberOfRows(inSection: sections - 1)
+                if rows > 0 {
+                    tv.scrollToRow(at: IndexPath(row: 0, section: sections - 1), at: .bottom, animated: false)
+                }
+            }
+        }
+        RunLoop.main.run(until: Date(timeIntervalSinceNow: 0.05))
+
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let img = renderer.image { ctx in nav.view.layer.render(in: ctx.cgContext) }
+        let url = URL(fileURLWithPath: "/tmp/live_connected_boards_full.png")
+        try img.pngData()!.write(to: url)
+        NSLog("Full Live Connected screenshot saved to: \(url.path)")
+
+        UserDefaults.standard.removeObject(forKey: MatchBoardStore.key)
+    }
+}

@@ -55,7 +55,8 @@ final class RemoteMatchesViewController: UIViewController {
             do {
                 let fetched = try await SupabaseService.shared.fetchActiveMatches()
                 await MainActor.run {
-                    let sorted = fetched.sorted {
+                    let hidden = HiddenMatchStore.hiddenIds()
+                    let sorted = fetched.filter { !hidden.contains($0.id) }.sorted {
                         let d0 = Self.parseSupabaseDate($0.createdAt ?? "") ?? .distantPast
                         let d1 = Self.parseSupabaseDate($1.createdAt ?? "") ?? .distantPast
                         return d0 > d1
@@ -83,25 +84,19 @@ final class RemoteMatchesViewController: UIViewController {
         allSections[indexPath.section].rows[indexPath.row]
     }
 
-    private func archiveMatch(at indexPath: IndexPath) {
+    private func removeMatch(at indexPath: IndexPath) {
         let m = match(at: indexPath)
-        Task {
-            do {
-                try await SupabaseService.shared.archiveMatch(id: m.id)
-                await MainActor.run {
-                    let isPast = self.allSections[indexPath.section].isPast
-                    if isPast {
-                        self.pastMatches.removeAll { $0.id == m.id }
-                    } else {
-                        self.todayMatches.removeAll { $0.id == m.id }
-                    }
-                    self.tableView.deleteRows(at: [indexPath], with: .automatic)
-                }
-            } catch {
-                await MainActor.run {
-                    self.showAlert(title: "Could not delete match", message: error.localizedDescription)
-                }
-            }
+        HiddenMatchStore.hide(id: m.id)
+        let isPast = allSections[indexPath.section].isPast
+        if isPast {
+            pastMatches.removeAll { $0.id == m.id }
+        } else {
+            todayMatches.removeAll { $0.id == m.id }
+        }
+        if tableView.numberOfRows(inSection: indexPath.section) == 1 {
+            tableView.deleteSections([indexPath.section], with: .automatic)
+        } else {
+            tableView.deleteRows(at: [indexPath], with: .automatic)
         }
     }
 
@@ -185,8 +180,8 @@ extension RemoteMatchesViewController: UITableViewDelegate {
         _ tableView: UITableView,
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        let action = UIContextualAction(style: .destructive, title: "Delete") { [weak self] _, _, done in
-            self?.archiveMatch(at: indexPath)
+        let action = UIContextualAction(style: .destructive, title: "Remove") { [weak self] _, _, done in
+            self?.removeMatch(at: indexPath)
             done(true)
         }
         action.backgroundColor = .systemRed
