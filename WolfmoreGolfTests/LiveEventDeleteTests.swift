@@ -2,8 +2,15 @@ import XCTest
 @testable import WolfmoreGolf
 
 // Integration test — hits the real Supabase project.
-// Requires network access and the delete_live_event RPC to be deployed.
+// Skipped by default. Set RUN_LIVE_TESTS=1 in the scheme's environment variables to run.
 final class LiveEventDeleteTests: XCTestCase {
+
+    override func setUpWithError() throws {
+        try XCTSkipUnless(
+            ProcessInfo.processInfo.environment["RUN_LIVE_TESTS"] == "1",
+            "Skipping live server tests — set RUN_LIVE_TESTS=1 to run"
+        )
+    }
 
     func testDeleteForEveryone_creatorTokenDeletesBoard() async throws {
         // 1. Create a real board on the server
