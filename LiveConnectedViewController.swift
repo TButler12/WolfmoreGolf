@@ -11,7 +11,8 @@ final class LiveConnectedViewController: UITableViewController {
         let icon: String        // SF Symbol name
         let tint: UIColor       // icon tint color
         let action: () -> Void
-        var removeAction: (() -> Void)? = nil  // non-nil enables swipe-to-Remove
+        var removeAction: (() -> Void)? = nil        // non-nil enables swipe-to-Remove
+        var creatorDeleteAction: (() -> Void)? = nil // non-nil → board creator; swipe shows choice sheet
     }
 
     private struct Section {
@@ -236,6 +237,11 @@ final class LiveConnectedViewController: UITableViewController {
                         MatchBoardStore.remove(code: board.code)
                         self?.buildSections()
                         self?.tableView.reloadData()
+                    },
+                    creatorDeleteAction: board.organizerToken.map { token in
+                        { [weak self] in
+                            self?.confirmAndDeleteBoard(code: board.code, name: board.name, token: token)
+                        }
                     }
                 )
             }
@@ -298,11 +304,15 @@ final class LiveConnectedViewController: UITableViewController {
         _ tableView: UITableView,
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        guard let removeAction = sections[indexPath.section].rows[indexPath.row].removeAction
-        else { return nil }
-        let action = UIContextualAction(style: .destructive, title: "Remove") { _, _, done in
-            removeAction()
+        let row = sections[indexPath.section].rows[indexPath.row]
+        guard row.removeAction != nil else { return nil }
+        let action = UIContextualAction(style: .destructive, title: "Remove") { [weak self] _, _, done in
             done(true)
+            if row.creatorDeleteAction != nil {
+                self?.presentRemoveSheet(for: row)
+            } else {
+                row.removeAction?()
+            }
         }
         return UISwipeActionsConfiguration(actions: [action])
     }
@@ -310,16 +320,63 @@ final class LiveConnectedViewController: UITableViewController {
     @objc private func handleLongPress(_ gesture: UILongPressGestureRecognizer) {
         guard gesture.state == .began else { return }
         let point = gesture.location(in: tableView)
-        guard let indexPath = tableView.indexPathForRow(at: point),
-              let removeAction = sections[indexPath.section].rows[indexPath.row].removeAction
-        else { return }
-        let rowTitle = sections[indexPath.section].rows[indexPath.row].title
-        let ac = UIAlertController(title: rowTitle, message: nil, preferredStyle: .actionSheet)
-        ac.addAction(UIAlertAction(title: "Remove from This Device", style: .destructive) { _ in
-            removeAction()
+        guard let indexPath = tableView.indexPathForRow(at: point) else { return }
+        let row = sections[indexPath.section].rows[indexPath.row]
+        guard row.removeAction != nil else { return }
+        presentRemoveSheet(for: row)
+    }
+
+    private func presentRemoveSheet(for row: Row) {
+        let ac = UIAlertController(
+            title: row.title,
+            message: row.creatorDeleteAction != nil
+                ? "You created this board. Removing it from your list will delete your organizer access on this device."
+                : nil,
+            preferredStyle: .actionSheet
+        )
+        ac.addAction(UIAlertAction(title: "Remove from My List", style: .destructive) { _ in
+            row.removeAction?()
         })
+        if row.creatorDeleteAction != nil {
+            ac.addAction(UIAlertAction(title: "Delete for Everyone", style: .destructive) { _ in
+                row.creatorDeleteAction?()
+            })
+        }
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(ac)
+    }
+
+    private func confirmAndDeleteBoard(code: String, name: String, token: String) {
+        let ac = UIAlertController(
+            title: "Delete \"\(name)\" for Everyone?",
+            message: "Scores will be lost.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Delete", style: .destructive) { [weak self] _ in
+            self?.executeDeleteBoard(code: code, token: token)
+        })
+        present(ac, animated: true)
+    }
+
+    private func executeDeleteBoard(code: String, token: String) {
+        Task {
+            do {
+                try await SupabaseService.shared.deleteLiveEvent(code: code, organizerToken: token)
+                MatchBoardStore.remove(code: code)
+                await MainActor.run {
+                    self.buildSections()
+                    self.tableView.reloadData()
+                }
+            } catch {
+                let msg = error.localizedDescription
+                let friendly = msg.localizedCaseInsensitiveContains("could not find")
+                    || msg.localizedCaseInsensitiveContains("does not exist")
+                    ? "Board deletion isn't available right now. Please try again later."
+                    : msg
+                await MainActor.run { self.showError(friendly) }
+            }
+        }
     }
 
     // MARK: - Actions

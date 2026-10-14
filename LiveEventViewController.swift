@@ -293,8 +293,15 @@ final class LiveEventViewController: UIViewController {
             } catch {
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
+                        let msg = error.localizedDescription
+                        // PostgREST returns "Could not find the function" when the RPC hasn't been
+                        // deployed yet. Show something the user can act on instead of a raw error.
+                        let friendly = msg.localizedCaseInsensitiveContains("could not find")
+                            || msg.localizedCaseInsensitiveContains("does not exist")
+                            ? "Board deletion isn't available right now. Please try again later."
+                            : msg
                         let err = UIAlertController(title: "Delete Failed",
-                                                    message: error.localizedDescription,
+                                                    message: friendly,
                                                     preferredStyle: .alert)
                         err.addAction(UIAlertAction(title: "OK", style: .default))
                         self.present(err, animated: true)
