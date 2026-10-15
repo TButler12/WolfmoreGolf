@@ -9,7 +9,7 @@ import UIKit
 
 final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
-    @IBOutlet weak var baseStakeField: UITextField!
+    @IBOutlet weak var baseStakeField: UITextField?
     @IBOutlet weak var saveButton: UIButton!
     @IBOutlet weak var umbrellaButton: UIButton!
     @IBOutlet weak var courseNameLabel: UILabel!
@@ -70,8 +70,8 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
 
         buildScrollLayout()
 
-        baseStakeField.delegate = self
-        baseStakeField.keyboardType = .decimalPad
+        baseStakeField?.delegate = self
+        baseStakeField?.keyboardType = .decimalPad
 
         let bar = UIToolbar()
         bar.sizeToFit()
@@ -79,13 +79,13 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             .flexibleSpace(),
             UIBarButtonItem(title: "Done", style: .done, target: self, action: #selector(doneTapped))
         ]
-        baseStakeField.inputAccessoryView = bar
+        baseStakeField?.inputAccessoryView = bar
 
         if let g = GameManager.shared.currentGame {
-            baseStakeField.text = formatMoney(Double(g.baseGameStake))
+            baseStakeField?.text = formatMoney(Double(g.baseGameStake))
             umbrellaMuted = g.isUmbrella
         } else {
-            baseStakeField.text = "2"
+            baseStakeField?.text = "2"
             umbrellaMuted = false
         }
 
@@ -174,10 +174,6 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             let stakeVal = g0?.baseGameStake ?? 2
             info.text = "Set by tournament organizer — $\(stakeVal) per hole"
             main.addArrangedSubview(vSection("Base Stake", body: info))
-            let dummy = UITextField()
-            dummy.text = String(stakeVal)
-            dummy.isHidden = true
-            baseStakeField = dummy
         } else {
             let stakeField = UITextField()
             stakeField.borderStyle = .roundedRect
@@ -424,7 +420,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
                 }
             }
         }
-        if newType.isMatchPlay { baseStakeField.text = "1" }
+        if newType.isMatchPlay { baseStakeField?.text = "1" }
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         umbrellaButton.alpha = (sender.selectedSegmentIndex == 0) ? 1.0 : 0.4
         refreshMatchPlayUI()
@@ -436,6 +432,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     private static let loneWolfInfoMessage = "When a player goes alone, their team total is compared to the other team's total. Ghost Partner: your score plus an imaginary partner halfway between your score and bogey (3 on a par 3 → 3 + 3.5 = 6.5). Double Score: your score counts twice (3 → 6)."
 
     private func installLoneWolfTeamScoreSegment() {
+        guard GameManager.shared.currentGame?.tournamentCode == nil else { return }
         let segment = UISegmentedControl(items: ["Ghost Partner", "Double Score"])
         segment.addTarget(self, action: #selector(loneWolfTeamScoreChanged(_:)), for: .valueChanged)
         segment.backgroundColor          = .systemGray6
@@ -1678,7 +1675,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
             return
         }
 
-        let clean = (baseStakeField.text ?? "")
+        let clean = (baseStakeField?.text ?? "")
             .replacingOccurrences(of: "$", with: "")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 

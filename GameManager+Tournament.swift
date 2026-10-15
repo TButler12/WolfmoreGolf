@@ -96,6 +96,7 @@ extension GameManager {
             } else {
                 g.modifiedStablefordTable = ModifiedStablefordTable()
             }
+            g.loneWolfTeamScore = .ghostPartner
             g.gameType = nil
             switch record.gameType {
             case "stableford": g.gameType = .tournament
