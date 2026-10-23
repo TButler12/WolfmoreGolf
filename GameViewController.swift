@@ -1174,7 +1174,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let scoreBtn = makeTabButton(icon: "target", title: "Score")
         scoreBtn.addTarget(self, action: #selector(liveTabScoreTapped), for: .touchUpInside)
 
-        let liveBtn = makeTabButton(icon: "tv", title: "Live Wolf")
+        let liveBtn = makeTabButton(icon: "tv", title: "Live Board")
         liveBtn.addTarget(self, action: #selector(liveTabLiveTapped), for: .touchUpInside)
 
         let leaderboardBtn = makeTabButton(icon: "trophy", title: "Leaderboard")
@@ -6008,7 +6008,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             lwCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
             }
-            lwCfg.title = "Live Wolf"
+            lwCfg.title = "Live Board"
             let liveWolfBtn = UIButton(configuration: lwCfg)
             liveWolfBtn.addTarget(self, action: #selector(liveWolfTapped), for: .touchUpInside)
 
