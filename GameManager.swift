@@ -19,6 +19,7 @@ final class GameManager {
 
     private init() {
         performSlotMigrationIfNeeded()
+        performTournamentToLocalMigrationIfNeeded()
     }
 
     // Persistence keys
@@ -129,6 +130,55 @@ final class GameManager {
 
     /// Remove the tournament slot entirely. Never touches currentGame_v1 or round history.
     func clearTournamentSlot() {
+        UserDefaults.standard.removeObject(forKey: tournamentKey)
+    }
+
+    /// Clears all tournament fields from the current local game.
+    func detachTournament() {
+        guard currentGame?.tournamentCode != nil else { return }
+        update { g in
+            g.tournamentCode        = nil
+            g.tournamentName        = nil
+            g.tournamentGameType    = nil
+            g.tournamentScoringType = nil
+            g.tournamentDay         = 1
+            g.tournamentIsOrganizer = false
+            g.tournamentIsCreator   = false
+            g.tournamentMatchId     = nil
+            g.groupCode             = nil
+            g.tournamentPotAmount   = nil
+            g.tournamentCarryTies   = nil
+            g.tournamentStablefordEnabled = nil
+        }
+        saveCurrent()
+        NotificationCenter.default.post(name: .reloadUI, object: nil)
+    }
+
+    /// One-time migration from the old two-slot model to the new single-slot model.
+    /// If a tournament slot exists with a tournament code, either moves it to the local slot
+    /// (if local is empty) or saves it to Restore (if local already has a round).
+    func performTournamentToLocalMigrationIfNeeded() {
+        let key = "tournamentToLocalMigration_v1"
+        guard !UserDefaults.standard.bool(forKey: key) else { return }
+        defer { UserDefaults.standard.set(true, forKey: key) }
+
+        // Only migrate if tournament slot exists and has a tournament code
+        guard let tData = UserDefaults.standard.data(forKey: tournamentKey),
+              let tGame = try? JSONDecoder().decode(GameData.self, from: tData),
+              tGame.tournamentCode != nil else { return }
+
+        let localHasRound = UserDefaults.standard.data(forKey: currentKey)
+            .flatMap { try? JSONDecoder().decode(GameData.self, from: $0) } != nil
+
+        if localHasRound {
+            // Only save to Restore if the tournament game has actual progress; otherwise discard silently.
+            if tGame.holeCommitted.contains(true) {
+                ResetSnapshotStore.shared.save(tGame)
+            }
+        } else {
+            // Local slot empty — move tournament game into local slot
+            UserDefaults.standard.set(tData, forKey: currentKey)
+        }
         UserDefaults.standard.removeObject(forKey: tournamentKey)
     }
 

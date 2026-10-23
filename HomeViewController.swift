@@ -35,6 +35,11 @@ final class ViewController: UIViewController,
     private weak var tournamentGroupButton: UIButton?
     private weak var tournamentContinueButton: UIButton?
     private weak var tournamentMenuButton: UIButton?
+    private weak var tournamentInProgressNameLabel: UILabel?
+    private weak var tournamentInProgressDivider: UIView?
+    private weak var tournamentInProgressGroupButton: UIButton?
+    private weak var tournamentInProgressLeaderboardButton: UIButton?
+    private weak var tournamentInProgressButtonRow: UIStackView?
     private weak var editCourseButton: UIButton?
     private weak var tournamentButton: UIButton?
     private weak var liveConnectedButton: UIButton?
@@ -355,7 +360,6 @@ final class ViewController: UIViewController,
         let pad: CGFloat = 16
 
         let caption = UILabel()
-        caption.text = "ROUND IN PROGRESS"
         caption.font = .systemFont(ofSize: 10, weight: .semibold)
         caption.textColor = forestGreen.withAlphaComponent(0.65)
         caption.translatesAutoresizingMaskIntoConstraints = false
@@ -379,19 +383,61 @@ final class ViewController: UIViewController,
         card.addSubview(detailLbl)
         inProgressDetailLabel = detailLbl
 
-        let chipsRow = UIStackView()
-        chipsRow.axis = .horizontal
-        chipsRow.spacing = 6
-        chipsRow.alignment = .center
-        chipsRow.translatesAutoresizingMaskIntoConstraints = false
-        card.addSubview(chipsRow)
-        inProgressChipsRow = chipsRow
-
         let chevron = UIImageView(image: UIImage(systemName: "chevron.right.circle.fill"))
         chevron.tintColor = forestGreen
         chevron.contentMode = .scaleAspectFit
         chevron.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(chevron)
+
+        // Tournament-only: name/day label
+        let tNameLbl = UILabel()
+        tNameLbl.font = .systemFont(ofSize: 13, weight: .regular)
+        tNameLbl.textColor = forestGreen.withAlphaComponent(0.65)
+        tNameLbl.isHidden = true
+        tournamentInProgressNameLabel = tNameLbl
+
+        // Chips row (always visible when card is visible)
+        let chipsRow = UIStackView()
+        chipsRow.axis = .horizontal
+        chipsRow.spacing = 6
+        chipsRow.alignment = .center
+        inProgressChipsRow = chipsRow
+
+        // Tournament-only: thin divider
+        let divider = UIView()
+        divider.backgroundColor = forestGreen.withAlphaComponent(0.2)
+        divider.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        divider.isHidden = true
+        tournamentInProgressDivider = divider
+
+        // Tournament-only: Group + Leaderboard buttons
+        let groupBtn = UIButton(type: .system)
+        groupBtn.setTitle("👥 Group", for: .normal)
+        groupBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        groupBtn.tintColor = forestGreen
+        groupBtn.addTarget(self, action: #selector(tournamentInProgressGroupTapped), for: .touchUpInside)
+        tournamentInProgressGroupButton = groupBtn
+
+        let lbBtn = UIButton(type: .system)
+        lbBtn.setTitle("🏆 Leaderboard", for: .normal)
+        lbBtn.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        lbBtn.tintColor = forestGreen
+        lbBtn.addTarget(self, action: #selector(tournamentInProgressLeaderboardTapped), for: .touchUpInside)
+        tournamentInProgressLeaderboardButton = lbBtn
+
+        let buttonRow = UIStackView(arrangedSubviews: [groupBtn, lbBtn])
+        buttonRow.axis = .horizontal
+        buttonRow.spacing = 20
+        buttonRow.alignment = .center
+        buttonRow.isHidden = true
+        tournamentInProgressButtonRow = buttonRow
+
+        // Bottom stack collapses hidden items automatically
+        let bottomStack = UIStackView(arrangedSubviews: [tNameLbl, chipsRow, divider, buttonRow])
+        bottomStack.axis = .vertical
+        bottomStack.spacing = 8
+        bottomStack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(bottomStack)
 
         NSLayoutConstraint.activate([
             caption.topAnchor.constraint(equalTo: card.topAnchor, constant: pad),
@@ -406,14 +452,15 @@ final class ViewController: UIViewController,
             detailLbl.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
             detailLbl.trailingAnchor.constraint(equalTo: chevron.leadingAnchor, constant: -8),
 
-            chipsRow.topAnchor.constraint(equalTo: detailLbl.bottomAnchor, constant: 10),
-            chipsRow.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
-            chipsRow.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -pad),
+            bottomStack.topAnchor.constraint(equalTo: detailLbl.bottomAnchor, constant: 10),
+            bottomStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: pad),
+            bottomStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -pad),
+            bottomStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -pad),
 
-            chevron.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            chevron.centerYAnchor.constraint(equalTo: titleLbl.centerYAnchor),
             chevron.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -pad),
             chevron.widthAnchor.constraint(equalToConstant: 28),
-            chevron.heightAnchor.constraint(equalToConstant: 28)
+            chevron.heightAnchor.constraint(equalToConstant: 28),
         ])
 
         return card
@@ -577,7 +624,7 @@ final class ViewController: UIViewController,
     }
 
     @objc private func tournamentCardLeaderboardTapped() {
-        guard let g = GameManager.shared.tournamentGameData,
+        guard let g = GameManager.shared.localGameData,
               let code = g.tournamentCode else { return }
         let gameType  = g.tournamentGameType
         let sfEnabled = g.tournamentStablefordEnabled ?? false
@@ -586,7 +633,7 @@ final class ViewController: UIViewController,
     }
 
     @objc private func tournamentMenuTapped() {
-        guard let g = GameManager.shared.tournamentGameData,
+        guard let g = GameManager.shared.localGameData,
               let code = g.tournamentCode else { return }
         let name = g.tournamentName ?? "Tournament"
         let isOrganizer = g.tournamentIsOrganizer
@@ -614,7 +661,7 @@ final class ViewController: UIViewController,
             message: "This removes the tournament from your phone. Results and the leaderboard stay available to others.",
             preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Remove", style: .destructive) { [weak self] _ in
-            GameManager.shared.clearTournamentSlot()
+            GameManager.shared.detachTournament()
             self?.refreshHomeUI()
         })
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -634,7 +681,7 @@ final class ViewController: UIViewController,
                 guard let self else { return }
                 do {
                     try await SupabaseService.shared.endTournament(code: code)
-                    GameManager.shared.clearTournamentSlot()
+                    GameManager.shared.detachTournament()
                     await MainActor.run {
                         spinner.dismiss(animated: false) {
                             self.refreshHomeUI()
@@ -659,10 +706,7 @@ final class ViewController: UIViewController,
     }
 
     @objc private func tournamentContinueTapped() {
-        guard let code = GameManager.shared.tournamentGameData?.tournamentCode, !code.isEmpty else { return }
-
-        // applyTournamentJoin writes to the tournament slot only — local round is untouched.
-        // No save dialog needed on this path.
+        guard let code = GameManager.shared.localGameData?.tournamentCode, !code.isEmpty else { return }
         let spinner = UIAlertController(title: nil, message: "Loading tournament…", preferredStyle: .alert)
         present(spinner, animated: true)
 
@@ -696,9 +740,14 @@ final class ViewController: UIViewController,
     }
 
     @objc private func tournamentCardGroupTapped() {
-        guard let g = GameManager.shared.tournamentGameData,
-              let code = g.tournamentCode else { return }
+        // The old tournamentInfoCard is always hidden in the new architecture.
+        // Redirect to the in-progress card's group button action.
+        tournamentInProgressGroupTapped()
+    }
 
+    @objc private func tournamentInProgressGroupTapped() {
+        guard let g = GameManager.shared.localGameData,
+              let code = g.tournamentCode else { return }
         if g.tournamentGameType == "scramble" { return }
 
         let spinner = UIAlertController(title: nil, message: "Setting up…", preferredStyle: .alert)
@@ -706,16 +755,14 @@ final class ViewController: UIViewController,
 
         Task { [weak self] in
             guard let self else { return }
-
             let record: TournamentRecord
             do {
                 record = try await SupabaseService.shared.fetchTournament(code: code)
             } catch {
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
-                        let alert = UIAlertController(
-                            title: "Connection Error",
-                            message: "Couldn't reach the server. Check your connection and try again.",
+                        let alert = UIAlertController(title: "Connection Error",
+                            message: "Couldn't reach the server.",
                             preferredStyle: .alert)
                         alert.addAction(UIAlertAction(title: "OK", style: .default))
                         self.present(alert, animated: true)
@@ -724,14 +771,11 @@ final class ViewController: UIViewController,
                 return
             }
 
-            let liveDay = record.currentDay ?? (g.tournamentDay ?? 1)
+            let liveDay  = record.currentDay ?? (g.tournamentDay ?? 1)
             let savedDay = g.tournamentDay ?? 1
             let isNewDay = liveDay > savedDay
-
-            // New day → new matchId so scores don't collide with previous day
             let newMatchId = isNewDay ? UUID().uuidString : (g.tournamentMatchId ?? UUID().uuidString)
 
-            // Organizer clears all roster claims so everyone is available on the new day
             if isNewDay {
                 let isOrg = (record.createdBy == DeviceID.id)
                     || (record.coOrganizerDevices?.contains(DeviceID.id) == true)
@@ -739,12 +783,9 @@ final class ViewController: UIViewController,
             }
 
             await MainActor.run {
-                // All GameManager mutations on main thread to avoid racing a local-round session
-                GameManager.shared.activeSlot = .tournament
-                _ = GameManager.shared.loadTournamentSlot(notify: false)
                 GameManager.shared.update { g in
-                    g.tournamentDay         = liveDay
-                    g.tournamentMatchId     = newMatchId
+                    g.tournamentDay     = liveDay
+                    g.tournamentMatchId = newMatchId
                     g.tournamentScoringType = record.scoring
                     g.tournamentPotAmount   = record.potAmount
                     g.tournamentCarryTies   = record.carryTies
@@ -768,9 +809,7 @@ final class ViewController: UIViewController,
                 }
                 UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
                 GameManager.shared.saveCurrent()
-            }
 
-            await MainActor.run {
                 spinner.dismiss(animated: false) {
                     let sb = UIStoryboard(name: "Main", bundle: nil)
                     guard let manageVC = sb.instantiateViewController(withIdentifier: "ManagePlayersVC")
@@ -786,6 +825,15 @@ final class ViewController: UIViewController,
                 }
             }
         }
+    }
+
+    @objc private func tournamentInProgressLeaderboardTapped() {
+        guard let g = GameManager.shared.localGameData,
+              let code = g.tournamentCode else { return }
+        let gameType  = g.tournamentGameType
+        let sfEnabled = g.tournamentStablefordEnabled ?? false
+        let vc = TournamentLeaderboardViewController(code: code, gameType: gameType, stablefordEnabled: sfEnabled)
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func buildNewRoundSection() -> UIView {
@@ -977,38 +1025,7 @@ final class ViewController: UIViewController,
     }
 
     private func refreshTournamentInfoCard() {
-        guard let card = tournamentInfoCard else { return }
-        guard let g = GameManager.shared.tournamentGameData,
-              let code = g.tournamentCode, !code.isEmpty else {
-            card.isHidden = true
-            return
-        }
-        tournamentInfoNameLabel?.text = g.tournamentName ?? "Tournament"
-        let day = g.tournamentDay ?? 1
-        let courseName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        let coursePrefix = courseName.isEmpty ? "" : "\(courseName) · "
-        tournamentInfoSubtitleLabel?.text = "\(coursePrefix)Day \(day) · Code: \(code)"
-        tournamentGroupButton?.isHidden = (g.tournamentGameType == "scramble")
-        let hasProgress = g.holeCommitted.contains(true) || g.hole > 0
-        tournamentContinueButton?.isHidden = !hasProgress
-        card.isHidden = false
-
-        // Background fetch: check for tournament end and stale day.
-        // Uses patchTournamentSlot so it never touches activeSlot or currentGame.
-        Task { [weak self] in
-            guard let record = try? await SupabaseService.shared.fetchTournament(code: code) else { return }
-            if record.finishedAt != nil {
-                GameManager.shared.clearTournamentSlot()
-                await MainActor.run { self?.refreshHomeUI() }
-                return
-            }
-            guard let liveDay = record.currentDay, liveDay != day else { return }
-            GameManager.shared.patchTournamentSlot { g in g.tournamentDay = liveDay }
-            UserDefaults.standard.set(liveDay, forKey: "lastTournamentDay_\(code)")
-            await MainActor.run {
-                self?.tournamentInfoSubtitleLabel?.text = "\(coursePrefix)Day \(liveDay) · Code: \(code)"
-            }
-        }
+        tournamentInfoCard?.isHidden = true
     }
 
     private func resetBannerText(for entry: ResetSnapshotStore.Entry) -> String {
@@ -1093,31 +1110,32 @@ final class ViewController: UIViewController,
 
     private func refreshInProgressCard() {
         guard let card = inProgressCard else { return }
-
-        // Local slot only; hide if it carries a tournament code (migration artefact or stale state).
-        guard let g = GameManager.shared.localGameData, g.tournamentCode == nil else {
+        guard let g = GameManager.shared.localGameData else {
             card.isHidden = true
             return
         }
-
         card.isHidden = false
 
+        let hasTournament = g.tournamentCode != nil
         let played = g.holeCommitted.filter { $0 }.count
         let isComplete = played >= 18
 
+        // Caption: append tournament badge when attached
+        inProgressCaptionLabel?.text = hasTournament
+            ? "ROUND IN PROGRESS  ·  🏆 TOURNAMENT"
+            : "ROUND IN PROGRESS"
+
         if isComplete {
-            inProgressCaptionLabel?.text = "ROUND COMPLETE"
+            inProgressCaptionLabel?.text = hasTournament
+                ? "ROUND COMPLETE  ·  🏆 TOURNAMENT"
+                : "ROUND COMPLETE"
             inProgressTitleLabel?.text = "Round complete — view results"
             inProgressDetailLabel?.isHidden = true
-            // A completed new game means the reset recovery window is over
             ResetSnapshotStore.shared.discard()
             resetBannerCard?.isHidden = true
         } else {
-            inProgressCaptionLabel?.text = "ROUND IN PROGRESS"
             inProgressTitleLabel?.text = "Continue \(inProgressDayLabel())"
-            // If the current hole has already been committed (Update Scores pressed but Next
-            // not yet tapped), advance by one so the label matches where Continue resumes.
-            let rawHole = g.hole + 1  // 1-indexed
+            let rawHole = g.hole + 1
             let alreadyCommitted = g.holeCommitted[safe: g.hole] == true
             let currentHole = alreadyCommitted ? rawHole + 1 : rawHole
             let courseName = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1135,6 +1153,34 @@ final class ViewController: UIViewController,
         }
 
         rebuildGameChips(for: g)
+
+        // Tournament section
+        if hasTournament {
+            let name = g.tournamentName ?? "Tournament"
+            let day  = g.tournamentDay ?? 1
+            tournamentInProgressNameLabel?.text = "\(name)  ·  Day \(day)"
+            tournamentInProgressNameLabel?.isHidden = false
+            tournamentInProgressDivider?.isHidden = false
+            tournamentInProgressGroupButton?.isHidden = (g.tournamentGameType == "scramble")
+            tournamentInProgressButtonRow?.isHidden = false
+        } else {
+            tournamentInProgressNameLabel?.isHidden = true
+            tournamentInProgressDivider?.isHidden = true
+            tournamentInProgressButtonRow?.isHidden = true
+        }
+
+        // Background: check if tournament has ended
+        if hasTournament, let code = g.tournamentCode {
+            Task { [weak self] in
+                guard let record = try? await SupabaseService.shared.fetchTournament(code: code) else { return }
+                if record.finishedAt != nil {
+                    await MainActor.run {
+                        GameManager.shared.detachTournament()
+                        self?.refreshHomeUI()
+                    }
+                }
+            }
+        }
     }
 
     private func inProgressDayLabel() -> String {
@@ -1170,6 +1216,9 @@ final class ViewController: UIViewController,
         if game.nassauState?.isEnabled == true {
             row.addArrangedSubview(makeGameChip("Nassau"))
         }
+        let spacer = UIView()
+        spacer.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        row.addArrangedSubview(spacer)
     }
 
     private func makeGameChip(_ text: String) -> UIView {

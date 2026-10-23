@@ -1,0 +1,187 @@
+{
+  "_note": "Constants for GlenLakes/Perdido Bay/Shell Landing already in CourseLibrary.swift (uncommitted). All entries need `all` array wiring. Fallen Oak/Mossy Oak/Old Waverly need full constants + entries. Two UUIDs still needed for Mossy Oak and Old Waverly.",
+  "courses": [
+    {
+      "swiftId": "GL_DUNES_VISTA_ID",
+      "uuid": "93EA97F1-A549-4F12-BABA-CFFE78805264",
+      "name": "GlenLakes (Dunes / Vista)",
+      "country": "USA", "state": "AL",
+      "type": "Public",
+      "phone": "(251) 955-1220",
+      "address": "9530 Clubhouse Dr, Foley, AL 36535",
+      "pars": [5,4,3,4,4,4,4,5,3, 4,5,3,4,3,5,4,4,4],
+      "_parNote": "Vista H5 (course H14) read as par 3 — verify, may be par 4",
+      "hcs":  [11,9,15,13,5,7,1,3,17, 10,6,8,4,14,18,16,2,12],
+      "womensHcs": "TODO",
+      "tees": [
+        {"name":"Black",  "yardage":"TODO", "rating":73.2, "slope":132},
+        {"name":"Blue",   "yardage":"TODO", "rating":70.6, "slope":126},
+        {"name":"White",  "yardage":"TODO", "rating":68.4, "slope":111},
+        {"name":"Gold",   "yardage":"TODO", "rating":65.8, "slope":111},
+        {"name":"Red",    "yardage":"TODO", "rating":70.3, "slope":117},
+        {"name":"Purple", "yardage":"TODO", "rating":64.0, "slope":104}
+      ],
+      "constantsInFile": true,
+      "inAllArray": false
+    },
+    {
+      "swiftId": "GL_LAKES_VISTA_ID",
+      "uuid": "157E3781-1000-40CF-81A9-77C0BBD63461",
+      "name": "GlenLakes (Lakes / Vista)",
+      "country": "USA", "state": "AL",
+      "type": "Public",
+      "phone": "(251) 955-1220",
+      "address": "9530 Clubhouse Dr, Foley, AL 36535",
+      "pars": [4,4,4,4,4,4,5,4,3, 4,5,3,4,3,5,4,4,4],
+      "_parNote": "Vista H5 (course H14) read as par 3 — verify, may be par 4",
+      "hcs":  [17,7,13,3,11,9,15,5,1, 10,6,8,4,14,18,16,2,12],
+      "womensHcs": "TODO",
+      "tees": [
+        {"name":"Black",  "yardage":"TODO", "rating":70.1, "slope":126},
+        {"name":"Blue",   "yardage":"TODO", "rating":68.0, "slope":118},
+        {"name":"White",  "yardage":"TODO", "rating":65.4, "slope":110},
+        {"name":"Red",    "yardage":"TODO", "rating":68.4, "slope":111},
+        {"name":"Purple", "yardage":"TODO", "rating":63.5, "slope":105}
+      ],
+      "constantsInFile": true,
+      "inAllArray": false
+    },
+    {
+      "swiftId": "GL_DUNES_LAKES_ID",
+      "uuid": "ED5F4D94-816F-45E0-B289-B8D3DFB58B4F",
+      "name": "GlenLakes (Dunes / Lakes)",
+      "country": "USA", "state": "AL",
+      "type": "Public",
+      "phone": "(251) 955-1220",
+      "address": "9530 Clubhouse Dr, Foley, AL 36535",
+      "pars": [5,4,3,4,4,4,4,5,3, 4,4,4,4,4,4,5,4,3],
+      "hcs":  [11,9,15,13,5,7,1,3,17, 18,8,14,4,12,10,16,6,2],
+      "womensHcs": "TODO",
+      "tees": [
+        {"name":"Black",  "yardage":"TODO", "rating":71.5, "slope":127},
+        {"name":"Blue",   "yardage":"TODO", "rating":69.4, "slope":127},
+        {"name":"White",  "yardage":"TODO", "rating":67.1, "slope":114},
+        {"name":"Red",    "yardage":"TODO", "rating":68.4, "slope":116},
+        {"name":"Purple", "yardage":"TODO", "rating":64.0, "slope":105}
+      ],
+      "constantsInFile": true,
+      "inAllArray": false
+    },
+    {
+      "swiftId": "PERDIDO_BAY_GC_ID",
+      "uuid": "3660B2A8-2296-4EDC-AD70-1C3E657C6CAA",
+      "name": "Perdido Bay Golf Club",
+      "country": "USA", "state": "FL",
+      "type": "TODO",
+      "phone": "(850) 492-1223",
+      "address": "1 Doug Ford Dr, Pensacola, FL 32507",
+      "architect": "TODO",
+      "pars": [4,5,4,3,4,4,5,3,4, 4,5,4,3,4,5,4,3,4],
+      "hcs":  [12,16,4,14,8,6,2,18,10, 1,7,3,17,9,13,11,15,5],
+      "ladiesHcs": [12,10,4,14,8,2,6,18,16, 1,13,5,15,7,11,9,17,3],
+      "tees": [
+        {"name":"Gold",  "yardage":7052, "rating":74.4, "slope":133},
+        {"name":"Blue",  "yardage":6554, "rating":71.8, "slope":127},
+        {"name":"White", "yardage":6056, "rating":69.8, "slope":120, "_womenRating":74.8, "_womenSlope":133},
+        {"name":"Black", "yardage":5622, "rating":67.3, "slope":115, "_womenRating":72.4, "_womenSlope":127},
+        {"name":"Red",   "yardage":5156, "rating":70.5, "slope":120}
+      ],
+      "constantsInFile": true,
+      "inAllArray": true
+    },
+    {
+      "swiftId": "SHELL_LANDING_GC_ID",
+      "uuid": "8012F3AC-6EEE-49F3-A241-437734CD9F92",
+      "name": "Shell Landing Golf Club",
+      "country": "USA", "state": "MS",
+      "architect": "Davis Love III",
+      "type": "Private",
+      "phone": "(228) 497-5683",
+      "tollFree": "(866) 851-0541",
+      "address": "3499 Shell Landing Blvd, Gautier, MS 39553",
+      "pars": [4,3,5,4,4,4,5,3,4, 4,3,4,5,4,4,5,3,4],
+      "hcs":  [9,17,3,11,13,1,7,15,5, 12,18,10,8,2,14,6,16,4],
+      "tees": [
+        {"name":"Black (Snapping)", "yardage":7024, "rating":73.3, "slope":140}
+      ],
+      "_note": "Only Black (Snapping) tee in session data; additional tees TODO",
+      "constantsInFile": true,
+      "inAllArray": true
+    },
+    {
+      "swiftId": "FALLEN_OAK_GC_ID",
+      "uuid": "876B32E1-DD23-48DD-9EDF-0E2D5C868D0D",
+      "name": "Fallen Oak",
+      "country": "USA", "state": "MS",
+      "architect": "Tom Fazio",
+      "type": "Resort",
+      "address": "24400 Highway 15 North, Saucier, MS 39574",
+      "_locationNote": "bluegolf lists as Biloxi, MS; opened November 2006",
+      "pars": [5,4,3,4,4,5,4,3,4, 4,4,4,5,3,5,4,3,4],
+      "hcs":  [7,3,13,11,1,9,17,15,5, 8,10,16,4,18,2,14,12,6],
+      "tees": [
+        {"name":"Tee #1", "yardage":7487, "rating":76.5, "slope":142}
+      ],
+      "_note": "Only Tee #1 in session data; additional tees TODO. Tee name 'Tee #1' should be verified.",
+      "constantsInFile": false,
+      "inAllArray": false
+    },
+    {
+      "swiftId": "MOSSY_OAK_GC_ID",
+      "uuid": "TODO — generate new",
+      "name": "Mossy Oak Golf Club",
+      "country": "USA", "state": "MS",
+      "architect": "Gil Hanse / Jim Wagner",
+      "type": "Semi-Private",
+      "address": "1 Mossy Oak Drive, West Point, MS",
+      "phone": "TODO",
+      "opened": 2016,
+      "pars": [4,4,4,3,5,4,5,4,3, 4,3,5,4,4,3,4,4,5],
+      "hcs":  [7,1,13,11,5,9,3,15,17, 18,14,4,16,6,8,12,10,2],
+      "tees": [
+        {"name":"Gold", "yardage":7212, "rating":75.7, "slope":140}
+      ],
+      "_note": "Only Gold tee in session data; additional tees TODO",
+      "constantsInFile": false,
+      "inAllArray": false
+    },
+    {
+      "swiftId": "OLD_WAVERLY_GC_ID",
+      "uuid": "TODO — generate new",
+      "name": "Old Waverly Golf Club",
+      "country": "USA", "state": "MS",
+      "architect": "TODO",
+      "type": "Private",
+      "address": "1 Magnolia Dr, West Point, MS 39773",
+      "phone": "662-494-6463",
+      "pars": [4,5,3,4,4,4,3,4,5, 5,4,3,4,4,5,4,3,4],
+      "hcs":  [16,12,18,4,8,14,6,2,10, 9,5,17,3,15,11,7,13,1],
+      "_hcNote": "Unusual pattern: front nine has even HCs, back nine has odd HCs — verified valid 1-18 set",
+      "tees": [
+        {"name":"Gold", "yardage":7063, "rating":74.0, "slope":138}
+      ],
+      "_note": "Only Gold tee in session data; additional tees TODO",
+      "constantsInFile": false,
+      "inAllArray": false
+    }
+  ],
+  "todos": [
+    "GlenLakes (all 3 combos): tee yardages for all tees",
+    "GlenLakes (all 3 combos): Women's HCs not confirmed from session data",
+    "GlenLakes Vista nine: verify H5 par (read as 3, may be 4) — affects D/V H14 and L/V H14",
+    "GlenLakes: Gold tee exists only for Dunes/Vista per rating table — verify whether Gold also exists for D/L",
+    "Perdido Bay: architect name (possibly associated with Doug Ford the PGA player, not confirmed designer)",
+    "Perdido Bay: type (bluegolf lists 'Other' — may be semi-private or military-adjacent)",
+    "Perdido Bay: White tee Women's rating 74.8/133 and Black tee Women's rating 72.4/127 not stored in TeeInfo (one rating per tee)",
+    "Rock Creek: Red tee rating/slope (omitted; WebFetch suggested 67.9/113 but unverified)",
+    "Lost Key: full street address (only 'Perdido Key, FL' confirmed in session)",
+    "Lost Key: additional tee sets beyond Black (6801/73.9/145)",
+    "Shell Landing: additional tee sets beyond Black (Snapping)",
+    "Fallen Oak: verify tee name 'Tee #1'; fetch additional tees",
+    "Mossy Oak: generate UUID; fetch phone number; additional tees beyond Gold",
+    "Old Waverly: generate UUID; architect name; additional tees beyond Gold",
+    "GlenLakes/Perdido Bay/Shell Landing: `all` array entries not yet added (constants in file, uncommitted)",
+    "Batch 2 build + commit still needed after adding `all` array entries",
+    "Batch 3 (Fallen Oak, Mossy Oak, Old Waverly): all constants + `all` entries + build + commit needed"
+  ]
+}

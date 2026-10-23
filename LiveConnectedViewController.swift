@@ -468,6 +468,26 @@ final class LiveConnectedViewController: UITableViewController {
     }
 
     private func performJoinedTournament(record: TournamentRecord) {
+        if let conflict = GameManager.checkTournamentAttachConflict(record: record) {
+            let ac = UIAlertController(
+                title: "Different Tournament",
+                message: "Your round at \(conflict.currentCourseName) doesn't match this tournament (\(conflict.description)). Start a new round? Your current round will be saved to Restore.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            ac.addAction(UIAlertAction(title: "Start New Round", style: .default) { [weak self] _ in
+                guard let self else { return }
+                ResetSnapshotStore.shared.saveFromCurrentGame()
+                GameManager.shared.startNewGame()
+                self.doJoinTournament(record: record)
+            })
+            present(ac, animated: true)
+            return
+        }
+        doJoinTournament(record: record)
+    }
+
+    private func doJoinTournament(record: TournamentRecord) {
         GameManager.applyTournamentJoin(record: record)
 
         let presenter = self.navigationController?.presentingViewController ?? presentingViewController
