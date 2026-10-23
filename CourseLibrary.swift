@@ -14038,6 +14038,82 @@ let SAN_JOSE_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",   yardage: 5492)
 ]
 
+// MARK: - Northwood Country Club — Meridian, MS
+// Par 71 | 6,212 yds | Type: Private | Architect: Ault, Clark & Associates / Brian Ault
+private let NORTHWOOD_CC_MS_ID = UUID(uuidString: "7FEA8C2B-FAE3-47A3-AA6F-EEEF9437348E")!
+let NORTHWOOD_CC_MS_PARS: [Int] = [
+    4,3,4,4,4,5,3,4,4,
+    4,3,5,3,5,4,5,3,4
+]
+let NORTHWOOD_CC_MS_HCS: [Int] = [
+    13,9,7,1,11,5,17,3,15,
+    8,6,10,16,2,4,12,18,14
+]
+
+// MARK: - TimberCreek Golf Club — Daphne, AL (27 holes: Magnolia · Dogwood · Pines)
+// Type: Public | Architect: Earl Stone | (251) 621-9900
+// HCs converted from per-nine 1–9 (front → 2n−1, back → 2n)
+
+private let TC_MAG_DOG_ID   = UUID(uuidString: "7B5722B0-7003-439F-B529-51A6A0EB0C8E")!
+private let TC_DOG_PINE_ID  = UUID(uuidString: "432FF257-DE7A-4DB4-A416-2470DD1CCCB9")!
+private let TC_PINE_MAG_ID  = UUID(uuidString: "57F2B630-A65F-407F-81EC-35879CD84A4E")!
+
+let TC_MAG_DOG_PARS: [Int]        = [5,4,3,5,3,4,4,4,4, 4,5,4,3,4,3,5,4,4]
+let TC_MAG_DOG_HCS: [Int]         = [7,1,15,3,13,9,17,5,11, 14,10,8,16,6,12,2,18,4]
+let TC_MAG_DOG_WOMENS_HCS: [Int]  = [5,1,15,3,13,7,17,11,9, 8,4,6,16,12,10,2,18,14]
+let TC_MAG_DOG_TEES: [TeeInfo]    = [
+    TeeInfo(teeName: "Gold",  yardage: 7182, rating: 74.8, slope: 141),
+    TeeInfo(teeName: "Blue",  yardage: 6587, rating: 71.8, slope: 133),
+    TeeInfo(teeName: "White", yardage: 6036, rating: 69.3, slope: 121),
+    TeeInfo(teeName: "Green", yardage: 5429, rating: 66.5, slope: 116),
+    TeeInfo(teeName: "Red",   yardage: 5016, rating: 68.7, slope: 119)
+]
+
+let TC_DOG_PINE_PARS: [Int]        = [4,5,4,3,4,3,5,4,4, 4,4,4,3,4,5,4,3,5]
+let TC_DOG_PINE_HCS: [Int]         = [13,9,7,15,5,11,1,17,3, 6,16,14,10,8,18,2,4,12]
+let TC_DOG_PINE_WOMENS_HCS: [Int]  = [7,3,5,15,11,9,1,17,13, 12,8,14,18,6,16,2,10,4]
+let TC_DOG_PINE_TEES: [TeeInfo]    = [
+    TeeInfo(teeName: "Gold",  yardage: 7049, rating: 73.6, slope: 126),
+    TeeInfo(teeName: "Blue",  yardage: 6512, rating: 70.7, slope: 124),
+    TeeInfo(teeName: "White", yardage: 6001, rating: 68.6, slope: 117),
+    TeeInfo(teeName: "Green", yardage: 5471, rating: 66.1, slope: 111),
+    TeeInfo(teeName: "Red",   yardage: 5020, rating: 68.2, slope: 112)
+]
+
+let TC_PINE_MAG_PARS: [Int]        = [4,4,4,3,4,5,4,3,5, 5,4,3,5,3,4,4,4,4]
+let TC_PINE_MAG_HCS: [Int]         = [5,15,13,9,7,17,1,3,11, 8,2,16,4,14,10,18,6,12]
+let TC_PINE_MAG_WOMENS_HCS: [Int]  = [11,7,13,17,5,15,1,9,3, 6,2,16,4,14,8,18,12,10]
+let TC_PINE_MAG_TEES: [TeeInfo]    = [
+    TeeInfo(teeName: "Gold",  yardage: 7225, rating: 75.2, slope: 137),
+    TeeInfo(teeName: "Blue",  yardage: 6693, rating: 72.5, slope: 132),
+    TeeInfo(teeName: "White", yardage: 6113, rating: 69.3, slope: 121),
+    TeeInfo(teeName: "Green", yardage: 5648, rating: 67.4, slope: 120),
+    TeeInfo(teeName: "Red",   yardage: 5154, rating: 69.5, slope: 119)
+]
+
+// MARK: - Rock Creek Golf Club — Fairhope, AL
+// Par 72 | Architect: Earl Stone | Public
+private let ROCK_CREEK_GC_ID = UUID(uuidString: "07656381-4986-4252-8FCA-7BF349780295")!
+let ROCK_CREEK_GC_PARS: [Int]        = [5,4,3,4,3,4,4,4,5, 4,5,3,5,4,4,3,4,4]
+let ROCK_CREEK_GC_MENS_HCS: [Int]    = [11,1,17,3,9,7,15,13,5, 18,14,8,16,6,10,12,2,4]
+let ROCK_CREEK_GC_LADIES_HCS: [Int]  = [5,1,17,13,15,7,11,9,3, 14,10,16,12,8,4,18,2,6]
+let ROCK_CREEK_GC_TEES: [TeeInfo]    = [
+    TeeInfo(teeName: "Black", yardage: 6915, rating: 72.4, slope: 127),
+    TeeInfo(teeName: "Blue",  yardage: 6344, rating: 69.7, slope: 124),
+    TeeInfo(teeName: "White", yardage: 5923, rating: 67.8, slope: 118),
+    TeeInfo(teeName: "Gold",  yardage: 5664, rating: 65.6, slope: 111),
+    TeeInfo(teeName: "Red",   yardage: 4933)
+]
+
+// MARK: - Lost Key Golf Club — Perdido Key, FL
+// Par 71 | Architect: Arnold Palmer Design Company | Resort
+private let LOST_KEY_GC_ID = UUID(uuidString: "C8FF2B24-9378-42F2-9452-F937A5B85CBD")!
+let LOST_KEY_GC_PARS: [Int] = [5,3,4,4,4,5,3,4,4, 4,3,5,3,4,4,3,4,5]
+let LOST_KEY_GC_HCS: [Int]  = [13,11,5,17,3,15,9,1,7, 4,12,16,18,6,8,14,2,10]
+let LOST_KEY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6801, rating: 73.9, slope: 145)
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -25135,6 +25211,98 @@ private enum BuiltIns {
             type: "Private",
             address: "15571 Alum Rock Ave, San Jose, CA",
             teeSets: [TeeSet(name: "Red (Women)", pars: SAN_JOSE_CC_PARS, hcs: SAN_JOSE_CC_RED_HCS)]
+        ),
+
+        // -------------------------
+        // Mississippi
+        // -------------------------
+        c(
+            NORTHWOOD_CC_MS_ID,
+            "Northwood Country Club",
+            NORTHWOOD_CC_MS_PARS,
+            NORTHWOOD_CC_MS_HCS,
+            country: "USA",
+            state: "MS",
+            architect: "Ault, Clark & Associates / Brian Ault",
+            type: "Private",
+            phone: "(601) 485-4491",
+            address: "4300 Country Club Drive, Meridian, MS 39305"
+        ),
+
+        // -------------------------
+        // Alabama
+        // -------------------------
+        c(
+            TC_MAG_DOG_ID,
+            "TimberCreek (Magnolia / Dogwood)",
+            TC_MAG_DOG_PARS,
+            TC_MAG_DOG_HCS,
+            TC_MAG_DOG_TEES,
+            country: "USA",
+            state: "AL",
+            architect: "Earl Stone",
+            type: "Public",
+            phone: "(251) 621-9900",
+            address: "9650 TimberCreek Blvd., Daphne, AL 36527",
+            teeSets: [TeeSet(name: "Women's", pars: TC_MAG_DOG_PARS, hcs: TC_MAG_DOG_WOMENS_HCS)]
+        ),
+        c(
+            TC_DOG_PINE_ID,
+            "TimberCreek (Dogwood / Pines)",
+            TC_DOG_PINE_PARS,
+            TC_DOG_PINE_HCS,
+            TC_DOG_PINE_TEES,
+            country: "USA",
+            state: "AL",
+            architect: "Earl Stone",
+            type: "Public",
+            phone: "(251) 621-9900",
+            address: "9650 TimberCreek Blvd., Daphne, AL 36527",
+            teeSets: [TeeSet(name: "Women's", pars: TC_DOG_PINE_PARS, hcs: TC_DOG_PINE_WOMENS_HCS)]
+        ),
+        c(
+            TC_PINE_MAG_ID,
+            "TimberCreek (Pines / Magnolia)",
+            TC_PINE_MAG_PARS,
+            TC_PINE_MAG_HCS,
+            TC_PINE_MAG_TEES,
+            country: "USA",
+            state: "AL",
+            architect: "Earl Stone",
+            type: "Public",
+            phone: "(251) 621-9900",
+            address: "9650 TimberCreek Blvd., Daphne, AL 36527",
+            teeSets: [TeeSet(name: "Women's", pars: TC_PINE_MAG_PARS, hcs: TC_PINE_MAG_WOMENS_HCS)]
+        ),
+        c(
+            ROCK_CREEK_GC_ID,
+            "Rock Creek Golf Club",
+            ROCK_CREEK_GC_PARS,
+            ROCK_CREEK_GC_MENS_HCS,
+            ROCK_CREEK_GC_TEES,
+            country: "USA",
+            state: "AL",
+            architect: "Earl Stone",
+            type: "Public",
+            phone: "(251) 928-4223",
+            address: "140 Clubhouse Dr, Fairhope, AL 36532",
+            teeSets: [TeeSet(name: "Ladies", pars: ROCK_CREEK_GC_PARS, hcs: ROCK_CREEK_GC_LADIES_HCS)]
+        ),
+
+        // -------------------------
+        // Florida
+        // -------------------------
+        c(
+            LOST_KEY_GC_ID,
+            "Lost Key Golf Club",
+            LOST_KEY_GC_PARS,
+            LOST_KEY_GC_HCS,
+            LOST_KEY_GC_TEES,
+            country: "USA",
+            state: "FL",
+            architect: "Arnold Palmer Design Company",
+            type: "Resort",
+            address: "Perdido Key, FL"
         ),
         ]
 
