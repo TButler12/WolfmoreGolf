@@ -14117,19 +14117,18 @@ let LOST_KEY_GC_TEES: [TeeInfo] = [
 // MARK: - GlenLakes Golf Club — Foley, AL (27 holes: Dunes · Vista · Lakes)
 // Type: Public | GM: David Musial, PGA | (251) 955-1220
 // HCs: Dunes always front (odd), Vista always back (even), Lakes front in L/V back in D/L
-// Vista nine H5 par read as 3 (verify — may be 4); tee yardages TODO
 
 private let GL_DUNES_VISTA_ID  = UUID(uuidString: "93EA97F1-A549-4F12-BABA-CFFE78805264")!
 private let GL_LAKES_VISTA_ID  = UUID(uuidString: "157E3781-1000-40CF-81A9-77C0BBD63461")!
 private let GL_DUNES_LAKES_ID  = UUID(uuidString: "ED5F4D94-816F-45E0-B289-B8D3DFB58B4F")!
 
-let GL_DUNES_VISTA_PARS: [Int]  = [5,4,3,4,4,4,4,5,3, 4,5,3,4,3,5,4,4,4]
-let GL_LAKES_VISTA_PARS: [Int]  = [4,4,4,4,4,4,5,4,3, 4,5,3,4,3,5,4,4,4]
-let GL_DUNES_LAKES_PARS: [Int]  = [5,4,3,4,4,4,4,5,3, 4,4,4,4,4,4,5,4,3]
+let GL_DUNES_VISTA_PARS: [Int]  = [5,4,3,4,4,4,5,3,4, 5,4,3,4,3,5,4,4,4]
+let GL_LAKES_VISTA_PARS: [Int]  = [4,4,5,3,4,4,3,4,4, 5,4,3,4,3,5,4,4,4]
+let GL_DUNES_LAKES_PARS: [Int]  = [5,4,3,4,4,4,5,3,4, 4,4,5,3,4,4,3,4,4]
 
-let GL_DUNES_VISTA_HCS: [Int]   = [11,9,15,13,5,7,1,3,17, 10,6,8,4,14,18,16,2,12]
-let GL_LAKES_VISTA_HCS: [Int]   = [17,7,13,3,11,9,15,5,1, 10,6,8,4,14,18,16,2,12]
-let GL_DUNES_LAKES_HCS: [Int]   = [11,9,15,13,5,7,1,3,17, 18,8,14,4,12,10,16,6,2]
+let GL_DUNES_VISTA_HCS: [Int]   = [11,9,15,13,5,7,3,17,1, 10,6,8,4,12,18,2,16,14]
+let GL_LAKES_VISTA_HCS: [Int]   = [17,7,13,3,11,9,15,5,1, 10,6,8,4,12,18,2,16,14]
+let GL_DUNES_LAKES_HCS: [Int]   = [11,9,15,13,5,7,3,17,1, 18,8,14,4,12,10,16,6,2]
 
 let GL_DUNES_VISTA_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Black",  rating: 73.2, slope: 132),
