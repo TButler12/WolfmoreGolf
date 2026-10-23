@@ -14,14 +14,11 @@ extension GameManager {
     /// update from the organizer's courseName, and history recording.
     @discardableResult
     static func applyTournamentJoin(record: TournamentRecord) -> (groupCode: String, matchId: String) {
-        shared.activeSlot = .tournament
-        if !shared.loadTournamentSlot(notify: false) {
-            // No tournament slot yet — seed from local slot as structural template;
-            // applyTournamentJoin will overwrite all tournament-specific fields.
-            _ = shared.loadLastOpened(notify: false)
-            shared.activeSlot = .tournament
-            if shared.currentGame == nil { shared.currentGame = GameData() }
+        // Ensure a local game is loaded to attach to
+        if shared.currentGame == nil {
+            if !shared.loadLastOpened(notify: false) { shared.startNewGame() }
         }
+        // activeSlot stays .local — tournament is metadata on the local round
 
         let liveDay = record.currentDay ?? 1
         let existing = TournamentHistoryStore.shared.all().first { $0.code == record.code }
@@ -34,30 +31,8 @@ extension GameManager {
             groupCode = UUID().uuidString; matchId = UUID().uuidString
         }
 
-        // Preserve progress ONLY when the game already carries this exact tournament code
-        // and it's the same day (i.e. the user is resuming mid-round). Any identity change —
-        // standalone → tournament, or tournament A → tournament B — always starts clean,
-        // regardless of same-day history keyed only on the incoming code.
-        let alreadyInThisTournament = (shared.currentGame?.tournamentCode == record.code)
-        let shouldPreserve = alreadyInThisTournament && isSameDay
-
-        // Standalone round with committed holes is about to be replaced — snapshot it so
-        // the "Restore?" banner appears on the home screen and the round is fully recoverable.
-        if !shouldPreserve,
-           let current = shared.currentGame,
-           current.tournamentCode == nil,
-           current.holeCommitted.contains(true) {
-            ResetSnapshotStore.shared.saveFromCurrentGame()
-        }
-
         shared.update { g in
-            let holes = g.totalHoles
-            if !shouldPreserve {
-                g.scores        = Array(repeating: Array(repeating: nil, count: holes), count: WOLF_MAX_PLAYERS)
-                g.holeCommitted = Array(repeating: false, count: holes)
-                g.hole          = 0
-            }
-
+            // Scores, holeCommitted, and hole are intentionally preserved as-is.
             g.tournamentCode        = record.code
             g.groupCode             = groupCode
             g.tournamentMatchId     = matchId
@@ -111,10 +86,7 @@ extension GameManager {
                 if let hs = record.hammerStyle { g.hammerStyle = hs == "additive" ? .additive : .doubling }
             default: break
             }
-            // Inherit Team Tee settings from the tournament record (nil disables it).
             g.teamTeeSettings = record.teamTeeSettings
-
-            // Update course for all game types when the organizer specified one.
             if let courseName = record.courseName,
                let profile = CourseLibrary.shared.courses.first(where: {
                    $0.name.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -124,7 +96,6 @@ extension GameManager {
                                   pars: Array(profile.pars.prefix(STANDARD_HOLES)),
                                   holeHandicaps: Array(profile.hcs.prefix(STANDARD_HOLES)),
                                   teeSets: profile.teeSets ?? [])
-                // Reset any tee-set indices that are out of bounds for the new course.
                 let setCount = g.course.teeSets.count
                 for i in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[i] > setCount {
                     g.playerTeeSetIndex[i] = 0
@@ -141,6 +112,51 @@ extension GameManager {
             groupCode: groupCode, tournamentMatchId: matchId)
         NotificationCenter.default.post(name: .reloadUI, object: nil)
         return (groupCode, matchId)
+    }
+
+    // MARK: - Tournament attach conflict check
+
+    struct TournamentAttachConflictInfo {
+        let currentCourseName: String
+        let description: String
+    }
+
+    static func checkTournamentAttachConflict(record: TournamentRecord) -> TournamentAttachConflictInfo? {
+        guard let g = shared.currentGame ?? shared.localGameData,
+              g.holeCommitted.contains(true) else { return nil }
+
+        let tournamentCourse = record.courseName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let currentCourse    = g.course.name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let courseConflict   = !tournamentCourse.isEmpty && !currentCourse.isEmpty
+            && currentCourse.caseInsensitiveCompare(tournamentCourse) != .orderedSame
+
+        let tournamentType   = resolvedGameType(for: record)
+        let currentType      = g.resolvedGameType
+        let typeConflict     = tournamentType != nil && tournamentType != currentType
+
+        guard courseConflict || typeConflict else { return nil }
+
+        var parts: [String] = []
+        if courseConflict { parts.append("course") }
+        if typeConflict   { parts.append("game format") }
+        return TournamentAttachConflictInfo(
+            currentCourseName: currentCourse.isEmpty ? "current course" : currentCourse,
+            description: parts.joined(separator: " and ")
+        )
+    }
+
+    private static func resolvedGameType(for record: TournamentRecord) -> GameType? {
+        switch record.gameType {
+        case "stableford": return .tournament
+        case "wolf":
+            switch record.wolfVariant {
+            case "2pt":       return .wolf
+            case "lowball":   return .wolfLowBall
+            case "matchplay": return .matchPlay
+            default:          return .sixPointScotch
+            }
+        default: return nil
+        }
     }
 
     // MARK: - Stableford helpers

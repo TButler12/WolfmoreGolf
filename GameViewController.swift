@@ -1174,7 +1174,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let scoreBtn = makeTabButton(icon: "target", title: "Score")
         scoreBtn.addTarget(self, action: #selector(liveTabScoreTapped), for: .touchUpInside)
 
-        let liveBtn = makeTabButton(icon: "tv", title: "Live Wolf")
+        let liveBtn = makeTabButton(icon: "tv", title: "Live Board")
         liveBtn.addTarget(self, action: #selector(liveTabLiveTapped), for: .touchUpInside)
 
         let leaderboardBtn = makeTabButton(icon: "trophy", title: "Leaderboard")
@@ -5671,92 +5671,37 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     }
 
     private func confirmAndAttach(record: TournamentRecord) {
-        let g = GameManager.shared.currentGame
-        let hasCommitted = g?.holeCommitted.contains(true) == true
+        let typeName = gameTypeFor(record: record)?.displayName ?? record.gameType.capitalized
+        let hasCommitted = GameManager.shared.currentGame?.holeCommitted.contains(true) == true
 
-        if hasCommitted {
-            let currentType    = g?.resolvedGameType
-            let tournamentType = gameTypeFor(record: record)
-            let formatConflict = tournamentType != nil && tournamentType != currentType
-
-            let tournamentCourse = record.courseName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            let currentCourse    = g?.course.name.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            let courseConflict   = !tournamentCourse.isEmpty && !currentCourse.isEmpty
-                && currentCourse.caseInsensitiveCompare(tournamentCourse) != .orderedSame
-
-            if formatConflict || courseConflict {
-                var parts: [String] = []
-                if formatConflict {
-                    let tName = tournamentType?.displayName ?? record.gameType.capitalized
-                    let cName = currentType?.displayName ?? "your current format"
-                    parts.append("format (\(tName) vs. \(cName))")
-                }
-                if courseConflict {
-                    parts.append("course (\(tournamentCourse) vs. \(currentCourse))")
-                }
-                let ac = UIAlertController(
-                    title: "Can't Join Mid-Round",
-                    message: "\"\(record.name)\" uses a different \(parts.joined(separator: " and ")). Your scores can't carry over. Finish your current round first.",
-                    preferredStyle: .alert
-                )
-                ac.addAction(UIAlertAction(title: "OK", style: .default))
-                present(ac, animated: true)
-                return
-            }
-
-            // Same format and course — scores will be preserved
-            let typeName = tournamentType?.displayName ?? record.gameType.capitalized
+        if let conflict = GameManager.checkTournamentAttachConflict(record: record) {
             let ac = UIAlertController(
-                title: "Join \"\(record.name)\"?",
-                message: "\(typeName) tournament. Your current players and scores will be kept.",
+                title: "Different Tournament",
+                message: "Your round at \(conflict.currentCourseName) doesn't match this tournament (\(conflict.description)). Start a new round? Your current round will be saved to Restore.",
                 preferredStyle: .alert
             )
             ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-            ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
-                self?.applyTournamentAttach(record: record, preserveScores: true)
+            ac.addAction(UIAlertAction(title: "Start New Round", style: .default) { [weak self] _ in
+                ResetSnapshotStore.shared.saveFromCurrentGame()
+                GameManager.shared.startNewGame()
+                self?.applyTournamentAttach(record: record)
             })
             present(ac, animated: true)
-            return
+        } else {
+            let message = hasCommitted
+                ? "\(typeName) tournament. Your current players and scores will be kept."
+                : "\(typeName) tournament. Your players will be carried over."
+            let ac = UIAlertController(title: "Join \"\(record.name)\"?", message: message, preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+            ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
+                self?.applyTournamentAttach(record: record)
+            })
+            present(ac, animated: true)
         }
-
-        // No committed holes — fresh start
-        let typeName: String
-        switch record.gameType {
-        case "wolf":       typeName = "Wolf"
-        case "stableford": typeName = "Stableford"
-        case "skins":      typeName = "Skins"
-        case "scramble":   typeName = "Scramble"
-        default:           typeName = record.gameType.capitalized
-        }
-        let ac = UIAlertController(
-            title: "Join \"\(record.name)\"?",
-            message: "\(typeName) tournament. Your players will be carried over.",
-            preferredStyle: .alert
-        )
-        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        ac.addAction(UIAlertAction(title: "Join", style: .default) { [weak self] _ in
-            self?.applyTournamentAttach(record: record)
-        })
-        present(ac, animated: true)
     }
 
-    private func applyTournamentAttach(record: TournamentRecord, preserveScores: Bool = false) {
-        let savedScores    = preserveScores ? GameManager.shared.currentGame?.scores        : nil
-        let savedCommitted = preserveScores ? GameManager.shared.currentGame?.holeCommitted : nil
-        let savedHole      = preserveScores ? GameManager.shared.currentGame?.hole          : nil
-
+    private func applyTournamentAttach(record: TournamentRecord) {
         GameManager.applyTournamentJoin(record: record)
-
-        if preserveScores, let scores = savedScores {
-            GameManager.shared.update { g in
-                g.scores        = scores
-                if let c = savedCommitted { g.holeCommitted = c }
-                if let h = savedHole      { g.hole          = h }
-            }
-            if let h = savedHole { self.currentHole = h }
-            GameManager.shared.saveCurrent()
-        }
-
         if GameManager.shared.currentGame?.resolvedGameType != .tournament {
             GameManager.shared.seedScoresWithParsForActivePlayers()
         }
@@ -6063,7 +6008,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             lwCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
             }
-            lwCfg.title = "Live Wolf"
+            lwCfg.title = "Live Board"
             let liveWolfBtn = UIButton(configuration: lwCfg)
             liveWolfBtn.addTarget(self, action: #selector(liveWolfTapped), for: .touchUpInside)
 
