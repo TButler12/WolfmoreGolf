@@ -5383,6 +5383,11 @@ let CLASSIC_CLUB_HCS: [Int] = [
     4,6,16,12,8,14,10,18,2
 ]
 
+let CLASSIC_CLUB_WOMENS_HCS: [Int] = [
+    15,17,9,1,3,13,7,11,5,
+    8,2,12,14,6,16,10,18,4
+]
+
 let CLASSIC_CLUB_TEES: [TeeInfo] = [
     TeeInfo(
         teeName: "Black",
@@ -18153,7 +18158,8 @@ private enum BuiltIns {
             phone: "(760) 601-3600",
             website: "https://www.classicclubgolf.com/course-information/",
             address: "75-200 Classic Club Blvd, Palm Desert, CA 92211",
-            isWolfApproved: true
+            isWolfApproved: true,
+            teeSets: [TeeSet(name: "Women", pars: CLASSIC_CLUB_PARS, hcs: CLASSIC_CLUB_WOMENS_HCS)]
         ),
 
         c(
