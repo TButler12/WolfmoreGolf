@@ -171,12 +171,13 @@ final class ManagePlayersViewController: UIViewController,
         container.addSubview(playerLabel)
         container.addSubview(hcLabel)
 
-        // Mirror exact storyboard cell positions: nameLabel x=46, hcField x=233 width=50
+        // Positions mirror the cell's adaptive layout: name starts at x=46,
+        // HC column aligns with the HC field (rightMargin=8, switchW=61, switchGap=41, hcW=50).
         NSLayoutConstraint.activate([
             playerLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 46),
             playerLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
 
-            hcLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 233),
+            hcLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -(8 + 61 + 41)),
             hcLabel.widthAnchor.constraint(equalToConstant: 50),
             hcLabel.centerYAnchor.constraint(equalTo: container.centerYAnchor),
         ])

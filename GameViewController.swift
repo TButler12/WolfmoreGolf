@@ -969,6 +969,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     // Column header labels are tagged in the storyboard (tags 1001-1005).
+    private func capButtonDynamicType(_ btn: UIButton) {
+        btn.maximumContentSizeCategory = .accessibilityMedium
+    }
+
     private func findColumnHeaderLabels() {
         colHeaderGame  = view.viewWithTag(1001) as? UILabel
         colHeaderHole  = view.viewWithTag(1002) as? UILabel
@@ -1248,11 +1252,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             cfg.title = title
             cfg.imagePlacement = .leading
             cfg.imagePadding = 4
-            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
-                var a = attrs; a.font = UIFont.systemFont(ofSize: 12, weight: .semibold); return a
+            cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [weak self] attrs in
+                var a = attrs
+                a.font = UIFontMetrics(forTextStyle: .caption2).scaledFont(
+                    for: UIFont.systemFont(ofSize: 12, weight: .semibold),
+                    maximumPointSize: 16,
+                    compatibleWith: self?.traitCollection)
+                return a
             }
             let btn = UIButton(configuration: cfg)
             btn.tintColor = .secondaryLabel
+            capButtonDynamicType(btn)
             return btn
         }
 
@@ -6041,6 +6051,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             usCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
                 var a = attrs; a.font = UIFont.systemFont(ofSize: 17, weight: .semibold); return a
             }
+            UpdateScores.backgroundColor = .clear
             UpdateScores.configuration = usCfg
             UpdateScores.heightAnchor.constraint(equalToConstant: 40).isActive = true
             vStack.addArrangedSubview(UpdateScores)
@@ -6057,10 +6068,27 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             stepper.addTarget(self, action: #selector(dollarStepperChanged(_:)), for: .valueChanged)
             dollarStepper = stepper
 
-            gameResultsButton.backgroundColor = UIColor(red: 0.910, green: 0.851, blue: 0.541, alpha: 1) // #E8D98A
-            gameResultsButton.setTitleColor(UIColor(red: 0.165, green: 0.133, blue: 0, alpha: 1), for: .normal) // #2A2200
+            var grCfg = UIButton.Configuration.plain()
+            grCfg.background.backgroundColor = UIColor(red: 0.910, green: 0.851, blue: 0.541, alpha: 1) // #E8D98A
+            grCfg.background.cornerRadius = 8
+            grCfg.baseForegroundColor = UIColor(red: 0.165, green: 0.133, blue: 0, alpha: 1) // #2A2200
+            grCfg.title = "Game Results"
+            grCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [weak self] attrs in
+                var a = attrs
+                a.font = UIFontMetrics(forTextStyle: .caption2).scaledFont(
+                    for: UIFont.systemFont(ofSize: 11),
+                    maximumPointSize: 15,
+                    compatibleWith: self?.traitCollection)
+                return a
+            }
+            gameResultsButton.backgroundColor = .clear
+            gameResultsButton.configuration = grCfg
             gameResultsButton.setContentHuggingPriority(.defaultLow, for: .horizontal)
             gameResultsButton.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+            capButtonDynamicType(gameResultsButton)
+            gameDollarsField.maximumContentSizeCategory = .accessibilityMedium
+            gameDollarsField.adjustsFontSizeToFitWidth = true
+            gameDollarsField.minimumScaleFactor = 0.6
             gameDollarsField.widthAnchor.constraint(equalToConstant: 80).isActive = true
             let row5 = UIStackView(arrangedSubviews: [gameResultsButton, stepper, gameDollarsField])
             row5.axis = .horizontal; row5.spacing = 8; row5.distribution = .fill
@@ -6073,12 +6101,35 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             hsCfg.baseForegroundColor = .label
             hsCfg.background.backgroundColor = UIColor.systemGray4
             hsCfg.background.cornerRadius = 8
-            hsCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
-                var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
+            hsCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [weak self] attrs in
+                var a = attrs
+                a.font = UIFontMetrics(forTextStyle: .caption2).scaledFont(
+                    for: UIFont.systemFont(ofSize: 11),
+                    maximumPointSize: 15,
+                    compatibleWith: self?.traitCollection)
+                return a
             }
             hsCfg.title = "Hole Stats"
             let holeStatsBtn = UIButton(configuration: hsCfg)
             holeStatsBtn.addTarget(self, action: #selector(holeStatsTapped(_:)), for: .touchUpInside)
+            capButtonDynamicType(holeStatsBtn)
+
+            var thCfg = UIButton.Configuration.plain()
+            thCfg.background.backgroundColor = UIColor(red: 0.475, green: 0.340, blue: 0.115, alpha: 1) // brown from storyboard
+            thCfg.background.cornerRadius = 8
+            thCfg.baseForegroundColor = .systemBackground
+            thCfg.title = "Text"
+            thCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [weak self] attrs in
+                var a = attrs
+                a.font = UIFontMetrics(forTextStyle: .caption2).scaledFont(
+                    for: UIFont.systemFont(ofSize: 11),
+                    maximumPointSize: 15,
+                    compatibleWith: self?.traitCollection)
+                return a
+            }
+            textHubButton.backgroundColor = .clear
+            textHubButton.configuration = thCfg
+            capButtonDynamicType(textHubButton)
 
             let row6 = UIStackView(arrangedSubviews: [holeStatsBtn, textHubButton])
             row6.axis = .horizontal; row6.spacing = 6; row6.distribution = .fillEqually
@@ -6090,23 +6141,35 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             lwCfg.baseForegroundColor = .label
             lwCfg.background.backgroundColor = UIColor.systemGray4
             lwCfg.background.cornerRadius = 8
-            lwCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
-                var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
+            lwCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [weak self] attrs in
+                var a = attrs
+                a.font = UIFontMetrics(forTextStyle: .caption2).scaledFont(
+                    for: UIFont.systemFont(ofSize: 11),
+                    maximumPointSize: 15,
+                    compatibleWith: self?.traitCollection)
+                return a
             }
             lwCfg.title = "Live Board"
             let liveWolfBtn = UIButton(configuration: lwCfg)
             liveWolfBtn.addTarget(self, action: #selector(liveWolfTapped), for: .touchUpInside)
+            capButtonDynamicType(liveWolfBtn)
 
             var tnCfg = UIButton.Configuration.plain()
             tnCfg.baseForegroundColor = .label
             tnCfg.background.backgroundColor = UIColor.systemGray4
             tnCfg.background.cornerRadius = 8
-            tnCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
-                var a = attrs; a.font = UIFont.preferredFont(forTextStyle: .caption2); return a
+            tnCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { [weak self] attrs in
+                var a = attrs
+                a.font = UIFontMetrics(forTextStyle: .caption2).scaledFont(
+                    for: UIFont.systemFont(ofSize: 11),
+                    maximumPointSize: 15,
+                    compatibleWith: self?.traitCollection)
+                return a
             }
             tnCfg.title = "Join"
             let tournamentBtn = UIButton(configuration: tnCfg)
             tournamentBtn.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
+            capButtonDynamicType(tournamentBtn)
 
             let row7 = UIStackView(arrangedSubviews: [liveWolfBtn, tournamentBtn])
             row7.axis = .horizontal; row7.spacing = 6; row7.distribution = .fillEqually

@@ -24,6 +24,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // If you're using storyboards, keep this guard and you're done
         guard let windowScene = (scene as? UIWindowScene) else { return }
 
+        window?.maximumContentSizeCategory = .accessibilityMedium
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             ReviewPrompter.maybeRequest(in: windowScene)
         }

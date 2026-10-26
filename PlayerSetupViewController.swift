@@ -118,8 +118,12 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
             let sl = UILabel()
             sl.tag = i
-            sl.font = UIFont.preferredFont(forTextStyle: .body)
-            sl.adjustsFontForContentSizeCategory = true
+            sl.font = UIFontMetrics(forTextStyle: .body).scaledFont(
+                for: UIFont.systemFont(ofSize: 17),
+                maximumPointSize: 24,
+                compatibleWith: traitCollection)
+            sl.adjustsFontSizeToFitWidth = true
+            sl.minimumScaleFactor = 0.6
             sl.textAlignment = .right
             sl.setContentHuggingPriority(.required, for: .horizontal)
             sl.setContentCompressionResistancePriority(.required, for: .horizontal)
@@ -339,8 +343,12 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private func makeEntryField(tag: Int) -> UITextField {
         let tf = UITextField()
         tf.tag = tag
-        tf.font = UIFont.preferredFont(forTextStyle: .body)
-        tf.adjustsFontForContentSizeCategory = true
+        tf.font = UIFontMetrics(forTextStyle: .body).scaledFont(
+            for: UIFont.systemFont(ofSize: 17),
+            maximumPointSize: 24,
+            compatibleWith: traitCollection)
+        tf.adjustsFontSizeToFitWidth = true
+        tf.minimumFontSize = 12
         tf.backgroundColor = .systemBackground
         tf.borderStyle = .none
         tf.layer.borderColor = UIColor.systemGray4.cgColor
@@ -380,8 +388,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private func hdrLabel(_ text: String) -> UILabel {
         let l = UILabel()
         l.text = text
-        l.font = UIFont.preferredFont(forTextStyle: .caption1)
-        l.adjustsFontForContentSizeCategory = true
+        l.font = UIFontMetrics(forTextStyle: .caption1).scaledFont(
+            for: UIFont.systemFont(ofSize: 12),
+            maximumPointSize: 16,
+            compatibleWith: traitCollection)
         l.textColor = .secondaryLabel
         return l
     }
