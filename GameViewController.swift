@@ -513,13 +513,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         installGameHeaderIfNeeded()
         installLiveTabBarIfNeeded()
         applyStoryboardShiftIfNeeded()      // sets currentIBShift; must run before repositionSortButton and layoutBottomControls
-        applyAdaptiveColumnLayout()         // pins Score to trailing, flexes Name, shrinks Game/Hole proportionally
+        let wasBuildDone = extraScoringRowsBuilt
+        buildExtraScoringRowsIfNeeded()     // must run before applyAdaptiveColumnLayout so rows 5-6 are in the arrays
+        applyAdaptiveColumnLayout()         // pins Score to trailing, flexes Name, shrinks Game/Hole proportionally — covers all rows
         repositionSortButton()              // uses updated playerNameLabels[0].frame.minX — idempotent
         layoutBottomControls()              // must run before installLiveNassauButtonIfNeeded
         installLiveNassauButtonIfNeeded()
         refreshPlayerRowCards()
-        let wasBuildDone = extraScoringRowsBuilt
-        buildExtraScoringRowsIfNeeded()
         if !wasBuildDone && extraScoringRowsBuilt {
             styleWolfButtons()
             paintEverythingForCurrentHole()
