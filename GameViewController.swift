@@ -226,6 +226,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // Last shift value applied by applyStoryboardShiftIfNeeded.
     // repositionSortButton reads this to compute the sort button Y from the original frame.
     private var currentIBShift: CGFloat = 0
+    // Column header labels — not IBOutlet-connected; found by text in viewDidLoad.
+    private weak var colHeaderGame: UILabel?
+    private weak var colHeaderHole: UILabel?
+    private weak var colHeaderWolf: UILabel?
+    private weak var colHeaderScore: UILabel?
+    private weak var colHeaderProx: UILabel?
 
     // Scroll container for scoring page — enabled only when 7-player content overflows tab bar
     private var gameContentScrollView: UIScrollView?
@@ -424,6 +430,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         NotificationCenter.default.addObserver(self, selector: #selector(handleRemoteMatchDidStart), name: .remoteMatchDidStart, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleAppBackground), name: UIApplication.didEnterBackgroundNotification, object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(handleKeyboardWillHide), name: UIResponder.keyboardWillHideNotification, object: nil)
+        findColumnHeaderLabels()
     }
 
     @objc private func handleAppBackground() {
@@ -506,7 +513,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         installGameHeaderIfNeeded()
         installLiveTabBarIfNeeded()
         applyStoryboardShiftIfNeeded()      // sets currentIBShift; must run before repositionSortButton and layoutBottomControls
-        repositionSortButton()              // uses currentIBShift + original frame — idempotent
+        applyAdaptiveColumnLayout()         // pins Score to trailing, flexes Name, shrinks Game/Hole proportionally
+        repositionSortButton()              // uses updated playerNameLabels[0].frame.minX — idempotent
         layoutBottomControls()              // must run before installLiveNassauButtonIfNeeded
         installLiveNassauButtonIfNeeded()
         refreshPlayerRowCards()
@@ -958,6 +966,87 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let h: CGFloat = 26
         let w: CGFloat = 72
         btn.frame = CGRect(x: first.frame.minX, y: headerCenterY - h / 2, width: w, height: h)
+    }
+
+    // Walk the direct subviews once at viewDidLoad to capture the storyboard column headers.
+    private func findColumnHeaderLabels() {
+        for sub in view.subviews {
+            guard let lbl = sub as? UILabel, !lbl.isHidden else { continue }
+            switch lbl.text {
+            case "Game":  colHeaderGame  = lbl
+            case "Hole":  colHeaderHole  = lbl
+            case "Wolf":  colHeaderWolf  = lbl
+            case "Score": colHeaderScore = lbl
+            case "Prox":  colHeaderProx  = lbl
+            default: break
+            }
+        }
+    }
+
+    // Repositions every scoring-row column so the Score field is always pinned to the
+    // trailing edge. Game and Hole shrink proportionally; Name fills the remainder.
+    // Safe to call every viewDidLayoutSubviews pass — only touches .origin.x / .size.width.
+    private func applyAdaptiveColumnLayout() {
+        let vw = view.bounds.width
+        guard vw > 10 else { return }
+
+        // Storyboard designed for 393 pt. Fixed overhead per row (px that can't shrink):
+        //   leftMargin(14) + game-hole gap(1) + hole-prox gap(3)
+        //   + prox(36) + wolf(36) + wolf-name gap(6) + name-score gap(3)
+        //   + score(44) + rightMargin(12) = 155
+        let leftMargin:  CGFloat = 14
+        let rightMargin: CGFloat = 12
+        let proxW:       CGFloat = 36
+        let wolfW:       CGFloat = 36
+        let scoreW:      CGFloat = 44
+        let ghGap:       CGFloat = 1
+        let hpGap:       CGFloat = 3
+        let wnGap:       CGFloat = 6
+        let nsGap:       CGFloat = 3
+
+        let fixedOverhead = leftMargin + ghGap + hpGap + proxW + wolfW + wnGap + nsGap + scoreW + rightMargin
+        let flex = vw - fixedOverhead          // space shared by Game + Hole + Name
+
+        let designGameW: CGFloat = 77
+        let designHoleW: CGFloat = 55
+        let designNameW: CGFloat = 106
+        let designTotal  = designGameW + designHoleW + designNameW   // 238
+
+        let scale  = flex / designTotal
+        let gameW  = max(44, (designGameW * scale).rounded())
+        let holeW  = max(36, (designHoleW * scale).rounded())
+
+        let gameX  = leftMargin
+        let holeX  = gameX + gameW + ghGap
+        let proxX  = holeX + holeW + hpGap
+        let wolfX  = proxX + proxW
+        let nameX  = wolfX + wolfW + wnGap
+        let scoreX = vw - rightMargin - scoreW
+        let nameW  = max(62, scoreX - nsGap - nameX)
+
+        func resize(_ v: UIView?, x: CGFloat, w: CGFloat) {
+            guard let v else { return }
+            var f = v.frame; f.origin.x = x; f.size.width = w; v.frame = f
+        }
+        func moveX(_ v: UIView?, x: CGFloat) {
+            guard let v else { return }
+            var f = v.frame; f.origin.x = x; v.frame = f
+        }
+
+        for lbl in totalMoneyLabels  { resize(lbl, x: gameX, w: gameW) }
+        for fld in playerMoneyFields { resize(fld, x: holeX, w: holeW) }
+        for btn in proxButtons       { moveX(btn, x: proxX) }
+        for btn in wolfButtons       { moveX(btn, x: wolfX) }
+        for lbl in playerNameLabels  { resize(lbl, x: nameX, w: nameW) }
+        for fld in scoreFields       { moveX(fld, x: scoreX) }
+
+        // Header labels (no IBOutlet — found by text in viewDidLoad)
+        resize(colHeaderGame,  x: gameX,  w: gameW)
+        resize(colHeaderHole,  x: holeX,  w: holeW)
+        moveX(colHeaderProx,   x: proxX)
+        moveX(colHeaderWolf,   x: wolfX)
+        moveX(colHeaderScore,  x: scoreX)
+        // Sort button follows playerNameLabels[0].frame.minX — repositionSortButton() handles it.
     }
 
     private func applyStoryboardShiftIfNeeded() {
