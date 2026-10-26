@@ -995,9 +995,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let scoreW:      CGFloat = 44
         let ghGap:       CGFloat = 1
         let hpGap:       CGFloat = 3
+        let pwGap:       CGFloat = 6   // min gap between Prox and Wolf; taken from Name, not Game/Hole
         let wnGap:       CGFloat = 6
         let nsGap:       CGFloat = 3
 
+        // fixedOverhead excludes pwGap so Game/Hole scaling is unaffected; Name absorbs it instead.
         let fixedOverhead = leftMargin + ghGap + hpGap + proxW + wolfW + wnGap + nsGap + scoreW + rightMargin
         let flex = vw - fixedOverhead          // space shared by Game + Hole + Name
 
@@ -1013,7 +1015,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let gameX  = leftMargin
         let holeX  = gameX + gameW + ghGap
         let proxX  = holeX + holeW + hpGap
-        let wolfX  = proxX + proxW
+        let wolfX  = proxX + proxW + pwGap
         let nameX  = wolfX + wolfW + wnGap
         let scoreX = vw - rightMargin - scoreW
         let nameW  = max(62, scoreX - nsGap - nameX)
