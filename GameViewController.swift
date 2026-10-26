@@ -968,19 +968,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         btn.frame = CGRect(x: first.frame.minX, y: headerCenterY - h / 2, width: w, height: h)
     }
 
-    // Walk the direct subviews once at viewDidLoad to capture the storyboard column headers.
+    // Column header labels are tagged in the storyboard (tags 1001-1005).
     private func findColumnHeaderLabels() {
-        for sub in view.subviews {
-            guard let lbl = sub as? UILabel, !lbl.isHidden else { continue }
-            switch lbl.text {
-            case "Game":  colHeaderGame  = lbl
-            case "Hole":  colHeaderHole  = lbl
-            case "Wolf":  colHeaderWolf  = lbl
-            case "Score": colHeaderScore = lbl
-            case "Prox":  colHeaderProx  = lbl
-            default: break
-            }
-        }
+        colHeaderGame  = view.viewWithTag(1001) as? UILabel
+        colHeaderHole  = view.viewWithTag(1002) as? UILabel
+        colHeaderProx  = view.viewWithTag(1003) as? UILabel
+        colHeaderWolf  = view.viewWithTag(1004) as? UILabel
+        colHeaderScore = view.viewWithTag(1005) as? UILabel
     }
 
     // Repositions every scoring-row column so the Score field is always pinned to the
