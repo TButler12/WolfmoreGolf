@@ -378,13 +378,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // --- Player money fields ---
         for (i, tf) in playerMoneyFields.enumerated() {
             tf.tag = i
-            tf.isUserInteractionEnabled = true
+            tf.isUserInteractionEnabled = false
             tf.textAlignment = .right
-            tf.keyboardType = .decimalPad
             tf.adjustsFontSizeToFitWidth = true
             tf.minimumFontSize = 9
-            tf.inputAccessoryView = makeDoneToolbar()
-            tf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
+            tf.accessibilityTraits = .staticText
         }
         
         // --- Button tags + styles ---
@@ -6374,7 +6372,6 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             mf.tag = seat
             mf.frame = CGRect(x: row4Money.frame.minX, y: offY,
                               width: row4Money.frame.width, height: row4Money.frame.height)
-            mf.keyboardType = .decimalPad
             mf.textAlignment = row4Money.textAlignment
             mf.adjustsFontSizeToFitWidth = true
             mf.minimumFontSize = 9
@@ -6383,9 +6380,8 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             mf.backgroundColor = row4Money.backgroundColor
             mf.borderStyle = row4Money.borderStyle
             mf.layer.cornerRadius = row4Money.layer.cornerRadius
-            mf.isUserInteractionEnabled = true
-            mf.inputAccessoryView = makeDoneToolbar()
-            mf.addTarget(self, action: #selector(moneyChanged(_:)), for: .editingChanged)
+            mf.isUserInteractionEnabled = false
+            mf.accessibilityTraits = .staticText
             sup.addSubview(mf)
             playerMoneyFields.append(mf)
 
