@@ -1258,6 +1258,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     compatibleWith: self?.traitCollection)
                 return a
             }
+            cfg.titleLineBreakMode = .byTruncatingTail
             let btn = UIButton(configuration: cfg)
             btn.tintColor = .secondaryLabel
             capButtonDynamicType(btn)
