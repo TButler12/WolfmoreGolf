@@ -5661,6 +5661,14 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
 
     @objc private func joinTapped() {
         let sheet = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        let ud = UserDefaults.standard
+        if let lastCode = ud.string(forKey: "lastTournamentCode"),
+           GameManager.shared.currentGame?.tournamentCode == nil {
+            let lastName = ud.string(forKey: "lastTournamentName") ?? lastCode
+            sheet.addAction(UIAlertAction(
+                title: "Rejoin \(lastName)\nCode: \(lastCode)",
+                style: .default) { [weak self] _ in self?.attachToTournament(code: lastCode) })
+        }
         sheet.addAction(UIAlertAction(
             title: "Tournament\nLink this round to a tournament leaderboard",
             style: .default) { [weak self] _ in self?.showTournamentJoinPrompt() })

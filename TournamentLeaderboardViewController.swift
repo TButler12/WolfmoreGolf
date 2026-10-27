@@ -240,12 +240,30 @@ final class TournamentLeaderboardViewController: UIViewController {
     @objc private func leaveTapped() {
         let ac = UIAlertController(
             title: "Leave this tournament?",
-            message: "Your progress is saved.",
+            message: "Your scores are saved. Rejoin any time from the Join button on the scoring screen.",
             preferredStyle: .alert
         )
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         ac.addAction(UIAlertAction(title: "Leave", style: .destructive) { [weak self] _ in
             guard let self else { return }
+            let ud = UserDefaults.standard
+            if let g = GameManager.shared.currentGame {
+                ud.set(g.tournamentCode,        forKey: "lastTournamentCode")
+                ud.set(g.tournamentMatchId,     forKey: "lastTournamentMatchId")
+                ud.set(g.groupCode,             forKey: "lastTournamentGroupCode")
+                ud.set(g.tournamentName,        forKey: "lastTournamentName")
+                ud.set(g.tournamentGameType,    forKey: "lastTournamentGameType")
+                ud.set(g.tournamentScoringType, forKey: "lastTournamentScoringType")
+            }
+            GameManager.shared.update { g in
+                g.tournamentCode        = nil
+                g.groupCode             = nil
+                g.tournamentMatchId     = nil
+                g.tournamentName        = nil
+                g.tournamentGameType    = nil
+                g.tournamentScoringType = nil
+            }
+            GameManager.shared.saveCurrent()
             if let nav = self.navigationController, nav.presentingViewController != nil {
                 nav.dismiss(animated: true)
             } else {
