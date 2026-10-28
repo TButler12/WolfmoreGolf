@@ -1268,7 +1268,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let scoreBtn = makeTabButton(icon: "target", title: "Score")
         scoreBtn.addTarget(self, action: #selector(liveTabScoreTapped), for: .touchUpInside)
 
-        let liveBtn = makeTabButton(icon: "tv", title: "Live Board")
+        let liveBtn = makeTabButton(icon: "tv", title: "Go Live")
         liveBtn.addTarget(self, action: #selector(liveTabLiveTapped), for: .touchUpInside)
 
         let leaderboardBtn = makeTabButton(icon: "trophy", title: "Leaderboard")
@@ -6156,7 +6156,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
                     compatibleWith: self?.traitCollection)
                 return a
             }
-            lwCfg.title = "Live Board"
+            lwCfg.title = "Go Live"
             let liveWolfBtn = UIButton(configuration: lwCfg)
             liveWolfBtn.addTarget(self, action: #selector(liveWolfTapped), for: .touchUpInside)
             capButtonDynamicType(liveWolfBtn)
