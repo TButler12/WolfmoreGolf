@@ -2916,10 +2916,13 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // Press tooltip is added to the stepper container in layoutBottomControls
 
         addHelp(to: alonePushed, title: "Alone (Lone Wolf)", message: """
-    Player goes solo (no partner).
-    Doubles the stake for this hole.
-    Only tap if you want Lone Wolf wager to double. Otherwise. Alone calculation will be the same but without the double.
-    Note: Alone Team Total calculation uses a ghost partner score: (player score + bogey) ÷ 2.
+    Player goes solo (no partner). Doubles the stake for this hole.
+
+    Team total method (set in Game Settings → Lone Wolf Team Score):
+    · Ghost (Classic): your score + an imaginary partner halfway between your score and bogey. Par 4, score 4 → 4 + (4+5)÷2 = 8.5.
+    · Double Score: your score counts twice. Par 4, score 4 → 8.
+
+    Quick guide: better than bogey, Double Score helps you. Worse than bogey, Ghost helps you. At bogey, they're equal.
     """)
 
     }
