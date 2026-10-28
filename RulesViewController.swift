@@ -411,9 +411,19 @@ private extension RulesViewController {
 
         header("LONE WOLF")
         body("""
-        • Player goes solo (Lone Wolf)
-        • Lone Wolf doubles the hole wager
-        • Special scoring applies for Lone Wolf situations
+        When the Wolf goes solo, they play against the other players alone, and the hole wager doubles.
+
+        Because partners count two scores, the Lone Wolf's score is converted to a two-score total. Choose how in Game Settings:
+
+        Ghost (Classic). The traditional rule. You get an imaginary partner who scores halfway between you and a bogey.
+        Par 4, you make 4 → 4 + (4 + 5) ÷ 2 = 8.5.
+        Softens a blow-up hole, but a birdie is worth less.
+
+        Double Score. A simpler, higher-risk variation. Your score counts twice.
+        Par 4, you make 4 → team total 8.
+        Big reward for a great hole, big penalty for a bad one.
+
+        Quick guide: better than bogey, Double Score helps you. Worse than bogey, Ghost helps you. At bogey, they're equal.
         """)
 
         header("UMBIE")

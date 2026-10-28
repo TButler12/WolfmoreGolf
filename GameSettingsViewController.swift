@@ -429,11 +429,11 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Lone Wolf Team Score segment
 
     private static let loneWolfInfoTitle   = "Lone Wolf Team Score"
-    private static let loneWolfInfoMessage = "When a player goes alone, their team total is compared to the other team's total. Ghost Partner: your score plus an imaginary partner halfway between your score and bogey (3 on a par 3 → 3 + 3.5 = 6.5). Double Score: your score counts twice (3 → 6)."
+    private static let loneWolfInfoMessage = "When a player goes alone, their team total is compared to the other team's total.\n\nGhost (Classic): your score plus an imaginary partner halfway between your score and bogey — par 4, you make 4 → 4 + (4 + 5) ÷ 2 = 8.5. Softens a blow-up, but a birdie is worth less.\n\nDouble Score: your score counts twice — par 4, you make 4 → team total 8. Big reward for a great hole, big penalty for a bad one.\n\nQuick guide: better than bogey, Double Score helps you. Worse than bogey, Ghost helps you. At bogey, they're equal."
 
     private func installLoneWolfTeamScoreSegment() {
         guard GameManager.shared.currentGame?.tournamentCode == nil else { return }
-        let segment = UISegmentedControl(items: ["Ghost Partner", "Double Score"])
+        let segment = UISegmentedControl(items: ["Ghost (Classic)", "Double Score"])
         segment.addTarget(self, action: #selector(loneWolfTeamScoreChanged(_:)), for: .valueChanged)
         segment.backgroundColor          = .systemGray6
         segment.selectedSegmentTintColor = UIColor(displayP3Red: 0.751, green: 0.819, blue: 0.370, alpha: 1)
@@ -458,7 +458,7 @@ final class GameSettingsViewController: UIViewController, UITextFieldDelegate {
         note.font          = UIFont.preferredFont(forTextStyle: .caption1)
         note.textColor     = .secondaryLabel
         note.numberOfLines = 0
-        note.text          = "Ghost: 3 on a par 3 → 6.5 · Double: 3 → 6"
+        note.text          = "Ghost (Classic): better than bogey → Double wins. Worse → Ghost wins. At bogey, equal."
 
         let header = labeledHeaderRow(
             title: Self.loneWolfInfoTitle,
