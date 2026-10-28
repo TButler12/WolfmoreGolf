@@ -4107,6 +4107,24 @@ let SAND_VALLEY_SEDGE_VALLEY_CHAMPIONSHIP_TEES: [TeeInfo] = [
     TeeInfo(teeName: "CHAMPIONSHIP", yardage: 6198, rating: 70.7, slope: 133)
 ]
 
+// MARK: Edelweiss Chalet Country Club — New Glarus, WI
+// Par 72 | Architect: Art Johnson (1968) | Private
+private let EDELWEISS_CHALET_CC_ID = UUID(uuidString: "D2E6A26D-A4D2-4EBE-9BE9-531533FA077D")!
+
+let EDELWEISS_CHALET_CC_PARS: [Int] = [4,4,5,3,4,4,3,5,4, 4,5,4,3,4,5,4,3,4]
+
+let EDELWEISS_CHALET_CC_MENS_HCS: [Int] = [15,5,1,17,7,11,13,3,9, 2,8,12,18,14,4,10,16,6]
+
+let EDELWEISS_CHALET_CC_WOMENS_HCS: [Int] = [11,13,1,17,5,9,15,3,7, 14,4,8,16,12,2,6,18,10]
+
+let EDELWEISS_CHALET_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",          yardage: 6642, rating: 72.2, slope: 127),
+    TeeInfo(teeName: "White",         yardage: 6262, rating: 70.5, slope: 123),
+    TeeInfo(teeName: "Green (Men)",   yardage: 5660, rating: 67.8, slope: 117),
+    TeeInfo(teeName: "Green (Women)", yardage: 5660, rating: 72.9, slope: 126),
+    TeeInfo(teeName: "Red",           yardage: 5148, rating: 70.0, slope: 120),
+]
+
 // MARK: Arcadia Bluffs — The Bluffs Course — Blue — Arcadia, MI
 // Par 72 | 6,858 yds | Rating 74.2 | Slope 150
 // Type: Daily-Fee | Architect: W. Henderson, R. Smith
@@ -10288,6 +10306,58 @@ let QUINTERO_GC_TEES: [TeeInfo] = [
         slope: 120
     )
 ]
+
+// MARK: - Ventana Canyon Club (Tucson, AZ) — Canyon & Mountain Courses
+
+private let VENTANA_CANYON_CANYON_ID   = UUID(uuidString: "4401CF2B-CF13-4312-A45A-E626CEE519A7")!
+private let VENTANA_CANYON_MOUNTAIN_ID = UUID(uuidString: "2CC542E5-31FE-4DC2-BF28-0B77F7DBF76C")!
+
+let VENTANA_CANYON_CANYON_PARS: [Int] = [
+    4,5,4,4,3,4,5,3,4,
+    4,4,5,3,4,4,3,4,5
+]
+
+let VENTANA_CANYON_CANYON_MENS_HCS: [Int] = [
+    8,12,2,18,16,6,10,14,4,
+    11,3,9,15,17,1,13,5,7
+]
+
+let VENTANA_CANYON_CANYON_LADIES_HCS: [Int] = [
+    6,8,2,18,16,10,12,14,4,
+    11,3,9,13,17,7,15,1,5
+]
+
+private let VENTANA_CANYON_CANYON_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",     yardage: 6836, rating: 72.1, slope: 137),
+    TeeInfo(teeName: "Gold",      yardage: 6299, rating: 70.2, slope: 132),
+    TeeInfo(teeName: "Silver",    yardage: 5822, rating: 68.0, slope: 125),
+    TeeInfo(teeName: "Turquoise", yardage: 5442, rating: 71.8, slope: 136),
+    TeeInfo(teeName: "Copper",    yardage: 4939, rating: 69.3, slope: 124)
+]
+
+let VENTANA_CANYON_MOUNTAIN_PARS: [Int] = [
+    4,4,3,5,4,3,4,5,4,
+    4,4,5,4,3,4,3,4,5
+]
+
+let VENTANA_CANYON_MOUNTAIN_MENS_HCS: [Int] = [
+    9,3,17,11,15,5,1,13,7,
+    10,8,12,16,14,2,18,4,6
+]
+
+let VENTANA_CANYON_MOUNTAIN_LADIES_HCS: [Int] = [
+    5,7,17,1,11,13,15,3,9,
+    14,10,8,12,16,6,18,2,4
+]
+
+private let VENTANA_CANYON_MOUNTAIN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",     yardage: 6898, rating: 72.9, slope: 141),
+    TeeInfo(teeName: "Gold",      yardage: 6338, rating: 70.2, slope: 136),
+    TeeInfo(teeName: "Silver",    yardage: 5733, rating: 67.4, slope: 127),
+    TeeInfo(teeName: "Turquoise", yardage: 5335, rating: 70.8, slope: 133),
+    TeeInfo(teeName: "Copper",    yardage: 4695, rating: 67.4, slope: 123)
+]
+
 // MARK: - American Dunes Golf Club
 
 private let AMERICAN_DUNES_ID = UUID(uuidString: "C12A6D8E-1F44-4B7D-9E31-2A8C7F5D1001")!
@@ -10661,6 +10731,173 @@ private let PAAKO_RIDGE_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Turquoise", yardage: 4776, rating: 64.7, slope: 115)
 
 ]
+
+// MARK: - Black Mesa Golf Club (La Cieneguilla, NM)
+
+private let BLACK_MESA_GC_ID = UUID(uuidString: "574F19A2-7404-4D5B-A335-24F52181BBC8")!
+
+let BLACK_MESA_GC_PARS: [Int] = [
+    4,4,5,3,4,5,4,3,4,
+    4,3,4,5,4,3,5,4,4
+]
+
+let BLACK_MESA_GC_MENS_HCS: [Int] = [
+    7,11,1,13,3,15,17,5,9,
+    6,18,12,8,16,14,4,2,10
+]
+
+let BLACK_MESA_GC_LADIES_HCS: [Int] = [
+    13,7,1,11,17,9,15,5,3,
+    4,10,16,8,12,14,2,18,6
+]
+
+private let BLACK_MESA_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7307, rating: 73.2, slope: 137)
+]
+
+// MARK: - Twin Warriors Golf Course (Santa Ana Pueblo, NM)
+
+private let TWIN_WARRIORS_GC_ID = UUID(uuidString: "827A62A6-B063-4E03-8E01-8779C11A41F1")!
+
+let TWIN_WARRIORS_GC_PARS: [Int] = [
+    5,4,4,3,4,4,4,5,3,
+    4,4,5,3,4,3,5,4,4
+]
+
+let TWIN_WARRIORS_GC_HCS: [Int] = [
+    9,7,3,15,13,11,1,5,17,
+    2,16,4,14,18,12,8,10,6
+]
+
+private let TWIN_WARRIORS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tour", yardage: 7736, rating: 79.0, slope: 155)
+]
+
+// MARK: - Santa Ana Golf Club (Santa Ana Pueblo, NM) — Tamaya / Cheena / Star nines
+// Per-nine HCs (1-9) converted to 18-hole (front→2n-1, back→2n)
+
+private let SANTA_ANA_TAMAYA_CHEENA_ID = UUID(uuidString: "6CD916AA-A45D-40C2-A76A-332C0BA75C9F")!
+private let SANTA_ANA_TAMAYA_STAR_ID   = UUID(uuidString: "656F11F1-E7E1-414B-8023-A3BCEC96E861")!
+private let SANTA_ANA_CHEENA_STAR_ID   = UUID(uuidString: "5D85BD05-B6DC-48DF-96CD-E9974AAC1FC6")!
+
+let SANTA_ANA_TAMAYA_CHEENA_PARS: [Int] = [
+    4,4,5,3,5,3,4,4,4,
+    4,4,3,4,3,4,4,5,5
+]
+
+let SANTA_ANA_TAMAYA_CHEENA_MENS_HCS: [Int] = [
+    13,7,5,15,3,17,1,11,9,
+    4,14,10,18,16,12,8,2,6
+]
+
+let SANTA_ANA_TAMAYA_CHEENA_LADIES_HCS: [Int] = [
+    9,11,7,17,1,15,3,5,13,
+    10,14,12,16,18,6,8,2,4
+]
+
+private let SANTA_ANA_TAMAYA_CHEENA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7338)
+]
+
+let SANTA_ANA_TAMAYA_STAR_PARS: [Int] = [
+    4,4,5,3,5,3,4,4,4,
+    4,4,4,3,4,5,4,3,5
+]
+
+let SANTA_ANA_TAMAYA_STAR_MENS_HCS: [Int] = [
+    13,7,5,15,3,17,1,11,9,
+    12,8,10,16,4,2,14,18,6
+]
+
+let SANTA_ANA_TAMAYA_STAR_LADIES_HCS: [Int] = [
+    9,11,7,17,1,15,3,5,13,
+    10,8,14,18,6,2,12,16,4
+]
+
+private let SANTA_ANA_TAMAYA_STAR_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7136)
+]
+
+let SANTA_ANA_CHEENA_STAR_PARS: [Int] = [
+    4,4,3,4,3,4,4,5,5,
+    4,4,4,3,4,5,4,3,5
+]
+
+let SANTA_ANA_CHEENA_STAR_MENS_HCS: [Int] = [
+    3,13,9,17,15,11,7,1,5,
+    12,8,10,16,4,2,14,18,6
+]
+
+let SANTA_ANA_CHEENA_STAR_LADIES_HCS: [Int] = [
+    9,13,11,15,17,5,7,1,3,
+    10,8,14,18,6,2,12,16,4
+]
+
+private let SANTA_ANA_CHEENA_STAR_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7130)
+]
+
+// MARK: - The Club at Las Campanas (Santa Fe, NM) — Sunrise & Sunset Courses
+
+private let LAS_CAMPANAS_SUNRISE_ID = UUID(uuidString: "A3AA7903-9129-47AA-B40A-CE2D4089CDAC")!
+private let LAS_CAMPANAS_SUNSET_ID  = UUID(uuidString: "D225EBC0-765B-4E3F-A75D-54BB13899846")!
+
+let LAS_CAMPANAS_SUNRISE_PARS: [Int] = [
+    4,5,4,3,4,5,4,3,4,
+    5,4,3,4,4,5,3,4,4
+]
+
+let LAS_CAMPANAS_SUNRISE_HCS: [Int] = [
+    15,9,5,17,1,7,3,13,11,
+    14,6,16,4,10,2,18,8,12
+]
+
+private let LAS_CAMPANAS_SUNRISE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black S/R", yardage: 7545, rating: 74.4, slope: 132)
+]
+
+let LAS_CAMPANAS_SUNSET_PARS: [Int] = [
+    4,4,3,4,5,3,4,5,4,
+    5,3,5,3,4,3,4,5,4
+]
+
+let LAS_CAMPANAS_SUNSET_HCS: [Int] = [
+    9,1,17,5,7,15,3,13,11,
+    2,18,8,16,14,12,10,6,4
+]
+
+private let LAS_CAMPANAS_SUNSET_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black S/S", yardage: 7475, rating: 74.6, slope: 142)
+]
+
+// MARK: - Piñon Hills Golf Course — Farmington, NM
+// Par 72 | Architect: Ken Dye | Public | Opened: November 1989
+
+private let PINON_HILLS_GC_ID = UUID(uuidString: "FCBC92EA-0B89-478F-92D7-E4B87AE2E22B")!
+
+let PINON_HILLS_GC_PARS: [Int] = [
+    4,4,4,3,4,3,4,5,5,
+    4,4,4,3,5,4,3,4,5
+]
+
+let PINON_HILLS_GC_MENS_HCS: [Int] = [
+    9,11,5,15,7,17,13,3,1,
+    6,14,18,8,10,16,12,4,2
+]
+
+let PINON_HILLS_GC_WOMENS_HCS: [Int] = [
+    9,11,7,15,3,17,13,5,1,
+    8,14,18,6,12,16,10,4,2
+]
+
+private let PINON_HILLS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 7198, rating: 73.9, slope: 139),
+    TeeInfo(teeName: "Blue",   yardage: 6746, rating: 71.7, slope: 132),
+    TeeInfo(teeName: "White",  yardage: 6204, rating: 69.0, slope: 127),
+    TeeInfo(teeName: "Silver", yardage: 5560, rating: 66.5, slope: 124),
+    TeeInfo(teeName: "Red",    yardage: 5428, rating: 70.6, slope: 125)
+]
+
 // MARK: - Trinity Forest GC (Plates)
 
 private let TRINITY_FOREST_ID = UUID(uuidString: "C3E8A6F1-9D55-4B77-8A33-100000000503")!
@@ -14182,6 +14419,108 @@ let SHELL_LANDING_GC_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
+// MARK: - UNM Championship Golf Course — Albuquerque, NM
+// Architect: Robert "Red" Lawrence | Public | Opened 1966
+// =======================================================
+
+private let UNM_CHAMPIONSHIP_ID = UUID(uuidString: "06975275-5203-4819-AE6F-2C9FEBFC02D3")!
+
+let UNM_CHAMPIONSHIP_PARS: [Int] = [5,4,3,4,4,4,4,3,5, 4,3,4,4,5,4,3,4,5]
+
+let UNM_CHAMPIONSHIP_MENS_HCS: [Int] = [11,13,17,15,3,5,1,9,7, 2,16,10,4,6,8,18,14,12]
+
+let UNM_CHAMPIONSHIP_WOMENS_HCS: [Int] = [5,11,17,1,13,3,9,15,7, 14,16,12,10,2,8,18,4,6]
+
+private let UNM_CHAMPIONSHIP_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black/Lobo", yardage: 7555, rating: 75.2, slope: 134),
+    TeeInfo(teeName: "Gold",       yardage: 7201, rating: 74.2, slope: 131),
+    TeeInfo(teeName: "Blue",       yardage: 6913, rating: 72.3, slope: 128),
+    TeeInfo(teeName: "White",      yardage: 6539, rating: 70.5, slope: 126),
+    TeeInfo(teeName: "Silver",     yardage: 5910, rating: 67.7, slope: 119),
+    TeeInfo(teeName: "Cherry",     yardage: 5380, rating: 65.3, slope: 114)
+]
+
+// =======================================================
+// MARK: - Sandia Golf Club — Albuquerque, NM
+// Architect: Scott Miller | Resort (Troon)
+// Ratings/slopes not available; yardage only
+// =======================================================
+
+private let SANDIA_GC_ID = UUID(uuidString: "60611968-7B47-4504-8679-D5CF4C11EF6C")!
+
+let SANDIA_GC_PARS: [Int] = [4,4,3,4,5,4,5,3,4, 4,5,3,4,4,4,3,5,4]
+
+let SANDIA_GC_MENS_HCS: [Int] = [11,3,17,15,5,1,9,13,7, 12,2,18,16,4,8,10,14,6]
+
+let SANDIA_GC_LADIES_HCS: [Int] = [15,17,7,13,1,3,11,9,5, 16,6,12,14,10,2,8,18,4]
+
+private let SANDIA_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Professional", yardage: 7755),
+    TeeInfo(teeName: "Championship", yardage: 7154),
+    TeeInfo(teeName: "Club",         yardage: 6671),
+    TeeInfo(teeName: "Resort",       yardage: 6008),
+    TeeInfo(teeName: "Forward",      yardage: 4879)
+]
+
+// =======================================================
+// MARK: - Cabo Del Sol — Cabo San Lucas, BCS, Mexico
+// Ocean Course: Jack Nicklaus (redesign by Nicklaus Design / Jim Lipe & Kurt Bowman)
+// Desert Course: Tom Weiskopf | Opened December 2001
+// Ocean pars/HCs from BlueGolf (post-redesign layout, 36/36 = 72)
+// =======================================================
+
+private let CABO_DEL_SOL_OCEAN_ID  = UUID(uuidString: "E3CA89D3-405F-48BB-A4B7-C343205D6DD3")!
+private let CABO_DEL_SOL_DESERT_ID = UUID(uuidString: "B192C5E5-9C00-4463-8EC8-9BDC009C0195")!
+
+let CABO_DEL_SOL_OCEAN_PARS: [Int] = [4,5,4,5,4,3,3,4,4, 4,4,5,3,4,5,4,3,4]
+let CABO_DEL_SOL_OCEAN_HCS:  [Int] = [7,9,17,11,1,13,15,5,3, 4,18,8,12,10,14,2,16,6]
+
+private let CABO_DEL_SOL_OCEAN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7091, rating: 70.0, slope: 113)
+]
+
+let CABO_DEL_SOL_DESERT_PARS:        [Int] = [4,3,5,4,3,4,4,4,5, 4,3,5,4,4,5,3,4,4]
+let CABO_DEL_SOL_DESERT_HCS:         [Int] = [3,15,1,17,13,9,11,7,5, 14,18,2,4,12,6,16,8,10]
+let CABO_DEL_SOL_DESERT_LADIES_HCS:  [Int] = [3,15,1,13,17,7,11,9,5, 12,18,2,8,14,4,16,10,6]
+
+private let CABO_DEL_SOL_DESERT_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7049, rating: 74.2, slope: 141),
+    TeeInfo(teeName: "Gold",  yardage: 6680),
+    TeeInfo(teeName: "Blue",  yardage: 6142),
+    TeeInfo(teeName: "White", yardage: 5494),
+    TeeInfo(teeName: "Red",   yardage: 4919)
+]
+
+// =======================================================
+// MARK: - Royal Melbourne Golf Club — Black Rock, VIC, Australia
+// Architects: West – Alister MacKenzie (1931); East – Alex Russell
+// =======================================================
+
+private let ROYAL_MELBOURNE_WEST_ID = UUID(uuidString: "16565AD2-3D88-4DAE-912C-1AFF380F6E68")!
+private let ROYAL_MELBOURNE_EAST_ID = UUID(uuidString: "9A35FF30-6528-4167-892B-02642D587F03")!
+
+let ROYAL_MELBOURNE_WEST_PARS: [Int] = [4,5,4,5,3,4,3,4,4, 4,4,5,3,4,5,3,4,4]  // Par 72, Blue Tees
+let ROYAL_MELBOURNE_WEST_HCS:  [Int] = [5,4,14,2,16,7,17,11,9, 13,1,10,18,12,8,15,3,6]
+
+let ROYAL_MELBOURNE_WEST_RED_MENS_PARS:   [Int] = [4,4,4,4,3,4,3,4,4, 4,4,5,3,4,4,3,4,4]  // Par 69
+let ROYAL_MELBOURNE_WEST_RED_WOMENS_PARS: [Int] = [4,5,4,5,3,4,3,4,4, 4,5,5,3,4,4,3,5,4]  // Par 73
+
+private let ROYAL_MELBOURNE_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6077),
+    TeeInfo(teeName: "Red",  yardage: 5191)
+]
+
+let ROYAL_MELBOURNE_EAST_PARS: [Int] = [4,4,4,3,4,3,5,4,4, 5,4,4,3,4,4,3,5,4]  // Par 71, Blue Tees
+let ROYAL_MELBOURNE_EAST_HCS:  [Int] = [13,5,10,15,12,16,2,6,9, 3,11,4,18,8,14,17,1,7]
+
+let ROYAL_MELBOURNE_EAST_RED_WOMENS_PARS: [Int] = [4,5,4,3,4,3,5,5,4, 5,4,4,3,4,4,3,5,5]  // Par 74
+
+private let ROYAL_MELBOURNE_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue", yardage: 6007),
+    TeeInfo(teeName: "Red",  yardage: 5320)
+]
+
+// =======================================================
 // MARK: - Built-in Registry
 // =======================================================
 
@@ -15081,7 +15420,20 @@ private enum BuiltIns {
           phone: "(888) 651-5539",
           website: "https://www.sandvalley.com",
           address: "1697 Leopold Way, Nekoosa, WI 54457"),
-        
+
+        c(EDELWEISS_CHALET_CC_ID,
+          "Edelweiss Chalet Country Club",
+          EDELWEISS_CHALET_CC_PARS,
+          EDELWEISS_CHALET_CC_MENS_HCS,
+          EDELWEISS_CHALET_CC_TEES,
+          country: "USA",
+          state: "WI",
+          architect: "Art Johnson",
+          type: "Private",
+          phone: "(608) 527-2315",
+          address: "4764 Edelweiss Rd, New Glarus, WI 53719",
+          teeSets: [TeeSet(name: "Women's", pars: EDELWEISS_CHALET_CC_PARS, hcs: EDELWEISS_CHALET_CC_WOMENS_HCS)]),
+
         // -------------------------
         // Arizona
         // -------------------------
@@ -22070,6 +22422,34 @@ private enum BuiltIns {
             promo: nil
         ),
         c(
+            VENTANA_CANYON_CANYON_ID,
+            "Ventana Canyon (Canyon)",
+            VENTANA_CANYON_CANYON_PARS,
+            VENTANA_CANYON_CANYON_MENS_HCS,
+            VENTANA_CANYON_CANYON_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(520) 577-4061",
+            address: "6200 N. Club House Lane, Tucson, AZ 85750",
+            teeSets: [TeeSet(name: "Ladies", pars: VENTANA_CANYON_CANYON_PARS, hcs: VENTANA_CANYON_CANYON_LADIES_HCS)]
+        ),
+        c(
+            VENTANA_CANYON_MOUNTAIN_ID,
+            "Ventana Canyon (Mountain)",
+            VENTANA_CANYON_MOUNTAIN_PARS,
+            VENTANA_CANYON_MOUNTAIN_MENS_HCS,
+            VENTANA_CANYON_MOUNTAIN_TEES,
+            country: "USA",
+            state: "AZ",
+            architect: "Tom Fazio",
+            type: "Private",
+            phone: "(520) 577-4061",
+            address: "6200 N. Club House Lane, Tucson, AZ 85750",
+            teeSets: [TeeSet(name: "Ladies", pars: VENTANA_CANYON_MOUNTAIN_PARS, hcs: VENTANA_CANYON_MOUNTAIN_LADIES_HCS)]
+        ),
+        c(
             AMERICAN_DUNES_ID,
             "American Dunes Golf Club",
             AMERICAN_DUNES_PARS,
@@ -22563,6 +22943,136 @@ private enum BuiltIns {
             address: "1 Club House Dr, Sandia Park, NM 87047",
             isWolfApproved: true,
             promo: nil
+        ),
+        c(
+            BLACK_MESA_GC_ID,
+            "Black Mesa Golf Club",
+            BLACK_MESA_GC_PARS,
+            BLACK_MESA_GC_MENS_HCS,
+            BLACK_MESA_GC_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Robert Baxter Spann / Finger Dye Spann",
+            type: "Public",
+            address: "La Cieneguilla, NM",
+            teeSets: [TeeSet(name: "Red (Women)", pars: BLACK_MESA_GC_PARS, hcs: BLACK_MESA_GC_LADIES_HCS)]
+        ),
+        c(
+            TWIN_WARRIORS_GC_ID,
+            "Twin Warriors Golf Course",
+            TWIN_WARRIORS_GC_PARS,
+            TWIN_WARRIORS_GC_HCS,
+            TWIN_WARRIORS_GC_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Gary Panks",
+            type: "Resort",
+            phone: "(505) 771-6155",
+            address: "288 Prairie Star Rd, Santa Ana Pueblo, NM 87004"
+        ),
+        c(
+            SANTA_ANA_TAMAYA_CHEENA_ID,
+            "Santa Ana Golf Club (Tamaya / Cheena)",
+            SANTA_ANA_TAMAYA_CHEENA_PARS,
+            SANTA_ANA_TAMAYA_CHEENA_MENS_HCS,
+            SANTA_ANA_TAMAYA_CHEENA_TEES,
+            country: "USA",
+            state: "NM",
+            type: "Resort",
+            address: "288 Prairie Star Rd, Santa Ana Pueblo, NM 87004",
+            teeSets: [TeeSet(name: "Ladies", pars: SANTA_ANA_TAMAYA_CHEENA_PARS, hcs: SANTA_ANA_TAMAYA_CHEENA_LADIES_HCS)]
+        ),
+        c(
+            SANTA_ANA_TAMAYA_STAR_ID,
+            "Santa Ana Golf Club (Tamaya / Star)",
+            SANTA_ANA_TAMAYA_STAR_PARS,
+            SANTA_ANA_TAMAYA_STAR_MENS_HCS,
+            SANTA_ANA_TAMAYA_STAR_TEES,
+            country: "USA",
+            state: "NM",
+            type: "Resort",
+            address: "288 Prairie Star Rd, Santa Ana Pueblo, NM 87004",
+            teeSets: [TeeSet(name: "Ladies", pars: SANTA_ANA_TAMAYA_STAR_PARS, hcs: SANTA_ANA_TAMAYA_STAR_LADIES_HCS)]
+        ),
+        c(
+            SANTA_ANA_CHEENA_STAR_ID,
+            "Santa Ana Golf Club (Cheena / Star)",
+            SANTA_ANA_CHEENA_STAR_PARS,
+            SANTA_ANA_CHEENA_STAR_MENS_HCS,
+            SANTA_ANA_CHEENA_STAR_TEES,
+            country: "USA",
+            state: "NM",
+            type: "Resort",
+            address: "288 Prairie Star Rd, Santa Ana Pueblo, NM 87004",
+            teeSets: [TeeSet(name: "Ladies", pars: SANTA_ANA_CHEENA_STAR_PARS, hcs: SANTA_ANA_CHEENA_STAR_LADIES_HCS)]
+        ),
+        c(
+            LAS_CAMPANAS_SUNRISE_ID,
+            "Las Campanas (Sunrise)",
+            LAS_CAMPANAS_SUNRISE_PARS,
+            LAS_CAMPANAS_SUNRISE_HCS,
+            LAS_CAMPANAS_SUNRISE_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(505) 995-3500",
+            address: "132 Clubhouse Dr, Santa Fe, NM 87506"
+        ),
+        c(
+            LAS_CAMPANAS_SUNSET_ID,
+            "Las Campanas (Sunset)",
+            LAS_CAMPANAS_SUNSET_PARS,
+            LAS_CAMPANAS_SUNSET_HCS,
+            LAS_CAMPANAS_SUNSET_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "(505) 995-3500",
+            address: "132 Clubhouse Dr, Santa Fe, NM 87506"
+        ),
+        c(
+            PINON_HILLS_GC_ID,
+            "Piñon Hills Golf Course",
+            PINON_HILLS_GC_PARS,
+            PINON_HILLS_GC_MENS_HCS,
+            PINON_HILLS_GC_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Ken Dye",
+            type: "Public",
+            phone: "(505) 326-6066",
+            address: "2101 Sunrise Pkwy, Farmington, NM 87401",
+            teeSets: [TeeSet(name: "Women's", pars: PINON_HILLS_GC_PARS, hcs: PINON_HILLS_GC_WOMENS_HCS)]
+        ),
+        c(
+            UNM_CHAMPIONSHIP_ID,
+            "UNM Championship Golf Course",
+            UNM_CHAMPIONSHIP_PARS,
+            UNM_CHAMPIONSHIP_MENS_HCS,
+            UNM_CHAMPIONSHIP_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Robert \"Red\" Lawrence",
+            type: "Public",
+            phone: "(505) 277-4546",
+            address: "3601 University Blvd SE, Albuquerque, NM 87106",
+            teeSets: [TeeSet(name: "Women's", pars: UNM_CHAMPIONSHIP_PARS, hcs: UNM_CHAMPIONSHIP_WOMENS_HCS)]
+        ),
+        c(
+            SANDIA_GC_ID,
+            "Sandia Golf Club",
+            SANDIA_GC_PARS,
+            SANDIA_GC_MENS_HCS,
+            SANDIA_GC_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Scott Miller",
+            type: "Resort",
+            phone: "(505) 798-3990",
+            address: "30 Rainbow Rd NE, Albuquerque, NM 87113",
+            teeSets: [TeeSet(name: "Ladies", pars: SANDIA_GC_PARS, hcs: SANDIA_GC_LADIES_HCS)]
         ),
         c(
             TRINITY_FOREST_ID,
@@ -25369,6 +25879,42 @@ private enum BuiltIns {
             address: "140 Clubhouse Dr, Fairhope, AL 36532",
             teeSets: [TeeSet(name: "Ladies", pars: ROCK_CREEK_GC_PARS, hcs: ROCK_CREEK_GC_LADIES_HCS)]
         ),
+        c(
+            GL_DUNES_VISTA_ID,
+            "GlenLakes (Dunes / Vista)",
+            GL_DUNES_VISTA_PARS,
+            GL_DUNES_VISTA_HCS,
+            GL_DUNES_VISTA_TEES,
+            country: "USA",
+            state: "AL",
+            type: "Public",
+            phone: "(251) 955-1220",
+            address: "9530 Clubhouse Dr, Foley, AL 36535"
+        ),
+        c(
+            GL_LAKES_VISTA_ID,
+            "GlenLakes (Lakes / Vista)",
+            GL_LAKES_VISTA_PARS,
+            GL_LAKES_VISTA_HCS,
+            GL_LAKES_VISTA_TEES,
+            country: "USA",
+            state: "AL",
+            type: "Public",
+            phone: "(251) 955-1220",
+            address: "9530 Clubhouse Dr, Foley, AL 36535"
+        ),
+        c(
+            GL_DUNES_LAKES_ID,
+            "GlenLakes (Dunes / Lakes)",
+            GL_DUNES_LAKES_PARS,
+            GL_DUNES_LAKES_HCS,
+            GL_DUNES_LAKES_TEES,
+            country: "USA",
+            state: "AL",
+            type: "Public",
+            phone: "(251) 955-1220",
+            address: "9530 Clubhouse Dr, Foley, AL 36535"
+        ),
 
         // -------------------------
         // Florida
@@ -25396,6 +25942,72 @@ private enum BuiltIns {
             phone: "(850) 492-1223",
             address: "1 Doug Ford Dr, Pensacola, FL 32507",
             teeSets: [TeeSet(name: "Ladies", pars: PERDIDO_BAY_GC_PARS, hcs: PERDIDO_BAY_GC_LADIES_HCS)]
+        ),
+
+        // -------------------------
+        // Australia
+        // -------------------------
+        c(
+            ROYAL_MELBOURNE_WEST_ID,
+            "Royal Melbourne Golf Club (West)",
+            ROYAL_MELBOURNE_WEST_PARS,
+            ROYAL_MELBOURNE_WEST_HCS,
+            ROYAL_MELBOURNE_WEST_TEES,
+            country: "Australia",
+            state: "VIC",
+            architect: "Alister MacKenzie",
+            type: "Private",
+            address: "88 Cheltenham Rd, Black Rock, VIC 3193, Australia",
+            teeSets: [
+                TeeSet(name: "Red (Men's)",   pars: ROYAL_MELBOURNE_WEST_RED_MENS_PARS,   hcs: ROYAL_MELBOURNE_WEST_HCS),
+                TeeSet(name: "Red (Women's)", pars: ROYAL_MELBOURNE_WEST_RED_WOMENS_PARS, hcs: ROYAL_MELBOURNE_WEST_HCS)
+            ]
+        ),
+        c(
+            ROYAL_MELBOURNE_EAST_ID,
+            "Royal Melbourne Golf Club (East)",
+            ROYAL_MELBOURNE_EAST_PARS,
+            ROYAL_MELBOURNE_EAST_HCS,
+            ROYAL_MELBOURNE_EAST_TEES,
+            country: "Australia",
+            state: "VIC",
+            architect: "Alex Russell",
+            type: "Private",
+            address: "88 Cheltenham Rd, Black Rock, VIC 3193, Australia",
+            teeSets: [
+                TeeSet(name: "Red (Women's)", pars: ROYAL_MELBOURNE_EAST_RED_WOMENS_PARS, hcs: ROYAL_MELBOURNE_EAST_HCS)
+            ]
+        ),
+
+        // -------------------------
+        // Mexico
+        // -------------------------
+        c(
+            CABO_DEL_SOL_OCEAN_ID,
+            "Cabo Del Sol (Ocean Course)",
+            CABO_DEL_SOL_OCEAN_PARS,
+            CABO_DEL_SOL_OCEAN_HCS,
+            CABO_DEL_SOL_OCEAN_TEES,
+            country: "Mexico",
+            state: "BCS",
+            architect: "Jack Nicklaus",
+            type: "Private",
+            phone: "1-866-231-4677",
+            address: "Carretera Transpeninsular Km 10.3, Cabo San Lucas, BCS 23410"
+        ),
+        c(
+            CABO_DEL_SOL_DESERT_ID,
+            "Cabo Del Sol (Desert Course)",
+            CABO_DEL_SOL_DESERT_PARS,
+            CABO_DEL_SOL_DESERT_HCS,
+            CABO_DEL_SOL_DESERT_TEES,
+            country: "Mexico",
+            state: "BCS",
+            architect: "Tom Weiskopf",
+            type: "Semi-Private",
+            phone: "1-866-231-4677",
+            address: "Carretera Transpeninsular Km 10.3, Cabo San Lucas, BCS 23410",
+            teeSets: [TeeSet(name: "Ladies", pars: CABO_DEL_SOL_DESERT_PARS, hcs: CABO_DEL_SOL_DESERT_LADIES_HCS)]
         ),
         ]
 
