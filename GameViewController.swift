@@ -266,6 +266,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var liveTabScoreButton: UIButton?
     private var liveTabLiveButton: UIButton?
     private weak var liveTabLeaderboardButton: UIButton?
+    private weak var liveWolfGridButton: UIButton?
     private var liveTabBarHeightConstraint: NSLayoutConstraint?
     private weak var liveContentVC: WolfSpectatorViewController?
     private var liveContentContainer: UIView?
@@ -1268,7 +1269,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let scoreBtn = makeTabButton(icon: "target", title: "Score")
         scoreBtn.addTarget(self, action: #selector(liveTabScoreTapped), for: .touchUpInside)
 
-        let liveBtn = makeTabButton(icon: "tv", title: "Go Live")
+        let liveBtn = makeTabButton(icon: "tv", title: "Live")
         liveBtn.addTarget(self, action: #selector(liveTabLiveTapped), for: .touchUpInside)
 
         let leaderboardBtn = makeTabButton(icon: "trophy", title: "Leaderboard")
@@ -1330,6 +1331,11 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         liveTabLiveButton?.isHidden = !isLive
         // Leaderboard tab: only when participating in a Live & Connected tournament
         liveTabLeaderboardButton?.isHidden = !isLiveTournament
+        // Bottom grid button: "Live" when session active, "Go Live" when not
+        if var cfg = liveWolfGridButton?.configuration {
+            cfg.title = isLive ? "Live" : "Go Live"
+            liveWolfGridButton?.configuration = cfg
+        }
 
         // 50 pt for all three tabs, 44 pt for any two-tab combination
         liveTabBarHeightConstraint?.constant = (isLive && isLiveTournament) ? 50 : 44
@@ -5625,8 +5631,8 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         }.count
         if !g.resolvedGameType.supportsSevenPlayers && activeCount > MAX_PLAYERS {
             let ac = UIAlertController(
-                title: "Live Wolf",
-                message: "Live Wolf supports up to 5 players. You currently have \(activeCount) active players.",
+                title: "Go Live",
+                message: "Live sessions support up to 5 players. You currently have \(activeCount) active players.",
                 preferredStyle: .alert
             )
             ac.addAction(UIAlertAction(title: "OK", style: .default))
@@ -5641,7 +5647,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         guard let g = GameManager.shared.currentGame else { return }
         if let code = g.liveSessionCode, !code.isEmpty {
             let ac = UIAlertController(
-                title: "Live Wolf Active",
+                title: "You're Live",
                 message: "Share this code with spectators:\n\(code)",
                 preferredStyle: .alert
             )
@@ -5679,7 +5685,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             WolfActions.presentGoLive(from: self)
         })
         sheet.addAction(UIAlertAction(
-            title: "Watch a group\nView another group's live scores",
+            title: "Watch a Group or Event Board\nView a group or event board in real time",
             style: .default) { [weak self] _ in
             guard let self else { return }
             WolfActions.presentWatchLive(from: self)
@@ -6160,6 +6166,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             let liveWolfBtn = UIButton(configuration: lwCfg)
             liveWolfBtn.addTarget(self, action: #selector(liveWolfTapped), for: .touchUpInside)
             capButtonDynamicType(liveWolfBtn)
+            liveWolfGridButton = liveWolfBtn
 
             var tnCfg = UIButton.Configuration.plain()
             tnCfg.baseForegroundColor = .label
@@ -6173,7 +6180,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
                     compatibleWith: self?.traitCollection)
                 return a
             }
-            tnCfg.title = "Join"
+            tnCfg.title = "Watch"
             let tournamentBtn = UIButton(configuration: tnCfg)
             tournamentBtn.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
             capButtonDynamicType(tournamentBtn)

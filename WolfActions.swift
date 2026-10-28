@@ -421,7 +421,7 @@ enum WolfActions {
     private static func presentMatchPlayWarning(gameTypeName: String, hasHolesScored: Bool,
                                                 from presenter: UIViewController,
                                                 switchAction: @escaping () -> Void) {
-        var msg = "This match board is for match play. Your round is set to \(gameTypeName).\n\nSwitch to match play to set up teams, then you'll be linked to the board."
+        var msg = "This event board is for match play. Your round is set to \(gameTypeName).\n\nSwitch to match play to set up teams, then you'll be linked to the board."
         if hasHolesScored {
             msg += "\n\nNote: switching game type applies to remaining holes only."
         }
@@ -511,7 +511,7 @@ enum WolfActions {
                 GameManager.shared.saveCurrent()
                 await MainActor.run {
                     let a = UIAlertController(title: "Linked",
-                                              message: "Session linked to match board \(evCode).",
+                                              message: "Session linked to event board \(evCode).",
                                               preferredStyle: .alert)
                     a.addAction(UIAlertAction(title: "OK", style: .default))
                     presenter.present(a, animated: true)
@@ -547,10 +547,10 @@ enum WolfActions {
         if let sessionId = g.liveSessionId {
             let code      = g.liveSessionCode ?? ""
             let groupName = g.liveSessionGroupName
-            let boardStatus = g.liveLinkedEventCode.map { "Match Board: \($0)" } ?? "Not on a match board"
+            let boardStatus = g.liveLinkedEventCode.map { "Event Board: \($0)" } ?? "Not on an Event Board"
             let msgParts = [groupName, code.isEmpty ? nil : "Code: \(code)", boardStatus].compactMap { $0 }
             let menu = UIAlertController(
-                title: "Live Wolf",
+                title: "You're Live",
                 message: msgParts.joined(separator: "\n"),
                 preferredStyle: .actionSheet
             )
@@ -566,18 +566,18 @@ enum WolfActions {
                 })
             }
             if g.liveLinkedEventCode == nil {
-                menu.addAction(UIAlertAction(title: "Link to Match Board…", style: .default) { [weak presenter] _ in
+                menu.addAction(UIAlertAction(title: "Join an Event Board…", style: .default) { [weak presenter] _ in
                     guard let presenter else { return }
                     linkToMatchBoardAction(sessionId: sessionId, creatorToken: g.liveCreatorToken, from: presenter)
                 })
             } else {
                 let evCode = g.liveLinkedEventCode!
-                menu.addAction(UIAlertAction(title: "Unlink from Match Board (\(evCode))", style: .default) { [weak presenter] _ in
+                menu.addAction(UIAlertAction(title: "Leave Event Board (\(evCode))", style: .default) { [weak presenter] _ in
                     guard let presenter else { return }
                     unlinkFromMatchBoardAction(sessionId: sessionId, creatorToken: g.liveCreatorToken, from: presenter)
                 })
             }
-            menu.addAction(UIAlertAction(title: "Create Match Board…", style: .default) { [weak presenter] _ in
+            menu.addAction(UIAlertAction(title: "Start an Event Board…", style: .default) { [weak presenter] _ in
                 guard let presenter else { return }
                 createMatchBoardAction(from: presenter)
             })
@@ -609,7 +609,7 @@ enum WolfActions {
             let prefillBoardCode = MatchBoardStore.todaysBoard()?.code ?? ""
             let namePrompt = UIAlertController(
                 title: "Go Live",
-                message: "Group name (optional) · Match board code (leave blank if none)\n\nGot a code from the organizer? Enter it below to appear on their match board.",
+                message: "Group name (optional) · Event board code (leave blank if none)\n\nGot a code from the organizer? Enter it below to appear on their event board.",
                 preferredStyle: .alert
             )
             namePrompt.addTextField { tf in
@@ -625,7 +625,7 @@ enum WolfActions {
                 }
             }
             namePrompt.addTextField { tf in
-                tf.placeholder            = "Match board code, e.g. EABC123"
+                tf.placeholder            = "Event board code, e.g. EABC123"
                 tf.text                   = prefillBoardCode
                 tf.autocapitalizationType = .allCharacters
                 tf.autocorrectionType     = .no
@@ -696,7 +696,7 @@ enum WolfActions {
 
     static func createMatchBoardAction(from presenter: UIViewController) {
         let prompt = UIAlertController(
-            title: "Create Live Match Board",
+            title: "Start an Event Board",
             message: "Give the board a name. You'll get a code to share with scorers and viewers.",
             preferredStyle: .alert
         )
@@ -727,7 +727,7 @@ enum WolfActions {
                     }
                 } catch {
                     await MainActor.run {
-                        let a = UIAlertController(title: "Create Match Board Failed",
+                        let a = UIAlertController(title: "Event Board Failed",
                                                   message: error.localizedDescription,
                                                   preferredStyle: .alert)
                         a.addAction(UIAlertAction(title: "OK", style: .default))
@@ -743,8 +743,8 @@ enum WolfActions {
                                                from presenter: UIViewController) {
         guard let token = creatorToken else { return }
         let prompt = UIAlertController(
-            title: "Link to Match Board",
-            message: "Enter the 7-character match board code",
+            title: "Join an Event Board",
+            message: "Enter the 7-character event board code",
             preferredStyle: .alert
         )
         prompt.addTextField { tf in
@@ -790,9 +790,9 @@ enum WolfActions {
         guard let token = creatorToken else { return }
         let evCode = GameManager.shared.currentGame?.liveLinkedEventCode ?? ""
         let confirm = UIAlertController(
-            title: "Unlink from Match Board",
-            message: evCode.isEmpty ? "Remove this session from the match board?" :
-                     "Remove this session from match board \(evCode)?",
+            title: "Leave Event Board",
+            message: evCode.isEmpty ? "Remove this session from the event board?" :
+                     "Remove this session from event board \(evCode)?",
             preferredStyle: .alert
         )
         confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -820,7 +820,7 @@ enum WolfActions {
     static func showMatchBoardCreatedAlert(code: String, name: String, from presenter: UIViewController) {
         let link = "wolfmore://watch?code=\(code)"
         let alert = UIAlertController(
-            title: "Match Board Created",
+            title: "Event Board Created",
             message: "Send this code to each group's scorer and your viewers.\n\n\(code)",
             preferredStyle: .alert
         )
@@ -868,8 +868,8 @@ enum WolfActions {
 
     static func presentWatchLive(from presenter: UIViewController) {
         let alert = UIAlertController(
-            title: "Watch Live Wolf or Match Board",
-            message: "Enter a group code (6 chars) or a match board code (7 chars, starts with E)",
+            title: "Watch a Group or Event Board",
+            message: "Enter a group code (6 chars) or an event board code (7 chars, starts with E)",
             preferredStyle: .alert
         )
         alert.addTextField { tf in

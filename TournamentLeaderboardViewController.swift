@@ -182,7 +182,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         let scoreBtn = makeTabBtn(icon: "target", title: "Score")
         scoreBtn.addTarget(self, action: #selector(tabScoreTapped), for: .touchUpInside)
 
-        let liveBtn = makeTabBtn(icon: "tv", title: "Live Wolf")
+        let liveBtn = makeTabBtn(icon: "tv", title: "Live")
         liveBtn.addTarget(self, action: #selector(tabLiveTapped), for: .touchUpInside)
         liveBtn.isHidden = !isLive
 

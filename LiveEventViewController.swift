@@ -30,7 +30,7 @@ final class LiveEventViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
         title = eventCode
-        navigationItem.prompt = "Match Board"
+        navigationItem.prompt = "Event Board"
 
         setupTableView()
         setupLoading()
@@ -189,7 +189,7 @@ final class LiveEventViewController: UIViewController {
 
     @objc private func shareTapped() {
         let boardName = event?.name ?? eventCode
-        let text = "Join my match board \"\(boardName)\" — enter code \(eventCode) when you tap Go Live in WolfMore Golf."
+        let text = "Join my event board \"\(boardName)\" — enter code \(eventCode) when you tap Go Live in WolfMore Golf."
         let vc = UIActivityViewController(activityItems: [text], applicationActivities: nil)
         vc.popoverPresentationController?.sourceView = view
         present(vc, animated: true)
@@ -213,7 +213,7 @@ final class LiveEventViewController: UIViewController {
             } catch {
                 await MainActor.run {
                     self.finishLoading()
-                    let a = UIAlertController(title: "Match Board Not Found",
+                    let a = UIAlertController(title: "Event Board Not Found",
                                               message: "Check the code and try again.",
                                               preferredStyle: .alert)
                     a.addAction(UIAlertAction(title: "OK", style: .default) { [weak self] _ in

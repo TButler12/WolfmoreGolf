@@ -113,8 +113,8 @@ final class LiveConnectedViewController: UITableViewController {
                 guard let self else { return }
                 WolfActions.joinLiveMatch(from: self)
             },
-            Row(title: "Watch Live Wolf or Match Board",
-                subtitle: "Watch a group or a match board in real time",
+            Row(title: "Watch a Group or Event Board",
+                subtitle: "Watch a group or an event board in real time",
                 icon: "eye.fill",
                 tint: .secondaryLabel) { [weak self] in
                 self?.watchLiveTapped()
@@ -162,7 +162,7 @@ final class LiveConnectedViewController: UITableViewController {
                 }
                 WolfActions.presentGoLive(from: self)
             },
-            Row(title: "Create Match Board / Ryder Cup",
+            Row(title: "Start an Event Board / Ryder Cup",
                 subtitle: "Follow several match play groups on one screen",
                 icon: "rectangle.3.group.fill",
                 tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)) { [weak self] in
