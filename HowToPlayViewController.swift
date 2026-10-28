@@ -7,11 +7,48 @@ fileprivate struct HowToPlayPage {
     let title:       String
     let body:        String
     let badges:      [String]
+    var attributedBody: NSAttributedString? = nil
+}
+
+// Build the "Which One Do I Need?" attributed body (three bold-label + detail rows, center-aligned).
+fileprivate func makeWhichOneAttributedBody() -> NSAttributedString {
+    let para = NSMutableParagraphStyle()
+    para.alignment = .center
+    para.paragraphSpacing = 4
+
+    let boldAttrs: [NSAttributedString.Key: Any] = [
+        .font: UIFont.systemFont(ofSize: 17, weight: .bold),
+        .foregroundColor: UIColor.label,
+        .paragraphStyle: para
+    ]
+    let regularAttrs: [NSAttributedString.Key: Any] = [
+        .font: UIFont.systemFont(ofSize: 15, weight: .regular),
+        .foregroundColor: UIColor.secondaryLabel,
+        .paragraphStyle: para
+    ]
+    let gapAttrs: [NSAttributedString.Key: Any] = [
+        .font: UIFont.systemFont(ofSize: 10, weight: .regular),
+        .paragraphStyle: para
+    ]
+
+    let rows: [(String, String)] = [
+        ("Go Live",       "Let friends follow your group"),
+        ("Event Board",   "See all groups at a casual outing"),
+        ("Tournament",    "Run an official competition with one set of rules and standings")
+    ]
+
+    let result = NSMutableAttributedString()
+    for (i, (label, detail)) in rows.enumerated() {
+        if i > 0 { result.append(NSAttributedString(string: "\n\n", attributes: gapAttrs)) }
+        result.append(NSAttributedString(string: label,         attributes: boldAttrs))
+        result.append(NSAttributedString(string: "\n" + detail, attributes: regularAttrs))
+    }
+    return result
 }
 
 // MARK: - HowToPlayViewController
 //
-// Five-page swipeable walkthrough reachable at any time from the Home "More" menu.
+// Swipeable walkthrough reachable at any time from the Home "More" menu.
 // Each page pairs a large SF Symbol diagram with a short caption — no screenshots,
 // so nothing goes stale when screens change.
 
@@ -45,14 +82,14 @@ final class HowToPlayViewController: UIViewController {
             systemImage: "person.badge.plus",
             symbolColor: UIColor(red: 0.106, green: 0.227, blue: 0.165, alpha: 1),
             title: "6 & 7-Player Wolf",
-            body: "6-Point, Wolf 2pt, and LowBall support up to 7 active players — add a 6th or 7th name on the Player Setup screen and they slot straight in.\n\nWith 6 or 7 players, Skins, Nassau, and Live Wolf are off for the round. Those side games are designed for groups of 5 — Results will show a note explaining why. Match Play is also blocked at more than 5 players; the app will tell you if you try to switch.\n\nStandings holes: players rotate as wolf for as many full rotations as fit in the round (4 players: holes 1–16, 5 players: holes 1–15, 7 players: holes 1–14). On the remaining holes, whoever is down the most money at that point goes first — giving the person who's behind the best chance to earn it back.",
+            body: "6-Point, Wolf 2pt, and LowBall support up to 7 active players — add a 6th or 7th name on the Player Setup screen and they slot straight in.\n\nWith 6 or 7 players, Skins, Nassau, and Go Live are off for the round. Those side games are designed for groups of 5 — Results will show a note explaining why. Match Play is also blocked at more than 5 players; the app will tell you if you try to switch.\n\nStandings holes: players rotate as wolf for as many full rotations as fit in the round (4 players: holes 1–16, 5 players: holes 1–15, 7 players: holes 1–14). On the remaining holes, whoever is down the most money at that point goes first — giving the person who's behind the best chance to earn it back.",
             badges: ["6-Point", "Wolf 2pt", "LowBall", "Up to 7 Players"]
         ),
         HowToPlayPage(
             systemImage: "pencil.and.list.clipboard",
             symbolColor: UIColor(red: 0.20, green: 0.44, blue: 0.70, alpha: 1),
             title: "Score Each Hole",
-            body: "Enter strokes for every player in the Update Scores grid. Toggle Roll, Press, or Alone to adjust the stake. Tap Prox to award closest-to-pin.\n\nStroke dots next to each score show exactly how many handicap strokes that player earned on the hole, so it's clear at a glance why net differs from gross.\n\nTap the ⓘ button (top-right of the scoring screen) mid-round for quick access to Scoring Tips, Change Course, Change Handicap, Change Base $ Bet, and Pass Game to Another Phone — so you can fix anything without leaving the hole.",
+            body: "Enter strokes for every player in the Update Scores grid. Toggle Roll, Press, or Alone to adjust the stake. Tap Prox to award closest-to-pin.\n\nStroke dots next to each score show exactly how many handicap strokes that player earned on the hole, so it's clear at a glance why net differs from gross. A filled dot ● next to a name marks the low-ball leader on that hole.\n\nTap the ⓘ button (top-right of the scoring screen) mid-round for quick access to Scoring Tips, Change Course, Change Handicap, Change Base $ Bet, and Pass Game to Another Phone — so you can fix anything without leaving the hole.",
             badges: ["Scores", "Roll / Press / Alone", "Prox", "ⓘ Menu"]
         ),
         HowToPlayPage(
@@ -73,21 +110,36 @@ final class HowToPlayViewController: UIViewController {
             systemImage: "antenna.radiowaves.left.and.right",
             symbolColor: UIColor(red: 0.10, green: 0.45, blue: 0.30, alpha: 1),
             title: "Share Your Round Live",
-            body: "Tap Go Live on the scoring screen to generate a spectator code. Share it with friends at the 19th hole — they open WolfMore, tap Spectate Live Wolf, enter the code, and follow your round hole-by-hole in real time as scores come in.\n\nThe leaderboard shows net totals and match status live. A filled dot ● marks the low-ball leader each hole.",
-            badges: ["Go Live", "Spectate", "Share Code", "19th Hole"]
+            body: "For friends who want to follow your group.\n\nTap Go Live on the scoring screen to get a spectator code. Anyone with WolfMore taps Watch, enters the code, and sees your group's scores hole-by-hole as you play.\n\nOne group, no setup. It ends when you tap Stop Live.",
+            badges: ["Go Live", "Watch", "Share Code", "Stop Live"]
+        ),
+        HowToPlayPage(
+            systemImage: "rectangle.3.group",
+            symbolColor: UIColor(red: 0.10, green: 0.45, blue: 0.30, alpha: 1),
+            title: "Event Board",
+            body: "For a casual outing with several groups.\n\nStart an Event Board and share its code. Each group goes live and taps Join an Event Board. Then everyone, players and spectators alike, sees every group on one screen.\n\nEach group keeps its own game and settings. It's great for a men's day or a buddies' trip where you just want to see how the other groups are doing.",
+            badges: ["Start an Event Board", "Join an Event Board", "Go Live"]
         ),
         HowToPlayPage(
             systemImage: "person.3.sequence.fill",
             symbolColor: UIColor(red: 0.35, green: 0.18, blue: 0.55, alpha: 1),
             title: "Host a Tournament",
-            body: "From Home, tap Live & Tournaments → Create Tournament to set up a new event. Choose a format: Wolf (team scoring), Skins (hole-by-hole pot), Stableford (points vs par), or Scramble (best-ball team drive) — then WolfMore generates a join code.\n\nShare that code with your group; they tap Join Tournament and enter it to hop in. Players can also join mid-round: from the scoring screen, tap the Join Tournament button and paste the code there. Running a big field? Generate a Co-Organizer Code so someone else can help manage scoring and settings alongside you.\n\nAs organizer, you set the course and scoring rules once at setup — everyone who joins automatically plays under the same settings, and they stay locked for the tournament. This keeps every group's results genuinely comparable instead of quietly drifting apart.",
+            body: "For an organized event with one set of rules.\n\nFrom Home, tap Live & Tournaments → Create Tournament. Pick the course and format (Wolf, Skins, Stableford or Scramble). Players join with your code, and everyone plays under the same locked settings, so results are truly comparable.\n\nYou get an official Leaderboard across all groups, multi-day events, and the option to add a co-organizer to help run it.",
             badges: ["Wolf", "Skins", "Stableford", "Scramble", "Co-Organizer"]
+        ),
+        HowToPlayPage(
+            systemImage: "questionmark.circle",
+            symbolColor: UIColor(red: 0.35, green: 0.18, blue: 0.55, alpha: 1),
+            title: "Which One Do I Need?",
+            body: "",
+            badges: ["Go Live", "Event Board", "Tournament"],
+            attributedBody: makeWhichOneAttributedBody()
         ),
         HowToPlayPage(
             systemImage: "slider.horizontal.3",
             symbolColor: UIColor(red: 0.18, green: 0.42, blue: 0.52, alpha: 1),
             title: "Tournament Scoring Options",
-            body: "Wolf and Skins tournaments can also track Team Scoring — a team net-scoring competition that runs alongside your main format, across every group. The organizer picks the team size at setup (a fixed count, or 4-3-2 by par); find team and individual results on the Leaderboard under Team Scoring.\n\nHosting Stableford? Choose Standard points, or switch to Modified Stableford to set your own point values for double bogey, bogey, par, birdie, and eagle — handy for tournaments that already have their own house scoring system.",
+            body: "Wolf and Skins tournaments can add Team Scoring, a team net competition across every group. Choose a fixed team size, or 4-3-2 by par. Results appear on the Leaderboard under Team Scoring.\n\nStableford tournaments can use Standard points or Modified Stableford with your own point values.",
             badges: ["Team Scoring", "Team Net", "Stableford", "Modified Points"]
         ),
         HowToPlayPage(
@@ -145,8 +197,6 @@ final class HowToPlayViewController: UIViewController {
         pageVCs = pages.map { HowToPlayPageViewController(page: $0) }
     }
 
-
-
     private func buildPageViewController() {
         pageVC = UIPageViewController(transitionStyle: .scroll,
                                       navigationOrientation: .horizontal)
@@ -180,7 +230,7 @@ final class HowToPlayViewController: UIViewController {
             bar.heightAnchor.constraint(equalToConstant: 100)
         ])
 
-        // Page dots
+        // Page dots — driven by pages.count so adding/removing pages keeps every dot in sync
         pageControl.numberOfPages = pages.count
         pageControl.currentPage   = 0
         pageControl.currentPageIndicatorTintColor = forestGreen
@@ -341,12 +391,16 @@ fileprivate final class HowToPlayPageViewController: UIViewController {
         titleLabel.adjustsFontSizeToFitWidth = true
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
 
-        // Body
+        // Body — uses NSAttributedString when set, otherwise plain string
         let bodyLabel = UILabel()
-        bodyLabel.text = page.body
-        bodyLabel.font = .systemFont(ofSize: 16, weight: .regular)
-        bodyLabel.textColor = .secondaryLabel
-        bodyLabel.textAlignment = .center
+        if let attr = page.attributedBody {
+            bodyLabel.attributedText = attr
+        } else {
+            bodyLabel.text = page.body
+            bodyLabel.font = .systemFont(ofSize: 16, weight: .regular)
+            bodyLabel.textColor = .secondaryLabel
+            bodyLabel.textAlignment = .center
+        }
         bodyLabel.numberOfLines = 0
         bodyLabel.translatesAutoresizingMaskIntoConstraints = false
 
@@ -362,15 +416,27 @@ fileprivate final class HowToPlayPageViewController: UIViewController {
         stack.setCustomSpacing(12, after: titleLabel)
         stack.translatesAutoresizingMaskIntoConstraints = false
 
-        view.addSubview(stack)
+        // Wrap in a scroll view so large Dynamic Type sizes don't overflow
+        let scrollView = UIScrollView()
+        scrollView.showsVerticalScrollIndicator = false
+        scrollView.alwaysBounceVertical = false
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        scrollView.addSubview(stack)
 
         NSLayoutConstraint.activate([
             iconView.heightAnchor.constraint(equalToConstant: 90),
             iconView.widthAnchor.constraint(equalToConstant: 120),
 
-            stack.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -20),
-            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 28),
-            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -28)
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            stack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 20),
+            stack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -20),
+            stack.leadingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.leadingAnchor, constant: 28),
+            stack.trailingAnchor.constraint(equalTo: scrollView.frameLayoutGuide.trailingAnchor, constant: -28),
         ])
     }
 

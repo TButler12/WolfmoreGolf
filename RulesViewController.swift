@@ -286,7 +286,7 @@ private extension RulesViewController {
         • Wolf (2 Point)
         • Wolf (1 Point)
         • Hammer
-        • Live Wolf (real-time spectator mode)
+        • Go Live (real-time spectator mode)
         • Match Play
         • Best Ball
         • Scramble (tournament format — see SCRAMBLE below)
@@ -295,8 +295,8 @@ private extension RulesViewController {
         • You can change game modes mid-round if you want to mix it up
 
         From the scoring page, two buttons give direct access to live features:
-        • Live Wolf — start or share a live spectator session
-        • Tournament — join or view the current tournament leaderboard
+        • Go Live — start or share a live spectator session
+        • Watch — join an event board or watch a group
         """)
 
         header("MATCH PLAY")
@@ -450,8 +450,8 @@ private extension RulesViewController {
         header("WOLF LIVE")
         body("""
         Wolf Live lets spectators watch a Wolf game in real time from their own phone.
-        • Scorer taps the Live Wolf button on the scoring page to start a session and get a 6-character code
-        • Spectators tap Live & Tournaments → Watch Live and enter the code
+        • Scorer taps Go Live on the scoring page to start a session and get a 6-character code
+        • Spectators tap Watch on the scoring page and enter the code
         • Scores, wolf assignments, press indicators, money, and roll decisions update in real time
         • Tap the refresh button to manually sync the latest scores
         • Watch up to 10 live matches simultaneously in the spectator view
