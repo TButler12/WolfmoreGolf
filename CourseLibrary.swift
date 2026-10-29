@@ -14596,6 +14596,22 @@ let SUGARLOAF_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green (Women)", yardage: 5289, rating: 72.6, slope: 135),
 ]
 
+// MARK: - Hawktree Golf Club — Bismarck, ND
+// Par 72 | Public
+private let HAWKTREE_GC_ID = UUID(uuidString: "40E29C1A-EEF7-418E-AF8B-49F316FE6FAE")!
+let HAWKTREE_GC_PARS: [Int] = [4,4,3,4,5,4,5,3,4, 5,4,4,3,5,3,4,3,5]
+let HAWKTREE_GC_HCS: [Int]  = [9,1,17,7,3,5,11,15,13, 4,14,2,8,10,18,12,16,6]
+let HAWKTREE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Falcon",   yardage: 7085, rating: 74.7, slope: 140),
+    TeeInfo(teeName: "Falcon 2", yardage: 6902, rating: 73.8, slope: 139),
+    TeeInfo(teeName: "Falcon 3", yardage: 6654, rating: 72.7, slope: 137),
+    TeeInfo(teeName: "Hawk",     yardage: 6420, rating: 71.7, slope: 134),
+    TeeInfo(teeName: "Hawk 2",   yardage: 6028, rating: 69.9, slope: 126),
+    TeeInfo(teeName: "Eagle",    yardage: 5635, rating: 68.1, slope: 121),
+    TeeInfo(teeName: "Eagle 2",  yardage: 5251, rating: 66.4, slope: 116),
+    TeeInfo(teeName: "Owl",      yardage: 4868, rating: 64.6, slope: 113),
+]
+
 // MARK: - TPC Louisiana — Avondale, LA
 // Par 72 | Architect: Pete Dye | Public (PGA Tour TPC) | Est. 2004
 private let TPC_LOUISIANA_ID = UUID(uuidString: "05AE8A15-4709-42EB-BC09-C3A6DA00916F")!
@@ -18306,6 +18322,21 @@ private enum BuiltIns {
             website: "https://www.hazeltinenational.com",
             address: "1900 Hazeltine Blvd., Chaska, MN 55318"
         ),
+        // North Dakota
+        // -------------------------
+        c(
+            HAWKTREE_GC_ID,
+            "Hawktree Golf Club",
+            HAWKTREE_GC_PARS,
+            HAWKTREE_GC_HCS,
+            HAWKTREE_GC_TEES,
+            country: "USA",
+            state: "ND",
+            type: "Public",
+            phone: "(701) 355-0995",
+            address: "3400 Burnt Creek Loop, Bismarck, ND 58503"
+        ),
+
         c(
             RICHTER_PARK_GOLF_COURSE_ID,
             "Richter Park Golf Course",
