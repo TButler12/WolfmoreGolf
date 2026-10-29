@@ -609,7 +609,7 @@ enum WolfActions {
             let prefillBoardCode = MatchBoardStore.todaysBoard()?.code ?? ""
             let namePrompt = UIAlertController(
                 title: "Go Live",
-                message: "Group name (optional) · Event board code (leave blank if none)\n\nGot a code from the organizer? Enter it below to appear on their event board.",
+                message: "Broadcast your game for others to watch.\n\nGroup name (optional) · Event board code (leave blank if none)\n\nGot a code from the organizer? Enter it below to appear on their event board.",
                 preferredStyle: .alert
             )
             namePrompt.addTextField { tf in
