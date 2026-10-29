@@ -5699,7 +5699,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             guard let self else { return }
             WolfActions.joinLiveMatch(from: self)
         }
-        nassauAction.setValue(UIColor.systemOrange, forKey: "titleTextColor")
+        nassauAction.setValue(UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0), forKey: "titleTextColor")
         sheet.addAction(nassauAction)
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         if let pop = sheet.popoverPresentationController {
