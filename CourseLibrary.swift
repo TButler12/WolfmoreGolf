@@ -14583,6 +14583,19 @@ let PRAIRIE_DUNES_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Bronze (Women)", yardage: 5035, rating: 69.2, slope: 123),
 ]
 
+// MARK: - Sugarloaf Golf Club — Carrabassett Valley, ME
+// Par 72 | Architects: Robert Trent Jones Jr., Kyle Phillips & Ross Forbes | Resort
+private let SUGARLOAF_GC_ID = UUID(uuidString: "5FB9FF93-53C9-4F90-A380-3E410FCD4367")!
+let SUGARLOAF_GC_PARS: [Int] = [4,5,3,5,4,4,4,3,4, 4,3,5,4,4,3,5,4,4]
+let SUGARLOAF_GC_HCS: [Int]  = [11,9,15,7,5,3,13,17,1, 18,12,8,14,4,16,10,6,2]
+let SUGARLOAF_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",         yardage: 6958, rating: 75.2, slope: 150),
+    TeeInfo(teeName: "Blue",          yardage: 6451, rating: 72.8, slope: 146),
+    TeeInfo(teeName: "White",         yardage: 5946, rating: 71.4, slope: 141),
+    TeeInfo(teeName: "Green (Men)",   yardage: 5289, rating: 67.9, slope: 134),
+    TeeInfo(teeName: "Green (Women)", yardage: 5289, rating: 72.6, slope: 135),
+]
+
 // MARK: - TPC Louisiana — Avondale, LA
 // Par 72 | Architect: Pete Dye | Public (PGA Tour TPC) | Est. 2004
 private let TPC_LOUISIANA_ID = UUID(uuidString: "05AE8A15-4709-42EB-BC09-C3A6DA00916F")!
@@ -25449,6 +25462,21 @@ private enum BuiltIns {
           website: "https://www.breakfasthill.com",
           address: "339 Breakfast Hill Road, Greenland, NH 03840"
         ),
+
+        // Maine
+        // -------------------------
+        c(
+            SUGARLOAF_GC_ID,
+            "Sugarloaf Golf Club",
+            SUGARLOAF_GC_PARS,
+            SUGARLOAF_GC_HCS,
+            SUGARLOAF_GC_TEES,
+            country: "USA",
+            state: "ME",
+            architect: "Robert Trent Jones Jr. / Kyle Phillips / Ross Forbes",
+            type: "Resort"
+        ),
+
         c(MERIT_CLUB_ID, "Merit Club",
           MERIT_CLUB_PARS, MERIT_CLUB_HCS, MERIT_CLUB_TEES,
           country: "USA", state: "IL",
