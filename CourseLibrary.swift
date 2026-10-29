@@ -14520,6 +14520,66 @@ private let ROYAL_MELBOURNE_EAST_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",  yardage: 5320)
 ]
 
+// MARK: - Inn of the Mountain Gods Championship Golf Course — Mescalero, NM
+// Par 72 | Architect: Ted Robinson, Sr. | Resort
+private let INN_OF_THE_MOUNTAIN_GODS_GC_ID = UUID(uuidString: "B1B9833A-FBC6-4470-ACB1-B988DA478E0B")!
+let INN_OF_THE_MOUNTAIN_GODS_GC_PARS: [Int]       = [5,4,4,4,3,4,4,3,5, 4,5,3,4,5,4,4,4,3]
+let INN_OF_THE_MOUNTAIN_GODS_GC_MENS_HCS: [Int]   = [7,1,11,9,17,13,3,15,5, 8,14,4,12,6,16,18,2,10]
+let INN_OF_THE_MOUNTAIN_GODS_GC_LADIES_HCS: [Int] = [1,5,13,7,17,11,9,15,3, 10,4,14,6,2,16,18,8,12]
+let INN_OF_THE_MOUNTAIN_GODS_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",         yardage: 7212, rating: 72.6, slope: 132),
+    TeeInfo(teeName: "Blue",          yardage: 6732, rating: 70.5, slope: 128),
+    TeeInfo(teeName: "White (Men)",   yardage: 6356, rating: 68.7, slope: 124),
+    TeeInfo(teeName: "White (Women)", yardage: 6356, rating: 74.8, slope: 137),
+    TeeInfo(teeName: "Red",           yardage: 5522, rating: 70.3, slope: 127),
+]
+
+// MARK: - Anchorage Golf Course — Anchorage, AK
+// Par 72 | Architect: Bill Newcomb | Public (Municipality of Anchorage)
+private let ANCHORAGE_GC_ID = UUID(uuidString: "1AB87804-5BAB-4190-80AE-4646B5DB5C25")!
+let ANCHORAGE_GC_PARS: [Int]       = [4,4,3,4,4,5,4,3,5, 4,4,4,3,5,4,3,5,4]
+let ANCHORAGE_GC_MENS_HCS: [Int]   = [14,8,16,2,12,4,10,18,6, 13,5,15,9,1,17,11,3,7]
+let ANCHORAGE_GC_WOMENS_HCS: [Int] = [12,8,16,10,6,4,14,18,2, 13,7,9,15,1,17,11,3,5]
+let ANCHORAGE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",        yardage: 6601, rating: 71.4, slope: 129),
+    TeeInfo(teeName: "Blue",         yardage: 6267, rating: 70.0, slope: 126),
+    TeeInfo(teeName: "White",        yardage: 6002, rating: 68.2, slope: 125),
+    TeeInfo(teeName: "Gold (Men)",   yardage: 5466, rating: 65.9, slope: 110),
+    TeeInfo(teeName: "Gold (Women)", yardage: 5466, rating: 71.8, slope: 129),
+    TeeInfo(teeName: "Red",          yardage: 4773, rating: 68.0, slope: 117),
+]
+
+// MARK: - The Coeur d'Alene Resort Golf Course — Coeur d'Alene, ID
+// Par 71 | Architect: Scott Miller | Resort | Hole 14 floating island green
+private let CDA_RESORT_GC_ID = UUID(uuidString: "C14319E9-DE01-43A7-8A3F-D6E68A0E079E")!
+let CDA_RESORT_GC_PARS: [Int]       = [5,4,3,4,3,3,4,4,5, 4,5,3,4,3,5,4,4,4]
+let CDA_RESORT_GC_MENS_HCS: [Int]   = [7,3,17,5,13,15,11,9,1, 6,2,14,12,10,16,8,18,4]
+let CDA_RESORT_GC_WOMENS_HCS: [Int] = [3,7,15,9,17,13,11,5,1, 10,2,18,16,12,8,6,14,4]
+let CDA_RESORT_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",          yardage: 6497, rating: 71.6, slope: 124),
+    TeeInfo(teeName: "Blue",           yardage: 6090, rating: 69.9, slope: 119),
+    TeeInfo(teeName: "White (Men)",    yardage: 5726, rating: 67.8, slope: 114),
+    TeeInfo(teeName: "White (Women)",  yardage: 5726, rating: 72.9, slope: 128),
+    TeeInfo(teeName: "Gold (Men)",     yardage: 5192, rating: 65.0, slope: 109),
+    TeeInfo(teeName: "Gold (Women)",   yardage: 5192, rating: 70.1, slope: 123),
+    TeeInfo(teeName: "Silver",         yardage: 4359, rating: 64.7, slope: 111),
+]
+
+// MARK: - Prairie Dunes Country Club — Hutchinson, KS
+// Par 70 | Architect: Perry Maxwell / Press Maxwell | Private | Founded 1937
+private let PRAIRIE_DUNES_CC_ID = UUID(uuidString: "FE64594E-BB69-4085-8235-AC50D2B4AA9A")!
+let PRAIRIE_DUNES_CC_PARS: [Int]        = [4,3,4,3,4,4,5,4,4, 3,4,4,4,4,3,4,5,4]
+let PRAIRIE_DUNES_CC_WOMENS_PARS: [Int] = [4,3,4,3,5,4,5,4,4, 3,5,4,4,4,3,4,5,4]
+let PRAIRIE_DUNES_CC_MENS_HCS: [Int]    = [7,15,13,17,3,11,9,1,5, 16,2,8,10,12,18,4,6,14]
+let PRAIRIE_DUNES_CC_WOMENS_HCS: [Int]  = [7,17,13,15,1,11,5,3,9, 18,2,12,10,16,8,6,14,4]
+let PRAIRIE_DUNES_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 6940, rating: 75.5, slope: 148),
+    TeeInfo(teeName: "Blue",  yardage: 6535),
+    TeeInfo(teeName: "White", yardage: 6119),
+    TeeInfo(teeName: "Green", yardage: 5462),
+    TeeInfo(teeName: "Red",   yardage: 5035),
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -23074,6 +23134,72 @@ private enum BuiltIns {
             address: "30 Rainbow Rd NE, Albuquerque, NM 87113",
             teeSets: [TeeSet(name: "Ladies", pars: SANDIA_GC_PARS, hcs: SANDIA_GC_LADIES_HCS)]
         ),
+        c(
+            INN_OF_THE_MOUNTAIN_GODS_GC_ID,
+            "Inn of the Mountain Gods Golf Course",
+            INN_OF_THE_MOUNTAIN_GODS_GC_PARS,
+            INN_OF_THE_MOUNTAIN_GODS_GC_MENS_HCS,
+            INN_OF_THE_MOUNTAIN_GODS_GC_TEES,
+            country: "USA",
+            state: "NM",
+            architect: "Ted Robinson, Sr.",
+            type: "Resort",
+            phone: "(575) 464-7945",
+            address: "287 Carrizo Canyon Rd, Mescalero, NM 88340",
+            teeSets: [TeeSet(name: "Ladies", pars: INN_OF_THE_MOUNTAIN_GODS_GC_PARS, hcs: INN_OF_THE_MOUNTAIN_GODS_GC_LADIES_HCS)]
+        ),
+
+        // -------------------------
+        // Alaska
+        // -------------------------
+        c(
+            ANCHORAGE_GC_ID,
+            "Anchorage Golf Course",
+            ANCHORAGE_GC_PARS,
+            ANCHORAGE_GC_MENS_HCS,
+            ANCHORAGE_GC_TEES,
+            country: "USA",
+            state: "AK",
+            architect: "Bill Newcomb",
+            type: "Public",
+            phone: "(907) 522-3363",
+            address: "3651 O'Malley Rd, Anchorage, AK 99507",
+            teeSets: [TeeSet(name: "Women's", pars: ANCHORAGE_GC_PARS, hcs: ANCHORAGE_GC_WOMENS_HCS)]
+        ),
+
+        // -------------------------
+        // Idaho
+        // -------------------------
+        c(
+            CDA_RESORT_GC_ID,
+            "The Coeur d'Alene Resort Golf Course",
+            CDA_RESORT_GC_PARS,
+            CDA_RESORT_GC_MENS_HCS,
+            CDA_RESORT_GC_TEES,
+            country: "USA",
+            state: "ID",
+            architect: "Scott Miller",
+            type: "Resort",
+            phone: "(855) 703-4648",
+            teeSets: [TeeSet(name: "Women's", pars: CDA_RESORT_GC_PARS, hcs: CDA_RESORT_GC_WOMENS_HCS)]
+        ),
+
+        // -------------------------
+        // Kansas
+        // -------------------------
+        c(
+            PRAIRIE_DUNES_CC_ID,
+            "Prairie Dunes Country Club",
+            PRAIRIE_DUNES_CC_PARS,
+            PRAIRIE_DUNES_CC_MENS_HCS,
+            PRAIRIE_DUNES_CC_TEES,
+            country: "USA",
+            state: "KS",
+            architect: "Perry Maxwell / Press Maxwell",
+            type: "Private",
+            teeSets: [TeeSet(name: "Women's", pars: PRAIRIE_DUNES_CC_WOMENS_PARS, hcs: PRAIRIE_DUNES_CC_WOMENS_HCS)]
+        ),
+
         c(
             TRINITY_FOREST_ID,
             "Trinity Forest Golf Club",
