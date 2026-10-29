@@ -14596,6 +14596,38 @@ let SUGARLOAF_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green (Women)", yardage: 5289, rating: 72.6, slope: 135),
 ]
 
+// MARK: - Sutton Bay Golf Course — Agar, SD
+// Par 72 | Private
+private let SUTTON_BAY_GC_ID = UUID(uuidString: "658A8888-F6AF-4699-950D-50BBECC11FDA")!
+let SUTTON_BAY_GC_PARS: [Int] = [4,4,5,4,3,4,3,5,4, 4,4,4,3,5,4,4,3,5]
+let SUTTON_BAY_GC_HCS: [Int]  = [13,11,9,15,17,3,5,1,7, 8,18,14,12,2,4,10,16,6]
+let SUTTON_BAY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Skull",       yardage: 7304, rating: 75.1, slope: 132),
+    TeeInfo(teeName: "Rattlesnake"),
+    TeeInfo(teeName: "Combo"),
+    TeeInfo(teeName: "Sutton"),
+    TeeInfo(teeName: "Arrow"),
+    TeeInfo(teeName: "Arrow (Ladies)"),
+    TeeInfo(teeName: "Forward (Ladies)"),
+]
+
+// MARK: - Ekwanok Country Club — Manchester, VT
+// Par 70 | Architects: Walter J. Travis / John Duncan Dunn | Private | Est. 1899
+private let EKWANOK_CC_ID = UUID(uuidString: "7ABEA0F4-CE31-48D9-BA2A-D62FCE45F6FC")!
+let EKWANOK_CC_PARS: [Int]       = [4,4,4,3,4,3,5,4,4, 5,3,4,3,4,4,4,4,4]
+let EKWANOK_CC_MENS_HCS: [Int]   = [5,3,11,17,9,15,1,13,7, 8,18,12,16,14,6,2,10,4]
+let EKWANOK_CC_LADIES_HCS: [Int] = [5,3,9,17,13,15,1,11,7, 6,18,12,16,10,8,4,14,2]
+let EKWANOK_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",          yardage: 6569, rating: 72.0, slope: 134),
+    TeeInfo(teeName: "Blue",           yardage: 6203, rating: 70.2, slope: 134),
+    TeeInfo(teeName: "White (Men)",    yardage: 5805, rating: 68.3, slope: 129),
+    TeeInfo(teeName: "White (Women)",  yardage: 5805, rating: 73.7, slope: 136),
+    TeeInfo(teeName: "Yellow (Men)",   yardage: 5480, rating: 66.7, slope: 125),
+    TeeInfo(teeName: "Yellow (Women)", yardage: 5480, rating: 71.9, slope: 129),
+    TeeInfo(teeName: "Green (Men)",    yardage: 4977, rating: 64.3, slope: 118),
+    TeeInfo(teeName: "Green (Women)",  yardage: 4977, rating: 68.7, slope: 124),
+]
+
 // MARK: - Hawktree Golf Club — Bismarck, ND
 // Par 72 | Public
 private let HAWKTREE_GC_ID = UUID(uuidString: "40E29C1A-EEF7-418E-AF8B-49F316FE6FAE")!
@@ -18335,6 +18367,19 @@ private enum BuiltIns {
             type: "Public",
             phone: "(701) 355-0995",
             address: "3400 Burnt Creek Loop, Bismarck, ND 58503"
+        ),
+
+        // South Dakota
+        // -------------------------
+        c(
+            SUTTON_BAY_GC_ID,
+            "Sutton Bay Golf Course",
+            SUTTON_BAY_GC_PARS,
+            SUTTON_BAY_GC_HCS,
+            SUTTON_BAY_GC_TEES,
+            country: "USA",
+            state: "SD",
+            type: "Private"
         ),
 
         c(
@@ -25506,6 +25551,23 @@ private enum BuiltIns {
             state: "ME",
             architect: "Robert Trent Jones Jr. / Kyle Phillips / Ross Forbes",
             type: "Resort"
+        ),
+
+        // Vermont
+        // -------------------------
+        c(
+            EKWANOK_CC_ID,
+            "Ekwanok Country Club",
+            EKWANOK_CC_PARS,
+            EKWANOK_CC_MENS_HCS,
+            EKWANOK_CC_TEES,
+            country: "USA",
+            state: "VT",
+            architect: "Walter J. Travis / John Duncan Dunn",
+            type: "Private",
+            phone: "(802) 362-2220",
+            address: "3262 Main St, Manchester, VT 05254",
+            teeSets: [TeeSet(name: "Ladies'", pars: EKWANOK_CC_PARS, hcs: EKWANOK_CC_LADIES_HCS)]
         ),
 
         c(MERIT_CLUB_ID, "Merit Club",
