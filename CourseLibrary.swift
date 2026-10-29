@@ -14583,6 +14583,21 @@ let PRAIRIE_DUNES_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Bronze (Women)", yardage: 5035, rating: 69.2, slope: 123),
 ]
 
+// MARK: - TPC Louisiana — Avondale, LA
+// Par 72 | Architect: Pete Dye | Public (PGA Tour TPC) | Est. 2004
+private let TPC_LOUISIANA_ID = UUID(uuidString: "05AE8A15-4709-42EB-BC09-C3A6DA00916F")!
+let TPC_LOUISIANA_PARS: [Int] = [4,5,3,4,4,4,5,4,3, 4,5,4,4,3,4,4,3,5]
+let TPC_LOUISIANA_HCS: [Int]  = [9,11,13,3,5,1,15,17,7, 14,12,2,18,16,4,8,10,6]
+let TPC_LOUISIANA_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "PGA Tour",   yardage: 7425, rating: 75.9, slope: 141),
+    TeeInfo(teeName: "Black",      yardage: 6931, rating: 73.8, slope: 136),
+    TeeInfo(teeName: "Blue",       yardage: 6610, rating: 72.5),          // slope TBD
+    TeeInfo(teeName: "Blue/Grey",  yardage: 6374, rating: 71.1, slope: 129),
+    TeeInfo(teeName: "Grey",       yardage: 6172),                         // dual-rated, TBD
+    TeeInfo(teeName: "Grey/Green", yardage: 5662),                         // dual-rated, TBD
+    TeeInfo(teeName: "Green",      yardage: 5121),                         // dual-rated, TBD
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -23202,6 +23217,22 @@ private enum BuiltIns {
             type: "Private",
             address: "4812 E 30th Ave, Hutchinson, KS 67502",
             teeSets: [TeeSet(name: "Women's", pars: PRAIRIE_DUNES_CC_WOMENS_PARS, hcs: PRAIRIE_DUNES_CC_WOMENS_HCS)]
+        ),
+
+        // Louisiana
+        // -------------------------
+        c(
+            TPC_LOUISIANA_ID,
+            "TPC Louisiana",
+            TPC_LOUISIANA_PARS,
+            TPC_LOUISIANA_HCS,
+            TPC_LOUISIANA_TEES,
+            country: "USA",
+            state: "LA",
+            architect: "Pete Dye",
+            type: "Public",
+            phone: "(504) 436-8721",
+            address: "11001 Lapalco Blvd, Avondale, LA 70094"
         ),
 
         c(
