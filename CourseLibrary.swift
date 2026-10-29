@@ -14598,6 +14598,33 @@ let TPC_LOUISIANA_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Green",      yardage: 5121),                         // dual-rated, TBD
 ]
 
+// MARK: - Bayou Oaks at City Park — North Course — New Orleans, LA
+// Par 68 | Architects: William Wiedorn & Joseph Bartholomew | Public
+private let BAYOU_OAKS_NORTH_ID = UUID(uuidString: "878DF443-2DA4-443F-B954-80757C278E45")!
+let BAYOU_OAKS_NORTH_PARS: [Int] = [4,3,5,4,4,4,4,4,4, 4,3,3,4,4,3,3,4,4]
+let BAYOU_OAKS_NORTH_HCS: [Int]  = [5,7,13,18,3,6,12,4,2, 8,15,14,11,16,17,10,9,1]
+let BAYOU_OAKS_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 5762, rating: 67.1, slope: 111),
+    TeeInfo(teeName: "Blue",  yardage: 5501, rating: 65.9, slope: 100),
+    TeeInfo(teeName: "White", yardage: 4904, rating: 63.8, slope: 100),
+    TeeInfo(teeName: "Gold",  yardage: 4388, rating: 61.3, slope:  92),
+]
+
+// MARK: - Bayou Oaks at City Park — South Course — New Orleans, LA
+// Par 72 | Architects: Rees Jones & Greg Muirhead | Public | Est. 2017
+private let BAYOU_OAKS_SOUTH_ID = UUID(uuidString: "604D5C98-894D-4927-A48E-5DB5F87B995A")!
+let BAYOU_OAKS_SOUTH_PARS: [Int] = [4,3,5,4,4,4,3,4,5, 4,5,4,4,4,3,4,4,4]
+let BAYOU_OAKS_SOUTH_HCS: [Int]  = [11,7,3,9,5,13,17,15,1, 18,6,16,2,8,4,14,12,10]
+let BAYOU_OAKS_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",       yardage: 7302, rating: 74.7, slope: 128),
+    TeeInfo(teeName: "Black",      yardage: 7013, rating: 73.3, slope: 126),
+    TeeInfo(teeName: "Blue",       yardage: 6642, rating: 71.3, slope: 125),
+    TeeInfo(teeName: "Blue/White", yardage: 6411, rating: 70.1, slope: 124),
+    TeeInfo(teeName: "White",      yardage: 5977, rating: 68.2, slope: 118),
+    TeeInfo(teeName: "Green",      yardage: 5522),   // dual-rated M/W, TBD
+    TeeInfo(teeName: "Red",        yardage: 5011),   // dual-rated M/W, TBD
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -23233,6 +23260,32 @@ private enum BuiltIns {
             type: "Public",
             phone: "(504) 436-8721",
             address: "11001 Lapalco Blvd, Avondale, LA 70094"
+        ),
+        c(
+            BAYOU_OAKS_NORTH_ID,
+            "Bayou Oaks at City Park (North Course)",
+            BAYOU_OAKS_NORTH_PARS,
+            BAYOU_OAKS_NORTH_HCS,
+            BAYOU_OAKS_NORTH_TEES,
+            country: "USA",
+            state: "LA",
+            architect: "William Wiedorn & Joseph Bartholomew",
+            type: "Public",
+            phone: "(504) 483-9410",
+            address: "1040 Filmore Ave, New Orleans, LA 70124"
+        ),
+        c(
+            BAYOU_OAKS_SOUTH_ID,
+            "Bayou Oaks at City Park (South Course)",
+            BAYOU_OAKS_SOUTH_PARS,
+            BAYOU_OAKS_SOUTH_HCS,
+            BAYOU_OAKS_SOUTH_TEES,
+            country: "USA",
+            state: "LA",
+            architect: "Rees Jones & Greg Muirhead",
+            type: "Public",
+            phone: "(504) 483-9410",
+            address: "1040 Filmore Ave, New Orleans, LA 70124"
         ),
 
         c(
