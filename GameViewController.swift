@@ -5693,12 +5693,14 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             guard let self else { return }
             WolfActions.presentWatchLive(from: self)
         })
-        sheet.addAction(UIAlertAction(
+        let nassauAction = UIAlertAction(
             title: "Remote Nassau\nImport an invite to join a live Nassau match",
             style: .default) { [weak self] _ in
             guard let self else { return }
             WolfActions.joinLiveMatch(from: self)
-        })
+        }
+        nassauAction.setValue(UIColor.systemOrange, forKey: "titleTextColor")
+        sheet.addAction(nassauAction)
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         if let pop = sheet.popoverPresentationController {
             pop.sourceView = view
@@ -6183,7 +6185,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
                     compatibleWith: self?.traitCollection)
                 return a
             }
-            tnCfg.title = "Watch"
+            tnCfg.title = "Watch / Join"
             let tournamentBtn = UIButton(configuration: tnCfg)
             tournamentBtn.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
             capButtonDynamicType(tournamentBtn)
