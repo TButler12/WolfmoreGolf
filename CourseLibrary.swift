@@ -14573,11 +14573,14 @@ let PRAIRIE_DUNES_CC_WOMENS_PARS: [Int] = [4,3,4,3,5,4,5,4,4, 3,5,4,4,4,3,4,5,4]
 let PRAIRIE_DUNES_CC_MENS_HCS: [Int]    = [7,15,13,17,3,11,9,1,5, 16,2,8,10,12,18,4,6,14]
 let PRAIRIE_DUNES_CC_WOMENS_HCS: [Int]  = [7,17,13,15,1,11,5,3,9, 18,2,12,10,16,8,6,14,4]
 let PRAIRIE_DUNES_CC_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Gold",  yardage: 6940, rating: 75.5, slope: 148),
-    TeeInfo(teeName: "Blue",  yardage: 6535),
-    TeeInfo(teeName: "White", yardage: 6119),
-    TeeInfo(teeName: "Green", yardage: 5462),
-    TeeInfo(teeName: "Red",   yardage: 5035),
+    TeeInfo(teeName: "Gold",           yardage: 6940, rating: 75.5, slope: 148),
+    TeeInfo(teeName: "Blue",           yardage: 6535, rating: 74.1, slope: 144),
+    TeeInfo(teeName: "White (Men)",    yardage: 6119, rating: 72.3, slope: 141),
+    TeeInfo(teeName: "White (Women)",  yardage: 6119, rating: 76.9, slope: 137),
+    TeeInfo(teeName: "Silver (Men)",   yardage: 5462, rating: 69.2, slope: 135),
+    TeeInfo(teeName: "Silver (Women)", yardage: 5462, rating: 72.8, slope: 130),
+    TeeInfo(teeName: "Bronze (Men)",   yardage: 5035, rating: 67.4, slope: 131),
+    TeeInfo(teeName: "Bronze (Women)", yardage: 5035, rating: 69.2, slope: 123),
 ]
 
 // =======================================================
@@ -23197,6 +23200,7 @@ private enum BuiltIns {
             state: "KS",
             architect: "Perry Maxwell / Press Maxwell",
             type: "Private",
+            address: "4812 E 30th Ave, Hutchinson, KS 67502",
             teeSets: [TeeSet(name: "Women's", pars: PRAIRIE_DUNES_CC_WOMENS_PARS, hcs: PRAIRIE_DUNES_CC_WOMENS_HCS)]
         ),
 
