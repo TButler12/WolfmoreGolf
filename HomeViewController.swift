@@ -2039,6 +2039,18 @@ final class ViewController: UIViewController,
     // MARK: - Quick Start
 
     @objc private func quickStartHomeTapped() {
+        let sheet = GamesInfoViewController()
+        sheet.modalPresentationStyle = .pageSheet
+        if let sheetCtrl = sheet.sheetPresentationController {
+            sheetCtrl.detents = [.medium()]
+            sheetCtrl.prefersGrabberVisible = true
+            sheetCtrl.prefersScrollingExpandsWhenScrolledToEdge = false
+        }
+        sheet.onStart = { [weak self] in self?.proceedWithQuickStart() }
+        present(sheet, animated: true)
+    }
+
+    private func proceedWithQuickStart() {
         guard GameManager.shared.hasSavedGame else {
             doQuickStart()
             return
@@ -2303,5 +2315,147 @@ extension UIViewController {
         alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
         return true
+    }
+}
+
+// MARK: - GamesInfoViewController
+
+final class GamesInfoViewController: UIViewController {
+
+    var onStart: (() -> Void)?
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .systemBackground
+        buildUI()
+    }
+
+    private func buildUI() {
+        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+
+        let titleLabel = UILabel()
+        titleLabel.text = "Auto-Tracked Every Round"
+        titleLabel.font = UIFontMetrics(forTextStyle: .title2)
+            .scaledFont(for: UIFont.systemFont(ofSize: 22, weight: .bold))
+        titleLabel.adjustsFontForContentSizeCategory = true
+        titleLabel.textAlignment = .center
+
+        let subtitleLabel = UILabel()
+        subtitleLabel.text = "These games run automatically — no setup needed."
+        subtitleLabel.font = UIFontMetrics(forTextStyle: .subheadline)
+            .scaledFont(for: UIFont.systemFont(ofSize: 15))
+        subtitleLabel.adjustsFontForContentSizeCategory = true
+        subtitleLabel.textColor = .secondaryLabel
+        subtitleLabel.textAlignment = .center
+        subtitleLabel.numberOfLines = 0
+
+        let games: [(name: String, symbol: String, color: UIColor)] = [
+            ("Wolf",           "pawprint.fill",         wolfGreen),
+            ("6-Point Scotch", "6.circle.fill",         UIColor(red: 0.75, green: 0.55, blue: 0.05, alpha: 1)),
+            ("Skins",          "dollarsign.circle.fill", UIColor.systemTeal),
+            ("Nassau",         "trophy.fill",            UIColor.systemOrange),
+        ]
+        let row1 = gamesRow(Array(games.prefix(2)))
+        let row2 = gamesRow(Array(games.suffix(2)))
+        let grid = UIStackView(arrangedSubviews: [row1, row2])
+        grid.axis = .vertical
+        grid.spacing = 12
+
+        let noteLabel = UILabel()
+        noteLabel.text = "Tap Game Results on the scoring screen to see live totals per hole."
+        noteLabel.font = UIFontMetrics(forTextStyle: .footnote)
+            .scaledFont(for: UIFont.systemFont(ofSize: 13))
+        noteLabel.adjustsFontForContentSizeCategory = true
+        noteLabel.textColor = .secondaryLabel
+        noteLabel.textAlignment = .center
+        noteLabel.numberOfLines = 0
+
+        var btnCfg = UIButton.Configuration.filled()
+        btnCfg.title = "Start Round"
+        btnCfg.image = UIImage(systemName: "arrow.right")
+        btnCfg.imagePlacement = .trailing
+        btnCfg.imagePadding = 8
+        btnCfg.baseBackgroundColor = wolfGreen
+        btnCfg.baseForegroundColor = .white
+        btnCfg.cornerStyle = .large
+        btnCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+            var a = attrs; a.font = UIFont.systemFont(ofSize: 17, weight: .semibold); return a
+        }
+        let startBtn = UIButton(configuration: btnCfg)
+        startBtn.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        startBtn.addTarget(self, action: #selector(startTapped), for: .touchUpInside)
+
+        let stack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, grid, noteLabel, startBtn])
+        stack.axis = .vertical
+        stack.spacing = 20
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 28),
+            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
+            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+        ])
+    }
+
+    private func gamesRow(_ games: [(name: String, symbol: String, color: UIColor)]) -> UIStackView {
+        let row = UIStackView(arrangedSubviews: games.map { gameTile(name: $0.name, symbol: $0.symbol, color: $0.color) })
+        row.axis = .horizontal; row.spacing = 12; row.distribution = .fillEqually
+        return row
+    }
+
+    private func gameTile(name: String, symbol: String, color: UIColor) -> UIView {
+        let card = UIView()
+        card.backgroundColor = .secondarySystemBackground
+        card.layer.cornerRadius = 16
+        card.layer.shadowColor = UIColor.black.cgColor
+        card.layer.shadowOpacity = 0.07
+        card.layer.shadowRadius = 4
+        card.layer.shadowOffset = CGSize(width: 0, height: 2)
+
+        let iconBg = UIView()
+        iconBg.backgroundColor = color.withAlphaComponent(0.15)
+        iconBg.layer.cornerRadius = 30
+        iconBg.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            iconBg.widthAnchor.constraint(equalToConstant: 60),
+            iconBg.heightAnchor.constraint(equalToConstant: 60),
+        ])
+
+        let iconView = UIImageView(image: UIImage(systemName: symbol,
+            withConfiguration: UIImage.SymbolConfiguration(pointSize: 28, weight: .medium)))
+        iconView.tintColor = color
+        iconView.contentMode = .scaleAspectFit
+        iconView.translatesAutoresizingMaskIntoConstraints = false
+        iconBg.addSubview(iconView)
+        NSLayoutConstraint.activate([
+            iconView.centerXAnchor.constraint(equalTo: iconBg.centerXAnchor),
+            iconView.centerYAnchor.constraint(equalTo: iconBg.centerYAnchor),
+        ])
+
+        let nameLabel = UILabel()
+        nameLabel.text = name
+        nameLabel.font = UIFontMetrics(forTextStyle: .caption1)
+            .scaledFont(for: UIFont.systemFont(ofSize: 13, weight: .semibold))
+        nameLabel.adjustsFontForContentSizeCategory = true
+        nameLabel.textAlignment = .center
+        nameLabel.numberOfLines = 2
+        nameLabel.textColor = .label
+
+        let vStack = UIStackView(arrangedSubviews: [iconBg, nameLabel])
+        vStack.axis = .vertical; vStack.spacing = 10; vStack.alignment = .center
+        vStack.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(vStack)
+        NSLayoutConstraint.activate([
+            vStack.centerXAnchor.constraint(equalTo: card.centerXAnchor),
+            vStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 20),
+            vStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -20),
+            vStack.leadingAnchor.constraint(greaterThanOrEqualTo: card.leadingAnchor, constant: 8),
+            vStack.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -8),
+        ])
+        return card
+    }
+
+    @objc private func startTapped() {
+        dismiss(animated: true) { [weak self] in self?.onStart?() }
     }
 }
