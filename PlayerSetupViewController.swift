@@ -318,6 +318,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
         let editLink = makeEditStakeLink()
         editStakeLinkButton = editLink
+        editLink.isHidden = true
         let nassauLink = makeLiveNassauLink()
         let linkRow = UIStackView(arrangedSubviews: [editLink, nassauLink])
         linkRow.axis = .horizontal
@@ -597,7 +598,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let pillFg = UIColor.white
 
         let gameType = g.gameType?.displayName ?? "Casual"
-        pillsStack.addArrangedSubview(makeSmallPill("\(gameType) $\(g.baseGameStake)", bg: pillBg, fg: pillFg))
+        pillsStack.addArrangedSubview(makeSmallPill("\(gameType) $\(g.baseGameStake)", bg: pillBg, fg: pillFg,
+            action: { [weak self] in self?.openGameSettings() }))
 
         let activeCount = (0..<g.activePlayerLimit).filter {
             (g.playerActivated[safe: $0] ?? false) &&
@@ -608,17 +610,34 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         if sideGamesActive, let ns = g.nassauState {
             let s = ns.settings.baseStake
             let stakeStr = s.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(s))" : String(format: "%.2f", s)
-            pillsStack.addArrangedSubview(makeSmallPill("Nassau $\(stakeStr)", bg: pillBg, fg: pillFg))
+            pillsStack.addArrangedSubview(makeSmallPill("Nassau $\(stakeStr)", bg: pillBg, fg: pillFg,
+                action: { [weak self] in self?.openNassauSettings() }))
         }
 
         if sideGamesActive, let ss = g.skinsState {
             let v = ss.settings.skinValue
             let stakeStr = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.2f", v)
-            pillsStack.addArrangedSubview(makeSmallPill("Skins $\(stakeStr)", bg: pillBg, fg: pillFg))
+            pillsStack.addArrangedSubview(makeSmallPill("Skins $\(stakeStr)", bg: pillBg, fg: pillFg,
+                action: { [weak self] in self?.openSkinsSettings() }))
         }
     }
 
-    private func makeSmallPill(_ text: String, bg: UIColor, fg: UIColor) -> UIView {
+    private func makeSmallPill(_ text: String, bg: UIColor, fg: UIColor, action: (() -> Void)? = nil) -> UIView {
+        if let action {
+            var cfg = UIButton.Configuration.filled()
+            cfg.baseBackgroundColor = bg
+            cfg.baseForegroundColor = fg
+            cfg.cornerStyle = .capsule
+            cfg.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10)
+            cfg.attributedTitle = AttributedString(text, attributes: AttributeContainer([
+                .font: UIFont.systemFont(ofSize: 12, weight: .medium) as CTFont,
+                .foregroundColor: fg,
+            ]))
+            let btn = UIButton(configuration: cfg)
+            btn.addAction(UIAction { _ in action() }, for: .touchUpInside)
+            return btn
+        }
+
         let lbl = UILabel()
         lbl.text = text
         lbl.textColor = fg
