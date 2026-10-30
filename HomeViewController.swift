@@ -2042,9 +2042,8 @@ final class ViewController: UIViewController,
         let sheet = GamesInfoViewController()
         sheet.modalPresentationStyle = .pageSheet
         if let sheetCtrl = sheet.sheetPresentationController {
-            sheetCtrl.detents = [.medium()]
+            sheetCtrl.detents = [.large()]
             sheetCtrl.prefersGrabberVisible = true
-            sheetCtrl.prefersScrollingExpandsWhenScrolledToEdge = false
         }
         sheet.onStart = { [weak self] in self?.proceedWithQuickStart() }
         present(sheet, animated: true)
