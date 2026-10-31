@@ -14686,6 +14686,91 @@ let BAYOU_OAKS_SOUTH_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",        yardage: 5011),   // dual-rated M/W, TBD
 ]
 
+// MARK: - Firekeeper Golf Course — Mayetta, KS
+private let FIREKEEPER_ID = UUID(uuidString: "D7A2C914-B5F3-4E81-9C06-2F1B8E47D530")!
+let FIREKEEPER_PARS: [Int] = [4,4,4,5,3,5,3,4,4, 4,5,4,3,5,4,3,4,4]
+let FIREKEEPER_HCS:  [Int] = [13,5,7,1,17,9,15,11,3, 12,10,4,16,2,8,18,14,6]
+let FIREKEEPER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Notah",   yardage: 7525, rating: 76.5, slope: 135),
+    TeeInfo(teeName: "Eagle",   yardage: 6945, rating: 74.3, slope: 130),
+    TeeInfo(teeName: "Buffalo", yardage: 6325, rating: 71.8, slope: 126),
+    TeeInfo(teeName: "Bear",    yardage: 5750, rating: 69.6, slope: 122),
+    TeeInfo(teeName: "Deer",    yardage: 4790, rating: 68.8, slope: 114),
+]
+
+// MARK: - Sand Creek Station Golf Course — Newton, KS
+private let SAND_CREEK_STATION_ID = UUID(uuidString: "E8B3D241-F6A7-4E2C-9B15-8C4D7F03A561")!
+let SAND_CREEK_STATION_PARS: [Int] = [4,5,3,5,4,4,3,4,4, 5,4,4,3,4,4,5,3,4]
+let SAND_CREEK_STATION_HCS:  [Int] = [4,2,18,12,16,8,10,6,14, 1,15,3,11,5,13,7,17,9]
+let SAND_CREEK_STATION_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship",      yardage: 7497, rating: 77.0, slope: 144),
+    TeeInfo(teeName: "Tournament",                       rating: 73.6, slope: 132),
+    TeeInfo(teeName: "Medal (Men)",                      rating: 70.3, slope: 127),
+    TeeInfo(teeName: "Medal (Women)",                    rating: 76.5, slope: 138),
+    TeeInfo(teeName: "Intermediate (Men)",               rating: 66.7, slope: 116),
+    TeeInfo(teeName: "Intermediate (Women)",             rating: 71.8, slope: 124),
+    TeeInfo(teeName: "Front (Men)",                      rating: 66.3, slope: 109),
+    TeeInfo(teeName: "Front (Women)",                    rating: 70.9, slope: 122),
+]
+
+// MARK: - Colbert Hills Golf Course — Manhattan, KS
+// Par 72 | Architects: Jeff Brauer / Jim Colbert | Daily-Fee
+private let COLBERT_HILLS_ID = UUID(uuidString: "F2A8D631-C4B7-4E59-8D12-1A3F9E7B5C20")!
+let COLBERT_HILLS_PARS: [Int] = [5,4,4,4,3,4,5,3,4, 5,3,4,4,4,4,5,3,4]
+let COLBERT_HILLS_HCS:  [Int] = [7,11,3,5,17,13,15,9,1, 6,10,8,16,2,14,18,12,4]
+let COLBERT_HILLS_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black & Blue", yardage: 7505),
+    TeeInfo(teeName: "Silver",       yardage: 7049),
+    TeeInfo(teeName: "Purple",       yardage: 6452),
+    TeeInfo(teeName: "White",        yardage: 5883),
+    TeeInfo(teeName: "Gold",         yardage: 4982),
+]
+
+// MARK: - Buffalo Dunes Golf Course — Garden City, KS
+// Par 72 | Municipal
+private let BUFFALO_DUNES_ID = UUID(uuidString: "A1C7E342-D5B8-4F63-9E21-2B4D8F1C6A07")!
+let BUFFALO_DUNES_PARS: [Int] = [4,4,3,5,4,4,5,3,4, 5,4,3,4,5,4,4,3,4]
+let BUFFALO_DUNES_HCS:  [Int] = [7,3,9,11,13,1,5,17,15, 10,8,2,18,6,14,16,12,4]
+let BUFFALO_DUNES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Brown", yardage: 6887, rating: 74.4, slope: 140),
+]
+
+// MARK: - Carter Plantation — Springfield, LA
+private let CARTER_PLANTATION_ID = UUID(uuidString: "C6D2A815-E3F7-4B1C-9D48-7A0E3F52B961")!
+let CARTER_PLANTATION_PARS: [Int] = [4,4,3,5,4,5,4,3,4, 4,4,3,5,3,4,5,4,4]
+let CARTER_PLANTATION_HCS:  [Int] = [11,3,13,1,15,9,5,17,7, 16,6,12,14,2,18,10,4,8]
+let CARTER_PLANTATION_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7033, rating: 74.3, slope: 140),
+    TeeInfo(teeName: "Gold",  yardage: 6548),
+    TeeInfo(teeName: "Blue",  yardage: 5693),
+    TeeInfo(teeName: "Red",   yardage: 5057),
+]
+
+// MARK: - Contraband Bayou Golf Club at L'Auberge — Lake Charles, LA
+private let CONTRABAND_BAYOU_ID = UUID(uuidString: "A4F1E823-B7D5-4C9E-8F62-3D0B5E91C7A2")!
+let CONTRABAND_BAYOU_PARS: [Int] = [5,4,4,3,4,4,4,3,5, 4,3,4,3,4,5,4,4,4]
+let CONTRABAND_BAYOU_HCS:  [Int] = [12,6,2,14,4,10,8,16,18, 7,15,5,13,17,1,3,9,11]
+let CONTRABAND_BAYOU_SILVER_HCS: [Int] = [2,14,4,12,16,6,8,18,10, 11,15,3,17,13,9,5,1,7]
+let CONTRABAND_BAYOU_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",  yardage: 7077, rating: 74.0, slope: 130),
+    TeeInfo(teeName: "Gold",   yardage: 6531, rating: 71.2, slope: 120),
+    TeeInfo(teeName: "Green",  yardage: 6015, rating: 69.0, slope: 116),
+    TeeInfo(teeName: "Silver", yardage: 5091, rating: 69.2, slope: 114),
+]
+
+// MARK: - Graywood Golf & Racquet Club — Lake Charles, LA
+private let GRAYWOOD_ID = UUID(uuidString: "B3E7F142-C8A1-4D56-9E3B-5F2C0D1A8B74")!
+let GRAYWOOD_PARS: [Int] = [5,4,4,4,4,3,5,3,4, 5,4,4,3,4,5,4,3,4]
+let GRAYWOOD_HCS:  [Int] = [9,11,5,7,13,15,1,17,3, 6,16,4,12,10,8,14,18,2]
+let GRAYWOOD_WOMENS_HCS: [Int] = [3,13,5,9,15,7,1,17,11, 8,4,10,14,12,6,16,18,2]
+let GRAYWOOD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6936),
+    TeeInfo(teeName: "Blue",  yardage: 6468),
+    TeeInfo(teeName: "White", yardage: 6137),
+    TeeInfo(teeName: "Green", yardage: 5428),
+    TeeInfo(teeName: "Red",   yardage: 4699),
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -23322,6 +23407,32 @@ private enum BuiltIns {
         // Kansas
         // -------------------------
         c(
+            FIREKEEPER_ID,
+            "Firekeeper Golf Course",
+            FIREKEEPER_PARS,
+            FIREKEEPER_HCS,
+            FIREKEEPER_TEES,
+            country: "USA",
+            state: "KS",
+            architect: "Notah Begay III",
+            type: "Resort",
+            phone: "(785) 966-2100",
+            address: "12524 150 Rd, Mayetta, KS 66509"
+        ),
+        c(
+            SAND_CREEK_STATION_ID,
+            "Sand Creek Station Golf Course",
+            SAND_CREEK_STATION_PARS,
+            SAND_CREEK_STATION_HCS,
+            SAND_CREEK_STATION_TEES,
+            country: "USA",
+            state: "KS",
+            architect: "Jeffrey D. Brauer",
+            type: "Daily-Fee",
+            phone: "(316) 284-6161",
+            address: "920 Meadowbrook Drive, Newton, KS 67114"
+        ),
+        c(
             PRAIRIE_DUNES_CC_ID,
             "Prairie Dunes Country Club",
             PRAIRIE_DUNES_CC_PARS,
@@ -23333,6 +23444,29 @@ private enum BuiltIns {
             type: "Private",
             address: "4812 E 30th Ave, Hutchinson, KS 67502",
             teeSets: [TeeSet(name: "Women's", pars: PRAIRIE_DUNES_CC_WOMENS_PARS, hcs: PRAIRIE_DUNES_CC_WOMENS_HCS)]
+        ),
+        c(
+            COLBERT_HILLS_ID,
+            "Colbert Hills Golf Course",
+            COLBERT_HILLS_PARS,
+            COLBERT_HILLS_HCS,
+            COLBERT_HILLS_TEES,
+            country: "USA",
+            state: "KS",
+            architect: "Jeff Brauer / Jim Colbert",
+            type: "Daily-Fee"
+        ),
+        c(
+            BUFFALO_DUNES_ID,
+            "Buffalo Dunes Golf Course",
+            BUFFALO_DUNES_PARS,
+            BUFFALO_DUNES_HCS,
+            BUFFALO_DUNES_TEES,
+            country: "USA",
+            state: "KS",
+            type: "Municipal",
+            phone: "(620) 276-1210",
+            address: "5685 US-83, Garden City, KS 67846"
         ),
 
         // Louisiana
@@ -23375,6 +23509,46 @@ private enum BuiltIns {
             type: "Public",
             phone: "(504) 483-9410",
             address: "1040 Filmore Ave, New Orleans, LA 70124"
+        ),
+        c(
+            CARTER_PLANTATION_ID,
+            "Carter Plantation",
+            CARTER_PLANTATION_PARS,
+            CARTER_PLANTATION_HCS,
+            CARTER_PLANTATION_TEES,
+            country: "USA",
+            state: "LA",
+            architect: "David Toms",
+            type: "Daily-Fee",
+            phone: "(225) 294-7555",
+            address: "23475 Carter Trace, Springfield, LA 70462"
+        ),
+        c(
+            CONTRABAND_BAYOU_ID,
+            "Contraband Bayou Golf Club at L'Auberge",
+            CONTRABAND_BAYOU_PARS,
+            CONTRABAND_BAYOU_HCS,
+            CONTRABAND_BAYOU_TEES,
+            country: "USA",
+            state: "LA",
+            architect: "Tom Fazio",
+            type: "Resort",
+            phone: "(866) 580-7444",
+            address: "777 Avenue L'Auberge, Lake Charles, LA 70601",
+            teeSets: [TeeSet(name: "Silver", pars: CONTRABAND_BAYOU_PARS, hcs: CONTRABAND_BAYOU_SILVER_HCS)]
+        ),
+        c(
+            GRAYWOOD_ID,
+            "Graywood Golf & Racquet Club",
+            GRAYWOOD_PARS,
+            GRAYWOOD_HCS,
+            GRAYWOOD_TEES,
+            country: "USA",
+            state: "LA",
+            architect: "Rocky Roquemore",
+            type: "Semi-Private",
+            address: "6150 Graywood Pkwy, Lake Charles, LA 70605",
+            teeSets: [TeeSet(name: "Ladies'", pars: GRAYWOOD_PARS, hcs: GRAYWOOD_WOMENS_HCS)]
         ),
 
         c(
