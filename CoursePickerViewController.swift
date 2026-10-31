@@ -538,7 +538,11 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     // MARK: - Actions
 
     @objc private func cancelTapped() {
-        dismiss(animated: true)
+        if let nav = navigationController, nav.viewControllers.count > 1 {
+            nav.popViewController(animated: true)
+        } else {
+            dismiss(animated: true)
+        }
     }
 
     @objc private func addTapped() {

@@ -34,6 +34,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private weak var gameInfoLabel: UILabel?
     private weak var stakeInfoLabel: UILabel?
     private weak var headerCourseChipLabel: UILabel?
+    private weak var headerCourseChipView: UIView?
     private weak var headerGamePillsStack: UIStackView?
     private var editStakeBlinkTimer: Timer?
     private var editStakeBlinkIsGold = false
@@ -534,7 +535,11 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         titleLbl.translatesAutoresizingMaskIntoConstraints = false
 
         let coursePillContainer = UIView()
-        coursePillContainer.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        coursePillContainer.backgroundColor = UIColor { tc in
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.82, green: 0.40, blue: 0.02, alpha: 1.0)
+                : UIColor(red: 0.88, green: 0.44, blue: 0.00, alpha: 1.0)
+        }
         coursePillContainer.layer.cornerRadius = 12
         coursePillContainer.layer.masksToBounds = true
         coursePillContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -553,6 +558,11 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             courseLbl.trailingAnchor.constraint(equalTo: coursePillContainer.trailingAnchor, constant: -12),
         ])
         headerCourseChipLabel = courseLbl
+        headerCourseChipView = coursePillContainer
+
+        let courseTap = UITapGestureRecognizer(target: self, action: #selector(courseChipTapped))
+        coursePillContainer.addGestureRecognizer(courseTap)
+        coursePillContainer.isUserInteractionEnabled = true
 
         let pillsStack = UIStackView()
         pillsStack.axis = .horizontal
@@ -594,38 +604,47 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         guard let pillsStack = headerGamePillsStack else { return }
         pillsStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
 
-        let pillBg = UIColor.white.withAlphaComponent(0.20)
         let pillFg = UIColor.white
+        let orangeBg = UIColor { tc in
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.82, green: 0.40, blue: 0.02, alpha: 1.0)
+                : UIColor(red: 0.88, green: 0.44, blue: 0.00, alpha: 1.0)
+        }
+        let greenBg = UIColor { tc in
+            tc.userInterfaceStyle == .dark
+                ? UIColor(red: 0.10, green: 0.38, blue: 0.18, alpha: 1.0)
+                : UIColor(red: 0.08, green: 0.33, blue: 0.15, alpha: 1.0)
+        }
 
         let gameType = g.gameType?.displayName ?? "Casual"
-        pillsStack.addArrangedSubview(makeSmallPill("\(gameType) $\(g.baseGameStake)", bg: pillBg, fg: pillFg,
+        pillsStack.addArrangedSubview(makeSmallPill("\(gameType) $\(g.baseGameStake)", bg: orangeBg, fg: pillFg,
             action: { [weak self] in self?.openGameSettings() }))
 
-        let activeCount = (0..<g.activePlayerLimit).filter {
+        // Orange = active (≤5 players, will score); green = inactive (6-7 players, set up but blocked)
+        let activeNamedCount = (0..<g.activePlayerLimit).filter {
             (g.playerActivated[safe: $0] ?? false) &&
             !(g.playerNames[safe: $0] ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
         }.count
-        let sideGamesActive = activeCount <= MAX_PLAYERS
+        let sideWillScore = activeNamedCount <= MAX_PLAYERS
+        let sideBg = sideWillScore ? orangeBg : greenBg
 
-        if sideGamesActive, let ns = g.nassauState {
+        if let ns = g.nassauState {
             let s = ns.settings.baseStake
             let stakeStr = s.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(s))" : String(format: "%.2f", s)
-            pillsStack.addArrangedSubview(makeSmallPill("Nassau $\(stakeStr)", bg: pillBg, fg: pillFg,
+            pillsStack.addArrangedSubview(makeSmallPill("Nassau $\(stakeStr)", bg: sideBg, fg: pillFg,
                 action: { [weak self] in self?.openNassauSettings() }))
         }
 
-        if sideGamesActive {
-            let v = g.skinsState?.settings.skinValue ?? 1.0
-            let stakeStr = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.2f", v)
-            pillsStack.addArrangedSubview(makeSmallPill("Skins $\(stakeStr)", bg: pillBg, fg: pillFg,
-                action: { [weak self] in self?.openSkinsSettings() }))
-        }
+        let v = g.skinsState?.settings.skinValue ?? 1.0
+        let stakeStr = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.2f", v)
+        pillsStack.addArrangedSubview(makeSmallPill("Skins $\(stakeStr)", bg: sideBg, fg: pillFg,
+            action: { [weak self] in self?.openSkinsSettings() }))
     }
 
     private func makeSmallPill(_ text: String, bg: UIColor, fg: UIColor, action: (() -> Void)? = nil) -> UIView {
         if let action {
             let btn = UIButton(type: .custom)
-            btn.backgroundColor = UIColor.white.withAlphaComponent(0.25)
+            btn.backgroundColor = bg
             btn.layer.cornerRadius = 11
             btn.layer.masksToBounds = true
             btn.layer.borderWidth = 1
@@ -779,6 +798,42 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
         present(ac, animated: true)
     }
+    @objc private func courseChipTapped() {
+        openCoursePicker()
+    }
+
+    private func openCoursePicker() {
+        let sb = UIStoryboard(name: "Main", bundle: nil)
+        guard let picker = sb.instantiateViewController(withIdentifier: "CoursePickerVC") as? CoursePickerViewController else { return }
+
+        picker.onPickCourse = { [weak self] courseID in
+            guard let self,
+                  let picked = CourseLibrary.shared.get(id: courseID) else { return }
+            GameManager.shared.update { g in
+                g.course.pars          = Array(picked.pars.prefix(STANDARD_HOLES))
+                g.course.holeHandicaps = Array(picked.hcs.prefix(STANDARD_HOLES))
+                g.course.name          = picked.name
+                g.course.id            = picked.id
+                g.course.teeSets       = picked.teeSets ?? []
+                let setCount = g.course.teeSets.count
+                for i in g.playerTeeSetIndex.indices where g.playerTeeSetIndex[i] > setCount {
+                    g.playerTeeSetIndex[i] = 0
+                }
+            }
+            CourseLibrary.shared.selectedCourseID = courseID
+            GameManager.shared.saveCurrent()
+            self.updateCourseLabel()
+            self.refreshTeeSetUI()
+            self.navigationController?.popViewController(animated: true)
+        }
+
+        picker.onTapAddCourse = { [weak self] in
+            self?.navigationController?.popViewController(animated: true)
+        }
+
+        navigationController?.pushViewController(picker, animated: true)
+    }
+
     private func openGameSettings() {
         guard let g = GameManager.shared.currentGame else { return }
 
@@ -1274,6 +1329,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         recalcStrokesFromModel()
         refreshRandomizeEnabled()
         persistEntireSetupFromUI()
+        refreshHeaderChips()
     }
     @IBAction func nassauSettingsTapped(_ sender: UIButton) {
         guard GameManager.shared.currentGame != nil else { return }
@@ -1501,6 +1557,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         refreshRandomizeEnabled()
         updateGoButtonEnabled()
         persistEntireSetupFromUI()
+        refreshHeaderChips()
     }
 
     @objc private func hcChanged(_ sender: UITextField) {
