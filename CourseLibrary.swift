@@ -13424,6 +13424,120 @@ let BELLERIVE_CC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Silver", yardage: 5673)
 ]
 
+// MARK: St. Louis Country Club — St. Louis, MO
+private let ST_LOUIS_CC_ID = UUID(uuidString: "D3E4F5A6-B7C8-9D0E-1F2A-3B4C5D6E7F8A")!
+
+let ST_LOUIS_CC_PARS: [Int] = [
+    4,3,3,4,5,4,3,4,5,
+    4,4,3,5,4,5,3,4,4
+]
+
+let ST_LOUIS_CC_HCS: [Int] = [
+    8,6,14,2,12,16,18,10,4,
+    13,7,17,1,5,11,15,9,3
+]
+
+let ST_LOUIS_CC_WOMENS_HCS: [Int] = [
+    6,10,8,4,14,16,18,12,2,
+    7,5,17,1,9,13,15,11,3
+]
+
+let ST_LOUIS_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6651, rating: 72.7, slope: 137),
+    TeeInfo(teeName: "Gold",  yardage: 6457),
+    TeeInfo(teeName: "Red",   yardage: 6155),
+    TeeInfo(teeName: "Blue",  yardage: 5657),
+    TeeInfo(teeName: "White", yardage: 5446),
+    TeeInfo(teeName: "Green", yardage: 4662),
+]
+
+// MARK: Old Warson Country Club — Ladue, MO
+private let OLD_WARSON_CC_ID = UUID(uuidString: "F5A6B7C8-D9E0-1F2A-3B4C-5D6E7F8A9B0C")!
+
+let OLD_WARSON_CC_PARS: [Int] = [
+    4,4,3,4,4,5,3,4,4,
+    4,4,5,3,4,4,5,3,4
+]
+
+// Women's par: hole 10 plays par 5 (vs men's par 4) → par 72
+let OLD_WARSON_CC_WOMENS_PARS: [Int] = [
+    4,4,3,4,4,5,3,4,4,
+    5,4,5,3,4,4,5,3,4
+]
+
+let OLD_WARSON_CC_HCS: [Int] = [
+    13,11,15,9,3,5,17,1,7,
+    4,12,10,18,14,2,6,16,8
+]
+
+let OLD_WARSON_CC_WOMENS_HCS: [Int] = [
+    13,11,17,7,5,3,15,1,9,
+    12,6,4,18,14,10,2,16,8
+]
+
+let OLD_WARSON_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",     yardage: 6893),
+    TeeInfo(teeName: "Ryder Cup", yardage: 6771, rating: 72.2, slope: 125),
+    TeeInfo(teeName: "Blue",      yardage: 6568),
+    TeeInfo(teeName: "Red",       yardage: 5542),
+]
+
+// MARK: Dalhousie Golf Club — Cape Girardeau, MO
+private let DALHOUSIE_GC_ID = UUID(uuidString: "E4F5A6B7-C8D9-0E1F-2A3B-4C5D6E7F8A9B")!
+
+let DALHOUSIE_GC_PARS: [Int] = [
+    4,5,4,4,3,4,5,3,4,
+    4,3,4,3,4,5,4,4,5
+]
+
+let DALHOUSIE_GC_HCS: [Int] = [
+    11,3,7,9,13,17,1,15,5,
+    10,14,8,18,12,16,4,2,6
+]
+
+let DALHOUSIE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",          yardage: 7389, rating: 75.1, slope: 141),
+    TeeInfo(teeName: "Gold",           yardage: 6960, rating: 73.5, slope: 133),
+    TeeInfo(teeName: "Blue",           yardage: 6460, rating: 71.7, slope: 129),
+    TeeInfo(teeName: "White",          yardage: 6137, rating: 70.1, slope: 128),
+    TeeInfo(teeName: "White (Women)",  yardage: 6106),
+    TeeInfo(teeName: "Combo (Women)",  yardage: 5753),
+]
+
+// MARK: Whitmoor Country Club (South) — Weldon Spring, MO
+private let WHITMOOR_SOUTH_ID = UUID(uuidString: "B1C2D3E4-F5A6-7B8C-9D0E-1F2A3B4C5D6E")!
+
+let WHITMOOR_SOUTH_PARS: [Int] = [
+    4,3,4,4,5,4,5,3,4,
+    4,5,3,5,3,4,5,3,4
+]
+
+let WHITMOOR_SOUTH_HCS: [Int] = [
+    3,17,15,7,5,1,9,13,11,
+    6,2,14,4,12,16,8,18,10
+]
+
+let WHITMOOR_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6787, rating: 73.5, slope: 141)
+]
+
+// MARK: Whitmoor Country Club (North) — Weldon Spring, MO
+private let WHITMOOR_NORTH_ID = UUID(uuidString: "C2D3E4F5-A6B7-8C9D-0E1F-2A3B4C5D6E7F")!
+
+let WHITMOOR_NORTH_PARS: [Int] = [
+    4,5,3,4,4,3,4,5,4,
+    4,3,5,3,5,4,3,4,4
+]
+
+let WHITMOOR_NORTH_HCS: [Int] = [
+    5,1,17,7,11,9,3,13,15,
+    2,18,12,16,4,8,14,6,10
+]
+
+let WHITMOOR_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6401, rating: 72.2, slope: 134)
+]
+
 // MARK: TPC Toronto at Osprey Valley — North Course — Caledon, ON
 private let TPC_TORONTO_NORTH_ID = UUID(uuidString: "A7B3C5D8-E2F1-4A9C-B6D4-1E2F3A4B5C6D")!
 
@@ -19532,6 +19646,80 @@ private enum BuiltIns {
             type: "Private",
             phone: "(314) 434-4400",
             address: "12925 Ladue Road, St. Louis, MO 63141"
+        ),
+        c(
+            DALHOUSIE_GC_ID,
+            "Dalhousie Golf Club",
+            DALHOUSIE_GC_PARS,
+            DALHOUSIE_GC_HCS,
+            DALHOUSIE_GC_TEES,
+            country: "USA",
+            state: "MO",
+            region: "Southeast Missouri",
+            architect: "Gary Nicklaus",
+            type: "Private",
+            phone: "(573) 332-0818",
+            website: "https://dalhousiegolfclub.com",
+            address: "4700 Cords Way, Cape Girardeau, MO 63701"
+        ),
+        c(
+            OLD_WARSON_CC_ID,
+            "Old Warson Country Club",
+            OLD_WARSON_CC_PARS,
+            OLD_WARSON_CC_HCS,
+            OLD_WARSON_CC_TEES,
+            country: "USA",
+            state: "MO",
+            region: "St. Louis",
+            architect: "Robert Trent Jones, Sr.",
+            type: "Private",
+            address: "10202 Old Warson Rd, Ladue, MO 63124",
+            teeSets: [
+                TeeSet(name: "Blue (Women's)", pars: OLD_WARSON_CC_WOMENS_PARS, hcs: OLD_WARSON_CC_WOMENS_HCS),
+            ]
+        ),
+        c(
+            ST_LOUIS_CC_ID,
+            "St. Louis Country Club",
+            ST_LOUIS_CC_PARS,
+            ST_LOUIS_CC_HCS,
+            ST_LOUIS_CC_TEES,
+            country: "USA",
+            state: "MO",
+            region: "St. Louis",
+            architect: "Charles B. MacDonald",
+            type: "Private",
+            phone: "(314) 994-0011",
+            address: "400 Barnes Rd, St. Louis, MO 63124",
+            teeSets: [
+                TeeSet(name: "Blue (Women's)", pars: ST_LOUIS_CC_PARS, hcs: ST_LOUIS_CC_WOMENS_HCS),
+            ]
+        ),
+        c(
+            WHITMOOR_SOUTH_ID,
+            "Whitmoor Country Club (South)",
+            WHITMOOR_SOUTH_PARS,
+            WHITMOOR_SOUTH_HCS,
+            WHITMOOR_SOUTH_TEES,
+            country: "USA",
+            state: "MO",
+            region: "St. Louis",
+            architect: "Karl Litten",
+            type: "Private",
+            address: "1100 Whitmoor Dr, Weldon Spring, MO 63304"
+        ),
+        c(
+            WHITMOOR_NORTH_ID,
+            "Whitmoor Country Club (North)",
+            WHITMOOR_NORTH_PARS,
+            WHITMOOR_NORTH_HCS,
+            WHITMOOR_NORTH_TEES,
+            country: "USA",
+            state: "MO",
+            region: "St. Louis",
+            architect: "Karl Litten",
+            type: "Private",
+            address: "1100 Whitmoor Dr, Weldon Spring, MO 63304"
         ),
         c(
             BEAR_DANCE_ID,
