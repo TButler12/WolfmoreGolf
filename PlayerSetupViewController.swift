@@ -614,8 +614,8 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
                 action: { [weak self] in self?.openNassauSettings() }))
         }
 
-        if sideGamesActive, let ss = g.skinsState {
-            let v = ss.settings.skinValue
+        if sideGamesActive {
+            let v = g.skinsState?.settings.skinValue ?? 1.0
             let stakeStr = v.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(v))" : String(format: "%.2f", v)
             pillsStack.addArrangedSubview(makeSmallPill("Skins $\(stakeStr)", bg: pillBg, fg: pillFg,
                 action: { [weak self] in self?.openSkinsSettings() }))
@@ -624,16 +624,17 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
     private func makeSmallPill(_ text: String, bg: UIColor, fg: UIColor, action: (() -> Void)? = nil) -> UIView {
         if let action {
-            var cfg = UIButton.Configuration.filled()
-            cfg.baseBackgroundColor = bg
-            cfg.baseForegroundColor = fg
-            cfg.cornerStyle = .capsule
-            cfg.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 10, bottom: 4, trailing: 10)
-            cfg.attributedTitle = AttributedString(text, attributes: AttributeContainer([
-                .font: UIFont.systemFont(ofSize: 12, weight: .medium) as CTFont,
-                .foregroundColor: fg,
-            ]))
-            let btn = UIButton(configuration: cfg)
+            let btn = UIButton(type: .custom)
+            btn.backgroundColor = UIColor.white.withAlphaComponent(0.25)
+            btn.layer.cornerRadius = 11
+            btn.layer.masksToBounds = true
+            btn.layer.borderWidth = 1
+            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.6).cgColor
+            btn.setTitle(text, for: .normal)
+            btn.setTitleColor(fg, for: .normal)
+            btn.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .semibold)
+            btn.contentEdgeInsets = UIEdgeInsets(top: 5, left: 12, bottom: 5, right: 12)
+            btn.translatesAutoresizingMaskIntoConstraints = false
             btn.addAction(UIAction { _ in action() }, for: .touchUpInside)
             return btn
         }
@@ -1143,6 +1144,17 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
 
     @objc private func teeSetButtonTapped(_ sender: UIButton) {
         let seat = sender.tag
+        // view.endEditing returns true when a first responder was dismissed (keyboard was up).
+        // Delay presenting the sheet so the keyboard window finishes its dismiss animation;
+        // otherwise the keyboard window sits above the action sheet and eats button taps.
+        let hadKeyboard = view.endEditing(true)
+        let delay: TimeInterval = hadKeyboard ? 0.35 : 0
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self, weak sender] in
+            self?.presentTeeSetPicker(seat: seat, sourceView: sender)
+        }
+    }
+
+    private func presentTeeSetPicker(seat: Int, sourceView: UIView?) {
         guard let g = GameManager.shared.currentGame, !g.course.teeSets.isEmpty else { return }
 
         let ac = UIAlertController(title: "Tee Set for \(g.playerNames[safe: seat] ?? "Player \(seat+1)")", message: nil, preferredStyle: .actionSheet)
@@ -1169,9 +1181,9 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         }
 
         ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        if let pop = ac.popoverPresentationController {
-            pop.sourceView = sender
-            pop.sourceRect = sender.bounds
+        if let pop = ac.popoverPresentationController, let sv = sourceView {
+            pop.sourceView = sv
+            pop.sourceRect = sv.bounds
         }
         present(ac, animated: true)
     }
