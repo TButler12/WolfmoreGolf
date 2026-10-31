@@ -2108,7 +2108,22 @@ final class ViewController: UIViewController,
 
         let sb = UIStoryboard(name: "Main", bundle: nil)
         guard let roundNav = sb.instantiateViewController(withIdentifier: "RoundNav") as? UINavigationController else { return }
-        present(roundNav, animated: true)
+        // Explicitly request a large (full-height) sheet.  Without this, if roundNav ends up
+        // being presented from an alert that's still in its dismiss animation, UIKit can fall
+        // back to the medium detent — leaving the sheet half-height and blocking all interaction.
+        roundNav.modalPresentationStyle = .pageSheet
+        if let sheet = roundNav.sheetPresentationController {
+            sheet.detents = [.large()]
+        }
+        // If an alert is still in mid-dismiss (UIAlertAction fires before the dismiss animation
+        // starts), get rid of it without animation before presenting the round nav cleanly.
+        if let existing = presentedViewController {
+            existing.dismiss(animated: false) { [weak self] in
+                self?.present(roundNav, animated: true)
+            }
+        } else {
+            present(roundNav, animated: true)
+        }
     }
 
     // MARK: - Live & Connected
@@ -2348,11 +2363,15 @@ final class GamesInfoViewController: UIViewController {
         subtitleLabel.textAlignment = .center
         subtitleLabel.numberOfLines = 0
 
-        let games: [(name: String, symbol: String, color: UIColor)] = [
-            ("Wolf",           "pawprint.fill",         wolfGreen),
-            ("6-Point Scotch", "6.circle.fill",         UIColor(red: 0.75, green: 0.55, blue: 0.05, alpha: 1)),
-            ("Skins",          "dollarsign.circle.fill", UIColor.systemTeal),
-            ("Nassau",         "trophy.fill",            UIColor.systemOrange),
+        let games: [(name: String, symbol: String, color: UIColor, desc: String)] = [
+            ("Wolf",           "pawprint.fill",          wolfGreen,
+             "Pick a partner hole-by-hole in a 1-point or 2-point game, with hammer option available."),
+            ("6-Point Scotch", "6.circle.fill",          UIColor(red: 0.75, green: 0.55, blue: 0.05, alpha: 1),
+             "Low ball, team total, birdie, prox — with alone, rolls and rerolls in play."),
+            ("Skins",          "dollarsign.circle.fill", UIColor.systemTeal,
+             "Win a hole outright to claim the skin. Carry or no carry-over options available."),
+            ("Nassau",         "trophy.fill",            UIColor.systemOrange,
+             "Three bets: front 9, back 9, and overall 18."),
         ]
         let row1 = gamesRow(Array(games.prefix(2)))
         let row2 = gamesRow(Array(games.suffix(2)))
@@ -2361,7 +2380,7 @@ final class GamesInfoViewController: UIViewController {
         grid.spacing = 12
 
         let noteLabel = UILabel()
-        noteLabel.text = "Tap Game Results on the scoring screen to see live totals per hole."
+        noteLabel.text = "All game settings customizable before your round — tap any chip on the Start Round screen."
         noteLabel.font = UIFontMetrics(forTextStyle: .footnote)
             .scaledFont(for: UIFont.systemFont(ofSize: 13))
         noteLabel.adjustsFontForContentSizeCategory = true
@@ -2396,13 +2415,13 @@ final class GamesInfoViewController: UIViewController {
         ])
     }
 
-    private func gamesRow(_ games: [(name: String, symbol: String, color: UIColor)]) -> UIStackView {
-        let row = UIStackView(arrangedSubviews: games.map { gameTile(name: $0.name, symbol: $0.symbol, color: $0.color) })
+    private func gamesRow(_ games: [(name: String, symbol: String, color: UIColor, desc: String)]) -> UIStackView {
+        let row = UIStackView(arrangedSubviews: games.map { gameTile(name: $0.name, symbol: $0.symbol, color: $0.color, desc: $0.desc) })
         row.axis = .horizontal; row.spacing = 12; row.distribution = .fillEqually
         return row
     }
 
-    private func gameTile(name: String, symbol: String, color: UIColor) -> UIView {
+    private func gameTile(name: String, symbol: String, color: UIColor, desc: String) -> UIView {
         let card = UIView()
         card.backgroundColor = .secondarySystemBackground
         card.layer.cornerRadius = 16
@@ -2440,17 +2459,27 @@ final class GamesInfoViewController: UIViewController {
         nameLabel.numberOfLines = 2
         nameLabel.textColor = .label
 
-        let vStack = UIStackView(arrangedSubviews: [iconBg, nameLabel])
-        vStack.axis = .vertical; vStack.spacing = 10; vStack.alignment = .center
+        let descLabel = UILabel()
+        descLabel.text = desc
+        descLabel.font = UIFontMetrics(forTextStyle: .caption2)
+            .scaledFont(for: UIFont.systemFont(ofSize: 11))
+        descLabel.adjustsFontForContentSizeCategory = true
+        descLabel.textAlignment = .center
+        descLabel.numberOfLines = 0
+        descLabel.textColor = .secondaryLabel
+
+        let vStack = UIStackView(arrangedSubviews: [iconBg, nameLabel, descLabel])
+        vStack.axis = .vertical; vStack.spacing = 6; vStack.alignment = .center
         vStack.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(vStack)
         NSLayoutConstraint.activate([
             vStack.centerXAnchor.constraint(equalTo: card.centerXAnchor),
-            vStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 20),
-            vStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -20),
-            vStack.leadingAnchor.constraint(greaterThanOrEqualTo: card.leadingAnchor, constant: 8),
-            vStack.trailingAnchor.constraint(lessThanOrEqualTo: card.trailingAnchor, constant: -8),
+            vStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+            vStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+            vStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 8),
+            vStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -8),
         ])
+
         return card
     }
 
