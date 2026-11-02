@@ -92,6 +92,25 @@ final class TournamentLeaderboardViewController: UIViewController {
             ? UIColor(red: 0.82, green: 0.40, blue: 0.02, alpha: 1.0)
             : UIColor(red: 0.88, green: 0.44, blue: 0.00, alpha: 1.0)
     }
+
+    // Renders "Net/Gross" as an image so the chip is permanently colored regardless
+    // of selection state (UISegmentedControl has no per-segment text color API).
+    private func netGrossImage(selected: Bool) -> UIImage {
+        let color: UIColor = selected ? .white : teamTeeOrange
+        let font  = UIFont.systemFont(ofSize: 13)
+        let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color, .font: font]
+        let str   = NSAttributedString(string: "Net/Gross", attributes: attrs)
+        let sz    = str.size()
+        return UIGraphicsImageRenderer(size: sz).image { _ in str.draw(at: .zero) }
+            .withRenderingMode(.alwaysOriginal)
+    }
+
+    private func refreshNetGrossImage() {
+        guard gameTypePicker.numberOfSegments > 3 else { return }
+        let isSel = gameTypePicker.selectedSegmentIndex == 3
+        gameTypePicker.setImage(netGrossImage(selected: isSel), forSegmentAt: 3)
+        gameTypePicker.selectedSegmentTintColor = isSel ? teamTeeOrange : nil
+    }
     private let dayPicker       = UISegmentedControl()
     private let gameTypePicker  = UISegmentedControl(items: ["Wolf", "Net Skins", "Gross Skins"])
     private let tableView       = UITableView(frame: .zero, style: .plain)
@@ -814,7 +833,7 @@ final class TournamentLeaderboardViewController: UIViewController {
         let isTeeGame = selectedGameType == "team_tee"
         segment.isHidden        = isTeeGame
         teeGameSegment.isHidden = !isTeeGame
-        gameTypePicker.selectedSegmentTintColor = isTeeGame ? teamTeeOrange : nil
+        refreshNetGrossImage()
         recompute()
         applyHeader()
         tableView.reloadData()
@@ -1034,7 +1053,8 @@ final class TournamentLeaderboardViewController: UIViewController {
             let teamTeeActive = record?.teamTeeSettings?.isEnabled == true
                 || GameManager.shared.currentGame?.teamTeeSettings?.isEnabled == true
             if teamTeeActive {
-                gameTypePicker.insertSegment(withTitle: "Net/Gross", at: 3, animated: false)
+                gameTypePicker.insertSegment(withTitle: "", at: 3, animated: false)
+                gameTypePicker.setImage(netGrossImage(selected: false), forSegmentAt: 3)
             } else if selectedGameType == "team_tee" {
                 selectedGameType = "wolf"
             }
@@ -1045,8 +1065,8 @@ final class TournamentLeaderboardViewController: UIViewController {
             default:            gameTypePicker.selectedSegmentIndex = 0
             }
 
+            if teamTeeActive { refreshNetGrossImage() }
             let isTeeGame = selectedGameType == "team_tee"
-            gameTypePicker.selectedSegmentTintColor = isTeeGame ? teamTeeOrange : nil
             segment.isHidden        = isTeeGame
             teeGameSegment.isHidden = !isTeeGame
             teeGameSegment.selectedSegmentIndex = teeGameSubTab
