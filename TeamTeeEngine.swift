@@ -13,10 +13,6 @@ enum TeamTeeEngine {
         }
         guard !activeSeats.isEmpty else { return nil }
 
-        let baseHC = activeSeats.compactMap {
-            $0 < gameData.hcPlayers.count ? gameData.hcPlayers[$0] : nil
-        }.min() ?? 0
-
         var holeResults: [TeamTeeHoleResult?] = Array(repeating: nil, count: totalHoles)
 
         for mp in 0..<totalHoles {
@@ -34,13 +30,9 @@ enum TeamTeeEngine {
                       let gross = gameData.scores[seat][mp] else {
                     allScored = false; break
                 }
-                let si    = gameData.hcForHole(courseH, player: seat)
-                let hc    = seat < gameData.hcPlayers.count ? gameData.hcPlayers[seat] : 0
-                let delta = max(0, hc - baseHC)
-                let pops: Int = {
-                    if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
-                    return 1 + (si <= (delta - STANDARD_HOLES) ? 1 : 0)
-                }()
+                let si   = gameData.hcForHole(courseH, player: seat)
+                let hc   = seat < gameData.hcPlayers.count ? gameData.hcPlayers[seat] : 0
+                let pops = GameManager.shared.absoluteStrokesGiven(playerHC: hc, strokeIndex: si)
                 netsByPlayer[seat] = gross - pops
             }
 

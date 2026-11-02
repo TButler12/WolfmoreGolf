@@ -87,6 +87,11 @@ final class TournamentLeaderboardViewController: UIViewController {
     private let moneyPtsToggle  = UISegmentedControl(items: ["$ Money", "Pts"])
     private let segment         = UISegmentedControl(items: ["Money", "Net Score", "Groups", "Tournament"])
     private let teeGameSegment  = UISegmentedControl(items: ["Team Net", "Individual Net", "Individual Gross"])
+    private let teamTeeOrange   = UIColor { tc in
+        tc.userInterfaceStyle == .dark
+            ? UIColor(red: 0.82, green: 0.40, blue: 0.02, alpha: 1.0)
+            : UIColor(red: 0.88, green: 0.44, blue: 0.00, alpha: 1.0)
+    }
     private let dayPicker       = UISegmentedControl()
     private let gameTypePicker  = UISegmentedControl(items: ["Wolf", "Net Skins", "Gross Skins"])
     private let tableView       = UITableView(frame: .zero, style: .plain)
@@ -807,8 +812,9 @@ final class TournamentLeaderboardViewController: UIViewController {
         default:                 selectedGameType = "wolf"
         }
         let isTeeGame = selectedGameType == "team_tee"
-        segment.isHidden       = isTeeGame
+        segment.isHidden        = isTeeGame
         teeGameSegment.isHidden = !isTeeGame
+        gameTypePicker.selectedSegmentTintColor = isTeeGame ? teamTeeOrange : nil
         recompute()
         applyHeader()
         tableView.reloadData()
@@ -1040,6 +1046,7 @@ final class TournamentLeaderboardViewController: UIViewController {
             }
 
             let isTeeGame = selectedGameType == "team_tee"
+            gameTypePicker.selectedSegmentTintColor = isTeeGame ? teamTeeOrange : nil
             segment.isHidden        = isTeeGame
             teeGameSegment.isHidden = !isTeeGame
             teeGameSegment.selectedSegmentIndex = teeGameSubTab

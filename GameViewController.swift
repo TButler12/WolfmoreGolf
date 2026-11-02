@@ -5144,7 +5144,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         let totalValue = result?.runningTotal ?? 0
         let thru = result?.holesCompleted ?? 0
         let footerLbl = UILabel()
-        footerLbl.text = thru > 0 ? "Team: \(totalValue)  ·  \(thru) holes" : "Team: —"
+        footerLbl.text = thru > 0 ? "Team Net: \(totalValue)  ·  \(thru) holes" : "Team Net: —"
         footerLbl.font = .systemFont(ofSize: 12, weight: .semibold)
         footerLbl.textColor = .secondaryLabel
         footerLbl.textAlignment = .right
