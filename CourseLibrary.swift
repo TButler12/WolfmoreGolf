@@ -2357,35 +2357,6 @@ let CALUSA_PINES_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
-// MARK: - Built-in: Karoo (Black)
-// Brooksville, FL  •  Par 72  •  7562 yds  •  75.2 / 140
-// NOTE: Your screenshots did NOT show HCPs, so this is a TODO.
-// =======================================================
-
-private let KAROO_ID = UUID(uuidString: "0C6A3D27-1783-4AC1-9B41-0E2F70C7CDEE")!
-
-let KAROO_BLACK_PARS: [Int] = [
-    4,4,3,5,4,5,3,4,4,
-    3,4,4,4,5,4,3,5,4
-]
-
-let KAROO_BLACK_YARDS: [Int] = [
-    475,522,292,511,382,563,199,426,421,
-    242,427,496,447,581,388,201,500,489
-]
-
-
-let KAROO_BLACK_HCS_TODO: [Int] = [
-    9,7,1,17,5,15,13,11,3,8,14,4,2,12,16,10,18,6
-]
-
-let KAROO_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Black", yardage: 7562, rating: 75.2, slope: 140),
-    TeeInfo(teeName: "Green", yardage: 6954, rating: 72.3, slope: 135),
-    TeeInfo(teeName: "Tangerine", yardage: 6431, rating: 70.0, slope: 123),
-    TeeInfo(teeName: "Hybrid", yardage: 6009, rating: 68.0, slope: 119),
-    TeeInfo(teeName: "Silver", yardage: 5325, rating: 64.9, slope: 109)
-]
 
 // =======================================================
 // MARK: - Built-in: Patriot GC (4 Star)
@@ -9188,7 +9159,7 @@ let SHINGLE_CREEK_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Silver", yardage: 5290, rating: 65.2, slope: 120)
 ]
 
-// MARK: KAROO at Streamsong — Brooksville, FL
+// MARK: Karoo at Cabot Citrus Farms — Howey-in-the-Hills, FL
 private let KAROO_STREAMSONG_ID = UUID(uuidString: "E1F2A3B4-C5D6-4E7F-8A9B-0C1D2E3F4A5B")!
 
 let KAROO_STREAMSONG_PARS: [Int] = [
@@ -9201,8 +9172,17 @@ let KAROO_STREAMSONG_HCS: [Int] = [
     8,14,4,2,12,16,10,18,6
 ]
 
+let KAROO_STREAMSONG_WOMENS_HCS: [Int] = [
+    7,3,9,17,1,13,15,11,5,
+    10,14,4,2,16,12,8,18,6
+]
+
 let KAROO_STREAMSONG_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Black", yardage: 7562, rating: 75.2, slope: 140)
+    TeeInfo(teeName: "Black",     yardage: 7562, rating: 75.7, slope: 142),
+    TeeInfo(teeName: "Green",     yardage: 6954, rating: 73.0, slope: 138),
+    TeeInfo(teeName: "Tangerine", yardage: 6431, rating: 70.3, slope: 123),
+    TeeInfo(teeName: "Silver",    yardage: 5325, rating: 66.6, slope: 116),
+    TeeInfo(teeName: "Blue",      yardage: 4223, rating: 61.3, slope: 106),
 ]
 
 // MARK: - Tiburón Golf Club (Black Course)
@@ -9773,8 +9753,31 @@ let TALIS_PARK_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Forward",yardage: 4979),
 ]
 
-// MARK: - McArthur Golf Club — Hobe Sound, FL
-// Par 71 | Designed by Tom Fazio & Nick Price | Private
+// MARK: - McArthur Golf Club (Front Yard) — Hobe Sound, FL
+// Par 72 | Designed by Tom Fazio & Nick Price | Private
+
+private let MCARTHUR_FRONTYARD_ID = UUID(uuidString: "F10A0000-0000-0000-0000-00000000001A")!
+
+let MCARTHUR_FRONTYARD_PARS: [Int] = [
+    4,4,3,4,5,4,4,3,5,   // Front 9 — OUT 36
+    5,4,4,3,4,5,4,3,4    // Back 9  — IN  36
+]
+let MCARTHUR_FRONTYARD_HCS: [Int] = [
+    12,4,18,2,8,14,6,16,10,
+    5,1,7,17,11,9,13,15,3
+]
+let MCARTHUR_FRONTYARD_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 7205, rating: 74.1, slope: 142),
+    TeeInfo(teeName: "Gold",       yardage: 6783, rating: 72.0, slope: 139),
+    TeeInfo(teeName: "Gold/Blue",  yardage: 6421, rating: 70.4, slope: 137),
+    TeeInfo(teeName: "Blue",       yardage: 6243, rating: 69.8, slope: 134),
+    TeeInfo(teeName: "White",      yardage: 5780, rating: 68.2, slope: 129),
+    TeeInfo(teeName: "White/Green",yardage: 5451, rating: 66.0, slope: 125),
+    TeeInfo(teeName: "Green",      yardage: 5003, rating: 64.0, slope: 121),
+]
+
+// MARK: - McArthur Golf Club (Back Yard) — Hobe Sound, FL
+// Par 71 | Designed by Bill Coore & Ben Crenshaw (opened 2023) | Private
 
 private let MCARTHUR_GC_ID = UUID(uuidString: "F10A0000-0000-0000-0000-000000000019")!
 
@@ -9783,11 +9786,15 @@ let MCARTHUR_GC_PARS: [Int] = [
     3,4,4,4,3,5,3,5,4    // Back 9  — IN  35
 ]
 let MCARTHUR_GC_HCS: [Int] = [
-    7,9,1,17,11,5,15,3,13,
-    16,6,10,2,18,14,12,8,4
+    6,14,2,16,12,10,8,18,4,
+    17,5,11,1,15,9,13,7,3
 ]
 let MCARTHUR_GC_TEES: [TeeInfo] = [
-    TeeInfo(teeName: "Black", yardage: 6863, rating: 73.7, slope: 134),
+    TeeInfo(teeName: "Black", yardage: 6902, rating: 73.7, slope: 134),
+    TeeInfo(teeName: "Gold",  yardage: 6592, rating: 71.9, slope: 132),
+    TeeInfo(teeName: "Blue",  yardage: 6142, rating: 70.0, slope: 129),
+    TeeInfo(teeName: "White", yardage: 5595, rating: 67.1, slope: 122),
+    TeeInfo(teeName: "Green", yardage: 4885, rating: 63.9, slope: 110),
 ]
 
 // MARK: - Innisbrook Resort — Palm Harbor, FL
@@ -15700,7 +15707,15 @@ private enum BuiltIns {
           website: "https://www.medalistgolfclub.org",
           address: "9908 SE Cottage Lane, Hobe Sound, FL 33455"),
 
-        c(MCARTHUR_GC_ID, "McArthur Golf Club", MCARTHUR_GC_PARS, MCARTHUR_GC_HCS, MCARTHUR_GC_TEES,
+        c(MCARTHUR_GC_ID, "McArthur Golf Club (Back Yard)", MCARTHUR_GC_PARS, MCARTHUR_GC_HCS, MCARTHUR_GC_TEES,
+          country: "USA",
+          state: "FL",
+          region: "Hobe Sound",
+          architect: "Bill Coore & Ben Crenshaw",
+          type: "Private",
+          address: "6550 SE Osprey St, Hobe Sound, FL 33455"),
+
+        c(MCARTHUR_FRONTYARD_ID, "McArthur Golf Club (Front Yard)", MCARTHUR_FRONTYARD_PARS, MCARTHUR_FRONTYARD_HCS, MCARTHUR_FRONTYARD_TEES,
           country: "USA",
           state: "FL",
           region: "Hobe Sound",
@@ -15760,13 +15775,6 @@ private enum BuiltIns {
           website: "https://www.calusapinesgolfclub.com",
           address: "2000 Calusa Pines Drive, Naples, FL 34120"),
       
-        c(KAROO_ID, "Karoo (Black)", KAROO_BLACK_PARS, KAROO_BLACK_HCS_TODO,
-          country: "USA", state: "FL",
-          architect: "Bill Coore & Ben Crenshaw",
-          phone: "(239) 352-2200",
-          website: "https://www.calusapinesgolfclub.com",
-          address: "2000 Calusa Pines Drive, Naples, FL 34120"),
-
         // -------------------------
         // Wisconsin
         // -------------------------
@@ -22304,17 +22312,21 @@ private enum BuiltIns {
         ),
         c(
             KAROO_STREAMSONG_ID,
-            "KAROO at Streamsong",
+            "Cabot Citrus Farms (Karoo)",
             KAROO_STREAMSONG_PARS,
             KAROO_STREAMSONG_HCS,
             KAROO_STREAMSONG_TEES,
             country: "USA",
             state: "FL",
-            region: "Tampa Bay",
-            architect: "Bill Coore & Ben Crenshaw",
+            region: "Central Florida",
+            architect: "Kyle Franz",
             type: "Resort",
-            address: "Brooksville, FL 34601",
-            resortBrand: "Streamsong"
+            address: "Howey-in-the-Hills, FL 34737",
+            resortBrand: "Cabot",
+            teeSets: [
+                TeeSet(name: "Women", pars: KAROO_STREAMSONG_PARS, hcs: KAROO_STREAMSONG_WOMENS_HCS),
+            ],
+            notes: "7,562-yard Kyle Franz design at Cabot Citrus Farms. Wide fairways, multiple routes to pins, bold green contours, and creative short-game recovery around the greens. Sandhill Cranes roam the property — their loud trumpeting call is described as a rolling karoo."
         ),
         c(
             TIBURON_BLACK_ID,
