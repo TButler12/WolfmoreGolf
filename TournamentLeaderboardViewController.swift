@@ -93,13 +93,13 @@ final class TournamentLeaderboardViewController: UIViewController {
             : UIColor(red: 0.88, green: 0.44, blue: 0.00, alpha: 1.0)
     }
 
-    // Renders "Net/Gross" as an image so the chip is permanently colored regardless
+    // Renders "Tee Game" as an image so the chip is permanently colored regardless
     // of selection state (UISegmentedControl has no per-segment text color API).
     private func netGrossImage(selected: Bool) -> UIImage {
         let color: UIColor = selected ? .white : teamTeeOrange
         let font  = UIFont.systemFont(ofSize: 13)
         let attrs: [NSAttributedString.Key: Any] = [.foregroundColor: color, .font: font]
-        let str   = NSAttributedString(string: "Net/Gross", attributes: attrs)
+        let str   = NSAttributedString(string: "Tee Game", attributes: attrs)
         let sz    = str.size()
         return UIGraphicsImageRenderer(size: sz).image { _ in str.draw(at: .zero) }
             .withRenderingMode(.alwaysOriginal)

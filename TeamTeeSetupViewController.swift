@@ -29,7 +29,7 @@ final class TeamTeeSetupViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemGroupedBackground
-        title = "Team Tee Game"
+        title = "Team Total Format"
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .done, target: self, action: #selector(doneTapped))
         buildLayout()

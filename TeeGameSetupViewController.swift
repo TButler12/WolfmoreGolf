@@ -305,7 +305,7 @@ final class TeeGameSetupViewController: UIViewController {
 
         // Team Scoring (Wolf and Skins only)
         let ttLabel = UILabel()
-        ttLabel.text = "Also track Team Scoring"
+        ttLabel.text = "Track Tee Game / Team Total"
         ttLabel.font = UIFont.preferredFont(forTextStyle: .subheadline)
         ttLabel.textColor = .secondaryLabel
         ttLabel.setContentHuggingPriority(.defaultLow, for: .horizontal)
@@ -826,12 +826,34 @@ final class TeeGameSetupViewController: UIViewController {
         )
         ac.addAction(UIAlertAction(title: "Copy Code", style: .default) { [weak self] _ in
             UIPasteboard.general.string = code
-            self?.navigationController?.popViewController(animated: true)
+            self?.openAddPlayers(code: code)
+        })
+        ac.addAction(UIAlertAction(title: "Add Players", style: .default) { [weak self] _ in
+            self?.openAddPlayers(code: code)
         })
         ac.addAction(UIAlertAction(title: "Done", style: .cancel) { [weak self] _ in
             self?.navigationController?.popViewController(animated: true)
         })
         present(ac, animated: true)
+    }
+
+    private func openAddPlayers(code: String) {
+        guard let name = GameManager.shared.currentGame?.tournamentName else {
+            navigationController?.popViewController(animated: true)
+            return
+        }
+        let rosterVC = TournamentRosterViewController(code: code, name: name)
+        rosterVC.title = "Add Players"
+        rosterVC.navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Done", style: .done, target: self, action: #selector(rosterDoneTapped))
+        navigationController?.pushViewController(rosterVC, animated: true)
+    }
+
+    @objc private func rosterDoneTapped() {
+        // Pop both TournamentRosterViewController and this VC, returning to the tournament list.
+        guard let nav = navigationController else { return }
+        let target = nav.viewControllers.dropLast(2).last ?? nav.viewControllers.first!
+        nav.popToViewController(target, animated: true)
     }
 
     private func showError(_ message: String) {

@@ -38,6 +38,7 @@ final class LiveConnectedViewController: UITableViewController {
 
     // Tracks which tournament codes have a new day available (populated async)
     private var newDayAvailable: Set<String> = []
+    private var organizerRosterCount: Int? = nil
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -46,6 +47,23 @@ final class LiveConnectedViewController: UITableViewController {
         tableView.reloadData()
         checkRecentTournamentsForNewDay()
         syncTournamentSettingsIfScorer()
+        fetchOrganizerRosterCount()
+    }
+
+    private func fetchOrganizerRosterCount() {
+        guard let code = GameManager.shared.currentGame?.tournamentCode,
+              GameManager.shared.currentGame?.tournamentIsOrganizer == true else {
+            organizerRosterCount = nil
+            return
+        }
+        Task {
+            let entries = try? await SupabaseService.shared.fetchRoster(code: code)
+            await MainActor.run {
+                self.organizerRosterCount = entries?.count
+                self.buildSections()
+                self.tableView.reloadData()
+            }
+        }
     }
 
     // Re-fetch the organizer's latest wolf/press/hammer settings for scorer devices so
@@ -175,12 +193,25 @@ final class LiveConnectedViewController: UITableViewController {
             && GameManager.shared.currentGame?.tournamentCode != nil
         if isOrganizer {
             let day = GameManager.shared.currentGame?.tournamentDay ?? 1
+            let rosterEmpty = organizerRosterCount == 0
+            let rosterSubtitle: String
+            if let count = organizerRosterCount, count > 0 {
+                rosterSubtitle = "Day \(day) · \(count) player\(count == 1 ? "" : "s")"
+            } else if rosterEmpty {
+                rosterSubtitle = "No players yet · Add Roster"
+            } else {
+                rosterSubtitle = "Currently Day \(day)"
+            }
             result.append(Section(header: "MANAGE", rows: [
                 Row(title: "Manage Tournament",
-                    subtitle: "Currently Day \(day)",
+                    subtitle: rosterSubtitle,
                     icon: "chart.bar.fill",
-                    tint: wolfGreen) { [weak self] in
-                    self?.manageTournamentTapped()
+                    tint: rosterEmpty ? .systemOrange : wolfGreen) { [weak self] in
+                    if rosterEmpty {
+                        self?.showRosterSheet()
+                    } else {
+                        self?.manageTournamentTapped()
+                    }
                 },
             ]))
         }
@@ -583,13 +614,7 @@ final class LiveConnectedViewController: UITableViewController {
 
     private func manageTournamentTapped() {
         let sheet = UIAlertController(title: "Manage Tournament", message: nil, preferredStyle: .actionSheet)
-        sheet.addAction(UIAlertAction(title: "View Results", style: .default) { [weak self] _ in
-            self?.viewOrganizerResults()
-        })
-        sheet.addAction(UIAlertAction(title: "AI Summary", style: .default) { [weak self] _ in
-            self?.navigationController?.pushViewController(AISummaryViewController(), animated: true)
-        })
-        sheet.addAction(UIAlertAction(title: "Roster", style: .default) { [weak self] _ in
+        sheet.addAction(UIAlertAction(title: "Roster / Add Players", style: .default) { [weak self] _ in
             self?.showRosterSheet()
         })
         if GameManager.shared.currentGame?.tournamentIsOrganizer == true {
@@ -597,14 +622,20 @@ final class LiveConnectedViewController: UITableViewController {
                 self?.editTournamentSettings()
             })
         }
-        sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
-            self?.advanceDay()
-        })
         if GameManager.shared.currentGame?.tournamentIsCreator == true {
             sheet.addAction(UIAlertAction(title: "Share Organizer Access", style: .default) { [weak self] _ in
                 self?.shareOrganizerAccess()
             })
         }
+        sheet.addAction(UIAlertAction(title: "View Results", style: .default) { [weak self] _ in
+            self?.viewOrganizerResults()
+        })
+        sheet.addAction(UIAlertAction(title: "AI Summary", style: .default) { [weak self] _ in
+            self?.navigationController?.pushViewController(AISummaryViewController(), animated: true)
+        })
+        sheet.addAction(UIAlertAction(title: "Advance to Next Day", style: .default) { [weak self] _ in
+            self?.advanceDay()
+        })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet)
     }

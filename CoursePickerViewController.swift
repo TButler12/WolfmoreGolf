@@ -882,6 +882,7 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     private func showCourseInfo(_ c: CourseProfile) {
         var lines: [String] = []
 
+        if let notes = c.notes, !notes.isEmpty { lines.append(notes) }
         if let type = c.type, !type.isEmpty { lines.append("Type: \(type)") }
         if let architect = c.architect, !architect.isEmpty { lines.append("Architect: \(architect)") }
         if let state = c.state, !state.isEmpty { lines.append("State: \(state)") }

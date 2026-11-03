@@ -49,6 +49,7 @@ struct CourseProfile: Codable, Equatable {
     var routing: CourseRouting = .eighteenStandard
     // Optional so synthesized Decodable uses decodeIfPresent — old saves without this key decode safely.
     var teeSets: [TeeSet]? = nil
+    var notes: String? = nil
 
     init(
         id: UUID = UUID(),
@@ -69,7 +70,8 @@ struct CourseProfile: Codable, Equatable {
         resortBrand: String? = nil,
         promo: LocationPromo? = nil,
         routing: CourseRouting = .eighteenStandard,
-        teeSets: [TeeSet]? = nil
+        teeSets: [TeeSet]? = nil,
+        notes: String? = nil
     ) {
         self.id = id
         self.name = name
@@ -90,6 +92,7 @@ struct CourseProfile: Codable, Equatable {
         self.promo = promo
         self.routing = routing
         self.teeSets = teeSets
+        self.notes = notes
     }
 
 
@@ -14885,6 +14888,103 @@ let GRAYWOOD_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Red",   yardage: 4699),
 ]
 
+// MARK: - Atlantic Golf Club — Bridgehampton, NY
+private let ATLANTIC_GC_ID = UUID(uuidString: "E5F6A7B8-C9D0-1E2F-3A4B-5C6D7E8F9A0B")!
+
+let ATLANTIC_GC_PARS: [Int] = [
+    5,4,4,3,4,5,3,4,4,
+    4,3,4,5,4,3,4,4,5
+]
+
+let ATLANTIC_GC_HCS: [Int] = [
+    9,1,15,7,5,13,17,11,3,
+    2,12,10,14,8,16,4,18,6
+]
+
+let ATLANTIC_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7084, rating: 75.0, slope: 144),
+]
+
+// MARK: - The Bridge — Bridgehampton, NY
+private let THE_BRIDGE_ID = UUID(uuidString: "D4E5F6A7-B8C9-0D1E-2F3A-4B5C6D7E8F9A")!
+
+let THE_BRIDGE_PARS: [Int] = [
+    4,3,4,4,3,4,5,4,5,
+    5,4,4,4,3,4,3,4,5
+]
+
+let THE_BRIDGE_HCS: [Int] = [
+    7,15,3,13,17,1,11,5,9,
+    6,12,16,4,18,2,14,8,10
+]
+
+let THE_BRIDGE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Checkered", yardage: 7341, rating: 77.6, slope: 146),
+]
+
+// MARK: - Nassau Country Club — Glen Cove, NY
+private let NASSAU_CC_ID = UUID(uuidString: "C3D4E5F6-A7B8-9C0D-1E2F-3A4B5C6D7E8F")!
+
+let NASSAU_CC_PARS: [Int] = [
+    4,4,3,5,3,4,4,4,4,
+    3,4,4,4,4,5,3,4,4
+]
+
+let NASSAU_CC_HCS: [Int] = [
+    9,11,13,5,17,1,3,7,15,
+    16,2,6,8,12,4,18,10,14
+]
+
+let NASSAU_CC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 7128, rating: 75.1, slope: 140),
+]
+
+// MARK: - Piping Rock Club — Locust Valley, NY
+private let PIPING_ROCK_CLUB_ID = UUID(uuidString: "B2C3D4E5-F6A7-8B9C-0D1E-2F3A4B5C6D7E")!
+
+let PIPING_ROCK_CLUB_PARS: [Int] = [
+    4,4,3,4,4,5,4,4,3,
+    5,3,4,4,4,4,4,3,5
+]
+
+// Stroke index from BlueGolf Championship tee data
+let PIPING_ROCK_CLUB_HCS: [Int] = [
+    7,11,15,3,17,9,5,1,13,
+    4,14,16,12,2,6,8,18,10
+]
+
+let PIPING_ROCK_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6866, rating: 73.8, slope: 134),
+    TeeInfo(teeName: "Gold",         yardage: 6787, rating: 73.7, slope: 134),
+    TeeInfo(teeName: "Blue",         yardage: 6370, rating: 71.0, slope: 130),
+    TeeInfo(teeName: "White",        yardage: 5948, rating: 69.0, slope: 127),
+    TeeInfo(teeName: "Red",          yardage: 5501, rating: 67.7, slope: 123),
+    TeeInfo(teeName: "Yellow (L)",   yardage: 5072, rating: 69.8, slope: 125),
+]
+
+// MARK: - Saint Andrew's Golf Club (Golf Course at Mount Hope) — Hastings-on-Hudson, NY
+private let SAINT_ANDREWS_GC_NY_ID = UUID(uuidString: "A1B2C3D4-E5F6-7A8B-9C0D-E1F2A3B4C5D6")!
+
+let SAINT_ANDREWS_GC_NY_PARS: [Int] = [
+    4,4,3,4,3,4,5,4,5,
+    3,4,5,3,4,4,3,5,4
+]
+
+let SAINT_ANDREWS_GC_NY_HCS: [Int] = [
+    7,15,17,9,13,3,11,1,5,
+    14,4,12,16,2,8,18,10,6
+]
+
+let SAINT_ANDREWS_GC_NY_WOMENS_HCS: [Int] = [
+    13,7,17,9,15,1,5,3,11,
+    18,10,12,16,6,4,14,2,8
+]
+
+let SAINT_ANDREWS_GC_NY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6614),
+    TeeInfo(teeName: "Member",       yardage: 6217),
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -14911,6 +15011,7 @@ private enum BuiltIns {
         let promo: LocationPromo?    // ✅ ADD (not String)
         let routing: CourseRouting
         let teeSets: [TeeSet]?
+        let notes: String?
     }
 
     private static func c(
@@ -14932,7 +15033,8 @@ private enum BuiltIns {
         resortBrand: String? = nil,
         promo: LocationPromo? = nil,
         routing: CourseRouting = .eighteenStandard,   // 👈 ADD
-        teeSets: [TeeSet]? = nil
+        teeSets: [TeeSet]? = nil,
+        notes: String? = nil
     ) -> BuiltInCourse {
         .init(
             id: id,
@@ -14953,7 +15055,8 @@ private enum BuiltIns {
             resortBrand: resortBrand,
             promo: promo,
             routing: routing,   // 👈 ADD
-            teeSets: teeSets
+            teeSets: teeSets,
+            notes: notes
         )
     }
     private static func profile(from b: BuiltInCourse) -> CourseProfile {
@@ -14976,7 +15079,8 @@ private enum BuiltIns {
             resortBrand: b.resortBrand,
             promo: b.promo,
             routing: b.routing,   // 👈 ADD THIS
-            teeSets: b.teeSets
+            teeSets: b.teeSets,
+            notes: b.notes
         )
     }
     private static let all: [BuiltInCourse] = [
@@ -26706,6 +26810,76 @@ private enum BuiltIns {
             address: "Carretera Transpeninsular Km 10.3, Cabo San Lucas, BCS 23410",
             teeSets: [TeeSet(name: "Ladies", pars: CABO_DEL_SOL_DESERT_PARS, hcs: CABO_DEL_SOL_DESERT_LADIES_HCS)]
         ),
+        c(
+            SAINT_ANDREWS_GC_NY_ID,
+            "Saint Andrew's Golf Club",
+            SAINT_ANDREWS_GC_NY_PARS,
+            SAINT_ANDREWS_GC_NY_HCS,
+            SAINT_ANDREWS_GC_NY_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Westchester",
+            architect: "Jack Nicklaus (redesign, 1983–85)",
+            type: "Private",
+            website: "https://saintandrewsgolfclub.com",
+            address: "Mount Hope Rd, Hastings-on-Hudson, NY 10706",
+            teeSets: [
+                TeeSet(name: "Ladies (Member)", pars: SAINT_ANDREWS_GC_NY_PARS, hcs: SAINT_ANDREWS_GC_NY_WOMENS_HCS),
+            ]
+        ),
+        c(
+            PIPING_ROCK_CLUB_ID,
+            "Piping Rock Club",
+            PIPING_ROCK_CLUB_PARS,
+            PIPING_ROCK_CLUB_HCS,
+            PIPING_ROCK_CLUB_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "C.B. Macdonald & Seth Raynor",
+            type: "Private",
+            address: "Piping Rock Rd, Locust Valley, NY 11560"
+        ),
+        c(
+            NASSAU_CC_ID,
+            "Nassau Country Club",
+            NASSAU_CC_PARS,
+            NASSAU_CC_HCS,
+            NASSAU_CC_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Devereux Emmet (1920); Tom Fazio (2012 renovation)",
+            type: "Private",
+            address: "1 Lattingtown Rd, Glen Cove, NY 11542",
+            notes: "Birthplace of the Nassau — a three-bet wager on the front nine, back nine, and 18-hole match, invented by club member J.B.C. Tappan."
+        ),
+        c(
+            THE_BRIDGE_ID,
+            "The Bridge",
+            THE_BRIDGE_PARS,
+            THE_BRIDGE_HCS,
+            THE_BRIDGE_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Rees Jones",
+            type: "Private",
+            phone: "(631) 537-1818",
+            address: "1040 Scuttle Hole Rd, Bridgehampton, NY 11932"
+        ),
+        c(
+            ATLANTIC_GC_ID,
+            "Atlantic Golf Club",
+            ATLANTIC_GC_PARS,
+            ATLANTIC_GC_HCS,
+            ATLANTIC_GC_TEES,
+            country: "USA",
+            state: "NY",
+            region: "Long Island",
+            architect: "Rees Jones",
+            type: "Private"
+        ),
         ]
 
 
@@ -26897,7 +27071,8 @@ final class CourseLibrary {
             resortBrand: incoming.resortBrand ?? base?.resortBrand,
             promo: incoming.promo ?? base?.promo,
             routing: incoming.routing,
-            teeSets: incoming.teeSets ?? base?.teeSets
+            teeSets: incoming.teeSets ?? base?.teeSets,
+            notes: incoming.notes ?? base?.notes
         )
     }
     private func load() {

@@ -53,11 +53,8 @@ final class ManagePlayersViewController: UIViewController,
         }
 
         buildQuickStartFooter()
-        // Hide Quick Start when in tournament context — players must come from the roster
-        if GameManager.shared.currentGame?.tournamentCode != nil {
-            quickStartButton?.isHidden = true
-        }
-        applyAdaptiveConstraints()
+        buildBottomControls()
+        observeKeyboard()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -765,64 +762,101 @@ final class ManagePlayersViewController: UIViewController,
     private func refreshRosterPickerButton() {
         let code = GameManager.shared.currentGame?.tournamentCode
         if let code, !code.isEmpty {
-            if rosterPickerButton == nil { buildRosterPickerButton(code: code) }
             rosterPickerButton?.isHidden = useOwnPlayers
-            if useOwnPlayers {
-                useOwnPlayersButton?.setTitle("Use Tournament Roster Instead", for: .normal)
-            } else {
-                useOwnPlayersButton?.setTitle("Use My Players Instead", for: .normal)
-            }
+            useOwnPlayersButton?.setTitle(
+                useOwnPlayers ? "Use Tournament Roster Instead" : "Use My Players Instead",
+                for: .normal)
             useOwnPlayersButton?.isHidden = false
+            _ = code // keep for future use
         } else {
             rosterPickerButton?.isHidden = true
             useOwnPlayersButton?.isHidden = true
         }
     }
 
-    private func buildRosterPickerButton(code: String) {
-        var cfg = UIButton.Configuration.tinted()
-        cfg.title = "Pick from Tournament Roster"
-        cfg.image = UIImage(systemName: "list.bullet")
-        cfg.imagePadding = 8
-        cfg.baseBackgroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
-        cfg.baseForegroundColor = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
-        cfg.cornerStyle = .large
-        cfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
-        cfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
+    // Pre-creates every bottom button and arranges them in a single UIStackView so
+    // the tableView can pin its bottom to the stack top, and hidden buttons collapse cleanly.
+    private func buildBottomControls() {
+        guard let startBtn = startRoundButton,
+              let homeBtn  = button(forAction: #selector(closeTapped(_:))) else { return }
+
+        let green = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+
+        // Roster picker button — hidden until a tournament is active
+        var rCfg = UIButton.Configuration.tinted()
+        rCfg.title = "Pick from Tournament Roster"
+        rCfg.image = UIImage(systemName: "list.bullet")
+        rCfg.imagePadding = 8
+        rCfg.baseBackgroundColor = green
+        rCfg.baseForegroundColor = green
+        rCfg.cornerStyle = .large
+        rCfg.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 20, bottom: 12, trailing: 20)
+        rCfg.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attrs in
             var a = attrs; a.font = UIFont.systemFont(ofSize: 15, weight: .semibold); return a
         }
-        let btn = UIButton(configuration: cfg)
-        btn.addTarget(self, action: #selector(rosterPickerTapped), for: .touchUpInside)
-        btn.translatesAutoresizingMaskIntoConstraints = false
-        rosterPickerButton = btn
-        view.addSubview(btn)
+        let rosterBtn = UIButton(configuration: rCfg)
+        rosterBtn.addTarget(self, action: #selector(rosterPickerTapped), for: .touchUpInside)
+        rosterBtn.translatesAutoresizingMaskIntoConstraints = false
+        rosterBtn.isHidden = true
+        rosterPickerButton = rosterBtn
 
+        // Toggle button — hidden until a tournament is active
         let toggleBtn = UIButton(type: .system)
         toggleBtn.setTitle("Use My Players Instead", for: .normal)
         toggleBtn.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
-        toggleBtn.tintColor = wolfGreen
-        toggleBtn.setTitleColor(wolfGreen, for: .normal)
-        toggleBtn.setTitleColor(wolfGreen.withAlphaComponent(0.5), for: .highlighted)
+        toggleBtn.tintColor = green
+        toggleBtn.setTitleColor(green, for: .normal)
+        toggleBtn.setTitleColor(green.withAlphaComponent(0.5), for: .highlighted)
         toggleBtn.addTarget(self, action: #selector(useOwnPlayersTapped), for: .touchUpInside)
         toggleBtn.translatesAutoresizingMaskIntoConstraints = false
+        toggleBtn.isHidden = true
         useOwnPlayersButton = toggleBtn
-        view.addSubview(toggleBtn)
 
-        guard let quickBtn = quickStartButton,
-              let homeBtn = button(forAction: #selector(closeTapped(_:))) else { return }
+        // Style the storyboard home button
+        homeBtn.tintColor = green
+        homeBtn.setTitleColor(green, for: .normal)
+        homeBtn.setTitleColor(green.withAlphaComponent(0.5), for: .highlighted)
+
+        // Build ordered stack: roster picker → toggle → (quick start) → start round → home
+        var arranged: [UIView] = [rosterBtn, toggleBtn]
+        if let quickBtn = quickStartButton {
+            quickBtn.isHidden = GameManager.shared.currentGame?.tournamentCode != nil
+            arranged.append(quickBtn)
+        }
+        arranged.append(contentsOf: [startBtn, homeBtn])
+
+        let stack = UIStackView(arrangedSubviews: arranged)
+        stack.axis = .vertical
+        stack.alignment = .fill
+        stack.distribution = .fill
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(stack)
+
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        startBtn.translatesAutoresizingMaskIntoConstraints = false
+        homeBtn.translatesAutoresizingMaskIntoConstraints  = false
+
+        let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            btn.topAnchor.constraint(equalTo: quickBtn.bottomAnchor, constant: 10),
-            btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-            btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
-            btn.heightAnchor.constraint(equalToConstant: 60),
+            tableView.topAnchor.constraint(equalTo: guide.topAnchor),
+            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tableView.bottomAnchor.constraint(equalTo: stack.topAnchor, constant: -8),
 
-            toggleBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            toggleBtn.topAnchor.constraint(equalTo: btn.bottomAnchor, constant: 6),
-            toggleBtn.bottomAnchor.constraint(equalTo: homeBtn.topAnchor, constant: -8),
-            toggleBtn.heightAnchor.constraint(equalToConstant: 36),
+            stack.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
+            stack.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -16),
+
+            rosterBtn.heightAnchor.constraint(equalToConstant: 50),
+            toggleBtn.heightAnchor.constraint(equalToConstant: 44),
+            startBtn.heightAnchor.constraint(equalToConstant: 50),
+            homeBtn.heightAnchor.constraint(equalToConstant: 44),
         ])
+        if let quickBtn = quickStartButton {
+            quickBtn.translatesAutoresizingMaskIntoConstraints = false
+            quickBtn.heightAnchor.constraint(equalToConstant: 60).isActive = true
+        }
     }
 
     @objc private func useOwnPlayersTapped() {
@@ -1001,63 +1035,35 @@ final class ManagePlayersViewController: UIViewController,
         btn.addTarget(self, action: #selector(quickStartTapped), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
         quickStartButton = btn
-
-        view.addSubview(btn)
-
-        // Horizontal sizing only — vertical position is wired up in applyAdaptiveConstraints()
-        // once the Home button is also known, so the three-button chain is consistent.
-        NSLayoutConstraint.activate([
-            btn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            btn.leadingAnchor.constraint(greaterThanOrEqualTo: view.leadingAnchor, constant: 20),
-            btn.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20),
-            btn.heightAnchor.constraint(equalToConstant: 60),
-        ])
+        // Layout is wired up in buildBottomControls() after all buttons exist.
     }
 
-    // Replaces storyboard fixed frames with safe-area-relative constraints so the
-    // layout fills the full width on iPad.
-    private func applyAdaptiveConstraints() {
-        guard let startBtn = startRoundButton,
-              let homeBtn  = button(forAction: #selector(closeTapped(_:))) else { return }
+    // MARK: - Keyboard
 
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        startBtn.translatesAutoresizingMaskIntoConstraints = false
-        homeBtn.translatesAutoresizingMaskIntoConstraints  = false
+    private func observeKeyboard() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(keyboardWillChange(_:)),
+            name: UIResponder.keyboardWillChangeFrameNotification,
+            object: nil)
+    }
 
-        let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
-        homeBtn.tintColor = wolfGreen
-        homeBtn.setTitleColor(wolfGreen, for: .normal)
-        homeBtn.setTitleColor(wolfGreen.withAlphaComponent(0.5), for: .highlighted)
+    @objc private func keyboardWillChange(_ note: Notification) {
+        guard let info = note.userInfo,
+              let endFrame = (info[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue,
+              let duration = info[UIResponder.keyboardAnimationDurationUserInfoKey] as? TimeInterval,
+              let curveRaw = info[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt
+        else { return }
 
-        let guide = view.safeAreaLayoutGuide
-        NSLayoutConstraint.activate([
-            // TableView fills full width; height driven by button chain below
-            tableView.topAnchor.constraint(equalTo: guide.topAnchor),
-            tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            tableView.bottomAnchor.constraint(equalTo: startBtn.topAnchor, constant: -8),
+        let keyboardHeight = max(0, view.bounds.height - endFrame.minY)
+        let safeBottom = view.safeAreaInsets.bottom
+        let inset = max(0, keyboardHeight - safeBottom)
 
-            // Start Round button spans usable width
-            startBtn.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 20),
-            startBtn.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
-            startBtn.heightAnchor.constraint(equalToConstant: 50),
-
-            // Home button pinned to safe-area bottom, centered
-            homeBtn.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            homeBtn.leadingAnchor.constraint(greaterThanOrEqualTo: guide.leadingAnchor, constant: 20),
-            homeBtn.trailingAnchor.constraint(lessThanOrEqualTo: guide.trailingAnchor, constant: -20),
-            homeBtn.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -16),
-            homeBtn.heightAnchor.constraint(equalToConstant: 44),
-        ])
-
-        // Vertical chain: tableView → startBtn → (quickStart →) homeBtn
-        if let quickBtn = quickStartButton {
-            NSLayoutConstraint.activate([
-                startBtn.bottomAnchor.constraint(equalTo: quickBtn.topAnchor, constant: -14),
-                quickBtn.bottomAnchor.constraint(equalTo: homeBtn.topAnchor, constant: -8),
-            ])
-        } else {
-            startBtn.bottomAnchor.constraint(equalTo: homeBtn.topAnchor, constant: -16).isActive = true
+        UIView.animate(withDuration: duration,
+                       delay: 0,
+                       options: UIView.AnimationOptions(rawValue: curveRaw << 16)) {
+            self.tableView.contentInset.bottom = inset
+            self.tableView.verticalScrollIndicatorInsets.bottom = inset
         }
     }
 

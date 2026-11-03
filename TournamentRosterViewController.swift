@@ -24,6 +24,62 @@ final class TournamentRosterViewController: UITableViewController {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .add, target: self, action: #selector(addTapped))
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.tableHeaderView = makeImportHeader()
+    }
+
+    // MARK: - Import header
+
+    private func makeImportHeader() -> UIView {
+        let container = UIView()
+        let green = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
+
+        func makeButton(title: String, icon: String, action: Selector) -> UIButton {
+            var cfg = UIButton.Configuration.tinted()
+            cfg.title = title
+            cfg.image = UIImage(systemName: icon)
+            cfg.imagePadding = 6
+            cfg.baseForegroundColor = green
+            cfg.baseBackgroundColor = green
+            let btn = UIButton(configuration: cfg)
+            btn.addTarget(self, action: action, for: .touchUpInside)
+            return btn
+        }
+
+        let pastBtn  = makeButton(title: "Copy from Previous Tournament",
+                                   icon: "doc.on.doc",
+                                   action: #selector(copyFromPastTapped))
+        let savedBtn = makeButton(title: "Choose Saved Players",
+                                   icon: "person.2",
+                                   action: #selector(chooseFromSavedTapped))
+
+        let stack = UIStackView(arrangedSubviews: [pastBtn, savedBtn])
+        stack.axis = .vertical
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 16),
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 20),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -20),
+            stack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -12),
+        ])
+
+        container.frame = CGRect(x: 0, y: 0, width: 0, height: 150)
+        return container
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        guard let header = tableView.tableHeaderView else { return }
+        let newSize = header.systemLayoutSizeFitting(
+            CGSize(width: tableView.bounds.width, height: 0),
+            withHorizontalFittingPriority: .required,
+            verticalFittingPriority: .fittingSizeLevel)
+        if abs(header.frame.height - newSize.height) > 1 {
+            header.frame.size.height = newSize.height
+            tableView.tableHeaderView = header
+        }
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -177,6 +233,123 @@ final class TournamentRosterViewController: UITableViewController {
                 await MainActor.run { self.loadRoster() }
             } catch {
                 await MainActor.run { self.showError("Save failed: \(error.localizedDescription)") }
+            }
+        }
+    }
+
+    // MARK: - Copy from previous tournament
+
+    @objc private func copyFromPastTapped() {
+        let history = TournamentHistoryStore.shared.all()
+            .filter { $0.isOrganizer && $0.code != tournamentCode }
+
+        guard !history.isEmpty else {
+            let ac = UIAlertController(
+                title: "No Previous Tournaments",
+                message: "You haven't organized any other tournaments yet.",
+                preferredStyle: .alert)
+            ac.addAction(UIAlertAction(title: "OK", style: .default))
+            present(ac, animated: true)
+            return
+        }
+
+        let sheet = UIAlertController(
+            title: "Copy from Previous Tournament", message: nil, preferredStyle: .actionSheet)
+        let fmt = DateFormatter()
+        fmt.dateStyle = .medium
+        fmt.timeStyle = .none
+        for entry in history {
+            let label = "\(entry.name)  ·  \(fmt.string(from: entry.lastJoined))"
+            sheet.addAction(UIAlertAction(title: label, style: .default) { [weak self] _ in
+                self?.importFromPastTournament(code: entry.code, name: entry.name)
+            })
+        }
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        presentActionSheet(sheet)
+    }
+
+    private func importFromPastTournament(code: String, name: String) {
+        let spinner = UIAlertController(title: nil, message: "Importing from \(name)…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                let fetched = try await SupabaseService.shared.fetchRoster(code: code)
+                let existingLower = Set(self.entries.map { $0.canonicalName.lowercased() })
+                var added = 0
+                for src in fetched {
+                    guard !existingLower.contains(src.canonicalName.lowercased()) else { continue }
+                    let entry = TournamentRosterEntry(
+                        id: UUID(),
+                        tournamentCode: self.tournamentCode,
+                        canonicalName: src.canonicalName,
+                        handicap: src.handicap,
+                        addedBy: "organizer",
+                        groupCode: nil)
+                    try await SupabaseService.shared.upsertRosterEntry(entry)
+                    added += 1
+                }
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let msg = added == 0
+                            ? "All players from \(name) are already on this roster."
+                            : "\(added) player\(added == 1 ? "" : "s") added."
+                        let ac = UIAlertController(title: "Done", message: msg, preferredStyle: .alert)
+                        ac.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(ac, animated: true)
+                        self.loadRoster()
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Import failed: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: - Choose saved players
+
+    @objc private func chooseFromSavedTapped() {
+        let existingLower = Set(entries.map { $0.canonicalName.lowercased() })
+        let picker = SavedPlayersPickerViewController(existingNames: existingLower)
+        picker.onAdd = { [weak self] players in
+            self?.bulkAdd(players)
+        }
+        navigationController?.pushViewController(picker, animated: true)
+    }
+
+    private func bulkAdd(_ players: [(name: String, handicap: Int)]) {
+        guard !players.isEmpty else { return }
+        let spinner = UIAlertController(
+            title: nil,
+            message: "Adding \(players.count) player\(players.count == 1 ? "" : "s")…",
+            preferredStyle: .alert)
+        present(spinner, animated: true)
+        let existingLower = Set(entries.map { $0.canonicalName.lowercased() })
+        Task {
+            do {
+                for p in players {
+                    guard !existingLower.contains(p.name.lowercased()) else { continue }
+                    let entry = TournamentRosterEntry(
+                        id: UUID(),
+                        tournamentCode: self.tournamentCode,
+                        canonicalName: p.name,
+                        handicap: p.handicap,
+                        addedBy: "organizer",
+                        groupCode: nil)
+                    try await SupabaseService.shared.upsertRosterEntry(entry)
+                }
+                await MainActor.run {
+                    spinner.dismiss(animated: false) { self.loadRoster() }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        self.showError("Add failed: \(error.localizedDescription)")
+                    }
+                }
             }
         }
     }
