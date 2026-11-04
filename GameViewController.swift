@@ -6642,6 +6642,9 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
     // Returns a human-readable match status string from Team A's perspective,
     // used when publishing live match status for the event summary.
     private func liveMatchStatusString(g: GameData, throughHole: Int) -> String {
+        if g.resolvedGameType == .bestBall {
+            return liveBestBallStatusString(g: g, throughHole: throughHole)
+        }
         let teamASeats = (g.matchPlayTeamA ?? []).filter { $0 < MAX_PLAYERS }
         let rawTeamB   = (g.matchPlayTeamB ?? []).filter { $0 < MAX_PLAYERS }
         let teamBSeats = rawTeamB.isEmpty
@@ -6693,6 +6696,61 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         } else {
             return "\(bNames) \(abs(diff)) UP vs \(aNames) · thru \(played)"
         }
+    }
+
+    private func liveBestBallStatusString(g: GameData, throughHole: Int) -> String {
+        let activeSeats = (0..<MAX_PLAYERS).filter {
+            $0 < g.playerActivated.count && g.playerActivated[$0] &&
+            !g.playerNames[$0].trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        let teamASeats = (g.matchPlayTeamA ?? []).filter { activeSeats.contains($0) }
+        let rawB = (g.matchPlayTeamB ?? []).filter { activeSeats.contains($0) }
+        let teamBSeats = rawB.isEmpty ? activeSeats.filter { !teamASeats.contains($0) } : rawB
+
+        func shortNames(_ seats: [Int]) -> String {
+            let names = seats.compactMap { seat -> String? in
+                guard seat < g.playerNames.count else { return nil }
+                let n = g.playerNames[seat].trimmingCharacters(in: .whitespaces)
+                guard !n.isEmpty else { return nil }
+                return n.components(separatedBy: " ").first
+            }
+            return names.isEmpty ? "?" : names.joined(separator: "/")
+        }
+
+        let baseHC = activeSeats.compactMap { g.hcPlayers[safe: $0] }.min() ?? 0
+
+        func bbPops(hcDelta: Int, si: Int) -> Int {
+            let d = max(0, hcDelta)
+            if d <= STANDARD_HOLES { return si <= d ? 1 : 0 }
+            return 1 + (si <= d - STANDARD_HOLES ? 1 : 0)
+        }
+
+        func teamBestNetToPar(_ team: [Int]) -> Int {
+            var total = 0
+            for h in 0...throughHole {
+                guard g.holeCommitted[safe: h] == true else { continue }
+                let courseH = h % STANDARD_HOLES
+                let par = g.courseParToPass[safe: courseH] ?? 4
+                let si  = max(1, g.courseHCToPass[safe: courseH] ?? STANDARD_HOLES)
+                let bestNet = team.compactMap { seat -> Int? in
+                    let gross = (seat < g.scores.count && h < g.scores[seat].count)
+                        ? (g.scores[seat][h] ?? 99) : 99
+                    guard gross < 99 else { return nil }
+                    return gross - bbPops(hcDelta: (g.hcPlayers[safe: seat] ?? 0) - baseHC, si: si)
+                }.min()
+                if let n = bestNet { total += n - par }
+            }
+            return total
+        }
+
+        let aTP = teamBestNetToPar(teamASeats)
+        let bTP = teamBestNetToPar(teamBSeats)
+        let played = (0...throughHole).filter { g.holeCommitted[safe: $0] == true }.count
+
+        return MatchStatusFormatter.teamStrokeStatus(
+            .init(aDiff: aTP - bTP, played: played, total: g.totalHoles,
+                  aLabel: shortNames(teamASeats), bLabel: shortNames(teamBSeats))
+        )
     }
 
     private func liveDualMatchStatusString(g: GameData, throughHole: Int) -> String {

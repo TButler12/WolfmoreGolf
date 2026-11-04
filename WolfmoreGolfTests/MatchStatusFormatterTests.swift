@@ -182,4 +182,53 @@ final class MatchStatusFormatterTests: XCTestCase {
                 status: "McTommy 2 UP vs Pat · Ray 2 UP vs Doug · thru 2", holes: "thru 2"),
             "McTommy 2 UP vs Pat · Ray 2 UP vs Doug · thru 2")
     }
+
+    // MARK: - teamStrokeStatus
+
+    private func stroke(aDiff: Int, played: Int, total: Int = 18,
+                        a: String = "McTommy/Lester", b: String = "Rex/Mike") -> MatchStatusFormatter.TeamStrokeResult {
+        MatchStatusFormatter.TeamStrokeResult(aDiff: aDiff, played: played, total: total, aLabel: a, bLabel: b)
+    }
+
+    func testTeamStroke_AWon_By20_Final() {
+        XCTAssertEqual(
+            MatchStatusFormatter.teamStrokeStatus(stroke(aDiff: -20, played: 18)),
+            "McTommy/Lester won by 20 · Final")
+    }
+
+    func testTeamStroke_BWon_Final() {
+        XCTAssertEqual(
+            MatchStatusFormatter.teamStrokeStatus(stroke(aDiff: 5, played: 18)),
+            "Rex/Mike won by 5 · Final")
+    }
+
+    func testTeamStroke_Tied_Final() {
+        XCTAssertEqual(
+            MatchStatusFormatter.teamStrokeStatus(stroke(aDiff: 0, played: 18)),
+            "Tied · Final")
+    }
+
+    func testTeamStroke_ALeads_InProgress() {
+        XCTAssertEqual(
+            MatchStatusFormatter.teamStrokeStatus(stroke(aDiff: -3, played: 9)),
+            "McTommy/Lester leads by 3 · thru 9")
+    }
+
+    func testTeamStroke_BLeads_InProgress() {
+        XCTAssertEqual(
+            MatchStatusFormatter.teamStrokeStatus(stroke(aDiff: 7, played: 12)),
+            "Rex/Mike leads by 7 · thru 12")
+    }
+
+    func testTeamStroke_Even_InProgress() {
+        XCTAssertEqual(
+            MatchStatusFormatter.teamStrokeStatus(stroke(aDiff: 0, played: 9)),
+            "Even · thru 9")
+    }
+
+    func testTeamStroke_NineHole_AWon() {
+        XCTAssertEqual(
+            MatchStatusFormatter.teamStrokeStatus(stroke(aDiff: -4, played: 9, total: 9)),
+            "McTommy/Lester won by 4 · Final")
+    }
 }
