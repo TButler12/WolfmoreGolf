@@ -65,7 +65,31 @@ enum HiddenMatchStore {
     }
 }
 
+private var _jebDelegateKey: UInt8 = 0
+
+private final class _JoinEventBoardDelegate: NSObject, UITextFieldDelegate {
+    var onReturn: (() -> Void)?
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        onReturn?()
+        return false
+    }
+}
+
 enum WolfActions {
+
+    // DB constraint wolf_sessions_group_name_len: char_length(group_name) <= 20
+    private static let maxGroupNameLen = 20
+
+    private static func makeGroupName(firstName: String, course: String) -> String {
+        let full = "\(firstName) · \(course)"
+        if full.count <= maxGroupNameLen { return full }
+        // Trim whitespace first, then cut, then strip any dangling " ·" or trailing space
+        let cut = String(full.trimmingCharacters(in: .whitespaces).prefix(maxGroupNameLen))
+            .trimmingCharacters(in: .whitespaces)
+            .replacingOccurrences(of: #"\s*·\s*$"#, with: "", options: .regularExpression)
+            .trimmingCharacters(in: .whitespaces)
+        return cut.isEmpty ? "\(firstName)'s group" : cut
+    }
 
     // MARK: - Remote Nassau
 
@@ -485,9 +509,15 @@ enum WolfActions {
                     showGoLiveCreatedAlert(code: code, from: presenter)
                 }
             } catch {
+                print("[GoLive] failed: \(error)")
                 await MainActor.run {
+                    #if DEBUG
+                    let msg = "Couldn't go live. Please try again.\n\n[DEBUG] \(error)"
+                    #else
+                    let msg = "Couldn't go live. Please try again."
+                    #endif
                     let a = UIAlertController(title: "Go Live Failed",
-                                              message: error.localizedDescription,
+                                              message: msg,
                                               preferredStyle: .alert)
                     a.addAction(UIAlertAction(title: "OK", style: .default))
                     presenter.present(a, animated: true)
@@ -621,7 +651,7 @@ enum WolfActions {
                     object: tf,
                     queue: .main
                 ) { _ in
-                    if let t = tf.text, t.count > 20 { tf.text = String(t.prefix(20)) }
+                    if let t = tf.text, t.count > maxGroupNameLen { tf.text = String(t.prefix(maxGroupNameLen)) }
                 }
             }
             namePrompt.addTextField { tf in
@@ -642,7 +672,7 @@ enum WolfActions {
             namePrompt.addAction(UIAlertAction(title: "Go Live", style: .default) { [weak presenter] _ in
                 guard let presenter else { return }
                 var raw = namePrompt.textFields?[0].text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-                if raw.count > 20 { raw = String(raw.prefix(20)) }
+                if raw.count > maxGroupNameLen { raw = String(raw.prefix(maxGroupNameLen)) }
                 let groupName: String? = raw.isEmpty ? nil : raw
                 let eventCodeRaw = (namePrompt.textFields?[1].text ?? "")
                     .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
@@ -687,7 +717,7 @@ enum WolfActions {
         }
         let course       = g.course.name.isEmpty ? "Custom Course" : g.course.name
         let firstName    = names.first(where: { !$0.isEmpty }) ?? "Group"
-        let groupName    = "\(firstName) · \(course)"
+        let groupName    = makeGroupName(firstName: firstName, course: course)
         let nineHole     = g.isNineHoleMatch
         let nineHoleStart = g.nineHoleStartingHole
 
@@ -717,48 +747,11 @@ enum WolfActions {
             message: "Enter the 7-character event board code from the organizer.",
             preferredStyle: .alert
         )
-        prompt.addTextField { tf in
-            tf.placeholder            = "e.g. EABC123"
-            tf.autocapitalizationType = .allCharacters
-            tf.autocorrectionType     = .no
-            tf.returnKeyType          = .done
-            NotificationCenter.default.addObserver(
-                forName: UITextField.textDidChangeNotification,
-                object: tf,
-                queue: .main
-            ) { _ in
-                if let t = tf.text { tf.text = String(t.prefix(7)).uppercased() }
-            }
-        }
-        prompt.addAction(UIAlertAction(title: "Cancel", style: .cancel))
 
-        if !isAlreadyLive {
-            prompt.addAction(UIAlertAction(title: "Go Live (spectators only)", style: .default) { [weak presenter] _ in
-                guard let presenter, let g = GameManager.shared.currentGame else { return }
-                let names = (0..<g.activePlayerLimit).compactMap { s -> String? in
-                    guard g.playerActivated[safe: s] == true else { return nil }
-                    return g.playerNames[safe: s] ?? ""
-                }
-                let handicaps = (0..<g.activePlayerLimit).compactMap { s -> Int? in
-                    guard g.playerActivated[safe: s] == true else { return nil }
-                    return g.hcPlayers[safe: s] ?? 0
-                }
-                let course    = g.course.name.isEmpty ? "Custom Course" : g.course.name
-                let firstName = names.first(where: { !$0.isEmpty }) ?? "Group"
-                executeGoLiveTask(names: names, course: course, handicaps: handicaps,
-                                  nineHole: g.isNineHoleMatch, nineHoleStart: g.nineHoleStartingHole,
-                                  groupName: "\(firstName) · \(course)", eventCode: nil, from: presenter)
-            })
-        }
-
-        prompt.addAction(UIAlertAction(title: "Join", style: .default) { [weak presenter] _ in
+        // Shared join logic — called from both the action handler and the return key
+        let doJoin: (String) -> Void = { [weak presenter] evCode in
             guard let presenter else { return }
-            let evCode = (prompt.textFields?.first?.text ?? "")
-                .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
-            guard !evCode.isEmpty else { return }
-
             let g = GameManager.shared.currentGame
-
             if isAlreadyLive {
                 guard let sessionId = g?.liveSessionId, let token = g?.liveCreatorToken else { return }
                 if g?.resolvedGameType.isMatchPlay == false,
@@ -776,8 +769,98 @@ enum WolfActions {
             } else {
                 startLiveWithEventCode(evCode, from: presenter)
             }
-        })
+        }
+
+        // Join action — starts disabled; enabled once field reaches exactly 7 chars
+        let joinAction = UIAlertAction(title: "Join", style: .default) { [weak prompt] _ in
+            let evCode = (prompt?.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            guard evCode.count == 7 else { return }
+            doJoin(evCode)
+        }
+        joinAction.isEnabled = false
+
+        // Delegate handles the Done/Return key on the keyboard
+        let tfDelegate = _JoinEventBoardDelegate()
+        tfDelegate.onReturn = { [weak prompt, weak presenter] in
+            let evCode = (prompt?.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            guard evCode.count == 7, let presenter else { return }
+            prompt?.dismiss(animated: true) { doJoin(evCode) }
+        }
+
+        prompt.addTextField { [weak joinAction] tf in
+            tf.placeholder            = "e.g. EABC123"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType     = .no
+            tf.returnKeyType          = .done
+            tf.delegate               = tfDelegate
+            NotificationCenter.default.addObserver(
+                forName: UITextField.textDidChangeNotification,
+                object: tf,
+                queue: .main
+            ) { [weak joinAction, weak tf] _ in
+                let raw = (tf?.text ?? "").trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+                let capped = String(raw.prefix(7))
+                if tf?.text != capped { tf?.text = capped }
+                joinAction?.isEnabled = capped.count == 7
+            }
+        }
+
+        // Retain the delegate for the alert's lifetime
+        objc_setAssociatedObject(prompt, &_jebDelegateKey, tfDelegate, .OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+
+        // Action order: Join (bold/preferred), Cancel
+        prompt.addAction(joinAction)
+        prompt.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        prompt.preferredAction = joinAction
+
         presenter.present(prompt, animated: true)
+    }
+
+    // MARK: - Go Live options sheet (shown when not yet live)
+
+    static func presentGoLiveOptions(from presenter: UIViewController) {
+        guard let g = GameManager.shared.currentGame else { return }
+        let pm = PremiumManager.shared
+        guard pm.canUse(.liveWolf) else {
+            presenter.present(PaywallViewController(feature: .liveWolf), animated: true)
+            return
+        }
+        pm.recordUse(.liveWolf)
+        pm.nudgeIfNeeded(for: .liveWolf, from: presenter)
+
+        let sheet = UIAlertController(title: "Go Live", message: nil, preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(
+            title: "Join an Event Board\nHave a code from the organizer",
+            style: .default) { [weak presenter] _ in
+            guard let presenter else { return }
+            presentJoinEventBoard(from: presenter)
+        })
+        sheet.addAction(UIAlertAction(title: "Just Let Friends Watch", style: .default) { [weak presenter] _ in
+            guard let presenter, let g = GameManager.shared.currentGame else { return }
+            let names = (0..<g.activePlayerLimit).compactMap { s -> String? in
+                guard g.playerActivated[safe: s] == true else { return nil }
+                return g.playerNames[safe: s] ?? ""
+            }
+            let handicaps = (0..<g.activePlayerLimit).compactMap { s -> Int? in
+                guard g.playerActivated[safe: s] == true else { return nil }
+                return g.hcPlayers[safe: s] ?? 0
+            }
+            let course    = g.course.name.isEmpty ? "Custom Course" : g.course.name
+            let firstName = names.first(where: { !$0.isEmpty }) ?? "Group"
+            executeGoLiveTask(names: names, course: course, handicaps: handicaps,
+                              nineHole: g.isNineHoleMatch, nineHoleStart: g.nineHoleStartingHole,
+                              groupName: makeGroupName(firstName: firstName, course: course), eventCode: nil, from: presenter)
+        })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = sheet.popoverPresentationController {
+            pop.sourceView = presenter.view
+            pop.sourceRect = CGRect(x: presenter.view.bounds.midX, y: presenter.view.bounds.midY,
+                                    width: 0, height: 0)
+            pop.permittedArrowDirections = []
+        }
+        presenter.present(sheet, animated: true)
     }
 
     private static func stopLiveSession(id: String, from presenter: UIViewController) {

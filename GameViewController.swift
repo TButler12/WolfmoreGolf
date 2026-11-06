@@ -1352,10 +1352,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         liveTabLiveButton?.isHidden = !isLive
         // Leaderboard tab: only when participating in a Live & Connected tournament
         liveTabLeaderboardButton?.isHidden = !isLiveTournament
-        // Bottom grid button: "Live" when on an event board, "Join Event" otherwise
+        // Bottom grid button: "Live" when session is active, "Go Live" when not
         if var cfg = liveWolfGridButton?.configuration {
-            let onBoard = GameManager.shared.currentGame?.liveLinkedEventCode?.isEmpty == false
-            cfg.title = onBoard ? "Live" : "Join Event"
+            cfg.title = isLive ? "Live" : "Go Live"
             liveWolfGridButton?.configuration = cfg
         }
 
@@ -5673,11 +5672,10 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             present(ac, animated: true)
             return
         }
-        let onBoard = g.liveLinkedEventCode?.isEmpty == false
-        if onBoard {
+        if g.liveSessionId != nil {
             WolfActions.presentGoLive(from: self)
         } else {
-            WolfActions.presentJoinEventBoard(from: self)
+            WolfActions.presentGoLiveOptions(from: self)
         }
     }
 
