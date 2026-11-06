@@ -696,6 +696,90 @@ enum WolfActions {
                           groupName: groupName, eventCode: eventCode, from: presenter)
     }
 
+    // MARK: - Mid-round Join Event Board (#3)
+
+    static func presentJoinEventBoard(from presenter: UIViewController) {
+        guard let g = GameManager.shared.currentGame else { return }
+        let isAlreadyLive = g.liveSessionId != nil
+
+        if !isAlreadyLive {
+            let pm = PremiumManager.shared
+            guard pm.canUse(.liveWolf) else {
+                presenter.present(PaywallViewController(feature: .liveWolf), animated: true)
+                return
+            }
+            pm.recordUse(.liveWolf)
+            pm.nudgeIfNeeded(for: .liveWolf, from: presenter)
+        }
+
+        let prompt = UIAlertController(
+            title: "Join Event Board",
+            message: "Enter the 7-character event board code from the organizer.",
+            preferredStyle: .alert
+        )
+        prompt.addTextField { tf in
+            tf.placeholder            = "e.g. EABC123"
+            tf.autocapitalizationType = .allCharacters
+            tf.autocorrectionType     = .no
+            tf.returnKeyType          = .done
+            NotificationCenter.default.addObserver(
+                forName: UITextField.textDidChangeNotification,
+                object: tf,
+                queue: .main
+            ) { _ in
+                if let t = tf.text { tf.text = String(t.prefix(7)).uppercased() }
+            }
+        }
+        prompt.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+
+        if !isAlreadyLive {
+            prompt.addAction(UIAlertAction(title: "Go Live (spectators only)", style: .default) { [weak presenter] _ in
+                guard let presenter, let g = GameManager.shared.currentGame else { return }
+                let names = (0..<g.activePlayerLimit).compactMap { s -> String? in
+                    guard g.playerActivated[safe: s] == true else { return nil }
+                    return g.playerNames[safe: s] ?? ""
+                }
+                let handicaps = (0..<g.activePlayerLimit).compactMap { s -> Int? in
+                    guard g.playerActivated[safe: s] == true else { return nil }
+                    return g.hcPlayers[safe: s] ?? 0
+                }
+                let course    = g.course.name.isEmpty ? "Custom Course" : g.course.name
+                let firstName = names.first(where: { !$0.isEmpty }) ?? "Group"
+                executeGoLiveTask(names: names, course: course, handicaps: handicaps,
+                                  nineHole: g.isNineHoleMatch, nineHoleStart: g.nineHoleStartingHole,
+                                  groupName: "\(firstName) · \(course)", eventCode: nil, from: presenter)
+            })
+        }
+
+        prompt.addAction(UIAlertAction(title: "Join", style: .default) { [weak presenter] _ in
+            guard let presenter else { return }
+            let evCode = (prompt.textFields?.first?.text ?? "")
+                .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+            guard !evCode.isEmpty else { return }
+
+            let g = GameManager.shared.currentGame
+
+            if isAlreadyLive {
+                guard let sessionId = g?.liveSessionId, let token = g?.liveCreatorToken else { return }
+                if g?.resolvedGameType.isMatchPlay == false,
+                   g?.resolvedGameType != .sixPointScotch {
+                    let hasHoles = g?.holeCommitted.contains(true) ?? false
+                    let typeName = g?.resolvedGameType.displayName ?? ""
+                    presentMatchPlayWarning(gameTypeName: typeName, hasHolesScored: hasHoles, from: presenter) {
+                        openMatchPlaySettings(from: presenter) {
+                            executeLinkTask(sessionId: sessionId, token: token, evCode: evCode, from: presenter)
+                        }
+                    }
+                    return
+                }
+                executeLinkTask(sessionId: sessionId, token: token, evCode: evCode, from: presenter)
+            } else {
+                startLiveWithEventCode(evCode, from: presenter)
+            }
+        })
+        presenter.present(prompt, animated: true)
+    }
+
     private static func stopLiveSession(id: String, from presenter: UIViewController) {
         Task {
             do {

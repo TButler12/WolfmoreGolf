@@ -1352,9 +1352,10 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         liveTabLiveButton?.isHidden = !isLive
         // Leaderboard tab: only when participating in a Live & Connected tournament
         liveTabLeaderboardButton?.isHidden = !isLiveTournament
-        // Bottom grid button: "Live" when session active, "Go Live" when not
+        // Bottom grid button: "Live" when on an event board, "Join Event" otherwise
         if var cfg = liveWolfGridButton?.configuration {
-            cfg.title = isLive ? "Live" : "Go Live"
+            let onBoard = GameManager.shared.currentGame?.liveLinkedEventCode?.isEmpty == false
+            cfg.title = onBoard ? "Live" : "Join Event"
             liveWolfGridButton?.configuration = cfg
         }
 
@@ -5672,7 +5673,12 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             present(ac, animated: true)
             return
         }
-        WolfActions.presentGoLive(from: self)
+        let onBoard = g.liveLinkedEventCode?.isEmpty == false
+        if onBoard {
+            WolfActions.presentGoLive(from: self)
+        } else {
+            WolfActions.presentJoinEventBoard(from: self)
+        }
     }
 
     @objc private func joinTapped() {
@@ -6192,7 +6198,7 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
                     compatibleWith: self?.traitCollection)
                 return a
             }
-            tnCfg.title = "Watch / Join"
+            tnCfg.title = "Watch a Game"
             let tournamentBtn = UIButton(configuration: tnCfg)
             tournamentBtn.addTarget(self, action: #selector(joinTapped), for: .touchUpInside)
             capButtonDynamicType(tournamentBtn)
