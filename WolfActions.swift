@@ -613,7 +613,20 @@ enum WolfActions {
             })
             menu.addAction(UIAlertAction(title: "Stop Live", style: .destructive) { [weak presenter] _ in
                 guard let presenter else { return }
-                stopLiveSession(id: sessionId, from: presenter)
+                if let evCode = g.liveLinkedEventCode {
+                    let confirm = UIAlertController(
+                        title: "Stop Live",
+                        message: "This will also remove your group from event board \(evCode).",
+                        preferredStyle: .alert
+                    )
+                    confirm.addAction(UIAlertAction(title: "Stop Live", style: .destructive) { _ in
+                        stopLiveSession(id: sessionId, from: presenter)
+                    })
+                    confirm.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+                    presenter.present(confirm, animated: true)
+                } else {
+                    stopLiveSession(id: sessionId, from: presenter)
+                }
             })
             menu.addAction(UIAlertAction(title: "Cancel", style: .cancel))
             if let pop = menu.popoverPresentationController {

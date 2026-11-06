@@ -9,7 +9,7 @@ about "going live." Joining an event board starts live automatically.
 - [x] #3 Mid-round "Join Event" action
 - [x] #4 Live status pill in header
 - [x] #5 Replace showGoLiveCreatedAlert with a toast
-- [ ] #6 Make leave vs. stop behavior clear
+- [x] #6 Make leave vs. stop behavior clear
 - [ ] #7 Clean up the action sheet
 - [x] #8 Remove dead showLiveCodePrompt code
 
