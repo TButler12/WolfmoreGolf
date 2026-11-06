@@ -998,6 +998,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        if let pending = UserDefaults.standard.string(forKey: "pendingEventCode") {
+            eventCodeField?.text = pending
+            UserDefaults.standard.removeObject(forKey: "pendingEventCode")
+        }
         refreshTeeSetUI()
         refreshExtraRowVisibility()
         NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)),

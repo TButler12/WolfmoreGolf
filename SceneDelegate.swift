@@ -170,6 +170,9 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             vc.sessionCode = code
             nav?.pushViewController(vc, animated: true)
 
+        } else if host == "event" {
+            WolfActions.joinEventFromDeepLink(code: code, from: root)
+
         } else if host == "nassau" {
             let confirm = UIAlertController(
                 title: "Join Live Nassau?",

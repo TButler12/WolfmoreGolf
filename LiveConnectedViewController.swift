@@ -28,6 +28,7 @@ final class LiveConnectedViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         title = "Live & Tournaments"
+        navigationItem.backButtonTitle = "Back"
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
         )
@@ -152,6 +153,13 @@ final class LiveConnectedViewController: UITableViewController {
                 tint: wolfGreen) { [weak self] in
                 self?.createTournamentTapped()
             },
+            Row(title: "Create Event Board",
+                subtitle: "Live leaderboard for multiple groups — share a code",
+                icon: "rectangle.3.group.fill",
+                tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)) { [weak self] in
+                guard let self else { return }
+                WolfActions.createMatchBoardAction(from: self)
+            },
             Row(title: "Calcutta Pools",
                 subtitle: "Manage auction pools, bids, and payouts",
                 icon: "dollarsign.circle.fill",
@@ -179,13 +187,6 @@ final class LiveConnectedViewController: UITableViewController {
                     return
                 }
                 WolfActions.presentGoLive(from: self)
-            },
-            Row(title: "Start an Event Board",
-                subtitle: "Follow several match play groups on one screen",
-                icon: "rectangle.3.group.fill",
-                tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)) { [weak self] in
-                guard let self else { return }
-                WolfActions.createMatchBoardAction(from: self)
             },
         ]))
 
@@ -217,6 +218,7 @@ final class LiveConnectedViewController: UITableViewController {
         }
 
         let history = TournamentHistoryStore.shared.all()
+            .sorted { $0.lastJoined > $1.lastJoined }
         if !history.isEmpty {
             let rows: [Row] = history.prefix(5).map { entry in
                 let gameLabel: String
@@ -229,7 +231,7 @@ final class LiveConnectedViewController: UITableViewController {
                 let subtitle = hasNewDay
                     ? "⚑ New day ready — tap to start"
                     : "Day \(entry.lastDay) · \(gameLabel) · \(entry.code)"
-                return Row(
+                var row = Row(
                     title: entry.name,
                     subtitle: subtitle,
                     icon: "clock.fill",
@@ -237,6 +239,12 @@ final class LiveConnectedViewController: UITableViewController {
                 ) { [weak self] in
                     self?.historyEntryTapped(entry)
                 }
+                row.removeAction = { [weak self] in
+                    TournamentHistoryStore.shared.remove(code: entry.code)
+                    self?.buildSections()
+                    self?.tableView.reloadData()
+                }
+                return row
             }
             result.append(Section(header: "RECENT TOURNAMENTS", rows: rows))
         }

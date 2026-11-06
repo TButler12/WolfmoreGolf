@@ -81,7 +81,16 @@ enum WolfActions {
     private static let maxGroupNameLen = 20
 
     private static func makeGroupName(firstName: String, course: String) -> String {
-        let full = "\(firstName) · \(course)"
+        let suffixes = ["Country Club", "Golf Club", "Golf Course", " CC", " GC"]
+        var shortCourse = course
+        for suffix in suffixes {
+            if shortCourse.hasSuffix(suffix) {
+                shortCourse = String(shortCourse.dropLast(suffix.count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                break
+            }
+        }
+        let full = "\(firstName) · \(shortCourse)"
         if full.count <= maxGroupNameLen { return full }
         // Trim whitespace first, then cut, then strip any dangling " ·" or trailing space
         let cut = String(full.trimmingCharacters(in: .whitespaces).prefix(maxGroupNameLen))
@@ -526,7 +535,7 @@ enum WolfActions {
         }
     }
 
-    private static func executeLinkTask(sessionId: String, token: String, evCode: String,
+    static func executeLinkTask(sessionId: String, token: String, evCode: String,
                                         from presenter: UIViewController) {
         Task {
             do {
@@ -1020,8 +1029,23 @@ enum WolfActions {
         presenter.present(confirm, animated: true)
     }
 
+    // MARK: - Deep link: wolfmore://event?code=XXXX
+
+    static func joinEventFromDeepLink(code: String, from presenter: UIViewController) {
+        let upperCode = code.uppercased()
+        guard let g = GameManager.shared.currentGame else {
+            UserDefaults.standard.set(upperCode, forKey: "pendingEventCode")
+            return
+        }
+        if let sessionId = g.liveSessionId, let token = g.liveCreatorToken {
+            executeLinkTask(sessionId: sessionId, token: token, evCode: upperCode, from: presenter)
+        } else {
+            startLiveWithEventCode(upperCode, from: presenter)
+        }
+    }
+
     static func showMatchBoardCreatedAlert(code: String, name: String, from presenter: UIViewController) {
-        let link = "wolfmore://watch?code=\(code)"
+        let shareText = "Join our Wolfmore event board (\(code))\nScorers, tap to join: wolfmore://event?code=\(code)\nWatch the board: wolfmore://watch?code=\(code)"
         let alert = UIAlertController(
             title: "Event Board Created",
             message: "Send this code to each group's scorer and your viewers.\n\n\(code)",
@@ -1032,7 +1056,7 @@ enum WolfActions {
         })
         alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak presenter] _ in
             guard let presenter else { return }
-            let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
+            let av = UIActivityViewController(activityItems: [shareText], applicationActivities: nil)
             presenter.present(av, animated: true)
         })
         alert.addAction(UIAlertAction(title: "View Board", style: .default) { [weak presenter] _ in

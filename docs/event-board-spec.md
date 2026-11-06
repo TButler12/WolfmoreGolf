@@ -5,12 +5,12 @@ about "going live." Joining an event board starts live automatically.
 
 ## Status
 - [x] #1 Event code on round setup (auto-starts live + links event)
-- [ ] #2 Deep link to join an event
+- [x] #2 Deep link to join an event
 - [x] #3 Mid-round "Join Event" action
 - [x] #4 Live status pill in header
 - [x] #5 Replace showGoLiveCreatedAlert with a toast
 - [x] #6 Make leave vs. stop behavior clear
-- [ ] #7 Clean up the action sheet
+- [x] #7 Clean up the action sheet
 - [x] #8 Remove dead showLiveCodePrompt code
 
 ## #2 Deep link

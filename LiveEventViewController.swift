@@ -14,6 +14,22 @@ final class LiveEventViewController: UIViewController {
 
     private var visibleSessions: [WolfSession] { sessions }
 
+    private lazy var qrImage: UIImage? = Self.makeQRImage(from: "wolfmore://event?code=\(eventCode)")
+
+    private static func makeQRImage(from string: String, size: CGFloat = 200) -> UIImage? {
+        guard let data = string.data(using: .ascii),
+              let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
+        filter.setValue(data, forKey: "inputMessage")
+        filter.setValue("M", forKey: "inputCorrectionLevel")
+        guard let raw = filter.outputImage else { return nil }
+        let scale = size / raw.extent.width
+        let scaled = raw.transformed(by: CGAffineTransform(scaleX: scale, y: scale))
+        let bg = CIImage(color: CIColor.white).cropped(to: scaled.extent)
+        let composed = scaled.composited(over: bg)
+        guard let cgImage = CIContext().createCGImage(composed, from: composed.extent) else { return nil }
+        return UIImage(cgImage: cgImage)
+    }
+
     // MARK: - Init
 
     init(eventCode: String, organizerToken: String? = nil) {
@@ -156,11 +172,37 @@ final class LiveEventViewController: UIViewController {
         shareButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
         shareButton.addTarget(self, action: #selector(shareTapped), for: .touchUpInside)
 
-        let stack = UIStackView(arrangedSubviews: [nameLabel, codeLabel, shareButton])
+        let qrScanLabel = UILabel()
+        qrScanLabel.text      = "Scorers: scan to join"
+        qrScanLabel.font      = .systemFont(ofSize: 12)
+        qrScanLabel.textColor = .secondaryLabel
+        qrScanLabel.textAlignment = .center
+
+        let qrButton = UIButton(type: .custom)
+        qrButton.translatesAutoresizingMaskIntoConstraints = false
+        if let img = qrImage { qrButton.setImage(img, for: .normal) }
+        qrButton.imageView?.contentMode = .scaleAspectFit
+        qrButton.layer.borderColor = UIColor.separator.cgColor
+        qrButton.layer.borderWidth = 1
+        qrButton.layer.cornerRadius = 4
+        qrButton.clipsToBounds = true
+        qrButton.addTarget(self, action: #selector(qrTapped), for: .touchUpInside)
+        qrButton.widthAnchor.constraint(equalToConstant: 200).isActive = true
+        qrButton.heightAnchor.constraint(equalToConstant: 200).isActive = true
+
+        let shareQRButton = UIButton(type: .system)
+        shareQRButton.setTitle("Share QR", for: .normal)
+        shareQRButton.titleLabel?.font = .systemFont(ofSize: 14, weight: .semibold)
+        shareQRButton.addTarget(self, action: #selector(shareQRTapped), for: .touchUpInside)
+
+        let stack = UIStackView(arrangedSubviews: [nameLabel, codeLabel, qrScanLabel, qrButton, shareQRButton, shareButton])
         stack.translatesAutoresizingMaskIntoConstraints = false
         stack.axis    = .vertical
         stack.spacing = 4
         stack.alignment = .center
+        stack.setCustomSpacing(12, after: codeLabel)
+        stack.setCustomSpacing(8, after: qrButton)
+        stack.setCustomSpacing(12, after: shareQRButton)
 
         container.addSubview(stack)
         NSLayoutConstraint.activate([
@@ -188,9 +230,22 @@ final class LiveEventViewController: UIViewController {
     // MARK: - Share
 
     @objc private func shareTapped() {
-        let boardName = event?.name ?? eventCode
-        let text = "Join my event board \"\(boardName)\" — enter code \(eventCode) when you tap Go Live in WolfMore Golf."
+        let text = "Join our Wolfmore event board (\(eventCode))\nScorers, tap to join: wolfmore://event?code=\(eventCode)\nWatch the board: wolfmore://watch?code=\(eventCode)"
         let vc = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        vc.popoverPresentationController?.sourceView = view
+        present(vc, animated: true)
+    }
+
+    @objc private func qrTapped() {
+        guard let img = qrImage else { return }
+        let vc = QRFullscreenViewController(image: img)
+        vc.modalPresentationStyle = .overFullScreen
+        present(vc, animated: true)
+    }
+
+    @objc private func shareQRTapped() {
+        guard let img = qrImage else { return }
+        let vc = UIActivityViewController(activityItems: [img], applicationActivities: nil)
         vc.popoverPresentationController?.sourceView = view
         present(vc, animated: true)
     }
@@ -329,6 +384,16 @@ final class LiveEventViewController: UIViewController {
         let played = session.holesPlayed ?? 0
         return played > 0 ? "thru \(played)" : ""
     }
+
+    private func liveStatusLabel(for session: WolfSession) -> String {
+        if session.status == "archived" { return "Final" }
+        let played = session.holesPlayed ?? 0
+        guard played > 0 else { return "Not started" }
+        let isNineHole = session.nineHoleMatch == true
+        let totalHoles = isNineHole ? 9 : 18
+        if played >= totalHoles { return "Final" }
+        return "Thru \(played) · Hole \(played + 1)"
+    }
 }
 
 // MARK: - UITableViewDataSource / Delegate
@@ -343,10 +408,14 @@ extension LiveEventViewController: UITableViewDataSource, UITableViewDelegate {
         let session = visibleSessions[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "liveEventCell", for: indexPath)
 
-        let hasStatus = session.matchStatus != nil
-        let status = session.matchStatus ?? "Not playing match play"
+        let hasMatchPlay = session.matchStatus != nil
         let holes  = holesLabel(for: session)
-        let secondary = hasStatus ? MatchStatusFormatter.boardSecondary(status: status, holes: holes) : status
+        let secondary: String
+        if hasMatchPlay {
+            secondary = MatchStatusFormatter.boardSecondary(status: session.matchStatus!, holes: holes)
+        } else {
+            secondary = liveStatusLabel(for: session)
+        }
 
         var config = cell.defaultContentConfiguration()
         config.text          = groupLabel(for: session)
@@ -354,7 +423,7 @@ extension LiveEventViewController: UITableViewDataSource, UITableViewDelegate {
         config.textProperties.font          = .systemFont(ofSize: 16, weight: .semibold)
         config.secondaryTextProperties.font = .systemFont(ofSize: 14)
         config.secondaryTextProperties.numberOfLines = 0
-        config.secondaryTextProperties.color = hasStatus ? .label : .secondaryLabel
+        config.secondaryTextProperties.color = hasMatchPlay ? .label : .secondaryLabel
         cell.contentConfiguration  = config
         cell.accessoryType         = .disclosureIndicator
 
@@ -368,4 +437,33 @@ extension LiveEventViewController: UITableViewDataSource, UITableViewDelegate {
         vc.sessionCode = session.code
         navigationController?.pushViewController(vc, animated: true)
     }
+}
+
+private final class QRFullscreenViewController: UIViewController {
+    private let qrImage: UIImage
+
+    init(image: UIImage) {
+        self.qrImage = image
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) { fatalError() }
+
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        view.backgroundColor = .white
+        let iv = UIImageView(image: qrImage)
+        iv.contentMode = .scaleAspectFit
+        iv.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(iv)
+        NSLayoutConstraint.activate([
+            iv.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            iv.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            iv.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.85),
+            iv.heightAnchor.constraint(equalTo: iv.widthAnchor),
+        ])
+        view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(close)))
+    }
+
+    @objc private func close() { dismiss(animated: true) }
 }
