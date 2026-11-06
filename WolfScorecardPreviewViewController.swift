@@ -128,13 +128,14 @@ final class WolfScorecardPreviewViewController: UIViewController {
             imageView.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor),
             imageView.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor),
 
-            shareBtn.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            rotBtn.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 16),
+            rotBtn.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -14),
+            rotBtn.heightAnchor.constraint(equalToConstant: 52),
+
+            shareBtn.leadingAnchor.constraint(equalTo: rotBtn.trailingAnchor, constant: 8),
             shareBtn.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
             shareBtn.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -14),
             shareBtn.heightAnchor.constraint(equalToConstant: 52),
-
-            rotBtn.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -16),
-            rotBtn.bottomAnchor.constraint(equalTo: shareBtn.topAnchor, constant: -12),
         ])
     }
 

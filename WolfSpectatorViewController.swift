@@ -487,7 +487,7 @@ final class WolfSpectatorViewController: UIViewController {
             let n = names[seat].trimmingCharacters(in: .whitespaces)
             return n.components(separatedBy: " ").first ?? n
         }
-        let formatName = isBB ? "Best Ball" : "Match Play"
+        let formatName = isBB ? "Team Stroke Play" : "Match Play"
         let parsedSeats = results.first(where: { $0.mpSeats != nil })?
             .mpSeats?.split(separator: ",").compactMap({ Int($0) }) ?? []
         let pairing: String
@@ -937,7 +937,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                                                                        coursePars: coursePars, courseHCs: courseHCs,
                                                                        teamASeats: teamASeats, playerHandicaps: hcs, orderedSeats: orderedSeats) }
                     else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
-                case 3: cell.configureAsSkinsTotals(results: allResults, playerNames: orderedNames)
+                case 3: cell.configureAsSkinsTotals(results: allResults, playerNames: orderedNames, isMatchPlay: isMatchPlay)
                 default: break
                 }
             } else if is36 {
@@ -962,7 +962,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                                                                        coursePars: coursePars, courseHCs: courseHCs,
                                                                        teamASeats: teamASeats, playerHandicaps: hcs, orderedSeats: orderedSeats) }
                     else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
-                case 7: cell.configureAsSkinsTotals(results: allResults, playerNames: orderedNames)
+                case 7: cell.configureAsSkinsTotals(results: allResults, playerNames: orderedNames, isMatchPlay: isMatchPlay)
                 default: break
                 }
             } else {
@@ -981,7 +981,7 @@ extension WolfSpectatorViewController: UITableViewDataSource {
                                                                        coursePars: coursePars, courseHCs: courseHCs,
                                                                        teamASeats: teamASeats, playerHandicaps: hcs, orderedSeats: orderedSeats) }
                     else          { cell.configureAsSkinsTotals(results: allResults, playerNames: session.playerNames) }
-                case 4: cell.configureAsSkinsTotals(results: allResults, playerNames: orderedNames)
+                case 4: cell.configureAsSkinsTotals(results: allResults, playerNames: orderedNames, isMatchPlay: isMatchPlay)
                 default: break
                 }
             }
@@ -1357,7 +1357,7 @@ private final class WolfHoleCell: UITableViewCell {
         outerStack.addArrangedSubview(skinsRow)
 
         configLabel(skinsLabel, size: 13, weight: .regular, width: 32)
-        skinsLabel.text      = "SK"
+        skinsLabel.text      = "Skins"
         skinsLabel.textColor = .secondaryLabel
         skinsRow.addArrangedSubview(skinsLabel)
 
@@ -1579,10 +1579,10 @@ private final class WolfHoleCell: UITableViewCell {
         skinsRow.isHidden = true
     }
 
-    func configureAsSkinsTotals(results: [WolfHoleResult], playerNames: [String]) {
-        setupColumns(playerCount: playerNames.count)
+    func configureAsSkinsTotals(results: [WolfHoleResult], playerNames: [String], isMatchPlay: Bool = false) {
+        setupColumns(playerCount: playerNames.count, isMatchPlay: isMatchPlay)
         holePressLevel = 0
-        holeLabel.text      = "SK"
+        holeLabel.text      = "Skins"
         holeLabel.textColor = .systemYellow
         holeLabel.font      = .systemFont(ofSize: 13, weight: .semibold)
         moneyRow.isHidden   = true
@@ -1620,7 +1620,7 @@ private final class WolfHoleCell: UITableViewCell {
             let total = skinsPerPlayer[i]
             col.font = .systemFont(ofSize: 13, weight: total > 0 ? .bold : .regular)
             if total > 0 {
-                col.text      = "\(total)S"
+                col.text      = "\(total)"
                 col.textColor = .systemYellow
             } else {
                 col.text      = "—"
@@ -1993,7 +1993,7 @@ private final class WolfHoleCell: UITableViewCell {
                 if let winner = skinWinner?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
                    let name = playerName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
                    winner == name {
-                    col.text      = "\(skinCount)S"
+                    col.text      = "\(skinCount)"
                     col.textColor = .systemYellow
                 } else if tiedSeats.contains(i) {
                     col.text      = "C"

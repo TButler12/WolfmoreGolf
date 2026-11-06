@@ -28,7 +28,7 @@ final class WolfScorecardRenderer {
 
     private let hdrH:    CGFloat = 22
     private let parH:    CGFloat = 22
-    private let playerH: CGFloat = 36   // single row per player — tall enough for annotations
+    private let playerH: CGFloat = 44   // tall enough for gross + net totals and annotations
 
     // ── Input ─────────────────────────────────────────────────
     private let game: GameData
@@ -69,9 +69,29 @@ final class WolfScorecardRenderer {
             teamsLine = mpStatuses.first.map { "Teams: \($0.teamALabel) vs. \($0.teamBLabel)" }
         }
 
+        let bbResultLine: String? = {
+            guard game.resolvedGameType == .bestBall, bbTeams.count == 2,
+                  let aTeam = bbTeams.first(where: { $0.isTeamA }),
+                  let bTeam = bbTeams.first(where: { !$0.isTeamA }) else { return nil }
+            let aVals = aTeam.countingNet.compactMap { $0 }
+            let bVals = bTeam.countingNet.compactMap { $0 }
+            let played = aVals.count
+            guard played > 0 else { return nil }
+            return MatchStatusFormatter.teamStrokeStatus(
+                MatchStatusFormatter.TeamStrokeResult(
+                    aDiff: aVals.reduce(0, +) - bVals.reduce(0, +),
+                    played: played, total: game.totalHoles,
+                    aLabel: aTeam.nameLabel, bLabel: bTeam.nameLabel))
+        }()
+
         let teamTeeRow = buildTeamTeeRow()
 
-        let docHdrH: CGFloat   = teamsLine != nil ? 114 : 96
+        let docHdrH: CGFloat = {
+            var h: CGFloat = 96
+            if teamsLine    != nil { h += 18 }
+            if bbResultLine != nil { h += 20 }
+            return h
+        }()
         let totalPlayerRows = players.reduce(0) { $0 + ($1.gross2 != nil ? 2 : 1) }
         let extraRows = bbTeams.count + mpStatuses.count + (teamTeeRow != nil ? 1 : 0)
         let gridH   = hdrH + parH + CGFloat(totalPlayerRows + extraRows) * playerH
@@ -88,7 +108,7 @@ final class WolfScorecardRenderer {
             UIRectFill(CGRect(x: 0, y: 0, width: pageW, height: totalH))
 
             var y: CGFloat = 0
-            y = drawDocHeader(y: y, players: players, teamsLine: teamsLine)
+            y = drawDocHeader(y: y, players: players, teamsLine: teamsLine, resultLine: bbResultLine)
             y = drawGrid(y: y, players: players, pars: pars, bbTeams: bbTeams,
                          mpStatuses: mpStatuses, teamTeeRow: teamTeeRow)
             let footerResult: String?
@@ -178,11 +198,22 @@ final class WolfScorecardRenderer {
         return TeamTeeRowData(modeLabel: modeLabel, netPerHole: netPerHole)
     }
 
+    // MARK: - Shared stroke calculation
+
+    private func strokesGiven(seat: Int, holeIdx: Int, baseHC base: Int) -> Int {
+        let raw = game.courseHCToPass[safe: holeIdx] ?? STANDARD_HOLES
+        let si  = max(1, min(STANDARD_HOLES, raw == 0 ? STANDARD_HOLES : raw))
+        let delta = max(0, (game.hcPlayers[safe: seat] ?? 0) - base)
+        if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
+        return 1 + (si <= (delta - STANDARD_HOLES) ? 1 : 0)
+    }
+
     // MARK: - Best Ball team data builder
 
     private struct BestBallTeamData {
-        let label:        String    // e.g. "Team A: Alice & Bob"
-        let countingGross: [Int?]   // 18 elements — gross of the better-net player each hole
+        let nameLabel:   String    // "Alice / Bob" — player names for display and result line
+        let countingNet: [Int?]    // 18 elements — net best ball per hole
+        let isTeamA:     Bool
     }
 
     private func buildBestBallTeams(players: [PlayerData], pars: [Int]) -> [BestBallTeamData] {
@@ -191,31 +222,21 @@ final class WolfScorecardRenderer {
         let activeSeats = players.map { $0.seat }
         guard !activeSeats.isEmpty else { return [] }
 
-        let baseHC = activeSeats.compactMap { game.hcPlayers[safe: $0] }.min() ?? 0
+        let base = activeSeats.compactMap { game.hcPlayers[safe: $0] }.min() ?? 0
 
-        func strokesGiven(seat: Int, holeIdx: Int) -> Int {
-            let si = { () -> Int in
-                let raw = game.courseHCToPass[safe: holeIdx] ?? STANDARD_HOLES
-                return max(1, min(STANDARD_HOLES, raw == 0 ? STANDARD_HOLES : raw))
-            }()
-            let delta = max(0, (game.hcPlayers[safe: seat] ?? 0) - baseHC)
-            if delta <= STANDARD_HOLES { return si <= delta ? 1 : 0 }
-            return 1 + (si <= (delta - STANDARD_HOLES) ? 1 : 0)
-        }
-
-        func teamRow(seats: [Int], label: String) -> BestBallTeamData? {
+        func teamRow(seats: [Int], nameLabel: String, isTeamA: Bool) -> BestBallTeamData? {
             guard !seats.isEmpty else { return nil }
             let counting: [Int?] = (0..<STANDARD_HOLES).map { h in
                 var bestNet = Int.max
-                var bestGross: Int? = nil
+                var bestNetVal: Int? = nil
                 for s in seats {
                     guard let g = game.scores[safe: s]?[safe: h] ?? nil else { continue }
-                    let net = g - strokesGiven(seat: s, holeIdx: h)
-                    if net < bestNet { bestNet = net; bestGross = g }
+                    let net = g - strokesGiven(seat: s, holeIdx: h, baseHC: base)
+                    if net < bestNet { bestNet = net; bestNetVal = net }
                 }
-                return bestGross
+                return bestNetVal
             }
-            return BestBallTeamData(label: label, countingGross: counting)
+            return BestBallTeamData(nameLabel: nameLabel, countingNet: counting, isTeamA: isTeamA)
         }
 
         func playerName(_ seat: Int) -> String {
@@ -228,10 +249,11 @@ final class WolfScorecardRenderer {
 
         guard !teamA.isEmpty, !teamB.isEmpty else { return [] }
 
-        let labelA = "Team A: " + teamA.map { playerName($0) }.joined(separator: " & ")
-        let labelB = "Team B: " + teamB.map { playerName($0) }.joined(separator: " & ")
+        let labelA = teamA.map { playerName($0) }.joined(separator: " / ")
+        let labelB = teamB.map { playerName($0) }.joined(separator: " / ")
 
-        return [teamRow(seats: teamA, label: labelA), teamRow(seats: teamB, label: labelB)]
+        return [teamRow(seats: teamA, nameLabel: labelA, isTeamA: true),
+                teamRow(seats: teamB, nameLabel: labelB, isTeamA: false)]
             .compactMap { $0 }
     }
 
@@ -257,14 +279,6 @@ final class WolfScorecardRenderer {
         guard !teamA.isEmpty, !teamB.isEmpty else { return nil }
 
         let baseHC = activeSeats.compactMap { game.hcPlayers[safe: $0] }.min() ?? 0
-
-        func strokes(seat: Int, h: Int) -> Int {
-            let raw = game.courseHCToPass[safe: h] ?? STANDARD_HOLES
-            let si  = max(1, min(STANDARD_HOLES, raw == 0 ? STANDARD_HOLES : raw))
-            let d   = max(0, (game.hcPlayers[safe: seat] ?? 0) - baseHC)
-            if d <= STANDARD_HOLES { return si <= d ? 1 : 0 }
-            return 1 + (si <= (d - STANDARD_HOLES) ? 1 : 0)
-        }
 
         func playerName(_ seat: Int) -> String {
             (game.playerNames[safe: seat] ?? "P\(seat+1)")
@@ -296,12 +310,12 @@ final class WolfScorecardRenderer {
             let aN = teamA.compactMap { s -> Int? in
                 guard game.holeCommitted[safe: scoreIdx] == true else { return nil }
                 guard let g = game.scores[safe: s]?[safe: scoreIdx] ?? nil else { return nil }
-                return g - strokes(seat: s, h: h)
+                return g - strokesGiven(seat: s, holeIdx: h, baseHC: baseHC)
             }.min()
             let bN = teamB.compactMap { s -> Int? in
                 guard game.holeCommitted[safe: scoreIdx] == true else { return nil }
                 guard let g = game.scores[safe: s]?[safe: scoreIdx] ?? nil else { return nil }
-                return g - strokes(seat: s, h: h)
+                return g - strokesGiven(seat: s, holeIdx: h, baseHC: baseHC)
             }.min()
             guard let aN, let bN else { break }
 
@@ -358,7 +372,8 @@ final class WolfScorecardRenderer {
     // MARK: - Document header
 
     @discardableResult
-    private func drawDocHeader(y: CGFloat, players: [PlayerData], teamsLine: String? = nil) -> CGFloat {
+    private func drawDocHeader(y: CGFloat, players: [PlayerData], teamsLine: String? = nil,
+                               resultLine: String? = nil) -> CGFloat {
         var cy = y + 20
 
         drawCentered("WOLFMORE SCORECARD", y: cy,
@@ -386,6 +401,13 @@ final class WolfScorecardRenderer {
             cy += 18
         }
 
+        if let rl = resultLine {
+            drawCentered(rl, y: cy,
+                         font: .systemFont(ofSize: 13, weight: .semibold),
+                         color: UIColor(red: 0.12, green: 0.42, blue: 0.18, alpha: 1))
+            cy += 20
+        }
+
         return cy + 8
     }
 
@@ -396,6 +418,8 @@ final class WolfScorecardRenderer {
                           bbTeams: [BestBallTeamData] = [],
                           mpStatuses: [MatchPlayStatusData] = [],
                           teamTeeRow: TeamTeeRowData? = nil) -> CGFloat {
+
+        let baseHC = players.compactMap { game.hcPlayers[safe: $0.seat] }.min() ?? 0
 
         // Column x-positions: ci 0=name, 1-9=h1-9, 10=OUT, 11-19=h10-18, 20=IN, 21=TOT
         var colXs = [CGFloat](repeating: 0, count: 22)
@@ -507,6 +531,23 @@ final class WolfScorecardRenderer {
             let (frontGross, hasFront) = rangeSum(gross, front)
             let (backGross,  hasBack)  = rangeSum(gross, back)
 
+            let playerHC       = game.hcPlayers[safe: seat] ?? 0
+            let receivesStrokes = playerHC > baseHC
+            var frontNet = 0; var hasFrontNet = false
+            var backNet  = 0; var hasBackNet  = false
+            if receivesStrokes {
+                let netScores: [Int?] = (0..<STANDARD_HOLES).map { h in
+                    guard let g = gross[h] else { return nil }
+                    return g - strokesGiven(seat: seat, holeIdx: h, baseHC: baseHC)
+                }
+                let r1 = rangeSum(netScores, front); frontNet = r1.sum; hasFrontNet = r1.hasAny
+                let r2 = rangeSum(netScores, back);  backNet  = r2.sum; hasBackNet  = r2.hasAny
+            }
+
+            let summGrossH: CGFloat = playerH * 0.60
+            let summNetH:   CGFloat = playerH - summGrossH
+            let netClr = UIColor(white: 0.38, alpha: 1)
+
             for ci in 0..<22 {
                 let w = colW(ci)
 
@@ -543,13 +584,27 @@ final class WolfScorecardRenderer {
 
                 case 10:
                     drawCell(hasFront ? "\(frontGross)" : "·",
-                             x: colXs[ci], y: ry, w: w, h: playerH,
+                             x: colXs[ci], y: ry, w: w,
+                             h: receivesStrokes ? summGrossH : playerH,
                              font: boldSumm, color: hasFront ? .black : dotGray)
+                    if receivesStrokes {
+                        drawCell(hasFrontNet ? "\(frontNet)" : "·",
+                                 x: colXs[ci], y: ry + summGrossH, w: w, h: summNetH,
+                                 font: .systemFont(ofSize: 10, weight: .regular),
+                                 color: hasFrontNet ? netClr : dotGray)
+                    }
 
                 case 20:
                     drawCell(hasBack ? "\(backGross)" : "·",
-                             x: colXs[ci], y: ry, w: w, h: playerH,
+                             x: colXs[ci], y: ry, w: w,
+                             h: receivesStrokes ? summGrossH : playerH,
                              font: boldSumm, color: hasBack ? .black : dotGray)
+                    if receivesStrokes {
+                        drawCell(hasBackNet ? "\(backNet)" : "·",
+                                 x: colXs[ci], y: ry + summGrossH, w: w, h: summNetH,
+                                 font: .systemFont(ofSize: 10, weight: .regular),
+                                 color: hasBackNet ? netClr : dotGray)
+                    }
 
                 case 21:
                     let (totTxt, totClr): (String, UIColor)
@@ -559,11 +614,25 @@ final class WolfScorecardRenderer {
                     case (false, true): (totTxt, totClr) = ("\(backGross)", .black)
                     default:            (totTxt, totClr) = ("·", dotGray)
                     }
-                    drawCell(totTxt, x: colXs[ci], y: ry, w: w, h: playerH,
+                    drawCell(totTxt, x: colXs[ci], y: ry, w: w,
+                             h: receivesStrokes ? summGrossH : playerH,
                              font: boldSumm, color: totClr)
+                    if receivesStrokes {
+                        let (netTot, netTotClr): (String, UIColor)
+                        switch (hasFrontNet, hasBackNet) {
+                        case (true, true):  (netTot, netTotClr) = ("\(frontNet + backNet)", netClr)
+                        case (true, false): (netTot, netTotClr) = ("\(frontNet)", netClr)
+                        case (false, true): (netTot, netTotClr) = ("\(backNet)", netClr)
+                        default:            (netTot, netTotClr) = ("·", dotGray)
+                        }
+                        drawCell(netTot, x: colXs[ci], y: ry + summGrossH, w: w, h: summNetH,
+                                 font: .systemFont(ofSize: 10, weight: .regular),
+                                 color: netTotClr)
+                    }
 
                 default:
                     if let localH = hIdx(ci) {
+                        let dots = receivesStrokes ? strokesGiven(seat: seat, holeIdx: localH, baseHC: baseHC) : 0
                         if let score = gross[localH] {
                             let diff  = score - game.parForHole(localH, player: seat)
                             let color = scoreColor(diff: diff)
@@ -574,6 +643,9 @@ final class WolfScorecardRenderer {
                             drawAnnotation(diff: diff,
                                            x: colXs[ci], y: ry, w: w, h: playerH,
                                            color: color)
+                            if dots > 0 {
+                                drawStrokeDots(count: dots, x: colXs[ci], y: ry, w: w)
+                            }
                         } else {
                             drawCell("·",
                                      x: colXs[ci], y: ry, w: w, h: playerH,
@@ -621,54 +693,67 @@ final class WolfScorecardRenderer {
             UIRectFill(CGRect(x: hPad, y: ry, width: gridW, height: 1.0))
         }
 
+        let bbWinnerBg = UIColor(red: 0.60, green: 0.90, blue: 0.62, alpha: 1)
+
         for team in bbTeams {
-            let (frontSum, hasFront) = rangeSum(team.countingGross, front)
-            let (backSum,  hasBack)  = rangeSum(team.countingGross, back)
+            let (frontSum, hasFront) = rangeSum(team.countingNet, front)
+            let (backSum,  hasBack)  = rangeSum(team.countingNet, back)
+
+            let otherTeam = bbTeams.first(where: { $0.isTeamA != team.isTeamA })
+            let isWinner: Bool = {
+                guard let other = otherTeam else { return false }
+                let myVals    = team.countingNet.compactMap { $0 }
+                let otherVals = other.countingNet.compactMap { $0 }
+                guard !myVals.isEmpty, !otherVals.isEmpty else { return false }
+                return myVals.reduce(0, +) < otherVals.reduce(0, +)
+            }()
+            let rowBg = isWinner ? bbWinnerBg : bbTeamBg
+            let totalClr = isWinner ? bbLabelColor : UIColor(white: 0.45, alpha: 1)
 
             for ci in 0..<22 {
                 let w = colW(ci)
-                let bg: UIColor = isSumm(ci) ? summBg : bbTeamBg
+                let bg: UIColor = isSumm(ci) ? summBg : rowBg
                 fill(x: colXs[ci], y: ry, w: w, h: playerH, color: bg)
 
                 switch ci {
                 case 0:
                     let nameH: CGFloat = playerH * 0.60
                     let subH:  CGFloat = playerH - nameH
-                    let shortLabel = team.label
-                    drawCell(shortLabel,
+                    drawCell(team.nameLabel,
                              x: colXs[ci], y: ry, w: w, h: nameH,
-                             font: .systemFont(ofSize: 11, weight: .bold),
+                             font: .systemFont(ofSize: 10, weight: .bold),
                              color: bbLabelColor, leftAlign: true)
-                    drawCell("Best Ball",
+                    drawCell("Team Stroke Play · Net",
                              x: colXs[ci], y: ry + nameH, w: w, h: subH,
-                             font: .systemFont(ofSize: 9, weight: .regular),
+                             font: .systemFont(ofSize: 8, weight: .regular),
                              color: bbLabelColor, leftAlign: true)
 
                 case 10:
                     drawCell(hasFront ? "\(frontSum)" : "·",
                              x: colXs[ci], y: ry, w: w, h: playerH,
-                             font: boldSumm, color: hasFront ? bbLabelColor : dotGray)
+                             font: boldSumm, color: hasFront ? totalClr : dotGray)
 
                 case 20:
                     drawCell(hasBack ? "\(backSum)" : "·",
                              x: colXs[ci], y: ry, w: w, h: playerH,
-                             font: boldSumm, color: hasBack ? bbLabelColor : dotGray)
+                             font: boldSumm, color: hasBack ? totalClr : dotGray)
 
                 case 21:
-                    let (totTxt, totClr): (String, UIColor)
+                    let (totTxt, totWeight): (String, UIFont.Weight)
                     switch (hasFront, hasBack) {
-                    case (true, true):  (totTxt, totClr) = ("\(frontSum + backSum)", bbLabelColor)
-                    case (true, false): (totTxt, totClr) = ("\(frontSum)", bbLabelColor)
-                    case (false, true): (totTxt, totClr) = ("\(backSum)", bbLabelColor)
-                    default:            (totTxt, totClr) = ("·", dotGray)
+                    case (true, true):  (totTxt, totWeight) = ("\(frontSum + backSum)", isWinner ? .heavy : .semibold)
+                    case (true, false): (totTxt, totWeight) = ("\(frontSum)", isWinner ? .heavy : .semibold)
+                    case (false, true): (totTxt, totWeight) = ("\(backSum)", isWinner ? .heavy : .semibold)
+                    default:            (totTxt, totWeight) = ("·", .regular)
                     }
                     drawCell(totTxt, x: colXs[ci], y: ry, w: w, h: playerH,
-                             font: boldSumm, color: totClr)
+                             font: .systemFont(ofSize: 13, weight: totWeight),
+                             color: totTxt == "·" ? dotGray : totalClr)
 
                 default:
-                    if let localH = hIdx(ci), let score = team.countingGross[localH] {
-                        let diff = score - pars[localH]
-                        drawCell("\(score)",
+                    if let localH = hIdx(ci), let net = team.countingNet[localH] {
+                        let diff = net - pars[localH]
+                        drawCell("\(net)",
                                  x: colXs[ci], y: ry, w: w, h: playerH,
                                  font: .systemFont(ofSize: 14, weight: .bold),
                                  color: bbLabelColor)
@@ -873,6 +958,19 @@ final class WolfScorecardRenderer {
         default:        // Double bogey+: double square
             stroke(square: center, side: side)
             stroke(square: center, side: side + 7)
+        }
+    }
+
+    private func drawStrokeDots(count: Int, x: CGFloat, y: CGFloat, w: CGFloat) {
+        guard count > 0 else { return }
+        let r: CGFloat = 2.5
+        let spacing: CGFloat = 7
+        let totalW = CGFloat(count - 1) * spacing
+        let startX = x + w / 2 - totalW / 2
+        UIColor(white: 0.42, alpha: 1).setFill()
+        for i in 0..<count {
+            UIBezierPath(arcCenter: CGPoint(x: startX + CGFloat(i) * spacing, y: y + 5),
+                         radius: r, startAngle: 0, endAngle: 2 * .pi, clockwise: true).fill()
         }
     }
 

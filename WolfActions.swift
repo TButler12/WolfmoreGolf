@@ -673,6 +673,29 @@ enum WolfActions {
         }
     }
 
+    static func startLiveWithEventCode(_ eventCode: String, from presenter: UIViewController) {
+        guard let g = GameManager.shared.currentGame else { return }
+        guard g.liveSessionId == nil else { return }
+
+        let names = (0..<g.activePlayerLimit).compactMap { s -> String? in
+            guard g.playerActivated[safe: s] == true else { return nil }
+            return g.playerNames[safe: s] ?? ""
+        }
+        let handicaps = (0..<g.activePlayerLimit).compactMap { s -> Int? in
+            guard g.playerActivated[safe: s] == true else { return nil }
+            return g.hcPlayers[safe: s] ?? 0
+        }
+        let course       = g.course.name.isEmpty ? "Custom Course" : g.course.name
+        let firstName    = names.first(where: { !$0.isEmpty }) ?? "Group"
+        let groupName    = "\(firstName) · \(course)"
+        let nineHole     = g.isNineHoleMatch
+        let nineHoleStart = g.nineHoleStartingHole
+
+        executeGoLiveTask(names: names, course: course, handicaps: handicaps,
+                          nineHole: nineHole, nineHoleStart: nineHoleStart,
+                          groupName: groupName, eventCode: eventCode, from: presenter)
+    }
+
     private static func stopLiveSession(id: String, from presenter: UIViewController) {
         Task {
             do {
@@ -848,22 +871,40 @@ enum WolfActions {
     }
 
     private static func showGoLiveCreatedAlert(code: String, from presenter: UIViewController) {
-        let link = "wolfmore://watch?code=\(code)"
-        let alert = UIAlertController(
-            title: "Live Session Created",
-            message: "Share this link with spectators:\n\(link)",
-            preferredStyle: .alert
-        )
-        alert.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
-            UIPasteboard.general.string = code
-        })
-        alert.addAction(UIAlertAction(title: "Share", style: .default) { [weak presenter] _ in
-            guard let presenter else { return }
-            let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
-            presenter.present(av, animated: true)
-        })
-        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
-        presenter.present(alert, animated: true)
+        guard let window = presenter.view.window ?? UIApplication.shared.connectedScenes
+            .compactMap({ ($0 as? UIWindowScene)?.windows.first(where: \.isKeyWindow) })
+            .first else { return }
+
+        let toast = UILabel()
+        toast.text = "You're live · Code \(code)"
+        toast.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        toast.textColor = .white
+        toast.textAlignment = .center
+        toast.backgroundColor = UIColor.black.withAlphaComponent(0.78)
+        toast.layer.cornerRadius = 20
+        toast.clipsToBounds = true
+        toast.numberOfLines = 1
+        toast.translatesAutoresizingMaskIntoConstraints = false
+        window.addSubview(toast)
+
+        NSLayoutConstraint.activate([
+            toast.centerXAnchor.constraint(equalTo: window.centerXAnchor),
+            toast.bottomAnchor.constraint(equalTo: window.safeAreaLayoutGuide.bottomAnchor, constant: -80),
+            toast.heightAnchor.constraint(equalToConstant: 40),
+            toast.leadingAnchor.constraint(greaterThanOrEqualTo: window.leadingAnchor, constant: 32),
+            toast.trailingAnchor.constraint(lessThanOrEqualTo: window.trailingAnchor, constant: -32),
+        ])
+        toast.layoutIfNeeded()
+        // Pad horizontally after auto-sizing
+        let padding: CGFloat = 20
+        toast.widthAnchor.constraint(greaterThanOrEqualToConstant: toast.intrinsicContentSize.width + padding * 2).isActive = true
+
+        toast.alpha = 0
+        UIView.animate(withDuration: 0.3, animations: { toast.alpha = 1 }) { _ in
+            UIView.animate(withDuration: 0.4, delay: 2.4, options: [], animations: { toast.alpha = 0 }) { _ in
+                toast.removeFromSuperview()
+            }
+        }
     }
 
     static func presentWatchLive(from presenter: UIViewController) {

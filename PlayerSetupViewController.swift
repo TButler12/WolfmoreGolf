@@ -42,6 +42,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     private var playerRowCards: [UIView] = []
     private weak var teeHdrLabel: UILabel?
     private weak var scrollView: UIScrollView?
+    private weak var eventCodeField: UITextField?
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -328,6 +329,10 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         main.addArrangedSubview(linkRow)
         main.setCustomSpacing(4, after: linkRow)
 
+        let codeRow = buildEventCodeRow()
+        main.addArrangedSubview(codeRow)
+        main.setCustomSpacing(6, after: codeRow)
+
         main.addArrangedSubview(goBtn)
         main.setCustomSpacing(10, after: goBtn)
 
@@ -341,6 +346,46 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
     }
 
     // MARK: - Layout helpers
+
+    private func buildEventCodeRow() -> UIView {
+        let label = UILabel()
+        label.text = "Event code"
+        label.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        label.textColor = .secondaryLabel
+        label.setContentHuggingPriority(.required, for: .horizontal)
+
+        let tf = UITextField()
+        tf.placeholder = "Optional — e.g. EABC123"
+        tf.font = UIFont.systemFont(ofSize: 13, weight: .regular)
+        tf.autocapitalizationType = .allCharacters
+        tf.autocorrectionType = .no
+        tf.returnKeyType = .done
+        tf.delegate = self
+        tf.clearButtonMode = .whileEditing
+        tf.addTarget(self, action: #selector(eventCodeChanged(_:)), for: .editingChanged)
+        eventCodeField = tf
+
+        let stack = UIStackView(arrangedSubviews: [label, tf])
+        stack.axis = .horizontal
+        stack.spacing = 8
+        stack.alignment = .center
+
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: container.topAnchor, constant: 6),
+            stack.bottomAnchor.constraint(equalTo: container.bottomAnchor, constant: -6),
+            stack.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 12),
+            stack.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -12),
+        ])
+        return container
+    }
+
+    @objc private func eventCodeChanged(_ sender: UITextField) {
+        if let t = sender.text { sender.text = String(t.prefix(7)).uppercased() }
+    }
 
     private func makeEntryField(tag: Int) -> UITextField {
         let tf = UITextField()
@@ -528,7 +573,7 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         closeBtn.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
 
         let titleLbl = UILabel()
-        titleLbl.text = "Start round"
+        titleLbl.text = "Edit game type and settings"
         titleLbl.textColor = .white
         titleLbl.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         titleLbl.textAlignment = .center
@@ -571,7 +616,23 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         pillsStack.translatesAutoresizingMaskIntoConstraints = false
         headerGamePillsStack = pillsStack
 
-        [closeBtn, titleLbl, coursePillContainer, pillsStack].forEach { hv.addSubview($0) }
+        let divider = UIView()
+        divider.backgroundColor = UIColor.white.withAlphaComponent(0.25)
+        divider.translatesAutoresizingMaskIntoConstraints = false
+
+        let infoBtn = UIButton(type: .system)
+        infoBtn.setImage(UIImage(systemName: "info.circle"), for: .normal)
+        infoBtn.tintColor = UIColor.white.withAlphaComponent(0.70)
+        infoBtn.translatesAutoresizingMaskIntoConstraints = false
+        infoBtn.addTarget(self, action: #selector(gameTypesInfoTapped), for: .touchUpInside)
+
+        let chipsAndInfoStack = UIStackView(arrangedSubviews: [pillsStack, infoBtn])
+        chipsAndInfoStack.axis = .horizontal
+        chipsAndInfoStack.spacing = 6
+        chipsAndInfoStack.alignment = .center
+        chipsAndInfoStack.translatesAutoresizingMaskIntoConstraints = false
+
+        [closeBtn, titleLbl, coursePillContainer, divider, chipsAndInfoStack].forEach { hv.addSubview($0) }
 
         NSLayoutConstraint.activate([
             titleLbl.topAnchor.constraint(equalTo: hv.topAnchor, constant: 14),
@@ -583,12 +644,47 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
             coursePillContainer.topAnchor.constraint(equalTo: titleLbl.bottomAnchor, constant: 10),
             coursePillContainer.centerXAnchor.constraint(equalTo: hv.centerXAnchor),
 
-            pillsStack.topAnchor.constraint(equalTo: coursePillContainer.bottomAnchor, constant: 8),
-            pillsStack.centerXAnchor.constraint(equalTo: hv.centerXAnchor),
-            pillsStack.bottomAnchor.constraint(equalTo: hv.bottomAnchor, constant: -14),
+            divider.topAnchor.constraint(equalTo: coursePillContainer.bottomAnchor, constant: 10),
+            divider.leadingAnchor.constraint(equalTo: hv.leadingAnchor),
+            divider.trailingAnchor.constraint(equalTo: hv.trailingAnchor),
+            divider.heightAnchor.constraint(equalToConstant: 0.5),
+
+            chipsAndInfoStack.topAnchor.constraint(equalTo: divider.bottomAnchor, constant: 8),
+            chipsAndInfoStack.centerXAnchor.constraint(equalTo: hv.centerXAnchor),
+            chipsAndInfoStack.bottomAnchor.constraint(equalTo: hv.bottomAnchor, constant: -10),
         ])
 
         return hv
+    }
+
+    @objc private func gameTypesInfoTapped() {
+        let msg = """
+        GAME TYPES (tap the game chip to change)
+
+        6-Point Scotch — Two teams of 2. Each hole is worth 6 points divided by result. Teams rotate each hole based on Wolf-style selection.
+
+        Wolf 2-Point — One player is Wolf each hole. After seeing tee shots, Wolf picks a partner or goes alone. Winning team earns 2 pts (4 if alone).
+
+        Wolf LowBall — Like Wolf, but the team with the lowest net ball wins the hole rather than head-to-head match.
+
+        Matchplay Singles — Head-to-head match play. Net strokes per hole; most holes won takes the stake.
+
+        Matchplay Fourball — Two fixed teams of 2. Each team plays their best net ball per hole; best ball wins.
+
+        Team Stroke Play — Two fixed teams accumulate net strokes over 18; lowest total wins.
+
+        Tournament — Individual Stableford scoring with a shared leaderboard and optional skins.
+
+        ────────────────────────
+        SIDE BETS (tap to adjust stake)
+
+        Nassau — Three separate bets on the same round: front 9, back 9, and overall 18. Each can be pressed.
+
+        Skins — Each hole is worth one skin. Ties carry the pot to the next hole until someone wins outright.
+        """
+        let ac = UIAlertController(title: "Game Types & Side Bets", message: msg, preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "Got it", style: .default))
+        present(ac, animated: true)
     }
 
     private func refreshHeaderChips() {
@@ -1536,6 +1632,12 @@ final class PlayerSetupViewController: UIViewController, UITextFieldDelegate {
         let sb = UIStoryboard(name: "Main", bundle: nil)
         let game = sb.instantiateViewController(withIdentifier: "GameViewController")
         navigationController?.pushViewController(game, animated: true)
+
+        let code = (eventCodeField?.text ?? "")
+            .trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+        if !code.isEmpty {
+            WolfActions.startLiveWithEventCode(code, from: game)
+        }
     }
 
     // MARK: - Editing hooks

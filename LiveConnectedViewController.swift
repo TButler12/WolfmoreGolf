@@ -180,7 +180,7 @@ final class LiveConnectedViewController: UITableViewController {
                 }
                 WolfActions.presentGoLive(from: self)
             },
-            Row(title: "Start an Event Board / Ryder Cup",
+            Row(title: "Start an Event Board",
                 subtitle: "Follow several match play groups on one screen",
                 icon: "rectangle.3.group.fill",
                 tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)) { [weak self] in

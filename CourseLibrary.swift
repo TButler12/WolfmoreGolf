@@ -2357,6 +2357,410 @@ let CALUSA_PINES_TEES: [TeeInfo] = [
 ]
 
 // =======================================================
+// MARK: - Admirals Cove (East Course) — Jupiter, FL
+// Par 70 | Private | Source: physical scorecard / TheGrint
+// =======================================================
+
+private let ADMIRALS_COVE_EAST_ID = UUID(uuidString: "0ADC0001-0001-4000-8000-000000000001")!
+
+let ADMIRALS_COVE_EAST_PARS: [Int] = [
+    4,5,3,4,3,4,4,4,4,   // OUT 35
+    3,5,4,4,3,4,3,5,4    // IN  35
+]
+
+let ADMIRALS_COVE_EAST_HCS: [Int] = [
+    9,11,15,3,17,5,1,13,7,
+    12,10,2,16,18,8,14,4,6
+]
+
+// =======================================================
+// MARK: - Bear Lakes CC — Lakes Course — West Palm Beach, FL
+// Par 72 | Jack Nicklaus | Private
+// Ratings source: BlueGolf; Gold yardage: TheGrint (7437)
+// =======================================================
+
+private let BEAR_LAKES_LAKES_ID = UUID(uuidString: "0BEA1A01-0001-4000-8000-000000000001")!
+
+let BEAR_LAKES_LAKES_PARS: [Int] = [
+    4,3,5,4,4,5,4,3,4,   // OUT 36
+    4,3,5,4,3,4,4,5,4    // IN  36
+]
+
+let BEAR_LAKES_LAKES_HCS: [Int] = [
+    13,15,11,3,7,9,1,17,5,
+    6,18,14,4,16,2,10,12,8
+]
+
+let BEAR_LAKES_LAKES_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 7437, rating: 75.9, slope: 150),
+    TeeInfo(teeName: "Black",             rating: 74.3, slope: 148),
+    TeeInfo(teeName: "Blue",              rating: 71.7, slope: 142),
+    TeeInfo(teeName: "Green",             rating: 69.7, slope: 135),
+    TeeInfo(teeName: "White",             rating: 69.1, slope: 125),
+    TeeInfo(teeName: "Red",               rating: 66.1, slope: 120),
+]
+
+// =======================================================
+// MARK: - Bear Lakes CC — The Burn Course — West Palm Beach, FL
+// Par 72 | Davis Love III | Private
+// Source: BlueGolf scorecard
+// =======================================================
+
+private let BEAR_LAKES_BURN_ID = UUID(uuidString: "0BEA1A01-0002-4000-8000-000000000001")!
+
+let BEAR_LAKES_BURN_PARS: [Int] = [
+    4,5,4,3,4,5,4,3,4,   // OUT 36
+    4,5,3,4,4,3,5,4,4    // IN  36
+]
+
+let BEAR_LAKES_BURN_HCS: [Int] = [
+    7,1,9,15,5,3,11,17,13,
+    12,10,4,18,2,14,16,8,6
+]
+
+let BEAR_LAKES_BURN_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",  yardage: 7392, rating: 75.3, slope: 137),
+    TeeInfo(teeName: "Black", yardage: 6901, rating: 73.7, slope: 137),
+    TeeInfo(teeName: "Blue",  yardage: 6365, rating: 70.9, slope: 134),
+    TeeInfo(teeName: "Green", yardage: 6128, rating: 69.5, slope: 131),
+    TeeInfo(teeName: "White", yardage: 5690, rating: 67.7, slope: 122),
+    TeeInfo(teeName: "Red",   yardage: 5044, rating: 64.3, slope: 113),
+]
+
+// =======================================================
+
+// =======================================================
+// MARK: - Mountain Lake Golf Course — Lake Wales, FL
+// Par 70 | Seth Raynor | Private
+// Ratings source: GHIN/BlueGolf
+// =======================================================
+
+private let MOUNTAIN_LAKE_GC_ID = UUID(uuidString: "90A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let MOUNTAIN_LAKE_GC_PARS: [Int] = [
+    4,4,4,5,3,4,4,5,3,   // OUT 36
+    4,3,4,4,4,4,4,3,4    // IN  34
+]
+
+let MOUNTAIN_LAKE_GC_HCS: [Int] = [
+    13,5,7,3,15,9,11,1,17,
+    2,14,6,12,10,18,8,16,4
+]
+
+let MOUNTAIN_LAKE_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6650, rating: 73.1, slope: 136),
+]
+
+// =======================================================
+// MARK: - Pine Tree Golf Club (Member Course) — Boynton Beach, FL
+// Par 72 | Dick Wilson (1961) | Private
+// Ratings source: club scorecard
+// =======================================================
+
+private let PINE_TREE_MEMBER_ID = UUID(uuidString: "91A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let PINE_TREE_MEMBER_PARS: [Int] = [
+    4,3,4,4,5,3,4,4,5,   // OUT 36
+    5,3,4,3,4,4,5,4,4    // IN  36
+]
+
+let PINE_TREE_MEMBER_HCS: [Int] = [
+    5,17,9,7,1,15,3,11,13,
+    8,16,4,18,12,14,2,6,10
+]
+
+let PINE_TREE_MEMBER_WOMEN_HCS: [Int] = [
+    3,17,9,13,11,15,7,5,1,
+    12,18,6,14,10,8,2,16,4
+]
+
+let PINE_TREE_MEMBER_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Blue",   yardage: 6480, rating: 72.5, slope: 131),
+    TeeInfo(teeName: "White",  yardage: 6178, rating: 69.8, slope: 124),
+    TeeInfo(teeName: "Bronze", yardage: 5706, rating: 68.6, slope: 121),
+    TeeInfo(teeName: "Red",    yardage: 5368, rating: 71.9, slope: 130),
+]
+
+// =======================================================
+// MARK: - Pine Tree Golf Club (Championship Course) — Boynton Beach, FL
+// Par 71 | Dick Wilson (1961) | Private
+// Ratings source: club scorecard
+// Black tee (7301 yds) and Blue tee (72.3/129) incomplete — rating/yardage not available
+// =======================================================
+
+private let PINE_TREE_CHAMPIONSHIP_ID = UUID(uuidString: "92A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let PINE_TREE_CHAMPIONSHIP_PARS: [Int] = [
+    4,3,4,4,5,3,4,4,5,   // OUT 36
+    4,3,4,3,4,4,5,4,4    // IN  35
+]
+
+let PINE_TREE_CHAMPIONSHIP_HCS: [Int] = [
+    5,17,9,7,1,15,3,11,13,
+    4,16,6,18,12,14,2,8,10
+]
+
+let PINE_TREE_CHAMPIONSHIP_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",   yardage: 6963, rating: 75.3, slope: 137),
+    TeeInfo(teeName: "Silver", yardage: 6650, rating: 74.0, slope: 133),
+]
+
+// =======================================================
+// MARK: - Pablo Creek Golf Club — Jacksonville, FL
+// Par 72 | Tom Fazio | Daily-Fee
+// Ratings source: BlueGolf
+// =======================================================
+
+private let PABLO_CREEK_GC_ID = UUID(uuidString: "93A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let PABLO_CREEK_GC_PARS: [Int] = [
+    4,4,5,4,3,5,4,3,4,   // OUT 36
+    5,4,3,4,4,3,5,4,4    // IN  36
+]
+
+let PABLO_CREEK_GC_HCS: [Int] = [
+    1,17,9,11,15,7,5,13,3,
+    2,8,12,6,16,18,14,10,4
+]
+
+let PABLO_CREEK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7198, rating: 74.4, slope: 132),
+]
+
+// =======================================================
+// MARK: - Lost Tree Club — North Palm Beach, FL
+// Par 72 | Jack Nicklaus (redesign) | Private
+// Originally designed by Mark Mahannah
+// Ratings source: BlueGolf
+// =======================================================
+
+private let LOST_TREE_CLUB_ID = UUID(uuidString: "94A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let LOST_TREE_CLUB_PARS: [Int] = [
+    4,5,4,3,4,5,4,3,4,   // OUT 36
+    4,3,4,5,3,4,4,4,5    // IN  36
+]
+
+let LOST_TREE_CLUB_HCS: [Int] = [
+    5,1,11,15,9,3,13,17,7,
+    8,18,2,10,16,14,4,12,6
+]
+
+let LOST_TREE_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold", yardage: 6858, rating: 73.7, slope: 137),
+]
+
+// =======================================================
+// MARK: - John's Island Club (West) — Sebastian, FL
+// Par 72 | Tom Fazio | Private
+// Ratings source: scorecard (2025 Tournament tee)
+// =======================================================
+
+private let JOHNS_ISLAND_WEST_ID = UUID(uuidString: "95A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let JOHNS_ISLAND_WEST_PARS: [Int] = [
+    4,4,4,5,3,5,3,4,4,   // OUT 36
+    4,4,4,3,5,4,3,5,4    // IN  36
+]
+
+let JOHNS_ISLAND_WEST_HCS: [Int] = [
+    7,11,1,5,15,13,9,17,3,
+    8,18,2,14,6,16,10,12,4
+]
+
+let JOHNS_ISLAND_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 6970, rating: 73.0, slope: 137),
+]
+
+// =======================================================
+// MARK: - John's Island Club (North) — Vero Beach, FL
+// Par 71 | Pete Dye & Perry Dye | Private
+// Ratings source: scorecard (2025 Tournament tee)
+// =======================================================
+
+private let JOHNS_ISLAND_NORTH_ID = UUID(uuidString: "96A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let JOHNS_ISLAND_NORTH_PARS: [Int] = [
+    4,4,4,5,3,4,4,3,5,   // OUT 36
+    4,3,4,4,5,4,3,4,4    // IN  35
+]
+
+let JOHNS_ISLAND_NORTH_HCS: [Int] = [
+    13,7,3,9,15,1,5,11,17,
+    6,18,16,2,14,8,12,10,4
+]
+
+let JOHNS_ISLAND_NORTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 6828, rating: 74.3, slope: 138),
+]
+
+// =======================================================
+// MARK: - John's Island Club (South) — Vero Beach, FL
+// Par 71 | Jack Nicklaus | Private
+// Ratings source: scorecard (2025 Tournament tee)
+// =======================================================
+
+private let JOHNS_ISLAND_SOUTH_ID = UUID(uuidString: "97A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let JOHNS_ISLAND_SOUTH_PARS: [Int] = [
+    4,4,4,3,4,4,3,5,4,   // OUT 35
+    4,5,3,4,5,4,4,3,4    // IN  36
+]
+
+let JOHNS_ISLAND_SOUTH_HCS: [Int] = [
+    13,7,1,11,9,5,15,3,17,
+    8,4,16,10,12,2,6,18,14
+]
+
+let JOHNS_ISLAND_SOUTH_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Tournament", yardage: 6496, rating: 70.9, slope: 131),
+]
+
+// =======================================================
+// MARK: - Belleair Country Club (East) — Belleair, FL
+// Par 71 | Donald Ross (1915/1924) | Private
+// Restored by Fry/Straka. Ratings source: BlueGolf
+// =======================================================
+
+private let BELLEAIR_CC_EAST_ID = UUID(uuidString: "98A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let BELLEAIR_CC_EAST_PARS: [Int] = [
+    4,5,3,5,3,4,4,4,4,   // OUT 36
+    4,4,5,3,4,3,4,4,4    // IN  35
+]
+
+let BELLEAIR_CC_EAST_HCS: [Int] = [
+    9,5,15,1,17,13,3,11,7,
+    8,6,2,14,4,16,18,12,10
+]
+
+let BELLEAIR_CC_EAST_WOMENS_HCS: [Int] = [
+    5,9,13,1,17,15,3,11,7,
+    8,6,2,16,10,14,18,12,4
+]
+
+let BELLEAIR_CC_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",              yardage: 6265, rating: 70.8, slope: 133),
+    TeeInfo(teeName: "Blue",               yardage: 5981, rating: 69.4, slope: 132),
+    TeeInfo(teeName: "White (Men's)",      yardage: 5540, rating: 67.6, slope: 127),
+    TeeInfo(teeName: "White (Women's)",    yardage: 5540, rating: 72.4, slope: 133),
+    TeeInfo(teeName: "Gold (Men's)",       yardage: 5333, rating: 66.7, slope: 119),
+    TeeInfo(teeName: "Gold (Women's)",     yardage: 5333, rating: 71.3, slope: 130),
+    TeeInfo(teeName: "Silver/Gold (Men's)",   yardage: 5017, rating: 65.3, slope: 116),
+    TeeInfo(teeName: "Silver/Gold (Women's)", yardage: 5017, rating: 69.5, slope: 120),
+    TeeInfo(teeName: "Silver",             yardage: 4717, rating: 67.8, slope: 117),
+]
+
+// =======================================================
+// MARK: - Loblolly Club — Hobe Sound, FL
+// Par 72 | Pete Dye | Private
+// Address: 7407 SE Hill Terrace, Hobe Sound, FL 33455
+// Ratings source: BlueGolf official scorecard
+// =======================================================
+
+private let LOBLOLLY_CLUB_ID = UUID(uuidString: "99A1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let LOBLOLLY_CLUB_PARS: [Int] = [
+    4,3,4,4,4,5,3,5,4,   // OUT 36
+    3,4,5,4,4,4,3,5,4    // IN  36
+]
+
+let LOBLOLLY_CLUB_HCS: [Int] = [
+    13,17,1,15,3,5,11,9,7,
+    18,10,4,16,14,2,12,8,6
+]
+
+let LOBLOLLY_CLUB_WOMENS_HCS: [Int] = [
+    13,15,11,3,7,1,17,5,9,
+    16,10,4,18,12,8,14,2,6
+]
+
+let LOBLOLLY_CLUB_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Gold",            yardage: 6930, rating: 74.9, slope: 145),
+    TeeInfo(teeName: "Blue",            yardage: 6472, rating: 72.3, slope: 143),
+    TeeInfo(teeName: "White",           yardage: 6036, rating: 69.9, slope: 136),
+    TeeInfo(teeName: "Green",           yardage: 5528, rating: 68.0, slope: 123),
+    TeeInfo(teeName: "Green (Women's)", yardage: 5528, rating: 73.0, slope: 136),
+    TeeInfo(teeName: "Red",             yardage: 5065, rating: 70.5, slope: 126),
+]
+
+// =======================================================
+// MARK: - Naples National Golf Club — Naples, FL
+// Par 72 | Michael Hurdzan & Dana Fry | Private | 1993
+// Address: 9325 Collier Blvd, Naples, FL
+// Ratings source: BlueGolf
+// =======================================================
+
+private let NAPLES_NATIONAL_GC_ID = UUID(uuidString: "9AA1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let NAPLES_NATIONAL_GC_PARS: [Int] = [
+    4,5,3,5,4,3,4,4,4,   // OUT 36
+    4,4,3,4,4,5,4,3,5    // IN  36
+]
+
+let NAPLES_NATIONAL_GC_HCS: [Int] = [
+    11,7,15,1,13,17,5,9,3,
+    10,12,18,6,14,2,8,16,4
+]
+
+let NAPLES_NATIONAL_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6917, rating: 74.2, slope: 147),
+]
+
+// =======================================================
+// MARK: - RedStick Golf Club — Vero Beach, FL
+// Par 72 | Rees Jones | Daily-Fee
+// Address: 8350 58th Avenue, Vero Beach, FL 32967
+// Ratings source: official club scorecard
+// =======================================================
+
+private let REDSTICK_GC_ID = UUID(uuidString: "9BA1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let REDSTICK_GC_PARS: [Int] = [
+    4,4,3,4,5,4,3,4,5,   // OUT 36
+    4,4,4,3,5,4,5,3,4    // IN  36
+]
+
+let REDSTICK_GC_HCS: [Int] = [
+    15,5,17,7,1,11,13,3,9,
+    12,10,6,18,8,2,14,16,4
+]
+
+let REDSTICK_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 7175, rating: 74.9, slope: 141),
+    TeeInfo(teeName: "Blue",  yardage: 6632, rating: 72.5, slope: 134),
+    TeeInfo(teeName: "White", yardage: 6185, rating: 70.1, slope: 128),
+    TeeInfo(teeName: "Green", yardage: 5404, rating: 66.5, slope: 120),
+]
+
+// =======================================================
+// MARK: - Seminole Legacy Golf Club — Tallahassee, FL
+// Par 72 | Bill Amick (1962) / Nicklaus Design (2020) | Semi-Private
+// Address: 2550 Pottsdamer Street, Tallahassee, FL 32306
+// Ratings source: BlueGolf (post-2020 renovation)
+// TODO: add Garnet/Gold/White/Teal ratings when available
+// =======================================================
+
+private let SEMINOLE_LEGACY_GC_ID = UUID(uuidString: "9CA1B2C3-D4E5-6F7A-8B9C-0D1E2F3A4B5C")!
+
+let SEMINOLE_LEGACY_GC_PARS: [Int] = [
+    4,4,3,5,3,5,4,4,4,   // OUT 36
+    4,5,4,3,5,3,4,4,4    // IN  36
+]
+
+let SEMINOLE_LEGACY_GC_HCS: [Int] = [
+    5,15,7,17,11,3,9,13,1,
+    4,16,8,14,6,18,12,10,2
+]
+
+let SEMINOLE_LEGACY_GC_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black",      yardage: 7205, rating: 75.2, slope: 138),
+    TeeInfo(teeName: "Garnet",     yardage: 6685, rating: 72.8, slope: 134),
+    TeeInfo(teeName: "Gold",       yardage: 6268, rating: 71.1, slope: 127),
+    TeeInfo(teeName: "Gold/White", yardage: 5957, rating: 69.2, slope: 128),
+    TeeInfo(teeName: "White",      yardage: 5676, rating: 67.8, slope: 126),
+    TeeInfo(teeName: "Teal",       yardage: 4894, rating: 64.1, slope: 118),
+]
 
 // =======================================================
 // MARK: - Built-in: Patriot GC (4 Star)
@@ -15774,7 +16178,33 @@ private enum BuiltIns {
           phone: "(239) 352-2200",
           website: "https://www.calusapinesgolfclub.com",
           address: "2000 Calusa Pines Drive, Naples, FL 34120"),
-      
+
+        c(ADMIRALS_COVE_EAST_ID, "Admirals Cove (East)", ADMIRALS_COVE_EAST_PARS, ADMIRALS_COVE_EAST_HCS,
+          country: "USA",
+          state: "FL",
+          region: "Jupiter",
+          type: "Private",
+          phone: "(561) 747-0400",
+          address: "2 Club Court, Jupiter, FL 33477"),
+
+        c(BEAR_LAKES_LAKES_ID, "Bear Lakes CC (Lakes Course)", BEAR_LAKES_LAKES_PARS, BEAR_LAKES_LAKES_HCS, BEAR_LAKES_LAKES_TEES,
+          country: "USA",
+          state: "FL",
+          region: "West Palm Beach",
+          architect: "Jack Nicklaus",
+          type: "Private",
+          phone: "(561) 478-0001",
+          address: "1901 Village Boulevard, West Palm Beach, FL 33409"),
+
+        c(BEAR_LAKES_BURN_ID, "Bear Lakes CC (The Burn)", BEAR_LAKES_BURN_PARS, BEAR_LAKES_BURN_HCS, BEAR_LAKES_BURN_TEES,
+          country: "USA",
+          state: "FL",
+          region: "West Palm Beach",
+          architect: "Davis Love III",
+          type: "Private",
+          phone: "(561) 478-0001",
+          address: "1901 Village Boulevard, West Palm Beach, FL 33409"),
+
         // -------------------------
         // Wisconsin
         // -------------------------
@@ -22751,7 +23181,7 @@ private enum BuiltIns {
           CABOT_CITRUS_ROOST_TEES,
           country: "USA",
           state: "FL",
-          architect: "Mike Nuzzo",
+          architect: "Kyle Franz, Rod Whitman, Mike Nuzzo & Ran Morrissett",
           type: "Resort",
           address: "9200 Broad St, Brooksville, FL 34601",
           isWolfApproved: false),
@@ -26485,7 +26915,7 @@ private enum BuiltIns {
         ),
         c(
             BLACK_DIAMOND_RANCH_ID,
-            "Black Diamond Ranch",
+            "Black Diamond Ranch (Ranch Course)",
             BLACK_DIAMOND_RANCH_PARS,
             BLACK_DIAMOND_RANCH_HCS,
             BLACK_DIAMOND_RANCH_TEES,
@@ -26756,6 +27186,106 @@ private enum BuiltIns {
             address: "1 Doug Ford Dr, Pensacola, FL 32507",
             teeSets: [TeeSet(name: "Ladies", pars: PERDIDO_BAY_GC_PARS, hcs: PERDIDO_BAY_GC_LADIES_HCS)]
         ),
+
+        c(MOUNTAIN_LAKE_GC_ID, "Mountain Lake Golf Course", MOUNTAIN_LAKE_GC_PARS, MOUNTAIN_LAKE_GC_HCS, MOUNTAIN_LAKE_GC_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Seth Raynor",
+          type: "Private",
+          phone: "(863) 676-5900",
+          website: "https://www.mountainlakecc.com",
+          address: "Mountain Lake, Lake Wales, FL 33898"),
+
+        c(PINE_TREE_MEMBER_ID, "Pine Tree Golf Club (Member Course)", PINE_TREE_MEMBER_PARS, PINE_TREE_MEMBER_HCS, PINE_TREE_MEMBER_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Dick Wilson",
+          type: "Private",
+          phone: "(561) 732-6404",
+          website: "https://www.pinetreegolfclub.net",
+          address: "10600 Pine Tree Terrace, Boynton Beach, FL 33436",
+          teeSets: [TeeSet(name: "Red (Women's)", pars: PINE_TREE_MEMBER_PARS, hcs: PINE_TREE_MEMBER_WOMEN_HCS)]),
+
+        c(PINE_TREE_CHAMPIONSHIP_ID, "Pine Tree Golf Club (Championship Course)", PINE_TREE_CHAMPIONSHIP_PARS, PINE_TREE_CHAMPIONSHIP_HCS, PINE_TREE_CHAMPIONSHIP_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Dick Wilson",
+          type: "Private",
+          phone: "(561) 732-6404",
+          website: "https://www.pinetreegolfclub.net",
+          address: "10600 Pine Tree Terrace, Boynton Beach, FL 33436"),
+
+        c(PABLO_CREEK_GC_ID, "Pablo Creek Golf Club", PABLO_CREEK_GC_PARS, PABLO_CREEK_GC_HCS, PABLO_CREEK_GC_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio",
+          type: "Daily-Fee",
+          address: "Jacksonville, FL"),
+
+        c(LOST_TREE_CLUB_ID, "Lost Tree Club", LOST_TREE_CLUB_PARS, LOST_TREE_CLUB_HCS, LOST_TREE_CLUB_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus",
+          type: "Private",
+          address: "North Palm Beach, FL 33408"),
+
+        c(JOHNS_ISLAND_WEST_ID, "John's Island Club (West)", JOHNS_ISLAND_WEST_PARS, JOHNS_ISLAND_WEST_HCS, JOHNS_ISLAND_WEST_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Tom Fazio",
+          type: "Private",
+          address: "Sebastian, FL"),
+
+        c(JOHNS_ISLAND_NORTH_ID, "John's Island Club (North)", JOHNS_ISLAND_NORTH_PARS, JOHNS_ISLAND_NORTH_HCS, JOHNS_ISLAND_NORTH_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye & Perry Dye",
+          type: "Private",
+          address: "Vero Beach, FL"),
+
+        c(JOHNS_ISLAND_SOUTH_ID, "John's Island Club (South)", JOHNS_ISLAND_SOUTH_PARS, JOHNS_ISLAND_SOUTH_HCS, JOHNS_ISLAND_SOUTH_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Jack Nicklaus",
+          type: "Private",
+          address: "Vero Beach, FL"),
+
+        c(BELLEAIR_CC_EAST_ID, "Belleair Country Club (East)", BELLEAIR_CC_EAST_PARS, BELLEAIR_CC_EAST_HCS, BELLEAIR_CC_EAST_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Donald Ross",
+          type: "Private",
+          address: "One Country Club Lane, Belleair, FL 33756",
+          teeSets: [TeeSet(name: "Women's", pars: BELLEAIR_CC_EAST_PARS, hcs: BELLEAIR_CC_EAST_WOMENS_HCS)]),
+
+        c(LOBLOLLY_CLUB_ID, "Loblolly Club", LOBLOLLY_CLUB_PARS, LOBLOLLY_CLUB_HCS, LOBLOLLY_CLUB_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Pete Dye",
+          type: "Private",
+          address: "7407 SE Hill Terrace, Hobe Sound, FL 33455",
+          teeSets: [TeeSet(name: "Women's", pars: LOBLOLLY_CLUB_PARS, hcs: LOBLOLLY_CLUB_WOMENS_HCS)]),
+
+        c(NAPLES_NATIONAL_GC_ID, "Naples National Golf Club", NAPLES_NATIONAL_GC_PARS, NAPLES_NATIONAL_GC_HCS, NAPLES_NATIONAL_GC_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Michael Hurdzan & Dana Fry",
+          type: "Private",
+          address: "9325 Collier Blvd, Naples, FL 34114"),
+
+        c(REDSTICK_GC_ID, "RedStick Golf Club", REDSTICK_GC_PARS, REDSTICK_GC_HCS, REDSTICK_GC_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Rees Jones",
+          type: "Daily-Fee",
+          address: "8350 58th Avenue, Vero Beach, FL 32967"),
+
+        c(SEMINOLE_LEGACY_GC_ID, "Seminole Legacy Golf Club", SEMINOLE_LEGACY_GC_PARS, SEMINOLE_LEGACY_GC_HCS, SEMINOLE_LEGACY_GC_TEES,
+          country: "USA",
+          state: "FL",
+          architect: "Bill Amick / Nicklaus Design",
+          type: "Semi-Private",
+          address: "2550 Pottsdamer Street, Tallahassee, FL 32306"),
 
         // -------------------------
         // Australia

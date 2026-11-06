@@ -158,6 +158,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // Programmatic header labels replacing the fixed "Hole / Par" storyboard labels
     private weak var holeInfoLabel: UILabel?
     private weak var courseHeaderLabel: UILabel?
+    private weak var livePillButton: UIButton?
+    private weak var livePillHeightConstraint: NSLayoutConstraint?
     private weak var tournamentBannerView: UIView?
     private weak var tournamentBannerLabel: UILabel?
 
@@ -257,7 +259,6 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     private var liveTabBar: UIView?
     private var liveTabBarInstalled = false
     private var activeTabIndex = 0
-    private static var shownLiveCodePromptForSession: String?
 
     // Tournament new-day polling
     private var newDayPollTimer: Timer?
@@ -644,6 +645,26 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         ])
         courseHeaderLabel = courseLabel
 
+        // Live pill — shown below course name when a live session is active
+        let pillBtn = UIButton(type: .system)
+        pillBtn.translatesAutoresizingMaskIntoConstraints = false
+        pillBtn.setTitleColor(.white, for: .normal)
+        pillBtn.titleLabel?.font = UIFont.systemFont(ofSize: 11, weight: .semibold)
+        pillBtn.backgroundColor = UIColor(red: 1, green: 0.27, blue: 0.27, alpha: 0.85)
+        pillBtn.layer.cornerRadius = 9
+        pillBtn.clipsToBounds = true
+        pillBtn.contentEdgeInsets = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 10)
+        pillBtn.addTarget(self, action: #selector(livePillTapped), for: .touchUpInside)
+        header.addSubview(pillBtn)
+        let pillHeight = pillBtn.heightAnchor.constraint(equalToConstant: 0)
+        pillHeight.isActive = true
+        livePillButton = pillBtn
+        livePillHeightConstraint = pillHeight
+        NSLayoutConstraint.activate([
+            pillBtn.centerXAnchor.constraint(equalTo: header.centerXAnchor),
+            pillBtn.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 4),
+        ])
+
         // Hole navigation row (Prev pill | dots | Next pill)
         let ghostPillBG = UIColor.white.withAlphaComponent(0.15)
 
@@ -696,7 +717,7 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         header.addSubview(toggleRowStack)
 
         NSLayoutConstraint.activate([
-            toggleRowStack.topAnchor.constraint(equalTo: courseLabel.bottomAnchor, constant: 8),
+            toggleRowStack.topAnchor.constraint(equalTo: pillBtn.bottomAnchor, constant: 4),
             toggleRowStack.centerXAnchor.constraint(equalTo: header.centerXAnchor),
 
             prevBtn.leadingAnchor.constraint(equalTo: header.leadingAnchor, constant: 16),
@@ -1340,6 +1361,25 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // 50 pt for all three tabs, 44 pt for any two-tab combination
         liveTabBarHeightConstraint?.constant = (isLive && isLiveTournament) ? 50 : 44
         updateLiveNassauButtonPosition()
+
+        // Live pill under course name
+        if isLive {
+            let g = GameManager.shared.currentGame
+            var pillText = "● Live"
+            if let eventCode = g?.liveLinkedEventCode, !eventCode.isEmpty {
+                pillText = "● Live · Event \(eventCode)"
+            }
+            livePillButton?.setTitle(pillText, for: .normal)
+            livePillHeightConstraint?.constant = 18
+            livePillButton?.isHidden = false
+        } else {
+            livePillHeightConstraint?.constant = 0
+            livePillButton?.isHidden = true
+        }
+    }
+
+    @objc private func livePillTapped() {
+        WolfActions.presentGoLive(from: self)
     }
 
     @objc private func liveTabScoreTapped() { hideLiveContent() }
@@ -5616,16 +5656,6 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
         }
     }
 
-    private func showLiveCodePromptIfNeeded() {
-        print("DEBUG livePrompt: entered — currentGame=\(GameManager.shared.currentGame != nil), presentedVC=\(presentedViewController != nil)")
-        guard let g = GameManager.shared.currentGame else { print("DEBUG livePrompt: guard FAILED — no currentGame"); return }
-        let gameId = g.historyGameID?.uuidString ?? g.gameName
-        guard GameViewController.shownLiveCodePromptForSession != gameId else { print("DEBUG livePrompt: guard FAILED — already shown for gameId=\(gameId)"); return }
-        print("DEBUG livePrompt: showing popup — gameId=\(gameId) code=\(g.liveSessionCode ?? "nil")")
-        GameViewController.shownLiveCodePromptForSession = gameId
-        showLiveCodePrompt()
-    }
-
     @objc private func liveWolfTapped() {
         guard let g = GameManager.shared.currentGame else { return }
         let activeCount = (0..<g.activePlayerLimit).filter {
@@ -5643,29 +5673,6 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             return
         }
         WolfActions.presentGoLive(from: self)
-    }
-
-    // Auto-popup shown once per session start — simpler share prompt, not the full menu.
-    private func showLiveCodePrompt() {
-        guard let g = GameManager.shared.currentGame else { return }
-        if let code = g.liveSessionCode, !code.isEmpty {
-            let ac = UIAlertController(
-                title: "You're Live",
-                message: "Share this code with spectators:\n\(code)",
-                preferredStyle: .alert
-            )
-            ac.addAction(UIAlertAction(title: "Share", style: .default) { [weak self] _ in
-                guard let self else { return }
-                let link = "wolfmore://watch?code=\(code)"
-                let av = UIActivityViewController(activityItems: [link], applicationActivities: nil)
-                self.present(av, animated: true)
-            })
-            ac.addAction(UIAlertAction(title: "Copy Code", style: .default) { _ in
-                UIPasteboard.general.string = code
-            })
-            ac.addAction(UIAlertAction(title: "Done", style: .cancel))
-            present(ac, animated: true)
-        }
     }
 
     @objc private func joinTapped() {
