@@ -268,9 +268,9 @@ final class LiveConnectedViewController: UITableViewController {
                     tint: boardIcon,
                     action: { [weak self] in
                         guard let self else { return }
-                        let vc = LiveEventViewController(eventCode: board.code,
-                                                        organizerToken: board.organizerToken)
-                        self.navigationController?.pushViewController(vc, animated: true)
+                        WolfActions.showEventBoard(code: board.code,
+                                                   organizerToken: board.organizerToken,
+                                                   from: self)
                     },
                     removeAction: { [weak self] in
                         MatchBoardStore.remove(code: board.code)
@@ -300,7 +300,7 @@ final class LiveConnectedViewController: UITableViewController {
             }
 
             if !boardRows.isEmpty {
-                result.append(Section(header: "MY MATCH BOARDS", rows: boardRows))
+                result.append(Section(header: "MY EVENT BOARDS", rows: boardRows))
             }
         }
 

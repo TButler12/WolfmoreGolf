@@ -712,8 +712,7 @@ final class WolfSpectatorViewController: UIViewController {
     }
 
     private func openLiveEvent(code: String) {
-        let vc = LiveEventViewController(eventCode: code)
-        navigationController?.pushViewController(vc, animated: true)
+        WolfActions.showEventBoard(code: code, from: self)
     }
 
     private func addSession(code: String) {
@@ -1835,20 +1834,22 @@ private final class WolfHoleCell: UITableViewCell {
             decisionLabel.backgroundColor         = .clear
             decisionLabel.layer.cornerRadius      = 0
             decisionLabel.layer.masksToBounds     = false
-        switch result?.decision {
+        let dec = result?.decision ?? ""
+        let isRev = dec.hasSuffix("+reverse") || dec == "reverse"
+        let baseStr: String
+        let baseColor: UIColor
+        switch isRev ? String(dec.prefix(while: { $0 != "+" })) : dec {
         case "alone":
-            decisionLabel.text      = "A"
-            decisionLabel.textColor = .systemOrange
+            baseStr = "A"; baseColor = .systemOrange
         case "reroll":
-            decisionLabel.text      = "RR"
-            decisionLabel.textColor = .systemYellow
+            baseStr = "RR"; baseColor = .systemYellow
         case "roll":
-            decisionLabel.text      = "R"
-            decisionLabel.textColor = .label
+            baseStr = "R"; baseColor = .label
         default:
-            decisionLabel.text      = ""
-            decisionLabel.textColor = .label
+            baseStr = ""; baseColor = .label
         }
+        decisionLabel.text      = isRev ? (baseStr.isEmpty ? "↺" : "\(baseStr)↺") : baseStr
+        decisionLabel.textColor = isRev && baseStr.isEmpty ? .systemCyan : baseColor
         decisionLabel.font = .systemFont(ofSize: 11, weight: .semibold)
         }
 

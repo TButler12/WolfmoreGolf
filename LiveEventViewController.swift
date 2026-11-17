@@ -369,14 +369,32 @@ final class LiveEventViewController: UIViewController {
     // MARK: - Helpers
 
     private func groupLabel(for session: WolfSession) -> String {
-        if let name = session.groupName, !name.isEmpty {
+        if let raw = session.groupName, !raw.isEmpty {
+            let name = Self.stripCourseSuffixes(from: raw)
             var counts: [String: Int] = [:]
             for s in visibleSessions {
                 if let n = s.groupName { counts[n, default: 0] += 1 }
             }
-            return (counts[name] ?? 0) > 1 ? "\(name) · \(session.code.prefix(3))" : name
+            return (counts[raw] ?? 0) > 1 ? "\(name) · \(session.code.prefix(3))" : name
         }
         return session.code
+    }
+
+    private static func stripCourseSuffixes(from groupName: String) -> String {
+        // Split on " · " and strip known suffixes from the course part so old stored names
+        // that weren't processed by makeGroupName's suffix logic still display cleanly.
+        let parts = groupName.components(separatedBy: " · ")
+        guard parts.count >= 2 else { return groupName }
+        let first = parts[0]
+        var coursePart = parts[1...].joined(separator: " · ")
+        for suffix in ["Country Club", "Golf Club", "Golf Course", " CC", " GC"] {
+            if coursePart.hasSuffix(suffix) {
+                coursePart = String(coursePart.dropLast(suffix.count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                break
+            }
+        }
+        return coursePart.isEmpty ? first : "\(first) · \(coursePart)"
     }
 
     private func holesLabel(for session: WolfSession) -> String {
@@ -408,7 +426,7 @@ extension LiveEventViewController: UITableViewDataSource, UITableViewDelegate {
         let session = visibleSessions[indexPath.row]
         let cell = tableView.dequeueReusableCell(withIdentifier: "liveEventCell", for: indexPath)
 
-        let hasMatchPlay = session.matchStatus != nil
+        let hasMatchPlay = session.matchStatus != nil && session.matchStatus != "Not playing match play"
         let holes  = holesLabel(for: session)
         let secondary: String
         if hasMatchPlay {

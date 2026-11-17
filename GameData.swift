@@ -167,6 +167,9 @@ struct GameData: Codable {
     var aloneApplied: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
     var aloneBaseAmount: [Double] = Array(repeating: 0.0, count: STANDARD_HOLES)
 
+    // Per-hole Reverse flag: multiplies final payout by -1 (winners pay, losers collect).
+    var holeReversed: [Bool] = Array(repeating: false, count: STANDARD_HOLES)
+
     // Pure stake per hole before any hole-scoped multipliers (roll/reroll/alone/press).
     // Only written by explicit stake adjustments; never by multiplier toggles.
     var holeBaseAmount: [Double] = Array(repeating: 2.0, count: STANDARD_HOLES)
@@ -290,6 +293,7 @@ struct GameData: Codable {
         padHole(&rerollBaseAmount,               fill: 0.0)
         padHole(&aloneApplied,                   fill: false)
         padHole(&aloneBaseAmount,                fill: 0.0)
+        padHole(&holeReversed,                   fill: false)
         padHole(&holeBaseAmount,                 fill: defaultBase)
         for i in 0..<scores.count      { padHole(&scores[i],      fill: nil as Int?) }
         for i in 0..<playerMoney.count { padHole(&playerMoney[i], fill: 0.0) }

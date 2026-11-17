@@ -299,9 +299,11 @@ private enum GameContextBuilder {
             }
             let alone = hole < wolfAlone.count ? wolfAlone[hole] : false
             let teamWon = hole < wolfTeamWon.count ? wolfTeamWon[hole] : false
+            let reversed = hole < g.holeReversed.count ? g.holeReversed[hole] : false
 
             var holeLine = "  Hole \(hole + 1) (Par \(par), $\(Int(dollars)))"
             if hammerCount > 0 { holeLine += " [×\(hammerCount) hammers]" }
+            if reversed { holeLine += " [↺ REVERSED]" }
             holeLine += ": Wolf=\(wolfName)\(alone ? " LONE" : "")"
             holeLine += " → \(teamWon ? "Wolf team WON" : "Pack WON")"
 

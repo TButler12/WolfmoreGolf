@@ -88,7 +88,8 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     // Bottom layout container
     private var bottomStackView: UIStackView?
     private var bottomSeparator: UIView?
-    private weak var bottomRow1: UIStackView?  // Alone | Re-Roll | Roll
+    private weak var bottomRow1: UIStackView?  // Alone | Re-Roll | Roll | ↺
+    private weak var reversePushed: UIButton?
     private weak var bottomRow2: UIStackView?  // Press | Hammer
 
     private var dollarStepper: UIStepper?
@@ -3322,6 +3323,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         refreshForCurrentHole()
         paintEverythingForCurrentHole()
     }
+
+    @objc private func reversePushedTapped(_ sender: UIButton) {
+        GameManager.shared.update { g in
+            if g.holeReversed.count != STANDARD_HOLES { g.holeReversed = Array(repeating: false, count: STANDARD_HOLES) }
+            let hole = max(0, min(g.hole, g.totalHoles - 1))
+            g.holeReversed[hole] = !g.holeReversed[hole]
+        }
+        if let g = GameManager.shared.currentGame {
+            paintBetButtons(g, hole: max(0, min(g.hole, g.totalHoles - 1)))
+        }
+    }
+
     @IBAction private func plusPointDollarsTapped(_ sender: UIButton) {
         stepDollars(by: 1)
     }
@@ -3977,10 +3990,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         }
 
         // 4) compute payouts using GLOBAL umbrella
-        let payouts = GameManager.shared.computeHolePayout(
+        let rawPayouts = GameManager.shared.computeHolePayout(
             hole: hole,
             umbePressed: umbrellaMuted
         )
+        let isHoleReversed = GameManager.shared.currentGame?.holeReversed[safe: hole] ?? false
+        let payouts: [Double] = isHoleReversed ? rawPayouts.map { -$0 } : rawPayouts
 
         // 5) save payouts
         GameManager.shared.update { g in
@@ -4008,10 +4023,12 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                 for laterHole in (hole + 1)..<totalH {
                     guard laterHole >= boundary,
                           g.holeCommitted[safe: laterHole] == true else { continue }
-                    let laterPayouts = GameManager.shared.computeHolePayout(
+                    let laterRaw = GameManager.shared.computeHolePayout(
                         hole: laterHole,
                         umbePressed: umbrellaMuted
                     )
+                    let laterReversed = g.holeReversed[safe: laterHole] ?? false
+                    let laterPayouts: [Double] = laterReversed ? laterRaw.map { -$0 } : laterRaw
                     GameManager.shared.update { g2 in
                         let seats = min(WOLF_MAX_PLAYERS, g2.playerMoney.count, laterPayouts.count)
                         for s in 0..<seats {
@@ -4476,13 +4493,18 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
                     let wentAlone     = g.aloneApplied[safe: backfillHole] ?? false
                     let rerollOn      = g.rerollApplied[safe: backfillHole] ?? false
                     let rollOn        = g.rollApplied[safe: backfillHole] ?? false
+                    let reversedHole  = g.holeReversed[safe: backfillHole] ?? false
                     let pressLevel    = g.pressLevel[safe: backfillHole] ?? 0
                     let teamWon       = backfillHole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[backfillHole]
                     let holePayouts   = g.playerMoney.map { $0[safe: backfillHole] ?? 0.0 }
                     // "matchplay"/"bestball" signal the format to spectators; Wolf uses alone/reroll/roll.
-                    let decision: String? = g.resolvedGameType == .bestBall ? "bestball" :
+                    // "+reverse" suffix means the hole payout was flipped.
+                    let baseDecision: String? = g.resolvedGameType == .bestBall ? "bestball" :
                         (g.resolvedGameType == .matchPlay || g.resolvedGameType == .fourball) ? "matchplay" :
                         wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
+                    let decision: String? = reversedHole
+                        ? (baseDecision.map { $0 + "+reverse" } ?? "reverse")
+                        : baseDecision
                     let holeHammer    = Int(g.hammerMultiplier(for: backfillHole))
 
                     // Skin winner/value/count/tied seats for this hole
@@ -5493,15 +5515,17 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
     }
 
     private func paintBetButtons(_ g: GameData, hole h: Int) {
-        let rollOn   = g.rollApplied[safe: h]   ?? false
-        let rerollOn = (g.rerollApplied[safe: h] ?? false) && rollOn
-        let aloneOn  = g.aloneApplied[safe: h]  ?? false
-        let pressLevel = g.pressLevel[safe: h] ?? 0
+        let rollOn      = g.rollApplied[safe: h]   ?? false
+        let rerollOn    = (g.rerollApplied[safe: h] ?? false) && rollOn
+        let aloneOn     = g.aloneApplied[safe: h]  ?? false
+        let reversedOn  = g.holeReversed[safe: h]  ?? false
+        let pressLevel  = g.pressLevel[safe: h] ?? 0
 
-        rollPushed.isSelected   = rollOn
-        rerollPushed.isSelected = rerollOn
-        rerollPushed.isEnabled  = rollOn
-        alonePushed.isSelected  = aloneOn
+        rollPushed.isSelected    = rollOn
+        rerollPushed.isSelected  = rerollOn
+        rerollPushed.isEnabled   = rollOn
+        alonePushed.isSelected   = aloneOn
+        reversePushed?.isSelected = reversedOn
 
         paintPressStepperView(pressLevel: pressLevel)
     }
@@ -5995,8 +6019,13 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
             sup.addSubview(vStack)
             bottomStackView = vStack
 
-            // ── Row 1: Alone | Re-Roll | Roll ────────────────────────────────
-            let row1 = UIStackView(arrangedSubviews: [alonePushed, rerollPushed, rollPushed])
+            // ── Row 1: Alone | Re-Roll | Roll | ↺ ───────────────────────────
+            let revBtn = UIButton()
+            setupToggleButton(revBtn, onColor: .label, offColor: .systemOrange,
+                              onTitle: "↺ On", offTitle: "↺")
+            revBtn.addTarget(self, action: #selector(reversePushedTapped(_:)), for: .touchUpInside)
+            reversePushed = revBtn
+            let row1 = UIStackView(arrangedSubviews: [alonePushed, rerollPushed, rollPushed, revBtn])
             row1.axis = .horizontal; row1.spacing = 6; row1.distribution = .fillEqually
             row1.heightAnchor.constraint(equalToConstant: 44).isActive = true
             vStack.addArrangedSubview(row1)

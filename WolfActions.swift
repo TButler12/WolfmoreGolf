@@ -508,6 +508,8 @@ enum WolfActions {
                                 sessionId: sessionId, creatorToken: token,
                                 matchStatus: "Not playing match play", holesPlayed: 0)
                         }
+                        let boardName = (try? await SupabaseService.shared.fetchLiveEvent(code: evCode))?.name ?? evCode
+                        MatchBoardStore.save(code: evCode, name: boardName)
                     } catch {
                         print("WARN linkSessionToEvent at launch: \(error)")
                     }
@@ -547,6 +549,8 @@ enum WolfActions {
                         sessionId: sessionId, creatorToken: token,
                         matchStatus: "Not playing match play", holesPlayed: 0)
                 }
+                let boardName = (try? await SupabaseService.shared.fetchLiveEvent(code: evCode))?.name ?? evCode
+                MatchBoardStore.save(code: evCode, name: boardName)
                 GameManager.shared.saveCurrent()
                 await MainActor.run {
                     let a = UIAlertController(title: "Linked",
@@ -1029,6 +1033,21 @@ enum WolfActions {
         presenter.present(confirm, animated: true)
     }
 
+    // MARK: - Show Event Board (single entry point so back button is always "Back")
+
+    static func showEventBoard(code: String, organizerToken: String? = nil,
+                                from presenter: UIViewController) {
+        let vc = LiveEventViewController(eventCode: code, organizerToken: organizerToken)
+        if let nav = presenter.navigationController {
+            nav.topViewController?.navigationItem.backButtonTitle = "Back"
+            nav.pushViewController(vc, animated: true)
+        } else {
+            let nav = UINavigationController(rootViewController: vc)
+            nav.modalPresentationStyle = .pageSheet
+            presenter.present(nav, animated: true)
+        }
+    }
+
     // MARK: - Deep link: wolfmore://event?code=XXXX
 
     static func joinEventFromDeepLink(code: String, from presenter: UIViewController) {
@@ -1061,14 +1080,7 @@ enum WolfActions {
         })
         alert.addAction(UIAlertAction(title: "View Board", style: .default) { [weak presenter] _ in
             guard let presenter else { return }
-            let vc = LiveEventViewController(eventCode: code)
-            if let nav = presenter.navigationController {
-                nav.pushViewController(vc, animated: true)
-            } else {
-                let nav = UINavigationController(rootViewController: vc)
-                nav.modalPresentationStyle = .pageSheet
-                presenter.present(nav, animated: true)
-            }
+            showEventBoard(code: code, from: presenter)
         })
         alert.addAction(UIAlertAction(title: "Done", style: .cancel))
         presenter.present(alert, animated: true)
@@ -1138,14 +1150,7 @@ enum WolfActions {
                 .uppercased()
             guard !code.isEmpty else { return }
             if code.count == 7 && code.hasPrefix("E") {
-                let vc = LiveEventViewController(eventCode: code)
-                if let nav = presenter.navigationController {
-                    nav.pushViewController(vc, animated: true)
-                } else {
-                    let nav = UINavigationController(rootViewController: vc)
-                    nav.modalPresentationStyle = .pageSheet
-                    presenter.present(nav, animated: true)
-                }
+                showEventBoard(code: code, from: presenter)
                 return
             }
             Task {
