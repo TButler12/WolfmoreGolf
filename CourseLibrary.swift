@@ -12580,6 +12580,81 @@ let WARREN_GC_HCS: [Int] = [
 let WARREN_GC_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Championship", yardage: nil, rating: nil, slope: nil)
 ]
+
+// MARK: - Belfair (Bluffton, SC) — Tom Fazio
+
+private let BELFAIR_WEST_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000010")!
+private let BELFAIR_EAST_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000011")!
+
+let BELFAIR_WEST_PARS: [Int] = [
+    4,5,3,4,4,4,5,3,4,
+    4,4,5,5,3,4,3,4,4
+]
+
+let BELFAIR_WEST_HCS: [Int] = [
+    13,3,11,9,1,17,7,15,5,
+    6,14,8,10,16,2,18,12,4
+]
+
+let BELFAIR_WEST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 7147, rating: 75.0, slope: 143),
+    TeeInfo(teeName: "Medal",        yardage: 6666, rating: 73.0, slope: 138)
+]
+
+let BELFAIR_EAST_PARS: [Int] = [
+    4,3,5,3,4,4,5,4,3,
+    5,4,4,4,3,4,5,3,4
+]
+
+let BELFAIR_EAST_HCS: [Int] = [
+    3,13,9,5,15,1,7,11,17,
+    2,12,4,8,16,14,10,18,6
+]
+
+let BELFAIR_EAST_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Championship", yardage: 6879, rating: 73.9, slope: 142)
+]
+
+// MARK: - Haig Point Club (Daufuskie Island, SC) — Rees Jones
+
+private let HAIG_POINT_CALIBOGUE_ID = UUID(uuidString: "A7A20001-0000-0000-0000-000000000008")!
+private let HAIG_POINT_HAIG_ID      = UUID(uuidString: "A7A20001-0000-0000-0000-000000000009")!
+
+let HAIG_POINT_CALIBOGUE_PARS: [Int] = [
+    4,4,4,5,3,4,4,3,5,
+    4,4,4,4,5,3,4,3,5
+]
+
+let HAIG_POINT_CALIBOGUE_HCS: [Int] = [
+    11,9,3,13,17,1,15,5,7,
+    2,8,14,10,4,6,18,12,16
+]
+
+let HAIG_POINT_CALIBOGUE_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6900, rating: 74.4, slope: 138),
+    TeeInfo(teeName: "White", yardage: 6560, rating: 72.5, slope: 132),
+    TeeInfo(teeName: "Green", yardage: 6220, rating: 70.8, slope: 129),
+    TeeInfo(teeName: "Gold",  yardage: 5720, rating: 69.0, slope: 120)
+]
+
+let HAIG_POINT_HAIG_PARS: [Int] = [
+    4,4,4,5,3,4,4,3,4,
+    4,4,4,4,5,3,4,3,5
+]
+
+let HAIG_POINT_HAIG_HCS: [Int] = [
+    13,7,5,9,15,3,11,17,1,
+    4,2,12,8,6,16,14,18,10
+]
+
+let HAIG_POINT_HAIG_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Black", yardage: 6735, rating: 73.3, slope: 138),
+    TeeInfo(teeName: "White", yardage: 6330, rating: 71.3, slope: 131),
+    TeeInfo(teeName: "Green", yardage: 5920, rating: 69.8, slope: 128),
+    TeeInfo(teeName: "Gold",  yardage: 5440, rating: 67.4, slope: 115),
+    TeeInfo(teeName: "Navy",  yardage: 5121, rating: 65.4, slope: 112)
+]
+
 // MARK: - Singapore Courses
 
 private let LAGUNA_NATIONAL_ID = UUID(uuidString: "3C9E5A71-6B28-4F4D-9E2A-8B7D1C3F9026")!
@@ -25062,6 +25137,71 @@ private enum BuiltIns {
             address: "995 Bulls Bay Drive, Awendaw, SC 29429",
             isWolfApproved: true
         ),
+
+        c(
+            HAIG_POINT_CALIBOGUE_ID,
+            "Haig Point Club (Calibogue)",
+            HAIG_POINT_CALIBOGUE_PARS,
+            HAIG_POINT_CALIBOGUE_HCS,
+            HAIG_POINT_CALIBOGUE_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Daufuskie Island",
+            architect: "Rees Jones",
+            type: "Private",
+            website: "https://www.haigpoint.com",
+            address: "Daufuskie Island, SC 29915",
+            isWolfApproved: true
+        ),
+
+        c(
+            HAIG_POINT_HAIG_ID,
+            "Haig Point Club (Haig)",
+            HAIG_POINT_HAIG_PARS,
+            HAIG_POINT_HAIG_HCS,
+            HAIG_POINT_HAIG_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Daufuskie Island",
+            architect: "Rees Jones",
+            type: "Private",
+            website: "https://www.haigpoint.com",
+            address: "Daufuskie Island, SC 29915",
+            isWolfApproved: true
+        ),
+
+        c(
+            BELFAIR_WEST_ID,
+            "Belfair (West)",
+            BELFAIR_WEST_PARS,
+            BELFAIR_WEST_HCS,
+            BELFAIR_WEST_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Bluffton",
+            architect: "Tom Fazio",
+            type: "Private",
+            website: "https://www.belfair.com",
+            address: "Belfair Parkway, Bluffton, SC 29910",
+            isWolfApproved: true
+        ),
+
+        c(
+            BELFAIR_EAST_ID,
+            "Belfair (East)",
+            BELFAIR_EAST_PARS,
+            BELFAIR_EAST_HCS,
+            BELFAIR_EAST_TEES,
+            country: "USA",
+            state: "SC",
+            region: "Bluffton",
+            architect: "Tom Fazio",
+            type: "Private",
+            website: "https://www.belfair.com",
+            address: "Belfair Parkway, Bluffton, SC 29910",
+            isWolfApproved: true
+        ),
+
         c(
             DUNES_GOLF_BEACH_GOLD_ID,
             "Dunes Golf & Beach Club",

@@ -15,9 +15,147 @@ final class LiveConnectedViewController: UITableViewController {
         var creatorDeleteAction: (() -> Void)? = nil // non-nil → board creator; swipe shows choice sheet
     }
 
+    private struct CardItem {
+        let title: String
+        let subtitle: String
+        let icon: String
+        let tint: UIColor
+        let action: () -> Void
+    }
+
     private struct Section {
         let header: String
         let rows: [Row]
+        let cards: [CardItem]
+        var isCardGrid: Bool { !cards.isEmpty }
+
+        init(header: String, rows: [Row]) {
+            self.header = header; self.rows = rows; self.cards = []
+        }
+        init(header: String, cards: [CardItem]) {
+            self.header = header; self.rows = []; self.cards = cards
+        }
+    }
+
+    // MARK: - Card Grid Cell
+
+    private final class CardGridCell: UITableViewCell {
+        static let reuseID = "CardGrid"
+
+        override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+            super.init(style: style, reuseIdentifier: reuseIdentifier)
+            selectionStyle = .none
+            backgroundColor = .systemGroupedBackground
+        }
+        required init?(coder: NSCoder) { fatalError() }
+
+        func configure(cards: [CardItem], isAccessibility: Bool) {
+            contentView.subviews.forEach { $0.removeFromSuperview() }
+            let columns = isAccessibility ? 1 : 2
+            let grid = buildGrid(cards: cards, columns: columns)
+            grid.translatesAutoresizingMaskIntoConstraints = false
+            contentView.addSubview(grid)
+            NSLayoutConstraint.activate([
+                grid.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+                grid.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
+                grid.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+                grid.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12),
+            ])
+        }
+
+        private func buildGrid(cards: [CardItem], columns: Int) -> UIStackView {
+            var rows: [UIStackView] = []
+            var i = 0
+            while i < cards.count {
+                let slice = Array(cards[i..<min(i + columns, cards.count)])
+                var subviews = slice.map { buildCard($0) }
+                if columns == 2 && slice.count == 1 { subviews.append(UIView()) }
+                let rowStack = UIStackView(arrangedSubviews: subviews)
+                rowStack.axis = .horizontal; rowStack.spacing = 12; rowStack.distribution = .fillEqually
+                rows.append(rowStack)
+                i += columns
+            }
+            let vStack = UIStackView(arrangedSubviews: rows)
+            vStack.axis = .vertical; vStack.spacing = 12
+            return vStack
+        }
+
+        private func buildCard(_ item: CardItem) -> UIView {
+            let card = UIView()
+            card.backgroundColor = .secondarySystemBackground
+            card.layer.cornerRadius = 14
+            card.layer.shadowColor = UIColor.black.cgColor
+            card.layer.shadowOpacity = 0.07
+            card.layer.shadowRadius = 4
+            card.layer.shadowOffset = CGSize(width: 0, height: 2)
+
+            let iconBg = UIView()
+            iconBg.backgroundColor = item.tint.withAlphaComponent(0.15)
+            iconBg.layer.cornerRadius = 24
+            iconBg.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                iconBg.widthAnchor.constraint(equalToConstant: 48),
+                iconBg.heightAnchor.constraint(equalToConstant: 48),
+            ])
+
+            let iconView = UIImageView(image: UIImage(systemName: item.icon,
+                withConfiguration: UIImage.SymbolConfiguration(pointSize: 22, weight: .medium)))
+            iconView.tintColor = item.tint
+            iconView.contentMode = .scaleAspectFit
+            iconView.translatesAutoresizingMaskIntoConstraints = false
+            iconBg.addSubview(iconView)
+            NSLayoutConstraint.activate([
+                iconView.centerXAnchor.constraint(equalTo: iconBg.centerXAnchor),
+                iconView.centerYAnchor.constraint(equalTo: iconBg.centerYAnchor),
+            ])
+
+            let nameLabel = UILabel()
+            nameLabel.text = item.title
+            nameLabel.font = UIFontMetrics(forTextStyle: .caption1)
+                .scaledFont(for: UIFont.systemFont(ofSize: 13, weight: .semibold))
+            nameLabel.adjustsFontForContentSizeCategory = true
+            nameLabel.textAlignment = .center
+            nameLabel.numberOfLines = 2
+            nameLabel.textColor = .label
+
+            let subtitleLabel = UILabel()
+            subtitleLabel.text = item.subtitle
+            subtitleLabel.font = UIFontMetrics(forTextStyle: .caption2)
+                .scaledFont(for: UIFont.systemFont(ofSize: 11))
+            subtitleLabel.adjustsFontForContentSizeCategory = true
+            subtitleLabel.textAlignment = .center
+            subtitleLabel.numberOfLines = 2
+            subtitleLabel.textColor = .secondaryLabel
+
+            let vStack = UIStackView(arrangedSubviews: [iconBg, nameLabel, subtitleLabel])
+            vStack.axis = .vertical; vStack.spacing = 6; vStack.alignment = .center
+            vStack.translatesAutoresizingMaskIntoConstraints = false
+            card.addSubview(vStack)
+            NSLayoutConstraint.activate([
+                vStack.centerXAnchor.constraint(equalTo: card.centerXAnchor),
+                vStack.topAnchor.constraint(equalTo: card.topAnchor, constant: 16),
+                vStack.bottomAnchor.constraint(equalTo: card.bottomAnchor, constant: -16),
+                vStack.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 8),
+                vStack.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -8),
+            ])
+
+            let tapBtn = UIButton()
+            tapBtn.translatesAutoresizingMaskIntoConstraints = false
+            tapBtn.addAction(UIAction { [weak card] _ in
+                UIView.animate(withDuration: 0.08, delay: 0, options: .allowUserInteraction) { card?.alpha = 0.6 }
+                UIView.animate(withDuration: 0.12, delay: 0.08, options: .allowUserInteraction) { card?.alpha = 1.0 }
+                item.action()
+            }, for: .touchUpInside)
+            card.addSubview(tapBtn)
+            NSLayoutConstraint.activate([
+                tapBtn.topAnchor.constraint(equalTo: card.topAnchor),
+                tapBtn.leadingAnchor.constraint(equalTo: card.leadingAnchor),
+                tapBtn.trailingAnchor.constraint(equalTo: card.trailingAnchor),
+                tapBtn.bottomAnchor.constraint(equalTo: card.bottomAnchor),
+            ])
+
+            return card
+        }
     }
 
     private var sections: [Section] = []
@@ -33,6 +171,7 @@ final class LiveConnectedViewController: UITableViewController {
             barButtonSystemItem: .close, target: self, action: #selector(closeTapped)
         )
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
+        tableView.register(CardGridCell.self, forCellReuseIdentifier: CardGridCell.reuseID)
         let longPress = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(_:)))
         tableView.addGestureRecognizer(longPress)
     }
@@ -40,6 +179,13 @@ final class LiveConnectedViewController: UITableViewController {
     // Tracks which tournament codes have a new day available (populated async)
     private var newDayAvailable: Set<String> = []
     private var organizerRosterCount: Int? = nil
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+            tableView.reloadData()
+        }
+    }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
@@ -118,58 +264,31 @@ final class LiveConnectedViewController: UITableViewController {
     private func buildSections() {
         var result: [Section] = []
 
-        result.append(Section(header: "JOIN", rows: [
-            Row(title: "Join Tournament",
-                subtitle: "Enter a code to join an existing tournament",
-                icon: "trophy.fill",
-                tint: wolfGreen) { [weak self] in
-                self?.joinTournamentTapped()
-            },
-            Row(title: "Join Remote Nassau Match",
-                subtitle: "Import an invite to join a live Nassau match",
-                icon: "flag.2.crossed.fill",
-                tint: .systemBlue) { [weak self] in
-                guard let self else { return }
-                WolfActions.joinLiveMatch(from: self)
-            },
-            Row(title: "Watch a Group or Event Board",
-                subtitle: "Watch a group or an event board in real time",
-                icon: "eye.fill",
-                tint: .secondaryLabel) { [weak self] in
-                self?.watchLiveTapped()
-            },
-            Row(title: "Enter Co-Organizer Code",
-                subtitle: "Claim organizer access with a code from the tournament creator",
-                icon: "key.fill",
-                tint: .secondaryLabel) { [weak self] in
-                self?.enterCoOrgCodeTapped()
-            },
-        ]))
-
-        result.append(Section(header: "CREATE", rows: [
-            Row(title: "Create Tournament",
-                subtitle: "Set up a new tournament and share a join code",
-                icon: "trophy.fill",
-                tint: wolfGreen) { [weak self] in
+        let wolfGold = UIColor(red: 0.75, green: 0.55, blue: 0.05, alpha: 1.0)
+        result.append(Section(header: "CREATE", cards: [
+            CardItem(title: "Tournament",
+                     subtitle: "Create a multi-day event",
+                     icon: "trophy.fill",
+                     tint: wolfGreen) { [weak self] in
                 self?.createTournamentTapped()
             },
-            Row(title: "Create Event Board",
-                subtitle: "Live leaderboard for multiple groups — share a code",
-                icon: "rectangle.3.group.fill",
-                tint: UIColor(red: 0.20, green: 0.47, blue: 0.78, alpha: 1.0)) { [weak self] in
+            CardItem(title: "Event Board",
+                     subtitle: "Live leaderboard, share a code",
+                     icon: "rectangle.3.group.fill",
+                     tint: wolfGold) { [weak self] in
                 guard let self else { return }
                 WolfActions.createMatchBoardAction(from: self)
             },
-            Row(title: "Calcutta Pools",
-                subtitle: "Manage auction pools, bids, and payouts",
-                icon: "dollarsign.circle.fill",
-                tint: .systemGreen) { [weak self] in
+            CardItem(title: "Calcutta",
+                     subtitle: "Auction pools & payouts",
+                     icon: "dollarsign.circle.fill",
+                     tint: wolfGold) { [weak self] in
                 self?.openCalcutta()
             },
-            Row(title: "Create Remote Nassau Match",
-                subtitle: "Start a live match and send an invite",
-                icon: "flag.2.crossed.fill",
-                tint: .systemBlue) { [weak self] in
+            CardItem(title: "Remote Nassau",
+                     subtitle: "Match vs. a remote player",
+                     icon: "flag.2.crossed.fill",
+                     tint: wolfGreen) { [weak self] in
                 guard let self else { return }
                 guard GameManager.shared.currentGame != nil else {
                     self.showError("Start a game first before creating a Nassau match.")
@@ -177,16 +296,44 @@ final class LiveConnectedViewController: UITableViewController {
                 }
                 WolfActions.startLiveMatch(from: self)
             },
-            Row(title: "Share Live Wolf",
-                subtitle: "Broadcast your scores to spectators",
-                icon: "antenna.radiowaves.left.and.right",
-                tint: .secondaryLabel) { [weak self] in
+            CardItem(title: "Live Wolf",
+                     subtitle: "Broadcast your scores",
+                     icon: "antenna.radiowaves.left.and.right",
+                     tint: wolfGreen) { [weak self] in
                 guard let self else { return }
                 guard GameManager.shared.currentGame != nil else {
                     self.showError("Start a game first before going Live Wolf.")
                     return
                 }
                 WolfActions.presentGoLive(from: self)
+            },
+            CardItem(title: "Co-Organizer Code",
+                     subtitle: "Claim organizer access",
+                     icon: "key.fill",
+                     tint: wolfGold) { [weak self] in
+                self?.enterCoOrgCodeTapped()
+            },
+        ]))
+
+        result.append(Section(header: "JOIN", rows: [
+            Row(title: "Join Tournament",
+                subtitle: "Enter a code",
+                icon: "trophy.fill",
+                tint: wolfGreen) { [weak self] in
+                self?.joinTournamentTapped()
+            },
+            Row(title: "Join Remote Nassau Match",
+                subtitle: "Accept a live invite",
+                icon: "flag.2.crossed.fill",
+                tint: wolfGreen) { [weak self] in
+                guard let self else { return }
+                WolfActions.joinLiveMatch(from: self)
+            },
+            Row(title: "Watch a Group or Event Board",
+                subtitle: "Watch live scores",
+                icon: "eye.fill",
+                tint: .secondaryLabel) { [weak self] in
+                self?.watchLiveTapped()
             },
         ]))
 
@@ -312,7 +459,7 @@ final class LiveConnectedViewController: UITableViewController {
     override func numberOfSections(in tableView: UITableView) -> Int { sections.count }
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        sections[section].rows.count
+        sections[section].isCardGrid ? 1 : sections[section].rows.count
     }
 
     override func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
@@ -321,8 +468,16 @@ final class LiveConnectedViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView,
                             cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let section = sections[indexPath.section]
+        if section.isCardGrid {
+            let cell = tableView.dequeueReusableCell(
+                withIdentifier: CardGridCell.reuseID, for: indexPath) as! CardGridCell
+            cell.configure(cards: section.cards,
+                           isAccessibility: traitCollection.preferredContentSizeCategory.isAccessibilityCategory)
+            return cell
+        }
         let cell = tableView.dequeueReusableCell(withIdentifier: "Cell", for: indexPath)
-        let row = sections[indexPath.section].rows[indexPath.row]
+        let row = section.rows[indexPath.row]
         var content = cell.defaultContentConfiguration()
         content.text = row.title
         content.secondaryText = row.subtitle
@@ -336,14 +491,18 @@ final class LiveConnectedViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        sections[indexPath.section].rows[indexPath.row].action()
+        let section = sections[indexPath.section]
+        guard !section.isCardGrid else { return }
+        section.rows[indexPath.row].action()
     }
 
     override func tableView(
         _ tableView: UITableView,
         trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath
     ) -> UISwipeActionsConfiguration? {
-        let row = sections[indexPath.section].rows[indexPath.row]
+        let section = sections[indexPath.section]
+        guard !section.isCardGrid else { return nil }
+        let row = section.rows[indexPath.row]
         guard row.removeAction != nil else { return nil }
         let action = UIContextualAction(style: .destructive, title: "Remove") { [weak self] _, _, done in
             done(true)
@@ -360,7 +519,9 @@ final class LiveConnectedViewController: UITableViewController {
         guard gesture.state == .began else { return }
         let point = gesture.location(in: tableView)
         guard let indexPath = tableView.indexPathForRow(at: point) else { return }
-        let row = sections[indexPath.section].rows[indexPath.row]
+        let section = sections[indexPath.section]
+        guard !section.isCardGrid else { return }
+        let row = section.rows[indexPath.row]
         guard row.removeAction != nil else { return }
         presentRemoveSheet(for: row)
     }

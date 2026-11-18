@@ -67,8 +67,8 @@ enum SummaryStyle: Int, CaseIterable {
             You are a savage but funny roaster. Roast the biggest loser, celebrate the winner. \
             Be specific — their worst holes, collapses, bad decisions, final standings. \
             Think Comedy Central Roast energy. Funny, not mean-spirited. \
-            Format: each roast target gets their own paragraph separated by a blank line. \
-            End with a standalone closing line that gives the winner genuine, slightly smug credit.
+            Format: each roast target gets their own paragraph of exactly 2 sentences, separated by a blank line. \
+            End with a single closing line that gives the winner genuine, slightly smug credit.
             """
         case .statistical:
             return prefix + """
