@@ -41,6 +41,7 @@
 		AB00001000000000000000FF /* TournamentMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001000000000000000AA /* TournamentMigrationTests.swift */; };
 		AB00001100000000000000FF /* GlenLakesCourseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001100000000000000AA /* GlenLakesCourseTests.swift */; };
 		AB00001200000000000000FF /* TeamTeeEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001200000000000000AA /* TeamTeeEngineTests.swift */; };
+		AB00001300000000000000FF /* GameDataMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001300000000000000AA /* GameDataMigrationTests.swift */; };
 		AB01CD02EF03AB04CD05EF06 /* TournamentRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F007 /* TournamentRosterViewController.swift */; };
 		AB01CD02EF03AB04CD05EF07 /* SavedPlayersPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F008 /* SavedPlayersPickerViewController.swift */; };
 		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
@@ -213,6 +214,7 @@
 		AB00001000000000000000AA /* TournamentMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentMigrationTests.swift; sourceTree = "<group>"; };
 		AB00001100000000000000AA /* GlenLakesCourseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlenLakesCourseTests.swift; sourceTree = "<group>"; };
 		AB00001200000000000000AA /* TeamTeeEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeEngineTests.swift; sourceTree = "<group>"; };
+		AB00001300000000000000AA /* GameDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDataMigrationTests.swift; sourceTree = "<group>"; };
 		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
 		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
 		AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
@@ -375,6 +377,7 @@
 				AB00001000000000000000AA /* TournamentMigrationTests.swift */,
 				AB00001100000000000000AA /* GlenLakesCourseTests.swift */,
 				AB00001200000000000000AA /* TeamTeeEngineTests.swift */,
+				AB00001300000000000000AA /* GameDataMigrationTests.swift */,
 			);
 			path = WolfmoreGolfTests;
 			sourceTree = "<group>";
@@ -711,6 +714,7 @@
 				AB00001000000000000000FF /* TournamentMigrationTests.swift in Sources */,
 				AB00001100000000000000FF /* GlenLakesCourseTests.swift in Sources */,
 				AB00001200000000000000FF /* TeamTeeEngineTests.swift in Sources */,
+				AB00001300000000000000FF /* GameDataMigrationTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -944,7 +948,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 77;
+				CURRENT_PROJECT_VERSION = 78;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -959,7 +963,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -985,7 +989,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 77;
+				CURRENT_PROJECT_VERSION = 78;
 				DEVELOPMENT_TEAM = BJ5DUSSCLX;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = "$(PROJECT_DIR)/Info.plist";
@@ -1000,7 +1004,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 3.2.0;
+				MARKETING_VERSION = 3.2.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolf;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

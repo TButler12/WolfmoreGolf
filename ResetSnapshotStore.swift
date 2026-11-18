@@ -20,10 +20,41 @@ final class ResetSnapshotStore {
     // MARK: - Persistence
 
     private func loadAll() -> [Entry] {
-        guard let data = UserDefaults.standard.data(forKey: key),
-              let entries = try? JSONDecoder().decode([Entry].self, from: data)
-        else { return [] }
+        guard let raw = UserDefaults.standard.data(forKey: key) else { return [] }
+
+        // Fast path: data already contains all required fields (saves from 3.2.1+).
+        if let entries = try? JSONDecoder().decode([Entry].self, from: raw) { return entries }
+
+        // Slow path: patch GameData within each entry for pre-3.2.1 saves.
+        // GameData.migrate() injects default values for fields added after 3.1.5.
+        guard var arr = (try? JSONSerialization.jsonObject(with: raw)) as? [[String: Any]] else {
+            rescueSnapshot(raw)
+            return []
+        }
+        arr = arr.map { entry in
+            var e = entry
+            if var gd = e["gameData"] as? [String: Any] {
+                if gd["holeReversed"] == nil {
+                    gd["holeReversed"] = Array(repeating: false, count: STANDARD_HOLES)
+                    e["gameData"] = gd
+                }
+            }
+            return e
+        }
+        guard let patched = try? JSONSerialization.data(withJSONObject: arr),
+              let entries = try? JSONDecoder().decode([Entry].self, from: patched) else {
+            rescueSnapshot(raw)
+            return []
+        }
         return entries
+    }
+
+    private func rescueSnapshot(_ raw: Data) {
+        let rescueKey = key + "_rescue"
+        if UserDefaults.standard.data(forKey: rescueKey) == nil {
+            UserDefaults.standard.set(raw, forKey: rescueKey)
+            print("📦 Snapshot store decode failed; raw bytes rescued to \(rescueKey)")
+        }
     }
 
     private func saveAll(_ entries: [Entry]) {

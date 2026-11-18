@@ -394,6 +394,40 @@ extension Collection {
 }
 
 extension GameData {
+    // MARK: - Forward-compatibility migration
+    //
+    // Swift's synthesized Decodable treats every non-optional stored property as a *required* JSON
+    // key — default values in the struct body are ignored by the decoder.  Any time we add a new
+    // non-optional field we must patch older saves before decoding, or the entire load fails and
+    // the user loses their round.
+    //
+    // Rule: add an entry here whenever a non-optional property is added to GameData.
+    //   * holeReversed  — added in 3.2.0 (commit 3b7e3ce); absent from all 3.1.5 saves.
+    //   * gameTypePerHole — predates 3.1.5 but patched here defensively (comment in source
+    //     incorrectly called it "optional").
+    //
+    // The function only touches keys that are absent; existing values are never modified.
+    // The original bytes on disk are never written here — callers decide when to persist.
+    static func migrate(_ data: Data) -> Data {
+        guard var json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            return data
+        }
+        var dirty = false
+
+        if json["holeReversed"] == nil {
+            json["holeReversed"] = Array(repeating: false, count: STANDARD_HOLES)
+            dirty = true
+        }
+        if json["gameTypePerHole"] == nil {
+            json["gameTypePerHole"] = Array(repeating: "sixPointScotch", count: STANDARD_HOLES)
+            dirty = true
+        }
+
+        guard dirty,
+              let patched = try? JSONSerialization.data(withJSONObject: json) else { return data }
+        return patched
+    }
+
     // Par for a hole considering the player's assigned tee set (0 = course default).
     func parForHole(_ hole: Int, player: Int) -> Int {
         let idx = playerTeeSetIndex[safe: player] ?? 0

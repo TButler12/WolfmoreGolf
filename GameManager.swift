@@ -39,10 +39,10 @@ final class GameManager {
     private func performSlotMigrationIfNeeded() {
         guard !UserDefaults.standard.bool(forKey: migrationKey) else { return }
         defer { UserDefaults.standard.set(true, forKey: migrationKey) }
-        guard let data = UserDefaults.standard.data(forKey: currentKey),
-              let g = try? JSONDecoder().decode(GameData.self, from: data),
+        guard let raw = UserDefaults.standard.data(forKey: currentKey),
+              let g = try? JSONDecoder().decode(GameData.self, from: GameData.migrate(raw)),
               g.tournamentCode != nil else { return }
-        UserDefaults.standard.set(data, forKey: tournamentKey)
+        UserDefaults.standard.set(raw, forKey: tournamentKey)
     }
     
     // MARK: - Create / Load / Save
@@ -81,16 +81,21 @@ final class GameManager {
     /// Load the local slot into currentGame and set activeSlot = .local.
     @discardableResult
     func loadLastOpened(notify: Bool = true) -> Bool {
-        guard let data = UserDefaults.standard.data(forKey: currentKey) else { return false }
+        guard let raw = UserDefaults.standard.data(forKey: currentKey) else { return false }
         do {
-            var g = try JSONDecoder().decode(GameData.self, from: data)
+            var g = try JSONDecoder().decode(GameData.self, from: GameData.migrate(raw))
             normalizeShapes(&g)
             currentGame = g
             activeSlot = .local
             if notify { requestReload() }
             return true
         } catch {
-            print("📦 Load failed:", error)
+            // Rescue the raw bytes before startNewGame() can overwrite this key.
+            let rescueKey = currentKey + "_rescue"
+            if UserDefaults.standard.data(forKey: rescueKey) == nil {
+                UserDefaults.standard.set(raw, forKey: rescueKey)
+            }
+            print("📦 Load failed (raw bytes rescued to \(rescueKey)):", error)
             return false
         }
     }
@@ -98,32 +103,36 @@ final class GameManager {
     /// Load the tournament slot into currentGame and set activeSlot = .tournament.
     @discardableResult
     func loadTournamentSlot(notify: Bool = false) -> Bool {
-        guard let data = UserDefaults.standard.data(forKey: tournamentKey) else { return false }
+        guard let raw = UserDefaults.standard.data(forKey: tournamentKey) else { return false }
         do {
-            var g = try JSONDecoder().decode(GameData.self, from: data)
+            var g = try JSONDecoder().decode(GameData.self, from: GameData.migrate(raw))
             normalizeShapes(&g)
             currentGame = g
             activeSlot = .tournament
             if notify { requestReload() }
             return true
         } catch {
-            print("📦 Load tournament slot failed:", error)
+            let rescueKey = tournamentKey + "_rescue"
+            if UserDefaults.standard.data(forKey: rescueKey) == nil {
+                UserDefaults.standard.set(raw, forKey: rescueKey)
+            }
+            print("📦 Load tournament slot failed (raw bytes rescued to \(rescueKey)):", error)
             return false
         }
     }
 
     /// Local-slot game data read fresh from UserDefaults — no side-effects on currentGame/activeSlot.
     var localGameData: GameData? {
-        guard let data = UserDefaults.standard.data(forKey: currentKey),
-              var g = try? JSONDecoder().decode(GameData.self, from: data) else { return nil }
+        guard let raw = UserDefaults.standard.data(forKey: currentKey),
+              var g = try? JSONDecoder().decode(GameData.self, from: GameData.migrate(raw)) else { return nil }
         normalizeShapes(&g)
         return g
     }
 
     /// Tournament-slot game data read fresh from UserDefaults — no side-effects.
     var tournamentGameData: GameData? {
-        guard let data = UserDefaults.standard.data(forKey: tournamentKey),
-              var g = try? JSONDecoder().decode(GameData.self, from: data) else { return nil }
+        guard let raw = UserDefaults.standard.data(forKey: tournamentKey),
+              var g = try? JSONDecoder().decode(GameData.self, from: GameData.migrate(raw)) else { return nil }
         normalizeShapes(&g)
         return g
     }
@@ -164,11 +173,11 @@ final class GameManager {
 
         // Only migrate if tournament slot exists and has a tournament code
         guard let tData = UserDefaults.standard.data(forKey: tournamentKey),
-              let tGame = try? JSONDecoder().decode(GameData.self, from: tData),
+              let tGame = try? JSONDecoder().decode(GameData.self, from: GameData.migrate(tData)),
               tGame.tournamentCode != nil else { return }
 
         let localHasRound = UserDefaults.standard.data(forKey: currentKey)
-            .flatMap { try? JSONDecoder().decode(GameData.self, from: $0) } != nil
+            .flatMap { try? JSONDecoder().decode(GameData.self, from: GameData.migrate($0)) } != nil
 
         if localHasRound {
             // Only save to Restore if the tournament game has actual progress; otherwise discard silently.
@@ -185,8 +194,8 @@ final class GameManager {
     /// Mutate and re-persist the tournament slot without touching activeSlot or currentGame.
     /// Safe to call from background tasks — never disrupts an in-progress local round.
     func patchTournamentSlot(_ mutate: (inout GameData) -> Void) {
-        guard let data = UserDefaults.standard.data(forKey: tournamentKey),
-              var g = try? JSONDecoder().decode(GameData.self, from: data) else { return }
+        guard let raw = UserDefaults.standard.data(forKey: tournamentKey),
+              var g = try? JSONDecoder().decode(GameData.self, from: GameData.migrate(raw)) else { return }
         mutate(&g)
         if let newData = try? JSONEncoder().encode(g) {
             UserDefaults.standard.set(newData, forKey: tournamentKey)
