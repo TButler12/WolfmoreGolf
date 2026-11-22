@@ -478,6 +478,7 @@ enum WolfActions {
     private static func executeGoLiveTask(names: [String], course: String, handicaps: [Int],
                                           nineHole: Bool, nineHoleStart: Int,
                                           groupName: String?, eventCode: String?,
+                                          autoShare: Bool = false,
                                           from presenter: UIViewController) {
         Task {
             do {
@@ -517,7 +518,20 @@ enum WolfActions {
                 GameManager.shared.saveCurrent()
                 await MainActor.run {
                     NotificationCenter.default.post(name: .reloadUI, object: nil)
-                    showGoLiveCreatedAlert(code: code, from: presenter)
+                    if autoShare {
+                        let link = "wolfmore://watch?code=\(code)"
+                        let msg  = "Follow my round at \(course) live in WolfMore Golf. Code: \(code)"
+                        let av = UIActivityViewController(activityItems: [msg, link], applicationActivities: nil)
+                        if let pop = av.popoverPresentationController {
+                            pop.sourceView = presenter.view
+                            pop.sourceRect = CGRect(x: presenter.view.bounds.midX,
+                                                    y: presenter.view.bounds.midY, width: 0, height: 0)
+                            pop.permittedArrowDirections = []
+                        }
+                        presenter.present(av, animated: true)
+                    } else {
+                        showGoLiveCreatedAlert(code: code, from: presenter)
+                    }
                 }
             } catch {
                 print("[GoLive] failed: \(error)")
@@ -877,7 +891,8 @@ enum WolfActions {
             let firstName = names.first(where: { !$0.isEmpty }) ?? "Group"
             executeGoLiveTask(names: names, course: course, handicaps: handicaps,
                               nineHole: g.isNineHoleMatch, nineHoleStart: g.nineHoleStartingHole,
-                              groupName: makeGroupName(firstName: firstName, course: course), eventCode: nil, from: presenter)
+                              groupName: makeGroupName(firstName: firstName, course: course),
+                              eventCode: nil, autoShare: true, from: presenter)
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         if let pop = sheet.popoverPresentationController {

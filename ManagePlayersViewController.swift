@@ -128,8 +128,8 @@ final class ManagePlayersViewController: UIViewController,
         courseLabel.font = courseFont
         courseLabel.textColor = .label
         courseLabel.textAlignment = .center
-        courseLabel.numberOfLines = 1
-        courseLabel.lineBreakMode = .byTruncatingTail
+        courseLabel.numberOfLines = 2
+        courseLabel.lineBreakMode = .byWordWrapping
 
         let g = GameManager.shared.currentGame
         let gameTypeName = g?.gameType?.displayName ?? "Casual"
@@ -139,12 +139,14 @@ final class ManagePlayersViewController: UIViewController,
         gameLabel.font = infoFont
         gameLabel.textColor = .secondaryLabel
         gameLabel.textAlignment = .center
-        gameLabel.numberOfLines = 1
+        gameLabel.numberOfLines = 2
 
         let spacing: CGFloat = 1
+        let isAX = traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+        let lineMultiplier: CGFloat = isAX ? 2.0 : 1.0
         let totalHeight = ceil(titleFont.lineHeight)
-                        + spacing + ceil(courseFont.lineHeight)
-                        + spacing + ceil(infoFont.lineHeight)
+                        + spacing + ceil(courseFont.lineHeight) * lineMultiplier
+                        + spacing + ceil(infoFont.lineHeight) * lineMultiplier
 
         let stack = UIStackView(arrangedSubviews: [titleLabel, courseLabel, gameLabel])
         stack.axis = .vertical
@@ -848,14 +850,14 @@ final class ManagePlayersViewController: UIViewController,
             stack.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -20),
             stack.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -16),
 
-            rosterBtn.heightAnchor.constraint(equalToConstant: 50),
-            toggleBtn.heightAnchor.constraint(equalToConstant: 44),
-            startBtn.heightAnchor.constraint(equalToConstant: 50),
-            homeBtn.heightAnchor.constraint(equalToConstant: 44),
+            rosterBtn.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
+            toggleBtn.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
+            startBtn.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
+            homeBtn.heightAnchor.constraint(greaterThanOrEqualToConstant: 44),
         ])
         if let quickBtn = quickStartButton {
             quickBtn.translatesAutoresizingMaskIntoConstraints = false
-            quickBtn.heightAnchor.constraint(equalToConstant: 60).isActive = true
+            quickBtn.heightAnchor.constraint(greaterThanOrEqualToConstant: 60).isActive = true
         }
     }
 

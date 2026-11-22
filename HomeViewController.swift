@@ -2344,7 +2344,13 @@ final class GamesInfoViewController: UIViewController {
         buildUI()
     }
 
+    private var isAX: Bool {
+        traitCollection.preferredContentSizeCategory.isAccessibilityCategory
+    }
+
     private func buildUI() {
+        view.subviews.forEach { $0.removeFromSuperview() }
+
         let wolfGreen = UIColor(red: 0.10, green: 0.33, blue: 0.18, alpha: 1.0)
 
         let titleLabel = UILabel()
@@ -2353,6 +2359,7 @@ final class GamesInfoViewController: UIViewController {
             .scaledFont(for: UIFont.systemFont(ofSize: 22, weight: .bold))
         titleLabel.adjustsFontForContentSizeCategory = true
         titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 0
 
         let subtitleLabel = UILabel()
         subtitleLabel.text = "These games run automatically — no setup needed."
@@ -2373,11 +2380,23 @@ final class GamesInfoViewController: UIViewController {
             ("Nassau",         "trophy.fill",            UIColor.systemOrange,
              "Three bets: front 9, back 9, and overall 18."),
         ]
-        let row1 = gamesRow(Array(games.prefix(2)))
-        let row2 = gamesRow(Array(games.suffix(2)))
-        let grid = UIStackView(arrangedSubviews: [row1, row2])
-        grid.axis = .vertical
-        grid.spacing = 12
+
+        let gridView: UIView
+        if isAX {
+            let col = UIStackView(arrangedSubviews: games.map {
+                gameTile(name: $0.name, symbol: $0.symbol, color: $0.color, desc: $0.desc)
+            })
+            col.axis = .vertical
+            col.spacing = 12
+            gridView = col
+        } else {
+            let row1 = gamesRow(Array(games.prefix(2)))
+            let row2 = gamesRow(Array(games.suffix(2)))
+            let grid = UIStackView(arrangedSubviews: [row1, row2])
+            grid.axis = .vertical
+            grid.spacing = 12
+            gridView = grid
+        }
 
         let noteLabel = UILabel()
         noteLabel.text = "All game settings customizable before your round — tap any chip on the Start Round screen."
@@ -2387,6 +2406,16 @@ final class GamesInfoViewController: UIViewController {
         noteLabel.textColor = .secondaryLabel
         noteLabel.textAlignment = .center
         noteLabel.numberOfLines = 0
+
+        let contentStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, gridView, noteLabel])
+        contentStack.axis = .vertical
+        contentStack.spacing = 20
+        contentStack.translatesAutoresizingMaskIntoConstraints = false
+
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        scrollView.addSubview(contentStack)
 
         var btnCfg = UIButton.Configuration.filled()
         btnCfg.title = "Start Round"
@@ -2400,19 +2429,35 @@ final class GamesInfoViewController: UIViewController {
             var a = attrs; a.font = UIFont.systemFont(ofSize: 17, weight: .semibold); return a
         }
         let startBtn = UIButton(configuration: btnCfg)
-        startBtn.heightAnchor.constraint(equalToConstant: 52).isActive = true
+        startBtn.translatesAutoresizingMaskIntoConstraints = false
         startBtn.addTarget(self, action: #selector(startTapped), for: .touchUpInside)
+        view.addSubview(startBtn)
 
-        let stack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel, grid, noteLabel, startBtn])
-        stack.axis = .vertical
-        stack.spacing = 20
-        stack.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(stack)
+        let guide = view.safeAreaLayoutGuide
         NSLayoutConstraint.activate([
-            stack.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 28),
-            stack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 24),
-            stack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -24),
+            startBtn.leadingAnchor.constraint(equalTo: guide.leadingAnchor, constant: 24),
+            startBtn.trailingAnchor.constraint(equalTo: guide.trailingAnchor, constant: -24),
+            startBtn.bottomAnchor.constraint(equalTo: guide.bottomAnchor, constant: -16),
+            startBtn.heightAnchor.constraint(greaterThanOrEqualToConstant: 52),
+
+            scrollView.topAnchor.constraint(equalTo: guide.topAnchor),
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: startBtn.topAnchor, constant: -12),
+
+            contentStack.topAnchor.constraint(equalTo: scrollView.contentLayoutGuide.topAnchor, constant: 28),
+            contentStack.leadingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.leadingAnchor, constant: 24),
+            contentStack.trailingAnchor.constraint(equalTo: scrollView.contentLayoutGuide.trailingAnchor, constant: -24),
+            contentStack.bottomAnchor.constraint(equalTo: scrollView.contentLayoutGuide.bottomAnchor, constant: -20),
+            contentStack.widthAnchor.constraint(equalTo: scrollView.frameLayoutGuide.widthAnchor, constant: -48),
         ])
+    }
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if previousTraitCollection?.preferredContentSizeCategory != traitCollection.preferredContentSizeCategory {
+            buildUI()
+        }
     }
 
     private func gamesRow(_ games: [(name: String, symbol: String, color: UIColor, desc: String)]) -> UIStackView {

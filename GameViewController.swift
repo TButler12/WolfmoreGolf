@@ -1366,9 +1366,9 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
         // Live pill under course name
         if isLive {
             let g = GameManager.shared.currentGame
-            var pillText = "● Live"
+            var pillText = "● Live · Share"
             if let eventCode = g?.liveLinkedEventCode, !eventCode.isEmpty {
-                pillText = "● Live · Event \(eventCode)"
+                pillText = "● Live · Share · Event \(eventCode)"
             }
             livePillButton?.setTitle(pillText, for: .normal)
             livePillHeightConstraint?.constant = 18
@@ -3329,9 +3329,86 @@ final class GameViewController: UIViewController, MFMessageComposeViewController
             if g.holeReversed.count != STANDARD_HOLES { g.holeReversed = Array(repeating: false, count: STANDARD_HOLES) }
             let hole = max(0, min(g.hole, g.totalHoles - 1))
             g.holeReversed[hole] = !g.holeReversed[hole]
+
+            // If the hole is already committed, immediately flip the stored payouts so the
+            // money display and running totals update without needing another Update Scores tap.
+            // Update Scores recomputes from scratch using the flag, so there is no double-apply.
+            guard g.holeCommitted[safe: hole] == true else { return }
+            let totalH = g.totalHoles
+            if g.playerMoney.count < WOLF_MAX_PLAYERS ||
+               g.playerMoney.contains(where: { $0.count != totalH }) {
+                g.playerMoney = Array(repeating: Array(repeating: 0, count: totalH), count: WOLF_MAX_PLAYERS)
+            }
+            for s in 0..<min(WOLF_MAX_PLAYERS, g.playerMoney.count) {
+                if hole < g.playerMoney[s].count {
+                    g.playerMoney[s][hole] = -g.playerMoney[s][hole]
+                }
+            }
         }
-        if let g = GameManager.shared.currentGame {
-            paintBetButtons(g, hole: max(0, min(g.hole, g.totalHoles - 1)))
+
+        guard let g = GameManager.shared.currentGame else { return }
+        let hole = max(0, min(g.hole, g.totalHoles - 1))
+        paintBetButtons(g, hole: hole)
+
+        guard g.holeCommitted[safe: hole] == true else { return }
+
+        // Repaint the per-player money row and running totals
+        let payouts = (0..<min(WOLF_MAX_PLAYERS, g.playerMoney.count)).map {
+            g.playerMoney[$0][safe: hole] ?? 0.0
+        }
+        let seatsToPaint = min(MAX_PLAYERS, playerMoneyFields.count, payouts.count)
+        for s in 0..<seatsToPaint {
+            setMoneyField(playerMoneyFields[s], to: payouts[s])
+        }
+        refreshTotalMoneyLabels()
+
+        // Push the updated hole to live spectators
+        guard let sessionId = g.liveSessionId else { return }
+        Task {
+            let holeScores = (0..<g.activePlayerLimit).map { s -> Int in
+                guard s < g.playerActivated.count, g.playerActivated[s],
+                      s < g.scores.count, hole < g.scores[s].count else { return 0 }
+                return g.scores[s][hole] ?? 0
+            }
+            let wolfMask    = g.wolfMaskByHole[safe: hole] ?? []
+            let wolfSlots   = wolfMask.enumerated().compactMap { $0.element ? $0.offset : nil }
+            let wolfSlot    = wolfSlots[safe: 0]
+            let partnerSlot = wolfSlots[safe: 1]
+            let wentAlone   = g.aloneApplied[safe: hole] ?? false
+            let rerollOn    = g.rerollApplied[safe: hole] ?? false
+            let rollOn      = g.rollApplied[safe: hole] ?? false
+            let reversedOn  = g.holeReversed[safe: hole] ?? false
+            let baseDecision: String? = wentAlone ? "alone" : rerollOn ? "reroll" : rollOn ? "roll" : nil
+            let decision: String? = reversedOn
+                ? (baseDecision.map { $0 + "+reverse" } ?? "reverse")
+                : baseDecision
+            let holePayouts = g.playerMoney.map { $0[safe: hole] ?? 0.0 }
+            let holeHammer  = Int(g.hammerMultiplier(for: hole))
+            let pressLevel  = g.pressLevel[safe: hole] ?? 0
+            let teamWon     = hole < g.wolfTeamWonPerHole.count && g.wolfTeamWonPerHole[hole]
+            do {
+                try await SupabaseService.shared.submitWolfHole(
+                    sessionId: sessionId,
+                    hole: hole + 1,
+                    scores: holeScores,
+                    wolfSlot: wolfSlot,
+                    partnerSlot: partnerSlot,
+                    wentAlone: wentAlone,
+                    teamWon: teamWon,
+                    payouts: holePayouts,
+                    decision: decision,
+                    hammerMultiplier: holeHammer,
+                    pressed: pressLevel,
+                    skinWinner: nil,
+                    skinValue: nil,
+                    nassauStatus: nil,
+                    skinCount: nil,
+                    skinTiedSeats: nil,
+                    mpSeats: nil
+                )
+            } catch {
+                print("ERROR submitWolfHole (reverse) hole=\(hole + 1): \(error)")
+            }
         }
     }
 
@@ -6025,6 +6102,8 @@ When scoring: set Prox if needed, choose the Wolf player, then tap Update Scores
                               onTitle: "↺ On", offTitle: "↺")
             revBtn.addTarget(self, action: #selector(reversePushedTapped(_:)), for: .touchUpInside)
             reversePushed = revBtn
+            let _revHole = max(0, min((GameManager.shared.currentGame?.totalHoles ?? STANDARD_HOLES) - 1, GameManager.shared.currentGame?.hole ?? 0))
+            revBtn.isSelected = GameManager.shared.currentGame?.holeReversed[safe: _revHole] ?? false
             let row1 = UIStackView(arrangedSubviews: [alonePushed, rerollPushed, rollPushed, revBtn])
             row1.axis = .horizontal; row1.spacing = 6; row1.distribution = .fillEqually
             row1.heightAnchor.constraint(equalToConstant: 44).isActive = true

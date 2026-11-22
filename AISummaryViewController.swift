@@ -58,8 +58,19 @@ enum SummaryStyle: Int, CaseIterable {
             Focus on how the match(es) played out: who was up or down, key turning-point holes, clutch wins, and the final result. \
             Do NOT mention money, dollar amounts, prize totals, or Nassau — match play is purely holes up or down.\n
             """ : ""
-        // Applied to every style: birdies, eagles, and holes-in-one must always be gross scores, never net.
-        let birdieNote = "IMPORTANT: When highlighting birdies, eagles, or holes-in-one, only reference gross scores — the actual strokes taken before any handicap adjustment. Never call a net birdie a birdie, never call a net eagle an eagle, and never call a net hole-in-one a hole-in-one. If a player made a score only by virtue of handicap strokes, do not describe it as a birdie or eagle.\n"
+        // Applied to every style: gross-only score names, fact-locked, no violence.
+        let birdieNote = """
+            IMPORTANT: When highlighting birdies, eagles, or holes-in-one, only reference gross scores — \
+            the actual strokes taken before any handicap adjustment. Never call a net birdie a birdie, \
+            never call a net eagle an eagle. If a player made a score only by virtue of handicap strokes, \
+            do not describe it as a birdie or eagle.\n
+            IMPORTANT: A VERIFIED FACTS section appears at the end of the round data. \
+            Use ONLY those pre-computed facts for score names (birdie, eagle, par, bogey, etc.) and \
+            dollar amounts. Do not infer score names from raw stroke counts. Do not mention any birdie, \
+            eagle, or dollar figure that is not in VERIFIED FACTS.\n
+            IMPORTANT: Keep the content about golf only. No references to guns, shooting, violence, \
+            weapons, self-harm, or anything that could read badly in a family group text.\n
+            """
         let prefix = birdieNote + stablefordNote + tournamentNote + scrambleNote + matchPlayNote
         switch self {
         case .trashTalk:
@@ -420,6 +431,184 @@ private enum GameContextBuilder {
 
         return lines.joined(separator: "\n")
     }
+
+    // MARK: - Verified fact list (Wolf rounds only)
+
+    private static func scoreName(gross: Int, par: Int) -> String {
+        switch gross - par {
+        case ...(-3): return "albatross"
+        case -2:      return "eagle"
+        case -1:      return "birdie"
+        case  0:      return "par"
+        case  1:      return "bogey"
+        case  2:      return "double bogey"
+        case  3:      return "triple bogey"
+        default:      return "\(gross - par) over par"
+        }
+    }
+
+    // Returns a VERIFIED FACTS block to append to the Wolf context, plus a verifier the
+    // caller uses to check the AI's response after generation.
+    static func buildFactList(from g: GameData) -> (text: String, verifier: FactVerifier) {
+        let pars      = g.course.pars
+        let committed = g.holeCommitted
+
+        let activePlayers: [(seat: Int, name: String)] = (0..<g.activePlayerLimit).compactMap { i in
+            guard i < g.playerNames.count, i < g.playerActivated.count,
+                  g.playerActivated[i] else { return nil }
+            let name = g.playerNames[i].trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !name.isEmpty else { return nil }
+            return (i, name)
+        }
+
+        // Last committed hole (0-indexed)
+        let lastHole = committed.indices.last(where: { $0 < committed.count && committed[$0] })
+
+        var factLines: [String] = ["VERIFIED FACTS (use ONLY these for score names and dollar amounts):"]
+        var playerHasBirdie = Set<String>()
+        var playerHasEagle  = Set<String>()
+        var allowedAmounts  = Set<Int>()   // built from context, used by verifier
+        var plainParts: [String] = []
+
+        for (seat, name) in activePlayers {
+            var parts: [String] = []
+
+            // Round total
+            let total = seat < g.playerMoney.count
+                ? g.playerMoney[seat].prefix(STANDARD_HOLES).reduce(0, +) : 0.0
+            let totalAbs = abs(Int(total.rounded()))
+            allowedAmounts.insert(totalAbs)
+            let totalWord = total >= 0 ? "won $\(totalAbs)" : "lost $\(totalAbs)"
+            parts.append("\(totalWord) for the round")
+            plainParts.append("\(name) \(totalWord).")
+
+            // Per-hole facts: eagles/birdies always, last hole always
+            for hole in 0..<STANDARD_HOLES {
+                guard hole < committed.count, committed[hole],
+                      seat < g.scores.count, let gross = g.scores[seat][hole] else { continue }
+                let par  = hole < pars.count ? pars[hole] : 4
+                let diff = gross - par
+                let sName = scoreName(gross: gross, par: par)
+                let holeMoneyRaw = seat < g.playerMoney.count && hole < g.playerMoney[seat].count
+                    ? g.playerMoney[seat][hole] : 0.0
+                let holeMoneyAbs = abs(Int(holeMoneyRaw))
+                if holeMoneyAbs > 0 { allowedAmounts.insert(holeMoneyAbs) }
+
+                let isLast = hole == lastHole
+
+                guard diff <= -1 || isLast else { continue }
+
+                if diff <= -2 { playerHasEagle.insert(name) }
+                if diff == -1 { playerHasBirdie.insert(name) }
+
+                var fact = "hole \(hole + 1) \(sName) (\(gross) on par \(par))"
+                if holeMoneyAbs > 0 {
+                    let holeWord = holeMoneyRaw >= 0 ? "won $\(holeMoneyAbs)" : "lost $\(holeMoneyAbs)"
+                    fact += "; \(holeWord) on hole \(hole + 1)"
+                }
+                parts.append(fact)
+            }
+
+            factLines.append("\(name): \(parts.joined(separator: "; "))")
+        }
+
+        // Also harvest every $ amount already in the full wolf context so the verifier
+        // doesn't flag numbers the AI legitimately copies from the main data section.
+        let wolfContextAmounts = extractAmounts(from: buildWolf(from: g))
+        allowedAmounts.formUnion(wolfContextAmounts)
+
+        let sortedPlain = activePlayers
+            .map { seat, name -> (name: String, total: Double) in
+                let t = seat < g.playerMoney.count
+                    ? g.playerMoney[seat].prefix(STANDARD_HOLES).reduce(0, +) : 0.0
+                return (name, t)
+            }
+            .sorted { $0.total > $1.total }
+        let summaryParts = sortedPlain.map { (name, total) -> String in
+            let abs = abs(Int(total.rounded()))
+            return total >= 0 ? "\(name) won $\(abs)" : "\(name) lost $\(abs)"
+        }
+        let plain = "Round results: " + summaryParts.joined(separator: ", ") + "."
+
+        return (
+            text: factLines.joined(separator: "\n"),
+            verifier: FactVerifier(
+                playerNames:     activePlayers.map(\.name),
+                playerHasBirdie: playerHasBirdie,
+                playerHasEagle:  playerHasEagle,
+                allowedAmounts:  allowedAmounts,
+                plainSummary:    plain
+            )
+        )
+    }
+
+    private static func extractAmounts(from text: String) -> Set<Int> {
+        var result = Set<Int>()
+        guard let re = try? NSRegularExpression(pattern: #"\$(\d+)"#) else { return result }
+        for m in re.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+            if let r = Range(m.range(at: 1), in: text), let v = Int(text[r]) { result.insert(v) }
+        }
+        return result
+    }
+}
+
+// MARK: - FactVerifier
+
+private struct FactVerifier {
+    let playerNames: [String]
+    let playerHasBirdie: Set<String>
+    let playerHasEagle:  Set<String>
+    let allowedAmounts:  Set<Int>
+    let plainSummary:    String
+
+    private static let bannedPhrases: [String] = [
+        "shot himself", "shot herself", "shot themselves",
+        "shoot himself", "shoot herself",
+        "reloaded", " reload",
+        "pistol", "revolver", "rifle", "bullet", "trigger",
+        "suicide", "self-harm", "overdose",
+        "hang himself", "hang herself",
+    ]
+
+    // Returns true if the text looks correct. Returns false if any of:
+    //   • A banned phrase appears.
+    //   • A player is credited with a birdie they didn't make.
+    //   • A player is credited with an eagle they didn't make.
+    //   • A dollar amount appears that wasn't in the round data.
+    func verify(text: String) -> Bool {
+        let lower = text.lowercased()
+
+        // Banned phrases
+        for phrase in FactVerifier.bannedPhrases {
+            if lower.contains(phrase) { return false }
+        }
+
+        // Dollar amounts
+        if let re = try? NSRegularExpression(pattern: #"\$(\d+)"#) {
+            for m in re.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+                if let r = Range(m.range(at: 1), in: text), let v = Int(text[r]) {
+                    if v > 0 && !allowedAmounts.contains(v) { return false }
+                }
+            }
+        }
+
+        // Birdie / eagle mentions — split on sentence boundaries
+        let sentences = text.components(separatedBy: CharacterSet(charactersIn: ".\n!?"))
+        for sentence in sentences {
+            let sLow = sentence.lowercased()
+            let hasBirdie = sLow.contains("birdie") || sLow.contains("birdied")
+            let hasEagle  = sLow.contains(" eagle") || sLow.contains("eagled")
+            guard hasBirdie || hasEagle else { continue }
+
+            for name in playerNames {
+                guard sLow.contains(name.lowercased()) else { continue }
+                if hasBirdie && !playerHasBirdie.contains(name) { return false }
+                if hasEagle  && !playerHasEagle.contains(name)  { return false }
+            }
+        }
+
+        return true
+    }
 }
 
 // MARK: - Tournament Context Builder
@@ -731,16 +920,20 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
         noteField.resignFirstResponder()
         state = .loading
 
-        let note = noteField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let note         = noteField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         let isTournament = game.tournamentCode != nil
         let isScramble   = isTournament && (game.tournamentGameType == "scramble")
         let isMatchPlay  = !isTournament && GameContextBuilder.isMatchPlay(game)
         let isStableford = !isTournament && !isMatchPlay && GameContextBuilder.isStableford(game)
-        let systemPrompt = style.systemPrompt(isStableford: isStableford, isTournament: isTournament, isMatchPlay: isMatchPlay, isScramble: isScramble)
+        let isWolf       = !isTournament && !isMatchPlay && !isStableford
+        let systemPrompt = style.systemPrompt(isStableford: isStableford, isTournament: isTournament,
+                                              isMatchPlay: isMatchPlay, isScramble: isScramble)
 
         Task {
             do {
                 var context: String
+                var factVerifier: FactVerifier? = nil
+
                 if let code = game.tournamentCode {
                     context = try await TournamentContextBuilder.build(
                         code: code,
@@ -752,14 +945,22 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
                     )
                 } else {
                     context = GameContextBuilder.build(from: game, includeSkins: includeSkins)
+                    if isWolf {
+                        // Append pre-computed fact list; keep verifier to check the AI's output.
+                        let (factText, verifier) = GameContextBuilder.buildFactList(from: game)
+                        context += "\n\n" + factText
+                        factVerifier = verifier
+                    }
                 }
                 if !note.isEmpty {
                     context += "\n\nAdditional context from the scorer: \(note)"
                 }
 
-                let text = try await ClaudeService.generate(
+                let userMsg = "Here is the golf round data. Write your recap:\n\n\(context)"
+                let text = try await generateWithVerification(
                     systemPrompt: systemPrompt,
-                    userMessage: "Here is the golf round data. Write your recap:\n\n\(context)"
+                    userMessage: userMsg,
+                    verifier: factVerifier
                 )
                 await MainActor.run {
                     pm.recordUse(.aiSummary)
@@ -773,6 +974,26 @@ final class AISummaryViewController: UIViewController, MFMessageComposeViewContr
                 }
             }
         }
+    }
+
+    // Calls ClaudeService up to 3 times. Returns the first response that passes
+    // verification. Falls back to the verifier's plain factual summary on all failures.
+    private func generateWithVerification(
+        systemPrompt: String,
+        userMessage: String,
+        verifier: FactVerifier?
+    ) async throws -> String {
+        for attempt in 0..<3 {
+            let text = try await ClaudeService.generate(
+                systemPrompt: systemPrompt,
+                userMessage: userMessage,
+                temperature: 0.5
+            )
+            guard let verifier else { return text }
+            if verifier.verify(text: text) { return text }
+            if attempt == 2 { return verifier.plainSummary }
+        }
+        return verifier?.plainSummary ?? ""
     }
 
     private func showMonthlyLimitReached() {

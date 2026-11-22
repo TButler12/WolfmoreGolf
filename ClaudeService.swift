@@ -2,7 +2,11 @@ import Foundation
 
 enum ClaudeService {
 
-    static func generate(systemPrompt: String, userMessage: String) async throws -> String {
+    // temperature: passed to the edge function and forwarded to the Claude API.
+    // The edge function must read and apply this value. Default 0.9 preserves
+    // existing behaviour; pass 0.5 for fact-sensitive Wolf summaries.
+    static func generate(systemPrompt: String, userMessage: String,
+                         temperature: Double = 0.9) async throws -> String {
         let edgeFunctionURL = SUPABASE_URL.appendingPathComponent("functions/v1/generate-round-summary")
 
         var request = URLRequest(url: edgeFunctionURL)
@@ -11,9 +15,10 @@ enum ClaudeService {
         request.setValue("Bearer \(SUPABASE_ANON_KEY)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let body: [String: String] = [
+        let body: [String: Any] = [
             "context":      userMessage,
             "systemPrompt": systemPrompt,
+            "temperature":  temperature,
         ]
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
