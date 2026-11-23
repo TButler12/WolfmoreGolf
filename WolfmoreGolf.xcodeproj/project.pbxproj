@@ -42,6 +42,9 @@
 		AB00001100000000000000FF /* GlenLakesCourseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001100000000000000AA /* GlenLakesCourseTests.swift */; };
 		AB00001200000000000000FF /* TeamTeeEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001200000000000000AA /* TeamTeeEngineTests.swift */; };
 		AB00001300000000000000FF /* GameDataMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001300000000000000AA /* GameDataMigrationTests.swift */; };
+		885D1C1A6163439E833FAEC8 /* BestBallEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07955AB6BBA546BFB985FC11 /* BestBallEngine.swift */; };
+		6BF0DAAEF421411F9862BC1B /* FieldSkinsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E3EE5D2CC4F46DEB2A57000 /* FieldSkinsEngine.swift */; };
+		9AA636CA5B404B6B983CF7FE /* BestBallEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304C63A729FA453F916DC262 /* BestBallEngineTests.swift */; };
 		AB01CD02EF03AB04CD05EF06 /* TournamentRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F007 /* TournamentRosterViewController.swift */; };
 		AB01CD02EF03AB04CD05EF07 /* SavedPlayersPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F008 /* SavedPlayersPickerViewController.swift */; };
 		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
@@ -215,6 +218,9 @@
 		AB00001100000000000000AA /* GlenLakesCourseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlenLakesCourseTests.swift; sourceTree = "<group>"; };
 		AB00001200000000000000AA /* TeamTeeEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeEngineTests.swift; sourceTree = "<group>"; };
 		AB00001300000000000000AA /* GameDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDataMigrationTests.swift; sourceTree = "<group>"; };
+		07955AB6BBA546BFB985FC11 /* BestBallEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestBallEngine.swift; sourceTree = "<group>"; };
+		5E3EE5D2CC4F46DEB2A57000 /* FieldSkinsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldSkinsEngine.swift; sourceTree = "<group>"; };
+		304C63A729FA453F916DC262 /* BestBallEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestBallEngineTests.swift; sourceTree = "<group>"; };
 		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
 		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
 		AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
@@ -378,6 +384,7 @@
 				AB00001100000000000000AA /* GlenLakesCourseTests.swift */,
 				AB00001200000000000000AA /* TeamTeeEngineTests.swift */,
 				AB00001300000000000000AA /* GameDataMigrationTests.swift */,
+				304C63A729FA453F916DC262 /* BestBallEngineTests.swift */,
 			);
 			path = WolfmoreGolfTests;
 			sourceTree = "<group>";
@@ -452,6 +459,8 @@
 				F6E007FF2F80182400763694 /* ReviewPrompter.swift */,
 				1D7D681FBEA3C05DBD4C6D7E /* UpdateChecker.swift */,
 				F6E007F42F8017F300763694 /* SkinsEngine.swift */,
+				07955AB6BBA546BFB985FC11 /* BestBallEngine.swift */,
+				5E3EE5D2CC4F46DEB2A57000 /* FieldSkinsEngine.swift */,
 				F6E007F22F8017AC00763694 /* SkinsModel.swift */,
 				F6750CFF2F785E24001828D2 /* GameSettingsViewController.swift */,
 				F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */,
@@ -715,6 +724,7 @@
 				AB00001100000000000000FF /* GlenLakesCourseTests.swift in Sources */,
 				AB00001200000000000000FF /* TeamTeeEngineTests.swift in Sources */,
 				AB00001300000000000000FF /* GameDataMigrationTests.swift in Sources */,
+				9AA636CA5B404B6B983CF7FE /* BestBallEngineTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -813,6 +823,8 @@
 				F63960732F60D62500EC0C30 /* Notification.swift in Sources */,
 				F6E007F92F80D19B00763694 /* HoleStatsEntryViewController.swift in Sources */,
 				F6E007F52F8017F300763694 /* SkinsEngine.swift in Sources */,
+				885D1C1A6163439E833FAEC8 /* BestBallEngine.swift in Sources */,
+				6BF0DAAEF421411F9862BC1B /* FieldSkinsEngine.swift in Sources */,
 				F63960742F60D62500EC0C30 /* Player.swift in Sources */,
 				F6D5416C2F646EA70020588F /* NassauEngine.swift in Sources */,
 				F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */,
