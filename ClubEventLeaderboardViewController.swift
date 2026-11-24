@@ -45,7 +45,10 @@ final class ClubEventLeaderboardViewController: UITableViewController {
     private let courseHCs:     [Int]
     private let myGroupCode:   String
     private let initialTab:    InitialTab
+    private let isOrganizer:   Bool
+    private let eventStatus:   String
     private var holeCount: Int { courseHCs.count }
+    private var isEventFinished: Bool { eventStatus == "finished" }
 
     // MARK: - Loaded data
 
@@ -80,13 +83,16 @@ final class ClubEventLeaderboardViewController: UITableViewController {
 
     init(tournamentId: UUID, eventName: String,
          coursePars: [Int], courseHCs: [Int], myGroupCode: String,
-         initialTab: InitialTab = .teamNet) {
+         initialTab: InitialTab = .teamNet, isOrganizer: Bool = false,
+         eventStatus: String = "active") {
         self.tournamentId = tournamentId
         self.eventName    = eventName
         self.coursePars   = coursePars
         self.courseHCs    = courseHCs
         self.myGroupCode  = myGroupCode
         self.initialTab   = initialTab
+        self.isOrganizer  = isOrganizer
+        self.eventStatus  = eventStatus
         super.init(style: .insetGrouped)
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -540,6 +546,7 @@ final class ClubEventLeaderboardViewController: UITableViewController {
     private var currentTotalPot: Double { usingGrossSkins ? grossTotalPot : netTotalPot }
 
     private func finalSkinsWinners() -> [SkinWinner] {
+        guard isEventFinished else { return [] }
         var counts: [UUID: Int] = [:]
         var values: [UUID: Double] = [:]
         for r in skinsResults {
@@ -606,8 +613,10 @@ final class ClubEventLeaderboardViewController: UITableViewController {
             let perSkin = totalSkinsWon > 0 ? currentTotalPot / Double(totalSkinsWon) : 0
             var built = final.map { w -> SummaryRow in
                 let name = playerById[w.playerID]?.playerName ?? "Unknown"
-                let pot  = currentTotalPot > 0 ? fmtPot(perSkin * Double(w.count)) : ""
-                let sec  = "\(w.count) skin\(w.count == 1 ? "" : "s")\(pot.isEmpty ? "" : "  ·  \(pot)")"
+                var sec  = "\(w.count) skin\(w.count == 1 ? "" : "s")"
+                if isOrganizer && currentTotalPot > 0 {
+                    sec += "  ·  \(fmtPot(perSkin * Double(w.count)))"
+                }
                 return SummaryRow(playerID: w.playerID, primary: name, secondary: sec,
                                   primaryColor: .label, secondaryColor: .systemGreen)
             }
@@ -662,7 +671,7 @@ final class ClubEventLeaderboardViewController: UITableViewController {
             switch section {
             case 0: return showSkinsSegment ? 1 : 0
             case 1:
-                let potRows = currentTotalPot > 0 ? 1 : 0
+                let potRows = isOrganizer && currentTotalPot > 0 ? 1 : 0
                 return potRows + skinsSummaryRows().count
             case 2: return holeCount
             default: return 0
@@ -676,7 +685,7 @@ final class ClubEventLeaderboardViewController: UITableViewController {
         case .skins:
             switch section {
             case 0: return "Skins are final once every group has finished the hole."
-            case 1: return "SKINS WON"
+            case 1: return isEventFinished ? "SKINS WON" : "SKINS LEADING"
             case 2: return "HOLE BY HOLE"
             default: return nil
             }
@@ -686,7 +695,7 @@ final class ClubEventLeaderboardViewController: UITableViewController {
     override func tableView(_ tv: UITableView, titleForFooterInSection section: Int) -> String? {
         guard selectedTabKind == .skins else { return nil }
         switch section {
-        case 1: return currentTotalPot > 0 ? "Value per skin changes until results are locked." : nil
+        case 1: return isOrganizer && currentTotalPot > 0 ? "Value per skin changes until results are locked." : nil
         default: return nil
         }
     }
@@ -699,7 +708,7 @@ final class ClubEventLeaderboardViewController: UITableViewController {
             switch indexPath.section {
             case 0: return skinsSegmentCell()
             case 1:
-                let hasPot = currentTotalPot > 0
+                let hasPot = isOrganizer && currentTotalPot > 0
                 if hasPot && indexPath.row == 0 { return skinsPotInfoCell() }
                 return skinsSummaryCell(summaryIndex: indexPath.row - (hasPot ? 1 : 0))
             case 2: return skinsHoleCell(hole: indexPath.row + 1)
@@ -746,7 +755,7 @@ final class ClubEventLeaderboardViewController: UITableViewController {
             let thru  = entry.holesPlayed < holeCount ? "thru \(entry.holesPlayed)" : "F"
             var secondary = "\(net)  ·  \(thru)"
             if let reason = re.tiebreakReason { secondary += "  ·  \(reason)" }
-            if let payout = re.payout, payout > 0 { secondary += "  ·  \(fmtPot(payout))" }
+            if isOrganizer, let payout = re.payout, payout > 0 { secondary += "  ·  \(fmtPot(payout))" }
             cfg.text          = "\(re.rank). \(entry.teamName)\(entry.isMine ? "  ★" : "")"
             cfg.secondaryText = secondary
             cfg.textProperties.font           = UIFontMetrics(forTextStyle: .body)
@@ -801,7 +810,8 @@ final class ClubEventLeaderboardViewController: UITableViewController {
         cfg.text = usingGrossSkins ? "Gross pot \(fmtPot(total))" : "Net pot \(fmtPot(total))"
         if skinsWon > 0 {
             let perSkin = total / Double(skinsWon)
-            cfg.secondaryText = "\(skinsWon) skin\(skinsWon == 1 ? "" : "s") decided so far  ·  \(fmtPot(perSkin)) each"
+            let verb = isEventFinished ? "decided" : "leading"
+            cfg.secondaryText = "\(skinsWon) skin\(skinsWon == 1 ? "" : "s") \(verb) so far  ·  \(fmtPot(perSkin)) each"
         } else {
             cfg.secondaryText = total > 0 ? "—" : "No skins decided yet"
         }
@@ -864,7 +874,7 @@ final class ClubEventLeaderboardViewController: UITableViewController {
         let result  = skinsResults[hole - 1]
         let winner  = usingGrossSkins ? result.grossWinner  : result.netWinner
         let tied    = usingGrossSkins ? result.grossTied    : result.netTied
-        let prov    = usingGrossSkins ? result.grossIsProvisional : result.netIsProvisional
+        let prov    = (usingGrossSkins ? result.grossIsProvisional : result.netIsProvisional) || !isEventFinished
         let pot     = usingGrossSkins ? result.grossPot     : result.netPot
         let carried = usingGrossSkins ? result.grossCarriedFrom : result.netCarriedFrom
 
@@ -893,11 +903,11 @@ final class ClubEventLeaderboardViewController: UITableViewController {
             if prov {
                 let notPosted = totalGroupCount - (groupsPostedPerHole[hole] ?? 0)
                 let groupsStr = notPosted == 1 ? "1 group still to play" : "\(notPosted) groups still to play"
-                let potStr    = pot > 0 ? "  ·  \(fmtPot(pot)) if it holds" : ""
+                let potStr    = isOrganizer && pot > 0 ? "  ·  \(fmtPot(pot)) if it holds" : ""
                 statusText    = "\(last)\(scoreStr)  ·  Leading  ·  \(groupsStr)\(potStr)\(carryText)"
                 statusColor   = .secondaryLabel
             } else {
-                let potStr  = pot > 0 ? "  ·  Won \(fmtPot(pot))" : "  ·  Won"
+                let potStr  = isOrganizer && pot > 0 ? "  ·  Won \(fmtPot(pot))" : "  ·  Won"
                 statusText  = "\(last)\(scoreStr)\(potStr)\(carryText)"
                 statusColor = UIColor(red: 0.10, green: 0.42, blue: 0.42, alpha: 1.0)
             }

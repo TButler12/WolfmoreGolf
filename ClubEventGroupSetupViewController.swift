@@ -153,6 +153,12 @@ final class ClubEventGroupSetupViewController: UIViewController {
     @objc private func confirmTapped() {
         guard confirmItem?.isEnabled == true else { return }
 
+        // With 3 players + dual-team on, require the user to pick who plays both.
+        if showDualPicker && !selected.contains(where: { $0.teams.count > 1 }) {
+            promptDualTeamPlayer()
+            return
+        }
+
         let code = ClubEventGroupSetupViewController.randomGroupCode()
         let spinner = UIAlertController(title: nil, message: "Setting up group…", preferredStyle: .alert)
         present(spinner, animated: true)
@@ -330,15 +336,13 @@ final class ClubEventGroupSetupViewController: UIViewController {
                     guard let self else { return }
                     let teams = self.defaultTeams(for: self.selected.count)
                     self.selected.append((.walkOn(name: name, handicap: hc), teams))
-                    self.tableView.reloadData()
-                    self.updateConfirmState()
+                    self.afterPlayerAdded()
                 })
                 let useExisting = UIAlertAction(title: "Use existing \(name)", style: .default) { [weak self] _ in
                     guard let self else { return }
                     let teams = self.defaultTeams(for: self.selected.count)
                     self.selected.append((.roster(existing), teams))
-                    self.tableView.reloadData()
-                    self.updateConfirmState()
+                    self.afterPlayerAdded()
                 }
                 warn.addAction(useExisting)
                 warn.preferredAction = useExisting
@@ -347,8 +351,7 @@ final class ClubEventGroupSetupViewController: UIViewController {
             }
             let teams = self.defaultTeams(for: self.selected.count)
             self.selected.append((.walkOn(name: name, handicap: hc), teams))
-            self.tableView.reloadData()
-            self.updateConfirmState()
+            self.afterPlayerAdded()
         })
         present(ac, animated: true)
     }
@@ -358,6 +361,11 @@ final class ClubEventGroupSetupViewController: UIViewController {
     static func randomGroupCode() -> String {
         let chars = Array("23456789ABCDEFGHJKLMNPQRSTUVWXYZ")
         return String((0..<6).map { _ in chars.randomElement()! })
+    }
+
+    private func afterPlayerAdded() {
+        tableView.reloadData()
+        updateConfirmState()
     }
 
     // MARK: - Utilities
@@ -522,8 +530,7 @@ extension ClubEventGroupSetupViewController: UITableViewDelegate {
             }
             let teams = defaultTeams(for: selected.count)
             selected.append((.roster(player), teams))
-            tableView.reloadData()
-            updateConfirmState()
+            afterPlayerAdded()
         }
     }
 

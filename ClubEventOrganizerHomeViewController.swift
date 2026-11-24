@@ -543,11 +543,11 @@ final class ClubEventOrganizerHomeViewController: UITableViewController {
     }
 
     @objc private func shareCode() {
-        let text = ShareLinks.clubEventShareText(
-            eventName: event.name,
-            courseName: event.courseName,
-            code: event.code)
-        let ac = UIActivityViewController(activityItems: [text], applicationActivities: nil)
+        let link = ShareLinks.joinClubEvent(code: event.code)
+        let text = ShareLinks.clubEventShareText(eventName: event.name,
+                                                  courseName: event.courseName,
+                                                  code: event.code)
+        let ac = UIActivityViewController(activityItems: [text, link], applicationActivities: nil)
         ac.popoverPresentationController?.sourceView = view
         present(ac, animated: true)
     }
@@ -672,7 +672,9 @@ final class ClubEventOrganizerHomeViewController: UITableViewController {
             eventName:    event.name,
             coursePars:   pars,
             courseHCs:    hcs,
-            myGroupCode:  ""
+            myGroupCode:  "",
+            isOrganizer:  true,
+            eventStatus:  event.status
         )
         navigationController?.pushViewController(vc, animated: true)
     }
@@ -685,7 +687,9 @@ final class ClubEventOrganizerHomeViewController: UITableViewController {
             coursePars:   pars,
             courseHCs:    hcs,
             myGroupCode:  "",
-            initialTab:   .skins
+            initialTab:   .skins,
+            isOrganizer:  true,
+            eventStatus:  event.status
         )
         navigationController?.pushViewController(vc, animated: true)
     }

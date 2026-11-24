@@ -111,6 +111,11 @@ final class ClubEventCreationViewController: UITableViewController {
 
     override func tableView(_ tv: UITableView, didSelectRowAt indexPath: IndexPath) {
         tv.deselectRow(at: indexPath, animated: true)
+        if indexPath.section == Section.payouts.rawValue {
+            (tv.cellForRow(at: indexPath)?.contentView
+                .subviews.first { $0 is UITextField } as? UITextField)?.becomeFirstResponder()
+            return
+        }
         if indexPath.section == 0 {
             if indexPath.row == 1 { presentCoursePicker() }
             if indexPath.row == 2 {

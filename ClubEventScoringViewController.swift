@@ -40,9 +40,10 @@ final class ClubEventScoringViewController: UIViewController {
     private weak var leaderboardButton: UIButton?
     private weak var submitButton:      UIButton?
 
-    private weak var toastView:   UIView?
-    private var toastTimer:       Timer?
-    private var toastUndoAction:  (() -> Void)?
+    private weak var toastView:    UIView?
+    private var toastTimer:        Timer?
+    private var toastUndoAction:   (() -> Void)?
+    private weak var managePlayersBtn: UIButton?
 
     private lazy var teamOrder: [String] = ["A", "B"].filter { team in
         players.contains { $0.teams.contains(team) }
@@ -136,7 +137,27 @@ final class ClubEventScoringViewController: UIViewController {
             backBtn.heightAnchor.constraint(equalToConstant: 36),
         ])
 
-        // "✓ Saved" indicator (top-right, fades in/out)
+        // Manage players button (top-right, mirrors back button)
+        let mgBtn = UIButton(type: .system)
+        mgBtn.translatesAutoresizingMaskIntoConstraints = false
+        mgBtn.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        mgBtn.layer.cornerRadius = 18
+        mgBtn.clipsToBounds = true
+        mgBtn.tintColor = .white
+        let peopleCfg = UIImage.SymbolConfiguration(pointSize: 14, weight: .semibold)
+        mgBtn.setImage(UIImage(systemName: "person.2", withConfiguration: peopleCfg), for: .normal)
+        mgBtn.addTarget(self, action: #selector(managePlayersTapped), for: .touchUpInside)
+        mgBtn.accessibilityLabel = "Manage Players"
+        header.addSubview(mgBtn)
+        managePlayersBtn = mgBtn
+        NSLayoutConstraint.activate([
+            mgBtn.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            mgBtn.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
+            mgBtn.widthAnchor.constraint(equalToConstant: 36),
+            mgBtn.heightAnchor.constraint(equalToConstant: 36),
+        ])
+
+        // "✓ Saved" indicator (fades in/out, left of manage button)
         let saved = UILabel()
         saved.translatesAutoresizingMaskIntoConstraints = false
         saved.text = "✓ Saved"
@@ -147,7 +168,7 @@ final class ClubEventScoringViewController: UIViewController {
         savedLabel = saved
         NSLayoutConstraint.activate([
             saved.centerYAnchor.constraint(equalTo: backBtn.centerYAnchor),
-            saved.trailingAnchor.constraint(equalTo: header.trailingAnchor, constant: -16),
+            saved.trailingAnchor.constraint(equalTo: mgBtn.leadingAnchor, constant: -8),
         ])
 
         // Hole info label
@@ -164,7 +185,7 @@ final class ClubEventScoringViewController: UIViewController {
             infoLabel.centerXAnchor.constraint(equalTo: header.centerXAnchor),
             infoLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 14),
             infoLabel.leadingAnchor.constraint(greaterThanOrEqualTo: backBtn.trailingAnchor, constant: 8),
-            infoLabel.trailingAnchor.constraint(lessThanOrEqualTo: saved.leadingAnchor, constant: -8),
+            infoLabel.trailingAnchor.constraint(lessThanOrEqualTo: mgBtn.leadingAnchor, constant: -8),
         ])
 
         // Course name label
@@ -387,6 +408,56 @@ final class ClubEventScoringViewController: UIViewController {
 
     @objc private func backTapped() {
         navigationController?.popViewController(animated: true)
+    }
+
+    @objc private func managePlayersTapped() {
+        let sheet = UIAlertController(title: "Manage Players", message: nil, preferredStyle: .actionSheet)
+        for player in players {
+            sheet.addAction(UIAlertAction(title: "Release \(player.name)…", style: .destructive) { [weak self] _ in
+                self?.confirmRelease(player: player)
+            })
+        }
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        sheet.popoverPresentationController?.sourceView = managePlayersBtn ?? view
+        present(sheet, animated: true)
+    }
+
+    private func confirmRelease(player: ClubEventGroupPlayer) {
+        let ac = UIAlertController(
+            title: "Release \(player.name)?",
+            message: "They will return to the available roster. Any scores they entered will be deleted.",
+            preferredStyle: .alert)
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Release", style: .destructive) { [weak self] _ in
+            self?.performRelease(player: player)
+        })
+        present(ac, animated: true)
+    }
+
+    private func performRelease(player: ClubEventGroupPlayer) {
+        let loading = UIAlertController(title: nil, message: "Releasing…", preferredStyle: .alert)
+        present(loading, animated: true)
+        Task {
+            do {
+                try await SupabaseService.shared.releaseClubEventPlayer(
+                    playerId: player.id, groupCode: groupCode)
+                await MainActor.run {
+                    loading.dismiss(animated: false) {
+                        self.navigationController?.popViewController(animated: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    loading.dismiss(animated: false) {
+                        let err = UIAlertController(title: "Could Not Release",
+                                                    message: error.localizedDescription,
+                                                    preferredStyle: .alert)
+                        err.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(err, animated: true)
+                    }
+                }
+            }
+        }
     }
 
     @objc private func prevHole() {

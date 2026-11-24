@@ -275,7 +275,8 @@ final class ClubEventJoinViewController: UIViewController {
             eventName: event.name,
             coursePars: pars,
             courseHCs: hcs,
-            myGroupCode: ""
+            myGroupCode: "",
+            eventStatus: event.status
         )
         navigationController?.pushViewController(vc, animated: true)
     }

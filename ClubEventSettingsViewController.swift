@@ -86,6 +86,8 @@ final class ClubEventSettingsViewController: UITableViewController {
         title = "Event Settings"
         view.backgroundColor = .systemGroupedBackground
         navigationItem.largeTitleDisplayMode = .never
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            barButtonSystemItem: .done, target: self, action: #selector(doneTapped))
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "Cell")
         tableView.keyboardDismissMode = .onDrag
 
@@ -177,6 +179,10 @@ final class ClubEventSettingsViewController: UITableViewController {
 
     override func tableView(_ tv: UITableView, didSelectRowAt indexPath: IndexPath) {
         tv.deselectRow(at: indexPath, animated: true)
+        if indexPath.section == Section.payouts.rawValue {
+            (tv.cellForRow(at: indexPath)?.contentView
+                .subviews.first { $0 is UITextField } as? UITextField)?.becomeFirstResponder()
+        }
     }
 
     // MARK: - Standard cell builders
@@ -392,7 +398,7 @@ final class ClubEventSettingsViewController: UITableViewController {
                 await MainActor.run {
                     spinner.dismiss(animated: false) {
                         self.onSaved?()
-                        self.navigationController?.popViewController(animated: true)
+                        self.showSavedToast()
                     }
                 }
             } catch {
@@ -405,6 +411,33 @@ final class ClubEventSettingsViewController: UITableViewController {
                         self.present(ac, animated: true)
                     }
                 }
+            }
+        }
+    }
+
+    @objc private func doneTapped() {
+        navigationController?.popViewController(animated: true)
+    }
+
+    private func showSavedToast() {
+        let toast = UILabel()
+        toast.text = "  Settings saved  "
+        toast.font = .preferredFont(forTextStyle: .footnote)
+        toast.textColor = .white
+        toast.backgroundColor = UIColor(red: 0.10, green: 0.42, blue: 0.42, alpha: 1.0)
+        toast.layer.cornerRadius = 10
+        toast.layer.masksToBounds = true
+        toast.sizeToFit()
+        toast.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(toast)
+        NSLayoutConstraint.activate([
+            toast.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            toast.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -80),
+        ])
+        toast.alpha = 0
+        UIView.animate(withDuration: 0.25, animations: { toast.alpha = 1 }) { _ in
+            UIView.animate(withDuration: 0.4, delay: 1.4, animations: { toast.alpha = 0 }) { _ in
+                toast.removeFromSuperview()
             }
         }
     }
