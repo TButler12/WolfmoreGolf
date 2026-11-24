@@ -191,7 +191,6 @@ final class ClubEventLeaderboardViewController: UITableViewController {
                     self.buildTabs(rules: fetchedRules)
                     self.tableView.refreshControl?.endRefreshing()
                     self.tableView.reloadData()
-                    self.printSkinsDebug()
                 }
             } catch {
                 await MainActor.run {
@@ -922,22 +921,4 @@ final class ClubEventLeaderboardViewController: UITableViewController {
         return cell
     }
 
-    // MARK: - Debug
-
-    private func printSkinsDebug() {
-        let build = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "?"
-        print("=== SKINS \(eventName) build \(build) ===")
-        for r in skinsResults {
-            let gName  = playerById[r.grossWinner ?? UUID()]?.playerName ?? "—"
-            let nName  = playerById[r.netWinner   ?? UUID()]?.playerName ?? "—"
-            let gTied  = r.grossTied.isEmpty ? "" : " (tied)"
-            let nTied  = r.netTied.isEmpty   ? "" : " (tied)"
-            let gProv  = r.grossIsProvisional ? " prov" : " ✓"
-            let nProv  = r.netIsProvisional   ? " prov" : " ✓"
-            let gStr   = r.grossWinner != nil ? "\(gName)\(gProv)" : "—\(gTied)"
-            let nStr   = r.netWinner   != nil ? "\(nName)\(nProv)" : "—\(nTied)"
-            print("  H\(r.holeNumber): gross \(gStr)  |  net \(nStr)")
-        }
-        print("=================================")
-    }
 }

@@ -103,7 +103,6 @@ final class ClubEventGroupSetupViewController: UIViewController {
                 await MainActor.run {
                     self.allRoster     = rows
                     self.allowDualTeam = rules?.allowDualTeam ?? false
-                    print("[GroupSetup] loadRoster: event=\(self.event.code) allowDualTeam=\(self.allowDualTeam)")
                     self.isLoading     = false
                     self.spinner.stopAnimating()
                     self.tableView.refreshControl?.endRefreshing()

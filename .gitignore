@@ -18,6 +18,10 @@ build/
 
 # Supabase credentials — never commit
 SupabaseConfig.swift
+
+# Database backup dumps
+*backup*.sql
+*_backup.sql
 supabase/.temp/
 .claude/
 
