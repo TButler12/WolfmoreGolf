@@ -273,7 +273,7 @@ final class TeeSetEditorViewController: UIViewController {
         }
 
         let pars = parFields.enumerated().map { i, tf in
-            max(3, min(6, Int(tf.text ?? "") ?? (i < defaultPars.count ? defaultPars[i] : 4)))
+            max(3, min(9, Int(tf.text ?? "") ?? (i < defaultPars.count ? defaultPars[i] : 4)))
         }
         let hcs = hcFields.enumerated().map { i, tf in
             max(1, min(STANDARD_HOLES, Int(tf.text ?? "") ?? (i < defaultHCs.count ? defaultHCs[i] : i + 1)))

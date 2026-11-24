@@ -35,6 +35,20 @@
                ReferencedContainer = "container:WolfmoreGolf.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "NO"
+            buildForProfiling = "NO"
+            buildForArchiving = "NO"
+            buildForAnalyzing = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "C1UITEST000000000000007"
+               BuildableName = "WolfmoreGolfUITests.xctest"
+               BlueprintName = "WolfmoreGolfUITests"
+               ReferencedContainer = "container:WolfmoreGolf.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
       </BuildActionEntries>
    </BuildAction>
    <TestAction
@@ -52,6 +66,17 @@
                BlueprintIdentifier = "AB000001000000000000000E"
                BuildableName = "WolfmoreGolfTests.xctest"
                BlueprintName = "WolfmoreGolfTests"
+               ReferencedContainer = "container:WolfmoreGolf.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+         <TestableReference
+            skipped = "NO"
+            parallelizable = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "C1UITEST000000000000007"
+               BuildableName = "WolfmoreGolfUITests.xctest"
+               BlueprintName = "WolfmoreGolfUITests"
                ReferencedContainer = "container:WolfmoreGolf.xcodeproj">
             </BuildableReference>
          </TestableReference>

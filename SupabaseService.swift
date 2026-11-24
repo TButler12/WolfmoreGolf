@@ -13,7 +13,8 @@ final class SupabaseService {
     private init() {
         client = SupabaseClient(
             supabaseURL: SUPABASE_URL,
-            supabaseKey: SUPABASE_ANON_KEY
+            supabaseKey: SUPABASE_ANON_KEY,
+            options: .init(global: .init(headers: ["x-device-id": DeviceID.id]))
         )
         #if DEBUG
         print("DEBUG supabase URL: \(SUPABASE_URL)")
@@ -1318,5 +1319,595 @@ final class SupabaseService {
             canonicalName: trimmed, handicap: 0, addedBy: "scorer", groupCode: groupCode)
         try await upsertRosterEntry(entry)
         return entry
+    }
+
+    // MARK: - Club Events (tournament_events / tournament_players)
+
+    func fetchClubEvent(code: String) async throws -> ClubEventRecord {
+        let rows: [ClubEventRecord] = try await client
+            .from("tournament_events")
+            .select()
+            .eq("code", value: code.uppercased())
+            .limit(1)
+            .execute()
+            .value
+        guard let first = rows.first else {
+            throw NSError(domain: "ClubEvent", code: 404,
+                          userInfo: [NSLocalizedDescriptionKey: "Event not found. Check the code and try again."])
+        }
+        guard first.status != "finished" else {
+            throw NSError(domain: "ClubEvent", code: 410,
+                          userInfo: [NSLocalizedDescriptionKey: "This event has already ended."])
+        }
+        return first
+    }
+
+    func fetchClubEventRoster(tournamentId: UUID) async throws -> [ClubEventPlayer] {
+        try await client
+            .from("tournament_players")
+            .select()
+            .eq("tournament_id", value: tournamentId.uuidString)
+            .order("player_name")
+            .execute()
+            .value
+    }
+
+    struct SetupGroupParams: Encodable {
+        struct Assignment: Encodable {
+            let player_id: String
+            let teams: [String]
+        }
+        struct WalkOn: Encodable {
+            let name: String
+            let handicap: Int
+            let teams: [String]
+        }
+        let p_tournament_id: String
+        let p_group_code:    String
+        let p_starting_hole: Int
+        let p_assignments:   [Assignment]
+        let p_walkons:       [WalkOn]
+    }
+
+    func createClubEvent(
+        name: String,
+        courseName: String?,
+        numDays: Int,
+        players: [(name: String, handicap: Double)],
+        startDate: Date? = nil,
+        handicapAllowance: Double = 1.0,
+        grossLeaderboard: Bool = false,
+        grossSkinsEnabled: Bool = true,
+        netSkinsEnabled: Bool = true,
+        skinsCarryover: Bool = false,
+        teamPlacesPaid: Int = 3,
+        allowDualTeam: Bool = false,
+        payoutMode: String = "per_player",
+        teamNetPerPlayer: Double = 0,
+        teamGrossPerPlayer: Double = 0,
+        grossSkinsPerPlayer: Double = 0,
+        netSkinsPerPlayer: Double = 0,
+        teamNetTotal: Double = 0,
+        teamGrossTotal: Double = 0,
+        grossSkinsTotal: Double = 0,
+        netSkinsTotal: Double = 0,
+        placePcts: [Double] = [50, 30, 20]
+    ) async throws -> ClubEventRecord {
+        struct Params: Encodable {
+            struct Player: Encodable { let name: String; let handicap: Double }
+            let p_name: String
+            let p_organizer_device_id: String
+            let p_course_name: String?
+            let p_num_days: Int
+            let p_players: [Player]
+            let p_start_date: String?
+        }
+        struct RPCResult: Decodable { let id: UUID; let code: String }
+
+        let dateString: String? = {
+            guard let d = startDate else { return nil }
+            let f = DateFormatter()
+            f.calendar = Calendar(identifier: .iso8601)
+            f.locale = Locale(identifier: "en_US_POSIX")
+            f.timeZone = TimeZone(identifier: "UTC")
+            f.dateFormat = "yyyy-MM-dd"
+            return f.string(from: d)
+        }()
+
+        let params = Params(
+            p_name: name,
+            p_organizer_device_id: DeviceID.id,
+            p_course_name: courseName,
+            p_num_days: numDays,
+            p_players: players.map { .init(name: $0.name, handicap: $0.handicap) },
+            p_start_date: dateString
+        )
+        let result: RPCResult = try await client
+            .rpc("create_club_event", params: params)
+            .execute()
+            .value
+
+        // Throws if the write fails — better to surface the error than silently create
+        // an event with wrong settings.
+        try await updateClubEventRules(
+            tournamentId: result.id,
+            handicapAllowance: handicapAllowance,
+            grossLeaderboard: grossLeaderboard,
+            grossSkinsEnabled: grossSkinsEnabled,
+            netSkinsEnabled: netSkinsEnabled,
+            skinsCarryover: skinsCarryover,
+            teamPlacesPaid: teamPlacesPaid,
+            allowDualTeam: allowDualTeam,
+            payoutMode: payoutMode,
+            teamNetPerPlayer: teamNetPerPlayer,
+            teamGrossPerPlayer: teamGrossPerPlayer,
+            grossSkinsPerPlayer: grossSkinsPerPlayer,
+            netSkinsPerPlayer: netSkinsPerPlayer,
+            teamNetTotal: teamNetTotal,
+            teamGrossTotal: teamGrossTotal,
+            grossSkinsTotal: grossSkinsTotal,
+            netSkinsTotal: netSkinsTotal,
+            placePcts: placePcts
+        )
+
+        return ClubEventRecord(
+            id: result.id,
+            code: result.code,
+            name: name,
+            organizerDeviceId: DeviceID.id,
+            courseName: courseName,
+            teeSet: nil,
+            numDays: numDays,
+            status: "active"
+        )
+    }
+
+    func fetchClubEventRules(tournamentId: UUID) async throws -> ClubEventRules? {
+        let rows: [ClubEventRules] = try await client
+            .from("tournament_rules")
+            .select("handicap_allowance,gross_leaderboard,gross_skins_enabled,net_skins_enabled,skins_carryover,team_net_per_player,team_gross_per_player,gross_skins_per_player,net_skins_per_player,team_places_paid,place_pcts,allow_dual_team,payout_mode,team_net_total,team_gross_total,gross_skins_total,net_skins_total")
+            .eq("tournament_id", value: tournamentId.uuidString)
+            .limit(1)
+            .execute()
+            .value
+        return rows.first
+    }
+
+    func addClubEventPlayer(tournamentId: UUID, name: String, handicap: Double) async throws -> ClubEventPlayer {
+        struct Row: Encodable {
+            let tournament_id: String
+            let player_name:   String
+            let handicap:      Double
+        }
+        struct InsertResult: Decodable { let id: UUID }
+        let row = Row(tournament_id: tournamentId.uuidString,
+                      player_name: name,
+                      handicap: handicap)
+        let result: InsertResult = try await client
+            .from("tournament_players")
+            .insert(row)
+            .select("id")
+            .single()
+            .execute()
+            .value
+        return ClubEventPlayer(
+            id: result.id,
+            tournamentId: tournamentId,
+            playerName: name,
+            handicap: handicap
+        )
+    }
+
+    func updateClubEventPlayer(id: UUID, name: String, handicap: Double) async throws {
+        struct Row: Encodable {
+            let player_name: String
+            let handicap:    Double
+        }
+        try await client
+            .from("tournament_players")
+            .update(Row(player_name: name, handicap: handicap))
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    func deleteClubEventPlayer(id: UUID) async throws {
+        try await client
+            .from("tournament_players")
+            .delete()
+            .eq("id", value: id.uuidString)
+            .execute()
+    }
+
+    func batchAddClubEventPlayers(
+        tournamentId: UUID,
+        players: [(name: String, handicap: Double)]
+    ) async throws {
+        guard !players.isEmpty else { return }
+        struct Row: Encodable {
+            let tournament_id: String
+            let player_name:   String
+            let handicap:      Double
+        }
+        let rows = players.map {
+            Row(tournament_id: tournamentId.uuidString,
+                player_name: $0.name,
+                handicap: $0.handicap)
+        }
+        try await client
+            .from("tournament_players")
+            .insert(rows)
+            .execute()
+    }
+
+    func updateClubEventRules(
+        tournamentId: UUID,
+        handicapAllowance: Double,
+        grossLeaderboard: Bool,
+        grossSkinsEnabled: Bool,
+        netSkinsEnabled: Bool,
+        skinsCarryover: Bool,
+        teamPlacesPaid: Int,
+        allowDualTeam: Bool = false,
+        payoutMode: String = "per_player",
+        teamNetPerPlayer: Double = 0,
+        teamGrossPerPlayer: Double = 0,
+        grossSkinsPerPlayer: Double = 0,
+        netSkinsPerPlayer: Double = 0,
+        teamNetTotal: Double = 0,
+        teamGrossTotal: Double = 0,
+        grossSkinsTotal: Double = 0,
+        netSkinsTotal: Double = 0,
+        placePcts: [Double] = [50, 30, 20]
+    ) async throws {
+        struct Row: Encodable {
+            let tournament_id:          String
+            let handicap_allowance:     Double
+            let gross_leaderboard:      Bool
+            let gross_skins_enabled:    Bool
+            let net_skins_enabled:      Bool
+            let skins_carryover:        Bool
+            let team_places_paid:       Int
+            let allow_dual_team:        Bool
+            let payout_mode:            String
+            let team_net_per_player:    Double
+            let team_gross_per_player:  Double
+            let gross_skins_per_player: Double
+            let net_skins_per_player:   Double
+            let team_net_total:         Double
+            let team_gross_total:       Double
+            let gross_skins_total:      Double
+            let net_skins_total:        Double
+            let place_pcts:             [Double]
+        }
+        let row = Row(
+            tournament_id:          tournamentId.uuidString,
+            handicap_allowance:     handicapAllowance,
+            gross_leaderboard:      grossLeaderboard,
+            gross_skins_enabled:    grossSkinsEnabled,
+            net_skins_enabled:      netSkinsEnabled,
+            skins_carryover:        skinsCarryover,
+            team_places_paid:       teamPlacesPaid,
+            allow_dual_team:        allowDualTeam,
+            payout_mode:            payoutMode,
+            team_net_per_player:    teamNetPerPlayer,
+            team_gross_per_player:  teamGrossPerPlayer,
+            gross_skins_per_player: grossSkinsPerPlayer,
+            net_skins_per_player:   netSkinsPerPlayer,
+            team_net_total:         teamNetTotal,
+            team_gross_total:       teamGrossTotal,
+            gross_skins_total:      grossSkinsTotal,
+            net_skins_total:        netSkinsTotal,
+            place_pcts:             placePcts
+        )
+        try await client
+            .from("tournament_rules")
+            .upsert(row, onConflict: "tournament_id")
+            .execute()
+    }
+
+    func submitClubEventCard(tournamentId: UUID, groupCode: String) async throws {
+        struct Params: Encodable {
+            let p_tournament_id: String
+            let p_group_code:    String
+        }
+        try await groupScoringClient(groupCode: groupCode)
+            .rpc("submit_club_event_card",
+                 params: Params(p_tournament_id: tournamentId.uuidString,
+                                p_group_code: groupCode))
+            .execute()
+    }
+
+    func lockClubEvent(tournamentId: UUID) async throws {
+        struct Row: Encodable { let status: String }
+        try await client
+            .from("tournament_events")
+            .update(Row(status: "finished"))
+            .eq("id", value: tournamentId.uuidString)
+            .execute()
+    }
+
+    func deleteClubEvent(id: UUID) async throws {
+        // tournament_players, tournament_rules, etc. cascade on delete from tournament_events
+        try await client.from("tournament_events")
+            .delete().eq("id", value: id.uuidString).execute()
+    }
+
+    func setupClubEventGroup(
+        tournamentId: UUID,
+        groupCode:    String,
+        startingHole: Int,
+        rosterPlayers: [(id: UUID, teams: [String])],
+        walkOns:       [(name: String, handicap: Int, teams: [String])]
+    ) async throws -> ClubEventSetupResult {
+        let params = SetupGroupParams(
+            p_tournament_id: tournamentId.uuidString,
+            p_group_code:    groupCode,
+            p_starting_hole: startingHole,
+            p_assignments: rosterPlayers.map {
+                SetupGroupParams.Assignment(player_id: $0.id.uuidString, teams: $0.teams)
+            },
+            p_walkons: walkOns.map {
+                SetupGroupParams.WalkOn(name: $0.name, handicap: $0.handicap, teams: $0.teams)
+            }
+        )
+        return try await client
+            .rpc("setup_club_event_group", params: params)
+            .execute()
+            .value
+    }
+
+    // MARK: - Group Scorer Client
+
+    private var groupScoringClients: [String: SupabaseClient] = [:]
+
+    private func groupScoringClient(groupCode: String) -> SupabaseClient {
+        if let c = groupScoringClients[groupCode] { return c }
+        let c = SupabaseClient(
+            supabaseURL: SUPABASE_URL,
+            supabaseKey: SUPABASE_ANON_KEY,
+            options: .init(global: .init(headers: [
+                "x-device-id":  DeviceID.id,
+                "x-group-code": groupCode
+            ]))
+        )
+        groupScoringClients[groupCode] = c
+        return c
+    }
+
+    // MARK: - Release Player
+
+    func releaseClubEventPlayer(playerId: UUID, groupCode: String?) async throws {
+        struct Params: Encodable {
+            let p_player_id:  String
+            let p_group_code: String?
+        }
+        try await client
+            .rpc("release_club_event_player",
+                 params: Params(p_player_id: playerId.uuidString, p_group_code: groupCode))
+            .execute()
+    }
+
+    // MARK: - Hole Scores
+
+    func upsertClubEventHoleScore(
+        tournamentId: UUID,
+        playerId:     UUID,
+        day:          Int,
+        hole:         Int,
+        gross:        Int?,
+        pickedUp:     Bool,
+        groupCode:    String
+    ) async throws {
+        struct Row: Encodable {
+            let tournament_id:        String
+            let tournament_player_id: String
+            let day:                  Int
+            let hole_number:          Int
+            let gross_score:          Int?
+            let net_score_type:       String?
+            let points:               Int
+        }
+        let row = Row(
+            tournament_id:        tournamentId.uuidString,
+            tournament_player_id: playerId.uuidString,
+            day:                  day,
+            hole_number:          hole,
+            gross_score:          gross,
+            net_score_type:       pickedUp ? "picked_up" : nil,
+            points:               0
+        )
+        try await groupScoringClient(groupCode: groupCode)
+            .from("tournament_hole_scores")
+            .upsert(row, onConflict: "tournament_player_id,day,hole_number")
+            .execute()
+    }
+
+    func fetchClubEventGroupScores(
+        tournamentId: UUID,
+        playerIds:    [UUID]
+    ) async throws -> [ClubEventHoleScore] {
+        guard !playerIds.isEmpty else { return [] }
+        return try await client
+            .from("tournament_hole_scores")
+            .select("tournament_player_id,day,hole_number,gross_score,net_score_type")
+            .eq("tournament_id", value: tournamentId.uuidString)
+            .in("tournament_player_id", values: playerIds.map { $0.uuidString })
+            .execute()
+            .value
+    }
+
+    func fetchClubEventAllScores(tournamentId: UUID) async throws -> [ClubEventHoleScore] {
+        return try await client
+            .from("tournament_hole_scores")
+            .select("tournament_player_id,day,hole_number,gross_score,net_score_type")
+            .eq("tournament_id", value: tournamentId.uuidString)
+            .execute()
+            .value
+    }
+
+    func fetchClubEventTeams(tournamentId: UUID) async throws -> [ClubEventTeam] {
+        return try await client
+            .from("tournament_teams")
+            .select("id,team_name,tournament_id")
+            .eq("tournament_id", value: tournamentId.uuidString)
+            .execute()
+            .value
+    }
+
+    func fetchClubEventTeamMemberships(teamIds: [UUID]) async throws -> [ClubEventTeamMembership] {
+        guard !teamIds.isEmpty else { return [] }
+        return try await client
+            .from("tournament_team_players")
+            .select("team_id,tournament_player_id")
+            .in("team_id", values: teamIds.map { $0.uuidString })
+            .execute()
+            .value
+    }
+
+    // MARK: - Player changes (Replace / Withdraw / Remove)
+
+    struct ReplacePlayerParams: Encodable {
+        let p_tournament_id: String
+        let p_old_player_id: String
+        let p_new_player_id: String
+        let p_group_code:    String?
+    }
+
+    @discardableResult
+    func replaceClubEventPlayer(tournamentId: UUID, oldPlayerId: UUID,
+                                newPlayerId: UUID, groupCode: String?) async throws -> [String: Int] {
+        let params = ReplacePlayerParams(
+            p_tournament_id: tournamentId.uuidString,
+            p_old_player_id: oldPlayerId.uuidString,
+            p_new_player_id: newPlayerId.uuidString,
+            p_group_code:    groupCode)
+        return try await client.rpc("replace_club_event_player", params: params).execute().value
+    }
+
+    struct WithdrawPlayerParams: Encodable {
+        let p_tournament_id: String
+        let p_player_id:     String
+    }
+
+    @discardableResult
+    func withdrawClubEventPlayer(tournamentId: UUID, playerId: UUID) async throws -> [String: Int] {
+        let params = WithdrawPlayerParams(
+            p_tournament_id: tournamentId.uuidString,
+            p_player_id:     playerId.uuidString)
+        return try await client.rpc("withdraw_club_event_player", params: params).execute().value
+    }
+
+    struct RemovePlayerParams: Encodable {
+        let p_tournament_id: String
+        let p_player_id:     String
+    }
+
+    @discardableResult
+    func removeClubEventPlayerScores(tournamentId: UUID, playerId: UUID) async throws -> [String: Int] {
+        let params = RemovePlayerParams(
+            p_tournament_id: tournamentId.uuidString,
+            p_player_id:     playerId.uuidString)
+        return try await client.rpc("remove_club_event_player_scores", params: params).execute().value
+    }
+
+    // MARK: - Event Settings
+
+    struct UpdateSettingsParams: Encodable {
+        let p_tournament_id:          String
+        let p_name:                   String?
+        let p_course_name:            String?
+        let p_tee_set:                String?
+        let p_handicap_allowance:     Double?
+        let p_gross_leaderboard:      Bool?
+        let p_gross_skins_enabled:    Bool?
+        let p_net_skins_enabled:      Bool?
+        let p_skins_carryover:        Bool?
+        let p_team_net_per_player:    Double?
+        let p_team_gross_per_player:  Double?
+        let p_gross_skins_per_player: Double?
+        let p_net_skins_per_player:   Double?
+        let p_team_places_paid:       Int?
+        let p_place_pcts:             [Double]?
+        let p_allow_dual_team:        Bool?
+        let p_payout_mode:            String?
+        let p_team_net_total:         Double?
+        let p_team_gross_total:       Double?
+        let p_gross_skins_total:      Double?
+        let p_net_skins_total:        Double?
+    }
+
+    func updateClubEventSettings(
+        tournamentId: UUID,
+        name: String? = nil,
+        courseName: String? = nil,
+        teeSet: String? = nil,
+        handicapAllowance: Double? = nil,
+        grossLeaderboard: Bool? = nil,
+        grossSkinsEnabled: Bool? = nil,
+        netSkinsEnabled: Bool? = nil,
+        skinsCarryover: Bool? = nil,
+        teamNetPerPlayer: Double? = nil,
+        teamGrossPerPlayer: Double? = nil,
+        grossSkinsPerPlayer: Double? = nil,
+        netSkinsPerPlayer: Double? = nil,
+        teamPlacesPaid: Int? = nil,
+        placePcts: [Double]? = nil,
+        allowDualTeam: Bool? = nil,
+        payoutMode: String? = nil,
+        teamNetTotal: Double? = nil,
+        teamGrossTotal: Double? = nil,
+        grossSkinsTotal: Double? = nil,
+        netSkinsTotal: Double? = nil
+    ) async throws {
+        let params = UpdateSettingsParams(
+            p_tournament_id:          tournamentId.uuidString,
+            p_name:                   name,
+            p_course_name:            courseName,
+            p_tee_set:                teeSet,
+            p_handicap_allowance:     handicapAllowance,
+            p_gross_leaderboard:      grossLeaderboard,
+            p_gross_skins_enabled:    grossSkinsEnabled,
+            p_net_skins_enabled:      netSkinsEnabled,
+            p_skins_carryover:        skinsCarryover,
+            p_team_net_per_player:    teamNetPerPlayer,
+            p_team_gross_per_player:  teamGrossPerPlayer,
+            p_gross_skins_per_player: grossSkinsPerPlayer,
+            p_net_skins_per_player:   netSkinsPerPlayer,
+            p_team_places_paid:       teamPlacesPaid,
+            p_place_pcts:             placePcts,
+            p_allow_dual_team:        allowDualTeam,
+            p_payout_mode:            payoutMode,
+            p_team_net_total:         teamNetTotal,
+            p_team_gross_total:       teamGrossTotal,
+            p_gross_skins_total:      grossSkinsTotal,
+            p_net_skins_total:        netSkinsTotal)
+        try await client.rpc("update_club_event_settings", params: params).execute()
+    }
+
+    struct UpdateHandicapParams: Encodable {
+        let p_tournament_id: String
+        let p_player_id:     String
+        let p_new_handicap:  Double
+    }
+
+    func updateClubEventPlayerHandicap(tournamentId: UUID, playerId: UUID,
+                                       newHandicap: Double) async throws {
+        let params = UpdateHandicapParams(
+            p_tournament_id: tournamentId.uuidString,
+            p_player_id:     playerId.uuidString,
+            p_new_handicap:  newHandicap)
+        try await client.rpc("update_club_event_player_handicap", params: params).execute()
+    }
+
+    // MARK: - Change Log
+
+    func fetchClubEventChangeLog(tournamentId: UUID) async throws -> [ClubEventChangeLogEntry] {
+        try await client
+            .from("club_event_change_log")
+            .select()
+            .eq("tournament_id", value: tournamentId.uuidString)
+            .order("changed_at", ascending: false)
+            .execute()
+            .value
     }
 }

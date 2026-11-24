@@ -264,8 +264,61 @@ final class LiveConnectedViewController: UITableViewController {
     private func buildSections() {
         var result: [Section] = []
 
-        let wolfGold = UIColor(red: 0.75, green: 0.55, blue: 0.05, alpha: 1.0)
+        let wolfGold  = UIColor(red: 0.75, green: 0.55, blue: 0.05, alpha: 1.0)
+        let eventTeal = UIColor(red: 0.10, green: 0.42, blue: 0.42, alpha: 1.0)
+
+        let organizerEntries = ClubEventOrganizerStore.shared.all
+        let activeSession    = ClubEventSessionStore.shared.current
+        if !organizerEntries.isEmpty || activeSession != nil {
+            var rows: [Row] = []
+            if let s = activeSession {
+                rows.append(Row(
+                    title: "Resume Scoring: \(s.eventName)",
+                    subtitle: "Group \(s.groupCode)",
+                    icon: "play.circle.fill",
+                    tint: UIColor(red: 0.18, green: 0.55, blue: 0.34, alpha: 1.0),
+                    action: { [weak self] in self?.resumeClubEventScoring() },
+                    removeAction: { [weak self] in
+                        ClubEventSessionStore.shared.clear()
+                        self?.buildSections()
+                        self?.tableView.reloadData()
+                    }
+                ))
+            }
+            for entry in organizerEntries {
+                let courseLabel = entry.courseName ?? "Event"
+                rows.append(Row(
+                    title: "My Event: \(entry.name)",
+                    subtitle: "\(courseLabel) · \(entry.code)",
+                    icon: "person.3.sequence.fill",
+                    tint: eventTeal,
+                    action: { [weak self] in self?.openOrganizerHome(entry: entry) },
+                    removeAction: { [weak self] in
+                        ClubEventOrganizerStore.shared.remove(id: entry.id)
+                        self?.buildSections()
+                        self?.tableView.reloadData()
+                    }
+                ))
+                rows.append(Row(
+                    title: "Leaderboard",
+                    subtitle: entry.name,
+                    icon: "list.number",
+                    tint: eventTeal,
+                    action: { [weak self] in self?.openClubEventLeaderboard(entry: entry) }
+                ))
+            }
+            if !rows.isEmpty {
+                result.append(Section(header: "CLUB EVENTS", rows: rows))
+            }
+        }
+
         result.append(Section(header: "CREATE", cards: [
+            CardItem(title: "Club Event",
+                     subtitle: "Best ball + skins",
+                     icon: "person.3.fill",
+                     tint: eventTeal) { [weak self] in
+                self?.createClubEventTapped()
+            },
             CardItem(title: "Tournament",
                      subtitle: "Create a multi-day event",
                      icon: "trophy.fill",
@@ -316,6 +369,12 @@ final class LiveConnectedViewController: UITableViewController {
         ]))
 
         result.append(Section(header: "JOIN", rows: [
+            Row(title: "Join Club Event",
+                subtitle: "Enter a code, pick your group",
+                icon: "person.3.fill",
+                tint: eventTeal) { [weak self] in
+                self?.joinClubEventTapped()
+            },
             Row(title: "Join Tournament",
                 subtitle: "Enter a code",
                 icon: "trophy.fill",
@@ -765,6 +824,145 @@ final class LiveConnectedViewController: UITableViewController {
             }
             presenter.present(nav, animated: true)
         }
+    }
+
+    // MARK: - Club Events
+
+    private func createClubEventTapped() {
+        let vc = ClubEventCreationViewController()
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func openClubEventLeaderboard(entry: ClubEventOrganizerEntry) {
+        let pars: [Int]
+        let hcs:  [Int]
+        if let name = entry.courseName,
+           let course = CourseLibrary.shared.courses.first(where: {
+               $0.name.caseInsensitiveCompare(name) == .orderedSame
+           }),
+           course.pars.count == 18, course.hcs.count == 18 {
+            pars = course.pars
+            hcs  = course.hcs
+        } else {
+            pars = Array(repeating: 4, count: 18)
+            hcs  = Array(1...18)
+        }
+        let vc = ClubEventLeaderboardViewController(
+            tournamentId: entry.id,
+            eventName:    entry.name,
+            coursePars:   pars,
+            courseHCs:    hcs,
+            myGroupCode:  ""
+        )
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func openOrganizerHome(entry: ClubEventOrganizerEntry) {
+        let spinner = UIAlertController(title: nil, message: "Loading…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            do {
+                let event = try await SupabaseService.shared.fetchClubEvent(code: entry.code)
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let vc = ClubEventOrganizerHomeViewController(event: event)
+                        self.navigationController?.pushViewController(vc, animated: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    spinner.dismiss(animated: false) {
+                        let ac = UIAlertController(
+                            title: "Could Not Open Event",
+                            message: error.localizedDescription,
+                            preferredStyle: .alert)
+                        ac.addAction(UIAlertAction(title: "Remove from My List", style: .destructive) { _ in
+                            ClubEventOrganizerStore.shared.remove(id: entry.id)
+                            self.buildSections()
+                            self.tableView.reloadData()
+                        })
+                        ac.addAction(UIAlertAction(title: "OK", style: .default))
+                        self.present(ac, animated: true)
+                    }
+                }
+            }
+        }
+    }
+
+    private func resumeClubEventScoring() {
+        guard let session = ClubEventSessionStore.shared.current else { return }
+        let spinner = UIAlertController(title: nil, message: "Resuming…", preferredStyle: .alert)
+        present(spinner, animated: true)
+        Task {
+            let groupScores = (try? await SupabaseService.shared.fetchClubEventGroupScores(
+                tournamentId: session.eventId, playerIds: session.playerIds)) ?? []
+            let roster = (try? await SupabaseService.shared.fetchClubEventRoster(
+                tournamentId: session.eventId)) ?? []
+            let teams = (try? await SupabaseService.shared.fetchClubEventTeams(
+                tournamentId: session.eventId)) ?? []
+            let memberships = (try? await SupabaseService.shared.fetchClubEventTeamMemberships(
+                teamIds: teams.map { $0.id })) ?? []
+
+            var playerTeams: [UUID: [String]] = [:]
+            for m in memberships {
+                guard let team = teams.first(where: { $0.id == m.teamId }) else { continue }
+                let suffix = team.teamName.hasSuffix("-A") ? "A"
+                           : team.teamName.hasSuffix("-B") ? "B"
+                           : nil
+                guard let suffix else { continue }
+                playerTeams[m.tournamentPlayerId, default: []].append(suffix)
+            }
+            let groupPlayers: [ClubEventGroupPlayer] = session.playerIds.compactMap { pid in
+                guard let p = roster.first(where: { $0.id == pid }) else { return nil }
+                return ClubEventGroupPlayer(
+                    id: p.id, name: p.playerName, handicap: p.handicap,
+                    teams: playerTeams[p.id] ?? ["A"])
+            }
+            let startHole = Self.findNextUnscoredHole(scores: groupScores,
+                                                     startingHole: session.startingHole)
+
+            await MainActor.run {
+                spinner.dismiss(animated: false) {
+                    guard !groupPlayers.isEmpty else {
+                        ClubEventSessionStore.shared.clear()
+                        self.buildSections()
+                        self.tableView.reloadData()
+                        return
+                    }
+                    let vc = ClubEventScoringViewController(
+                        tournamentId: session.eventId,
+                        groupCode:    session.groupCode,
+                        startingHole: startHole,
+                        eventName:    session.eventName,
+                        courseName:   session.courseName,
+                        players:      groupPlayers
+                    )
+                    self.navigationController?.pushViewController(vc, animated: true)
+                }
+            }
+        }
+    }
+
+    static func findNextUnscoredHole(scores: [ClubEventHoleScore], startingHole: Int) -> Int {
+        let scored = Set(scores
+            .filter { ($0.grossScore ?? 0) > 0 || $0.netScoreType == "picked_up" }
+            .map { $0.holeNumber })
+        for offset in 0..<18 {
+            let hole = ((startingHole - 1 + offset) % 18) + 1
+            if !scored.contains(hole) { return hole }
+        }
+        return startingHole
+    }
+
+    private func joinClubEventTapped() {
+        let vc  = ClubEventJoinViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
     }
 
     // MARK: - Create Tournament
