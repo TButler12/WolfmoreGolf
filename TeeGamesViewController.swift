@@ -65,6 +65,18 @@ final class TeeGamesViewController: UIViewController {
             color: UIColor(red: 0.52, green: 0.32, blue: 0.06, alpha: 1.0))
         calcuttaBtn.addTarget(self, action: #selector(calcuttaTapped), for: .touchUpInside)
 
+        let clubSeparator = UILabel()
+        clubSeparator.text = "CLUB EVENT"
+        clubSeparator.font = .systemFont(ofSize: 12, weight: .semibold)
+        clubSeparator.textColor = .secondaryLabel
+        clubSeparator.textAlignment = .center
+
+        let clubEventBtn = makeButton(
+            title: "Join Club Event",
+            subtitle: "Best-ball team scoring + field skins",
+            color: UIColor(red: 0.10, green: 0.42, blue: 0.42, alpha: 1.0))
+        clubEventBtn.addTarget(self, action: #selector(joinClubEventTapped), for: .touchUpInside)
+
         stackView.axis = .vertical
         stackView.spacing = 16
         stackView.translatesAutoresizingMaskIntoConstraints = false
@@ -75,6 +87,8 @@ final class TeeGamesViewController: UIViewController {
         stackView.addArrangedSubview(manageBtn)
         stackView.addArrangedSubview(calcuttaSeparator)
         stackView.addArrangedSubview(calcuttaBtn)
+        stackView.addArrangedSubview(clubSeparator)
+        stackView.addArrangedSubview(clubEventBtn)
         view.addSubview(stackView)
 
         NSLayoutConstraint.activate([
@@ -152,6 +166,13 @@ final class TeeGamesViewController: UIViewController {
     @objc private func calcuttaTapped() {
         let vc = CalcuttaListViewController()
         navigationController?.pushViewController(vc, animated: true)
+    }
+
+    @objc private func joinClubEventTapped() {
+        let vc = ClubEventJoinViewController()
+        let nav = UINavigationController(rootViewController: vc)
+        nav.modalPresentationStyle = .formSheet
+        present(nav, animated: true)
     }
 
     @objc private func createTapped() {

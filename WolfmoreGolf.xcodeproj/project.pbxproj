@@ -42,9 +42,35 @@
 		AB00001100000000000000FF /* GlenLakesCourseTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001100000000000000AA /* GlenLakesCourseTests.swift */; };
 		AB00001200000000000000FF /* TeamTeeEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001200000000000000AA /* TeamTeeEngineTests.swift */; };
 		AB00001300000000000000FF /* GameDataMigrationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB00001300000000000000AA /* GameDataMigrationTests.swift */; };
+		CE60AA61BB62CC63DD64EE65 /* ClubEventSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE70AA71BB72CC73DD74EE75 /* ClubEventSnapshotTests.swift */; };
+		DT01AA02BB03CC04DD05EE06 /* ClubEventDualTeamTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DT11AA12BB13CC14DD15EE16 /* ClubEventDualTeamTests.swift */; };
+		GS01AA02BB03CC04DD05EE06 /* ClubEventGroupSetupTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = GS11AA12BB13CC14DD15EE16 /* ClubEventGroupSetupTests.swift */; };
 		885D1C1A6163439E833FAEC8 /* BestBallEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07955AB6BBA546BFB985FC11 /* BestBallEngine.swift */; };
+		PC01AA02BB03CC04DD05EE06 /* PayoutCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = PC11AA12BB13CC14DD15EE16 /* PayoutCalculator.swift */; };
 		6BF0DAAEF421411F9862BC1B /* FieldSkinsEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E3EE5D2CC4F46DEB2A57000 /* FieldSkinsEngine.swift */; };
+		CE01AA02BB03CC04DD05EE06 /* ClubEventJoinViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE11AA12BB13CC14DD15EE16 /* ClubEventJoinViewController.swift */; };
+		CE21AA22BB23CC24DD25EE26 /* ClubEventGroupSetupViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE31AA32BB33CC34DD35EE36 /* ClubEventGroupSetupViewController.swift */; };
+		CE41AA42BB43CC44DD45EE46 /* ClubEventGroupCodeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE51AA52BB53CC54DD55EE56 /* ClubEventGroupCodeViewController.swift */; };
+		CE81AA82BB83CC84DD85EE86 /* ClubEventScoringViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE91AA92BB93CC94DD95EE96 /* ClubEventScoringViewController.swift */; };
+		CF01AA02BB03CC04DD05EE07 /* ClubEventLeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CF11AA12BB13CC14DD15EE17 /* ClubEventLeaderboardViewController.swift */; };
+		1C058047B1FECCA22D79C68D /* ClubEventCreationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632A5F8261310D90BC3BAFF5 /* ClubEventCreationViewController.swift */; };
+		5DEC0702A6275E7975368DBA /* ClubEventOrganizerHomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = FFBE901B5D6CD4785ABDF999 /* ClubEventOrganizerHomeViewController.swift */; };
+		FA8043DFB904147118D7A379 /* ClubEventRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24850A1976D148AC91569699 /* ClubEventRosterViewController.swift */; };
+		CC2A2B3C4D5E6F7A8B9C0D1E /* ClubEventCopyRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC1A2B3C4D5E6F7A8B9C0D1E /* ClubEventCopyRosterViewController.swift */; };
+		57E4AEE5EF14558522E047A3 /* ClubEventPasteRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A6E59B007202A9FB926C63B7 /* ClubEventPasteRosterViewController.swift */; };
+		BC62ABD6340A090A27AE4A79 /* ClubEventPlayerEditViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8946ADE086064E2DA1F9E1E /* ClubEventPlayerEditViewController.swift */; };
+		8D9FC2DE921E57070232E08A /* ClubEventSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 957458B003258B3956D3DDE3 /* ClubEventSessionStore.swift */; };
+		C3DDF87180C709B4EF3242A9 /* ClubEventReviewSubmitViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 45C4286D5E10998C813BE427 /* ClubEventReviewSubmitViewController.swift */; };
+		1A0A2752B7D94860B10A54F4 /* ClubEventGroupManageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F635FCE0A314716BB997DD4 /* ClubEventGroupManageViewController.swift */; };
+		ECA696C4D2A847FFB9CFE4C0 /* ClubEventSettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 97E03FC6C0C54CA58E6FDEAE /* ClubEventSettingsViewController.swift */; };
+		AC9C77DD4112482DBE3003DE /* ClubEventChangeLogViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7042D04A1D784DB3A73E87E9 /* ClubEventChangeLogViewController.swift */; };
+		SL01AA02BB03CC04DD05EE01 /* ShareLinks.swift in Sources */ = {isa = PBXBuildFile; fileRef = SL11AA12BB13CC14DD15EE11 /* ShareLinks.swift */; };
+		PS01AA02BB03CC04DD05EE01 /* PayoutsSectionController.swift in Sources */ = {isa = PBXBuildFile; fileRef = PS11AA12BB13CC14DD15EE11 /* PayoutsSectionController.swift */; };
+		QR01AA02BB03CC04DD05EE01 /* ClubEventQRViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = QR11AA12BB13CC14DD15EE11 /* ClubEventQRViewController.swift */; };
+		711407AE0D1D4A0D92FD8EC1 /* ClubEventWithdrawTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D2D4F983B004C6FA0D92E09 /* ClubEventWithdrawTests.swift */; };
+		F7CE11BB22CC33DD44EE55FF /* ClubEventSkinsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F8CE11BB22CC33DD44EE55FF /* ClubEventSkinsTests.swift */; };
 		9AA636CA5B404B6B983CF7FE /* BestBallEngineTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 304C63A729FA453F916DC262 /* BestBallEngineTests.swift */; };
+		PC21AA22BB23CC24DD25EE26 /* PayoutCalculatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = PC31AA32BB33CC34DD35EE36 /* PayoutCalculatorTests.swift */; };
 		AB01CD02EF03AB04CD05EF06 /* TournamentRosterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F007 /* TournamentRosterViewController.swift */; };
 		AB01CD02EF03AB04CD05EF07 /* SavedPlayersPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = BC02DE03F004BC05DE06F008 /* SavedPlayersPickerViewController.swift */; };
 		AI01B2C3D4E5F607182930A2 /* AISummaryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */; };
@@ -166,10 +192,19 @@
 		RS1A2B3C4D5E6F70819203AA /* ResetSnapshotStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */; };
 		SC01B2C3D4E5F607182930AA /* ScrambleTeamEntryViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = SC01B2C3D4E5F607182930AB /* ScrambleTeamEntryViewController.swift */; };
 		TS01B2C3D4E5F607182930AA /* TeeSetEditorViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = TS01B2C3D4E5F607182930AB /* TeeSetEditorViewController.swift */; };
+		C1UITEST000000000000003 /* ClubEventAX5Tests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1UITEST000000000000002 /* ClubEventAX5Tests.swift */; };
+		C1UITEST00000000000000D /* ClubEventAX5Screenshots.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1UITEST00000000000000E /* ClubEventAX5Screenshots.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
 		AB00000100000000000000FD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = F64DE7802EB0396000F8D625 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = F64DE7872EB0396000F8D625;
+			remoteInfo = WolfmoreGolf;
+		};
+		C1UITEST000000000000008 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F64DE7802EB0396000F8D625 /* Project object */;
 			proxyType = 1;
@@ -218,9 +253,35 @@
 		AB00001100000000000000AA /* GlenLakesCourseTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlenLakesCourseTests.swift; sourceTree = "<group>"; };
 		AB00001200000000000000AA /* TeamTeeEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeamTeeEngineTests.swift; sourceTree = "<group>"; };
 		AB00001300000000000000AA /* GameDataMigrationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameDataMigrationTests.swift; sourceTree = "<group>"; };
+		CE70AA71BB72CC73DD74EE75 /* ClubEventSnapshotTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventSnapshotTests.swift; sourceTree = "<group>"; };
+		DT11AA12BB13CC14DD15EE16 /* ClubEventDualTeamTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventDualTeamTests.swift; sourceTree = "<group>"; };
+		GS11AA12BB13CC14DD15EE16 /* ClubEventGroupSetupTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventGroupSetupTests.swift; sourceTree = "<group>"; };
 		07955AB6BBA546BFB985FC11 /* BestBallEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestBallEngine.swift; sourceTree = "<group>"; };
+		PC11AA12BB13CC14DD15EE16 /* PayoutCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoutCalculator.swift; sourceTree = "<group>"; };
 		5E3EE5D2CC4F46DEB2A57000 /* FieldSkinsEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FieldSkinsEngine.swift; sourceTree = "<group>"; };
+		CE11AA12BB13CC14DD15EE16 /* ClubEventJoinViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventJoinViewController.swift; sourceTree = "<group>"; };
+		CE31AA32BB33CC34DD35EE36 /* ClubEventGroupSetupViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventGroupSetupViewController.swift; sourceTree = "<group>"; };
+		CE51AA52BB53CC54DD55EE56 /* ClubEventGroupCodeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventGroupCodeViewController.swift; sourceTree = "<group>"; };
+		CE91AA92BB93CC94DD95EE96 /* ClubEventScoringViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventScoringViewController.swift; sourceTree = "<group>"; };
+		CF11AA12BB13CC14DD15EE17 /* ClubEventLeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventLeaderboardViewController.swift; sourceTree = "<group>"; };
+		632A5F8261310D90BC3BAFF5 /* ClubEventCreationViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventCreationViewController.swift; sourceTree = "<group>"; };
+		FFBE901B5D6CD4785ABDF999 /* ClubEventOrganizerHomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventOrganizerHomeViewController.swift; sourceTree = "<group>"; };
+		24850A1976D148AC91569699 /* ClubEventRosterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventRosterViewController.swift; sourceTree = "<group>"; };
+		CC1A2B3C4D5E6F7A8B9C0D1E /* ClubEventCopyRosterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventCopyRosterViewController.swift; sourceTree = "<group>"; };
+		A6E59B007202A9FB926C63B7 /* ClubEventPasteRosterViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventPasteRosterViewController.swift; sourceTree = "<group>"; };
+		A8946ADE086064E2DA1F9E1E /* ClubEventPlayerEditViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventPlayerEditViewController.swift; sourceTree = "<group>"; };
+		957458B003258B3956D3DDE3 /* ClubEventSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventSessionStore.swift; sourceTree = "<group>"; };
+		45C4286D5E10998C813BE427 /* ClubEventReviewSubmitViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventReviewSubmitViewController.swift; sourceTree = "<group>"; };
+		2F635FCE0A314716BB997DD4 /* ClubEventGroupManageViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventGroupManageViewController.swift; sourceTree = "<group>"; };
+		97E03FC6C0C54CA58E6FDEAE /* ClubEventSettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventSettingsViewController.swift; sourceTree = "<group>"; };
+		7042D04A1D784DB3A73E87E9 /* ClubEventChangeLogViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventChangeLogViewController.swift; sourceTree = "<group>"; };
+		SL11AA12BB13CC14DD15EE11 /* ShareLinks.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShareLinks.swift; sourceTree = "<group>"; };
+		PS11AA12BB13CC14DD15EE11 /* PayoutsSectionController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoutsSectionController.swift; sourceTree = "<group>"; };
+		QR11AA12BB13CC14DD15EE11 /* ClubEventQRViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventQRViewController.swift; sourceTree = "<group>"; };
+		2D2D4F983B004C6FA0D92E09 /* ClubEventWithdrawTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventWithdrawTests.swift; sourceTree = "<group>"; };
+		F8CE11BB22CC33DD44EE55FF /* ClubEventSkinsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventSkinsTests.swift; sourceTree = "<group>"; };
 		304C63A729FA453F916DC262 /* BestBallEngineTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestBallEngineTests.swift; sourceTree = "<group>"; };
+		PC31AA32BB33CC34DD35EE36 /* PayoutCalculatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PayoutCalculatorTests.swift; sourceTree = "<group>"; };
 		AI01B2C3D4E5F607182930A1 /* AISummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AISummaryViewController.swift; sourceTree = "<group>"; };
 		AL01B2C3D4E5F607182930A9 /* ArchitectLibrary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ArchitectLibrary.swift; sourceTree = "<group>"; };
 		AN01B2C3D4E5F607182930A3 /* AnalyticsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsService.swift; sourceTree = "<group>"; };
@@ -344,10 +405,20 @@
 		RS1A2B3C4D5E6F70819203AB /* ResetSnapshotStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResetSnapshotStore.swift; sourceTree = "<group>"; };
 		SC01B2C3D4E5F607182930AB /* ScrambleTeamEntryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScrambleTeamEntryViewController.swift; sourceTree = "<group>"; };
 		TS01B2C3D4E5F607182930AB /* TeeSetEditorViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TeeSetEditorViewController.swift; sourceTree = "<group>"; };
+		C1UITEST000000000000001 /* WolfmoreGolfUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = WolfmoreGolfUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		C1UITEST000000000000002 /* ClubEventAX5Tests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventAX5Tests.swift; sourceTree = "<group>"; };
+		C1UITEST00000000000000E /* ClubEventAX5Screenshots.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClubEventAX5Screenshots.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AB000001000000000000000D /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C1UITEST000000000000006 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -385,6 +456,12 @@
 				AB00001200000000000000AA /* TeamTeeEngineTests.swift */,
 				AB00001300000000000000AA /* GameDataMigrationTests.swift */,
 				304C63A729FA453F916DC262 /* BestBallEngineTests.swift */,
+				PC31AA32BB33CC34DD35EE36 /* PayoutCalculatorTests.swift */,
+				CE70AA71BB72CC73DD74EE75 /* ClubEventSnapshotTests.swift */,
+				DT11AA12BB13CC14DD15EE16 /* ClubEventDualTeamTests.swift */,
+				GS11AA12BB13CC14DD15EE16 /* ClubEventGroupSetupTests.swift */,
+				2D2D4F983B004C6FA0D92E09 /* ClubEventWithdrawTests.swift */,
+				F8CE11BB22CC33DD44EE55FF /* ClubEventSkinsTests.swift */,
 			);
 			path = WolfmoreGolfTests;
 			sourceTree = "<group>";
@@ -460,7 +537,27 @@
 				1D7D681FBEA3C05DBD4C6D7E /* UpdateChecker.swift */,
 				F6E007F42F8017F300763694 /* SkinsEngine.swift */,
 				07955AB6BBA546BFB985FC11 /* BestBallEngine.swift */,
+				PC11AA12BB13CC14DD15EE16 /* PayoutCalculator.swift */,
 				5E3EE5D2CC4F46DEB2A57000 /* FieldSkinsEngine.swift */,
+				CE11AA12BB13CC14DD15EE16 /* ClubEventJoinViewController.swift */,
+				CE31AA32BB33CC34DD35EE36 /* ClubEventGroupSetupViewController.swift */,
+				CE51AA52BB53CC54DD55EE56 /* ClubEventGroupCodeViewController.swift */,
+				CE91AA92BB93CC94DD95EE96 /* ClubEventScoringViewController.swift */,
+				CF11AA12BB13CC14DD15EE17 /* ClubEventLeaderboardViewController.swift */,
+				632A5F8261310D90BC3BAFF5 /* ClubEventCreationViewController.swift */,
+				FFBE901B5D6CD4785ABDF999 /* ClubEventOrganizerHomeViewController.swift */,
+				24850A1976D148AC91569699 /* ClubEventRosterViewController.swift */,
+				CC1A2B3C4D5E6F7A8B9C0D1E /* ClubEventCopyRosterViewController.swift */,
+				A6E59B007202A9FB926C63B7 /* ClubEventPasteRosterViewController.swift */,
+				A8946ADE086064E2DA1F9E1E /* ClubEventPlayerEditViewController.swift */,
+				957458B003258B3956D3DDE3 /* ClubEventSessionStore.swift */,
+				45C4286D5E10998C813BE427 /* ClubEventReviewSubmitViewController.swift */,
+				2F635FCE0A314716BB997DD4 /* ClubEventGroupManageViewController.swift */,
+				97E03FC6C0C54CA58E6FDEAE /* ClubEventSettingsViewController.swift */,
+				7042D04A1D784DB3A73E87E9 /* ClubEventChangeLogViewController.swift */,
+				SL11AA12BB13CC14DD15EE11 /* ShareLinks.swift */,
+				PS11AA12BB13CC14DD15EE11 /* PayoutsSectionController.swift */,
+				QR11AA12BB13CC14DD15EE11 /* ClubEventQRViewController.swift */,
 				F6E007F22F8017AC00763694 /* SkinsModel.swift */,
 				F6750CFF2F785E24001828D2 /* GameSettingsViewController.swift */,
 				F6E2180F2F75D25C00A95B52 /* NassauSettingsViewController.swift */,
@@ -552,6 +649,7 @@
 				F64DE81C2EB2864B00F8D625 /* SceneDelegate.swift */,
 				F6D66AC42F327AC400367C08 /* Frameworks */,
 				AB00000100000000000000FF /* WolfmoreGolfTests */,
+				C1UITEST000000000000004 /* WolfmoreGolfUITests */,
 				F633A6D4307E796500E33D5C /* Recovered References */,
 			);
 			sourceTree = "<group>";
@@ -564,6 +662,7 @@
 				F64DE9512EB6AAE300F8D625 /* Assets.xcassets */,
 				F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */,
 				AB00000100000000000000FE /* WolfmoreGolfTests.xctest */,
+				C1UITEST000000000000001 /* WolfmoreGolfUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -588,6 +687,15 @@
 			children = (
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		C1UITEST000000000000004 /* WolfmoreGolfUITests */ = {
+			isa = PBXGroup;
+			children = (
+				C1UITEST000000000000002 /* ClubEventAX5Tests.swift */,
+				C1UITEST00000000000000E /* ClubEventAX5Screenshots.swift */,
+			);
+			path = WolfmoreGolfUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -630,6 +738,23 @@
 			productReference = F6D3513D2EBFF5DC00CE24F9 /* WolfmoreGolf.app */;
 			productType = "com.apple.product-type.application";
 		};
+		C1UITEST000000000000007 /* WolfmoreGolfUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1UITEST00000000000000C /* Build configuration list for PBXNativeTarget "WolfmoreGolfUITests" */;
+			buildPhases = (
+				C1UITEST000000000000005 /* Sources */,
+				C1UITEST000000000000006 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				C1UITEST000000000000009 /* PBXTargetDependency */,
+			);
+			name = WolfmoreGolfUITests;
+			productName = WolfmoreGolfUITests;
+			productReference = C1UITEST000000000000001 /* WolfmoreGolfUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -641,6 +766,10 @@
 				LastUpgradeCheck = 2640;
 				TargetAttributes = {
 					AB000001000000000000000E = {
+						CreatedOnToolsVersion = 26.0.1;
+						TestTargetID = F64DE7872EB0396000F8D625;
+					};
+					C1UITEST000000000000007 = {
 						CreatedOnToolsVersion = 26.0.1;
 						TestTargetID = F64DE7872EB0396000F8D625;
 					};
@@ -687,6 +816,7 @@
 			targets = (
 				F64DE7872EB0396000F8D625 /* WolfmoreGolf */,
 				AB000001000000000000000E /* WolfmoreGolfTests */,
+				C1UITEST000000000000007 /* WolfmoreGolfUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -725,6 +855,12 @@
 				AB00001200000000000000FF /* TeamTeeEngineTests.swift in Sources */,
 				AB00001300000000000000FF /* GameDataMigrationTests.swift in Sources */,
 				9AA636CA5B404B6B983CF7FE /* BestBallEngineTests.swift in Sources */,
+				PC21AA22BB23CC24DD25EE26 /* PayoutCalculatorTests.swift in Sources */,
+				CE60AA61BB62CC63DD64EE65 /* ClubEventSnapshotTests.swift in Sources */,
+				DT01AA02BB03CC04DD05EE06 /* ClubEventDualTeamTests.swift in Sources */,
+				GS01AA02BB03CC04DD05EE06 /* ClubEventGroupSetupTests.swift in Sources */,
+				711407AE0D1D4A0D92FD8EC1 /* ClubEventWithdrawTests.swift in Sources */,
+				F7CE11BB22CC33DD44EE55FF /* ClubEventSkinsTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -824,7 +960,27 @@
 				F6E007F92F80D19B00763694 /* HoleStatsEntryViewController.swift in Sources */,
 				F6E007F52F8017F300763694 /* SkinsEngine.swift in Sources */,
 				885D1C1A6163439E833FAEC8 /* BestBallEngine.swift in Sources */,
+				PC01AA02BB03CC04DD05EE06 /* PayoutCalculator.swift in Sources */,
 				6BF0DAAEF421411F9862BC1B /* FieldSkinsEngine.swift in Sources */,
+				CE01AA02BB03CC04DD05EE06 /* ClubEventJoinViewController.swift in Sources */,
+				CE21AA22BB23CC24DD25EE26 /* ClubEventGroupSetupViewController.swift in Sources */,
+				CE41AA42BB43CC44DD45EE46 /* ClubEventGroupCodeViewController.swift in Sources */,
+				CE81AA82BB83CC84DD85EE86 /* ClubEventScoringViewController.swift in Sources */,
+				CF01AA02BB03CC04DD05EE07 /* ClubEventLeaderboardViewController.swift in Sources */,
+				1C058047B1FECCA22D79C68D /* ClubEventCreationViewController.swift in Sources */,
+				5DEC0702A6275E7975368DBA /* ClubEventOrganizerHomeViewController.swift in Sources */,
+				FA8043DFB904147118D7A379 /* ClubEventRosterViewController.swift in Sources */,
+				CC2A2B3C4D5E6F7A8B9C0D1E /* ClubEventCopyRosterViewController.swift in Sources */,
+				57E4AEE5EF14558522E047A3 /* ClubEventPasteRosterViewController.swift in Sources */,
+				BC62ABD6340A090A27AE4A79 /* ClubEventPlayerEditViewController.swift in Sources */,
+				8D9FC2DE921E57070232E08A /* ClubEventSessionStore.swift in Sources */,
+				C3DDF87180C709B4EF3242A9 /* ClubEventReviewSubmitViewController.swift in Sources */,
+				1A0A2752B7D94860B10A54F4 /* ClubEventGroupManageViewController.swift in Sources */,
+				ECA696C4D2A847FFB9CFE4C0 /* ClubEventSettingsViewController.swift in Sources */,
+				AC9C77DD4112482DBE3003DE /* ClubEventChangeLogViewController.swift in Sources */,
+				SL01AA02BB03CC04DD05EE01 /* ShareLinks.swift in Sources */,
+				PS01AA02BB03CC04DD05EE01 /* PayoutsSectionController.swift in Sources */,
+				QR01AA02BB03CC04DD05EE01 /* ClubEventQRViewController.swift in Sources */,
 				F63960742F60D62500EC0C30 /* Player.swift in Sources */,
 				F6D5416C2F646EA70020588F /* NassauEngine.swift in Sources */,
 				F6E008272F8FFDC000763694 /* RemoteMatchesViewController.swift in Sources */,
@@ -873,6 +1029,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		C1UITEST000000000000005 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C1UITEST000000000000003 /* ClubEventAX5Tests.swift in Sources */,
+				C1UITEST00000000000000D /* ClubEventAX5Screenshots.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
@@ -880,6 +1045,11 @@
 			isa = PBXTargetDependency;
 			target = F64DE7872EB0396000F8D625 /* WolfmoreGolf */;
 			targetProxy = AB00000100000000000000FD /* PBXContainerItemProxy */;
+		};
+		C1UITEST000000000000009 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = F64DE7872EB0396000F8D625 /* WolfmoreGolf */;
+			targetProxy = C1UITEST000000000000008 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1156,6 +1326,53 @@
 			};
 			name = Release;
 		};
+		C1UITEST00000000000000A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BJ5DUSSCLX;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolfUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = WolfmoreGolf;
+			};
+			name = Debug;
+		};
+		C1UITEST00000000000000B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BJ5DUSSCLX;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.McTommy.WolfmoreGolfUITests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_TARGET_NAME = WolfmoreGolf;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -1182,6 +1399,15 @@
 			buildConfigurations = (
 				F64DE79C2EB0396100F8D625 /* Debug */,
 				F64DE79D2EB0396100F8D625 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		C1UITEST00000000000000C /* Build configuration list for PBXNativeTarget "WolfmoreGolfUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C1UITEST00000000000000A /* Debug */,
+				C1UITEST00000000000000B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

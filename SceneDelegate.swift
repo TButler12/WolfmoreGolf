@@ -170,6 +170,12 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             vc.sessionCode = code
             nav?.pushViewController(vc, animated: true)
 
+        } else if host == "join" {
+            let vc = ClubEventJoinViewController(prefillCode: code)
+            let nav2 = UINavigationController(rootViewController: vc)
+            nav2.modalPresentationStyle = .formSheet
+            root.present(nav2, animated: true)
+
         } else if host == "event" {
             WolfActions.joinEventFromDeepLink(code: code, from: root)
 
