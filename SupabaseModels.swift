@@ -501,3 +501,348 @@ struct RemoteNassauHoleScore: Codable {
         )
     }
 }
+
+// MARK: - Club Events (tournament_events / tournament_players)
+
+struct ClubEventRecord: Codable {
+    let id: UUID
+    let code: String
+    let name: String
+    let organizerDeviceId: String
+    let courseName: String?
+    let teeSet: String?
+    let numDays: Int
+    let status: String
+
+    init(id: UUID, code: String, name: String, organizerDeviceId: String,
+         courseName: String? = nil, teeSet: String? = nil, numDays: Int, status: String) {
+        self.id = id; self.code = code; self.name = name
+        self.organizerDeviceId = organizerDeviceId
+        self.courseName = courseName; self.teeSet = teeSet
+        self.numDays = numDays; self.status = status
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id, code, name, status
+        case organizerDeviceId = "organizer_device_id"
+        case courseName        = "course_name"
+        case teeSet            = "tee_set"
+        case numDays           = "num_days"
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id               = try c.decode(UUID.self,   forKey: .id)
+        code             = try c.decode(String.self, forKey: .code)
+        name             = try c.decode(String.self, forKey: .name)
+        organizerDeviceId = try c.decode(String.self, forKey: .organizerDeviceId)
+        courseName       = try? c.decode(String.self, forKey: .courseName)
+        teeSet           = try? c.decode(String.self, forKey: .teeSet)
+        numDays          = try c.decode(Int.self,    forKey: .numDays)
+        status           = try c.decode(String.self, forKey: .status)
+    }
+}
+
+struct ClubEventPlayer: Codable, Identifiable {
+    let id: UUID
+    let tournamentId: UUID
+    let playerName: String
+    let handicap: Double
+    var groupCode: String?
+    var cardSubmitted: Bool
+    var status: String   // 'active' | 'withdrawn'
+
+    var isWithdrawn: Bool { status == "withdrawn" }
+
+    var displayHandicap: String {
+        let n = Int(handicap.rounded())
+        if n == 0  { return "Scratch" }
+        if n < 0   { return "+\(-n)" }
+        return "HC \(n)"
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case tournamentId  = "tournament_id"
+        case playerName    = "player_name"
+        case handicap
+        case groupCode     = "group_code"
+        case cardSubmitted = "card_submitted"
+        case status
+    }
+
+    init(id: UUID, tournamentId: UUID, playerName: String, handicap: Double,
+         groupCode: String? = nil, cardSubmitted: Bool = false, status: String = "active") {
+        self.id = id
+        self.tournamentId = tournamentId
+        self.playerName = playerName
+        self.handicap = handicap
+        self.groupCode = groupCode
+        self.cardSubmitted = cardSubmitted
+        self.status = status
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id             = try c.decode(UUID.self,    forKey: .id)
+        tournamentId   = try c.decode(UUID.self,    forKey: .tournamentId)
+        playerName     = try c.decode(String.self,  forKey: .playerName)
+        handicap       = try c.decode(Double.self,  forKey: .handicap)
+        groupCode      = try? c.decode(String.self, forKey: .groupCode)
+        cardSubmitted  = (try? c.decode(Bool.self,  forKey: .cardSubmitted)) ?? false
+        status         = (try? c.decode(String.self, forKey: .status)) ?? "active"
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id,            forKey: .id)
+        try c.encode(tournamentId,  forKey: .tournamentId)
+        try c.encode(playerName,    forKey: .playerName)
+        try c.encode(handicap,      forKey: .handicap)
+        try c.encodeIfPresent(groupCode, forKey: .groupCode)
+        try c.encode(cardSubmitted, forKey: .cardSubmitted)
+        try c.encode(status,        forKey: .status)
+    }
+}
+
+struct ClubEventRules: Decodable {
+    let handicapAllowance:    Double
+    let grossLeaderboard:     Bool
+    let grossSkinsEnabled:    Bool
+    let netSkinsEnabled:      Bool
+    let skinsCarryover:       Bool
+    let teamNetPerPlayer:     Double
+    let teamGrossPerPlayer:   Double
+    let grossSkinsPerPlayer:  Double
+    let netSkinsPerPlayer:    Double
+    let teamPlacesPaid:       Int
+    let placePcts:            [Double]
+    let allowDualTeam:        Bool
+    // Added in migration 20261128 — decoded with defaults for backward compat
+    let payoutMode:           String    // 'per_player' | 'fixed_total'
+    let teamNetTotal:         Double
+    let teamGrossTotal:       Double
+    let grossSkinsTotal:      Double
+    let netSkinsTotal:        Double
+
+    enum CodingKeys: String, CodingKey {
+        case handicapAllowance   = "handicap_allowance"
+        case grossLeaderboard    = "gross_leaderboard"
+        case grossSkinsEnabled   = "gross_skins_enabled"
+        case netSkinsEnabled     = "net_skins_enabled"
+        case skinsCarryover      = "skins_carryover"
+        case teamNetPerPlayer    = "team_net_per_player"
+        case teamGrossPerPlayer  = "team_gross_per_player"
+        case grossSkinsPerPlayer = "gross_skins_per_player"
+        case netSkinsPerPlayer   = "net_skins_per_player"
+        case teamPlacesPaid      = "team_places_paid"
+        case placePcts           = "place_pcts"
+        case allowDualTeam       = "allow_dual_team"
+        case payoutMode          = "payout_mode"
+        case teamNetTotal        = "team_net_total"
+        case teamGrossTotal      = "team_gross_total"
+        case grossSkinsTotal     = "gross_skins_total"
+        case netSkinsTotal       = "net_skins_total"
+    }
+
+    init(handicapAllowance: Double, grossLeaderboard: Bool,
+         grossSkinsEnabled: Bool, netSkinsEnabled: Bool,
+         skinsCarryover: Bool,
+         teamNetPerPlayer: Double, teamGrossPerPlayer: Double,
+         grossSkinsPerPlayer: Double, netSkinsPerPlayer: Double,
+         teamPlacesPaid: Int, placePcts: [Double], allowDualTeam: Bool,
+         payoutMode: String = "per_player",
+         teamNetTotal: Double = 0, teamGrossTotal: Double = 0,
+         grossSkinsTotal: Double = 0, netSkinsTotal: Double = 0) {
+        self.handicapAllowance   = handicapAllowance
+        self.grossLeaderboard    = grossLeaderboard
+        self.grossSkinsEnabled   = grossSkinsEnabled
+        self.netSkinsEnabled     = netSkinsEnabled
+        self.skinsCarryover      = skinsCarryover
+        self.teamNetPerPlayer    = teamNetPerPlayer
+        self.teamGrossPerPlayer  = teamGrossPerPlayer
+        self.grossSkinsPerPlayer = grossSkinsPerPlayer
+        self.netSkinsPerPlayer   = netSkinsPerPlayer
+        self.teamPlacesPaid      = teamPlacesPaid
+        self.placePcts           = placePcts
+        self.allowDualTeam       = allowDualTeam
+        self.payoutMode          = payoutMode
+        self.teamNetTotal        = teamNetTotal
+        self.teamGrossTotal      = teamGrossTotal
+        self.grossSkinsTotal     = grossSkinsTotal
+        self.netSkinsTotal       = netSkinsTotal
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        handicapAllowance    = (try? c.decode(Double.self,   forKey: .handicapAllowance))  ?? 1.0
+        grossLeaderboard     = (try? c.decode(Bool.self,     forKey: .grossLeaderboard))   ?? false
+        grossSkinsEnabled    = (try? c.decode(Bool.self,     forKey: .grossSkinsEnabled))  ?? true
+        netSkinsEnabled      = (try? c.decode(Bool.self,     forKey: .netSkinsEnabled))    ?? true
+        skinsCarryover       = (try? c.decode(Bool.self,     forKey: .skinsCarryover))     ?? false
+        teamNetPerPlayer     = (try? c.decode(Double.self,   forKey: .teamNetPerPlayer))   ?? 0
+        teamGrossPerPlayer   = (try? c.decode(Double.self,   forKey: .teamGrossPerPlayer)) ?? 0
+        grossSkinsPerPlayer  = (try? c.decode(Double.self,   forKey: .grossSkinsPerPlayer)) ?? 0
+        netSkinsPerPlayer    = (try? c.decode(Double.self,   forKey: .netSkinsPerPlayer))   ?? 0
+        teamPlacesPaid       = (try? c.decode(Int.self,      forKey: .teamPlacesPaid))     ?? 3
+        placePcts            = (try? c.decode([Double].self, forKey: .placePcts))          ?? [50, 30, 20]
+        allowDualTeam        = (try? c.decode(Bool.self,     forKey: .allowDualTeam))      ?? false
+        payoutMode           = (try? c.decode(String.self,   forKey: .payoutMode))         ?? "per_player"
+        teamNetTotal         = (try? c.decode(Double.self,   forKey: .teamNetTotal))       ?? 0
+        teamGrossTotal       = (try? c.decode(Double.self,   forKey: .teamGrossTotal))     ?? 0
+        grossSkinsTotal      = (try? c.decode(Double.self,   forKey: .grossSkinsTotal))    ?? 0
+        netSkinsTotal        = (try? c.decode(Double.self,   forKey: .netSkinsTotal))      ?? 0
+    }
+}
+
+struct ClubEventSetupResult: Decodable {
+    let claimed: [UUID]
+}
+
+struct ClubEventGroupPlayer: Equatable {
+    let id:          UUID
+    let name:        String
+    let handicap:    Double
+    let teams:       [String]   // ["A"] | ["B"] | ["A","B"]
+    var isWithdrawn: Bool = false
+}
+
+struct ClubEventHoleScore: Decodable {
+    let tournamentPlayerId: UUID
+    let day:                Int
+    let holeNumber:         Int
+    let grossScore:         Int?
+    let netScoreType:       String?
+
+    enum CodingKeys: String, CodingKey {
+        case day
+        case tournamentPlayerId = "tournament_player_id"
+        case holeNumber         = "hole_number"
+        case grossScore         = "gross_score"
+        case netScoreType       = "net_score_type"
+    }
+}
+
+struct ClubEventTeam: Decodable {
+    let id:           UUID
+    let teamName:     String
+    let tournamentId: UUID
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case teamName     = "team_name"
+        case tournamentId = "tournament_id"
+    }
+}
+
+struct ClubEventTeamMembership: Decodable {
+    let teamId:            UUID
+    let tournamentPlayerId: UUID
+
+    init(teamId: UUID, tournamentPlayerId: UUID) {
+        self.teamId             = teamId
+        self.tournamentPlayerId = tournamentPlayerId
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case teamId            = "team_id"
+        case tournamentPlayerId = "tournament_player_id"
+    }
+}
+
+struct ClubEventChangeLogEntry: Decodable, Identifiable {
+    let id:          UUID
+    let changedAt:   Date
+    let changedBy:   String?
+    let changeType:  String   // 'replace_player' | 'withdraw_player' | 'remove_player' | 'update_settings' | 'update_handicap'
+    let details:     [String: AnyCodable]
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case changedAt  = "changed_at"
+        case changedBy  = "changed_by"
+        case changeType = "change_type"
+        case details
+    }
+
+    var summary: String {
+        switch changeType {
+        case "replace_player":
+            let old = details["old_player_name"]?.stringValue ?? "?"
+            let new = details["new_player_name"]?.stringValue ?? "?"
+            return "Replaced \(old) → \(new)"
+        case "withdraw_player":
+            let name = details["player_name"]?.stringValue ?? "?"
+            let holes = details["holes_played"]?.intValue ?? 0
+            return "Withdrew \(name) (\(holes) holes played)"
+        case "remove_player":
+            let name = details["player_name"]?.stringValue ?? "?"
+            let n    = details["scores_deleted"]?.intValue ?? 0
+            return "Removed \(name), \(n) score\(n == 1 ? "" : "s") deleted"
+        case "update_settings":
+            return "Settings updated"
+        case "update_handicap":
+            let name  = details["player_name"]?.stringValue ?? "?"
+            let old   = details["old_handicap"]?.stringValue ?? "?"
+            let new   = details["new_handicap"]?.stringValue ?? "?"
+            return "Handicap \(name): \(old) → \(new)"
+        default:
+            return changeType
+        }
+    }
+}
+
+/// Minimal wrapper so JSONB details can be decoded without a fixed schema.
+// MARK: - Shared skins input builder
+
+/// Single source of truth for building FieldSkinsEngine inputs from club event data.
+/// • Excludes unassigned players (empty groupCode) — their groupPosted is all-false
+///   and would make every hole provisional even when all real groups have finished.
+/// • Deduplicates by player UUID so a player who appears twice in the roster
+///   (e.g. added under two workflows) only competes once.
+func buildClubEventSkinInputs(
+    players: [ClubEventPlayer],
+    scoresByPlayer: [UUID: [Int: (gross: Int, pickedUp: Bool)]],
+    postedByGroup: [String: Set<Int>],
+    holeCount: Int
+) -> [FieldSkinsEngine.PlayerInput] {
+    var seen = Set<UUID>()
+    return players
+        .filter { !($0.groupCode ?? "").isEmpty }
+        .filter { seen.insert($0.id).inserted }
+        .map { player in
+            var hs = [HoleScore](repeating: .notEntered, count: holeCount)
+            var gp = [Bool](repeating: false, count: holeCount)
+            let gc   = player.groupCode ?? ""
+            let hc18 = Int(player.handicap.rounded())
+            let courseHC = holeCount == 9 ? Int((Double(hc18) / 2.0).rounded()) : hc18
+            for hole in 1...holeCount {
+                let i = hole - 1
+                if let d = scoresByPlayer[player.id]?[hole] {
+                    hs[i] = d.pickedUp ? .pickedUp : d.gross > 0 ? .gross(d.gross) : .notEntered
+                }
+                gp[i] = !gc.isEmpty && (postedByGroup[gc]?.contains(hole) ?? false)
+            }
+            return FieldSkinsEngine.PlayerInput(
+                playerID: player.id,
+                courseHandicap: courseHC,
+                scores: hs,
+                groupPosted: gp)
+        }
+}
+
+struct AnyCodable: Decodable {
+    let value: Any
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.singleValueContainer()
+        if let s = try? c.decode(String.self)  { value = s; return }
+        if let i = try? c.decode(Int.self)     { value = i; return }
+        if let d = try? c.decode(Double.self)  { value = d; return }
+        if let b = try? c.decode(Bool.self)    { value = b; return }
+        value = ""
+    }
+
+    var stringValue: String? { value as? String }
+    var intValue:    Int?    { value as? Int }
+}
