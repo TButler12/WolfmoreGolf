@@ -71,8 +71,9 @@ public enum FieldSkinsEngine {
     // MARK: Computation
 
     public static func compute(players: [PlayerInput], settings: Settings) -> [SkinResult] {
-        precondition(settings.holeHandicapRanks.count == 18)
-        precondition(players.allSatisfy { $0.scores.count == 18 && $0.groupPosted.count == 18 })
+        let holeCount = settings.holeHandicapRanks.count
+        guard holeCount > 0 else { return [] }
+        precondition(players.allSatisfy { $0.scores.count == holeCount && $0.groupPosted.count == holeCount })
 
         var results = [SkinResult]()
         var grossCarryPot: Double  = 0
@@ -80,10 +81,10 @@ public enum FieldSkinsEngine {
         var netCarryPot: Double    = 0
         var netCarryFrom: [Int]    = []
 
-        for h in 0..<18 {
+        for h in 0..<holeCount {
             let holeNumber = h + 1
             let rank       = settings.holeHandicapRanks[h]
-            let isLastHole = h == 17
+            let isLastHole = h == holeCount - 1
 
             // Hole is fully posted when every player's group has posted it.
             let isFullyPosted = players.allSatisfy { $0.groupPosted[h] }
@@ -96,7 +97,7 @@ public enum FieldSkinsEngine {
                 guard player.groupPosted[h] else { continue }
                 guard case .gross(let g) = player.scores[h] else { continue }
                 let eff = Int((Double(player.courseHandicap) * settings.allowance).rounded())
-                let s   = BestBallEngine.rawStrokes(effectiveHC: eff, holeRank: rank)
+                let s   = BestBallEngine.rawStrokes(effectiveHC: eff, holeRank: rank, holeCount: holeCount)
                 grossScores.append((player.playerID, g))
                 netScores.append((player.playerID, g - s))
             }

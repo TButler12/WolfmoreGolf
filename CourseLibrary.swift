@@ -15471,6 +15471,18 @@ let SAINT_ANDREWS_GC_NY_TEES: [TeeInfo] = [
     TeeInfo(teeName: "Member",       yardage: 6217),
 ]
 
+// MARK: Biltmore (Cross Country) — 9-hole cross-country layout
+// Thanksgiving Cross Country Classic format: 9 unique holes crossing the Biltmore property.
+// Par 7 on hole 6 (#17 Red Tee to #18 Green) is a cross-country composite.
+private let BILTMORE_CROSS_COUNTRY_ID = UUID(uuidString: "CC000001-B110-4000-0000-000000000001")!
+
+let BILTMORE_CROSS_COUNTRY_PARS: [Int] = [4, 5, 3, 4, 4, 7, 4, 3, 4]  // par 38
+let BILTMORE_CROSS_COUNTRY_HCS:  [Int] = [7, 2, 8, 6, 4, 1, 5, 9, 3]
+
+let BILTMORE_CROSS_COUNTRY_TEES: [TeeInfo] = [
+    TeeInfo(teeName: "Cross Country", yardage: 3419)
+]
+
 // =======================================================
 // MARK: - Built-in Registry
 // =======================================================
@@ -27561,6 +27573,19 @@ private enum BuiltIns {
             region: "Long Island",
             architect: "Rees Jones",
             type: "Private"
+        ),
+        c(
+            BILTMORE_CROSS_COUNTRY_ID,
+            "Biltmore (Cross Country)",
+            BILTMORE_CROSS_COUNTRY_PARS,
+            BILTMORE_CROSS_COUNTRY_HCS,
+            BILTMORE_CROSS_COUNTRY_TEES,
+            country: "USA",
+            state: "IL",
+            region: "North Barrington",
+            type: "Private",
+            routing: .nineStandard,
+            notes: "Thanksgiving Cross Country Classic 9-hole layout. Each hole routes between two different regular holes. Hole 6 (#17 Red Tee → #18 Green) is a 946-yard par 7."
         ),
         ]
 

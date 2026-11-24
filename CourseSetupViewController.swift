@@ -422,7 +422,7 @@ final class CourseSetupViewController: UIViewController, MFMailComposeViewContro
         let parSorted = parFields.sorted { $0.tag < $1.tag }.prefix(STANDARD_HOLES)
         let hcSorted  = hcFields.sorted  { $0.tag < $1.tag }.prefix(STANDARD_HOLES)
 
-        let pars = parSorted.map { max(3, min(6, Int($0.text ?? "") ?? 4)) }
+        let pars = parSorted.map { max(3, min(9, Int($0.text ?? "") ?? 4)) }
         let hcs  = hcSorted.map  { max(1, min(STANDARD_HOLES, Int($0.text ?? "") ?? 1)) }
 
         return (pars, hcs)

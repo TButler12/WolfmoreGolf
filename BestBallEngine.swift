@@ -128,11 +128,11 @@ public enum BestBallEngine {
         return rawStrokes(effectiveHC: eff, holeRank: holeRank)
     }
 
-    public static func rawStrokes(effectiveHC: Int, holeRank: Int) -> Int {
+    public static func rawStrokes(effectiveHC: Int, holeRank: Int, holeCount: Int = 18) -> Int {
         guard effectiveHC >= 0 else {
-            return holeRank >= (19 + effectiveHC) ? -1 : 0  // effectiveHC is negative
+            return holeRank >= (holeCount + 1 + effectiveHC) ? -1 : 0
         }
-        return effectiveHC / 18 + (holeRank <= effectiveHC % 18 ? 1 : 0)
+        return effectiveHC / holeCount + (holeRank <= effectiveHC % holeCount ? 1 : 0)
     }
 
     // MARK: Per-hole results
