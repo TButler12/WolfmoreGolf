@@ -1372,6 +1372,8 @@ final class SupabaseService {
     func createClubEvent(
         name: String,
         courseName: String?,
+        coursePars: [Int]? = nil,
+        courseHandicaps: [Int]? = nil,
         numDays: Int,
         players: [(name: String, handicap: Double)],
         startDate: Date? = nil,
@@ -1401,6 +1403,8 @@ final class SupabaseService {
             let p_num_days: Int
             let p_players: [Player]
             let p_start_date: String?
+            let p_course_pars: [Int]?
+            let p_course_handicaps: [Int]?
         }
         struct RPCResult: Decodable { let id: UUID; let code: String }
 
@@ -1420,7 +1424,9 @@ final class SupabaseService {
             p_course_name: courseName,
             p_num_days: numDays,
             p_players: players.map { .init(name: $0.name, handicap: $0.handicap) },
-            p_start_date: dateString
+            p_start_date: dateString,
+            p_course_pars: coursePars,
+            p_course_handicaps: courseHandicaps
         )
         let result: RPCResult = try await client
             .rpc("create_club_event", params: params)
@@ -1458,7 +1464,9 @@ final class SupabaseService {
             courseName: courseName,
             teeSet: nil,
             numDays: numDays,
-            status: "active"
+            status: "active",
+            coursePars: coursePars,
+            courseHandicaps: courseHandicaps
         )
     }
 

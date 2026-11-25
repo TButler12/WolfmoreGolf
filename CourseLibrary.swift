@@ -27638,6 +27638,40 @@ final class CourseLibrary {
         seedBuiltIns()
     }
 
+    // MARK: - OpenGolfAPI imported courses
+
+    private static let openGolfNamespace = "0F60F000-0000-4000-A000-"
+
+    static func openGolfUUID(apiId: Int) -> UUID {
+        UUID(uuidString: "\(openGolfNamespace)\(String(format: "%012X", apiId))")!
+    }
+
+    func isOpenGolfImport(id: UUID) -> Bool {
+        id.uuidString.hasPrefix(Self.openGolfNamespace)
+    }
+
+    func importOpenGolfCourse(
+        apiId: Int,
+        name: String,
+        city: String?,
+        state: String?,
+        country: String?,
+        pars: [Int],
+        handicaps: [Int]
+    ) -> CourseProfile {
+        let profile = CourseProfile(
+            id: Self.openGolfUUID(apiId: apiId),
+            name: name,
+            pars: pars,
+            hcs: handicaps,
+            country: country,
+            state: state,
+            notes: "openGolfAPI:\(apiId)"
+        )
+        upsert(profile)
+        return profile
+    }
+
     func wolfMore() -> CourseProfile? {
         if let c = get(id: WOLFMORE_CC_ID) { return c }
         return courses.first { $0.name.caseInsensitiveCompare("WolfMore") == .orderedSame }

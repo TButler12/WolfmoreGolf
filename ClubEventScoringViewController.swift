@@ -53,28 +53,39 @@ final class ClubEventScoringViewController: UIViewController {
 
     // MARK: - Init
 
+    // nil means "show update-app alert in viewDidLoad" — set when snapshot is missing and
+    // the course name isn't in the local library.
+    private var showUpdateAppAlert: Bool = false
+
     init(tournamentId: UUID, groupCode: String, startingHole: Int,
-         eventName: String, courseName: String?, players: [ClubEventGroupPlayer]) {
+         eventName: String, courseName: String?,
+         coursePars: [Int]? = nil, courseHandicaps: [Int]? = nil,
+         players: [ClubEventGroupPlayer]) {
         self.tournamentId = tournamentId
         self.groupCode    = groupCode
         self.eventName    = eventName
         self.courseName   = courseName
         self.players      = players
 
-        if let name = courseName,
-           let course = CourseLibrary.shared.courses.first(where: {
-               $0.name.caseInsensitiveCompare(name) == .orderedSame
-           }),
-           !course.pars.isEmpty, course.pars.count == course.hcs.count {
+        if let pars = coursePars, let hcs = courseHandicaps,
+           pars.count == hcs.count, !pars.isEmpty {
+            // Snapshot from event record — always correct regardless of local library.
+            self.coursePars = pars
+            self.courseHCs  = hcs
+        } else if let name = courseName,
+                  let course = CourseLibrary.shared.courses.first(where: {
+                      $0.name.caseInsensitiveCompare(name) == .orderedSame
+                  }),
+                  !course.pars.isEmpty, course.pars.count == course.hcs.count {
+            // Fallback: existing event with null snapshot — look up by name.
             self.coursePars = course.pars
             self.courseHCs  = course.hcs
         } else {
+            // Course not found — use neutral defaults; alert shown after view loads.
             self.coursePars = Array(repeating: 4, count: 18)
             self.courseHCs  = Array(1...18)
+            if courseName != nil { showUpdateAppAlert = true }
         }
-        // Clamp after pars are known — findNextUnscoredHole uses a hardcoded 18-hole
-        // search and may return a hole > holeCount for 9-hole events where all holes
-        // are already scored.
         self.currentHole = max(1, min(startingHole, self.coursePars.count))
 
         super.init(nibName: nil, bundle: nil)
@@ -91,6 +102,17 @@ final class ClubEventScoringViewController: UIViewController {
         buildTableView()
         refreshBottomBar()
         loadExistingScores()
+        if showUpdateAppAlert { presentUpdateAppAlert() }
+    }
+
+    private func presentUpdateAppAlert() {
+        let ac = UIAlertController(
+            title: "Update Required",
+            message: "This event uses a course that isn't in your version of the app. Update WolfMore Golf from the App Store to get the correct scorecard.",
+            preferredStyle: .alert
+        )
+        ac.addAction(UIAlertAction(title: "OK", style: .default))
+        present(ac, animated: true)
     }
 
     override func viewWillAppear(_ animated: Bool) {

@@ -513,13 +513,17 @@ struct ClubEventRecord: Codable {
     let teeSet: String?
     let numDays: Int
     let status: String
+    let coursePars: [Int]?
+    let courseHandicaps: [Int]?
 
     init(id: UUID, code: String, name: String, organizerDeviceId: String,
-         courseName: String? = nil, teeSet: String? = nil, numDays: Int, status: String) {
+         courseName: String? = nil, teeSet: String? = nil, numDays: Int, status: String,
+         coursePars: [Int]? = nil, courseHandicaps: [Int]? = nil) {
         self.id = id; self.code = code; self.name = name
         self.organizerDeviceId = organizerDeviceId
         self.courseName = courseName; self.teeSet = teeSet
         self.numDays = numDays; self.status = status
+        self.coursePars = coursePars; self.courseHandicaps = courseHandicaps
     }
 
     enum CodingKeys: String, CodingKey {
@@ -528,18 +532,22 @@ struct ClubEventRecord: Codable {
         case courseName        = "course_name"
         case teeSet            = "tee_set"
         case numDays           = "num_days"
+        case coursePars        = "course_pars"
+        case courseHandicaps   = "course_handicaps"
     }
 
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        id               = try c.decode(UUID.self,   forKey: .id)
-        code             = try c.decode(String.self, forKey: .code)
-        name             = try c.decode(String.self, forKey: .name)
-        organizerDeviceId = try c.decode(String.self, forKey: .organizerDeviceId)
-        courseName       = try? c.decode(String.self, forKey: .courseName)
-        teeSet           = try? c.decode(String.self, forKey: .teeSet)
-        numDays          = try c.decode(Int.self,    forKey: .numDays)
-        status           = try c.decode(String.self, forKey: .status)
+        id                = try  c.decode(UUID.self,    forKey: .id)
+        code              = try  c.decode(String.self,  forKey: .code)
+        name              = try  c.decode(String.self,  forKey: .name)
+        organizerDeviceId = try  c.decode(String.self,  forKey: .organizerDeviceId)
+        courseName        = try? c.decode(String.self,  forKey: .courseName)
+        teeSet            = try? c.decode(String.self,  forKey: .teeSet)
+        numDays           = try  c.decode(Int.self,     forKey: .numDays)
+        status            = try  c.decode(String.self,  forKey: .status)
+        coursePars        = try? c.decode([Int].self,   forKey: .coursePars)
+        courseHandicaps   = try? c.decode([Int].self,   forKey: .courseHandicaps)
     }
 }
 

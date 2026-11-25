@@ -11,6 +11,7 @@ final class ClubEventCreationViewController: UITableViewController {
 
     private var eventName: String = ""
     private var courseName: String?
+    private var selectedCourse: CourseProfile?
     private var startDate: Date = Date()
 
     private var handicapAllowance: Int = 100
@@ -368,11 +369,13 @@ final class ClubEventCreationViewController: UITableViewController {
         for course in CourseLibrary.shared.courses.sorted(by: { $0.name < $1.name }) {
             sheet.addAction(UIAlertAction(title: course.name, style: .default) { [weak self] _ in
                 self?.courseName = course.name
+                self?.selectedCourse = course
                 self?.tableView.reloadRows(at: [IndexPath(row: 1, section: 0)], with: .none)
             })
         }
         sheet.addAction(UIAlertAction(title: "No course", style: .destructive) { [weak self] _ in
             self?.courseName = nil
+            self?.selectedCourse = nil
             self?.tableView.reloadRows(at: [IndexPath(row: 1, section: 0)], with: .none)
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
@@ -397,6 +400,8 @@ final class ClubEventCreationViewController: UITableViewController {
                 let event = try await SupabaseService.shared.createClubEvent(
                     name: trimmed,
                     courseName: courseName,
+                    coursePars: selectedCourse?.pars,
+                    courseHandicaps: selectedCourse?.hcs,
                     numDays: 1,
                     players: [],
                     startDate: startDate,

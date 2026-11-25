@@ -220,13 +220,15 @@ final class ClubEventGroupSetupViewController: UIViewController {
 
     private func pushCodeScreen(code: String, players: [ClubEventGroupPlayer]) {
         let vc = ClubEventGroupCodeViewController(
-            groupCode:    code,
-            eventCode:    event.code,
-            eventName:    event.name,
-            players:      players,
-            tournamentId: event.id,
-            startingHole: startingHole,
-            courseName:   event.courseName
+            groupCode:       code,
+            eventCode:       event.code,
+            eventName:       event.name,
+            players:         players,
+            tournamentId:    event.id,
+            startingHole:    startingHole,
+            courseName:      event.courseName,
+            coursePars:      event.coursePars,
+            courseHandicaps: event.courseHandicaps
         )
         navigationController?.pushViewController(vc, animated: true)
     }

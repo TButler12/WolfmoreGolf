@@ -5,30 +5,36 @@ import CoreImage
 /// Push onto the navigation stack; "Done" pops to root (dismisses the whole join flow).
 final class ClubEventGroupCodeViewController: UIViewController {
 
-    private let groupCode:    String
-    private let eventCode:    String
-    private let eventName:    String
-    private var players:      [ClubEventGroupPlayer]
-    private let tournamentId: UUID
-    private let startingHole: Int
-    private let courseName:   String?
+    private let groupCode:        String
+    private let eventCode:        String
+    private let eventName:        String
+    private var players:          [ClubEventGroupPlayer]
+    private let tournamentId:     UUID
+    private let startingHole:     Int
+    private let courseName:       String?
+    private let coursePars:       [Int]?
+    private let courseHandicaps:  [Int]?
 
     private var releaseRowStack: UIStackView?
 
-    init(groupCode:    String,
-         eventCode:    String,
-         eventName:    String,
-         players:      [ClubEventGroupPlayer],
-         tournamentId: UUID,
-         startingHole: Int,
-         courseName:   String? = nil) {
-        self.groupCode    = groupCode
-        self.eventCode    = eventCode
-        self.eventName    = eventName
-        self.players      = players
-        self.tournamentId = tournamentId
-        self.startingHole = startingHole
-        self.courseName   = courseName
+    init(groupCode:       String,
+         eventCode:       String,
+         eventName:       String,
+         players:         [ClubEventGroupPlayer],
+         tournamentId:    UUID,
+         startingHole:    Int,
+         courseName:      String? = nil,
+         coursePars:      [Int]? = nil,
+         courseHandicaps: [Int]? = nil) {
+        self.groupCode       = groupCode
+        self.eventCode       = eventCode
+        self.eventName       = eventName
+        self.players         = players
+        self.tournamentId    = tournamentId
+        self.startingHole    = startingHole
+        self.courseName      = courseName
+        self.coursePars      = coursePars
+        self.courseHandicaps = courseHandicaps
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -298,12 +304,14 @@ final class ClubEventGroupCodeViewController: UIViewController {
             playerIds:    players.map { $0.id }
         ))
         let vc = ClubEventScoringViewController(
-            tournamentId: tournamentId,
-            groupCode:    groupCode,
-            startingHole: startingHole,
-            eventName:    eventName,
-            courseName:   courseName,
-            players:      players
+            tournamentId:    tournamentId,
+            groupCode:       groupCode,
+            startingHole:    startingHole,
+            eventName:       eventName,
+            courseName:      courseName,
+            coursePars:      coursePars,
+            courseHandicaps: courseHandicaps,
+            players:         players
         )
         navigationController?.pushViewController(vc, animated: true)
     }
