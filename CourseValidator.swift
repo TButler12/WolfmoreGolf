@@ -1,6 +1,7 @@
 import Foundation
 
 enum CourseValidationError: Error, Equatable {
+    case noHoleData
     case wrongHoleCount(got: Int, expected: Int)
     case invalidPar(hole: Int, par: Int)
     case duplicateHandicap(value: Int)
@@ -11,6 +12,8 @@ enum CourseValidationError: Error, Equatable {
 extension CourseValidationError: LocalizedError {
     var errorDescription: String? {
         switch self {
+        case .noHoleData:
+            return "No hole data available for this course."
         case .wrongHoleCount(let got, let expected):
             return "Expected \(expected) holes, got \(got)"
         case .invalidPar(let hole, let par):
@@ -48,13 +51,12 @@ struct CourseValidator {
     }
 
     // Builds pars and handicaps arrays from the holes endpoint response.
-    // Returns the arrays on success, or a validation error.
+    // Accepts 9- or 18-hole courses only; anything else (including 0) returns noHoleData.
     static func buildArrays(
-        from holes: [OpenGolfHoleData],
-        expectedCount: Int = 18
+        from holes: [OpenGolfHoleData]
     ) -> Result<(pars: [Int], handicaps: [Int]), CourseValidationError> {
-        guard holes.count == expectedCount else {
-            return .failure(.wrongHoleCount(got: holes.count, expected: expectedCount))
+        guard holes.count == 9 || holes.count == 18 else {
+            return .failure(.noHoleData)
         }
         let pars = holes.map { $0.par }
         let rawHcs = holes.map { $0.handicapIndex }

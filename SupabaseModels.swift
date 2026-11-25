@@ -515,15 +515,17 @@ struct ClubEventRecord: Codable {
     let status: String
     let coursePars: [Int]?
     let courseHandicaps: [Int]?
+    let courseSource: String
 
     init(id: UUID, code: String, name: String, organizerDeviceId: String,
          courseName: String? = nil, teeSet: String? = nil, numDays: Int, status: String,
-         coursePars: [Int]? = nil, courseHandicaps: [Int]? = nil) {
+         coursePars: [Int]? = nil, courseHandicaps: [Int]? = nil, courseSource: String = "builtin") {
         self.id = id; self.code = code; self.name = name
         self.organizerDeviceId = organizerDeviceId
         self.courseName = courseName; self.teeSet = teeSet
         self.numDays = numDays; self.status = status
         self.coursePars = coursePars; self.courseHandicaps = courseHandicaps
+        self.courseSource = courseSource
     }
 
     enum CodingKeys: String, CodingKey {
@@ -534,6 +536,7 @@ struct ClubEventRecord: Codable {
         case numDays           = "num_days"
         case coursePars        = "course_pars"
         case courseHandicaps   = "course_handicaps"
+        case courseSource      = "course_source"
     }
 
     init(from decoder: Decoder) throws {
@@ -548,6 +551,7 @@ struct ClubEventRecord: Codable {
         status            = try  c.decode(String.self,  forKey: .status)
         coursePars        = try? c.decode([Int].self,   forKey: .coursePars)
         courseHandicaps   = try? c.decode([Int].self,   forKey: .courseHandicaps)
+        courseSource      = (try? c.decode(String.self, forKey: .courseSource)) ?? "builtin"
     }
 }
 

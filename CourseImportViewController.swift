@@ -9,6 +9,8 @@ final class CourseImportViewController: UITableViewController {
     private var holes: [OpenGolfHoleData] = []
     private var validationError: CourseValidationError?
     private var isLoading = true
+    // ZIP-corrected state; set after the detail fetch; falls back to searchResult.state.
+    private var correctedState: String?
 
     private enum Section: Int, CaseIterable {
         case status, holes
@@ -35,20 +37,19 @@ final class CourseImportViewController: UITableViewController {
 
         tableView.tableFooterView = attributionFooter()
 
-        fetchHoles()
+        fetchDetail()
     }
 
     // MARK: - Fetch
 
-    private func fetchHoles() {
+    private func fetchDetail() {
         Task {
             do {
-                let raw = try await OpenGolfAPIService.shared.holes(courseId: searchResult.id)
-                await MainActor.run { self.applyHoles(raw) }
+                let detail = try await OpenGolfAPIService.shared.courseDetail(courseId: searchResult.id)
+                await MainActor.run { self.applyDetail(detail) }
             } catch {
                 await MainActor.run {
                     self.isLoading = false
-                    self.validationError = nil
                     self.tableView.reloadData()
                     self.showAlert("Could not load hole data.\n\n\(error.localizedDescription)")
                 }
@@ -56,11 +57,13 @@ final class CourseImportViewController: UITableViewController {
         }
     }
 
-    private func applyHoles(_ raw: [OpenGolfHoleData]) {
-        isLoading = false
-        holes = raw.sorted { $0.holeNumber < $1.holeNumber }
+    private func applyDetail(_ detail: OpenGolfCourseDetail) {
+        correctedState = ZipStateCorrector.state(forZip: detail.postalCode, fallback: searchResult.state)
 
-        switch CourseValidator.buildArrays(from: holes, expectedCount: holes.count) {
+        isLoading = false
+        holes = detail.holes
+
+        switch CourseValidator.buildArrays(from: holes) {
         case .success:
             validationError = nil
             navigationItem.rightBarButtonItem?.isEnabled = true
@@ -75,16 +78,41 @@ final class CourseImportViewController: UITableViewController {
 
     @objc private func addTapped() {
         guard validationError == nil, !holes.isEmpty else { return }
+
+        let stateToUse = correctedState ?? searchResult.state
+
+        // Check whether a built-in already covers this course.
+        if let existing = matchingBuiltIn(state: stateToUse) {
+            let ac = UIAlertController(
+                title: "Already in Wolfmore Courses",
+                message: "\(existing.name) is already a built-in course.",
+                preferredStyle: .alert
+            )
+            ac.addAction(UIAlertAction(title: "Use Built-in", style: .default) { [weak self] _ in
+                self?.delegate?.courseSearchDidImport(existing)
+                self?.navigationController?.popToRootViewController(animated: true)
+            })
+            ac.addAction(UIAlertAction(title: "Import Anyway", style: .default) { [weak self] _ in
+                self?.performImport(state: stateToUse)
+            })
+            present(ac, animated: true)
+            return
+        }
+
+        performImport(state: stateToUse)
+    }
+
+    private func performImport(state: String?) {
         let pars = holes.map { $0.par }
         let hcs  = holes.map { $0.handicapIndex! }
 
         let profile = CourseLibrary.shared.importOpenGolfCourse(
-            apiId:   searchResult.id,
-            name:    searchResult.name,
-            city:    searchResult.city,
-            state:   searchResult.state,
-            country: searchResult.country,
-            pars:    pars,
+            apiId:     searchResult.id,
+            name:      searchResult.name,
+            city:      searchResult.city,
+            state:     state,
+            country:   searchResult.country,
+            pars:      pars,
             handicaps: hcs
         )
 
@@ -99,6 +127,30 @@ final class CourseImportViewController: UITableViewController {
             self?.navigationController?.popToRootViewController(animated: true)
         })
         present(ac, animated: true)
+    }
+
+    // Returns a built-in course whose normalised name and state match the import candidate.
+    private func matchingBuiltIn(state: String?) -> CourseProfile? {
+        let normalised = Self.normaliseName(searchResult.name)
+        return CourseLibrary.shared.allSorted().first { course in
+            guard CourseLibrary.shared.isBuiltIn(id: course.id) else { return false }
+            return Self.normaliseName(course.name) == normalised && course.state == state
+        }
+    }
+
+    // Strips common golf venue suffixes so "Pebble Beach Golf Links" and
+    // "Pebble Beach" compare equal.
+    static func normaliseName(_ name: String) -> String {
+        var n = name.lowercased()
+        for suffix in [" golf & country club", " golf and country club",
+                       " country club", " golf club", " golf course",
+                       " golf links", " golf resort"] {
+            if n.hasSuffix(suffix) {
+                n = String(n.dropLast(suffix.count))
+                break
+            }
+        }
+        return n.trimmingCharacters(in: .whitespaces)
     }
 
     // MARK: - Attribution

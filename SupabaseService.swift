@@ -11,10 +11,14 @@ final class SupabaseService {
     private var wolfEventChannels: [String: RealtimeChannelV2] = [:]
 
     private init() {
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
         client = SupabaseClient(
             supabaseURL: SUPABASE_URL,
             supabaseKey: SUPABASE_ANON_KEY,
-            options: .init(global: .init(headers: ["x-device-id": DeviceID.id]))
+            options: .init(global: .init(headers: [
+                "x-device-id":    DeviceID.id,
+                "x-app-version":  buildNumber
+            ]))
         )
         #if DEBUG
         print("DEBUG supabase URL: \(SUPABASE_URL)")
@@ -1374,6 +1378,7 @@ final class SupabaseService {
         courseName: String?,
         coursePars: [Int]? = nil,
         courseHandicaps: [Int]? = nil,
+        courseSource: String = "builtin",
         numDays: Int,
         players: [(name: String, handicap: Double)],
         startDate: Date? = nil,
@@ -1405,6 +1410,7 @@ final class SupabaseService {
             let p_start_date: String?
             let p_course_pars: [Int]?
             let p_course_handicaps: [Int]?
+            let p_course_source: String
         }
         struct RPCResult: Decodable { let id: UUID; let code: String }
 
@@ -1426,7 +1432,8 @@ final class SupabaseService {
             p_players: players.map { .init(name: $0.name, handicap: $0.handicap) },
             p_start_date: dateString,
             p_course_pars: coursePars,
-            p_course_handicaps: courseHandicaps
+            p_course_handicaps: courseHandicaps,
+            p_course_source: courseSource
         )
         let result: RPCResult = try await client
             .rpc("create_club_event", params: params)
@@ -1466,7 +1473,8 @@ final class SupabaseService {
             numDays: numDays,
             status: "active",
             coursePars: coursePars,
-            courseHandicaps: courseHandicaps
+            courseHandicaps: courseHandicaps,
+            courseSource: courseSource
         )
     }
 
@@ -1670,12 +1678,14 @@ final class SupabaseService {
 
     private func groupScoringClient(groupCode: String) -> SupabaseClient {
         if let c = groupScoringClients[groupCode] { return c }
+        let buildNumber = Bundle.main.infoDictionary?["CFBundleVersion"] as? String ?? "0"
         let c = SupabaseClient(
             supabaseURL: SUPABASE_URL,
             supabaseKey: SUPABASE_ANON_KEY,
             options: .init(global: .init(headers: [
-                "x-device-id":  DeviceID.id,
-                "x-group-code": groupCode
+                "x-device-id":    DeviceID.id,
+                "x-group-code":   groupCode,
+                "x-app-version":  buildNumber
             ]))
         )
         groupScoringClients[groupCode] = c

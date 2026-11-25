@@ -10,7 +10,9 @@
 		03489B873B85431E95BBA76D /* CourseSearchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C51B52DC6BC463E8C9F0ACC /* CourseSearchViewController.swift */; };
 		7B5C8F2278DF468F9D8A7A86 /* CourseImportViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA147F17CA3140398BD2670F /* CourseImportViewController.swift */; };
 		9D413B061CFF4448B298BC3A /* CourseValidatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EFFDC49B89A146FC89A25870 /* CourseValidatorTests.swift */; };
+		A0001B02C03D04E05F06A001 /* OpenGolfAPITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0001B02C03D04E05F06A003 /* OpenGolfAPITests.swift */; };
 		B2A6B4AE8A4C40A28475CA57 /* CourseValidator.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBFD794675B1434997A75F88 /* CourseValidator.swift */; };
+		A1002C03D04E05F06A07B001 /* ZipStateCorrector.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1002C03D04E05F06A07B002 /* ZipStateCorrector.swift */; };
 		D29AD6CAA5954827873A9BB1 /* OpenGolfAPIService.swift in Sources */ = {isa = PBXBuildFile; fileRef = FF1F0A76235D44198046D51D /* OpenGolfAPIService.swift */; };
 		1A0A2752B7D94860B10A54F4 /* ClubEventGroupManageViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F635FCE0A314716BB997DD4 /* ClubEventGroupManageViewController.swift */; };
 		1C058047B1FECCA22D79C68D /* ClubEventCreationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 632A5F8261310D90BC3BAFF5 /* ClubEventCreationViewController.swift */; };
@@ -222,7 +224,9 @@
 		3C51B52DC6BC463E8C9F0ACC /* CourseSearchViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseSearchViewController.swift; sourceTree = "<group>"; };
 		CA147F17CA3140398BD2670F /* CourseImportViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseImportViewController.swift; sourceTree = "<group>"; };
 		CBFD794675B1434997A75F88 /* CourseValidator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseValidator.swift; sourceTree = "<group>"; };
+		A1002C03D04E05F06A07B002 /* ZipStateCorrector.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ZipStateCorrector.swift; sourceTree = "<group>"; };
 		EFFDC49B89A146FC89A25870 /* CourseValidatorTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CourseValidatorTests.swift; sourceTree = "<group>"; };
+		A0001B02C03D04E05F06A003 /* OpenGolfAPITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenGolfAPITests.swift; sourceTree = "<group>"; };
 		FF1F0A76235D44198046D51D /* OpenGolfAPIService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenGolfAPIService.swift; sourceTree = "<group>"; };
 		07955AB6BBA546BFB985FC11 /* BestBallEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BestBallEngine.swift; sourceTree = "<group>"; };
 		132A36A89650472DA654B343 /* TournamentSummaryViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TournamentSummaryViewController.swift; sourceTree = "<group>"; };
@@ -473,6 +477,7 @@
 				GS11AA12BB13CC14DD15EE16 /* ClubEventGroupSetupTests.swift */,
 				2D2D4F983B004C6FA0D92E09 /* ClubEventWithdrawTests.swift */,
 				F8CE11BB22CC33DD44EE55FF /* ClubEventSkinsTests.swift */,
+				A0001B02C03D04E05F06A003 /* OpenGolfAPITests.swift */,
 			);
 			path = WolfmoreGolfTests;
 			sourceTree = "<group>";
@@ -560,6 +565,7 @@
 				PC11AA12BB13CC14DD15EE16 /* PayoutCalculator.swift */,
 				FF1F0A76235D44198046D51D /* OpenGolfAPIService.swift */,
 				CBFD794675B1434997A75F88 /* CourseValidator.swift */,
+				A1002C03D04E05F06A07B002 /* ZipStateCorrector.swift */,
 				3C51B52DC6BC463E8C9F0ACC /* CourseSearchViewController.swift */,
 				CA147F17CA3140398BD2670F /* CourseImportViewController.swift */,
 				5E3EE5D2CC4F46DEB2A57000 /* FieldSkinsEngine.swift */,
@@ -877,6 +883,7 @@
 				GS01AA02BB03CC04DD05EE06 /* ClubEventGroupSetupTests.swift in Sources */,
 				711407AE0D1D4A0D92FD8EC1 /* ClubEventWithdrawTests.swift in Sources */,
 				F7CE11BB22CC33DD44EE55FF /* ClubEventSkinsTests.swift in Sources */,
+				A0001B02C03D04E05F06A001 /* OpenGolfAPITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -988,6 +995,7 @@
 				PC01AA02BB03CC04DD05EE06 /* PayoutCalculator.swift in Sources */,
 				D29AD6CAA5954827873A9BB1 /* OpenGolfAPIService.swift in Sources */,
 				B2A6B4AE8A4C40A28475CA57 /* CourseValidator.swift in Sources */,
+				A1002C03D04E05F06A07B001 /* ZipStateCorrector.swift in Sources */,
 				03489B873B85431E95BBA76D /* CourseSearchViewController.swift in Sources */,
 				7B5C8F2278DF468F9D8A7A86 /* CourseImportViewController.swift in Sources */,
 				6BF0DAAEF421411F9862BC1B /* FieldSkinsEngine.swift in Sources */,

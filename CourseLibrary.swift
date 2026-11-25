@@ -27642,8 +27642,9 @@ final class CourseLibrary {
 
     private static let openGolfNamespace = "0F60F000-0000-4000-A000-"
 
-    static func openGolfUUID(apiId: Int) -> UUID {
-        UUID(uuidString: "\(openGolfNamespace)\(String(format: "%012X", apiId))")!
+    static func openGolfUUID(apiId: String) -> UUID {
+        let hex = apiId.replacingOccurrences(of: "-", with: "").uppercased()
+        return UUID(uuidString: "\(openGolfNamespace)\(hex.prefix(12))")!
     }
 
     func isOpenGolfImport(id: UUID) -> Bool {
@@ -27651,7 +27652,7 @@ final class CourseLibrary {
     }
 
     func importOpenGolfCourse(
-        apiId: Int,
+        apiId: String,
         name: String,
         city: String?,
         state: String?,

@@ -407,11 +407,15 @@ final class ClubEventCreationViewController: UITableViewController {
 
         Task {
             do {
+                let isImported = selectedCourse.map {
+                    CourseLibrary.shared.isOpenGolfImport(id: $0.id)
+                } ?? false
                 let event = try await SupabaseService.shared.createClubEvent(
                     name: trimmed,
                     courseName: courseName,
                     coursePars: selectedCourse?.pars,
                     courseHandicaps: selectedCourse?.hcs,
+                    courseSource: isImported ? "imported" : "builtin",
                     numDays: 1,
                     players: [],
                     startDate: startDate,

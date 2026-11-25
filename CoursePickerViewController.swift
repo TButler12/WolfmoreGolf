@@ -175,11 +175,16 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         let importedCount = all.filter { CourseLibrary.shared.isOpenGolfImport(id: $0.id) }.count
         let customCount   = total - builtInCount - importedCount
 
+#if DEBUG
         summaryLabel1.text = "Loaded courses: \(total)"
         var parts = ["Built-in: \(builtInCount)"]
         if importedCount > 0 { parts.append("Imported: \(importedCount)") }
         if customCount   > 0 { parts.append("Custom: \(customCount)") }
         summaryLabel2.text = parts.joined(separator: " • ")
+#else
+        summaryLabel1.text = nil
+        summaryLabel2.text = nil
+#endif
 
         summaryHeader.setNeedsLayout()
         summaryHeader.layoutIfNeeded()
@@ -806,7 +811,9 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         }
         delete.image = UIImage(systemName: "trash")
 
-        let config = UISwipeActionsConfiguration(actions: [delete, edit, info])
+        let isBuiltIn = CourseLibrary.shared.isBuiltIn(id: c.id)
+        let actions: [UIContextualAction] = isBuiltIn ? [info] : [delete, edit, info]
+        let config = UISwipeActionsConfiguration(actions: actions)
         config.performsFirstActionWithFullSwipe = false
         return config
     }
@@ -864,10 +871,61 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     // MARK: - Course Actions
 
     private func editCourse(_ course: CourseProfile) {
-        let sb = UIStoryboard(name: "Main", bundle: nil)
-        let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC") as! CourseSetupViewController
-        vc.loadCourseID = course.id
-        navigationController?.pushViewController(vc, animated: true)
+        if CourseLibrary.shared.isOpenGolfImport(id: course.id) {
+            presentImportedCourseEditor(for: course)
+        } else {
+            let sb = UIStoryboard(name: "Main", bundle: nil)
+            let vc = sb.instantiateViewController(withIdentifier: "CourseSetupVC") as! CourseSetupViewController
+            vc.loadCourseID = course.id
+            navigationController?.pushViewController(vc, animated: true)
+        }
+    }
+
+    private static let validStateCodes: Set<String> = [
+        "AL","AK","AZ","AR","CA","CO","CT","DE","FL","GA",
+        "HI","ID","IL","IN","IA","KS","KY","LA","ME","MD",
+        "MA","MI","MN","MS","MO","MT","NE","NV","NH","NJ",
+        "NM","NY","NC","ND","OH","OK","OR","PA","RI","SC",
+        "SD","TN","TX","UT","VT","VA","WA","WV","WI","WY",
+        "DC","GU","PR","VI","AS","MP"
+    ]
+
+    private func presentImportedCourseEditor(for course: CourseProfile) {
+        let ac = UIAlertController(title: "Edit Course", message: nil, preferredStyle: .alert)
+        ac.addTextField { tf in
+            tf.text = course.name
+            tf.placeholder = "Course name"
+            tf.autocapitalizationType = .words
+            tf.returnKeyType = .next
+        }
+        ac.addTextField { tf in
+            tf.text = course.state
+            tf.placeholder = "State (e.g. IL)"
+            tf.autocapitalizationType = .allCharacters
+            tf.returnKeyType = .done
+        }
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        ac.addAction(UIAlertAction(title: "Save", style: .default) { [weak self] _ in
+            guard let self else { return }
+            let newName  = ac.textFields?[0].text?.trimmingCharacters(in: .whitespaces) ?? ""
+            guard !newName.isEmpty else { return }
+            let rawState = ac.textFields?[1].text?.trimmingCharacters(in: .whitespaces).uppercased() ?? ""
+            if !rawState.isEmpty && !Self.validStateCodes.contains(rawState) {
+                let err = UIAlertController(
+                    title: "Invalid State",
+                    message: "\"\(rawState)\" is not a recognised US state or territory code. Enter a 2-letter code like IL, or leave it blank.",
+                    preferredStyle: .alert)
+                err.addAction(UIAlertAction(title: "OK", style: .default))
+                self.present(err, animated: true)
+                return
+            }
+            var updated = course
+            updated.name  = newName
+            updated.state = rawState.isEmpty ? nil : rawState
+            CourseLibrary.shared.upsert(updated)
+            self.reloadCourses()
+        })
+        present(ac, animated: true)
     }
 
     private func confirmDeleteCourse(_ course: CourseProfile, completion: @escaping (Bool) -> Void) {

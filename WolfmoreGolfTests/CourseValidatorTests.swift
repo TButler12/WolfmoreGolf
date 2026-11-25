@@ -103,12 +103,35 @@ final class CourseValidatorTests: XCTestCase {
     }
 
     func testBuildArraysWrongCount() {
-        let holes: [OpenGolfHoleData] = (1...9).map { i in
+        // 7 holes is not 9 or 18 — should return noHoleData
+        let holes: [OpenGolfHoleData] = (1...7).map { i in
             makeFakeHole(number: i, par: 4, hc: i)
         }
         switch CourseValidator.buildArrays(from: holes) {
         case .success:   XCTFail("Expected failure")
-        case .failure(let err): XCTAssertEqual(err, .wrongHoleCount(got: 9, expected: 18))
+        case .failure(let err): XCTAssertEqual(err, .noHoleData)
+        }
+    }
+
+    func testBuildArraysZeroHolesReturnsNoHoleData() {
+        switch CourseValidator.buildArrays(from: []) {
+        case .success:   XCTFail("Expected failure")
+        case .failure(let err): XCTAssertEqual(err, .noHoleData)
+        }
+    }
+
+    func testBuildArraysNineHoleValid() {
+        let pars: [Int] = [4,3,5,4,4,3,5,4,4]
+        let hcs:  [Int] = [1,9,3,7,5,2,8,4,6]
+        let holes: [OpenGolfHoleData] = (1...9).map { i in
+            makeFakeHole(number: i, par: pars[i-1], hc: hcs[i-1])
+        }
+        switch CourseValidator.buildArrays(from: holes) {
+        case .success(let (builtPars, builtHcs)):
+            XCTAssertEqual(builtPars, pars)
+            XCTAssertEqual(builtHcs, hcs)
+        case .failure(let err):
+            XCTFail("Expected success, got \(err)")
         }
     }
 
@@ -116,7 +139,7 @@ final class CourseValidatorTests: XCTestCase {
 
     private func makeFakeHole(number: Int, par: Int, hc: Int?) -> OpenGolfHoleData {
         let json = """
-        {"hole_number":\(number),"par":\(par)\(hc.map { ",\"handicap_index\":\($0)" } ?? "")}
+        {"number":\(number),"par":\(par)\(hc.map { ",\"handicap_index\":\($0)" } ?? "")}
         """.data(using: .utf8)!
         return try! JSONDecoder().decode(OpenGolfHoleData.self, from: json)
     }

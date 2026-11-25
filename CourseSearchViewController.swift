@@ -13,6 +13,8 @@ final class CourseSearchViewController: UITableViewController {
     private var results: [OpenGolfSearchResult] = []
     private var searchTask: Task<Void, Never>?
     private var isLoading = false
+    private var searchError: String?
+    private var hasSearched = false
 
     // MARK: - Lifecycle
 
@@ -77,10 +79,13 @@ final class CourseSearchViewController: UITableViewController {
         searchTask?.cancel()
         guard !query.trimmingCharacters(in: .whitespaces).isEmpty else {
             results = []
+            searchError = nil
+            hasSearched = false
             tableView.reloadData()
             return
         }
         isLoading = true
+        searchError = nil
         tableView.reloadData()
 
         searchTask = Task {
@@ -90,6 +95,8 @@ final class CourseSearchViewController: UITableViewController {
                 await MainActor.run {
                     self.isLoading = false
                     self.results = items
+                    self.searchError = nil
+                    self.hasSearched = true
                     self.tableView.reloadData()
                 }
             } catch {
@@ -97,6 +104,8 @@ final class CourseSearchViewController: UITableViewController {
                 await MainActor.run {
                     self.isLoading = false
                     self.results = []
+                    self.searchError = error.localizedDescription
+                    self.hasSearched = false
                     self.tableView.reloadData()
                 }
             }
@@ -106,7 +115,10 @@ final class CourseSearchViewController: UITableViewController {
     // MARK: - Table
 
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        isLoading ? 1 : results.count
+        if isLoading { return 1 }
+        if searchError != nil { return 1 }
+        if hasSearched && results.isEmpty { return 1 }
+        return results.count
     }
 
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -114,6 +126,23 @@ final class CourseSearchViewController: UITableViewController {
         if isLoading {
             var cfg = cell.defaultContentConfiguration()
             cfg.text = "Searching…"
+            cfg.textProperties.color = .secondaryLabel
+            cell.contentConfiguration = cfg
+            cell.selectionStyle = .none
+            return cell
+        }
+        if let errorMessage = searchError {
+            var cfg = cell.defaultContentConfiguration()
+            cfg.text = "Search failed"
+            cfg.secondaryText = errorMessage
+            cfg.textProperties.color = .systemRed
+            cell.contentConfiguration = cfg
+            cell.selectionStyle = .none
+            return cell
+        }
+        if hasSearched && results.isEmpty {
+            var cfg = cell.defaultContentConfiguration()
+            cfg.text = "No courses found"
             cfg.textProperties.color = .secondaryLabel
             cell.contentConfiguration = cfg
             cell.selectionStyle = .none
@@ -133,7 +162,7 @@ final class CourseSearchViewController: UITableViewController {
 
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
-        guard !isLoading else { return }
+        guard !isLoading, searchError == nil, !results.isEmpty else { return }
         let result = results[indexPath.row]
         let vc = CourseImportViewController(searchResult: result)
         vc.delegate = delegate
