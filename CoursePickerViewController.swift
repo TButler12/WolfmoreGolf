@@ -170,12 +170,16 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     }
 
     private func updateSummaryHeader() {
-        let total = all.count
-        let builtInCount = all.filter { CourseLibrary.shared.isBuiltIn(id: $0.id) }.count
-        let customCount = total - builtInCount
+        let total         = all.count
+        let builtInCount  = all.filter { CourseLibrary.shared.isBuiltIn(id: $0.id) }.count
+        let importedCount = all.filter { CourseLibrary.shared.isOpenGolfImport(id: $0.id) }.count
+        let customCount   = total - builtInCount - importedCount
 
         summaryLabel1.text = "Loaded courses: \(total)"
-        summaryLabel2.text = "Built-in: \(builtInCount) • Custom: \(customCount)"
+        var parts = ["Built-in: \(builtInCount)"]
+        if importedCount > 0 { parts.append("Imported: \(importedCount)") }
+        if customCount   > 0 { parts.append("Custom: \(customCount)") }
+        summaryLabel2.text = parts.joined(separator: " • ")
 
         summaryHeader.setNeedsLayout()
         summaryHeader.layoutIfNeeded()
@@ -330,21 +334,28 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
         working = working.filter { matchesFilter($0) }
         filtered = working
 
+        // Separate imported courses so they appear in their own section at the top.
+        let imported = working.filter { CourseLibrary.shared.isOpenGolfImport(id: $0.id) }
+        let rest     = working.filter { !CourseLibrary.shared.isOpenGolfImport(id: $0.id) }
+
         switch sortMode {
         case .nameAZ:
-            let sorted = working.sorted {
+            let sorted = rest.sorted {
                 $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
-            sections = [("All Courses", sorted)]
+            sections = imported.isEmpty ? [("All Courses", sorted)]
+                                        : [("My Courses", imported), ("All Courses", sorted)]
             collapsedSections = []
 
         case .groupedLocation:
-            buildSections(from: working)
-            collapsedSections = Set(sections.indices)
+            buildSections(from: rest)
+            if !imported.isEmpty { sections.insert(("My Courses", imported), at: 0) }
+            collapsedSections = Set(sections.indices.dropFirst(imported.isEmpty ? 0 : 1))
 
         case .groupedArchitect:
-            buildArchitectSections(from: working)
-            collapsedSections = Set(sections.indices)
+            buildArchitectSections(from: rest)
+            if !imported.isEmpty { sections.insert(("My Courses", imported), at: 0) }
+            collapsedSections = Set(sections.indices.dropFirst(imported.isEmpty ? 0 : 1))
         }
 
         tableView.reloadData()
@@ -546,7 +557,25 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
     }
 
     @objc private func addTapped() {
-        onTapAddCourse?()
+        let ac = UIAlertController(title: nil, message: nil, preferredStyle: .actionSheet)
+        ac.addAction(UIAlertAction(title: "Search Online Courses…", style: .default) { [weak self] _ in
+            self?.presentCourseSearch()
+        })
+        ac.addAction(UIAlertAction(title: "Create Custom Course", style: .default) { [weak self] _ in
+            self?.onTapAddCourse?()
+        })
+        ac.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        if let pop = ac.popoverPresentationController {
+            pop.barButtonItem = navigationItem.rightBarButtonItems?.first
+        }
+        present(ac, animated: true)
+    }
+
+    private func presentCourseSearch() {
+        let search = CourseSearchViewController()
+        search.delegate = self
+        let nav = UINavigationController(rootViewController: search)
+        present(nav, animated: true)
     }
 
     private func course(at indexPath: IndexPath) -> CourseProfile {
@@ -951,6 +980,14 @@ final class CoursePickerViewController: UITableViewController, UISearchResultsUp
 
     func updateSearchResults(for searchController: UISearchController) {
         applySearchSortAndFilter()
+    }
+}
+
+// MARK: - CourseSearchDelegate
+
+extension CoursePickerViewController: CourseSearchDelegate {
+    func courseSearchDidImport(_ course: CourseProfile) {
+        reloadCourses()
     }
 }
 
