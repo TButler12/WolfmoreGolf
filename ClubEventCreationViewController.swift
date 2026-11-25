@@ -366,7 +366,10 @@ final class ClubEventCreationViewController: UITableViewController {
 
     private func presentCoursePicker() {
         let sheet = UIAlertController(title: "Select Course", message: nil, preferredStyle: .actionSheet)
-        for course in CourseLibrary.shared.courses.sorted(by: { $0.name < $1.name }) {
+        sheet.addAction(UIAlertAction(title: "Search Online Courses…", style: .default) { [weak self] _ in
+            self?.presentCourseSearch()
+        })
+        for course in CourseLibrary.shared.allSorted() {
             sheet.addAction(UIAlertAction(title: course.name, style: .default) { [weak self] _ in
                 self?.courseName = course.name
                 self?.selectedCourse = course
@@ -380,6 +383,13 @@ final class ClubEventCreationViewController: UITableViewController {
         })
         sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         presentActionSheet(sheet)
+    }
+
+    private func presentCourseSearch() {
+        let search = CourseSearchViewController()
+        search.delegate = self
+        let nav = UINavigationController(rootViewController: search)
+        present(nav, animated: true)
     }
 
     @objc private func createTapped() {
@@ -514,4 +524,14 @@ final class ClubEventCreationViewController: UITableViewController {
         }
     }
 #endif
+}
+
+// MARK: - CourseSearchDelegate
+
+extension ClubEventCreationViewController: CourseSearchDelegate {
+    func courseSearchDidImport(_ course: CourseProfile) {
+        courseName = course.name
+        selectedCourse = course
+        tableView.reloadRows(at: [IndexPath(row: 1, section: 0)], with: .none)
+    }
 }
