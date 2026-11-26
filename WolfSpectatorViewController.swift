@@ -47,6 +47,8 @@ final class WolfSpectatorViewController: UIViewController {
     private let savedCodesKey = "watchedWolfSessions"
     private let maxSessions   = 10
 
+    private var pollTimer: Timer?
+
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -92,6 +94,7 @@ final class WolfSpectatorViewController: UIViewController {
     }
 
     @objc private func appDidBecomeActive() {
+        refreshTapped()
         Task {
             for session in sessions {
                 await subscribeToSession(session)
@@ -99,8 +102,18 @@ final class WolfSpectatorViewController: UIViewController {
         }
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        pollTimer?.invalidate()
+        pollTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
+            self?.refreshTapped()
+        }
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        pollTimer?.invalidate()
+        pollTimer = nil
         let toUnsub = sessions
         Task {
             for session in toUnsub {

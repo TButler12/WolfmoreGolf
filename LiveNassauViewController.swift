@@ -54,6 +54,16 @@ final class LiveNassauViewController: UIViewController {
         setupUI()
         fetchPriorScores()
         subscribeToScores()
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc private func appDidBecomeActive() {
+        Task { await refreshScores() }
     }
 
     override func viewDidAppear(_ animated: Bool) {

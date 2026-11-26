@@ -46,6 +46,46 @@ fileprivate func makeWhichOneAttributedBody() -> NSAttributedString {
     return result
 }
 
+// Build the "Which One Should I Create?" attributed body — all 7 CREATE options.
+fileprivate func makeWhichOneShouldICreateBody() -> NSAttributedString {
+    let para = NSMutableParagraphStyle()
+    para.alignment = .center
+    para.paragraphSpacing = 4
+
+    let boldAttrs: [NSAttributedString.Key: Any] = [
+        .font: UIFont.systemFont(ofSize: 17, weight: .bold),
+        .foregroundColor: UIColor.label,
+        .paragraphStyle: para
+    ]
+    let regularAttrs: [NSAttributedString.Key: Any] = [
+        .font: UIFont.systemFont(ofSize: 15, weight: .regular),
+        .foregroundColor: UIColor.secondaryLabel,
+        .paragraphStyle: para
+    ]
+    let gapAttrs: [NSAttributedString.Key: Any] = [
+        .font: UIFont.systemFont(ofSize: 10, weight: .regular),
+        .paragraphStyle: para
+    ]
+
+    let rows: [(String, String)] = [
+        ("Go Live",             "Let friends follow your group's scores hole-by-hole"),
+        ("Event Board",         "One live board for several groups — add Match Play for Ryder Cup–style scoring"),
+        ("Tournament",          "Official event with standings, locked settings, and multi-day support"),
+        ("Club Event",          "Best ball + skins across multiple groups with a shared leaderboard"),
+        ("Remote Nassau",       "1v1 Nassau match against a player on a different course"),
+        ("Calcutta",            "Auction pool — bid on players and calculate payouts after the round"),
+        ("Co-Organizer Code",   "Enter a code to claim organizer access for someone else's event")
+    ]
+
+    let result = NSMutableAttributedString()
+    for (i, (label, detail)) in rows.enumerated() {
+        if i > 0 { result.append(NSAttributedString(string: "\n\n", attributes: gapAttrs)) }
+        result.append(NSAttributedString(string: label,         attributes: boldAttrs))
+        result.append(NSAttributedString(string: "\n" + detail, attributes: regularAttrs))
+    }
+    return result
+}
+
 // MARK: - HowToPlayViewController
 //
 // Swipeable walkthrough reachable at any time from the Home "More" menu.
@@ -117,8 +157,8 @@ final class HowToPlayViewController: UIViewController {
             systemImage: "rectangle.3.group",
             symbolColor: UIColor(red: 0.10, green: 0.45, blue: 0.30, alpha: 1),
             title: "Event Board",
-            body: "For a casual outing with several groups.\n\nStart an Event Board and share its code. Each group goes live and taps Join an Event Board. Then everyone, players and spectators alike, sees every group on one screen.\n\nEach group keeps its own game and settings. It's great for a men's day or a buddies' trip where you just want to see how the other groups are doing.",
-            badges: ["Start an Event Board", "Join an Event Board", "Go Live"]
+            body: "For a casual outing with several groups.\n\nStart an Event Board and share its code. Each group goes live and taps Join an Event Board. Then everyone — players and spectators alike — sees every group on one screen.\n\nEach group keeps its own game and settings. Set each group to Match Play format and it becomes a Ryder Cup–style event: the board shows every match's status, like '1 UP thru 5'.\n\nGreat for a men's day, a buddies' trip, or any outing where you want to see how the other groups are doing.",
+            badges: ["Start an Event Board", "Join an Event Board", "Go Live", "Match Play"]
         ),
         HowToPlayPage(
             systemImage: "person.3.sequence.fill",
@@ -134,6 +174,14 @@ final class HowToPlayViewController: UIViewController {
             body: "",
             badges: ["Go Live", "Event Board", "Tournament"],
             attributedBody: makeWhichOneAttributedBody()
+        ),
+        HowToPlayPage(
+            systemImage: "square.grid.2x2.fill",
+            symbolColor: UIColor(red: 0.20, green: 0.38, blue: 0.55, alpha: 1),
+            title: "Which One Should I Create?",
+            body: "",
+            badges: ["Go Live", "Event Board", "Tournament", "Club Event", "Remote Nassau", "Calcutta"],
+            attributedBody: makeWhichOneShouldICreateBody()
         ),
         HowToPlayPage(
             systemImage: "slider.horizontal.3",

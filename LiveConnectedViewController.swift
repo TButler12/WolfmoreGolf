@@ -326,7 +326,7 @@ final class LiveConnectedViewController: UITableViewController {
                 self?.createTournamentTapped()
             },
             CardItem(title: "Event Board",
-                     subtitle: "Live leaderboard, share a code",
+                     subtitle: "Live board for all groups",
                      icon: "rectangle.3.group.fill",
                      tint: wolfGold) { [weak self] in
                 guard let self else { return }
